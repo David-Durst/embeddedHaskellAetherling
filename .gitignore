@@ -8,7 +8,7 @@ aetherling.egg-info/
 *.log
 *.aux
 .stack-work/
-AetherlingSTIR.cabal
+Aetherling.cabal
 cabal.config
 *~
 *.iml
