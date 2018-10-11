@@ -20,6 +20,8 @@ sArray0_2 :: Array 2 Int
 sArray0_2 = fromTuple (2, 2)
 sArray0_3 :: Array 3 Int
 sArray0_3 = fromTuple (2, 2, 3)
+sArray0_22 :: Array 2 (Array 2 Int)
+sArray0_22 = fromTuple (sArray0_2, sArray0_2)
 
 sArray1_2 :: Array 2 Int
 sArray1_2 = fromTuple (4, 6)
