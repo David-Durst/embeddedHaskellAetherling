@@ -14,7 +14,7 @@ instance Atom Bit
 instance Atom ()
 
 type Array n a = Vector n a
-type Sequence n a = Vector n a
+type Sequence n v a = Vector n a
 
 sArray0_2 :: Array 2 Int
 sArray0_2 = fromTuple (2, 2)
@@ -28,8 +28,10 @@ sArray1_2 = fromTuple (4, 6)
 sArray1_3 :: Array 3 Int
 sArray1_3 = fromTuple (1, 2, 3)
 
-tSeq0_2 :: Sequence 2 (Array 2 Int)
+tSeq0_2 :: Sequence 2 0 (Array 2 Int)
 tSeq0_2 = fromTuple (sArray0_2, sArray1_2)
-tSeq0_3 :: Sequence 2 (Array 3 Int)
+tSeq0_3 :: Sequence 2 0 (Array 3 Int)
 tSeq0_3 = fromTuple (sArray0_3, sArray1_3)
+tSeq1_3 :: Sequence 3 0 (Array 2 Int)
+tSeq1_3 = fromTuple (sArray1_2, sArray1_2, sArray1_2)
 

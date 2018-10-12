@@ -44,3 +44,5 @@ library:
     - ScopedTypeVariables
     - TypeApplications
     - TypeSynonymInstances
+    - PolyKinds
+    - LiberalTypeSynonyms

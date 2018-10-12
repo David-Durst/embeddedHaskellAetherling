@@ -15,13 +15,21 @@ liftUnaryModule = liftA
 liftBinaryModule :: (Applicative f) => ((a, b) -> c) -> ((f a, f b) -> f c)
 liftBinaryModule = uncurry . liftA2 . curry
 
+liftUnaryModuleToSpace :: (KnownNat n) => Proxy n -> (a -> b) ->
+  (Array n a -> Array n b)
+liftUnaryModuleToSpace _ = liftUnaryModule
+
+liftUnaryModuleToTime :: (KnownNat n, KnownNat v) => Proxy n -> Proxy v -> (a -> b) ->
+  (Sequence n v a -> Sequence n v b)
+liftUnaryModuleToTime _ _ = liftUnaryModule
+
 liftBinaryModuleToSpace :: (KnownNat n) => Proxy n -> ((a, b) -> c) ->
   ((Array n a, Array n b) -> Array n c)
 liftBinaryModuleToSpace _ = liftBinaryModule
 
-liftBinaryModuleToTime :: (KnownNat n) => Proxy n -> ((a, b) -> c) ->
-  ((Sequence n a, Sequence n b) -> Sequence n c)
-liftBinaryModuleToTime _ = liftBinaryModule
+liftBinaryModuleToTime :: (KnownNat n, KnownNat v) => Proxy n -> Proxy v -> ((a, b) -> c) ->
+  ((Sequence n v a, Sequence n v b) -> Sequence n v c)
+liftBinaryModuleToTime _ _ = liftBinaryModule
 
 -- HIGHER ORDER MODULES
 forkJoin :: (a -> c) -> (b -> d) -> Module (a, b) (c, d)
