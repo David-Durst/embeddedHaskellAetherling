@@ -4,6 +4,10 @@ import Data.Proxy
 import Data.Finite
 import Data.Vector.Sized
 import Control.Applicative
+import qualified Data.List as L
+import Data.Maybe
+import Data.Finite
+import Data.List.Split
 
 type Module a b = a -> b
 
@@ -13,8 +17,17 @@ instance Atom Int
 instance Atom Bit
 instance Atom ()
 
+type STIOC n a = Vector n a
 type Array n a = Vector n a
 type Sequence n v a = Vector n a
+
+--instance Functor (STIOC n a) where
+
+-- mapSTIOCToST :: KnownNat n => Proxy n -> STIOC n
+
+-- this is intentionally undefined if list length doesn't match claimed length
+listToVector :: KnownNat n => Proxy n -> [a] -> Vector n a
+listToVector p xs | fromIntegral (L.length xs) == natVal p  = fromJust $ fromList xs
 
 sArray0_2 :: Array 2 Int
 sArray0_2 = fromTuple (2, 2)

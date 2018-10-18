@@ -26,6 +26,7 @@ dependencies:
 - ghc-typelits-extra
 - ghc-typelits-natnormalise
 - ghc-typelits-knownnat
+- split
 
 ghc-options:
 - -fwarn-incomplete-patterns 
