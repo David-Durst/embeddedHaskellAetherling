@@ -27,6 +27,7 @@ dependencies:
 - ghc-typelits-natnormalise
 - ghc-typelits-knownnat
 - split
+- type-iso
 
 ghc-options:
 - -fwarn-incomplete-patterns 
@@ -42,6 +43,7 @@ library:
     - TypeOperators
     - TypeFamilies
     - FlexibleContexts
+    - FlexibleInstances
     - ScopedTypeVariables
     - TypeApplications
     - TypeSynonymInstances

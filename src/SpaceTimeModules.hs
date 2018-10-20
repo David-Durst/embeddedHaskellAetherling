@@ -30,7 +30,13 @@ liftBinaryModuleToSpace _ = liftBinaryModule
 liftBinaryModuleToTime :: (KnownNat n, KnownNat v) => Proxy n -> Proxy v -> ((a, b) -> c) ->
   ((Sequence n v a, Sequence n v b) -> Sequence n v c)
 liftBinaryModuleToTime _ _ = liftBinaryModule
-
+{-
+liftUnarySTIOCToST :: (KnownNat n, KnownNat m, KnownNat s, KnownNat v) =>
+  Proxy n -> Proxy s -> Proxy v ->
+  ((STIOC n a) -> (STIOC m b)) ->
+  (Sequence (div n s) v (Array s a)) -> (Sequence (div n s) v (Array s b))
+liftUnarySTIOCToST _ _ _ = liftUnaryModule . liftUnaryModule
+-} 
 -- HIGHER ORDER MODULES
 forkJoin :: (a -> c) -> (b -> d) -> Module (a, b) (c, d)
 forkJoin f g = \(a, b) -> (f a, g b)
