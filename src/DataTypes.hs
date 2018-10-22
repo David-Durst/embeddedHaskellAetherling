@@ -10,6 +10,7 @@ import Data.Maybe
 import Data.Finite
 import Data.List.Split
 import Data.Types.Injective
+import Data.Types.Isomorphic
 
 type Module a b = a -> b
 
@@ -35,11 +36,55 @@ instance TotalElements Bit where
 instance TotalElements () where
   numElements _ = 1
 
-instance (TotalElements a, KnownNat n) => TotalElements (STIOC (n + 1) a) where
-  numElements (STIOC vec) = V.length vec * numElements (V.head vec)
+-- way in values (but not types) to show two containers are same total size with different
+-- amounts of nesting
+instance (TotalElements a, KnownNat n, KnownNat m, n ~ (m+1)) => TotalElements (STIOC n a) where
+  numElements (STIOC vec) = V.length vec + (numElements $ V.head vec)
 
-instance (TotalElements a, KnownNat n) => TotalElements (Array n a) where
-  numElements (Array vec) = V.length vec * numElements (V.head vec)
+instance (TotalElements a, KnownNat n, KnownNat m, n ~ (m+1)) => TotalElements (Array n a) where
+  numElements (Array vec) = V.length vec + (numElements $ V.head vec)
+
+instance (TotalElements a, KnownNat n, KnownNat m, n ~ (m+1)) => TotalElements (Sequence n v a) where
+  numElements (Sequence vec) = V.length vec + (numElements $ V.head vec)
+
+
+-- way to convert between time or space containers and independent contianers, no nesting yet
+instance (KnownNat n) => Injective (STIOC n a) (Array n a) where
+  to (STIOC vec) = Array vec
+
+instance (KnownNat n) => Injective (Array n a) (STIOC n a) where
+  to (Array vec) = STIOC vec
+
+instance (KnownNat n) => Iso (Array n a) (STIOC n a)
+
+instance (KnownNat n) => Injective (STIOC n a) (Sequence n v a) where
+  to (STIOC vec) = Sequence vec
+
+instance (KnownNat n) => Injective (Sequence n v a) (STIOC n a) where
+  to (Sequence vec) = STIOC vec
+
+instance (KnownNat n) => Iso (Sequence n v a) (STIOC n a)
+{-
+why does the above work and d1head and d2head, but not this:
+instance (TotalElements a, KnownNat (n+1)) => TotalElements (Array (n+1) a) where
+  numElements (Array vec) = V.length vec + (numElements $ V.head vec)
+
+
+
+
+
+d1head :: (KnownNat n) => Vector (1+n) a -> a
+d1head = V.head
+
+d2head :: (TotalElements a, KnownNat n) => STIOC (1+n) a -> a
+d2head (STIOC vec)= V.head vec
+-- instance (TotalElements a, KnownNat n, (1+n) ~ nat) => TotalElements (STIOC (1+n) a)
+dhead :: forall n a. Vector (1+n) a -> a
+dhead = V.head
+-}
+{-totalSize :: TotalElements a -> Int
+totalSize 
+-}
 --instance Functor (STIOC n a) where
 
 -- mapSTIOCToST :: KnownNat n => Proxy n -> STIOC n

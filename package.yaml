@@ -26,6 +26,7 @@ dependencies:
 - ghc-typelits-extra
 - ghc-typelits-natnormalise
 - ghc-typelits-knownnat
+- ghc-typelits-natnormalise
 - split
 - type-iso
 
@@ -33,6 +34,7 @@ ghc-options:
 - -fwarn-incomplete-patterns 
 - -fplugin GHC.TypeLits.KnownNat.Solver
 - -fplugin GHC.TypeLits.Extra.Solver
+- -fplugin GHC.TypeLits.Normalise
     #- -Wall - comeback to this, too many warnings right now to handle
     #- -fplugin GHC.TypeLits.KnownNat.Solver
 
@@ -49,3 +51,5 @@ library:
     - TypeSynonymInstances
     - PolyKinds
     - LiberalTypeSynonyms
+    - UndecidableInstances
+    - MultiParamTypeClasses
