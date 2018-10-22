@@ -21,8 +21,52 @@ instance Atom Bit
 instance Atom ()
 
 newtype STIOC n a = STIOC {stVec :: Vector n a}
+
+instance (KnownNat n) => Functor (STIOC n) where
+  fmap f (STIOC vec) = STIOC (fmap f vec)
+
+instance (KnownNat n) => Applicative (STIOC n) where
+  pure a = (STIOC ((pure :: a -> Vector n a) a))
+  (STIOC f) <*> (STIOC a) = STIOC (f <*> a)
+
 newtype Array n a = Array {aVec :: Vector n a}
+
+instance (KnownNat n) => Functor (Array n) where
+  fmap f (Array vec) = Array (fmap f vec)
+
+instance (KnownNat n) => Applicative (Array n) where
+  pure a = (Array ((pure :: a -> Vector n a) a))
+  (Array f) <*> (Array a) = Array (f <*> a)
+  
 newtype Sequence n v a = Sequence {seqVec :: Vector n a}
+
+instance (KnownNat n) => Functor (Sequence n v) where
+  fmap f (Sequence vec) = Sequence (fmap f vec)
+
+instance (KnownNat n) => Applicative (Sequence n v) where
+  pure a = (Sequence ((pure :: a -> Vector n a) a))
+  (Sequence f) <*> (Sequence a) = Sequence (f <*> a)
+
+data ContainerType = STIOCType | ArrayType | SequenceType
+
+{-
+Why does this fail? How to embed tuple decomposition in type system?
+type family STIOCList (typesAndLengths :: [(ContainerType, Nat)])  a  where
+  STIOCList '[] a = a
+  STIOCList ((STIOCType, outerLength) ': innerLengths) a = STIOC outerLength (STIOCList innerLengths a)
+-}
+
+-- this is a type constructor, that gives me the ability to talk about the deeply nested
+-- types in my type system
+type family ContainerList (lengths :: [Nat]) (containerTypes :: [ContainerType])
+  (vVals :: [Nat]) elementType where
+  ContainerList '[] _ _ elementType = elementType 
+  ContainerList (outerLength ': innerLengths) (STIOCType ': innerTypes) vVals elementType =
+    STIOC outerLength (ContainerList innerLengths innerTypes vVals elementType)
+  ContainerList (outerLength ': innerLengths) (ArrayType ': innerTypes) vVals elementType =
+    Array outerLength (ContainerList innerLengths innerTypes vVals elementType)
+  ContainerList (outerLength ': innerLengths) (SequenceType ': innerTypes) (vVal ': innerVVals) elementType =
+    Sequence outerLength vVal (ContainerList innerLengths innerTypes innerVVals elementType)
 
 class TotalElements n where
   numElements :: n -> Int
@@ -166,6 +210,8 @@ instance CustomIso Bit Bit where
 instance CustomIso () () where
   customTo = id
   customFrom = id
+
+
 
 -- this is intentionally undefined if list length doesn't match claimed length
 listToVector :: KnownNat n => Proxy n -> [a] -> Vector n a
