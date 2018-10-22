@@ -167,8 +167,6 @@ instance CustomIso () () where
   customTo = id
   customFrom = id
 
-instance (Iso a b)
-
 -- this is intentionally undefined if list length doesn't match claimed length
 listToVector :: KnownNat n => Proxy n -> [a] -> Vector n a
 listToVector p xs | fromIntegral (L.length xs) == natVal p  = fromJust $ fromList xs
