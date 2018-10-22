@@ -59,7 +59,7 @@ type family STIOCList (typesAndLengths :: [(ContainerType, Nat)])  a  where
 -- this is a type constructor, that gives me the ability to talk about the deeply nested
 -- types in my type system
 type family ContainerList (lengths :: [Nat]) (containerTypes :: [ContainerType])
-  (vVals :: [Nat]) elementType where
+  (vVals :: [Nat]) elementType :: * where
   ContainerList '[] _ _ a = a
   ContainerList (outerLength ': innerLengths) (STIOCType ': innerTypes) vVals elementType =
     STIOC outerLength (ContainerList innerLengths innerTypes vVals elementType)
@@ -70,6 +70,16 @@ type family ContainerList (lengths :: [Nat]) (containerTypes :: [ContainerType])
 
 exampleFromTypeFunction :: (ContainerList '[1] '[STIOCType] '[] Bit)
 exampleFromTypeFunction = STIOC (listToVector (Proxy @1) [True])
+
+-- this takes in any type (elementOrContainer) and emits the total length
+-- where its the length times the lengths of the nested elements if the
+-- container is a STIOC, Array, or Sequence. Otherwise, its 1 as anything else
+-- is stored as an atomic element in these arrays
+type family NestedContainersSize (elementOrContainer :: *) :: Nat where
+  NestedContainersSize (STIOC n a) = n * (NestedContainersSize a)
+  NestedContainersSize (Array n a) = n * (NestedContainersSize a)
+  NestedContainersSize (Sequence n _ a) = n * (NestedContainersSize a)
+  NestedContainersSize _ = 1
 
 class TotalElements n where
   numElements :: n -> Int
