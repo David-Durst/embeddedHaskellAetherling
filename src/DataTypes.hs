@@ -60,13 +60,16 @@ type family STIOCList (typesAndLengths :: [(ContainerType, Nat)])  a  where
 -- types in my type system
 type family ContainerList (lengths :: [Nat]) (containerTypes :: [ContainerType])
   (vVals :: [Nat]) elementType where
-  ContainerList '[] _ _ elementType = elementType 
+  ContainerList '[] _ _ a = a
   ContainerList (outerLength ': innerLengths) (STIOCType ': innerTypes) vVals elementType =
     STIOC outerLength (ContainerList innerLengths innerTypes vVals elementType)
   ContainerList (outerLength ': innerLengths) (ArrayType ': innerTypes) vVals elementType =
     Array outerLength (ContainerList innerLengths innerTypes vVals elementType)
   ContainerList (outerLength ': innerLengths) (SequenceType ': innerTypes) (vVal ': innerVVals) elementType =
     Sequence outerLength vVal (ContainerList innerLengths innerTypes innerVVals elementType)
+
+exampleFromTypeFunction :: (ContainerList '[1] '[STIOCType] '[] Bit)
+exampleFromTypeFunction = STIOC (listToVector (Proxy @1) [True])
 
 class TotalElements n where
   numElements :: n -> Int
