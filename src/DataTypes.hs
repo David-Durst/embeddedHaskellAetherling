@@ -60,7 +60,9 @@ type family STIOCList (typesAndLengths :: [(ContainerType, Nat)])  a  where
 -- types in my type system
 type family ContainerList (lengths :: [Nat]) (containerTypes :: [ContainerType])
   (vVals :: [Nat]) elementType :: * where
-  ContainerList '[] _ _ a = a
+  ContainerList '[] _ _ Bit = Bit
+  ContainerList '[] _ _ Int = Int
+  ContainerList '[] _ _ () = ()
   ContainerList (outerLength ': innerLengths) (STIOCType ': innerTypes) vVals elementType =
     STIOC outerLength (ContainerList innerLengths innerTypes vVals elementType)
   ContainerList (outerLength ': innerLengths) (ArrayType ': innerTypes) vVals elementType =
@@ -76,16 +78,24 @@ exampleFromTypeFunction = STIOC (listToVector (Proxy @1) [True])
 -- container is a STIOC, Array, or Sequence. Otherwise, its 1 as anything else
 -- is stored as an atomic element in these arrays
 type family NestedContainersSize (elementOrContainer :: *) :: Nat where
+  NestedContainersSize Int = 1
+  NestedContainersSize Bit = 1
+  NestedContainersSize () = 1
   NestedContainersSize (STIOC n a) = n * (NestedContainersSize a)
   NestedContainersSize (Array n a) = n * (NestedContainersSize a)
   NestedContainersSize (Sequence n _ a) = n * (NestedContainersSize a)
-  NestedContainersSize _ = 1
 
-
-
+flattenContainerList :: (KnownNat n,
+                         NestedContainersSize (ContainerList lengths
+                                               containerTypes vVales elementType)
+                          ~ n) =>
+                        ContainerList lengths containerTypes vVales elementType ->
+                        STIOC n elementType
+flattenContainerList (x :: ContainerList '[] _ _ Bit) =STIOC (listToVector (Proxy @1) [x])
+{-
 instance (NestedContainersSize a ~ NestedContainersSize b) =>
   Injective a b
-
+-}
 class TotalElements n where
   numElements :: n -> Int
 

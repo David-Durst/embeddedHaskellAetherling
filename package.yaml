@@ -54,3 +54,4 @@ library:
     - UndecidableInstances
     - MultiParamTypeClasses
     - AllowAmbiguousTypes
+    - PartialTypeSignatures
