@@ -81,6 +81,11 @@ type family NestedContainersSize (elementOrContainer :: *) :: Nat where
   NestedContainersSize (Sequence n _ a) = n * (NestedContainersSize a)
   NestedContainersSize _ = 1
 
+
+
+instance (NestedContainersSize a ~ NestedContainersSize b) =>
+  Injective a b
+
 class TotalElements n where
   numElements :: n -> Int
 
