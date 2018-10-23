@@ -58,19 +58,19 @@ type family STIOCList (typesAndLengths :: [(ContainerType, Nat)])  a  where
 
 -- this is a type constructor, that gives me the ability to talk about the deeply nested
 -- types in my type system
-type family ContainerList (lengths :: [Nat]) (containerTypes :: [ContainerType])
-  (vVals :: [Nat]) elementType :: * where
-  ContainerList '[] _ _ Bit = Bit
-  ContainerList '[] _ _ Int = Int
-  ContainerList '[] _ _ () = ()
-  ContainerList (outerLength ': innerLengths) (STIOCType ': innerTypes) vVals elementType =
-    STIOC outerLength (ContainerList innerLengths innerTypes vVals elementType)
-  ContainerList (outerLength ': innerLengths) (ArrayType ': innerTypes) vVals elementType =
-    Array outerLength (ContainerList innerLengths innerTypes vVals elementType)
-  ContainerList (outerLength ': innerLengths) (SequenceType ': innerTypes) (vVal ': innerVVals) elementType =
-    Sequence outerLength vVal (ContainerList innerLengths innerTypes innerVVals elementType)
+type family ContainerList (lengthsTypesAndVValues :: [(Nat, ContainerType, Nat)])
+  elementType :: * where
+  ContainerList '[] Bit = Bit
+  ContainerList '[] Int = Int
+  ContainerList '[] () = ()
+  ContainerList ('(outerLength, STIOCType, _) ': innerData) elementType =
+    STIOC outerLength (ContainerList innerData elementType)
+  ContainerList ('(outerLength, ArrayType, _) ': innerData) elementType =
+    Array outerLength (ContainerList innerData elementType)
+  ContainerList ('(outerLength, SequenceType, v) ': innerData) elementType =
+    Sequence outerLength v (ContainerList innerData elementType)
 
-exampleFromTypeFunction :: (ContainerList '[1] '[STIOCType] '[] Bit)
+exampleFromTypeFunction :: (ContainerList '[ '(1, STIOCType, 0) ] Bit)
 exampleFromTypeFunction = STIOC (listToVector (Proxy @1) [True])
 
 -- this takes in any type (elementOrContainer) and emits the total length
