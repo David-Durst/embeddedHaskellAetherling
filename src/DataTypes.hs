@@ -86,12 +86,10 @@ type family NestedContainersSize (elementOrContainer :: *) :: Nat where
   NestedContainersSize (Sequence n _ a) = n * (NestedContainersSize a)
 
 flattenContainerList :: (KnownNat n,
-                         NestedContainersSize (ContainerList lengths
-                                               containerTypes vVales elementType)
+                         NestedContainersSize (ContainerList params elementType)
                           ~ n) =>
-                        ContainerList lengths containerTypes vVales elementType ->
-                        STIOC n elementType
-flattenContainerList (x :: ContainerList '[] _ _ Bit) =STIOC (listToVector (Proxy @1) [x])
+                        ContainerList parames elementType -> STIOC n elementType
+flattenContainerList (x :: ContainerList '[] Bit) = STIOC (listToVector (Proxy @1) [x])
 {-
 instance (NestedContainersSize a ~ NestedContainersSize b) =>
   Injective a b
