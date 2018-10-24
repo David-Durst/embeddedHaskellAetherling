@@ -118,3 +118,44 @@ nestVector sublistLengthProxy (flatVector :: Vector o a) =
     totalLengthProxy = Proxy
     vectorOfVectors = listToVector totalLengthProxy listOfVectors
   in vectorOfVectors
+
+-- an example of the ismorphisms
+-- here taking a space-time, nested represnetation (a sequence of length 2
+-- of an array of length 2 of a STIOC of 2) and flattening it to a sequence of
+-- length 8
+stioc2_0 :: STIOC 2 Int
+stioc2_0 = STIOC (listToVector (Proxy @2) [0,1])
+stioc2_1 :: STIOC 2 Int
+stioc2_1 = STIOC (listToVector (Proxy @2) [2,3])
+stioc2_2 :: STIOC 2 Int
+stioc2_2 = STIOC (listToVector (Proxy @2) [4,5])
+stioc2_3 :: STIOC 2 Int
+stioc2_3 = STIOC (listToVector (Proxy @2) [6,7])
+array2_0 :: Array 2 (STIOC 2 Int)
+array2_0 = Array (listToVector (Proxy @2) [stioc2_0, stioc2_1])
+array2_1 :: Array 2 (STIOC 2 Int)
+array2_1 = Array (listToVector (Proxy @2) [stioc2_2, stioc2_3])
+seqOfArrOfSTIOC :: Sequence 2 0 (Array 2 (STIOC 2 Int))
+seqOfArrOfSTIOC = Sequence (listToVector (Proxy @2) [array2_0, array2_1])
+seqOfSTIOCofSTIOC :: Sequence 2 0 (STIOC 2 (STIOC 2 Int))
+seqOfSTIOCofSTIOC = fmap to seqOfArrOfSTIOC
+seqOfFlatSTIOC :: Sequence 2 0 (STIOC 4 Int)
+seqOfFlatSTIOC = fmap to seqOfSTIOCofSTIOC
+stiocOfFlatSTIOC :: STIOC 2 (STIOC 4 Int)
+stiocOfFlatSTIOC = to seqOfFlatSTIOC 
+flatSTIOC :: STIOC 8 Int
+flatSTIOC = to stiocOfFlatSTIOC 
+flatSeq :: Sequence 8 0 Int
+flatSeq = to flatSTIOC 
+-- now that we've flattened completely, can renest to a sequence of length 1 of
+-- an Array of length 8
+stioc1OfSTIOC8 :: STIOC 1 (STIOC 8 Int)
+stioc1OfSTIOC8 = to flatSTIOC
+stioc1OfArray8 :: STIOC 1 (Array 8 Int)
+stioc1OfArray8 = to stioc1OfSTIOC8
+seq1OfArray8 :: Sequence 1 7 (Array 8 Int)
+seq1OfArray8 = to stioc1OfArray8
+-- the type system enforces total length, as seen here
+-- as the following code fails to type check
+--seq2OfArray8 :: Sequence 2 7 (Array 8 Int)
+--seq2OfArray8 = to stioc1OfArray8
