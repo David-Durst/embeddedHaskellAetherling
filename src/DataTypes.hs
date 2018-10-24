@@ -49,91 +49,6 @@ instance (KnownNat n) => Applicative (Sequence n v) where
 
 data ContainerType = STIOCType | ArrayType | SequenceType
 
-{-
-Why does this fail? How to embed tuple decomposition in type system?
-type family STIOCList (typesAndLengths :: [(ContainerType, Nat)])  a  where
-  STIOCList '[] a = a
-  STIOCList ((STIOCType, outerLength) ': innerLengths) a = STIOC outerLength (STIOCList innerLengths a)
--}
-
--- this is a type constructor, that gives me the ability to talk about the deeply nested
--- types in my type system
-type family ContainerList (lengthsTypesAndVValues :: [(Nat, ContainerType, Nat)])
-  elementType :: * where
-  ContainerList '[] Bit = Bit
-  ContainerList '[] Int = Int
-  ContainerList '[] () = ()
-  ContainerList ('(outerLength, STIOCType, _) ': innerData) elementType =
-    STIOC outerLength (ContainerList innerData elementType)
-  ContainerList ('(outerLength, ArrayType, _) ': innerData) elementType =
-    Array outerLength (ContainerList innerData elementType)
-  ContainerList ('(outerLength, SequenceType, v) ': innerData) elementType =
-    Sequence outerLength v (ContainerList innerData elementType)
-
-exampleFromTypeFunction :: (ContainerList '[ '(1, STIOCType, 0) ] Bit)
-exampleFromTypeFunction = STIOC (listToVector (Proxy @1) [True])
--- https://kseo.github.io/posts/2017-01-16-type-level-functions-using-closed-type-families.html
--- https://wiki.haskell.org/GHC/Type_families#Type_class_instances_of_family_instances
--- this takes in any type (elementOrContainer) and emits the total length
--- where its the length times the lengths of the nested elements if the
--- container is a STIOC, Array, or Sequence. Otherwise, its 1 as anything else
--- is stored as an atomic element in these arrays
-type family NestedContainersSize (elementOrContainer :: *) :: Nat where
-  NestedContainersSize Int = 1
-  NestedContainersSize Bit = 1
-  NestedContainersSize () = 1
-  NestedContainersSize (STIOC n a) = n * (NestedContainersSize a)
-  NestedContainersSize (Array n a) = n * (NestedContainersSize a)
-  NestedContainersSize (Sequence n _ a) = n * (NestedContainersSize a)
-
--- maybe consider https://chrisdone.com/posts/haskell-constraint-trick
-flattenContainerList :: forall n m o a elementType. (KnownNat n, KnownNat m, KnownNat o, NestedContainersSize (a) ~ m,
-                        NestedContainersSize(elementType) ~ o, m <= n, (Div n m) ~ o) =>
-                        a -> Vector n elementType
-flattenContainerList (x :: Int) =
-  let
-    nVal :: Int
-    nVal = fromIntegral $ natVal (Proxy :: Proxy n)
-    vec = listToVector (Proxy :: Proxy n) (L.take nVal $ repeat x)
-  in vec
-{-
-flattenContainerList  =
-  let
-   vectorOfFlatVectors = fmap flattenContainerList vec 
-   flatVector = flattenNestedVector vectorOfFlatVectors
-  in flatVector
--}
-{-
-instance (NestedContainersSize a ~ NestedContainersSize b) =>
-  Injective a b
--}
-class TotalElements n where
-  numElements :: n -> Int
-
-instance TotalElements Int where
-  numElements _ = 1
-
-instance TotalElements Bit where
-  numElements _ = 1
-
-instance TotalElements () where
-  numElements _ = 1
-
--- way in values (but not types) to show two containers are same total size with different
--- amounts of nesting
-instance (TotalElements a, KnownNat n, KnownNat m, n ~ (m+1)) =>
-  TotalElements (STIOC n a) where
-  numElements (STIOC vec) = V.length vec + (numElements $ V.head vec)
-
-instance (TotalElements a, KnownNat n, KnownNat m, n ~ (m+1)) =>
-  TotalElements (Array n a) where
-  numElements (Array vec) = V.length vec + (numElements $ V.head vec)
-
-instance (TotalElements a, KnownNat n, KnownNat m, n ~ (m+1)) =>
-  TotalElements (Sequence n v a) where
-  numElements (Sequence vec) = V.length vec + (numElements $ V.head vec)
-
-
 -- way to convert between time or space containers and independent contianers, no nesting yet
 instance (KnownNat n) => Injective (STIOC n a) (Array n a) where
   to (STIOC vec) = Array vec
@@ -208,49 +123,6 @@ instance (KnownNat n, KnownNat m) =>
 
 instance (KnownNat n, KnownNat m) =>
   Iso (STIOC n (STIOC m a)) (STIOC n (Sequence m v a))
-{-
-why does the above work and d1head and d2head, but not this:
-instance (TotalElements a, KnownNat (n+1)) => TotalElements (Array (n+1) a) where
-  numElements (Array vec) = V.length vec + (numElements $ V.head vec)
-
-
-
-
-
-d1head :: (KnownNat n) => Vector (1+n) a -> a
-d1head = V.head
-
-d2head :: (TotalElements a, KnownNat n) => STIOC (1+n) a -> a
-d2head (STIOC vec)= V.head vec
--- instance (TotalElements a, KnownNat n, (1+n) ~ nat) => TotalElements (STIOC (1+n) a)
-dhead :: forall n a. Vector (1+n) a -> a
-dhead = V.head
--}
-{-totalSize :: TotalElements a -> Int
-totalSize 
--}
---instance Functor (STIOC n a) where
-
--- mapSTIOCToST :: KnownNat n => Proxy n -> STIOC n
-
--- trying for autoderiving isomorphisms
-class CustomIso a b where
-  customTo :: a -> b
-  customFrom :: b -> a
-
-instance CustomIso Int Int where
-  customTo = id
-  customFrom = id
-
-instance CustomIso Bit Bit where
-  customTo = id
-  customFrom = id
-
-instance CustomIso () () where
-  customTo = id
-  customFrom = id
-
-
 
 -- this is intentionally undefined if list length doesn't match claimed length
 listToVector :: KnownNat n => Proxy n -> [a] -> Vector n a
@@ -283,24 +155,6 @@ nestVector sublistLengthProxy (flatVector :: Vector o a) =
     totalLengthProxy = Proxy
     vectorOfVectors = listToVector totalLengthProxy listOfVectors
   in vectorOfVectors
-{-
-liftSTIOCToSpace :: (KnownNat n, KnownNat k) => Proxy k -> STIOC n a ->
-  STIOC (Div n k) (Array k a)
-liftSTIOCToSpace (proxyK :: Proxy k) (xs :: STIOC n a) | 1 <=? k =
-  let
-    kInteger :: Int
-    kInteger = fromIntegral $ natVal proxyK
-    listDividedIntoSpaceListChunks = chunksOf kInteger (toList xs)
-    listDividedIntoSpaceVectorChunks = fmap (listToVector proxyK)
-      listDividedIntoSpaceListChunks
-    newOuterLength :: Proxy (Div n k)
-    newOuterLength = Proxy
-    vectorDividedIntoSpaceVectorChunks = listToVector newOuterLength
-      listDividedIntoSpaceVectorChunks
-  in
-    vectorDividedIntoSpaceVectorChunks
--}   
-    
 
 sArray0_2 :: Array 2 Int
 sArray0_2 = Array $ fromTuple (2, 2)
