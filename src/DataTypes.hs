@@ -72,7 +72,8 @@ type family ContainerList (lengthsTypesAndVValues :: [(Nat, ContainerType, Nat)]
 
 exampleFromTypeFunction :: (ContainerList '[ '(1, STIOCType, 0) ] Bit)
 exampleFromTypeFunction = STIOC (listToVector (Proxy @1) [True])
-
+-- https://kseo.github.io/posts/2017-01-16-type-level-functions-using-closed-type-families.html
+-- https://wiki.haskell.org/GHC/Type_families#Type_class_instances_of_family_instances
 -- this takes in any type (elementOrContainer) and emits the total length
 -- where its the length times the lengths of the nested elements if the
 -- container is a STIOC, Array, or Sequence. Otherwise, its 1 as anything else
@@ -85,11 +86,23 @@ type family NestedContainersSize (elementOrContainer :: *) :: Nat where
   NestedContainersSize (Array n a) = n * (NestedContainersSize a)
   NestedContainersSize (Sequence n _ a) = n * (NestedContainersSize a)
 
-flattenContainerList :: (KnownNat n,
-                         NestedContainersSize (ContainerList params elementType)
-                          ~ n) =>
-                        ContainerList parames elementType -> STIOC n elementType
-flattenContainerList (x :: ContainerList '[] Bit) = STIOC (listToVector (Proxy @1) [x])
+-- maybe consider https://chrisdone.com/posts/haskell-constraint-trick
+flattenContainerList :: forall n m o a elementType. (KnownNat n, KnownNat m, KnownNat o, NestedContainersSize (a) ~ m,
+                        NestedContainersSize(elementType) ~ o, m <= n, (Div n m) ~ o) =>
+                        a -> Vector n elementType
+flattenContainerList (x :: Int) =
+  let
+    nVal :: Int
+    nVal = fromIntegral $ natVal (Proxy :: Proxy n)
+    vec = listToVector (Proxy :: Proxy n) (L.take nVal $ repeat x)
+  in vec
+{-
+flattenContainerList  =
+  let
+   vectorOfFlatVectors = fmap flattenContainerList vec 
+   flatVector = flattenNestedVector vectorOfFlatVectors
+  in flatVector
+-}
 {-
 instance (NestedContainersSize a ~ NestedContainersSize b) =>
   Injective a b
@@ -128,7 +141,7 @@ instance (KnownNat n) => Injective (STIOC n a) (Array n a) where
 instance (KnownNat n) => Injective (Array n a) (STIOC n a) where
   to (Array vec) = STIOC vec
 
-instance (KnownNat n) => Iso (Array n a) (STIOC n a)
+instance (KnownNat n)  => Iso (Array n a) (STIOC n a)
 instance (KnownNat n) => Iso (STIOC n a) (Array n a)
 
 instance (KnownNat n) => Injective (STIOC n a) (Sequence n v a) where
