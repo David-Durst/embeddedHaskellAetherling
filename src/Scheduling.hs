@@ -25,7 +25,7 @@ type family NestedContainersSize (elementOrContainer :: *) :: Nat where
   NestedContainersSize (Sequence n _ a) = n * (NestedContainersSize a)
 
 data Container n v a = STC (STIOC n a) | AC (Array n a) | SEQC (Sequence n v a)
-  deriving (Foldable, Traversable)
+  deriving (Foldable, Traversable, Show)
 
 instance (KnownNat n) => Functor (Container n v) where
   fmap f (STC (STIOC vec)) = STC (STIOC (fmap f vec))
@@ -41,14 +41,19 @@ instance (KnownNat n) => Applicative (Container n v) where
   STC (STIOC f) <*> STC (STIOC a) = STC (STIOC (f <*> a))
   AC (Array f) <*> AC (Array a) = AC (Array (f <*> a))
   SEQC (Sequence f) <*> SEQC (Sequence a) = SEQC (Sequence (f <*> a))
-{-
-join :: Container n v (Container n v b) -> Container n v b
-join (STC (STIOC (STC (STIOC a)))) = (STC (STIOC a))
--}
-instance (KnownNat n) => Monad (Container n v) where
+
+join :: (KnownNat n, KnownNat m, n ~ (m + 1)) => Container n v (Container n v b) -> Container n v b
+join (STC (STIOC a)) = V.head a 
+join (AC (Array a)) = V.head a 
+join (SEQC (Sequence a)) = V.head a 
+
+instance (KnownNat n, KnownNat m, n ~ (m + 1)) => Monad (Container n v) where
+--  c >>= f = V.head $ fmap f c
+  c >>= f = join $ fmap f c 
+--  c >>= f = fmap f c 
 --  c >>= f = (Prelude.sequence $ fmap f c) >>= id -- works but is an infinite loop
 --  STC (STIOC a) >>= f = Prelude.sequence $ fmap f a
-  STC (STIOC a) >>= f = (fmap f a)
+--  STC (STIOC a) >>= f = (fmap f a)
 --  STC (STIOC a) >>= f =
 --    let
 --      containerOfVectors = Prelude.sequence $ fmap f a
