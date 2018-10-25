@@ -25,13 +25,17 @@ type family NestedContainersSize (elementOrContainer :: *) :: Nat where
   NestedContainersSize (Array n a) = n * (NestedContainersSize a)
   NestedContainersSize (Sequence n _ a) = n * (NestedContainersSize a)
 
-data Container n v a = STC (STIOC n a) | AC (Array n a) | SEQC (Sequence n v a)
+data Container n v a = STC (STIOC n a)
+  | AC (Array n a)
+  | SEQC (Sequence n v a)
+--  | STNestedC (STIOC i (STIOC o a))
   deriving (Foldable, Traversable, Show)
 
 instance (KnownNat n) => Functor (Container n v) where
   fmap f (STC (STIOC vec)) = STC (STIOC (fmap f vec))
   fmap f (AC (Array vec)) = AC (Array (fmap f vec))
   fmap f (SEQC (Sequence vec)) = SEQC (Sequence (fmap f vec))
+--  fmap f (STNestedC (STIOC stoicOfVecs)) = STNestedC (STOIC (fmap f stoicOfVecs))
 
 
 
@@ -43,6 +47,7 @@ instance (KnownNat n) => Applicative (Container n v) where
   AC (Array f) <*> AC (Array a) = AC (Array (f <*> a))
   SEQC (Sequence f) <*> SEQC (Sequence a) = SEQC (Sequence (f <*> a))
 
+
 -- custom join for the container monad as the defualt one depends on >>=, and need
 -- this to implement >>=
 joinC :: (KnownNat n, KnownNat m, n ~ (m + 1)) => Container n v (Container n v b) -> Container n v b
@@ -50,41 +55,40 @@ joinC (STC (STIOC a)) = V.head a
 joinC (AC (Array a)) = V.head a 
 joinC (SEQC (Sequence a)) = V.head a 
 
+getVectorC :: Container n v a -> Vector n a
+getVectorC (STC (STIOC a)) = a
+getVectorC (AC (Array a)) = a
+getVectorC (SEQC (Sequence a)) = a
+
+mergeC :: forall n m o v a. (KnownNat n, KnownNat m, KnownNat o, n ~ (o + 1)) => Vector n (Container m v a) -> Container (n*m) v a
+mergeC inVec =
+  let
+    vecOfVecs = fmap getVectorC inVec
+    listOfLists = vectorToList $ fmap vectorToList vecOfVecs 
+    flatList = concat listOfLists
+    totalLength :: Proxy (n*m)
+    totalLength = Proxy
+    outVec = listToVector totalLength flatList
+  in
+    case V.head inVec of
+      (STC (STIOC _)) -> STC (STIOC outVec) 
+      (AC (Array _)) -> AC (Array outVec)
+      (SEQC (Sequence _)) -> SEQC (Sequence outVec)
+
 instance (KnownNat n, KnownNat m, n ~ (m + 1)) => Monad (Container n v) where
---  c >>= f = V.head $ fmap f c
   c >>= f = joinC $ fmap f c 
 
 -- example of monad for rewriting a wrapper
-liftToSTOICContainer x = STC (STIOC (listToVector (Proxy @1) [x]))
+liftToSTIOCContainer x = STC (STIOC (listToVector (Proxy @1) [x]))
 liftToArrayContainer x = AC (Array (listToVector (Proxy @1) [x]))
-stoicConvertedToArray = liftToSTOICContainer 2 >>= liftToArrayContainer
---  c >>= f = fmap f c 
---  c >>= f = (Prelude.sequence $ fmap f c) >>= id -- works but is an infinite loop
---  STC (STIOC a) >>= f = Prelude.sequence $ fmap f a
---  STC (STIOC a) >>= f = (fmap f a)
---  STC (STIOC a) >>= f =
---    let
---      containerOfVectors = Prelude.sequence $ fmap f a
---  STC (STIOC a) >>= f = STC (STIOC $ fmap f a)
---  STC (STIOC a) >>= f = 
---    let
---      vec :: Vector m (Container n v b)
---      vec = fmap f a
---    in vec
--- STC (Sequence a) >>= f = STC (STIOC $ fmap f a)
---    case f of
---      (b -> STC) -> STC (STIOC a)
-
---data (Functor a) => Container n a = forall b. Container (a b)
-{-
-instance (Functor a) => Functor (Container n) where
-
-instance (KnownNat n, Functor a) => Functor (Container n) where
-  fmap f (Container mappable) = Container (fmap f mappable)
-
-instance (KnownNat n) => Applicative (Sequence n v) where
-  pure a = (Sequence ((pure :: a -> Vector n a) a))
-  (Sequence f) <*> (Sequence a) = Sequence (f <*> a)
-instance (Functor a) => Functor (Container n) where
--}
---instance (Applicative a, KnownNat n, NestedContainersSize(a) ~ n) => Monad (Container n) 
+stiocConvertedToArray = liftToSTIOCContainer 2 >>= liftToArrayContainer
+--y :: Container 2 0 Integer
+y = STC (STIOC (listToVector (Proxy @2) [1,2]))
+--x = y >>= (\z -> AC (Array z))
+x = joinC $ fmap (\x -> AC (Array x)) y
+o = STIOC (listToVector (Proxy @3) [1,2,3])
+k :: Container 3 0 Integer
+k = STC o
+j = fmap (\x -> AC (Array (listToVector (Proxy @1) [x]))) k
+h = getVectorC j
+l = mergeC h
