@@ -9,6 +9,7 @@ import qualified Data.List as L
 import Data.Maybe
 import Data.List.Split
 import DataTypes
+import Isomorphism
 
 -- https://kseo.github.io/posts/2017-01-16-type-level-functions-using-closed-type-families.html
 -- https://wiki.haskell.org/GHC/Type_families#Type_class_instances_of_family_instances
@@ -42,14 +43,21 @@ instance (KnownNat n) => Applicative (Container n v) where
   AC (Array f) <*> AC (Array a) = AC (Array (f <*> a))
   SEQC (Sequence f) <*> SEQC (Sequence a) = SEQC (Sequence (f <*> a))
 
-join :: (KnownNat n, KnownNat m, n ~ (m + 1)) => Container n v (Container n v b) -> Container n v b
-join (STC (STIOC a)) = V.head a 
-join (AC (Array a)) = V.head a 
-join (SEQC (Sequence a)) = V.head a 
+-- custom join for the container monad as the defualt one depends on >>=, and need
+-- this to implement >>=
+joinC :: (KnownNat n, KnownNat m, n ~ (m + 1)) => Container n v (Container n v b) -> Container n v b
+joinC (STC (STIOC a)) = V.head a 
+joinC (AC (Array a)) = V.head a 
+joinC (SEQC (Sequence a)) = V.head a 
 
 instance (KnownNat n, KnownNat m, n ~ (m + 1)) => Monad (Container n v) where
 --  c >>= f = V.head $ fmap f c
-  c >>= f = join $ fmap f c 
+  c >>= f = joinC $ fmap f c 
+
+-- example of monad for rewriting a wrapper
+liftToSTOICContainer x = STC (STIOC (listToVector (Proxy @1) [x]))
+liftToArrayContainer x = AC (Array (listToVector (Proxy @1) [x]))
+stoicConvertedToArray = liftToSTOICContainer 2 >>= liftToArrayContainer
 --  c >>= f = fmap f c 
 --  c >>= f = (Prelude.sequence $ fmap f c) >>= id -- works but is an infinite loop
 --  STC (STIOC a) >>= f = Prelude.sequence $ fmap f a
