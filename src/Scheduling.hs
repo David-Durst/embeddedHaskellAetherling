@@ -32,6 +32,8 @@ instance (KnownNat n) => Functor (Container n v) where
   fmap f (AC (Array vec)) = AC (Array (fmap f vec))
   fmap f (SEQC (Sequence vec)) = SEQC (Sequence (fmap f vec))
 
+
+
 -- Intentionally leaving interactions between different containers undefined
 -- As the operators shouldn't mix
 instance (KnownNat n) => Applicative (Container n v) where
@@ -39,14 +41,23 @@ instance (KnownNat n) => Applicative (Container n v) where
   STC (STIOC f) <*> STC (STIOC a) = STC (STIOC (f <*> a))
   AC (Array f) <*> AC (Array a) = AC (Array (f <*> a))
   SEQC (Sequence f) <*> SEQC (Sequence a) = SEQC (Sequence (f <*> a))
-
+{-
+join :: Container n v (Container n v b) -> Container n v b
+join (STC (STIOC (STC (STIOC a)))) = (STC (STIOC a))
+-}
 instance (KnownNat n) => Monad (Container n v) where
+--  c >>= f = (Prelude.sequence $ fmap f c) >>= id -- works but is an infinite loop
 --  STC (STIOC a) >>= f = Prelude.sequence $ fmap f a
-  STC (STIOC a) >>= f =
-    let
-      vec :: Vector m (Container n v b)
-      vec = fmap f a
-    in vec
+  STC (STIOC a) >>= f = (fmap f a)
+--  STC (STIOC a) >>= f =
+--    let
+--      containerOfVectors = Prelude.sequence $ fmap f a
+--  STC (STIOC a) >>= f = STC (STIOC $ fmap f a)
+--  STC (STIOC a) >>= f = 
+--    let
+--      vec :: Vector m (Container n v b)
+--      vec = fmap f a
+--    in vec
 -- STC (Sequence a) >>= f = STC (STIOC $ fmap f a)
 --    case f of
 --      (b -> STC) -> STC (STIOC a)

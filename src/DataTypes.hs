@@ -14,7 +14,7 @@ instance Atom Bit
 instance Atom ()
 
 newtype STIOC n a = STIOC {stVec :: Vector n a}
-  deriving (Foldable, Traversable)
+  deriving (Foldable, Traversable, Show)
 
 instance (KnownNat n) => Functor (STIOC n) where
   fmap f (STIOC vec) = STIOC (fmap f vec)
@@ -24,7 +24,7 @@ instance (KnownNat n) => Applicative (STIOC n) where
   (STIOC f) <*> (STIOC a) = STIOC (f <*> a)
 
 newtype Array n a = Array {aVec :: Vector n a}
-  deriving (Foldable, Traversable)
+  deriving (Foldable, Traversable, Show)
 
 instance (KnownNat n) => Functor (Array n) where
   fmap f (Array vec) = Array (fmap f vec)
@@ -34,7 +34,7 @@ instance (KnownNat n) => Applicative (Array n) where
   (Array f) <*> (Array a) = Array (f <*> a)
   
 newtype Sequence n v a = Sequence {seqVec :: Vector n a}
-  deriving (Foldable, Traversable)
+  deriving (Foldable, Traversable, Show)
 
 instance (KnownNat n) => Functor (Sequence n v) where
   fmap f (Sequence vec) = Sequence (fmap f vec)
