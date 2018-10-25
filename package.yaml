@@ -55,3 +55,7 @@ library:
     - MultiParamTypeClasses
     - AllowAmbiguousTypes
     - PartialTypeSignatures
+    - ExistentialQuantification
+    - DatatypeContexts
+    - DeriveFoldable
+    - DeriveTraversable

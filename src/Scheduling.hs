@@ -24,15 +24,33 @@ type family NestedContainersSize (elementOrContainer :: *) :: Nat where
   NestedContainersSize (Array n a) = n * (NestedContainersSize a)
   NestedContainersSize (Sequence n _ a) = n * (NestedContainersSize a)
 
-data (KnownNat n) => Container n a =
-  forall m. (KnownNat m, NestedContainersSize(STIOC m a) ~ n) => STC (STIOC n a)
-  | forall m. (KnownNat m, NestedContainersSize(STIOC m a) ~ n) => AC (Array n a)
-  | forall m v. (KnownNat m, NestedContainersSize(STIOC m a) ~ n) => SEQC (Sequence n v a)
+data Container n v a = STC (STIOC n a) | AC (Array n a) | SEQC (Sequence n v a)
+  deriving (Foldable, Traversable)
 
-instance (KnownNat n) => Functor (Container n) where
+instance (KnownNat n) => Functor (Container n v) where
   fmap f (STC (STIOC vec)) = STC (STIOC (fmap f vec))
   fmap f (AC (Array vec)) = AC (Array (fmap f vec))
   fmap f (SEQC (Sequence vec)) = SEQC (Sequence (fmap f vec))
+
+-- Intentionally leaving interactions between different containers undefined
+-- As the operators shouldn't mix
+instance (KnownNat n) => Applicative (Container n v) where
+  pure a = STC (STIOC ((pure :: a -> Vector n a) a))
+  STC (STIOC f) <*> STC (STIOC a) = STC (STIOC (f <*> a))
+  AC (Array f) <*> AC (Array a) = AC (Array (f <*> a))
+  SEQC (Sequence f) <*> SEQC (Sequence a) = SEQC (Sequence (f <*> a))
+
+instance (KnownNat n) => Monad (Container n v) where
+--  STC (STIOC a) >>= f = Prelude.sequence $ fmap f a
+  STC (STIOC a) >>= f =
+    let
+      vec :: Vector m (Container n v b)
+      vec = fmap f a
+    in vec
+-- STC (Sequence a) >>= f = STC (STIOC $ fmap f a)
+--    case f of
+--      (b -> STC) -> STC (STIOC a)
+
 --data (Functor a) => Container n a = forall b. Container (a b)
 {-
 instance (Functor a) => Functor (Container n) where
