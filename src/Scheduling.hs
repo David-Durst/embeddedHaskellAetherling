@@ -9,7 +9,15 @@ import qualified Data.List as L
 import Data.Maybe
 import Data.List.Split
 import DataTypes
+import Data.Types.Injective
+import Data.Types.Isomorphic
 import Isomorphism
+
+liftSTIOCToSpace :: (KnownNat n, KnownNat m) => (STIOC n a -> STIOC m b) -> Array n a -> Array m b
+liftSTIOCToSpace f = to . f . to
+
+liftSTIOCToTime :: (KnownNat n, KnownNat m, KnownNat v) => Proxy v -> (STIOC n a -> STIOC m b) -> Sequence n v a -> Sequence m v b
+liftSTIOCToTime _ f = to . f . to
 
 -- https://kseo.github.io/posts/2017-01-16-type-level-functions-using-closed-type-families.html
 -- https://wiki.haskell.org/GHC/Type_families#Type_class_instances_of_family_instances
@@ -75,13 +83,19 @@ mergeC inVec =
       (AC (Array _)) -> AC (Array outVec)
       (SEQC (Sequence _)) -> SEQC (Sequence outVec)
 
+-- this will never work. Lifting Int twice will create n*n elements ofit.
+-- even if you have the monad with the join natural transofmraiton so
+-- can get container m from container n (container n), m ~ n*n, so wrong size
+-- can't do lifting, need morphisms between functions, not lifting
+{-
 instance (KnownNat n, KnownNat m, n ~ (m + 1)) => Monad (Container n v) where
-  c >>= f = joinC $ fmap f c 
-
+  --c >>= f = mergeC $ getVectorC $ fmap f c 
+  (STC (STIOC vec)) >>= f = mergeC $ fmap f vec
+-}
 -- example of monad for rewriting a wrapper
 liftToSTIOCContainer x = STC (STIOC (listToVector (Proxy @1) [x]))
 liftToArrayContainer x = AC (Array (listToVector (Proxy @1) [x]))
-stiocConvertedToArray = liftToSTIOCContainer 2 >>= liftToArrayContainer
+--stiocConvertedToArray = liftToSTIOCContainer 2 >>= liftToArrayContainer
 --y :: Container 2 0 Integer
 y = STC (STIOC (listToVector (Proxy @2) [1,2]))
 --x = y >>= (\z -> AC (Array z))
