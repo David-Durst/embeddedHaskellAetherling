@@ -7,8 +7,17 @@ import Data.Types.Isomorphic
 import DataTypes
 import Isomorphism
 
-liftSTIOCToSpace :: (KnownNat n, KnownNat m) => (STIOC n a -> STIOC m b) -> Array n a -> Array m b
-liftSTIOCToSpace f = to . f . to
+mapSTIOCToSpace :: (KnownNat n, KnownNat m) => (STIOC n a -> STIOC m b) -> Array n a -> Array m b
+mapSTIOCToSpace f = to . f . to
 
-liftSTIOCToTime :: (KnownNat n, KnownNat m, KnownNat v) => Proxy v -> (STIOC n a -> STIOC m b) -> Sequence n v a -> Sequence m v b
-liftSTIOCToTime _ f = to . f . to
+type family IfGreaterEq (x :: Nat) (y :: Nat) (tResult :: Nat) (fResult :: Nat) :: Nat where
+  IfGreaterEq 0 0 tRes _ = tRes
+  IfGreaterEq 0 _ tRes _ = tRes
+  IfGreaterEq _ 0 _ fRes = fRes
+  IfGreaterEq x y tRes fRes = IfGreaterEq (x-1) (y-1) tRes fRes
+
+mapSTIOCToTime :: (KnownNat n, KnownNat m) => (STIOC n a -> STIOC m b) ->
+  Sequence n (IfGreaterEq m n 0 (m-n)) a -> Sequence m (IfGreaterEq n m 0 (n-m)) b
+mapSTIOCToTime f = to . f . to
+
+--upTime = mapSTIOCToTime (up (Proxy @2))
