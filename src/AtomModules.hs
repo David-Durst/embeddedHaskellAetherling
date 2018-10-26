@@ -1,6 +1,10 @@
 module AtomModules where 
 import Data.Bits
 import DataTypes
+import Data.Proxy
+import GHC.TypeLits
+import GHC.TypeLits.Extra
+import qualified Data.Vector.Sized as V
 
 -- unary modules
 absInt :: Module Int Int
@@ -70,3 +74,10 @@ lutAtomGen as = \i -> as !! i
 
 constAtomGen :: (Atom a) => a -> Module () a
 constAtomGen a = \_ -> a
+
+-- multi-rate modules
+up :: (KnownNat n) => Proxy n -> Module (STIOC 1 a) (STIOC n a)
+up _ = \(STIOC vec) -> STIOC $ V.replicate $ V.head vec
+
+down :: (KnownNat n, KnownNat m, n ~ (m+1)) => Proxy n -> Module (STIOC n a) (STIOC 1 a)
+down _ = \(STIOC vec) -> STIOC $ V.singleton $ V.head vec
