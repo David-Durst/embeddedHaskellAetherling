@@ -18,7 +18,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: lts-12.12
+resolver: lts-12.11
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -41,6 +41,8 @@ packages:
 extra-deps:
 - type-iso-1.0.0.0
 - numericpeano-0.2.0.0
+- github: David-Durst/PluginAetherling
+  commit: d9347c3af1d5c06acbcce88872d8872a71042019
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
