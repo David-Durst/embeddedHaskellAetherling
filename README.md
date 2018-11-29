@@ -7,7 +7,7 @@ The goal of this IR is to represent a high-level schedule of a dataflow program 
 The IR is a typed combinator language in which dataflow programs are expressed using point-free compositions of combinators. The dataflow programs operate on fixed length, ordered collections of data. This IR is broken down into five main components: 
 1. Types for describing atoms and ordered, fixed length collections of data. The ordered collections schedule computation. 
     1. An atom is a unit of data that cannot be broken down further. In Aetherling, these are bits and ints.
-    1. There are three types of ordered collections. The Space Time Independent Ordered Collection (STIOC) doesn't schedule computation in space or time. It allows pipelines to be created before being scheduled. The Array schedules compute in space as all it's elements must be processed in parallel, aka in space. The Sequence schedules compute in time as all it's elements must be processed in sequence, aka in time.
+    1. There are three types of ordered collections. The Space Time Independent Ordered Collection (STIOC) doesn't schedule computation in space or time. It allows pipelines to be created before being scheduled. The Array schedules compute in space as all it's elements must be processed in parallel. The Sequence schedules compute in time as all it's elements must be processed in sequence.
     2. For example, a Sequence of Arrays would mean that each of the arrays are processed sequentially, but that all the elements of each array are processed in parallel.
 2. Operators on atoms and ordered collections
 2. Combinators for composing the operators
