@@ -12,7 +12,7 @@ import Data.Types.Injective
 import Data.Types.Isomorphic
 import DataTypes
   
--- way to convert between time or space containers and independent contianers, no nesting yet
+-- way to convert between time or space containers and independent containers
 instance (KnownNat n) => Injective (STIOC n a) (Array n a) where
   to (STIOC vec) = Array vec
 

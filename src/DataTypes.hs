@@ -33,6 +33,8 @@ instance (KnownNat n) => Applicative (Array n) where
   pure a = (Array ((pure :: a -> Vector n a) a))
   (Array f) <*> (Array a) = Array (f <*> a)
   
+-- n is number of elements, v is number of clocks of delay
+-- v is always 0 for now. Please ignore it for the time being
 newtype Sequence n v a = Sequence {seqVec :: Vector n a}
   deriving (Foldable, Traversable, Show)
 
