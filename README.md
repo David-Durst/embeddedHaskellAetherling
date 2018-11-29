@@ -11,11 +11,10 @@ The IR is a typed combinator language in which dataflow programs are expressed u
     2. For example, a Sequence of Arrays would mean that each of the arrays are processed sequentially, but that all the elements of each array are processed in parallel.
 2. Operators on atoms and ordered collections
 2. Combinators for composing the operators
-3. Functors for lifting types and combinators to ordered collections of the types and combinators on those ordered collections. Since these are Haskell endofunctors on the category of types, they can lift any types and combinators. For example, the STIOC 3 combinator, which lifts types to a STIOC with 3 elements, can lift an Int to a STIOC 3 Int and a STIOC 3 Int to a STIOC 3 (STIOC 3 Int)
-4. Isomorphisms between ordered collections for converting between schedules. This allow converting pipelines that are on STIOCs to pipelines on differently nested combinations of Arrays and Sequences. Thus, the isomorphisms enable scheduling in space and time.
+3. Functors for creating schedules. The functors lift types and combinators to ordered collections of the types and combinators on those ordered collections. By lifting a combinator to an ordered collection, the user is scheduling that combinator to be run multiple times either in parallel or sequentially.
+4. Isomorphisms between ordered collections for converting between schedules. They enable converting pipelines that in parallel on Arrays to ones in sequence on Sequences. A more complicated example is that they allow for blocking by splitting loops into an outer Sequence that occurs sequentially and an inner Array that occurs in parallel. Thus, the isomorphisms enable scheduling in space and time.
 
-
-The following are the important files in this repository. Each file has a few examples at the bottom to demonstrate how to use it components.
+The following are the important files in this repository. DataTypes.hs and Isomorphism.hs have a few examples at the bottom to demonstrate how to use the components.
 
 ## [DataTypes.hs](https://github.com/David-Durst/embeddedHaskellAetherling/blob/master/src/DataTypes.hs)
 This file defines the atomic data types, the three types of ordered collections, and the functors for lifting to those collections.
