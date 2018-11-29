@@ -6,9 +6,9 @@ The goal of this IR is to represent a schedule of a dataflow program that the Ae
 
 The IR is a typed combinator language in which dataflow programs are expressed using point-free compositions of combinators. The dataflow programs operate on fixed length, ordered collections of data. This IR is broken down into five main components: 
 1. Types for describing atoms and ordered, fixed length collections of data. 
-  1. An atom is a unit of data that cannot be broken down further. In Aetherling, these are bits and ints.
-  1. There are three types of ordered collections. The Space Time Independent Ordered Collection (STIOC) is one that doesn't schedule computation in space or time. The Array schedules compute in space as all it's elements must be processed in parallel. The Sequence schedules compute in time as all it's elements must be processed in sequence.
-  2. For example, a Sequence of Arrays would mean that each of the arrays are processed sequentially, but that all the elements of each array are processed in parallel.
+    1. An atom is a unit of data that cannot be broken down further. In Aetherling, these are bits and ints.
+    1. There are three types of ordered collections. The Space Time Independent Ordered Collection (STIOC) is one that doesn't schedule computation in space or time. The Array schedules compute in space as all it's elements must be processed in parallel. The Sequence schedules compute in time as all it's elements must be processed in sequence.
+    2. For example, a Sequence of Arrays would mean that each of the arrays are processed sequentially, but that all the elements of each array are processed in parallel.
 2. Operators on atoms and ordered collections
 2. Combinators for composing the operators
 3. Functors for lifting types and combinators to ordered collections of the types and combinators on those ordered collections. Since these are Haskell endofunctors on the category of types, they can lift any types and combinators. For example, the STIOC 3 combinator, which lifts types to a STIOC with 3 elements, can lift an Int to a STIOC 3 Int and a STIOC 3 Int to a STIOC 3 (STIOC 3 Int)
