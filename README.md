@@ -14,7 +14,7 @@ The IR is a typed combinator language in which dataflow programs are expressed u
 3. Functors for creating schedules. The functors lift types and combinators to ordered collections of the types and combinators on those ordered collections. By lifting a combinator to an ordered collection, the user is scheduling that combinator to be run multiple times either in parallel or sequentially.
 4. Isomorphisms between between STIOCs, Arrays, and Sequences enable rescheduling by changing the amounts of parallelism. For example, one can slow down a pipeline by converting it from operating in parallel on Arrays to operating in sequence on Sequences. A more complicated example is that they allow loop tiling. Think of a Sequence as a sequential for loop. The isomorphisms allow splitting the Sequence into an outer Sequence that occurs sequentially and an inner Array that occurs in parallel. This new schedule is equivalent to an outer sequential for loop and an inner, parallel tile. 
 
-The following are the important files in this repository. DataTypes.hs and Isomorphism.hs have a few examples at the bottom to demonstrate how to use the components.
+The following are the important files in this repository. DataTypes.hs, Isomorphism.hs, and SpaceTimeModules.hs have a few examples at the bottom to demonstrate how to use the components. In particular, SpaceTimeModules.hs has an example of add scheduled in different amounts of space and time.
 
 ## [DataTypes.hs](https://github.com/David-Durst/embeddedHaskellAetherling/blob/master/src/DataTypes.hs)
 This file defines the atomic data types, the three types of ordered collections, and the functors for lifting to those collections.
