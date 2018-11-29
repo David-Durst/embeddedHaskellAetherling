@@ -28,6 +28,15 @@ This file defines the operators (aka modules) on atoms. Despite the name, it als
 ## [Isomorphism.hs](https://github.com/David-Durst/embeddedHaskellAetherling/blob/master/src/Isomorphism.hs)
 This file defines the isomorphisms for scheduling pipelines in space and time.
 
+# How To Run
+To build this part of the project:
+1. Install the latest version of [stack](https://docs.haskellstack.org/en/stable/README/)
+2. Clone this repo
+3. Explore the IR:
+```
+stack ghci
+```
+
 # Appendix
 Note: This is a prototype. There is currently no work on actually making this IR compile to hardware. It's an experiment in a strongly-typed language like Haskell to enforce formality on my ideas. I will be reimplementing this language in Python so that it's easier to compile to Magma. Magma is a Python library that can compile to Verilog.
 
