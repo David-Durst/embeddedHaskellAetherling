@@ -5,13 +5,7 @@ import Data.Vector.Sized as V
 import Control.Applicative
 import qualified Data.List as L
 
-type Module a b = a -> b
-
-class (Eq a) => Atom a
-type Bit = Bool
-instance Atom Int
-instance Atom Bit
-instance Atom ()
+data Atom = Int Int | Bit Bool | CompilerResult String deriving (Show, Eq)
 
 newtype STIOC n a = STIOC {stVec :: Vector n a}
   deriving (Foldable, Traversable, Show)

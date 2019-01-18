@@ -5,15 +5,13 @@ import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 
-data MAtom = MInt Int | MBit Bool | CompilerResult String deriving Show
-
 class Monad m => Circuit m where
-  and2, or2 :: (MAtom, MAtom) -> m MAtom
-  add2, sub2 :: (MAtom, MAtom) -> m MAtom
+  and2, or2 :: (Atom, Atom) -> m Atom
+  add2, sub2 :: (Atom, Atom) -> m Atom
 
 data SimulatorEnv a = SimulatorEnv a
 
-simulate :: SimulatorEnv MAtom -> MAtom
+simulate :: SimulatorEnv Atom -> Atom
 simulate (SimulatorEnv a) = a
 
 instance Functor SimulatorEnv where
@@ -28,18 +26,18 @@ instance Monad SimulatorEnv where
   return a = SimulatorEnv a
 
 instance Circuit SimulatorEnv where
-  and2 (MBit x, MBit y) = return (MBit (x && y))
+  and2 (Bit x, Bit y) = return (Bit (x && y))
   and2 (_, _) = fail "and2 only handles 2 bits"
-  or2 (MBit x, MBit y) = return (MBit (x || y))
+  or2 (Bit x, Bit y) = return (Bit (x || y))
   or2 (_, _) = fail "or2 only handles 2 bits"
-  add2 (MInt x, MInt y) = return (MInt (x + y))
+  add2 (Int x, Int y) = return (Int (x + y))
   add2 (_, _) = fail "add2 only haddles 2 ints"
-  sub2 (MInt x, MInt y) = return (MInt (x - y))
+  sub2 (Int x, Int y) = return (Int (x - y))
   sub2 (_, _) = fail "sub2 only handles 2 ints"
 
 data CompilerEnv a = CompilerEnv a 
 
-compile :: CompilerEnv MAtom -> IO ()
+compile :: CompilerEnv Atom -> IO ()
 compile (CompilerEnv (CompilerResult s)) = putStrLn s
 compile (CompilerEnv _) = fail "Not Compiled"
 
@@ -55,11 +53,11 @@ instance Monad CompilerEnv where
   return a = CompilerEnv a
 
 instance Circuit CompilerEnv where
-  and2 (MBit x, MBit y) = return $ CompilerResult (show x ++ " && " ++ show y)
+  and2 (Bit x, Bit y) = return $ CompilerResult (show x ++ " && " ++ show y)
   and2 (_, _) = fail "and2 only handles 2 bits"
-  or2 (MBit x, MBit y) = return $ CompilerResult (show x ++ " || " ++ show y)
+  or2 (Bit x, Bit y) = return $ CompilerResult (show x ++ " || " ++ show y)
   or2 (_, _) = fail "or2 only handles 2 bits"
-  add2 (MInt x, MInt y) = return $ CompilerResult (show x ++ " + " ++ show y)
+  add2 (Int x, Int y) = return $ CompilerResult (show x ++ " + " ++ show y)
   add2 (_, _) = fail "add2 only haddles 2 ints"
-  sub2 (MInt x, MInt y) = return $ CompilerResult (show x ++ " - " ++ show y)
+  sub2 (Int x, Int y) = return $ CompilerResult (show x ++ " - " ++ show y)
   sub2 (_, _) = fail "sub2 only handles 2 ints"
