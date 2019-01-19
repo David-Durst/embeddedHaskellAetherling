@@ -27,6 +27,7 @@ dependencies:
 - ghc-typelits-natnormalise
 - ghc-typelits-knownnat
 - ghc-typelits-natnormalise
+- singletons
 - split
 - type-iso
 - lens

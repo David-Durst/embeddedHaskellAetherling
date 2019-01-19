@@ -7,55 +7,55 @@ import qualified Data.List as L
 
 data Atom = Int Int | Bit Bool | CompilerResult String deriving (Show, Eq)
 
-newtype STIOC n a = STIOC {stVec :: Vector n a}
+newtype Seq n a = Seq {stVec :: Vector n a}
   deriving (Foldable, Traversable, Show)
 
-instance (KnownNat n) => Functor (STIOC n) where
-  fmap f (STIOC vec) = STIOC (fmap f vec)
+instance (KnownNat n) => Functor (Seq n) where
+  fmap f (Seq vec) = Seq (fmap f vec)
 
-instance (KnownNat n) => Applicative (STIOC n) where
-  pure a = (STIOC ((pure :: a -> Vector n a) a))
-  (STIOC f) <*> (STIOC a) = STIOC (f <*> a)
+instance (KnownNat n) => Applicative (Seq n) where
+  pure a = (Seq ((pure :: a -> Vector n a) a))
+  (Seq f) <*> (Seq a) = Seq (f <*> a)
 
-newtype Array n a = Array {aVec :: Vector n a}
+newtype SSeq n a = SSeq {aVec :: Vector n a}
   deriving (Foldable, Traversable, Show)
 
-instance (KnownNat n) => Functor (Array n) where
-  fmap f (Array vec) = Array (fmap f vec)
+instance (KnownNat n) => Functor (SSeq n) where
+  fmap f (SSeq vec) = SSeq (fmap f vec)
 
-instance (KnownNat n) => Applicative (Array n) where
-  pure a = (Array ((pure :: a -> Vector n a) a))
-  (Array f) <*> (Array a) = Array (f <*> a)
+instance (KnownNat n) => Applicative (SSeq n) where
+  pure a = (SSeq ((pure :: a -> Vector n a) a))
+  (SSeq f) <*> (SSeq a) = SSeq (f <*> a)
   
 -- n is number of elements, v is number of clocks of delay
 -- v is always 0 for now. Please ignore it for the time being
-newtype Sequence n v a = Sequence {seqVec :: Vector n a}
+newtype TSeq n v a = TSeq {seqVec :: Vector n a}
   deriving (Foldable, Traversable, Show)
 
-instance (KnownNat n) => Functor (Sequence n v) where
-  fmap f (Sequence vec) = Sequence (fmap f vec)
+instance (KnownNat n) => Functor (TSeq n v) where
+  fmap f (TSeq vec) = TSeq (fmap f vec)
 
-instance (KnownNat n) => Applicative (Sequence n v) where
-  pure a = (Sequence ((pure :: a -> Vector n a) a))
-  (Sequence f) <*> (Sequence a) = Sequence (f <*> a)
+instance (KnownNat n) => Applicative (TSeq n v) where
+  pure a = (TSeq ((pure :: a -> Vector n a) a))
+  (TSeq f) <*> (TSeq a) = TSeq (f <*> a)
 
-data ContainerType = STIOCType | ArrayType | SequenceType
+data ContainerType = SeqType | SSeqType | TSeqType
 
-sArray0_2 :: Array 2 Int
-sArray0_2 = Array $ fromTuple (2, 2)
-sArray0_3 :: Array 3 Int
-sArray0_3 = Array $ fromTuple (2, 2, 3)
-sArray0_22 :: Array 2 (Array 2 Int)
-sArray0_22 = Array $ fromTuple (sArray0_2, sArray0_2)
+sSSeq0_2 :: SSeq 2 Int
+sSSeq0_2 = SSeq $ fromTuple (2, 2)
+sSSeq0_3 :: SSeq 3 Int
+sSSeq0_3 = SSeq $ fromTuple (2, 2, 3)
+sSSeq0_22 :: SSeq 2 (SSeq 2 Int)
+sSSeq0_22 = SSeq $ fromTuple (sSSeq0_2, sSSeq0_2)
 
-sArray1_2 :: Array 2 Int
-sArray1_2 = Array $ fromTuple (4, 6)
-sArray1_3 :: Array 3 Int
-sArray1_3 = Array $ fromTuple (1, 2, 3)
+sSSeq1_2 :: SSeq 2 Int
+sSSeq1_2 = SSeq $ fromTuple (4, 6)
+sSSeq1_3 :: SSeq 3 Int
+sSSeq1_3 = SSeq $ fromTuple (1, 2, 3)
 
-tSeq0_2 :: Sequence 2 0 (Array 2 Int)
-tSeq0_2 = Sequence $ fromTuple (sArray0_2, sArray1_2)
-tSeq0_3 :: Sequence 2 0 (Array 3 Int)
-tSeq0_3 = Sequence $ fromTuple (sArray0_3, sArray1_3)
-tSeq1_3 :: Sequence 3 0 (Array 2 Int)
-tSeq1_3 = Sequence $ fromTuple (sArray1_2, sArray1_2, sArray1_2)
+tSeq0_2 :: TSeq 2 0 (SSeq 2 Int)
+tSeq0_2 = TSeq $ fromTuple (sSSeq0_2, sSSeq1_2)
+tSeq0_3 :: TSeq 2 0 (SSeq 3 Int)
+tSeq0_3 = TSeq $ fromTuple (sSSeq0_3, sSSeq1_3)
+tSeq1_3 :: TSeq 3 0 (SSeq 2 Int)
+tSeq1_3 = TSeq $ fromTuple (sSSeq1_2, sSSeq1_2, sSSeq1_2)
