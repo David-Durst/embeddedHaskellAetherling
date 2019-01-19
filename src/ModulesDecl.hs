@@ -25,6 +25,10 @@ class Monad m => Circuit m where
   -- sequence operators
   upC :: (KnownNat n) => Proxy n -> Seq 1 a -> Seq n a
   downC :: (KnownNat n, KnownNat o, n ~ (o+1)) => Proxy n -> (Seq n a) -> (Seq 1 a)
+  foldC :: (KnownNat n) => (a -> b -> m a) -> a -> Seq n b -> m a
+  partition :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
+    Proxy o -> Seq p a -> Seq n (Seq o a)
+
   -- scheduling operators
   iterC :: (KnownNat n, SeqBaseType a ~ Atom, SeqBaseType b ~ Atom) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))

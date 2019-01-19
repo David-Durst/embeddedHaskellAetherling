@@ -5,6 +5,8 @@ import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import ModulesDecl
+import Data.List.Split
+import Isomorphism
 import qualified Data.Vector.Sized as V
 
 data SimulatorEnv a = SimulatorEnv a
@@ -82,6 +84,24 @@ instance Circuit SimulatorEnv where
 
   constGenC x = \_ -> return x
 
-  -- multi-rate modules
+  -- sequence operators
   upC _ (Seq vec) = Seq $ V.replicate $ V.head vec
   downC _ (Seq vec) = Seq $ V.singleton $ V.head vec
+
+  foldC f accum (Seq vec) = do
+    result <- V.foldM f accum vec
+    return result
+
+  partition sublistLength (Seq inputVec) =
+    let
+      vectorOfVectors = nestVector sublistLength inputVec
+      vectorOfSeqs = V.map (\x -> Seq x) vectorOfVectors
+    in
+      Seq vectorOfSeqs
+  --_ sub_list_length (Seq vec) = let
+  --  unpartitioned_list = toList vec
+  --  partitioned_list = chunksOf (natVal sub_list_length) unpartitioned_list
+
+  iterC _ f (Seq inputVec) = do
+    resultVec <- V.mapM f inputVec
+    return $ Seq resultVec
