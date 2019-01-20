@@ -6,6 +6,8 @@ import GHC.TypeLits
 import GHC.TypeLits.Extra
 import ModulesDecl
 import Data.List.Split
+import Data.Types.Injective
+import Data.Types.Isomorphic
 import Isomorphism
 import qualified Data.Vector.Sized as V
 
@@ -112,12 +114,49 @@ instance Circuit SimulatorEnv where
   (f >>> g) x = f x >>= g
 
   -- scheduling operators
-  split_seq_to_sseqC = fail "scheduling operators not useful in CPU accelerator"
-  split_seq_to_tseqC = fail "scheduling operators not useful in CPU accelerator"
-  sseq_to_seqC = fail "scheduling operators not useful in CPU accelerator"
-  tseq_to_seqC = fail "scheduling operators not useful in CPU accelerator"
-  seq_to_sseqC = fail "scheduling operators not useful in CPU accelerator"
+  split_seq_to_sseqC outerLengthProxy f (Seq vecOfSSeqs) = do
+    let inputVectorOfVector = V.map (\(SSeq vec) -> vec) vecOfSSeqs
+    resultingFlatSeq <- f $ vectorToSeq $ flattenNestedVector inputVectorOfVector
+    let resultingFlatVector = seqToVector resultingFlatSeq
+    let innerLengthProxy = Proxy :: Proxy innerOutputLength
+    let resultingNestedVector = nestVector innerLengthProxy resultingFlatVector 
+    return $ vectorToSeq $ V.map (\vec -> SSeq vec) resultingNestedVector
+    
+  split_seq_to_tseqC outerLengthProxy f s@(Seq vecOfTSeqs) = do
+    --let inputVectorOfVector = V.map (\(TSeq vec) -> vec) vecOfTSeqs
+    --resultingFlatSeq <- f $ vectorToSeq $ flattenNestedVector inputVectorOfVector
+    resultingFlatSeq <- f $ seqOfSeqToSeq $ seqOfTSeqToSeqOfSeq s
+    --let resultingFlatVector = seqToVector resultingFlatSeq
+    let innerLengthProxy = Proxy :: Proxy innerOutputLength
+    --let resultingNestedVector = nestVector innerLengthProxy resultingFlatVector 
+    --return $ vectorToSeq $ V.map (\vec -> TSeq vec) resultingNestedVector
+    return $ seqOfSeqToSeqOfTSeq $ seqToSeqOfSeq innerLengthProxy resultingFlatSeq
+
+  sseq_to_seqC f seq = (f . to) >>= (return . to)
+  tseq_to_seqC = to
+  seq_to_sseqC = to 
   seq_to_tseqC = fail "scheduling operators not useful in CPU accelerator"
   sseq_to_tseqC = fail "scheduling operators not useful in CPU accelerator"
   tseq_to_sseqC = fail "scheduling operators not useful in CPU accelerator"
   underutilC = fail "scheduling operators not useful in CPU accelerator"
+
+-- examples of programs in space and time
+addFullyParallel = liftBinaryModuleToTime (Proxy @1) (Proxy @0) (liftBinaryModuleToSpace (Proxy @4) addInt)
+unscheduled4 :: Seq 4 Int
+unscheduled4 = Seq $ fromTuple (1, 2, 3, 4) 
+unscheduled4Nested :: Seq 1 (Seq 4 Int)
+unscheduled4Nested = to unscheduled4
+partiallyScheduledFullyParallel4Nested :: Seq 1 (SSeq 4 Int)
+partiallyScheduledFullyParallel4Nested = to unscheduled4Nested
+fullyParallel4Nested :: TSeq 1 0 (SSeq 4 Int)
+fullyParallel4Nested = to partiallyScheduledFullyParallel4Nested
+resultFullyParallel = addFullyParallel (fullyParallel4Nested, fullyParallel4Nested)
+
+addPartiallyParallel = liftBinaryModuleToTime (Proxy @2) (Proxy @0) (liftBinaryModuleToSpace (Proxy @2) addInt)
+unscheduled4Split :: Seq 2 (Seq 2 Int)
+unscheduled4Split = to unscheduled4
+partiallyScheduled4Split :: Seq 2 (SSeq 2 Int)
+partiallyScheduled4Split = to unscheduled4Split
+partiallyParallel4 :: TSeq 2 0 (SSeq 2 Int)
+partiallyParallel4 = to partiallyScheduled4Split 
+resultPartiallyParallel = addPartiallyParallel (partiallyParallel4, partiallyParallel4)

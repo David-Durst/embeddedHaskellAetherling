@@ -13,23 +13,31 @@ import Data.Types.Isomorphic
 import DataTypes
   
 -- way to convert between time or space containers and independent containers
-instance (KnownNat n) => Injective (Seq n a) (SSeq n a) where
+instance Injective (Seq n a) (SSeq n a) where
   to (Seq vec) = SSeq vec
+seqToSSeq :: Seq n a -> SSeq n a
+seqToSSeq = to
 
-instance (KnownNat n) => Injective (SSeq n a) (Seq n a) where
+instance Injective (SSeq n a) (Seq n a) where
   to (SSeq vec) = Seq vec
+sseqToSeq :: SSeq n a -> Seq n a
+sseqToSeq = to
 
-instance (KnownNat n)  => Iso (SSeq n a) (Seq n a)
-instance (KnownNat n) => Iso (Seq n a) (SSeq n a)
+instance Iso (SSeq n a) (Seq n a)
+instance Iso (Seq n a) (SSeq n a)
 
-instance (KnownNat n) => Injective (Seq n a) (TSeq n v a) where
+instance Injective (Seq n a) (TSeq n v a) where
   to (Seq vec) = TSeq vec
+seqToTSeq :: Seq n a -> TSeq n v a
+seqToTSeq = to
 
-instance (KnownNat n) => Injective (TSeq n v a) (Seq n a) where
+instance Injective (TSeq n v a) (Seq n a) where
   to (TSeq vec) = Seq vec
+tseqToSeq :: TSeq n v a -> Seq n a
+tseqToSeq = to
 
-instance (KnownNat n) => Iso (TSeq n v a) (Seq n a)
-instance (KnownNat n) => Iso (Seq n a) (TSeq n v a)
+instance Iso (TSeq n v a) (Seq n a)
+instance Iso (Seq n a) (TSeq n v a)
 
 -- ability to convert nested Seqs to flat, at one level
 
@@ -40,6 +48,9 @@ instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
       vecOfVecs = fmap stVec vecOfSeqs
       flatVec = flattenNestedVector vecOfVecs
     in Seq flatVec 
+seqOfSeqToSeq :: (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
+  Seq n (Seq m a) -> Seq o a
+seqOfSeqToSeq = to
   
 instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
   Injective (Seq o a) (Seq n (Seq m a)) where
@@ -50,6 +61,9 @@ instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
       vecOfVecs = nestVector sublistLengthProxy flatVec
       vecOfSeqs = fmap Seq vecOfVecs 
     in Seq vecOfSeqs
+seqToSeqOfSeq :: (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
+  Proxy m -> Seq o a -> Seq n (Seq m a)
+seqToSeqOfSeq _ = to
 
 instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
   Iso (Seq o a) (Seq n (Seq m a))
@@ -58,34 +72,34 @@ instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
   Iso (Seq n (Seq m a)) (Seq o a)
 
   
-instance (KnownNat n, KnownNat m) =>
-  Injective (Seq n (Seq m a)) (Seq n (SSeq m a)) where
+instance Injective (Seq n (Seq m a)) (Seq n (SSeq m a)) where
   to (Seq vecOfSeqs) = Seq (fmap to vecOfSeqs)
+seqOfSeqToSeqOfSSeq :: Seq n (Seq m a) -> Seq n (SSeq m a) 
+seqOfSeqToSeqOfSSeq = to
 
-instance (KnownNat n, KnownNat m) =>
-  Injective (Seq n (SSeq m a)) (Seq n (Seq m a)) where
+instance Injective (Seq n (SSeq m a)) (Seq n (Seq m a)) where
   to (Seq vecOfSSeqs) = Seq (fmap to vecOfSSeqs)
+seqOfSSeqToSeqOfSeq :: Seq n (SSeq m a) -> Seq n (Seq m a) 
+seqOfSSeqToSeqOfSeq = to
 
-instance (KnownNat n, KnownNat m) =>
-  Iso (Seq n (SSeq m a)) (Seq n (Seq m a))
+instance Iso (Seq n (SSeq m a)) (Seq n (Seq m a))
 
-instance (KnownNat n, KnownNat m) =>
-  Iso (Seq n (Seq m a)) (Seq n (SSeq m a))
+instance Iso (Seq n (Seq m a)) (Seq n (SSeq m a))
 
   
-instance (KnownNat n, KnownNat m) =>
-  Injective (Seq n (Seq m a)) (Seq n (TSeq m v a)) where
+instance Injective (Seq n (Seq m a)) (Seq n (TSeq m v a)) where
   to (Seq vecOfSeqs) = Seq (fmap to vecOfSeqs)
+seqOfSeqToSeqOfTSeq :: Seq n (Seq m a) -> Seq n (TSeq m v a) 
+seqOfSeqToSeqOfTSeq = to
 
-instance (KnownNat n, KnownNat m) =>
-  Injective (Seq n (TSeq m v a)) (Seq n (Seq m a)) where
+instance Injective (Seq n (TSeq m v a)) (Seq n (Seq m a)) where
   to (Seq vecOfTSeqs) = Seq (fmap to vecOfTSeqs)
+seqOfTSeqToSeqOfSeq :: Seq n (TSeq m v a) -> Seq n (Seq m a) 
+seqOfTSeqToSeqOfSeq = to
 
-instance (KnownNat n, KnownNat m) =>
-  Iso (Seq n (TSeq m v a)) (Seq n (Seq m a))
+instance Iso (Seq n (TSeq m v a)) (Seq n (Seq m a))
 
-instance (KnownNat n, KnownNat m) =>
-  Iso (Seq n (Seq m a)) (Seq n (TSeq m v a))
+instance Iso (Seq n (Seq m a)) (Seq n (TSeq m v a))
 
 -- this is intentionally undefined if list length doesn't match claimed length
 listToVector :: KnownNat n => Proxy n -> [a] -> Vector n a
@@ -93,6 +107,20 @@ listToVector p xs | fromIntegral (L.length xs) == natVal p  = fromJust $ fromLis
 
 vectorToList :: KnownNat n => Vector n a -> [a]
 vectorToList = toList
+
+seqToVector :: (KnownNat n) => Seq n a -> Vector n a
+seqToVector (Seq vec) = vec
+
+seqOfSeqToVectorOfVector :: (KnownNat n, KnownNat m) => 
+                            Seq n (Seq m a) -> Vector n (Vector m a)
+seqOfSeqToVectorOfVector (Seq vecOfSeqs) = V.map (\(Seq vec) -> vec) vecOfSeqs
+
+vectorToSeq :: (KnownNat n) => Vector n a -> Seq n a
+vectorToSeq vec = Seq vec
+  
+vectorOfVectorToSeqOfSeq :: (KnownNat n, KnownNat m) => 
+                            Vector n (Vector m a) -> Seq n (Seq m a) 
+vectorOfVectorToSeqOfSeq vecOfVecs = Seq $ V.map (\vec -> Seq vec) vecOfVecs
 
 flattenNestedVector :: (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
                        (Vector n (Vector m a)) -> (Vector o a)

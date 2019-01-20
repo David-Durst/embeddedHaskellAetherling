@@ -41,11 +41,23 @@ class Monad m => Circuit m where
     (a -> m b) -> (b -> m c) -> (a -> m c)
 
   -- scheduling operators
-  split_seq_to_sseqC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) =>
-    Proxy o -> Seq p a -> Seq n (SSeq o a)
-  split_seq_to_tseqC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) =>
-    Proxy o -> Seq p a -> Seq n (TSeq o 0 a)
-  sseq_to_seqC :: (KnownNat n) => SSeq n a -> Seq n a
+  split_seq_to_sseqC :: (KnownNat totalInputLength, KnownNat totalOutputLength,
+                         KnownNat outerLength, KnownNat innerInputLength,
+                         KnownNat innerOutputLength,
+                         totalInputLength ~ (outerLength*innerInputLength),
+                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
+    Proxy outerLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
+    Seq outerLength (SSeq innerInputLength a) -> m (Seq outerLength (SSeq innerOutputLength b))
+
+  split_seq_to_tseqC :: (KnownNat totalInputLength, KnownNat totalOutputLength,
+                         KnownNat outerLength, KnownNat innerInputLength,
+                         KnownNat innerOutputLength,
+                         totalInputLength ~ (outerLength*innerInputLength),
+                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
+    Proxy outerLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
+    Seq outerLength (TSeq innerInputLength 0 a) -> m (Seq outerLength (TSeq innerOutputLength 0 b))
+  sseq_to_seqC :: (SSeq inputLength a -> SSeq outputLength b) ->
+    Seq inputLength a -> Seq outputLength b
   tseq_to_seqC :: (KnownNat n, KnownNat v) => TSeq n v a -> Seq n a
   seq_to_sseqC :: (KnownNat n) => Seq n a -> SSeq n a
   seq_to_tseqC :: (KnownNat n) => Seq n a -> TSeq n 0 a
