@@ -124,13 +124,18 @@ instance Circuit SimulatorEnv where
     let innerLengthProxy = Proxy :: Proxy innerOutputLength
     return $ seqOfSeqToSeqOfTSeq $ seqToSeqOfSeq innerLengthProxy resultingFlatSeq
 
-  sseq_to_seqC f seq = (f . to) >>= (return . to)
-  tseq_to_seqC = to
-  seq_to_sseqC = to 
-  seq_to_tseqC = fail "scheduling operators not useful in CPU accelerator"
-  sseq_to_tseqC = fail "scheduling operators not useful in CPU accelerator"
-  tseq_to_sseqC = fail "scheduling operators not useful in CPU accelerator"
-  underutilC = fail "scheduling operators not useful in CPU accelerator"
+  sseq_to_seqC f seq = (f $ seqToSSeq seq) >>= (return . sseqToSeq)
+  tseq_to_seqC f seq = (f $ seqToTSeq seq) >>= (return . tseqToSeq)
+  seq_to_sseqC f sseq = (f $ sseqToSeq sseq) >>= (return . seqToSSeq)
+  seq_to_tseqC f tseq = (f $ tseqToSeq tseq) >>= (return . seqToTSeq)
+  sseq_to_tseqC _ _ f tseq = (f $ tseqToSSeq tseq) >>= (return . sseqToTSeq)
+  tseq_to_sseqC f sseq = (f $ sseqToTSeq sseq) >>= (return . tseqToSSeq)
+  underutilC _ f tseq = do --(f $ changeUtilTSeq tseq) >>= (return . changeUtilTSeq)
+    --let innerSpeedTSeq = changeUtilTSeq (Proxy :: Proxy v) tseq
+    innerSpeedResultTSeq :: TSeq o u b <- f $ changeUtilTSeq tseq
+    --let outerSpeedResultTSeq = changeUtilTSeq (Proxy :: Proxy ((o + u) * underutilMult)) innerSpeedResultTSeq
+    return $ changeUtilTSeq innerSpeedResultTSeq
+
 
 -- examples of programs in space and time
 addFullyParallel = liftBinaryModuleToTime (Proxy @1) (Proxy @0) (liftBinaryModuleToSpace (Proxy @4) addInt)

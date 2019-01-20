@@ -39,6 +39,17 @@ tseqToSeq = to
 instance Iso (TSeq n v a) (Seq n a)
 instance Iso (Seq n a) (TSeq n v a)
 
+instance Injective (TSeq n v a) (TSeq n u a) where
+  to (TSeq vec) = TSeq vec
+
+changeUtilTSeq :: TSeq n v a -> TSeq n u a
+changeUtilTSeq (TSeq vec) = TSeq vec
+
+instance Iso (TSeq n v a) (TSeq n u a)
+
+tseqToSSeq = seqToSSeq . tseqToSeq
+sseqToTSeq = seqToTSeq . sseqToSeq
+
 -- ability to convert nested Seqs to flat, at one level
 
 instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>

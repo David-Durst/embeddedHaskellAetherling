@@ -56,16 +56,29 @@ class Monad m => Circuit m where
                          totalOutputLength ~ (outerLength*innerOutputLength)) =>
     Proxy outerLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
     Seq outerLength (TSeq innerInputLength 0 a) -> m (Seq outerLength (TSeq innerOutputLength 0 b))
-  sseq_to_seqC :: (SSeq inputLength a -> SSeq outputLength b) ->
-    Seq inputLength a -> Seq outputLength b
-  tseq_to_seqC :: (KnownNat n, KnownNat v) => TSeq n v a -> Seq n a
-  seq_to_sseqC :: (KnownNat n) => Seq n a -> SSeq n a
-  seq_to_tseqC :: (KnownNat n) => Seq n a -> TSeq n 0 a
-  sseq_to_tseqC :: (KnownNat n) => SSeq n a -> TSeq n 0 a
-  tseq_to_sseqC :: (KnownNat n) => TSeq n v a -> SSeq n a
-  underutilC :: (KnownNat n, KnownNat v, KnownNat underutilMult,
-                 1 <= underutilMult) => 
-    Proxy underutilMult -> TSeq n v a -> TSeq n ((n + v) * underutilMult) a
+
+  sseq_to_seqC :: (SSeq inputLength a -> m (SSeq outputLength b)) ->
+    Seq inputLength a -> m (Seq outputLength b)
+
+  tseq_to_seqC :: (TSeq inputLength v a -> m (TSeq outputLength u b)) ->
+    Seq inputLength a -> m (Seq outputLength b)
+
+  seq_to_sseqC :: (Seq inputLength a -> m (Seq outputLength b)) ->
+    SSeq inputLength a -> m (SSeq outputLength b)
+
+  seq_to_tseqC :: (Seq inputLength a -> m (Seq outputLength b)) ->
+    TSeq inputLength v a -> m (TSeq outputLength u b)
+
+  sseq_to_tseqC :: Proxy v -> Proxy u -> (SSeq inputLength a -> m (SSeq outputLength b)) ->
+    TSeq inputLength v a -> m (TSeq outputLength u b)
+
+  tseq_to_sseqC :: (TSeq inputLength v a -> m (TSeq outputLength u b)) ->
+    SSeq inputLength a -> m (SSeq outputLength b)
+
+  underutilC :: (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
+                 KnownNat underutilMult, 1 <= underutilMult) => 
+    Proxy underutilMult -> (TSeq n v a -> m (TSeq o u b)) ->
+    TSeq n ((n + v) * underutilMult) a -> m (TSeq o ((o + u) * underutilMult) b)
 
 
 {-
