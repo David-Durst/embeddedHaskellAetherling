@@ -130,14 +130,13 @@ instance Circuit SimulatorEnv where
   seq_to_tseqC f tseq = (f $ tseqToSeq tseq) >>= (return . seqToTSeq)
   sseq_to_tseqC _ _ f tseq = (f $ tseqToSSeq tseq) >>= (return . sseqToTSeq)
   tseq_to_sseqC f sseq = (f $ sseqToTSeq sseq) >>= (return . tseqToSSeq)
-  underutilC _ f tseq = do --(f $ changeUtilTSeq tseq) >>= (return . changeUtilTSeq)
-    --let innerSpeedTSeq = changeUtilTSeq (Proxy :: Proxy v) tseq
-    innerSpeedResultTSeq :: TSeq o u b <- f $ changeUtilTSeq tseq
-    --let outerSpeedResultTSeq = changeUtilTSeq (Proxy :: Proxy ((o + u) * underutilMult)) innerSpeedResultTSeq
-    return $ changeUtilTSeq innerSpeedResultTSeq
+  underutilC _ f tseq = do 
+    innerResultTSeq :: TSeq o u b <- f $ changeUtilTSeq tseq
+    return $ changeUtilTSeq innerResultTSeq
 
 
 -- examples of programs in space and time
+{-
 addFullyParallel = liftBinaryModuleToTime (Proxy @1) (Proxy @0) (liftBinaryModuleToSpace (Proxy @4) addInt)
 unscheduled4 :: Seq 4 Int
 unscheduled4 = Seq $ fromTuple (1, 2, 3, 4) 
@@ -157,3 +156,4 @@ partiallyScheduled4Split = to unscheduled4Split
 partiallyParallel4 :: TSeq 2 0 (SSeq 2 Int)
 partiallyParallel4 = to partiallyScheduled4Split 
 resultPartiallyParallel = addPartiallyParallel (partiallyParallel4, partiallyParallel4)
+-}
