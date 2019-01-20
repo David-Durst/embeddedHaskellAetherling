@@ -114,22 +114,14 @@ instance Circuit SimulatorEnv where
   (f >>> g) x = f x >>= g
 
   -- scheduling operators
-  split_seq_to_sseqC outerLengthProxy f (Seq vecOfSSeqs) = do
-    let inputVectorOfVector = V.map (\(SSeq vec) -> vec) vecOfSSeqs
-    resultingFlatSeq <- f $ vectorToSeq $ flattenNestedVector inputVectorOfVector
-    let resultingFlatVector = seqToVector resultingFlatSeq
+  split_seq_to_sseqC outerLengthProxy f seqOfSSeq = do
+    resultingFlatSeq <- f $ seqOfSeqToSeq $ seqOfSSeqToSeqOfSeq seqOfSSeq
     let innerLengthProxy = Proxy :: Proxy innerOutputLength
-    let resultingNestedVector = nestVector innerLengthProxy resultingFlatVector 
-    return $ vectorToSeq $ V.map (\vec -> SSeq vec) resultingNestedVector
+    return $ seqOfSeqToSeqOfSSeq $ seqToSeqOfSeq innerLengthProxy resultingFlatSeq
     
-  split_seq_to_tseqC outerLengthProxy f s@(Seq vecOfTSeqs) = do
-    --let inputVectorOfVector = V.map (\(TSeq vec) -> vec) vecOfTSeqs
-    --resultingFlatSeq <- f $ vectorToSeq $ flattenNestedVector inputVectorOfVector
-    resultingFlatSeq <- f $ seqOfSeqToSeq $ seqOfTSeqToSeqOfSeq s
-    --let resultingFlatVector = seqToVector resultingFlatSeq
+  split_seq_to_tseqC outerLengthProxy f seqOfTSeq = do
+    resultingFlatSeq <- f $ seqOfSeqToSeq $ seqOfTSeqToSeqOfSeq seqOfTSeq
     let innerLengthProxy = Proxy :: Proxy innerOutputLength
-    --let resultingNestedVector = nestVector innerLengthProxy resultingFlatVector 
-    --return $ vectorToSeq $ V.map (\vec -> TSeq vec) resultingNestedVector
     return $ seqOfSeqToSeqOfTSeq $ seqToSeqOfSeq innerLengthProxy resultingFlatSeq
 
   sseq_to_seqC f seq = (f . to) >>= (return . to)
