@@ -36,46 +36,46 @@ instance Circuit SimulatorEnv where
   noop x = return x 
 
   -- binary operators
-  addC (Int x, Int y) = return $ Int $ x + y
-  addC (_, _) = fail "addC only handles 2 ints"
-  subC (Int x, Int y) = return $ Int $ x - y
-  subC (_, _) = fail "subC only handles 2 ints"
-  mulC (Int x, Int y) = return $ Int $ x * y
-  mulC (_, _) = fail "mulC only handles 2 ints"
-  divC (Int x, Int y) = return $ Int $ x `div` y
-  divC (_, _) = fail "divC only handles 2 ints"
-  minC (Int x, Int y) = return $ Int $ min x y
-  minC (_, _) = fail "minC only handles 2 ints"
-  maxC (Int x, Int y) = return $ Int $ max x y
-  maxC (_, _) = fail "maxC only handles 2 ints"
-  ashrC (Int input, Int amount) = return $ Int $ shiftR input amount
-  ashrC (_, _) = fail "ashrC only handles 2 ints"
-  shlC (Int input, Int amount) = return $ Int $ shiftL input amount
-  shlC (_, _) = fail "shlC only handles 2 ints"
-  andC (Bit x, Bit y) = return $ Bit $ x && y
-  andC (_, _) = fail "andC only handles 2 bits"
-  orC (Bit x, Bit y) = return $ Bit $ x || y
-  orC (_, _) = fail "orC only handles 2 bits"
-  xorC (Bit x, Bit y) = return $ Bit $ (x /= y) && (x || y)
-  xorC (_, _) = fail "xorC only handles 2 bits"
-  eqC (Int x, Int y) = return $ Bit $ x == y
-  eqC (Bit x, Bit y) = return $ Bit $ x == y
-  eqC (_, _) = fail "eqC only handles 2 bits or 2 ints, not a mix"
-  neqC (Int x, Int y) = return $ Bit $ x /= y
-  neqC (Bit x, Bit y) = return $ Bit $ x /= y
-  neqC (_, _) = fail "neqC only handles 2 bits or 2 ints, not a mix"
-  ltC (Int x, Int y) = return $ Bit $ x < y
-  ltC (Bit x, Bit y) = return $ Bit $ x < y
-  ltC (_, _) = fail "ltC only handles 2 bits or 2 ints, not a mix"
-  leqC (Int x, Int y) = return $ Bit $ x <= y
-  leqC (Bit x, Bit y) = return $ Bit $ x <= y
-  leqC (_, _) = fail "leqC only handles 2 bits or 2 ints, not a mix"
-  gtC (Int x, Int y) = return $ Bit $ x > y
-  gtC (Bit x, Bit y) = return $ Bit $ x > y
-  gtC (_, _) = fail "gtC only handles 2 bits or 2 ints, not a mix"
-  geqC (Int x, Int y) = return $ Bit $ x >= y
-  geqC (Bit x, Bit y) = return $ Bit $ x >= y
-  geqC (_, _) = fail "geqC only handles 2 bits or 2 ints, not a mix"
+  addC (Tuple (Int x, Int y)) = return $ Int $ x + y
+  addC (Tuple (_, _)) = fail "addC only handles 2 ints"
+  subC (Tuple (Int x, Int y)) = return $ Int $ x - y
+  subC (Tuple (_, _)) = fail "subC only handles 2 ints"
+  mulC (Tuple (Int x, Int y)) = return $ Int $ x * y
+  mulC (Tuple (_, _)) = fail "mulC only handles 2 ints"
+  divC (Tuple (Int x, Int y)) = return $ Int $ x `div` y
+  divC (Tuple (_, _)) = fail "divC only handles 2 ints"
+  minC (Tuple (Int x, Int y)) = return $ Int $ min x y
+  minC (Tuple (_, _)) = fail "minC only handles 2 ints"
+  maxC (Tuple (Int x, Int y)) = return $ Int $ max x y
+  maxC (Tuple (_, _)) = fail "maxC only handles 2 ints"
+  ashrC (Tuple (Int input, Int amount)) = return $ Int $ shiftR input amount
+  ashrC (Tuple (_, _)) = fail "ashrC only handles 2 ints"
+  shlC (Tuple (Int input, Int amount)) = return $ Int $ shiftL input amount
+  shlC (Tuple (_, _)) = fail "shlC only handles 2 ints"
+  andC (Tuple (Bit x, Bit y)) = return $ Bit $ x && y
+  andC (Tuple (_, _)) = fail "andC only handles 2 bits"
+  orC (Tuple (Bit x, Bit y)) = return $ Bit $ x || y
+  orC (Tuple (_, _)) = fail "orC only handles 2 bits"
+  xorC (Tuple (Bit x, Bit y) = return $ Bit $ (x /= y) && (x || y))
+  xorC (Tuple (_, _)) = fail "xorC only handles 2 bits"
+  eqC (Tuple (Int x, Int y)) = return $ Bit $ x == y
+  eqC (Tuple (Bit x, Bit y)) = return $ Bit $ x == y
+  eqC (Tuple (_, _)) = fail "eqC only handles 2 bits or 2 ints, not a mix"
+  neqC (Tuple (Int x, Int y)) = return $ Bit $ x /= y
+  neqC (Tuple (Bit x, Bit y)) = return $ Bit $ x /= y
+  neqC (Tuple (_, _)) = fail "neqC only handles 2 bits or 2 ints, not a mix"
+  ltC (Tuple (Int x, Int y)) = return $ Bit $ x < y
+  ltC (Tuple (Bit x, Bit y)) = return $ Bit $ x < y
+  ltC (Tuple (_, _)) = fail "ltC only handles 2 bits or 2 ints, not a mix"
+  leqC (Tuple (Int x, Int y)) = return $ Bit $ x <= y
+  leqC (Tuple (Bit x, Bit y)) = return $ Bit $ x <= y
+  leqC (Tuple (_, _)) = fail "leqC only handles 2 bits or 2 ints, not a mix"
+  gtC (Tuple (Int x, Int y)) = return $ Bit $ x > y
+  gtC (Tuple (Bit x, Bit y)) = return $ Bit $ x > y
+  gtC (Tuple (_, _)) = fail "gtC only handles 2 bits or 2 ints, not a mix"
+  geqC (Tuple (Int x, Int y)) = return $ Bit $ x >= y
+  geqC (Tuple (Bit x, Bit y)) = return $ Bit $ x >= y
+  geqC (Tuple (_, _)) = fail "geqC only handles 2 bits or 2 ints, not a mix"
 
   -- module generator
   lutGenC as (Int i) = return $ as !! i 
@@ -106,10 +106,12 @@ instance Circuit SimulatorEnv where
     resultVec <- V.mapM f inputVec
     return $ Seq resultVec
 
-  (f *** g) (inTypeA, inTypeB) = do
+  (f *** g) (Tuple (inTypeA, inTypeB)) = do
     outTypeC <- f inTypeA
     outTypeD <- g inTypeB
-    return (outTypeC, outTypeD)
+    return (Tuple (outTypeC, outTypeD))
+
+  (f *** g) _ = fail "*** must receive a tuple input"
 
   (f >>> g) x = f x >>= g
 

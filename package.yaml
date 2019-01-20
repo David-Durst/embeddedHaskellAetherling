@@ -64,3 +64,4 @@ library:
     - DatatypeContexts
     - DeriveFoldable
     - DeriveTraversable
+    - GADTs

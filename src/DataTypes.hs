@@ -5,7 +5,7 @@ import Data.Vector.Sized as V
 import Control.Applicative
 import qualified Data.List as L
 
-data Atom = Int Int | Bit Bool | CompilerResult String deriving (Show, Eq)
+data Atom = Int Int | Bit Bool | Tuple (Atom, Atom) | CompilerResult String deriving (Show, Eq)
 
 newtype Seq n a = Seq {stVec :: Vector n a}
   deriving (Foldable, Traversable, Show)

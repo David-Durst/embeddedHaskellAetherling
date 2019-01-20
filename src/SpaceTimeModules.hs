@@ -10,7 +10,7 @@ import Data.Types.Isomorphic
 import Data.Vector.Sized as V
   
 -- lifting to higher space or time dimensions
-liftUnaryModule :: (Applicative f) => (a -> b) -> (f a -> f b)
+liftUnaryModule :: (Monad m, Applicative f) => (a -> m b) -> (f a -> m (f b))
 liftUnaryModule = liftA 
 
 liftBinaryModule :: (Applicative f) => ((a, b) -> c) -> ((f a, f b) -> f c)
@@ -58,7 +58,6 @@ iter :: (KnownNat n, KnownNat m, KnownNat o) => Proxy o ->
   Seq o (Seq n a) -> Seq o (Seq m a)
 iter _ f = liftUnaryModule f
 
-{-
 -- examples of programs in space and time
 addFullyParallel = liftBinaryModuleToTime (Proxy @1) (Proxy @0) (liftBinaryModuleToSpace (Proxy @4) addInt)
 unscheduled4 :: Seq 4 Int
@@ -79,4 +78,3 @@ partiallyScheduled4Split = to unscheduled4Split
 partiallyParallel4 :: TSeq 2 0 (SSeq 2 Int)
 partiallyParallel4 = to partiallyScheduled4Split 
 resultPartiallyParallel = addPartiallyParallel (partiallyParallel4, partiallyParallel4)
--}
