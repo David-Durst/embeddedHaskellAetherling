@@ -18,7 +18,7 @@ class Monad m => Circuit m where
   -- binary operators
   addC, subC, divC, mulC, minC, maxC, ashrC,
     shlC, andC, orC, xorC, eqC, neqC, ltC, leqC,
-    gtC, geqC :: (Atom, Atom) -> m Atom
+    gtC, geqC :: Atom -> m Atom
   -- generators
   lutGenC :: [Atom] -> (Atom) -> m Atom
   constGenC :: Atom -> () -> m Atom
@@ -34,8 +34,8 @@ class Monad m => Circuit m where
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
   (***) :: (SeqBaseType a ~ Atom, SeqBaseType b ~ Atom, SeqBaseType c ~ Atom,
-            SeqBaseType d ~ Atom) =>
-    (a -> m c) -> (b -> m d) -> ((a, b) -> m (c, d))
+            SeqBaseType d ~ Atom, SeqBaseType e ~ Atom, SeqBaseType f ~ Atom) =>
+    (a -> m c) -> (b -> m d) -> (e -> m f)
 
   (>>>) ::  (SeqBaseType a ~ Atom, SeqBaseType b ~ Atom, SeqBaseType c ~ Atom) =>
     (a -> m b) -> (b -> m c) -> (a -> m c)

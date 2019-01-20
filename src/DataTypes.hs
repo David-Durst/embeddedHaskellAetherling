@@ -5,8 +5,24 @@ import Data.Vector.Sized as V
 import Control.Applicative
 import qualified Data.List as L
 
-data Atom = Int Int | Bit Bool | Tuple (Atom, Atom) | CompilerResult String deriving (Show, Eq)
+data Atom = Int Int | Bit Bool | Tuple (Atom, Atom) | CompilerResult String
+  deriving (Eq, Show)
+{-
+data Atom a where
+  Int :: Int -> Atom Int
+  Bit :: Bool -> Atom Bool
+  Tuple :: Atom a -> Atom b -> Atom (Atom a, Atom b)
+  CompilerResult :: String -> Atom String 
 
+atomInt :: Int -> Atom Int
+atomInt x = Int x
+atomInt2 = Int 3
+instance Eq (Atom a) where
+  (Int x) == (Int y) = x == y
+  (Bit x) == (Bit y) = x == y
+  (Tuple x y) == (Tuple x' y') = (x == x') && (y == y')
+  (CompilerResult x) == (CompilerResult y) = x == y
+-}
 newtype Seq n a = Seq {stVec :: Vector n a}
   deriving (Foldable, Traversable, Show)
 

@@ -56,7 +56,7 @@ instance Circuit SimulatorEnv where
   andC (Tuple (_, _)) = fail "andC only handles 2 bits"
   orC (Tuple (Bit x, Bit y)) = return $ Bit $ x || y
   orC (Tuple (_, _)) = fail "orC only handles 2 bits"
-  xorC (Tuple (Bit x, Bit y) = return $ Bit $ (x /= y) && (x || y))
+  xorC (Tuple (Bit x, Bit y)) = return $ Bit $ (x /= y) && (x || y)
   xorC (Tuple (_, _)) = fail "xorC only handles 2 bits"
   eqC (Tuple (Int x, Int y)) = return $ Bit $ x == y
   eqC (Tuple (Bit x, Bit y)) = return $ Bit $ x == y
