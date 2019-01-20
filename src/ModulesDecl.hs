@@ -29,9 +29,31 @@ class Monad m => Circuit m where
   partition :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
     Proxy o -> Seq p a -> Seq n (Seq o a)
 
-  -- scheduling operators
+  -- higher-order operators
   iterC :: (KnownNat n, SeqBaseType a ~ Atom, SeqBaseType b ~ Atom) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
+
+  (***) :: (SeqBaseType a ~ Atom, SeqBaseType b ~ Atom, SeqBaseType c ~ Atom,
+            SeqBaseType d ~ Atom) =>
+    (a -> m c) -> (b -> m d) -> ((a, b) -> m (c, d))
+
+  (>>>) ::  (SeqBaseType a ~ Atom, SeqBaseType b ~ Atom, SeqBaseType c ~ Atom) =>
+    (a -> m b) -> (b -> m c) -> (a -> m c)
+
+  -- scheduling operators
+  split_seq_to_sseqC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) =>
+    Proxy o -> Seq p a -> Seq n (SSeq o a)
+  split_seq_to_tseqC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) =>
+    Proxy o -> Seq p a -> Seq n (TSeq o 0 a)
+  sseq_to_seqC :: (KnownNat n) => SSeq n a -> Seq n a
+  tseq_to_seqC :: (KnownNat n, KnownNat v) => TSeq n v a -> Seq n a
+  seq_to_sseqC :: (KnownNat n) => Seq n a -> SSeq n a
+  seq_to_tseqC :: (KnownNat n) => Seq n a -> TSeq n 0 a
+  sseq_to_tseqC :: (KnownNat n) => SSeq n a -> TSeq n 0 a
+  tseq_to_sseqC :: (KnownNat n) => TSeq n v a -> SSeq n a
+  underutilC :: (KnownNat n, KnownNat v, KnownNat underutilMult,
+                 1 <= underutilMult) => 
+    Proxy underutilMult -> TSeq n v a -> TSeq n ((n + v) * underutilMult) a
 
 
 {-

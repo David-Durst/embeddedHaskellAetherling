@@ -98,10 +98,26 @@ instance Circuit SimulatorEnv where
       vectorOfSeqs = V.map (\x -> Seq x) vectorOfVectors
     in
       Seq vectorOfSeqs
-  --_ sub_list_length (Seq vec) = let
-  --  unpartitioned_list = toList vec
-  --  partitioned_list = chunksOf (natVal sub_list_length) unpartitioned_list
 
+  -- higher-order operators
   iterC _ f (Seq inputVec) = do
     resultVec <- V.mapM f inputVec
     return $ Seq resultVec
+
+  (f *** g) (inTypeA, inTypeB) = do
+    outTypeC <- f inTypeA
+    outTypeD <- g inTypeB
+    return (outTypeC, outTypeD)
+
+  (f >>> g) x = f x >>= g
+
+  -- scheduling operators
+  split_seq_to_sseqC = fail "scheduling operators not useful in CPU accelerator"
+  split_seq_to_tseqC = fail "scheduling operators not useful in CPU accelerator"
+  sseq_to_seqC = fail "scheduling operators not useful in CPU accelerator"
+  tseq_to_seqC = fail "scheduling operators not useful in CPU accelerator"
+  seq_to_sseqC = fail "scheduling operators not useful in CPU accelerator"
+  seq_to_tseqC = fail "scheduling operators not useful in CPU accelerator"
+  sseq_to_tseqC = fail "scheduling operators not useful in CPU accelerator"
+  tseq_to_sseqC = fail "scheduling operators not useful in CPU accelerator"
+  underutilC = fail "scheduling operators not useful in CPU accelerator"
