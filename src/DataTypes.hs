@@ -5,7 +5,7 @@ import Data.Vector.Sized as V
 import Control.Applicative
 import qualified Data.List as L
 
-data Atom = Int Int | Bit Bool | Tuple (Atom, Atom) | CompilerResult String
+data Atom = Int Int | Bit Bool | CompilerResult String
   deriving (Eq, Show)
 {-
 data Atom a where

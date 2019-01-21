@@ -1,3 +1,4 @@
+{-
 module SpaceTimeModules where
 import DataTypes
 import GHC.TypeLits
@@ -78,3 +79,4 @@ partiallyScheduled4Split = to unscheduled4Split
 partiallyParallel4 :: TSeq 2 0 (SSeq 2 Int)
 partiallyParallel4 = to partiallyScheduled4Split 
 resultPartiallyParallel = addPartiallyParallel (partiallyParallel4, partiallyParallel4)
+-}
