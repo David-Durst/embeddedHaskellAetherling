@@ -139,7 +139,9 @@ unscheduled4 :: Seq 4 Int
 unscheduled4 = Seq $ V.fromTuple (1, 2, 3, 4) 
 -- examples of programs in space and time
 iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
-unscheduledCirc = iterC (Proxy @4) $ (constGenC (Int 3) *** constGenC (Int 2)) >>> addC
+-- replace unscheduledCirc with this one to see a composition
+--unscheduledCirc = iterC (Proxy @4) $ (constGenC (Int 3) *** constGenC (Int 2)) >>> addC
+unscheduledCirc = iterC (Proxy @4) $ addC
 unscheduledResult = simulate $ unscheduledCirc iterInput
 sequentialResult = simulate $ seq_to_tseqC unscheduledCirc $ to iterInput
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput
@@ -149,24 +151,3 @@ partialParallelResult =
   simulate $
   (seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledCirc) $
   partialParallelInput
-{-
-addFullyParallel = liftBinaryModuleToTime (Proxy @1) (Proxy @0) (liftBinaryModuleToSpace (Proxy @4) addInt)
-unscheduled4 :: Seq 4 Int
-unscheduled4 = Seq $ fromTuple (1, 2, 3, 4) 
-unscheduled4Nested :: Seq 1 (Seq 4 Int)
-unscheduled4Nested = to unscheduled4
-partiallyScheduledFullyParallel4Nested :: Seq 1 (SSeq 4 Int)
-partiallyScheduledFullyParallel4Nested = to unscheduled4Nested
-fullyParallel4Nested :: TSeq 1 0 (SSeq 4 Int)
-fullyParallel4Nested = to partiallyScheduledFullyParallel4Nested
-resultFullyParallel = addFullyParallel (fullyParallel4Nested, fullyParallel4Nested)
-
-addPartiallyParallel = liftBinaryModuleToTime (Proxy @2) (Proxy @0) (liftBinaryModuleToSpace (Proxy @2) addInt)
-unscheduled4Split :: Seq 2 (Seq 2 Int)
-unscheduled4Split = to unscheduled4
-partiallyScheduled4Split :: Seq 2 (SSeq 2 Int)
-partiallyScheduled4Split = to unscheduled4Split
-partiallyParallel4 :: TSeq 2 0 (SSeq 2 Int)
-partiallyParallel4 = to partiallyScheduled4Split 
-resultPartiallyParallel = addPartiallyParallel (partiallyParallel4, partiallyParallel4)
--}
