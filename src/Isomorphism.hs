@@ -11,7 +11,7 @@ import Data.List.Split
 import Data.Types.Injective
 import Data.Types.Isomorphic
 import DataTypes
-  
+
 -- way to convert between time or space containers and independent containers
 instance Injective (Seq n a) (SSeq n a) where
   to (Seq vec) = SSeq vec

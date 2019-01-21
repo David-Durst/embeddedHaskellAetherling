@@ -135,8 +135,6 @@ instance Circuit SimulatorEnv where
     return $ changeUtilTSeq innerResultTSeq
 
 
-unscheduled4 :: Seq 4 Int
-unscheduled4 = Seq $ V.fromTuple (1, 2, 3, 4) 
 -- examples of programs in space and time
 iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition
