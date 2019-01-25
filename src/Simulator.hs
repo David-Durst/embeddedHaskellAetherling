@@ -30,78 +30,44 @@ instance Monad SimulatorEnv where
 instance Circuit SimulatorEnv where
   -- unary operators
   absC (Int x) = return $ Int $ abs x
-  absC _ = fail "absC only handles an int"
   notC (Bit x) = return $ Bit $ not x
-  notC _ = fail "notC only handles a bit"
   noop x = return x 
 
   -- binary operators
   addC (Int x, Int y) = return $ Int $ x + y
-  addC (_, _) = fail "addC only handles 2 ints"
   subC (Int x, Int y) = return $ Int $ x - y
-  subC (_, _) = fail "subC only handles 2 ints"
   mulC (Int x, Int y) = return $ Int $ x * y
-  mulC (_, _) = fail "mulC only handles 2 ints"
   divC (Int x, Int y) = return $ Int $ x `div` y
-  divC (_, _) = fail "divC only handles 2 ints"
   minC (Int x, Int y) = return $ Int $ min x y
-  minC (_, _) = fail "minC only handles 2 ints"
   maxC (Int x, Int y) = return $ Int $ max x y
-  maxC (_, _) = fail "maxC only handles 2 ints"
   ashrC (Int input, Int amount) = return $ Int $ shiftR input amount
-  ashrC (_, _) = fail "ashrC only handles 2 ints"
   shlC (Int input, Int amount) = return $ Int $ shiftL input amount
-  shlC (_, _) = fail "shlC only handles 2 ints"
   andC (Bit x, Bit y) = return $ Bit $ x && y
-  andC (_, _) = fail "andC only handles 2 bits"
   orC (Bit x, Bit y) = return $ Bit $ x || y
-  orC (_, _) = fail "orC only handles 2 bits"
   xorC (Bit x, Bit y) = return $ Bit $ (x /= y) && (x || y)
-  xorC (_, _) = fail "xorC only handles 2 bits"
   eqIntC (Int x, Int y) = return $ Bit $ x == y
-  eqIntC (_, _) = fail "eqIntC only handles 2 ints"
   eqBitC (Bit x, Bit y) = return $ Bit $ x == y
-  eqBitC (_, _) = fail "eqBitC only handles 2 bits"
   neqIntC (Int x, Int y) = return $ Bit $ x /= y
-  neqIntC (_, _) = fail "neqIntC only handles 2 ints"
   neqBitC (Bit x, Bit y) = return $ Bit $ x /= y
-  neqBitC (_, _) = fail "neqBitC only handles 2 bits"
   ltIntC (Int x, Int y) = return $ Bit $ x < y
-  ltIntC (_, _) = fail "ltIntC only handles 2 ints"
   ltBitC (Bit x, Bit y) = return $ Bit $ x < y
-  ltBitC (_, _) = fail "ltBitC only handles 2 bits"
   leqIntC (Int x, Int y) = return $ Bit $ x <= y
-  leqIntC (_, _) = fail "leqIntC only handles 2 ints"
   leqBitC (Bit x, Bit y) = return $ Bit $ x <= y
-  leqBitC (_, _) = fail "leqBitC only handles 2 bits"
   gtIntC (Int x, Int y) = return $ Bit $ x > y
-  gtIntC (_, _) = fail "gtC only handles 2 ints, not a mix"
   gtBitC (Bit x, Bit y) = return $ Bit $ x > y
-  gtBitC (_, _) = fail "gtC only handles 2 bits"
   geqIntC (Int x, Int y) = return $ Bit $ x >= y
-  geqIntC (_, _) = fail "geqIntC only handles 2 ints"
   geqBitC (Bit x, Bit y) = return $ Bit $ x >= y
-  geqBitC (_, _) = fail "geqBitC only handles 2 bits"
 
   -- module generator
   lutGenIntC as (Int i) = return $ as !! i 
-  lutGenIntC as (Bit True) = return $ as !! 1
-  lutGenIntC as (Bit False) = return $ as !! 0
-  lutGenIntC _ (CompilerResult _) = fail $ "lutGenIntC can't handle compiler " ++
-    "internals as an input"
 
   lutGenBitC as (Int i) = return $ as !! i 
-  lutGenBitC as (Bit True) = return $ as !! 1
-  lutGenBitC as (Bit False) = return $ as !! 0
-  lutGenBitC _ (CompilerResult _) = fail $ "lutGenIntC can't handle compiler " ++
-    "internals as an input"
 
-  constGenIntC x = \_ -> return x
-  constGenBitC x = \_ -> return x
+  constGenC x = \_ -> return x
 
   -- sequence operators
-  upC _ (Seq vec) = Seq $ V.replicate $ V.head vec
-  downC _ (Seq vec) = Seq $ V.singleton $ V.head vec
+  upC _ (Seq vec) = return $ Seq $ V.replicate $ V.head vec
+  downC _ (Seq vec) = return $ Seq $ V.singleton $ V.head vec
 
   foldC f accum (Seq vec) = do
     result <- V.foldM f accum vec
@@ -156,7 +122,7 @@ unscheduledCirc = iterC (Proxy @4) $ addC
 unscheduledResult = simulate $ unscheduledCirc iterInput
 sequentialResult = simulate $ seq_to_tseqC unscheduledCirc $ to iterInput
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput
-partialParallelInput :: TSeq 2 0 (SSeq 2 (Atom, Atom))
+partialParallelInput :: TSeq 2 0 (SSeq 2 (Atom Int, Atom Int))
 partialParallelInput = seqToTSeq $ seqOfSeqToSeqOfSSeq $ seqToSeqOfSeq (Proxy @2) iterInput
 partialParallelResult =
   simulate $
