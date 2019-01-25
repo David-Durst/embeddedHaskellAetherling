@@ -39,7 +39,9 @@ instance Show (Atom a) where
   show (Tuple x y) = "(" L.++ show x L.++ ", " L.++ show y L.++ ")"
   show (CompilerResult x) = show x
 
+intSizeInBits :: Int
 intSizeInBits = 8
+bitSizeInBits :: Int
 bitSizeInBits = 1
 type family TypeSize (x :: *) :: Nat where
   TypeSize (Atom Int) = 8
@@ -49,8 +51,8 @@ type family TypeSize (x :: *) :: Nat where
   TypeSize (TSeq n _ a) = (TypeSize a)
   TypeSize a = 0
 
-size :: forall a . (KnownNat (TypeSize a)) => a -> Integer
-size _ = natVal $ (Proxy :: Proxy (TypeSize a))
+size :: forall a . (KnownNat (TypeSize a)) => Proxy a -> Int
+size _ = fromInteger $ natVal $ (Proxy :: Proxy (TypeSize a) )
 {-
 instance SizeOf Atom where
   size (Int _) = intSizeInBits

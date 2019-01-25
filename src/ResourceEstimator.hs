@@ -62,11 +62,10 @@ incrementResourcesBy newWireSize newALUSize a = do
 
 instance Circuit (State ResourceEstimate) where
   -- unary operators
-  absC c@(Int _) = incrementResourcesBy (size c) (size c) c
-  absC _ = fail "absC only handles an int"
-  notC c@(Int _) = incrementResourcesBy (size c) (size c) c
+  absC _ = incrementResourcesBy intSizeInBits intSizeInBits (Int 2)
+  notC _ = incrementResourcesBy bitSizeInBits bitSizeInBits (Bit True)
   notC _ = fail "notC only handles a bit"
-  noop c = incrementResourcesBy (size c) (size c) c
+  noop c = incrementResourcesBy (size (Proxy :: Proxy a)) (size (Proxy :: Proxy a)) c
 
   -- binary operators
   -- the values returned here, they are only to emit things of the right types
@@ -93,44 +92,29 @@ instance Circuit (State ResourceEstimate) where
   orC (_, _) = fail "orC only handles 2 bits"
   xorC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
   xorC (_, _) = fail "xorC only handles 2 bits"
-  eqC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
-  eqC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
-  eqC (_, _) = fail "eqC only handles 2 bits or 2 ints, not a mix"
-  neqC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
-  neqC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
-  neqC (_, _) = fail "neqC only handles 2 bits or 2 ints, not a mix"
-  ltC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
-  ltC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
-  ltC (_, _) = fail "ltC only handles 2 bits or 2 ints, not a mix"
-  leqC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
-  leqC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
-  leqC (_, _) = fail "leqC only handles 2 bits or 2 ints, not a mix"
-  gtC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
-  gtC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
-  gtC (_, _) = fail "gtC only handles 2 bits or 2 ints, not a mix"
-  geqC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
-  geqC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
-  geqC (_, _) = fail "geqC only handles 2 bits or 2 ints, not a mix"
+  eqIntC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
+  eqBitC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
+  neqIntC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
+  neqBitC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
+  ltIntC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
+  ltBitC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
+  leqIntC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
+  leqBitC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
+  gtIntC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
+  gtBitC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
+  geqIntC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
+  geqBitC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
 
   -- module generator
-  lutGenC as _ = incrementResourcesBy (length as * elementSize) elementSize (head as)
-    where
-      elementSize = size $ head as
+  lutGenIntC as _ = incrementResourcesBy (length as * intSizeInBits) intSizeInBits (head as)
+  lutGenBitC as _ = incrementResourcesBy (length as * bitSizeInBits) bitSizeInBits (head as)
 
-  constGenC x@(Int _) _ = incrementResourcesBy intSizeInBits intSizeInBits x
-  constGenC x@(Bit _) _ = incrementResourcesBy bitSizeInBits bitSizeInBits x
-  constGenC _ _ = fail "constGenC has no size for non-int and non-bit atoms"
+  constGenC x _ = incrementResourcesBy intSizeInBits intSizeInBits x
 
   -- sequence operators
-  -- THIS HAS TO BE A STATEFUL VECTOR. THIS ALLOWS ME TO GET AROUND THE ISSUE HERE
-  -- Don't KNOW WHAT THIS IS, RETURNING A COUNTER, NEED TO BE TRACKING SIZE AND
-  -- ACCUMULATING THAT IN MONAD STATE RATHER THAN AS RETURN RESULT
-  upC _ (Seq vec) = incrementResourcesBy 0 (size $ V.head vec) simValue
-    where
-      simValue = Seq $ V.replicate $ V.head vec
-  downC _ (Seq vec) = incrementResourcesBy 0 (size $ V.head vec) simValue
-    where
-      simValue = Seq $ V.singleton $ V.head vec
+  -- need to fix upC to account for storage if tseq
+  upC _ (Seq vec) = incrementResourcesBy 0 (size (Proxy :: Proxy a)) undefined
+  downC _ (Seq vec) = incrementResourcesBy 0 (size (Proxy :: Proxy a)) undefined
 
   foldC _ accum (Seq vec) = do
     result <- V.foldM f accum vec
