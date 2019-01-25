@@ -41,8 +41,6 @@ packages:
 extra-deps:
 - type-iso-1.0.0.0
 - numericpeano-0.2.0.0
-- github: David-Durst/PluginAetherling
-  commit: d9347c3af1d5c06acbcce88872d8872a71042019
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

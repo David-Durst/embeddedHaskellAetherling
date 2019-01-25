@@ -5,8 +5,23 @@ import Data.Vector.Sized as V
 import Control.Applicative
 import qualified Data.List as L
 
-data Atom = Int Int | Bit Bool | CompilerResult String
+class SizeOf a where
+  size :: a -> Int
+
+data Atom =
+  Int Int
+  | Bit Bool
+  | CompilerResult String
   deriving (Eq, Show)
+
+intSizeInBits = 8
+bitSizeInBits = 1
+
+instance SizeOf Atom where
+  size (Int _) = intSizeInBits
+  size (Bit _) = bitSizeInBits
+  size _ = -1
+
 {-
 data Atom a where
   Int :: Int -> Atom Int
