@@ -58,37 +58,50 @@ instance Circuit SimulatorEnv where
   orC (_, _) = fail "orC only handles 2 bits"
   xorC (Bit x, Bit y) = return $ Bit $ (x /= y) && (x || y)
   xorC (_, _) = fail "xorC only handles 2 bits"
-  eqC (Int x, Int y) = return $ Bit $ x == y
-  eqC (Bit x, Bit y) = return $ Bit $ x == y
-  eqC (_, _) = fail "eqC only handles 2 bits or 2 ints, not a mix"
-  neqC (Int x, Int y) = return $ Bit $ x /= y
-  neqC (Bit x, Bit y) = return $ Bit $ x /= y
-  neqC (_, _) = fail "neqC only handles 2 bits or 2 ints, not a mix"
-  ltC (Int x, Int y) = return $ Bit $ x < y
-  ltC (Bit x, Bit y) = return $ Bit $ x < y
-  ltC (_, _) = fail "ltC only handles 2 bits or 2 ints, not a mix"
-  leqC (Int x, Int y) = return $ Bit $ x <= y
-  leqC (Bit x, Bit y) = return $ Bit $ x <= y
-  leqC (_, _) = fail "leqC only handles 2 bits or 2 ints, not a mix"
-  gtC (Int x, Int y) = return $ Bit $ x > y
-  gtC (Bit x, Bit y) = return $ Bit $ x > y
-  gtC (_, _) = fail "gtC only handles 2 bits or 2 ints, not a mix"
-  geqC (Int x, Int y) = return $ Bit $ x >= y
-  geqC (Bit x, Bit y) = return $ Bit $ x >= y
-  geqC (_, _) = fail "geqC only handles 2 bits or 2 ints, not a mix"
+  eqIntC (Int x, Int y) = return $ Bit $ x == y
+  eqIntC (_, _) = fail "eqIntC only handles 2 ints"
+  eqBitC (Bit x, Bit y) = return $ Bit $ x == y
+  eqBitC (_, _) = fail "eqBitC only handles 2 bits"
+  neqIntC (Int x, Int y) = return $ Bit $ x /= y
+  neqIntC (_, _) = fail "neqIntC only handles 2 ints"
+  neqBitC (Bit x, Bit y) = return $ Bit $ x /= y
+  neqBitC (_, _) = fail "neqBitC only handles 2 bits"
+  ltIntC (Int x, Int y) = return $ Bit $ x < y
+  ltIntC (_, _) = fail "ltIntC only handles 2 ints"
+  ltBitC (Bit x, Bit y) = return $ Bit $ x < y
+  ltBitC (_, _) = fail "ltBitC only handles 2 bits"
+  leqIntC (Int x, Int y) = return $ Bit $ x <= y
+  leqIntC (_, _) = fail "leqIntC only handles 2 ints"
+  leqBitC (Bit x, Bit y) = return $ Bit $ x <= y
+  leqBitC (_, _) = fail "leqBitC only handles 2 bits"
+  gtIntC (Int x, Int y) = return $ Bit $ x > y
+  gtIntC (_, _) = fail "gtC only handles 2 ints, not a mix"
+  gtBitC (Bit x, Bit y) = return $ Bit $ x > y
+  gtBitC (_, _) = fail "gtC only handles 2 bits"
+  geqIntC (Int x, Int y) = return $ Bit $ x >= y
+  geqIntC (_, _) = fail "geqIntC only handles 2 ints"
+  geqBitC (Bit x, Bit y) = return $ Bit $ x >= y
+  geqBitC (_, _) = fail "geqBitC only handles 2 bits"
 
   -- module generator
-  lutGenC as (Int i) = return $ as !! i 
-  lutGenC as (Bit True) = return $ as !! 1
-  lutGenC as (Bit False) = return $ as !! 0
-  lutGenC _ (CompilerResult _) = fail $ "lutGenC can't handle compiler " ++
+  lutGenIntC as (Int i) = return $ as !! i 
+  lutGenIntC as (Bit True) = return $ as !! 1
+  lutGenIntC as (Bit False) = return $ as !! 0
+  lutGenIntC _ (CompilerResult _) = fail $ "lutGenIntC can't handle compiler " ++
     "internals as an input"
 
-  constGenC x = \_ -> return x
+  lutGenBitC as (Int i) = return $ as !! i 
+  lutGenBitC as (Bit True) = return $ as !! 1
+  lutGenBitC as (Bit False) = return $ as !! 0
+  lutGenBitC _ (CompilerResult _) = fail $ "lutGenIntC can't handle compiler " ++
+    "internals as an input"
+
+  constGenIntC x = \_ -> return x
+  constGenBitC x = \_ -> return x
 
   -- sequence operators
-  upC _ (Seq vec) = return $ Seq $ V.replicate $ V.head vec
-  downC _ (Seq vec) = return $ Seq $ V.singleton $ V.head vec
+  upC _ (Seq vec) = Seq $ V.replicate $ V.head vec
+  downC _ (Seq vec) = Seq $ V.singleton $ V.head vec
 
   foldC f accum (Seq vec) = do
     result <- V.foldM f accum vec

@@ -15,30 +15,36 @@ type family SeqBaseType (x :: *) :: * where
 
 class Monad m => Circuit m where
   -- unary operators
-  absC, notC, noop :: Atom -> m Atom
+  absC :: Atom Int -> m (Atom Int)
+  notC :: Atom Bool -> m (Atom Bool)
+  noop :: Atom a -> m (Atom a)
   -- binary operators
   addC, subC, divC, mulC, minC, maxC, ashrC,
-    shlC, andC, orC, xorC, eqC, neqC, ltC, leqC,
-    gtC, geqC :: (Atom, Atom) -> m Atom
+    shlC :: (Atom Int, Atom Int) -> m (Atom Int)
+  eqIntC, neqIntC, ltIntC, leqIntC,
+    gtIntC, geqIntC :: (Atom Int, Atom Int) -> m (Atom Bool)
+  andC, orC, xorC, eqBitC, neqBitC, ltBitC, leqBitC,
+    gtBitC, geqBitC :: (Atom Bool, Atom Bool) -> m (Atom Bool)
   -- generators
-  lutGenC :: [Atom] -> (Atom) -> m Atom
-  constGenC :: Atom -> Atom -> m Atom
+  lutGenIntC :: [Atom Int] -> (Atom Int) -> m (Atom Int)
+  lutGenBitC :: [Atom Bool] -> (Atom Int) -> m (Atom Bool)
+  constGenC :: Atom a -> Atom a -> m (Atom a)
   -- sequence operators
-  upC :: (KnownNat n, SizeOf a) => Proxy n -> Seq 1 a -> m (Seq n a)
-  downC :: (KnownNat n, KnownNat o, n ~ (o+1), SizeOf a) => Proxy n -> (Seq n a) -> m (Seq 1 a)
+  upC :: (KnownNat n) => Proxy n -> Seq 1 a -> m (Seq n a)
+  downC :: (KnownNat n, KnownNat o, n ~ (o+1)) => Proxy n -> (Seq n a) -> m (Seq 1 a)
   foldC :: (KnownNat n) => (a -> b -> m a) -> a -> Seq n b -> m a
   partition :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
     Proxy o -> Seq p a -> Seq n (Seq o a)
 
   -- higher-order operators
-  iterC :: (KnownNat n, SeqBaseType a ~ Atom, SeqBaseType b ~ Atom) =>
+  iterC :: (KnownNat n, SeqBaseType a ~ Atom a', SeqBaseType b ~ Atom b') =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
-  (***) :: (SeqBaseType a ~ Atom, SeqBaseType b ~ Atom, SeqBaseType c ~ Atom,
-            SeqBaseType d ~ Atom) =>
+  (***) :: (SeqBaseType a ~ Atom a', SeqBaseType b ~ Atom b', SeqBaseType c ~ Atom c',
+            SeqBaseType d ~ Atom d') =>
     (a -> m c) -> (b -> m d) -> ((a,b) -> m (c, d))
 
-  (>>>) ::  (SeqBaseType a ~ Atom, SeqBaseType b ~ Atom, SeqBaseType c ~ Atom) =>
+  (>>>) ::  (SeqBaseType a ~ Atom a', SeqBaseType b ~ Atom b', SeqBaseType c ~ Atom c') =>
     (a -> m b) -> (b -> m c) -> (a -> m c)
 
   -- scheduling operators
