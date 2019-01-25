@@ -61,9 +61,6 @@ incrementResourcesBy newWireSize newALUSize a = do
 instance Circuit (State ResourceEstimate) where
   -- unary operators
   absC c@(Int _) = incrementResourcesBy (size c) (size c) c
- --   (ResourceEstimate oldWires oldALUs) <- get 
-  --  put $ ResourceEstimate (oldWires + intSizeInBits) (oldALUs + intSizeInBits)
-    --return c
   absC _ = fail "absC only handles an int"
   {-
   notC (Bit x) = return $ Resources bitSizeInBits bitSizeInBits
