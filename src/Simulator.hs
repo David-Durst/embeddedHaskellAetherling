@@ -73,7 +73,7 @@ instance Circuit SimulatorEnv where
     result <- V.foldM f accum vec
     return result
 
-  partition sublistLength (Seq inputVec) =
+  partitionC sublistLength (Seq inputVec) =
     let
       vectorOfVectors = nestVector sublistLength inputVec
       vectorOfSeqs = V.map (\x -> Seq x) vectorOfVectors

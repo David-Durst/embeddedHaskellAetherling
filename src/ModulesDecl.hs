@@ -28,12 +28,12 @@ class Monad m => Circuit m where
   -- generators
   lutGenIntC :: [Atom Int] -> (Atom Int) -> m (Atom Int)
   lutGenBitC :: [Atom Bool] -> (Atom Int) -> m (Atom Bool)
-  constGenC :: Atom a -> Atom a -> m (Atom a)
+  constGenC :: Atom a -> Atom b -> m (Atom a)
   -- sequence operators
   upC :: (KnownNat n) => Proxy n -> Seq 1 a -> m (Seq n a)
   downC :: (KnownNat n, KnownNat o, n ~ (o+1)) => Proxy n -> (Seq n a) -> m (Seq 1 a)
   foldC :: (KnownNat n) => (a -> b -> m a) -> a -> Seq n b -> m a
-  partition :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
+  partitionC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
     Proxy o -> Seq p a -> Seq n (Seq o a)
 
   -- higher-order operators

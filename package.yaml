@@ -33,6 +33,7 @@ dependencies:
 - lens
 - reflection
 - mtl
+- containers
 
 ghc-options:
 - -fwarn-incomplete-patterns 
@@ -65,3 +66,4 @@ library:
     - DeriveTraversable
     - GADTs
     - ConstraintKinds
+    - Rank2Types

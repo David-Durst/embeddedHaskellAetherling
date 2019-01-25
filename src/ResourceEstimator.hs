@@ -10,7 +10,59 @@ import Data.Types.Injective
 import Data.Types.Isomorphic
 import Isomorphism
 import Control.Monad.State
+import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
+
+-- these are the types of the nodes in a DAG
+data NodeType a =
+  AbsT
+  | NotT
+  | NoopT
+  | AddT
+  | SubT
+  | DivT
+  | MulT
+  | MinT
+  | MaxT
+  | AshrT
+  | ShlT 
+  | EqIntT
+  | NeqIntT
+  | LtIntT
+  | LeqIntT
+  | GtIntT
+  | GeqIntT 
+  | AndT
+  | OrT
+  | XorT
+  | EqBitT
+  | NeqBitT
+  | LtBitT
+  | LeqBitT
+  | GtBitT
+  | GeqBitT 
+  | LutGenIntT [Atom Int]
+  | LutGenBitT [Atom Bool]
+  | ConstGenT  (Atom a)
+  | UpT Int
+  | DownT Int
+  | FoldT a (NodeType a)
+  | PartitionT Int
+  deriving (Show, Eq)
+
+-- This is all the info about a dag necessary to compile it to Magma
+-- and measure it's resources
+data NodeInfo = NodeInfo {nodeThroughputNumerator :: Int,
+                         nodeThroughputDenominator :: Int, consumerNodes :: [NodeInfo]}
+  deriving (Eq, Show)
+
+data PipelineDAG = forall a . (Show a, Eq a) => PipelineDAG (Map.Map (NodeType a) NodeInfo)
+
+instance Show PipelineDAG where
+  show (PipelineDAG map) = show map 
+
+emptyDAG :: PipelineDAG
+emptyDAG = PipelineDAG $ (Map.empty :: forall k . (Show k, Eq k) => Map.Map (NodeType k) NodeInfo)
 
 data ResourceEstimate = ResourceEstimate {numWires :: Int, numALUs :: Int}
   deriving (Show, Eq)
@@ -37,6 +89,9 @@ estimateResources :: a -> (a -> State ResourceEstimate b) -> ResourceEstimate
 estimateResources input functionYieldingMonad = snd $
   runState (functionYieldingMonad input) $ ResourceEstimate 0 0
 
+buildDag :: (a -> State PipelineDAG b) -> PipelineDAG 
+buildDag functionYieldingMonad = snd $
+  runState (functionYieldingMonad undefined) emptyDAG
 {-
 instance Functor ResourceEstimatorEnv where
   fmap f (ResourceEstimatorEnv a) = ResourceEstimatorEnv (f a)
@@ -115,12 +170,12 @@ instance Circuit (State ResourceEstimate) where
   -- need to fix upC to account for storage if tseq
   upC _ (Seq vec) = incrementResourcesBy 0 (size (Proxy :: Proxy a)) undefined
   downC _ (Seq vec) = incrementResourcesBy 0 (size (Proxy :: Proxy a)) undefined
-
+{-
   foldC _ accum (Seq vec) = do
     result <- V.foldM f accum vec
     return result
-
-  partition sublistLength (Seq inputVec) =
+-}
+  partitionC sublistLength (Seq inputVec) =
     let
       vectorOfVectors = nestVector sublistLength inputVec
       vectorOfSeqs = V.map (\x -> Seq x) vectorOfVectors
