@@ -87,8 +87,8 @@ instance Circuit SimulatorEnv where
   constGenC x = \_ -> return x
 
   -- sequence operators
-  upC _ (Seq vec) = Seq $ V.replicate $ V.head vec
-  downC _ (Seq vec) = Seq $ V.singleton $ V.head vec
+  upC _ (Seq vec) = return $ Seq $ V.replicate $ V.head vec
+  downC _ (Seq vec) = return $ Seq $ V.singleton $ V.head vec
 
   foldC f accum (Seq vec) = do
     result <- V.foldM f accum vec

@@ -17,11 +17,20 @@ data Atom =
 intSizeInBits = 8
 bitSizeInBits = 1
 
+type family TypeSize (x :: *) :: Nat where
+  TypeSize 
+  TypeSize a = 0
+
 instance SizeOf Atom where
   size (Int _) = intSizeInBits
   size (Bit _) = bitSizeInBits
   size _ = -1
 
+instance (SizeOf a, KnownNat n, KnownNat m, n ~ (m + 1)) => SizeOf (SSeq n a) where
+  size (SSeq s) = V.length s * (size $ V.head s)
+
+instance (SizeOf a, KnownNat n, KnownNat m, n ~ (m + 1)) => SizeOf (TSeq n v a) where
+  size (TSeq s) = (size $ V.head s)
 {-
 data Atom a where
   Int :: Int -> Atom Int

@@ -24,8 +24,8 @@ class Monad m => Circuit m where
   lutGenC :: [Atom] -> (Atom) -> m Atom
   constGenC :: Atom -> Atom -> m Atom
   -- sequence operators
-  upC :: (KnownNat n) => Proxy n -> Seq 1 a -> Seq n a
-  downC :: (KnownNat n, KnownNat o, n ~ (o+1)) => Proxy n -> (Seq n a) -> (Seq 1 a)
+  upC :: (KnownNat n, SizeOf a) => Proxy n -> Seq 1 a -> m (Seq n a)
+  downC :: (KnownNat n, KnownNat o, n ~ (o+1), SizeOf a) => Proxy n -> (Seq n a) -> m (Seq 1 a)
   foldC :: (KnownNat n) => (a -> b -> m a) -> a -> Seq n b -> m a
   partition :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
     Proxy o -> Seq p a -> Seq n (Seq o a)
