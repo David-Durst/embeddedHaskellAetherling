@@ -6,12 +6,12 @@ import GHC.TypeLits
 import GHC.TypeLits.Extra
 
 class Monad m => Circuit m where
-  and2, or2 :: (Atom, Atom) -> m Atom
-  add2, sub2 :: (Atom, Atom) -> m Atom
+  and2, or2 :: (Atom Bool, Atom Bool) -> m (Atom Bool)
+  add2, sub2 :: (Atom Int, Atom Int) -> m (Atom Int)
 
 data SimulatorEnv a = SimulatorEnv a
 
-simulate :: SimulatorEnv Atom -> Atom
+simulate :: SimulatorEnv (Atom a) -> Atom a
 simulate (SimulatorEnv a) = a
 
 instance Functor SimulatorEnv where
@@ -27,17 +27,13 @@ instance Monad SimulatorEnv where
 
 instance Circuit SimulatorEnv where
   and2 (Bit x, Bit y) = return (Bit (x && y))
-  and2 (_, _) = fail "and2 only handles 2 bits"
   or2 (Bit x, Bit y) = return (Bit (x || y))
-  or2 (_, _) = fail "or2 only handles 2 bits"
   add2 (Int x, Int y) = return (Int (x + y))
-  add2 (_, _) = fail "add2 only haddles 2 ints"
   sub2 (Int x, Int y) = return (Int (x - y))
-  sub2 (_, _) = fail "sub2 only handles 2 ints"
 
 data CompilerEnv a = CompilerEnv a 
 
-compile :: CompilerEnv Atom -> IO ()
+compile :: CompilerEnv (Atom a) -> IO ()
 compile (CompilerEnv (CompilerResult s)) = putStrLn s
 compile (CompilerEnv _) = fail "Not Compiled"
 
@@ -52,6 +48,9 @@ instance Monad CompilerEnv where
   (CompilerEnv a) >>= f = f a
   return a = CompilerEnv a
 
+{-
+This no longer works with gadt version of atoms that embeds the subtype (like int or bool)
+See how the actual compiler uses a Writer Monad to track state
 instance Circuit CompilerEnv where
   and2 (Bit x, Bit y) = return $ CompilerResult (show x ++ " && " ++ show y)
   and2 (_, _) = fail "and2 only handles 2 bits"
@@ -61,3 +60,4 @@ instance Circuit CompilerEnv where
   add2 (_, _) = fail "add2 only haddles 2 ints"
   sub2 (Int x, Int y) = return $ CompilerResult (show x ++ " - " ++ show y)
   sub2 (_, _) = fail "sub2 only handles 2 ints"
+-}
