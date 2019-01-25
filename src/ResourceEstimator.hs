@@ -12,7 +12,8 @@ import Isomorphism
 import Control.Monad.State
 import qualified Data.Vector.Sized as V
 
-data ResourceEstimate = ResourceEstimate {numWires :: Int, numALUs :: Int} 
+data ResourceEstimate = ResourceEstimate {numWires :: Int, numALUs :: Int}
+  deriving (Show, Eq)
 {-
 data REContainer a = REContainer ResourceEstimate a
 
@@ -32,8 +33,9 @@ instance Applicative REContainer where
 instance Functor REContainer where
   fmap = liftM
 -}
-estimateResources :: State ResourceEstimate a -> ResourceEstimate
-estimateResources a = snd $ runState a $ ResourceEstimate 0 0
+estimateResources :: a -> (a -> State ResourceEstimate b) -> ResourceEstimate
+estimateResources input functionYieldingMonad = snd $
+  runState (functionYieldingMonad input) $ ResourceEstimate 0 0
 
 {-
 instance Functor ResourceEstimatorEnv where
