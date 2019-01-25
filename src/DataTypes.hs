@@ -3,35 +3,21 @@ import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Vector.Sized as V
 import Control.Applicative
+import Data.Proxy
+import GHC.TypeLits
+import GHC.TypeLits.Extra
 import qualified Data.List as L
 
+{-
 class SizeOf a where
   size :: a -> Int
-
 data Atom =
   Int Int
   | Bit Bool
   | CompilerResult String
   deriving (Eq, Show)
+-}
 
-intSizeInBits = 8
-bitSizeInBits = 1
-
-type family TypeSize (x :: *) :: Nat where
-  TypeSize 
-  TypeSize a = 0
-
-instance SizeOf Atom where
-  size (Int _) = intSizeInBits
-  size (Bit _) = bitSizeInBits
-  size _ = -1
-
-instance (SizeOf a, KnownNat n, KnownNat m, n ~ (m + 1)) => SizeOf (SSeq n a) where
-  size (SSeq s) = V.length s * (size $ V.head s)
-
-instance (SizeOf a, KnownNat n, KnownNat m, n ~ (m + 1)) => SizeOf (TSeq n v a) where
-  size (TSeq s) = (size $ V.head s)
-{-
 data Atom a where
   Int :: Int -> Atom Int
   Bit :: Bool -> Atom Bool
@@ -46,6 +32,37 @@ instance Eq (Atom a) where
   (Bit x) == (Bit y) = x == y
   (Tuple x y) == (Tuple x' y') = (x == x') && (y == y')
   (CompilerResult x) == (CompilerResult y) = x == y
+
+instance Show (Atom a) where
+  show (Int x) = "Int " L.++ show x
+  show (Bit x) = "Bit " L.++ show x
+  show (Tuple x y) = "(" L.++ show x L.++ ", " L.++ show y L.++ ")"
+  show (CompilerResult x) = show x
+
+intSizeInBits = 8
+bitSizeInBits = 1
+type family TypeSize (x :: *) :: Nat where
+  TypeSize (Atom Int) = 8
+  TypeSize (Atom Bool) = 1
+  TypeSize (Atom (x, y)) = (TypeSize x) + (TypeSize y)
+  TypeSize (SSeq n a) = n * (TypeSize a)
+  TypeSize (TSeq n _ a) = (TypeSize a)
+  TypeSize a = 0
+
+size :: forall a . (KnownNat (TypeSize a)) => a -> Integer
+size _ = natVal $ (Proxy :: Proxy (TypeSize a))
+{-
+instance SizeOf Atom where
+  size (Int _) = intSizeInBits
+  size (Bit _) = bitSizeInBits
+  size _ = -1
+
+instance (SizeOf a, KnownNat n, KnownNat m, n ~ (m + 1)) => SizeOf (SSeq n a) where
+  size (SSeq s) = V.length s * (size $ V.head s)
+
+instance (SizeOf a, KnownNat n, KnownNat m, n ~ (m + 1)) => SizeOf (TSeq n v a) where
+  size (TSeq s) = (size $ V.head s)
+
 -}
 newtype Seq n a = Seq {stVec :: Vector n a}
   deriving (Foldable, Traversable, Show)
