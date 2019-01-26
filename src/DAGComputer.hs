@@ -97,6 +97,10 @@ data NodeInfo = NodeInfo {
   }
   deriving Show
 
+multiplyNodeThroughput :: Int -> NodeInfo -> NodeInfo
+multiplyNodeThroughput n (NodeInfo nt numerator denominator children) =
+  NodeInfo nt (numerator * n) denominator children
+
 data PipelineDAG = PipelineDAG [NodeInfo] deriving Show
 
 {-
@@ -129,6 +133,15 @@ getInnerPipeline f startingDAG = innerStages
     -- this passes in an emptyDAG for start and collects the final state,
     -- the state with all stages
     (_, PipelineDAG innerStages) = startingDAGToPipelineDAG startingDAG
+
+-- This is for combinators that do nothing and so just append the dag
+-- that they contain to the one surrounding them
+appendInnerDAGToOuterDAG :: (a -> State PipelineDAG b) -> State PipelineDAG c
+appendInnerDAGToOuterDAG f = do
+    PipelineDAG stages <- get 
+    put $ PipelineDAG (stages ++ getInnerPipeline f emptyDAG)
+    return undefined
+
 
 instance Circuit (State PipelineDAG) where
   -- unary operators
@@ -192,12 +205,12 @@ instance Circuit (State PipelineDAG) where
 
   -- ignore the iter since it does nothing, needs to be wrapped with a tseq or
   -- sseq converting function
-  iterC _ f _ = do
+  iterC _ f _ = appendInnerDAGToOuterDAG f {-do
     PipelineDAG stages <- get 
     put $ PipelineDAG (stages ++ getInnerPipeline f emptyDAG)
     return undefined
     -- appendToPipeline (NodeInfo (FoldT (Proxy :: Proxy a)) 1 1 (getInnerPipeline f emptyDAG, []))
-
+-}
 
   (f *** g) _ = do
     appendToPipeline (NodeInfo ForkJoinT 1 1
@@ -210,15 +223,30 @@ instance Circuit (State PipelineDAG) where
     return undefined
 
   -- scheduling operators
-  split_seq_to_sseqC outerLengthProxy f seqOfSSeq = do
-    resultingFlatSeq <- f $ seqOfSeqToSeq $ seqOfSSeqToSeqOfSeq seqOfSSeq
+  split_seq_to_sseqC :: forall totalInputLength totalOutputLength outerLength
+                        innerInputLength innerOutputLength a b .
+                        (KnownNat totalInputLength, KnownNat totalOutputLength,
+                         KnownNat outerLength, KnownNat innerInputLength,
+                         KnownNat innerOutputLength,
+                         totalInputLength ~ (outerLength*innerInputLength),
+                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
+                        Proxy outerLength ->
+    (Seq totalInputLength a -> State PipelineDAG (Seq totalOutputLength b)) ->
+    (Seq outerLength (SSeq innerInputLength a) ->
+      State PipelineDAG (Seq outerLength (SSeq innerOutputLength b)))
+  split_seq_to_sseqC _ f _ = do
+    PipelineDAG stages <- get 
     let innerLengthProxy = Proxy :: Proxy innerOutputLength
-    return $ seqOfSeqToSeqOfSSeq $ seqToSeqOfSeq innerLengthProxy resultingFlatSeq
+    let innerLength = (fromInteger $ natVal innerLengthProxy)
+    put $ PipelineDAG (fmap (multiplyNodeThroughput innerLength) stages)
+    return undefined
     
+  -- ignore the tseq since it does nothing, its the same as an iter, just chewing
+  -- up iterations that don't need to be parallelized
   split_seq_to_tseqC outerLengthProxy f seqOfTSeq = do
-    resultingFlatSeq <- f $ seqOfSeqToSeq $ seqOfTSeqToSeqOfSeq seqOfTSeq
-    let innerLengthProxy = Proxy :: Proxy innerOutputLength
-    return $ seqOfSeqToSeqOfTSeq $ seqToSeqOfSeq innerLengthProxy resultingFlatSeq
+    PipelineDAG stages <- get 
+    put $ PipelineDAG (stages ++ getInnerPipeline f emptyDAG)
+    return undefined
 
 {-
   sseq_to_seqC f seq = (f $ seqToSSeq seq) >>= (return . sseqToSeq)
