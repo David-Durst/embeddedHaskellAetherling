@@ -72,8 +72,12 @@ instance Circuit SimulatorEnv where
 
   foldC sublistLength f accum (Seq inputVec) =
     let
+      zipAtoms atom1 atom2 = Tuple atom1 atom2
       vectorOfVectors = nestVector sublistLength inputVec
-      vectorOfResults = V.mapM (\subVec ->  V.foldM f accum subVec) vectorOfVectors
+      vectorOfResults = V.mapM (\subVec ->
+                                  V.foldM (\atom1 -> (\atom2 -> f $
+                                                       Tuple atom1 atom2))
+                                  accum subVec) vectorOfVectors
       seqOfResults = liftM (\vec -> Seq vec) vectorOfResults
     in
       seqOfResults 
