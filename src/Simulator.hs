@@ -9,6 +9,7 @@ import Data.List.Split
 import Data.Types.Injective
 import Data.Types.Isomorphic
 import Isomorphism
+import Control.Monad
 import qualified Data.Vector.Sized as V
 
 data SimulatorEnv a = SimulatorEnv a
@@ -69,16 +70,20 @@ instance Circuit SimulatorEnv where
   upC _ (Seq vec) = return $ Seq $ V.replicate $ V.head vec
   downC _ (Seq vec) = return $ Seq $ V.singleton $ V.head vec
 
-  foldC f accum (Seq vec) = do
-    result <- V.foldM f accum vec
-    return result
+  foldC sublistLength f accum (Seq inputVec) =
+    let
+      vectorOfVectors = nestVector sublistLength inputVec
+      vectorOfResults = V.mapM (\subVec ->  V.foldM f accum subVec) vectorOfVectors
+      seqOfResults = liftM (\vec -> Seq vec) vectorOfResults
+    in
+      seqOfResults 
 
   partitionC sublistLength (Seq inputVec) =
     let
       vectorOfVectors = nestVector sublistLength inputVec
       vectorOfSeqs = V.map (\x -> Seq x) vectorOfVectors
     in
-      Seq vectorOfSeqs
+      return $ Seq vectorOfSeqs
 
   -- higher-order operators
   iterC _ f (Seq inputVec) = do

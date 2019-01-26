@@ -17,7 +17,7 @@ class Monad m => Circuit m where
   -- unary operators
   absC :: Atom Int -> m (Atom Int)
   notC :: Atom Bool -> m (Atom Bool)
-  noop :: Atom a -> m (Atom a)
+  noop :: (KnownNat (TypeSize a)) => Atom a -> m (Atom a)
   -- binary operators
   addC, subC, divC, mulC, minC, maxC, ashrC,
     shlC :: (Atom Int, Atom Int) -> m (Atom Int)
@@ -30,11 +30,17 @@ class Monad m => Circuit m where
   lutGenBitC :: [Atom Bool] -> (Atom Int) -> m (Atom Bool)
   constGenC :: Atom a -> Atom b -> m (Atom a)
   -- sequence operators
-  upC :: (KnownNat n) => Proxy n -> Seq 1 a -> m (Seq n a)
-  downC :: (KnownNat n, KnownNat o, n ~ (o+1)) => Proxy n -> (Seq n a) -> m (Seq 1 a)
-  foldC :: (KnownNat n) => (a -> b -> m a) -> a -> Seq n b -> m a
+  upC :: (KnownNat n, KnownNat (TypeSize a)) => Proxy n -> Seq 1 a -> m (Seq n a)
+  downC :: (KnownNat n, KnownNat o, n ~ (o+1), KnownNat (TypeSize a)) =>
+    Proxy n -> (Seq n a) -> m (Seq 1 a)
+  -- maybe in future allow them to be different types (accum and seq elements)
+  -- take seqences of length p, break them up into sequences of length o and
+  -- fold over each subsequence of length o
+  foldC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o),
+            (KnownNat (TypeSize a))) =>
+           Proxy o -> (a -> a -> m a) -> a -> Seq p a -> m (Seq n a)
   partitionC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
-    Proxy o -> Seq p a -> Seq n (Seq o a)
+    Proxy o -> Seq p a -> m (Seq n (Seq o a))
 
   -- higher-order operators
   iterC :: (KnownNat n, SeqBaseType a ~ Atom a', SeqBaseType b ~ Atom b') =>

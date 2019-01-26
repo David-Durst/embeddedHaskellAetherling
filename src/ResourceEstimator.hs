@@ -14,7 +14,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
 -- these are the types of the nodes in a DAG
-data NodeType a =
+data NodeType =
   AbsT
   | NotT
   | NoopT
@@ -43,12 +43,12 @@ data NodeType a =
   | GeqBitT 
   | LutGenIntT [Atom Int]
   | LutGenBitT [Atom Bool]
-  | ConstGenT  (Atom a)
+  | forall a . ConstGenT  (Atom a)
   | UpT Int
   | DownT Int
-  | FoldT a (NodeType a)
+  | forall a . FoldT a NodeType
   | PartitionT Int
-  deriving (Show, Eq)
+  --deriving (Show, Eq)
 
 -- This is all the info about a dag necessary to compile it to Magma
 -- and measure it's resources
@@ -56,13 +56,15 @@ data NodeInfo = NodeInfo {nodeThroughputNumerator :: Int,
                          nodeThroughputDenominator :: Int, consumerNodes :: [NodeInfo]}
   deriving (Eq, Show)
 
-data PipelineDAG = forall a . (Show a, Eq a) => PipelineDAG (Map.Map (NodeType a) NodeInfo)
+data PipelineDAG = PipelineDAG (Map.Map NodeType NodeInfo)
 
+{-
 instance Show PipelineDAG where
   show (PipelineDAG map) = show map 
+-}
 
 emptyDAG :: PipelineDAG
-emptyDAG = PipelineDAG $ (Map.empty :: forall k . (Show k, Eq k) => Map.Map (NodeType k) NodeInfo)
+emptyDAG = PipelineDAG Map.empty 
 
 data ResourceEstimate = ResourceEstimate {numWires :: Int, numALUs :: Int}
   deriving (Show, Eq)
@@ -118,35 +120,23 @@ incrementResourcesBy newWireSize newALUSize a = do
 instance Circuit (State ResourceEstimate) where
   -- unary operators
   absC _ = incrementResourcesBy intSizeInBits intSizeInBits (Int 2)
-  notC _ = incrementResourcesBy bitSizeInBits bitSizeInBits (Bit True)
-  notC _ = fail "notC only handles a bit"
+  noop :: forall a . (KnownNat (TypeSize a)) => Atom a -> State ResourceEstimate (Atom a)
   noop c = incrementResourcesBy (size (Proxy :: Proxy a)) (size (Proxy :: Proxy a)) c
 
   -- binary operators
   -- the values returned here, they are only to emit things of the right types
   -- so the state computations can occur
   addC (Int _, Int _) = incrementResourcesBy (2*intSizeInBits) intSizeInBits (Int 2)
-  addC (_, _) = fail "addC only handles 2 ints"
   subC (Int _, Int _) = incrementResourcesBy (2*intSizeInBits) intSizeInBits (Int 2)
-  subC (_, _) = fail "subC only handles 2 ints"
   mulC (Int _, Int _) = incrementResourcesBy (2*intSizeInBits) intSizeInBits (Int 2)
-  mulC (_, _) = fail "mulC only handles 2 ints"
   divC (Int _, Int _) = incrementResourcesBy (2*intSizeInBits) intSizeInBits (Int 2)
-  divC (_, _) = fail "divC only handles 2 ints"
   minC (Int _, Int _) = incrementResourcesBy (2*intSizeInBits) intSizeInBits (Int 2)
-  minC (_, _) = fail "minC only handles 2 ints"
   maxC (Int _, Int _) = incrementResourcesBy (2*intSizeInBits) intSizeInBits (Int 2)
-  maxC (_, _) = fail "maxC only handles 2 ints"
   ashrC (Int _, Int _) = incrementResourcesBy (2*intSizeInBits) intSizeInBits (Int 2)
-  ashrC (_, _) = fail "ashrC only handles 2 ints"
   shlC (Int _, Int _) = incrementResourcesBy (2*intSizeInBits) intSizeInBits (Int 2)
-  shlC (_, _) = fail "shlC only handles 2 ints"
   andC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
-  andC (_, _) = fail "andC only handles 2 bits"
   orC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
-  orC (_, _) = fail "orC only handles 2 bits"
   xorC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
-  xorC (_, _) = fail "xorC only handles 2 bits"
   eqIntC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
   eqBitC (Bit x, Bit y) = incrementResourcesBy (2*bitSizeInBits) bitSizeInBits (Bit True)
   neqIntC (Int x, Int y) = incrementResourcesBy (2*intSizeInBits) bitSizeInBits (Bit True)
@@ -168,7 +158,11 @@ instance Circuit (State ResourceEstimate) where
 
   -- sequence operators
   -- need to fix upC to account for storage if tseq
+  upC :: forall a n. (KnownNat n, KnownNat (TypeSize a)) =>
+    Proxy n -> Seq 1 a -> State ResourceEstimate (Seq n a)
   upC _ (Seq vec) = incrementResourcesBy 0 (size (Proxy :: Proxy a)) undefined
+  downC :: forall a n o . (KnownNat n, KnownNat o, n ~ (o+1), KnownNat (TypeSize a)) =>
+    Proxy n -> (Seq n a) -> State ResourceEstimate (Seq 1 a)
   downC _ (Seq vec) = incrementResourcesBy 0 (size (Proxy :: Proxy a)) undefined
 {-
   foldC _ accum (Seq vec) = do

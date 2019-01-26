@@ -67,3 +67,4 @@ library:
     - GADTs
     - ConstraintKinds
     - Rank2Types
+    - InstanceSigs
