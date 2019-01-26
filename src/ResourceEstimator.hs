@@ -167,7 +167,10 @@ instance Circuit (State ResourceEstimate) where
   downC _ (Seq vec) = incrementResourcesBy 0 (size (Proxy :: Proxy a)) undefined
 
   foldC sublistLength f _ _ = do
-    (ResourceEstimate innerWires innerALU) <- get (f undefined undefined)
+    -- this runs the inner function to compute its state
+    f undefined undefined
+    -- get copies the state to the value so <- can return the state
+    (ResourceEstimate innerWires innerALU) <- get
     -- need to fix this estimate 
     put $ ResourceEstimate (innerWires * (fromInteger $ natVal sublistLength))
       (innerALU * (fromInteger $ natVal sublistLength))
