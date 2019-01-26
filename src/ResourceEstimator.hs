@@ -173,13 +173,6 @@ instance Circuit (State ResourceEstimate) where
       (innerALU * (fromInteger $ natVal sublistLength))
     return undefined
 
-  partitionC sublistLength (Seq inputVec) =
-    let
-      vectorOfVectors = nestVector sublistLength inputVec
-      vectorOfSeqs = V.map (\x -> Seq x) vectorOfVectors
-    in
-      Seq vectorOfSeqs
-
   -- higher-order operators
   iterC _ f (Seq inputVec) = do
     resultVec <- V.mapM f inputVec
