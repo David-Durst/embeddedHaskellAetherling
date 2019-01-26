@@ -120,6 +120,7 @@ incrementResourcesBy newWireSize newALUSize a = do
 instance Circuit (State ResourceEstimate) where
   -- unary operators
   absC _ = incrementResourcesBy intSizeInBits intSizeInBits (Int 2)
+  notC _ = incrementResourcesBy bitSizeInBits bitSizeInBits undefined
   noop :: forall a . (KnownNat (TypeSize a)) => Atom a -> State ResourceEstimate (Atom a)
   noop c = incrementResourcesBy (size (Proxy :: Proxy a)) (size (Proxy :: Proxy a)) c
 
