@@ -165,11 +165,14 @@ instance Circuit (State ResourceEstimate) where
   downC :: forall a n o . (KnownNat n, KnownNat o, n ~ (o+1), KnownNat (TypeSize a)) =>
     Proxy n -> (Seq n a) -> State ResourceEstimate (Seq 1 a)
   downC _ (Seq vec) = incrementResourcesBy 0 (size (Proxy :: Proxy a)) undefined
-{-
-  foldC _ accum (Seq vec) = do
-    result <- V.foldM f accum vec
-    return result
--}
+
+  foldC sublistLength f _ _ = do
+    (ResourceEstimate innerWires innerALU) <- get (f undefined undefined)
+    -- need to fix this estimate 
+    put $ ResourceEstimate (innerWires * (fromInteger $ natVal sublistLength))
+      (innerALU * (fromInteger $ natVal sublistLength))
+    return undefined
+
   partitionC sublistLength (Seq inputVec) =
     let
       vectorOfVectors = nestVector sublistLength inputVec
