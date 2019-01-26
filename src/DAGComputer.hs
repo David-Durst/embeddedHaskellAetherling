@@ -205,12 +205,7 @@ instance Circuit (State PipelineDAG) where
 
   -- ignore the iter since it does nothing, needs to be wrapped with a tseq or
   -- sseq converting function
-  iterC _ f _ = appendInnerDAGToOuterDAG f {-do
-    PipelineDAG stages <- get 
-    put $ PipelineDAG (stages ++ getInnerPipeline f emptyDAG)
-    return undefined
-    -- appendToPipeline (NodeInfo (FoldT (Proxy :: Proxy a)) 1 1 (getInnerPipeline f emptyDAG, []))
--}
+  iterC _ f _ = appendInnerDAGToOuterDAG f 
 
   (f *** g) _ = do
     appendToPipeline (NodeInfo ForkJoinT 1 1
@@ -243,10 +238,7 @@ instance Circuit (State PipelineDAG) where
     
   -- ignore the tseq since it does nothing, its the same as an iter, just chewing
   -- up iterations that don't need to be parallelized
-  split_seq_to_tseqC outerLengthProxy f seqOfTSeq = do
-    PipelineDAG stages <- get 
-    put $ PipelineDAG (stages ++ getInnerPipeline f emptyDAG)
-    return undefined
+  split_seq_to_tseqC _ f _ = appendInnerDAGToOuterDAG f
 
 {-
   sseq_to_seqC f seq = (f $ seqToSSeq seq) >>= (return . sseqToSeq)
