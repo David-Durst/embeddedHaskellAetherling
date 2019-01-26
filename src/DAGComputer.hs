@@ -98,12 +98,20 @@ data NodeInfo = NodeInfo {
   deriving Show
 
 multiplyNodeThroughput :: Int -> NodeInfo -> NodeInfo
-multiplyNodeThroughput n (NodeInfo nt numerator denominator children) =
+multiplyNodeThroughput n (NodeInfo nt@(FoldT _) numerator denominator children) =
   NodeInfo nt (numerator * n) denominator children
+multiplyNodeThroughput n (NodeInfo nt numerator denominator children) =
+  NodeInfo nt (numerator * n) denominator
+  (fmap (multiplyNodeThroughput n) $ fst children,
+   fmap (multiplyNodeThroughput n) $ snd children)
 
 divideNodeThroughput :: Int -> NodeInfo -> NodeInfo
-divideNodeThroughput n (NodeInfo nt numerator denominator children) =
+divideNodeThroughput n (NodeInfo nt@(FoldT _) numerator denominator children) =
   NodeInfo nt numerator (denominator * n) children
+divideNodeThroughput n (NodeInfo nt numerator denominator children) =
+  NodeInfo nt numerator (denominator * n) 
+  (fmap (divideNodeThroughput n) $ fst children,
+   fmap (divideNodeThroughput n) $ snd children)
 
 data PipelineDAG = PipelineDAG [NodeInfo] deriving Show
 
@@ -288,7 +296,7 @@ instance Circuit (State PipelineDAG) where
                    (KnownNat inputLength, KnownNat outputLength) =>
     (TSeq inputLength v a -> State PipelineDAG (TSeq outputLength u b)) ->
     SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)
-  tseq_to_sseqC f sseq = do 
+  tseq_to_sseqC f _ = do 
     PipelineDAG stages <- get 
     let inputLengthProxy = Proxy :: Proxy inputLength 
     let inputLength = (fromInteger $ natVal inputLengthProxy)
