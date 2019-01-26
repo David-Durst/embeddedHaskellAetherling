@@ -241,10 +241,12 @@ instance Circuit (State PipelineDAG) where
     (Seq outerLength (SSeq innerInputLength a) ->
       State PipelineDAG (Seq outerLength (SSeq innerOutputLength b)))
   split_seq_to_sseqC _ f _ = do
-    PipelineDAG stages <- get 
+    PipelineDAG priorStages <- get 
+    let innerStages = getInnerPipeline f emptyDAG
     let innerLengthProxy = Proxy :: Proxy innerOutputLength
     let innerLength = (fromInteger $ natVal innerLengthProxy)
-    put $ PipelineDAG (fmap (multiplyNodeThroughput innerLength) stages)
+    let scheduledInnerStages = (fmap (multiplyNodeThroughput innerLength) innerStages)
+    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
     return undefined
     
   -- ignore the tseq since it does nothing, its the same as an iter, just chewing
@@ -257,10 +259,12 @@ instance Circuit (State PipelineDAG) where
                   (SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)) ->
                   Seq inputLength a -> State PipelineDAG (Seq outputLength b)
   sseq_to_seqC f _ = do 
-    PipelineDAG stages <- get 
+    PipelineDAG priorStages <- get 
+    let innerStages = getInnerPipeline f emptyDAG
     let inputLengthProxy = Proxy :: Proxy inputLength 
     let inputLength = (fromInteger $ natVal inputLengthProxy)
-    put $ PipelineDAG (fmap (divideNodeThroughput inputLength) stages)
+    let scheduledInnerStages = (fmap (divideNodeThroughput inputLength) innerStages)
+    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
     return undefined
 
   -- ignore the seq since it does nothing and tseq did nothing as well 
@@ -271,10 +275,12 @@ instance Circuit (State PipelineDAG) where
                   (Seq inputLength a -> State PipelineDAG (Seq outputLength b)) ->
                   SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)
   seq_to_sseqC f _ = do
-    PipelineDAG stages <- get 
+    PipelineDAG priorStages <- get 
+    let innerStages = getInnerPipeline f emptyDAG
     let inputLengthProxy = Proxy :: Proxy inputLength 
     let inputLength = (fromInteger $ natVal inputLengthProxy)
-    put $ PipelineDAG (fmap (multiplyNodeThroughput inputLength) stages)
+    let scheduledInnerStages = (fmap (multiplyNodeThroughput inputLength) innerStages)
+    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
     return undefined
 
   seq_to_tseqC f _ = appendInnerDAGToOuterDAG f
@@ -285,10 +291,12 @@ instance Circuit (State PipelineDAG) where
     Proxy v -> Proxy u -> (SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)) ->
     TSeq inputLength v a -> State PipelineDAG (TSeq outputLength u b)
   sseq_to_tseqC _ _ f _ = do
-    PipelineDAG stages <- get
+    PipelineDAG priorStages <- get 
+    let innerStages = getInnerPipeline f emptyDAG
     let inputLengthProxy = Proxy :: Proxy inputLength 
     let inputLength = (fromInteger $ natVal inputLengthProxy)
-    put $ PipelineDAG (fmap (divideNodeThroughput inputLength) stages)
+    let scheduledInnerStages = (fmap (divideNodeThroughput inputLength) innerStages)
+    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
     return undefined
 
   -- this is almost same as seq_to_sseq as tseq and seq both don't change parallelism
@@ -297,10 +305,12 @@ instance Circuit (State PipelineDAG) where
     (TSeq inputLength v a -> State PipelineDAG (TSeq outputLength u b)) ->
     SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)
   tseq_to_sseqC f _ = do 
-    PipelineDAG stages <- get 
+    PipelineDAG priorStages <- get 
+    let innerStages = getInnerPipeline f emptyDAG
     let inputLengthProxy = Proxy :: Proxy inputLength 
     let inputLength = (fromInteger $ natVal inputLengthProxy)
-    put $ PipelineDAG (fmap (divideNodeThroughput inputLength) stages)
+    let scheduledInnerStages = (fmap (multiplyNodeThroughput inputLength) innerStages)
+    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
     return undefined
 
   underutilC :: forall n v o u a b underutilMult .
@@ -309,9 +319,11 @@ instance Circuit (State PipelineDAG) where
     Proxy underutilMult -> (TSeq n v a -> State PipelineDAG (TSeq o u b)) ->
     TSeq n ((n + v) * underutilMult) a -> State PipelineDAG (TSeq o ((o + u) * underutilMult) b)
   underutilC underutilProxy f _ = do 
-    PipelineDAG stages <- get 
+    PipelineDAG priorStages <- get 
+    let innerStages = getInnerPipeline f emptyDAG
     let underutilAmount = (fromInteger $ natVal underutilProxy)
-    put $ PipelineDAG (fmap (divideNodeThroughput underutilAmount) stages)
+    let scheduledInnerStages = (fmap (divideNodeThroughput underutilAmount) innerStages)
+    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
     return undefined
 -- examples of programs in space and time
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
