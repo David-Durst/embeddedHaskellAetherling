@@ -10,6 +10,7 @@ import Data.Types.Injective
 import Data.Types.Isomorphic
 import Isomorphism
 import Control.Monad.State
+import Data.Typeable
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
@@ -44,8 +45,8 @@ data NodeType =
   | LutGenIntT [Atom Int]
   | LutGenBitT [Atom Bool]
   | forall a . ConstGenT  (Atom a)
-  | UpT Int
-  | DownT Int
+  | UpT TypeRep Int
+  | DownT TypeRep Int
   | forall a . FoldT a NodeType
   | PartitionT Int
   --deriving (Show, Eq)
@@ -168,7 +169,7 @@ instance Circuit (State ResourceEstimate) where
 
   foldC sublistLength f _ _ = do
     -- this runs the inner function to compute its state
-    f undefined undefined
+    f undefined
     -- get copies the state to the value so <- can return the state
     (ResourceEstimate innerWires innerALU) <- get
     -- need to fix this estimate 

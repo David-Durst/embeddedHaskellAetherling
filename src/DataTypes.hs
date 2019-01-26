@@ -6,6 +6,8 @@ import Control.Applicative
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Extra
+import Data.Typeable
+import Data.List.Split
 import qualified Data.List as L
 
 {-
@@ -53,6 +55,44 @@ type family TypeSize (x :: *) :: Nat where
 
 size :: forall a . (KnownNat (TypeSize a)) => Proxy a -> Int
 size _ = fromInteger $ natVal $ (Proxy :: Proxy (TypeSize a) )
+
+-- first one is string to replace
+-- second one is string to replace it with
+-- third string is string to operate on
+replaceAString :: String -> String -> String -> String
+replaceAString toReplace subtitute input = replaced 
+  where
+    (hdSplit:tlSplit) = splitOn toReplace input
+    replaced = L.foldl (\x -> \y -> x L.++ subtitute L.++ y)
+      hdSplit tlSplit
+
+typeToMagmaString :: forall (a :: *) (b :: *) . TypeRep -> String
+typeToMagmaString typeRep
+  | typeRep == typeOf (Proxy :: Proxy (Atom Int)) = "Array(" L.++
+                                                    show intSizeInBits L.++
+                                                    ", In(BitIn))"
+  | typeRep == typeOf (Proxy :: Proxy (Atom Bool)) = "Array(" L.++
+                                                    show bitSizeInBits L.++
+                                                    ", In(BitIn))"
+  -- assume otherwise this is a tuple
+  | otherwise = do
+      let lastBraceRemoved = L.reverse . L.tail . L.reverse $ show typeRep
+          proxyRemoved = L.foldl (L.++) "" $ splitOn "Proxy * (" $ lastBraceRemoved
+          intsReplaced = replaceAString "(Atom Int)" "Array(8,In(BitIn))" proxyRemoved
+          bitsReplaced = replaceAString "(Atom Bool)" "Array(1,In(BitIn))" intsReplaced
+          tuplesReplaced = replaceAString "Atom (" "Tuple(" bitsReplaced
+      tuplesReplaced
+{-
+      (hdSplitOnInts:tlSplitOnInts) = splitOn "(Atom Int)" $ proxyRemoved
+      intsReplaced = foldl (\x -> \y -> x ++ "Array(8,In(BitIn))" ++ y)
+        hdSplitOnInts tlSplitOnInts
+      (hdSplitOnBits:tlSplitOnBits) = splitOn "(Atom Bit)" $ proxyRemoved
+      bitsReplaced = foldl (\x -> \y -> x ++ "Array(1,In(BitIn))" ++ y)
+        hdSplitOnBits tlSplitOnBits
+      (hdSplitOnTuples:tlSplitOnTuples) = splitOn "Atom (" $ proxyRemoved
+      tuplesReplaced = foldl (\x -> \y -> x ++ "Tuple(" ++ y)
+        hdSplitOnTuples tlSplitOnTuples
+-}
 {-
 instance SizeOf Atom where
   size (Int _) = intSizeInBits
