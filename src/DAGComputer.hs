@@ -101,6 +101,10 @@ multiplyNodeThroughput :: Int -> NodeInfo -> NodeInfo
 multiplyNodeThroughput n (NodeInfo nt numerator denominator children) =
   NodeInfo nt (numerator * n) denominator children
 
+divideNodeThroughput :: Int -> NodeInfo -> NodeInfo
+divideNodeThroughput n (NodeInfo nt numerator denominator children) =
+  NodeInfo nt numerator (denominator * n) children
+
 data PipelineDAG = PipelineDAG [NodeInfo] deriving Show
 
 {-
@@ -141,7 +145,6 @@ appendInnerDAGToOuterDAG f = do
     PipelineDAG stages <- get 
     put $ PipelineDAG (stages ++ getInnerPipeline f emptyDAG)
     return undefined
-
 
 instance Circuit (State PipelineDAG) where
   -- unary operators
@@ -240,25 +243,88 @@ instance Circuit (State PipelineDAG) where
   -- up iterations that don't need to be parallelized
   split_seq_to_tseqC _ f _ = appendInnerDAGToOuterDAG f
 
-{-
-  sseq_to_seqC f seq = (f $ seqToSSeq seq) >>= (return . sseqToSeq)
-  tseq_to_seqC f seq = (f $ seqToTSeq seq) >>= (return . tseqToSeq)
-  seq_to_sseqC f sseq = (f $ sseqToSeq sseq) >>= (return . seqToSSeq)
-  seq_to_tseqC f tseq = (f $ tseqToSeq tseq) >>= (return . seqToTSeq)
-  sseq_to_tseqC _ _ f tseq = (f $ tseqToSSeq tseq) >>= (return . sseqToTSeq)
-  tseq_to_sseqC f sseq = (f $ sseqToTSeq sseq) >>= (return . tseqToSSeq)
-  underutilC _ f tseq = do 
-    innerResultTSeq :: TSeq o u b <- f $ changeUtilTSeq tseq
-    return $ changeUtilTSeq innerResultTSeq
--}
-{-
+  -- since getting rid of sseq, undo parallelism
+  sseq_to_seqC :: forall a b inputLength outputLength .
+                  (KnownNat inputLength, KnownNat outputLength) =>
+                  (SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)) ->
+                  Seq inputLength a -> State PipelineDAG (Seq outputLength b)
+  sseq_to_seqC f _ = do 
+    PipelineDAG stages <- get 
+    let inputLengthProxy = Proxy :: Proxy inputLength 
+    let inputLength = (fromInteger $ natVal inputLengthProxy)
+    put $ PipelineDAG (fmap (divideNodeThroughput inputLength) stages)
+    return undefined
+
+  -- ignore the seq since it does nothing and tseq did nothing as well 
+  tseq_to_seqC f _ = appendInnerDAGToOuterDAG f
+
+  seq_to_sseqC :: forall inputLength outputLength a b .
+                  (KnownNat inputLength, KnownNat outputLength) =>
+                  (Seq inputLength a -> State PipelineDAG (Seq outputLength b)) ->
+                  SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)
+  seq_to_sseqC f _ = do
+    PipelineDAG stages <- get 
+    let inputLengthProxy = Proxy :: Proxy inputLength 
+    let inputLength = (fromInteger $ natVal inputLengthProxy)
+    put $ PipelineDAG (fmap (multiplyNodeThroughput inputLength) stages)
+    return undefined
+
+  seq_to_tseqC f _ = appendInnerDAGToOuterDAG f
+
+  -- this is almost same as sseq_to_seq as tseq and seq both don't change parallelism
+  sseq_to_tseqC :: forall inputLength outputLength a b u v .
+                   (KnownNat inputLength, KnownNat outputLength) =>
+    Proxy v -> Proxy u -> (SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)) ->
+    TSeq inputLength v a -> State PipelineDAG (TSeq outputLength u b)
+  sseq_to_tseqC _ _ f _ = do
+    PipelineDAG stages <- get
+    let inputLengthProxy = Proxy :: Proxy inputLength 
+    let inputLength = (fromInteger $ natVal inputLengthProxy)
+    put $ PipelineDAG (fmap (divideNodeThroughput inputLength) stages)
+    return undefined
+
+  -- this is almost same as seq_to_sseq as tseq and seq both don't change parallelism
+  tseq_to_sseqC :: forall inputLength outputLength a b u v .
+                   (KnownNat inputLength, KnownNat outputLength) =>
+    (TSeq inputLength v a -> State PipelineDAG (TSeq outputLength u b)) ->
+    SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)
+  tseq_to_sseqC f sseq = do 
+    PipelineDAG stages <- get 
+    let inputLengthProxy = Proxy :: Proxy inputLength 
+    let inputLength = (fromInteger $ natVal inputLengthProxy)
+    put $ PipelineDAG (fmap (divideNodeThroughput inputLength) stages)
+    return undefined
+
+  underutilC :: forall n v o u a b underutilMult .
+                (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
+                 KnownNat underutilMult, 1 <= underutilMult) => 
+    Proxy underutilMult -> (TSeq n v a -> State PipelineDAG (TSeq o u b)) ->
+    TSeq n ((n + v) * underutilMult) a -> State PipelineDAG (TSeq o ((o + u) * underutilMult) b)
+  underutilC underutilProxy f _ = do 
+    PipelineDAG stages <- get 
+    let underutilAmount = (fromInteger $ natVal underutilProxy)
+    put $ PipelineDAG (fmap (divideNodeThroughput underutilAmount) stages)
+    return undefined
 -- examples of programs in space and time
-iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
+-- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition
---unscheduledCirc = iterC (Proxy @4) $ (constGenC (Int 3) *** constGenC (Int 2)) >>> addC
-unscheduledCirc = iterC (Proxy @4) $ addC
-unscheduledResult = simulate $ unscheduledCirc iterInput
-sequentialResult = simulate $ seq_to_tseqC unscheduledCirc $ to iterInput
+unscheduledPipeline = iterC (Proxy @4) $ (constGenC (Int 3) *** constGenC (Int 2)) >>> addC
+unscheduledNode = iterC (Proxy @4) $ addC
+
+unscheduledPipelineDAG = buildDAG unscheduledPipeline
+unscheduledNodeDAG = buildDAG unscheduledNode 
+
+sequentialPipelineDAG = buildDAG $ seq_to_tseqC unscheduledPipeline 
+sequentialNodeDAG = buildDAG $ seq_to_tseqC unscheduledNode
+
+parallelPipelineDAG = buildDAG $ seq_to_sseqC unscheduledPipeline 
+parallelNodeDAG = buildDAG $ seq_to_sseqC unscheduledNode
+
+partialParallelPipelineDAG = buildDAG $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
+  unscheduledPipeline 
+partialParallelNodeDAG = buildDAG $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
+  unscheduledNode
+{-
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput
 partialParallelInput :: TSeq 2 0 (SSeq 2 (Atom, Atom))
 partialParallelInput = seqToTSeq $ seqOfSeqToSeqOfSSeq $ seqToSeqOfSeq (Proxy @2) iterInput
@@ -266,5 +332,4 @@ partialParallelResult =
   simulate $
   (seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledCirc) $
   partialParallelInput
-
 -}
