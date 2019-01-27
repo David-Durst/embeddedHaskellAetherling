@@ -64,7 +64,8 @@ instance Circuit SimulatorEnv where
 
   lutGenBitC as (Int i) = return $ as !! i 
 
-  constGenC x = \_ -> return x
+  constGenIntC x = \_ -> return x
+  constGenBitC x = \_ -> return x
 
   -- sequence operators
   upC _ (Seq vec) = return $ Seq $ V.replicate $ V.head vec

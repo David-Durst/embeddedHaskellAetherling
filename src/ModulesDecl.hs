@@ -4,6 +4,7 @@ import DataTypes
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Extra
+import Data.Typeable
 import qualified Data.Vector.Sized as V
 
 type family SeqBaseType (x :: *) :: * where
@@ -28,10 +29,11 @@ class Monad m => Circuit m where
   -- generators
   lutGenIntC :: [Atom Int] -> (Atom Int) -> m (Atom Int)
   lutGenBitC :: [Atom Bool] -> (Atom Int) -> m (Atom Bool)
-  constGenC :: Atom a -> Atom b -> m (Atom a)
+  constGenIntC :: Atom Int -> Atom a -> m (Atom Int)
+  constGenBitC :: Atom Bool -> Atom a -> m (Atom Bool)
   -- sequence operators
-  upC :: (KnownNat n, KnownNat (TypeSize a)) => Proxy n -> Seq 1 a -> m (Seq n a)
-  downC :: (KnownNat n, KnownNat o, n ~ (o+1), KnownNat (TypeSize a)) =>
+  upC :: (KnownNat n, KnownNat (TypeSize a), Typeable (Proxy a)) => Proxy n -> Seq 1 a -> m (Seq n a)
+  downC :: (KnownNat n, KnownNat o, n ~ (o+1), KnownNat (TypeSize a), Typeable (Proxy a)) =>
     Proxy n -> (Seq n a) -> m (Seq 1 a)
   -- maybe in future allow them to be different types (accum and seq elements)
   -- take seqences of length p, break them up into sequences of length o and

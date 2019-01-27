@@ -156,7 +156,8 @@ instance Circuit (State ResourceEstimate) where
   lutGenIntC as _ = incrementResourcesBy (length as * intSizeInBits) intSizeInBits (head as)
   lutGenBitC as _ = incrementResourcesBy (length as * bitSizeInBits) bitSizeInBits (head as)
 
-  constGenC x _ = incrementResourcesBy intSizeInBits intSizeInBits x
+  constGenIntC x _ = incrementResourcesBy intSizeInBits intSizeInBits x
+  constGenBitC x _ = incrementResourcesBy bitSizeInBits bitSizeInBits x
 
   -- sequence operators
   -- need to fix upC to account for storage if tseq

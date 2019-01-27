@@ -45,7 +45,8 @@ data NodeType =
   | GeqBitT 
   | LutGenIntT [Atom Int]
   | LutGenBitT [Atom Bool]
-  | forall a . ConstGenT (Atom a)
+  | ConstGenIntT (Atom Int)
+  | ConstGenBitT (Atom Bool)
   | forall a . UpT (Proxy a) Int
   | forall a . DownT (Proxy a) Int
   | forall a . FoldT (Proxy a) 
@@ -81,7 +82,8 @@ instance Show NodeType where
   show GeqBitT = "GeqBitT" 
   show (LutGenIntT as) = "LutGenIntT " ++ show as
   show (LutGenBitT as) = "LutGenBitT " ++ show as
-  show (ConstGenT a) = "ConstGenT " ++ show a
+  show (ConstGenIntT a) = "ConstGenT " ++ show a
+  show (ConstGenBitT a) = "ConstGenT " ++ show a
   show (UpT proxy n) = "UpT " ++ show proxy ++ " " ++ show n
   show (DownT proxy n) = "DownT " ++ show proxy ++ " " ++ show n
   show (FoldT proxy) = "FoldT " ++ show proxy
@@ -191,15 +193,16 @@ instance Circuit (State PipelineDAG) where
   lutGenIntC as _ = appendToPipeline (NodeInfo (LutGenIntT as) 1 1 ([],[]))
   lutGenBitC as _ = appendToPipeline (NodeInfo (LutGenBitT as) 1 1 ([],[]))
 
-  constGenC x _ = appendToPipeline (NodeInfo (ConstGenT x) 1 1 ([],[]))
+  constGenIntC x _ = appendToPipeline (NodeInfo (ConstGenIntT x) 1 1 ([],[]))
+  constGenBitC x _ = appendToPipeline (NodeInfo (ConstGenBitT x) 1 1 ([],[]))
   -- sequence operators
   -- need to fix upC to account for storage if tseq
-  upC :: forall a n. (KnownNat n, KnownNat (TypeSize a)) =>
+  upC :: forall a n. (KnownNat n, KnownNat (TypeSize a), Typeable (Proxy a)) =>
     Proxy n -> Seq 1 a -> State PipelineDAG (Seq n a)
   upC amountProxy _ = appendToPipeline (NodeInfo (UpT (Proxy :: Proxy a)
                                                       (fromInteger $ natVal amountProxy))
                                                  1 1 ([],[]))
-  downC :: forall a n o . (KnownNat n, KnownNat o, n ~ (o+1), KnownNat (TypeSize a)) =>
+  downC :: forall a n o . (KnownNat n, KnownNat o, n ~ (o+1), KnownNat (TypeSize a), Typeable (Proxy a)) =>
     Proxy n -> (Seq n a) -> State PipelineDAG (Seq 1 a)
   downC amountProxy _ = appendToPipeline (NodeInfo (DownT (Proxy :: Proxy a)
                                                       (fromInteger $ natVal amountProxy))
@@ -328,7 +331,7 @@ instance Circuit (State PipelineDAG) where
 -- examples of programs in space and time
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition
-unscheduledPipeline = iterC (Proxy @4) $ (constGenC (Int 3) *** constGenC (Int 2)) >>> addC
+unscheduledPipeline = iterC (Proxy @4) $ (constGenIntC (Int 3) *** constGenIntC (Int 2)) >>> addC
 unscheduledNode = iterC (Proxy @4) $ addC
 
 unscheduledPipelineDAG = buildDAG unscheduledPipeline
