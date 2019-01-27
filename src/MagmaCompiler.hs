@@ -262,46 +262,64 @@ getPortNames (FoldT nt totalLen) fnName 1 = Right (
                                      Ports [fnName ++ ".I"] [fnName ++ ".out"] [] [fnName ++ ".valid"])
 getPortNames (FoldT _ _) _ _ = Left "FoldT must have a par of at least 1"
 getPortNames ForkJoinT _ _ = Left "ForkJoin shouldn't be printed to magma"
+
 -- This is all the info about a dag necessary to compile it to Magma
--- and measure it's resources
-data NodeInfo = NodeInfo {
-  nodeType :: NodeType,
-  nodeThroughputNumerator :: Int,
-  nodeThroughputDenominator :: Int,
-  childNodes :: ([NodeInfo],[NodeInfo])
+data CompilationData = CompilationData {
+  -- list of strings in reverse of Magma code
+  -- reversed as prepend is cheaper
+  reversedOutputText :: [String],
+  -- the input ports to the circuit
+  -- this is NOT REVERSED
+  inputPorts :: [PortName],
+  -- the output ports, used to wire up adjacent nodes
+  -- this is NOT REVERSED
+  outputPorts :: [PortName],
+  -- list of valid ports with last in DAG
+  -- as the last element
+  reversedValidPorts :: [PortName],
+  -- this tracks how parallel to make everything in the subpart
+  throughputNumerator :: Int,
+  throughputDenominator :: Int
   }
   deriving Show
 
-multiplyNodeThroughput :: Int -> NodeInfo -> NodeInfo
-multiplyNodeThroughput n (NodeInfo nt@(FoldT _ _) numerator denominator children) =
-  NodeInfo nt (numerator * n) denominator children
-multiplyNodeThroughput n (NodeInfo nt numerator denominator children) =
-  NodeInfo nt (numerator * n) denominator
-  (fmap (multiplyNodeThroughput n) $ fst children,
-   fmap (multiplyNodeThroughput n) $ snd children)
-
-divideNodeThroughput :: Int -> NodeInfo -> NodeInfo
-divideNodeThroughput n (NodeInfo nt@(FoldT _ _) numerator denominator children) =
-  NodeInfo nt numerator (denominator * n) children
-divideNodeThroughput n (NodeInfo nt numerator denominator children) =
-  NodeInfo nt numerator (denominator * n) 
-  (fmap (divideNodeThroughput n) $ fst children,
-   fmap (divideNodeThroughput n) $ snd children)
-
-data PipelineDAG = PipelineDAG [NodeInfo] deriving Show
-
-{-
-instance Show PipelineDAG where
-  show (PipelineDAG map) = show map 
--}
-
-emptyDAG :: PipelineDAG
-emptyDAG = PipelineDAG []
+multiplyThroughput :: Int -> CompilationData -> CompilationData
+multiplyThroughput n compData =
+  compData { throughputNumerator = n * (throughputNumerator compData) }
 
 
-buildDAG :: (a -> State PipelineDAG b) -> PipelineDAG 
-buildDAG functionYieldingMonad = snd $
-  runState (functionYieldingMonad undefined) emptyDAG
+divideThroughput :: Int -> CompilationData -> CompilationData
+divideThroughput n compData =
+  compData { throughputDenominator = n * (throughputDenominator compData) }
+
+emptyCompData :: CompilationData
+emptyCompData = CompilationData [] 
+
+validCircuitInterfaceString =
+  "args = ['I', inType, 'O', outType, 'valid', Out(Bit)] + ClockInterface(False, False)"
+noValidCircuitInterfaceString =
+  "args = ['I', inType, 'O', outType] + ClockInterface(False, False)"
+
+
+buildCompilationData :: (a -> State CompilationData b) -> CompilationData
+buildCompilationData functionYieldingMonad = snd $
+  runState (functionYieldingMonad undefined) emptyCompData 
+
+writeProgramToFile :: (Typeable (Proxy a), Typeable (Proxy b)) =>
+  String -> String -> (a -> State CompilationData b) -> IO ()
+writeProgramToFile preludeLocation epilogueLocation program = do
+  let compData = buildCompilationData program
+  preludeString <- readFile preludeLocation
+  epilogueString <- readFile epilogueLocation
+  let inputType = typeToMagmaString $ typeOf (Proxy :: Proxy a)
+  let inputTypeString = "inType = In(" ++ inputTypeString ++ ")"
+  let outputType = typeToMagmaString $ typeOf (Proxy :: Proxy b)
+  let outputTypeString = "outType = Out(" ++ inputTypeString ++ ")"
+  let interfaceString = (if ((length $ reversedValidPorts compData) > 0)
+                         then validCircuitInterfaceString
+                         else noValidCircuitInterfaceString)
+
+
 
 appendToPipeline :: NodeInfo -> State PipelineDAG a
 appendToPipeline newStage = do  

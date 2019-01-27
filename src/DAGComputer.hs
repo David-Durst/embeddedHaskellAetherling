@@ -15,80 +15,6 @@ import Data.Typeable
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
--- these are the types of the nodes in a DAG
-data NodeType =
-  AbsT
-  | NotT
-  | NoopT
-  | AddT
-  | SubT
-  | DivT
-  | MulT
-  | MinT
-  | MaxT
-  | AshrT
-  | ShlT 
-  | EqIntT
-  | NeqIntT
-  | LtIntT
-  | LeqIntT
-  | GtIntT
-  | GeqIntT 
-  | AndT
-  | OrT
-  | XorT
-  | EqBitT
-  | NeqBitT
-  | LtBitT
-  | LeqBitT
-  | GtBitT
-  | GeqBitT 
-  | LutGenIntT [Atom Int]
-  | LutGenBitT [Atom Bool]
-  | ConstGenIntT (Atom Int)
-  | ConstGenBitT (Atom Bool)
-  | forall a . UpT (Proxy a) Int
-  | forall a . DownT (Proxy a) Int
-  | forall a . FoldT (Proxy a) 
-  | ForkJoinT
-  --deriving (Show, Eq)
-
-instance Show NodeType where
-  show AbsT = "AbsT"
-  show NotT = "NotT"
-  show NoopT = "NoopT"
-  show AddT = "AddT"
-  show SubT = "SubT"
-  show DivT = "DivT"
-  show MulT = "MulT"
-  show MinT = "MinT"
-  show MaxT = "MaxT"
-  show AshrT = "AshrT"
-  show ShlT = "ShlT" 
-  show EqIntT = "EqIntT"
-  show NeqIntT = "NeqIntT"
-  show LtIntT = "LtIntT"
-  show LeqIntT = "LeqIntT"
-  show GtIntT = "GtIntT"
-  show GeqIntT = "GeqIntT" 
-  show AndT = "AndT"
-  show OrT = "OrT"
-  show XorT = "XorT"
-  show EqBitT = "EqBitT"
-  show NeqBitT = "NeqBitT"
-  show LtBitT = "LtBitT"
-  show LeqBitT = "LeqBitT"
-  show GtBitT = "GtBitT"
-  show GeqBitT = "GeqBitT" 
-  show (LutGenIntT as) = "LutGenIntT " ++ show as
-  show (LutGenBitT as) = "LutGenBitT " ++ show as
-  show (ConstGenIntT a) = "ConstGenT " ++ show a
-  show (ConstGenBitT a) = "ConstGenT " ++ show a
-  show (UpT proxy n) = "UpT " ++ show proxy ++ " " ++ show n
-  show (DownT proxy n) = "DownT " ++ show proxy ++ " " ++ show n
-  show (FoldT proxy) = "FoldT " ++ show proxy
-  show ForkJoinT = "ForkJoinT"
-
 -- This is all the info about a dag necessary to compile it to Magma
 -- and measure it's resources
 data NodeInfo = NodeInfo {
@@ -100,7 +26,7 @@ data NodeInfo = NodeInfo {
   deriving Show
 
 multiplyNodeThroughput :: Int -> NodeInfo -> NodeInfo
-multiplyNodeThroughput n (NodeInfo nt@(FoldT _) numerator denominator children) =
+multiplyNodeThroughput n (NodeInfo nt@(FoldT _ _) numerator denominator children) =
   NodeInfo nt (numerator * n) denominator children
 multiplyNodeThroughput n (NodeInfo nt numerator denominator children) =
   NodeInfo nt (numerator * n) denominator
@@ -108,7 +34,7 @@ multiplyNodeThroughput n (NodeInfo nt numerator denominator children) =
    fmap (multiplyNodeThroughput n) $ snd children)
 
 divideNodeThroughput :: Int -> NodeInfo -> NodeInfo
-divideNodeThroughput n (NodeInfo nt@(FoldT _) numerator denominator children) =
+divideNodeThroughput n (NodeInfo nt@(FoldT _ _) numerator denominator children) =
   NodeInfo nt numerator (denominator * n) children
 divideNodeThroughput n (NodeInfo nt numerator denominator children) =
   NodeInfo nt numerator (denominator * n) 
@@ -213,7 +139,10 @@ instance Circuit (State PipelineDAG) where
            Proxy o -> (Atom (Atom a, Atom a) -> State PipelineDAG (Atom a)) -> Atom a ->
            Seq p (Atom a) -> State PipelineDAG (Seq n (Atom a))
   foldC sublistLength f _ _ = do
-    appendToPipeline (NodeInfo (FoldT (Proxy :: Proxy a)) 1 1 (getInnerPipeline f emptyDAG, []))
+    appendToPipeline (NodeInfo (FoldT (nodeType $ innerNode) 1) 1 1 ([innerNode], []))
+      where 
+        innerNode = head $ getInnerPipeline f emptyDAG
+
 
   -- higher-order operators
 

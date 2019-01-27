@@ -99,3 +99,81 @@ class Monad m => Circuit m where
                  KnownNat underutilMult, 1 <= underutilMult) => 
     Proxy underutilMult -> (TSeq n v a -> m (TSeq o u b)) ->
     TSeq n ((n + v) * underutilMult) a -> m (TSeq o ((o + u) * underutilMult) b)
+
+-- these are the types of the nodes in a DAG
+data NodeType =
+  AbsT
+  | NotT
+  | NoopT
+  | AddT
+  | SubT
+  | DivT
+  | MulT
+  | MinT
+  | MaxT
+  | AshrT
+  | ShlT 
+  | EqIntT
+  | NeqIntT
+  | LtIntT
+  | LeqIntT
+  | GtIntT
+  | GeqIntT 
+  | AndT
+  | OrT
+  | XorT
+  | EqBitT
+  | NeqBitT
+  | LtBitT
+  | LeqBitT
+  | GtBitT
+  | GeqBitT 
+  | LutGenIntT [Atom Int]
+  | LutGenBitT [Atom Bool]
+  | ConstGenIntT (Atom Int)
+  | ConstGenBitT (Atom Bool)
+  | forall a . (Typeable (Proxy a)) => UpT (Proxy a) Int
+  | forall a . (Typeable (Proxy a)) => DownT (Proxy a) Int
+  -- nodet is the operation inside the fold
+  -- at this point only single operations are supports
+  -- int is total sequence length
+  | forall a . FoldT NodeType Int
+  | ForkJoinT
+  --deriving (Show, Eq)
+
+instance Show NodeType where
+  show AbsT = "AbsT"
+  show NotT = "NotT"
+  show NoopT = "NoopT"
+  show AddT = "AddT"
+  show SubT = "SubT"
+  show DivT = "DivT"
+  show MulT = "MulT"
+  show MinT = "MinT"
+  show MaxT = "MaxT"
+  show AshrT = "AshrT"
+  show ShlT = "ShlT" 
+  show EqIntT = "EqIntT"
+  show NeqIntT = "NeqIntT"
+  show LtIntT = "LtIntT"
+  show LeqIntT = "LeqIntT"
+  show GtIntT = "GtIntT"
+  show GeqIntT = "GeqIntT" 
+  show AndT = "AndT"
+  show OrT = "OrT"
+  show XorT = "XorT"
+  show EqBitT = "EqBitT"
+  show NeqBitT = "NeqBitT"
+  show LtBitT = "LtBitT"
+  show LeqBitT = "LeqBitT"
+  show GtBitT = "GtBitT"
+  show GeqBitT = "GeqBitT" 
+  show (LutGenIntT as) = "LutGenIntT " ++ show as
+  show (LutGenBitT as) = "LutGenBitT " ++ show as
+  show (ConstGenIntT a) = "ConstGenIntT " ++ show a
+  show (ConstGenBitT a) = "ConstGenBitT " ++ show a
+  show (UpT proxy n) = "UpT " ++ show proxy ++ " " ++ show n
+  show (DownT proxy n) = "DownT " ++ show proxy ++ " " ++ show n
+  show (FoldT nt totalLen) = "FoldT " ++ show nt ++ " " ++
+    show totalLen
+  show ForkJoinT = "ForkJoinT"
