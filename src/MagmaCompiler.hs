@@ -173,11 +173,10 @@ createMagmaInstanceOfNode (FoldT nt totalLen) par | par == totalLen = Right (
                                                     innerString = fromLeft "" (
                                                       createMagmaInstanceOfNode nt 1)
 createMagmaInstanceOfNode (FoldT nt totalLen) par | par > 1 = Right (
-                                                     "ReduceParallel(" ++
+                                                     "DefineReducePartiallyParallel(" ++
                                                      "cirb, " ++ show totalLen ++ ", " ++ 
                                                      show par ++ ", " ++
-                                                     "renameCircuitForReduce(" ++
-                                                     innerString ++ "))")
+                                                     innerString ++ ")()")
                                                   where
                                                     innerString = fromLeft "" (
                                                       createMagmaInstanceOfNode nt 1)
@@ -192,6 +191,77 @@ createMagmaInstanceOfNode (FoldT nt totalLen) 1 = Right (
 createMagmaInstanceOfNode (FoldT _ _) _ = Left "FoldT must have a par of at least 1"
 createMagmaInstanceOfNode ForkJoinT _ = Left "ForkJoin shouldn't be printed to magma"
 
+type PortName = String
+data Ports = Ports {
+  inPorts :: [PortName],
+  outPorts :: [PortName],
+  ce :: [PortName],
+  validPorts :: [PortName]
+  }
+
+mergePorts :: Ports -> Ports -> Ports
+mergePorts ports1 ports2 = Ports allInPorts allOutPorts allCEPorts allValidPorts
+  where
+    allInPorts = (inPorts ports1) ++ (inPorts ports2)
+    allOutPorts = (outPorts ports1) ++ (outPorts ports2)
+    allCEPorts = (ce ports1) ++ (ce ports2)
+    allValidPorts = (validPorts ports1) ++ (validPorts ports2)
+
+binaryFunctionPorts fnName = Ports [fnName ++ ".I0", fnName ++ ".I1"] [fnName ++ ".O"] [] [] 
+
+getPortNames :: NodeType -> String -> Int -> Either String Ports
+getPortNames AbsT _ _ = Left "Abs node not implemented" 
+getPortNames NotT fnName _ = Right $ Ports [fnName ++ "I"] [fnName ++ "O"] [] []
+getPortNames NoopT _ _ = Left "NoOp shouldn't be printed to magma"
+getPortNames AddT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames SubT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames DivT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames MulT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames MinT fnName _ = Left "Min node not implemented in magma" 
+getPortNames MaxT fnName _ = Left "Max node not implemented in magma" 
+getPortNames AshrT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames ShlT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames EqIntT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames NeqIntT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames LtIntT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames LeqIntT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames GtIntT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames GeqIntT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames AndT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames OrT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames XorT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames EqBitT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames NeqBitT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames LtBitT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames LeqBitT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames GtBitT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames GeqBitT fnName _ = Right $ binaryFunctionPorts fnName
+getPortNames (LutGenIntT as) _ _ = Left "LUT not implemented in Magma"
+getPortNames (LutGenBitT as) _ _ = Left "LUT not implemented in Magma"
+getPortNames (ConstGenIntT x) fnName _ = Right $ Ports [] [fnName ++ ".O"] [] []
+getPortNames (ConstGenBitT x) fnName _ = Right $ Ports [] [fnName ++ ".O"] [] []
+-- can't upsample by less than 1
+getPortNames (UpT _ _) _ _ = Left "Upsample not implemented yet for getPortNames"
+getPortNames (DownT _ _) _ _ = Left "Downsample not implemented yet for getPortNames"
+-- if the inner node doesn't work, just fail
+getPortNames (FoldT nt totalLen) fnName par | par == totalLen = Right $
+                                     Ports ([fnName ++ ".I.identity"] ++ inputsWithIndex) [fnName ++ ".out"] [] []
+                                     where
+                                       copiedInputs = replicate par (\x -> fnName ++ ".I.data[" ++ show x ++ "]") 
+                                       inputsWithIndex :: [String]
+                                       inputsWithIndex = zipWith (\f -> \x -> f x) copiedInputs [0..(par - 1)]
+
+getPortNames (FoldT nt totalLen) fnName par | par > 1 = Right (
+                                     Ports ([fnName ++ ".identity"] ++ inputsWithIndex) [fnName ++ ".O"] [] [fnName ++ ".valid"])
+                                     where
+                                       copiedInputs = replicate par (\x -> fnName ++ ".I[" ++ show x ++ "]") 
+                                       inputsWithIndex :: [String]
+                                       inputsWithIndex = zipWith (\f -> \x -> f x) copiedInputs [0..(par - 1)]
+
+getPortNames (FoldT nt totalLen) fnName 1 = Right (
+                                     Ports [fnName ++ ".I"] [fnName ++ ".out"] [] [fnName ++ ".valid"])
+getPortNames (FoldT _ _) _ _ = Left "FoldT must have a par of at least 1"
+getPortNames ForkJoinT _ _ = Left "ForkJoin shouldn't be printed to magma"
 -- This is all the info about a dag necessary to compile it to Magma
 -- and measure it's resources
 data NodeInfo = NodeInfo {
