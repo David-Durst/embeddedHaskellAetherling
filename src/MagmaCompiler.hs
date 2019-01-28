@@ -18,6 +18,8 @@ import Data.Either
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
+magmaNodeBaseName = "magmaInstance"
+
 copyStringWithInt :: Int -> (Int -> String) -> String
 copyStringWithInt numCopies stringGenerator =
   foldl (++) "" $ fmap stringGenerator [0..(numCopies-1)]
@@ -25,69 +27,17 @@ copyStringWithInt numCopies stringGenerator =
 -- left string is an error, right string is a valid result
 -- first int is the index, second is the parallelism
 duplicateAndInstantiateNode :: NodeType -> Int -> Either String String
-duplicateAndInstantiateNode AbsT _ = createMagmaDefOfNode AbsT 1
-duplicateAndInstantiateNode NotT par = Right $ copyStringWithInt par $
-  \x -> "not" ++ show x ++ " = " ++
-  (fromRight "" $ createMagmaDefOfNode NotT par) ++ "()\n"
-duplicateAndInstantiateNode NoopT _ = createMagmaDefOfNode NoopT 1
-duplicateAndInstantiateNode AddT par = Right $ copyStringWithInt par $
-  \x -> "add" ++ show x ++ " =  " ++
-  (fromRight "" $ createMagmaDefOfNode NotT par) ++ "()\n"
-duplicateAndInstantiateNode SubT par = Right $ copyStringWithInt par $
-  \x -> "sub" ++ show x ++ " = DefineSub(8)()\n"
-duplicateAndInstantiateNode DivT par = Right $ copyStringWithInt par $
-  \x -> "div" ++ show x ++ " = DefineCoreirUDiv(8)"
-duplicateAndInstantiateNode MulT par = Right $ copyStringWithInt par $
-  \x -> "mul" ++ show x ++ " = DefineCoreirMul(8)()\n"
-duplicateAndInstantiateNode MinT _ = createMagmaDefOfNode NoopT 1
-duplicateAndInstantiateNode MaxT _ = createMagmaDefOfNode NoopT 1
-duplicateAndInstantiateNode AshrT par = Right $ copyStringWithInt par $
-  \x -> "ashr" ++ show x ++ " = DefineASR(8)()\n"
-duplicateAndInstantiateNode ShlT par = Right $ copyStringWithInt par $
-  \x -> "shl" ++ show x ++ " = DefineLSL(8)()\n"
-duplicateAndInstantiateNode EqIntT par = Right $ copyStringWithInt par $
-  \x -> "eqint" ++ show x ++ " = DefineEQ(8)()\n"
-duplicateAndInstantiateNode NeqIntT par = Right $ copyStringWithInt par $
-  \x -> "neqint" ++ show x ++ " = DefineNE(8)()\n"
-duplicateAndInstantiateNode LtIntT par = Right $ copyStringWithInt par $
-  \x -> "ltint" ++ show x ++ " = DefineULT(8)()\n"
-duplicateAndInstantiateNode LeqIntT par = Right $ copyStringWithInt par $
-  \x -> "leqint" ++ show x ++ " = DefineULE(8)()\n"
-duplicateAndInstantiateNode GtIntT par = Right $ copyStringWithInt par $
-  \x -> "gtint" ++ show x ++ " = DefineUGT(8)()\n"
-duplicateAndInstantiateNode GeqIntT par = Right $ copyStringWithInt par $
-  \x -> "geqint" ++ show x ++ " = DefineUGE(8)()\n" 
-duplicateAndInstantiateNode AndT par = Right $ copyStringWithInt par $
-  \x -> "and" ++ show x ++ " = DefineAnd(8)()\n"
-duplicateAndInstantiateNode OrT par = Right $ copyStringWithInt par $
-  \x -> "or" ++ show x ++ " = DefineOr(8)()\n"
-duplicateAndInstantiateNode XorT par = Right $ copyStringWithInt par $
-  \x -> "xor" ++ show x ++ " = DefineXOr(8)()\n"
-duplicateAndInstantiateNode EqBitT par = Right $ copyStringWithInt par $
-  \x -> "eqbit" ++ show x ++ " = DefineEQ(1)()\n"
-duplicateAndInstantiateNode NeqBitT par = Right $ copyStringWithInt par $
-  \x -> "neqbit" ++ show x ++ " = DefineNE(1)()\n"
-duplicateAndInstantiateNode LtBitT par = Right $ copyStringWithInt par $
-  \x -> "ltbit" ++ show x ++ " = DefineULT(1)()\n"
-duplicateAndInstantiateNode LeqBitT par = Right $ copyStringWithInt par $
-  \x -> "leqbit" ++ show x ++ " = DefineULE(1)()\n"
-duplicateAndInstantiateNode GtBitT par = Right $ copyStringWithInt par $
-  \x -> "gtbit" ++ show x ++ " = DefineUGT(1)()\n"
-duplicateAndInstantiateNode GeqBitT par = Right $ copyStringWithInt par $
-  \x -> "geqbit" ++ show x ++ " = DefineUGE(1)()\n" 
-duplicateAndInstantiateNode x@(LutGenIntT as) _ = createMagmaDefOfNode x 1
-duplicateAndInstantiateNode x@(LutGenBitT as) _ = createMagmaDefOfNode x 1
-duplicateAndInstantiateNode (ConstGenIntT x) par = Right $ copyStringWithInt par $
-  \idx -> "constgenint" ++ show idx ++ " = DefineCoreirConst(" ++ show intSizeInBits ++
-  ", " ++ show x ++ ")\n"
-duplicateAndInstantiateNode (ConstGenBitT x) par = Right $ copyStringWithInt par $
-  \idx -> "constgenbit" ++ show idx ++ " = DefineCoreirConst(" ++ show bitSizeInBits ++
-  ", " ++ show x ++ ")"
 -- up, down, and fold handle their own parallelization, so nothing to do here
 duplicateAndInstantiateNode x@(UpT _ _) par = createMagmaDefOfNode x par
 duplicateAndInstantiateNode x@(DownT _ _) par = createMagmaDefOfNode x par
 duplicateAndInstantiateNode x@(FoldT _ _) par = createMagmaDefOfNode x par
-duplicateAndInstantiateNode ForkJoinT _ = createMagmaDefOfNode ForkJoinT 1
+-- otherwise, duplicate if success (if right), and propagate error if failure
+duplicateAndInstantiateNode nodeType par |
+  isRight (createMagmaDefOfNode nodeType par) =
+  Right $ copyStringWithInt par $
+  \x -> magmaNodeBaseName ++ show x ++ " = " ++
+        (fromRight "" $ createMagmaDefOfNode nodeType par) ++ "()\n"
+duplicateAndInstantiateNode nodeType par = createMagmaDefOfNode nodeType par
 
 -- left string is an error, right string is a valid result
 -- first int is the index, second is the parallelism
@@ -201,6 +151,50 @@ mergePorts ports1 ports2 = Ports allInPorts allOutPorts allCEPorts allValidPorts
     allValidPorts = (validPorts ports1) ++ (validPorts ports2)
 
 binaryFunctionPorts fnName = Ports [fnName ++ ".I0", fnName ++ ".I1"] [fnName ++ ".O"] [] [] 
+
+{-
+copyStringWithInt :: Int -> (Int -> String) -> String
+copyStringWithInt numCopies stringGenerator =
+  foldl (++) "" $ fmap stringGenerator [0..(numCopies-1)]
+
+-- left string is an error, right string is a valid result
+-- first int is the index, second is the parallelism
+duplicateAndInstantiateNode :: NodeType -> Int -> Either String String
+-- up, down, and fold handle their own parallelization, so nothing to do here
+duplicateAndInstantiateNode x@(UpT _ _) par = createMagmaDefOfNode x par
+duplicateAndInstantiateNode x@(DownT _ _) par = createMagmaDefOfNode x par
+duplicateAndInstantiateNode x@(FoldT _ _) par = createMagmaDefOfNode x par
+-- otherwise, duplicate if success (if right), and propagate error if failure
+duplicateAndInstantiateNode nodeType par |
+  isRight (createMagmaDefOfNode nodeType par) =
+  Right $ copyStringWithInt par $
+  \x -> "magmaInstance" ++ show x ++ " = " ++
+        (fromRight "" $ createMagmaDefOfNode nodeType par) ++ "()\n"
+duplicateAndInstantiateNode nodeType par = createMagmaDefOfNode nodeType par
+
+-}
+
+-- get duplicated ports for parallel versions of nodes
+getDuplicatedPorts :: NodeType -> Int -> Either String Ports
+getDuplicatedPorts nodeType@(UpT _ _) par = getPortNames nodeType magmaNodeBaseName par
+getDuplicatedPorts nodeType@(DownT _ _) par = getPortNames nodeType magmaNodeBaseName par
+getDuplicatedPorts nodeType@(FoldT _ _) par = getPortNames nodeType magmaNodeBaseName par
+getDuplicatedPorts nodeType par |
+  isRight (getPortNames nodeType magmaNodeBaseName par) =
+  Right $ Ports allNodesInPorts allNodesOutPorts allNodesCEPorts allNodesValidPorts
+  where
+    allNodesPorts = fmap (\idx -> fromRight undefined $ getPortNames nodeType ("magmaInstance" ++ show idx)
+                           par) [0..(par - 1)]
+    allNodesInPorts = foldl (++) [] $ fmap inPorts allNodesPorts
+    allNodesOutPorts = foldl (++) [] $ fmap outPorts allNodesPorts
+    allNodesCEPorts = foldl (++) [] $ fmap ce allNodesPorts
+    allNodesValidPorts = foldl (++) [] $ fmap validPorts allNodesPorts
+getDuplicatedPorts nodeType par = getPortNames nodeType magmaNodeBaseName par
+   {- 
+  --Right $ Ports copyStringWithInt par $
+  --\x -> "magmaInstance" ++ show x ++ " = " ++
+  --      (fromRight "" $ createMagmaDefOfNode nodeType par) ++ "()\n"
+-}
 
 getPortNames :: NodeType -> String -> Int -> Either String Ports
 getPortNames AbsT _ _ = Left "Abs node not implemented" 
