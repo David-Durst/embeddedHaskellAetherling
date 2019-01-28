@@ -15,6 +15,7 @@ import Control.Monad.Except
 import Control.Monad.Identity
 import Data.Typeable
 import Data.Either
+import Debug.Trace
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
@@ -144,7 +145,7 @@ data Ports = Ports {
   outPorts :: [PortName],
   ce :: [PortName],
   validPorts :: [PortName]
-  }
+  } deriving Show
 
 mergePorts :: Ports -> Ports -> Ports
 mergePorts ports1 ports2 = Ports allInPorts allOutPorts allCEPorts allValidPorts
@@ -311,8 +312,10 @@ wirePorts priorOutPorts nextInPorts = Left ("Different lengths of ports " ++
 -- given a compilation data for a new stage, append it to the state
 -- for a set of existing stages
 appendToCompilationData :: CompilationData -> StatefulErrorMonad a
-appendToCompilationData (CompilationData ni rot ip op rvp tNum tDenom) = do  
+appendToCompilationData dd@(CompilationData ni rot ip op rvp tNum tDenom) = do  
     priorData <- get 
+    --traceM ("Old data" ++ show priorData)
+    --traceM ("New data" ++ show dd)
     let portWirings = wirePorts (outputPorts priorData) ip
     if isLeft portWirings
       then liftEither portWirings
@@ -338,13 +341,17 @@ createCompilationDataAndAppend nodeType = do
     priorData <- get
     let curNodeIndex = nodeIndex priorData
     let par = throughputNumerator priorData `div` throughputDenominator priorData
-    let magmaInstances = duplicateAndInstantiateNode nodeType par curNodeIndex
+    let magmaInstances = duplicateAndInstantiateNode nodeType curNodeIndex par 
+    --traceM ("nodeType" ++ show nodeType)
+    --traceM ("par" ++ show par)
+    --traceM ("curNodeIndex" ++ show curNodeIndex)
+    --traceM ("magmaInstances" ++ show magmaInstances)
     if isLeft magmaInstances
       then do
       liftEither magmaInstances
       return undefined
       else do
-      let ports = getDuplicatedPorts nodeType par curNodeIndex
+      let ports = getDuplicatedPorts nodeType curNodeIndex par
       if isLeft ports
         then do
         liftEither ports
@@ -352,7 +359,8 @@ createCompilationDataAndAppend nodeType = do
         else do
         let instancesValues = fromRight undefined magmaInstances
         let portsValues = fromRight undefined ports
-        appendToCompilationData (CompilationData (curNodeIndex+1)
+        --traceM ("instanceValues" ++ show instancesValues)
+        appendToCompilationData (CompilationData curNodeIndex
                                 [instancesValues] (inPorts portsValues)
                                  (outPorts portsValues) 
                                  (validPorts portsValues)
@@ -464,6 +472,7 @@ instance Circuit (StatefulErrorMonad) where
                                 }
     let fPipeline = runIdentity $ runExceptT $ (runStateT
           (f undefined) cData)
+    traceM $ "cData in for fpipeline " ++ show cData
     let secondNodeIndex = nodeIndex $ snd $ fromRight (undefined, emptyCompData) fPipeline
     -- this is not good type safety, unpack 
     let gPipeline = runIdentity $ runExceptT $ (runStateT
@@ -473,6 +482,8 @@ instance Circuit (StatefulErrorMonad) where
       then do
       let fCompilerData = snd $ fromRight undefined fPipeline
       let gCompilerData = snd $ fromRight undefined gPipeline
+      traceM $ "f compilation: " ++ show fCompilerData
+      traceM $ "g compilation: " ++ show gCompilerData
       let mergedCompilerData = (CompilationData
                                (nodeIndex gCompilerData)
                                (reversedOutputText gCompilerData ++
