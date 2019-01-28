@@ -21,6 +21,7 @@ data Atom =
 -}
 
 data Atom a where
+  Unit :: () -> Atom ()
   Int :: Int -> Atom Int
   Bit :: Bool -> Atom Bool
   Tuple :: Atom a -> Atom b -> Atom (Atom a, Atom b)

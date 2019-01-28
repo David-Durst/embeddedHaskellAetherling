@@ -29,8 +29,8 @@ class Monad m => Circuit m where
   -- generators
   lutGenIntC :: [Atom Int] -> (Atom Int) -> m (Atom Int)
   lutGenBitC :: [Atom Bool] -> (Atom Int) -> m (Atom Bool)
-  constGenIntC :: Atom Int -> Atom a -> m (Atom Int)
-  constGenBitC :: Atom Bool -> Atom a -> m (Atom Bool)
+  constGenIntC :: Atom Int -> Atom () -> m (Atom Int)
+  constGenBitC :: Atom Bool -> Atom () -> m (Atom Bool)
   -- sequence operators
   upC :: (KnownNat n, KnownNat (TypeSize a), Typeable (Proxy a)) => Proxy n -> Seq 1 a -> m (Seq n a)
   downC :: (KnownNat n, KnownNat o, n ~ (o+1), KnownNat (TypeSize a), Typeable (Proxy a)) =>
