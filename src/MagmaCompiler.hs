@@ -228,11 +228,15 @@ noValidCircuitInterfaceString =
 type StatefulErrorMonad a = StateT CompilationData (ExceptT String Identity) a
 
 buildCompilationData :: (a -> StatefulErrorMonad b) -> CompilationData
-buildCompilationData functionYieldingMonad = snd $
+buildCompilationData functionYieldingMonad = getErrorOrCompDataAsCompData $
   runIdentity $ runExceptT $ runStateT (functionYieldingMonad undefined) emptyCompData 
+  where
+    getErrorOrCompDataAsCompData :: Either String (b, CompilationData) -> CompilationData
+    getErrorOrCompDataAsCompData (Left s) = emptyCompData { reversedOutputText = [s] }
+    getErrorOrCompDataAsCompData (Right (_, compData)) = compData
 
 writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
-  String -> String -> String -> (a -> State CompilationData b) -> IO ()
+  String -> String -> String -> (a -> StatefulErrorMonad b) -> IO ()
 writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   let compData = buildCompilationData program
   preludeString <- readFile preludeLocation
