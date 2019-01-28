@@ -152,28 +152,6 @@ mergePorts ports1 ports2 = Ports allInPorts allOutPorts allCEPorts allValidPorts
 
 binaryFunctionPorts fnName = Ports [fnName ++ ".I0", fnName ++ ".I1"] [fnName ++ ".O"] [] [] 
 
-{-
-copyStringWithInt :: Int -> (Int -> String) -> String
-copyStringWithInt numCopies stringGenerator =
-  foldl (++) "" $ fmap stringGenerator [0..(numCopies-1)]
-
--- left string is an error, right string is a valid result
--- first int is the index, second is the parallelism
-duplicateAndInstantiateNode :: NodeType -> Int -> Either String String
--- up, down, and fold handle their own parallelization, so nothing to do here
-duplicateAndInstantiateNode x@(UpT _ _) par = createMagmaDefOfNode x par
-duplicateAndInstantiateNode x@(DownT _ _) par = createMagmaDefOfNode x par
-duplicateAndInstantiateNode x@(FoldT _ _) par = createMagmaDefOfNode x par
--- otherwise, duplicate if success (if right), and propagate error if failure
-duplicateAndInstantiateNode nodeType par |
-  isRight (createMagmaDefOfNode nodeType par) =
-  Right $ copyStringWithInt par $
-  \x -> "magmaInstance" ++ show x ++ " = " ++
-        (fromRight "" $ createMagmaDefOfNode nodeType par) ++ "()\n"
-duplicateAndInstantiateNode nodeType par = createMagmaDefOfNode nodeType par
-
--}
-
 -- get duplicated ports for parallel versions of nodes
 getDuplicatedPorts :: NodeType -> Int -> Either String Ports
 getDuplicatedPorts nodeType@(UpT _ _) par = getPortNames nodeType magmaNodeBaseName par
@@ -190,11 +168,6 @@ getDuplicatedPorts nodeType par |
     allNodesCEPorts = foldl (++) [] $ fmap ce allNodesPorts
     allNodesValidPorts = foldl (++) [] $ fmap validPorts allNodesPorts
 getDuplicatedPorts nodeType par = getPortNames nodeType magmaNodeBaseName par
-   {- 
-  --Right $ Ports copyStringWithInt par $
-  --\x -> "magmaInstance" ++ show x ++ " = " ++
-  --      (fromRight "" $ createMagmaDefOfNode nodeType par) ++ "()\n"
--}
 
 getPortNames :: NodeType -> String -> Int -> Either String Ports
 getPortNames AbsT _ _ = Left "Abs node not implemented" 
