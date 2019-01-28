@@ -14,58 +14,8 @@ import Data.Typeable
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
--- these are the types of the nodes in a DAG
-data NodeType =
-  AbsT
-  | NotT
-  | NoopT
-  | AddT
-  | SubT
-  | DivT
-  | MulT
-  | MinT
-  | MaxT
-  | AshrT
-  | ShlT 
-  | EqIntT
-  | NeqIntT
-  | LtIntT
-  | LeqIntT
-  | GtIntT
-  | GeqIntT 
-  | AndT
-  | OrT
-  | XorT
-  | EqBitT
-  | NeqBitT
-  | LtBitT
-  | LeqBitT
-  | GtBitT
-  | GeqBitT 
-  | LutGenIntT [Atom Int]
-  | LutGenBitT [Atom Bool]
-  | forall a . ConstGenT  (Atom a)
-  | UpT TypeRep Int
-  | DownT TypeRep Int
-  | forall a . FoldT a NodeType
-  | PartitionT Int
-  --deriving (Show, Eq)
-
 -- This is all the info about a dag necessary to compile it to Magma
 -- and measure it's resources
-data NodeInfo = NodeInfo {nodeThroughputNumerator :: Int,
-                         nodeThroughputDenominator :: Int, consumerNodes :: [NodeInfo]}
-  deriving (Eq, Show)
-
-data PipelineDAG = PipelineDAG (Map.Map NodeType NodeInfo)
-
-{-
-instance Show PipelineDAG where
-  show (PipelineDAG map) = show map 
--}
-
-emptyDAG :: PipelineDAG
-emptyDAG = PipelineDAG Map.empty 
 
 data ResourceEstimate = ResourceEstimate {numWires :: Int, numALUs :: Int}
   deriving (Show, Eq)
@@ -92,9 +42,6 @@ estimateResources :: a -> (a -> State ResourceEstimate b) -> ResourceEstimate
 estimateResources input functionYieldingMonad = snd $
   runState (functionYieldingMonad input) $ ResourceEstimate 0 0
 
-buildDag :: (a -> State PipelineDAG b) -> PipelineDAG 
-buildDag functionYieldingMonad = snd $
-  runState (functionYieldingMonad undefined) emptyDAG
 {-
 instance Functor ResourceEstimatorEnv where
   fmap f (ResourceEstimatorEnv a) = ResourceEstimatorEnv (f a)

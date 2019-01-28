@@ -610,23 +610,23 @@ instance Circuit (StatefulErrorMonad) where
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition
 
-{-
-unscheduledPipeline = iterC (Proxy @4) $ (constGenC (Int 3) *** constGenC (Int 2)) >>> addC
+unscheduledPipeline = iterC (Proxy @4) $ (constGenIntC (Int 3) *** constGenIntC (Int 2)) >>> addC
 unscheduledNode = iterC (Proxy @4) $ addC
 
-unscheduledPipelineDAG = buildDAG unscheduledPipeline
-unscheduledNodeDAG = buildDAG unscheduledNode 
+unscheduledPipelineCData = buildCompilationData unscheduledPipeline
+unscheduledNodeCData = buildCompilationData unscheduledNode 
 
-sequentialPipelineDAG = buildDAG $ seq_to_tseqC unscheduledPipeline 
-sequentialNodeDAG = buildDAG $ seq_to_tseqC unscheduledNode
+sequentialPipelineCData = buildCompilationData $ seq_to_tseqC unscheduledPipeline 
+sequentialNodeCData = buildCompilationData $ seq_to_tseqC unscheduledNode
 
-parallelPipelineDAG = buildDAG $ seq_to_sseqC unscheduledPipeline 
-parallelNodeDAG = buildDAG $ seq_to_sseqC unscheduledNode
+parallelPipelineCData = buildCompilationData $ seq_to_sseqC unscheduledPipeline 
+parallelNodeCData = buildCompilationData $ seq_to_sseqC unscheduledNode
 
-partialParallelPipelineDAG = buildDAG $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
+partialParallelPipelineCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
   unscheduledPipeline 
-partialParallelNodeDAG = buildDAG $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
+partialParallelNodeCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
   unscheduledNode
+{-
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput
 partialParallelInput :: TSeq 2 0 (SSeq 2 (Atom, Atom))
 partialParallelInput = seqToTSeq $ seqOfSeqToSeqOfSSeq $ seqToSeqOfSeq (Proxy @2) iterInput
