@@ -317,21 +317,49 @@ appendToCompilationData (CompilationData ni rot ip op rvp tNum tDenom) = do
     if isLeft portWirings
       then liftEither portWirings
       else do
-        let newOutText = rot ++ reversedOutputText priorData
-        let newInPorts = if (null $ (inputPorts priorData))
-                            then ip else inputPorts priorData
-        let newOutPorts = op
-        let newReversedValidPorts = rvp ++ reversedValidPorts priorData
-        -- just propagate throughput numerator and denominator 
-        -- as those are only modififed by scheduling combiators that are
-        -- parents, and this is for combining siblines
-        -- section as we are going along 
-        let newThroughputNumerator = throughputNumerator priorData
-        let newThroughputDenominator = throughputDenominator priorData
-        put $ (CompilationData ni newOutText newInPorts newOutPorts
-              newReversedValidPorts newThroughputNumerator newThroughputDenominator)
-        return undefined
+      let newOutText = rot ++ reversedOutputText priorData
+      let newInPorts = if (null $ (inputPorts priorData))
+                       then ip else inputPorts priorData
+      let newOutPorts = op
+      let newReversedValidPorts = rvp ++ reversedValidPorts priorData
+      -- just propagate throughput numerator and denominator 
+      -- as those are only modififed by scheduling combiators that are
+      -- parents, and this is for combining siblines
+      -- section as we are going along 
+      let newThroughputNumerator = throughputNumerator priorData
+      let newThroughputDenominator = throughputDenominator priorData
+      put $ (CompilationData (ni+1) newOutText newInPorts newOutPorts
+            newReversedValidPorts newThroughputNumerator newThroughputDenominator)
+      return undefined
     return undefined
+
+createCompilationDataAndAppend :: NodeType -> StatefulErrorMonad a
+createCompilationDataAndAppend nodeType = do
+    priorData <- get
+    let curNodeIndex = nodeIndex priorData
+    let par = throughputNumerator priorData `div` throughputDenominator priorData
+    let magmaInstances = duplicateAndInstantiateNode nodeType par curNodeIndex
+    if isLeft magmaInstances
+      then do
+      liftEither magmaInstances
+      return undefined
+      else do
+      let ports = getDuplicatedPorts nodeType par curNodeIndex
+      if isLeft ports
+        then do
+        liftEither ports
+        return undefined
+        else do
+        let instancesValues = fromRight undefined magmaInstances
+        let portsValues = fromRight undefined ports
+        appendToCompilationData (CompilationData (curNodeIndex+1)
+                                [instancesValues] (inPorts portsValues)
+                                 (outPorts portsValues) 
+                                 (validPorts portsValues)
+                                 (throughputNumerator priorData)
+                                 (throughputDenominator priorData))
+    return undefined
+
 
 {-
 getInnerPipeline :: (a -> State PipelineDAG b) -> PipelineDAG -> [NodeInfo]
@@ -356,43 +384,18 @@ appendInnerDAGToOuterDAG f = do
 -}
 instance Circuit (StatefulErrorMonad) where
   -- unary operators
-  absC _ = do
-    priorData <- get
-    let curNodeIndex = nodeIndex priorData
-    let par = throughputNumerator priorData `div` throughputDenominator priorData
-    let magmaInstances = duplicateAndInstantiateNode AbsT par curNodeIndex
-    if isLeft magmaInstances
-      then do
-      liftEither magmaInstances
-      return undefined
-      else do
-      let ports = getDuplicatedPorts AbsT par curNodeIndex
-      if isLeft ports
-        then do
-        liftEither ports
-        return undefined
-        else do
-        let instancesValues = fromRight undefined magmaInstances
-        let portsValues = fromRight undefined ports
-        appendToCompilationData (CompilationData (curNodeIndex+1)
-                                [instancesValues] (inPorts portsValues)
-                                 (outPorts portsValues) 
-                                 (validPorts portsValues)
-                                 (throughputNumerator priorData)
-                                 (throughputDenominator priorData))
-    return undefined
-
-{-
-  notC _ = appendToPipeline (NodeInfo NotT 1 1 ([],[]))
-  noop c = appendToPipeline  (NodeInfo NoopT 1 1 ([],[]))
+  absC _ = createCompilationDataAndAppend AbsT 
+  notC _ = createCompilationDataAndAppend NotT
+  noop c = return undefined
 
   -- binary operators
   -- the values returned here, they are only to emit things of the right types
   -- so the state computations can occur
-  addC _ = appendToPipeline (NodeInfo AddT 2 1 ([],[]))
-  subC _ = appendToPipeline (NodeInfo SubT 2 1 ([],[]))
-  mulC _ = appendToPipeline (NodeInfo MulT 2 1 ([],[]))
-  divC _ = appendToPipeline (NodeInfo DivT 2 1 ([],[]))
+  addC _ = createCompilationDataAndAppend AddT
+  subC _ = createCompilationDataAndAppend SubT
+  mulC _ = createCompilationDataAndAppend MulT
+  divC _ = createCompilationDataAndAppend DivT
+{-
   minC _ = appendToPipeline (NodeInfo MinT 2 1 ([],[]))
   maxC _ = appendToPipeline (NodeInfo MaxT 2 1 ([],[]))
   ashrC _ = appendToPipeline (NodeInfo AshrT 2 1 ([],[]))
@@ -412,13 +415,13 @@ instance Circuit (StatefulErrorMonad) where
   gtBitC _ = appendToPipeline (NodeInfo GtBitT 2 1 ([],[]))
   geqIntC _ = appendToPipeline (NodeInfo GeqIntT 2 1 ([],[]))
   geqBitC _ = appendToPipeline (NodeInfo GeqBitT 2 1 ([],[]))
-
+-}
   -- module generator
-  lutGenIntC as _ = appendToPipeline (NodeInfo (LutGenIntT as) 1 1 ([],[]))
-  lutGenBitC as _ = appendToPipeline (NodeInfo (LutGenBitT as) 1 1 ([],[]))
-
-  constGenIntC x _ = appendToPipeline (NodeInfo (ConstGenIntT x) 1 1 ([],[]))
-  constGenBitC x _ = appendToPipeline (NodeInfo (ConstGenBitT x) 1 1 ([],[]))
+  lutGenIntC as _ = createCompilationDataAndAppend (LutGenIntT as)
+  lutGenBitC as _ = createCompilationDataAndAppend (LutGenBitT as) 
+  constGenIntC x _ = createCompilationDataAndAppend (ConstGenIntT x)
+  constGenBitC x _ = createCompilationDataAndAppend (ConstGenBitT x)
+{-
   -- sequence operators
   -- need to fix upC to account for storage if tseq
   upC :: forall a n. (KnownNat n, KnownNat (TypeSize a), Typeable (Proxy a)) =>
@@ -443,21 +446,54 @@ instance Circuit (StatefulErrorMonad) where
     appendToPipeline (NodeInfo (FoldT (nodeType $ head innerPipeline) numToFold) 1 1 (innerPipeline, []))
 
   -- higher-order operators
-
+-}
   -- ignore the iter since it does nothing, needs to be wrapped with a tseq or
   -- sseq converting function
-  iterC _ f _ = appendInnerDAGToOuterDAG f 
-
-  (f *** g) _ = do
-    appendToPipeline (NodeInfo ForkJoinT 1 1
-                      (getInnerPipeline g emptyDAG, getInnerPipeline f emptyDAG))
-
-  (f >>> g) x = do
-    PipelineDAG stages <- get 
-    let fAndgPipelineStages = getInnerPipeline g $ PipelineDAG $ getInnerPipeline f emptyDAG
-    put $ PipelineDAG (stages ++ fAndgPipelineStages)
+  iterC _ f _ = do
+    -- this should run f to have it update the state, then do nothing
+    f undefined
     return undefined
+  (f *** g) _ = do
+    priorData <- get
+    let tNum = throughputNumerator priorData
+    let tDenom = throughputDenominator priorData
+    let firstNodeIndex = nodeIndex priorData
+    let cData = emptyCompData { throughputNumerator = tNum,
+                                throughputDenominator = tDenom,
+                                nodeIndex = firstNodeIndex
+                                }
+    let fPipeline = runIdentity $ runExceptT $ (runStateT
+          (f undefined) cData)
+    let secondNodeIndex = nodeIndex $ snd $ fromRight (undefined, emptyCompData) fPipeline
+    -- this is not good type safety, unpack 
+    let gPipeline = runIdentity $ runExceptT $ (runStateT
+          (f undefined) (cData { nodeIndex = secondNodeIndex}))
+    let errorMessages = fmap (fromLeft "") $ filter isLeft [fPipeline, gPipeline]
+    if null errorMessages
+      then do
+      let fCompilerData = snd $ fromRight undefined fPipeline
+      let gCompilerData = snd $ fromRight undefined gPipeline
+      let mergedCompilerData = (CompilationData
+                               (nodeIndex gCompilerData + 1)
+                               (reversedOutputText gCompilerData ++
+                                 reversedOutputText fCompilerData)
+                               (inputPorts fCompilerData ++ inputPorts gCompilerData)
+                               (outputPorts fCompilerData ++ outputPorts gCompilerData)
+                               (reversedValidPorts fCompilerData ++
+                                 reversedValidPorts gCompilerData)
+                               tNum tDenom
+                               )
+      appendToCompilationData mergedCompilerData
+      else do
+      liftEither $ Left $ foldl (++) "" errorMessages
+      return undefined
+      
 
+  (f >>> g) _ = do
+    f undefined
+    g undefined
+
+{-
   -- scheduling operators
   split_seq_to_sseqC :: forall totalInputLength totalOutputLength outerLength
                         innerInputLength innerOutputLength a b .
