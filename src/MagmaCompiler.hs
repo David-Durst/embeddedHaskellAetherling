@@ -20,27 +20,31 @@ import qualified Data.Vector.Sized as V
 
 magmaNodeBaseName = "magmaInstance"
 
-copyStringWithInt :: Int -> (Int -> String) -> String
-copyStringWithInt numCopies stringGenerator =
-  foldl (++) "" $ fmap stringGenerator [0..(numCopies-1)]
+copyStringWithInt :: Int -> Int -> (Int -> String) -> String
+copyStringWithInt baseNum numCopies stringGenerator =
+  foldl (++) "" $ fmap stringGenerator [baseNum..(baseNum + numCopies - 1)]
+
+nodeParallelizesBySelf :: NodeType -> Bool
+nodeParallelizesBySelf (UpT _ _) = True
+nodeParallelizesBySelf (DownT _ _) = True
+nodeParallelizesBySelf (FoldT _ _) = True
+nodeParallelizesBySelf _ = False
 
 -- left string is an error, right string is a valid result
 -- first int is the index, second is the parallelism
-duplicateAndInstantiateNode :: NodeType -> Int -> Either String String
--- up, down, and fold handle their own parallelization, so nothing to do here
-duplicateAndInstantiateNode x@(UpT _ _) par = createMagmaDefOfNode x par
-duplicateAndInstantiateNode x@(DownT _ _) par = createMagmaDefOfNode x par
-duplicateAndInstantiateNode x@(FoldT _ _) par = createMagmaDefOfNode x par
+duplicateAndInstantiateNode :: NodeType -> Int -> Int -> Either String String
 -- otherwise, duplicate if success (if right), and propagate error if failure
-duplicateAndInstantiateNode nodeType par |
+duplicateAndInstantiateNode nodeType baseNum par |
   isRight (createMagmaDefOfNode nodeType par) =
-  Right $ copyStringWithInt par $
+  Right $ copyStringWithInt baseNum numCopies $
   \x -> magmaNodeBaseName ++ show x ++ " = " ++
         (fromRight "" $ createMagmaDefOfNode nodeType par) ++ "()\n"
-duplicateAndInstantiateNode nodeType par = createMagmaDefOfNode nodeType par
+  where
+    numCopies = if nodeParallelizesBySelf nodeType then 1 else par
+duplicateAndInstantiateNode nodeType _ par = createMagmaDefOfNode nodeType par
 
 -- left string is an error, right string is a valid result
--- first int is the index, second is the parallelism
+-- int is the parallelism
 createMagmaDefOfNode :: NodeType -> Int -> Either String String
 createMagmaDefOfNode AbsT _ = Left "Abs node not implemented" 
 createMagmaDefOfNode NotT _ = Right "DefineNegate(8)"
@@ -153,21 +157,19 @@ mergePorts ports1 ports2 = Ports allInPorts allOutPorts allCEPorts allValidPorts
 binaryFunctionPorts fnName = Ports [fnName ++ ".I0", fnName ++ ".I1"] [fnName ++ ".O"] [] [] 
 
 -- get duplicated ports for parallel versions of nodes
-getDuplicatedPorts :: NodeType -> Int -> Either String Ports
-getDuplicatedPorts nodeType@(UpT _ _) par = getPortNames nodeType magmaNodeBaseName par
-getDuplicatedPorts nodeType@(DownT _ _) par = getPortNames nodeType magmaNodeBaseName par
-getDuplicatedPorts nodeType@(FoldT _ _) par = getPortNames nodeType magmaNodeBaseName par
-getDuplicatedPorts nodeType par |
+getDuplicatedPorts :: NodeType -> Int -> Int -> Either String Ports
+getDuplicatedPorts nodeType baseNum par |
   isRight (getPortNames nodeType magmaNodeBaseName par) =
   Right $ Ports allNodesInPorts allNodesOutPorts allNodesCEPorts allNodesValidPorts
   where
+    numCopies = if nodeParallelizesBySelf nodeType then 1 else par
     allNodesPorts = fmap (\idx -> fromRight undefined $ getPortNames nodeType ("magmaInstance" ++ show idx)
-                           par) [0..(par - 1)]
+                           par) [baseNum .. (baseNum + numCopies - 1)]
     allNodesInPorts = foldl (++) [] $ fmap inPorts allNodesPorts
     allNodesOutPorts = foldl (++) [] $ fmap outPorts allNodesPorts
     allNodesCEPorts = foldl (++) [] $ fmap ce allNodesPorts
     allNodesValidPorts = foldl (++) [] $ fmap validPorts allNodesPorts
-getDuplicatedPorts nodeType par = getPortNames nodeType magmaNodeBaseName par
+getDuplicatedPorts nodeType baseNum par = getPortNames nodeType magmaNodeBaseName par
 
 getPortNames :: NodeType -> String -> Int -> Either String Ports
 getPortNames AbsT _ _ = Left "Abs node not implemented" 
@@ -264,7 +266,7 @@ validCircuitInterfaceString =
 noValidCircuitInterfaceString =
   "args = ['I', inType, 'O', outType] + ClockInterface(False, False)\n"
 
-type StatefulErrorMonad a = StateT CompilationData (ExceptT String Identity) a
+type StatefulErrorMonad = StateT CompilationData (ExceptT String Identity) 
 
 buildCompilationData :: (a -> StatefulErrorMonad b) -> CompilationData
 buildCompilationData functionYieldingMonad = getErrorOrCompDataAsCompData $
@@ -351,10 +353,27 @@ appendInnerDAGToOuterDAG f = do
     PipelineDAG stages <- get 
     put $ PipelineDAG (stages ++ getInnerPipeline f emptyDAG)
     return undefined
-
-instance Circuit (State PipelineDAG) where
+-}
+instance Circuit (StatefulErrorMonad) where
   -- unary operators
-  absC _ = appendToPipeline (NodeInfo AbsT 1 1 ([],[]))
+  absC _ = do
+    priorData <- get
+    let par = throughputNumerator priorData `div` throughputDenominator priorData
+    let magmaInstances = duplicateAndInstantiateNode AbsT par
+    if isLeft magmaInstances
+      then liftEither magmaInstances
+      else do
+      let ports = getDuplicatedPorts AbsT par
+      if isLeft ports
+        then liftEither ports
+        else do
+        let instancesValues = fromRight undefined magmaInstances
+        let portsValues = fromRight undefined ports
+        appendToCompilationData (CompilationData (inPorts ports) (outPorts ports)
+                                 (ce ports) (validPorts ports))
+    return undefined
+
+{-
   notC _ = appendToPipeline (NodeInfo NotT 1 1 ([],[]))
   noop c = appendToPipeline  (NodeInfo NoopT 1 1 ([],[]))
 
