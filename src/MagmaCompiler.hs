@@ -24,98 +24,165 @@ copyStringWithInt numCopies stringGenerator =
 
 -- left string is an error, right string is a valid result
 -- first int is the index, second is the parallelism
-createMagmaInstanceOfNode :: NodeType -> Int -> Either String String
-createMagmaInstanceOfNode AbsT _ = Left "Abs node not implemented" 
-createMagmaInstanceOfNode NotT _ = Right "DefineNegate(8)"
-createMagmaInstanceOfNode NoopT _ = Left "NoOp shouldn't be printed to magma"
-createMagmaInstanceOfNode AddT _ = Right "DefineAdd(8)"
-createMagmaInstanceOfNode SubT _ = Right "DefineSub(8)"
-createMagmaInstanceOfNode DivT _ = Right "DefineCoreirUDiv(8)"
-createMagmaInstanceOfNode MulT _ = Right "DefineCoreirMul(8)"
-createMagmaInstanceOfNode MinT _ = Left "Min node not implemented in magma" 
-createMagmaInstanceOfNode MaxT _ = Left "Max node not implemented in magma" 
-createMagmaInstanceOfNode AshrT _ = Right "DefineASR(8)"
-createMagmaInstanceOfNode ShlT _ = Right "DefineLSL(8)"
-createMagmaInstanceOfNode EqIntT _ = Right "DefineEQ(8)"
-createMagmaInstanceOfNode NeqIntT _ = Right "DefineNE(8)"
-createMagmaInstanceOfNode LtIntT _ = Right "DefineULT(8)"
-createMagmaInstanceOfNode LeqIntT _ = Right "DefineULE(8)"
-createMagmaInstanceOfNode GtIntT _ = Right "DefineUGT(8)"
-createMagmaInstanceOfNode GeqIntT _ = Right "DefineUGE(8)" 
-createMagmaInstanceOfNode AndT _ = Right "DefineAnd(8)"
-createMagmaInstanceOfNode OrT _ = Right "DefineOr(8)"
-createMagmaInstanceOfNode XorT _ = Right "DefineXOr(8)"
-createMagmaInstanceOfNode EqBitT _ = Right "DefineEQ(1)"
-createMagmaInstanceOfNode NeqBitT _ = Right "DefineNE(1)"
-createMagmaInstanceOfNode LtBitT _ = Right "DefineULT(1)"
-createMagmaInstanceOfNode LeqBitT _ = Right "DefineULE(1)"
-createMagmaInstanceOfNode GtBitT _ = Right "DefineUGT(1)"
-createMagmaInstanceOfNode GeqBitT _ = Right "DefineUGE(1)" 
-createMagmaInstanceOfNode (LutGenIntT as) _ = Left "LUT not implemented in Magma"
-createMagmaInstanceOfNode (LutGenBitT as) _ = Left "LUT not implemented in Magma"
-createMagmaInstanceOfNode (ConstGenIntT x) _ = Right ("DefineCoreirConst(" ++
+duplicateAndInstantiateNode :: NodeType -> Int -> Either String String
+duplicateAndInstantiateNode AbsT _ = createMagmaDefOfNode AbsT 1
+duplicateAndInstantiateNode NotT par = Right $ copyStringWithInt par $
+  \x -> "not" ++ show x ++ " = " ++
+  (fromRight "" $ createMagmaDefOfNode NotT par) ++ "()\n"
+duplicateAndInstantiateNode NoopT _ = createMagmaDefOfNode NoopT 1
+duplicateAndInstantiateNode AddT par = Right $ copyStringWithInt par $
+  \x -> "add" ++ show x ++ " =  " ++
+  (fromRight "" $ createMagmaDefOfNode NotT par) ++ "()\n"
+duplicateAndInstantiateNode SubT par = Right $ copyStringWithInt par $
+  \x -> "sub" ++ show x ++ " = DefineSub(8)()\n"
+duplicateAndInstantiateNode DivT par = Right $ copyStringWithInt par $
+  \x -> "div" ++ show x ++ " = DefineCoreirUDiv(8)"
+duplicateAndInstantiateNode MulT par = Right $ copyStringWithInt par $
+  \x -> "mul" ++ show x ++ " = DefineCoreirMul(8)()\n"
+duplicateAndInstantiateNode MinT _ = createMagmaDefOfNode NoopT 1
+duplicateAndInstantiateNode MaxT _ = createMagmaDefOfNode NoopT 1
+duplicateAndInstantiateNode AshrT par = Right $ copyStringWithInt par $
+  \x -> "ashr" ++ show x ++ " = DefineASR(8)()\n"
+duplicateAndInstantiateNode ShlT par = Right $ copyStringWithInt par $
+  \x -> "shl" ++ show x ++ " = DefineLSL(8)()\n"
+duplicateAndInstantiateNode EqIntT par = Right $ copyStringWithInt par $
+  \x -> "eqint" ++ show x ++ " = DefineEQ(8)()\n"
+duplicateAndInstantiateNode NeqIntT par = Right $ copyStringWithInt par $
+  \x -> "neqint" ++ show x ++ " = DefineNE(8)()\n"
+duplicateAndInstantiateNode LtIntT par = Right $ copyStringWithInt par $
+  \x -> "ltint" ++ show x ++ " = DefineULT(8)()\n"
+duplicateAndInstantiateNode LeqIntT par = Right $ copyStringWithInt par $
+  \x -> "leqint" ++ show x ++ " = DefineULE(8)()\n"
+duplicateAndInstantiateNode GtIntT par = Right $ copyStringWithInt par $
+  \x -> "gtint" ++ show x ++ " = DefineUGT(8)()\n"
+duplicateAndInstantiateNode GeqIntT par = Right $ copyStringWithInt par $
+  \x -> "geqint" ++ show x ++ " = DefineUGE(8)()\n" 
+duplicateAndInstantiateNode AndT par = Right $ copyStringWithInt par $
+  \x -> "and" ++ show x ++ " = DefineAnd(8)()\n"
+duplicateAndInstantiateNode OrT par = Right $ copyStringWithInt par $
+  \x -> "or" ++ show x ++ " = DefineOr(8)()\n"
+duplicateAndInstantiateNode XorT par = Right $ copyStringWithInt par $
+  \x -> "xor" ++ show x ++ " = DefineXOr(8)()\n"
+duplicateAndInstantiateNode EqBitT par = Right $ copyStringWithInt par $
+  \x -> "eqbit" ++ show x ++ " = DefineEQ(1)()\n"
+duplicateAndInstantiateNode NeqBitT par = Right $ copyStringWithInt par $
+  \x -> "neqbit" ++ show x ++ " = DefineNE(1)()\n"
+duplicateAndInstantiateNode LtBitT par = Right $ copyStringWithInt par $
+  \x -> "ltbit" ++ show x ++ " = DefineULT(1)()\n"
+duplicateAndInstantiateNode LeqBitT par = Right $ copyStringWithInt par $
+  \x -> "leqbit" ++ show x ++ " = DefineULE(1)()\n"
+duplicateAndInstantiateNode GtBitT par = Right $ copyStringWithInt par $
+  \x -> "gtbit" ++ show x ++ " = DefineUGT(1)()\n"
+duplicateAndInstantiateNode GeqBitT par = Right $ copyStringWithInt par $
+  \x -> "geqbit" ++ show x ++ " = DefineUGE(1)()\n" 
+duplicateAndInstantiateNode x@(LutGenIntT as) _ = createMagmaDefOfNode x 1
+duplicateAndInstantiateNode x@(LutGenBitT as) _ = createMagmaDefOfNode x 1
+duplicateAndInstantiateNode (ConstGenIntT x) par = Right $ copyStringWithInt par $
+  \idx -> "constgenint" ++ show idx ++ " = DefineCoreirConst(" ++ show intSizeInBits ++
+  ", " ++ show x ++ ")\n"
+duplicateAndInstantiateNode (ConstGenBitT x) par = Right $ copyStringWithInt par $
+  \idx -> "constgenbit" ++ show idx ++ " = DefineCoreirConst(" ++ show bitSizeInBits ++
+  ", " ++ show x ++ ")"
+-- up, down, and fold handle their own parallelization, so nothing to do here
+duplicateAndInstantiateNode x@(UpT _ _) par = createMagmaDefOfNode x par
+duplicateAndInstantiateNode x@(DownT _ _) par = createMagmaDefOfNode x par
+duplicateAndInstantiateNode x@(FoldT _ _) par = createMagmaDefOfNode x par
+duplicateAndInstantiateNode ForkJoinT _ = createMagmaDefOfNode ForkJoinT 1
+
+-- left string is an error, right string is a valid result
+-- first int is the index, second is the parallelism
+createMagmaDefOfNode :: NodeType -> Int -> Either String String
+createMagmaDefOfNode AbsT _ = Left "Abs node not implemented" 
+createMagmaDefOfNode NotT _ = Right "DefineNegate(8)"
+createMagmaDefOfNode NoopT _ = Left "NoOp shouldn't be printed to magma"
+createMagmaDefOfNode AddT _ = Right "DefineAdd(8)"
+createMagmaDefOfNode SubT _ = Right "DefineSub(8)"
+createMagmaDefOfNode DivT _ = Right "DefineCoreirUDiv(8)"
+createMagmaDefOfNode MulT _ = Right "DefineCoreirMul(8)"
+createMagmaDefOfNode MinT _ = Left "Min node not implemented in magma" 
+createMagmaDefOfNode MaxT _ = Left "Max node not implemented in magma" 
+createMagmaDefOfNode AshrT _ = Right "DefineASR(8)"
+createMagmaDefOfNode ShlT _ = Right "DefineLSL(8)"
+createMagmaDefOfNode EqIntT _ = Right "DefineEQ(8)"
+createMagmaDefOfNode NeqIntT _ = Right "DefineNE(8)"
+createMagmaDefOfNode LtIntT _ = Right "DefineULT(8)"
+createMagmaDefOfNode LeqIntT _ = Right "DefineULE(8)"
+createMagmaDefOfNode GtIntT _ = Right "DefineUGT(8)"
+createMagmaDefOfNode GeqIntT _ = Right "DefineUGE(8)" 
+createMagmaDefOfNode AndT _ = Right "DefineAnd(8)"
+createMagmaDefOfNode OrT _ = Right "DefineOr(8)"
+createMagmaDefOfNode XorT _ = Right "DefineXOr(8)"
+createMagmaDefOfNode EqBitT _ = Right "DefineEQ(1)"
+createMagmaDefOfNode NeqBitT _ = Right "DefineNE(1)"
+createMagmaDefOfNode LtBitT _ = Right "DefineULT(1)"
+createMagmaDefOfNode LeqBitT _ = Right "DefineULE(1)"
+createMagmaDefOfNode GtBitT _ = Right "DefineUGT(1)"
+createMagmaDefOfNode GeqBitT _ = Right "DefineUGE(1)" 
+createMagmaDefOfNode (LutGenIntT as) _ = Left "LUT not implemented in Magma"
+createMagmaDefOfNode (LutGenBitT as) _ = Left "LUT not implemented in Magma"
+createMagmaDefOfNode (ConstGenIntT x) _ = Right ("DefineCoreirConst(" ++
   show intSizeInBits ++ ", " ++ show x ++ ")")
-createMagmaInstanceOfNode (ConstGenBitT x) _ = Right ("DefineCoreirConst(" ++
+createMagmaDefOfNode (ConstGenBitT x) _ = Right ("DefineCoreirConst(" ++
   show bitSizeInBits ++ ", " ++ show x ++ ")")
-createMagmaInstanceOfNode (UpT proxy upAmount) par | par == upAmount = Right (
+createMagmaDefOfNode (UpT proxy upAmount) par | par == upAmount = Right (
                                                      "DefineUpsampleParallel(" ++
                                                      show par ++ ", " ++ 
                                                      (typeToMagmaString $ typeOf proxy) ++
                                                      ")")
-createMagmaInstanceOfNode (UpT proxy upAmount) par | par > 1 = Left (
+createMagmaDefOfNode (UpT proxy upAmount) par | par > 1 = Left (
                                                    "Upsample partially parallel not implemented in Magma")
-createMagmaInstanceOfNode (UpT proxy upAmount) 1 = Right (
+createMagmaDefOfNode (UpT proxy upAmount) 1 = Right (
                                                      "DefineUpsampleSequential(" ++
                                                      "cirb, " ++ show upAmount ++
                                                      ", " ++ 
                                                      (typeToMagmaString $ typeOf proxy) ++
                                                      ")")
 -- can't upsample by less than 1
-createMagmaInstanceOfNode (UpT _ _) _ = Left "Upsample must have a par of at least 1"
-createMagmaInstanceOfNode (DownT proxy upAmount) par | par == upAmount = Right (
+createMagmaDefOfNode (UpT _ _) _ = Left "Upsample must have a par of at least 1"
+createMagmaDefOfNode (DownT proxy upAmount) par | par == upAmount = Right (
                                                      "DefineDownsampleParallel(" ++
                                                      "cirb, " ++ show par ++ ", " ++ 
                                                      (typeToMagmaString $ typeOf proxy) ++
                                                      ")")
-createMagmaInstanceOfNode (DownT proxy upAmount) par | par > 1 = Left (
+createMagmaDefOfNode (DownT proxy upAmount) par | par > 1 = Left (
                                                    "Downsample partially parallel not implemented in Magma")
-createMagmaInstanceOfNode (DownT proxy upAmount) 1 = Right (
+createMagmaDefOfNode (DownT proxy upAmount) 1 = Right (
                                                      "DefineDownsampleSequential(" ++
                                                      show upAmount ++
                                                      ", " ++ 
                                                      (typeToMagmaString $ typeOf proxy) ++
                                                      ")")
 -- can't upsample by less than 1
-createMagmaInstanceOfNode (DownT _ _) _ = Left "Downsample must have a par of at least 1"
+createMagmaDefOfNode (DownT _ _) _ = Left "Downsample must have a par of at least 1"
 -- if the inner node doesn't work, just fail
-createMagmaInstanceOfNode (FoldT nt totalLen) par |
-  isLeft (createMagmaInstanceOfNode nt 1) = createMagmaInstanceOfNode nt 1
-createMagmaInstanceOfNode (FoldT nt totalLen) par | par == totalLen = Right (
+createMagmaDefOfNode (FoldT nt totalLen) par |
+  isLeft (createMagmaDefOfNode nt 1) = createMagmaDefOfNode nt 1
+createMagmaDefOfNode (FoldT nt totalLen) par | par == totalLen = Right (
                                                      "ReduceParallel(" ++
                                                      "cirb, " ++ show par ++ ", " ++ 
                                                      "renameCircuitForReduce(" ++
                                                      innerString ++ ")).defn")
                                                   where
                                                     innerString = fromLeft "" (
-                                                      createMagmaInstanceOfNode nt 1)
-createMagmaInstanceOfNode (FoldT nt totalLen) par | par > 1 = Right (
+                                                      createMagmaDefOfNode nt 1)
+createMagmaDefOfNode (FoldT nt totalLen) par | par > 1 = Right (
                                                      "DefineReducePartiallyParallel(" ++
                                                      "cirb, " ++ show totalLen ++ ", " ++ 
                                                      show par ++ ", " ++
                                                      innerString ++ ")()")
                                                   where
                                                     innerString = fromLeft "" (
-                                                      createMagmaInstanceOfNode nt 1)
-createMagmaInstanceOfNode (FoldT nt totalLen) 1 = Right (
+                                                      createMagmaDefOfNode nt 1)
+createMagmaDefOfNode (FoldT nt totalLen) 1 = Right (
                                                      "ReduceSequential(" ++
                                                      "cirb, " ++ show totalLen ++ ", " ++ 
                                                      "renameCircuitForReduce(" ++
                                                      innerString ++ ")).defn")
                                                   where
                                                     innerString = fromLeft "" (
-                                                      createMagmaInstanceOfNode nt 1)
-createMagmaInstanceOfNode (FoldT _ _) _ = Left "FoldT must have a par of at least 1"
-createMagmaInstanceOfNode ForkJoinT _ = Left "ForkJoin shouldn't be printed to magma"
+                                                      createMagmaDefOfNode nt 1)
+createMagmaDefOfNode (FoldT _ _) _ = Left "FoldT must have a par of at least 1"
+createMagmaDefOfNode ForkJoinT _ = Left "ForkJoin shouldn't be printed to magma"
 
 type PortName = String
 data Ports = Ports {
