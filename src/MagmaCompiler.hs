@@ -472,7 +472,7 @@ instance Circuit (StatefulErrorMonad) where
                                 }
     let fPipeline = runIdentity $ runExceptT $ (runStateT
           (f undefined) cData)
-    traceM $ "cData in for fpipeline " ++ show cData
+    --traceM $ "cData in for fpipeline " ++ show cData
     let secondNodeIndex = nodeIndex $ snd $ fromRight (undefined, emptyCompData) fPipeline
     -- this is not good type safety, unpack 
     let gPipeline = runIdentity $ runExceptT $ (runStateT
@@ -482,10 +482,15 @@ instance Circuit (StatefulErrorMonad) where
       then do
       let fCompilerData = snd $ fromRight undefined fPipeline
       let gCompilerData = snd $ fromRight undefined gPipeline
-      traceM $ "f compilation: " ++ show fCompilerData
-      traceM $ "g compilation: " ++ show gCompilerData
+      --traceM $ "f compilation: " ++ show fCompilerData
+      --traceM $ "g compilation: " ++ show gCompilerData
       let mergedCompilerData = (CompilationData
-                               (nodeIndex gCompilerData)
+                               -- subtract 1 here as g compiler data's
+                               -- node index is incremented by 1 for the
+                               -- next node, and then appendToCompilationData
+                               -- will increment again. -1 to prevent double
+                               -- counting.
+                               (nodeIndex gCompilerData - 1)
                                (reversedOutputText gCompilerData ++
                                  reversedOutputText fCompilerData)
                                (inputPorts fCompilerData ++ inputPorts gCompilerData)
