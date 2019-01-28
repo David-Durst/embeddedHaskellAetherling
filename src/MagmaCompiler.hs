@@ -11,91 +11,12 @@ import Data.Types.Injective
 import Data.Types.Isomorphic
 import Isomorphism
 import Control.Monad.State
+import Control.Monad.Except
+import Control.Monad.Identity
 import Data.Typeable
 import Data.Either
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
-{-
-magmaPrelude = "
--}
-
--- these are the types of the nodes in a DAG
-data NodeType =
-  AbsT
-  | NotT
-  | NoopT
-  | AddT
-  | SubT
-  | DivT
-  | MulT
-  | MinT
-  | MaxT
-  | AshrT
-  | ShlT 
-  | EqIntT
-  | NeqIntT
-  | LtIntT
-  | LeqIntT
-  | GtIntT
-  | GeqIntT 
-  | AndT
-  | OrT
-  | XorT
-  | EqBitT
-  | NeqBitT
-  | LtBitT
-  | LeqBitT
-  | GtBitT
-  | GeqBitT 
-  | LutGenIntT [Atom Int]
-  | LutGenBitT [Atom Bool]
-  | ConstGenIntT (Atom Int)
-  | ConstGenBitT (Atom Bool)
-  | forall a . (Typeable (Proxy a)) => UpT (Proxy a) Int
-  | forall a . (Typeable (Proxy a)) => DownT (Proxy a) Int
-  -- nodet is the operation inside the fold
-  -- at this point only single operations are supports
-  -- int is total sequence length
-  | forall a . FoldT NodeType Int
-  | ForkJoinT
-  --deriving (Show, Eq)
-
-instance Show NodeType where
-  show AbsT = "AbsT"
-  show NotT = "NotT"
-  show NoopT = "NoopT"
-  show AddT = "AddT"
-  show SubT = "SubT"
-  show DivT = "DivT"
-  show MulT = "MulT"
-  show MinT = "MinT"
-  show MaxT = "MaxT"
-  show AshrT = "AshrT"
-  show ShlT = "ShlT" 
-  show EqIntT = "EqIntT"
-  show NeqIntT = "NeqIntT"
-  show LtIntT = "LtIntT"
-  show LeqIntT = "LeqIntT"
-  show GtIntT = "GtIntT"
-  show GeqIntT = "GeqIntT" 
-  show AndT = "AndT"
-  show OrT = "OrT"
-  show XorT = "XorT"
-  show EqBitT = "EqBitT"
-  show NeqBitT = "NeqBitT"
-  show LtBitT = "LtBitT"
-  show LeqBitT = "LeqBitT"
-  show GtBitT = "GtBitT"
-  show GeqBitT = "GeqBitT" 
-  show (LutGenIntT as) = "LutGenIntT " ++ show as
-  show (LutGenBitT as) = "LutGenBitT " ++ show as
-  show (ConstGenIntT a) = "ConstGenIntT " ++ show a
-  show (ConstGenBitT a) = "ConstGenBitT " ++ show a
-  show (UpT proxy n) = "UpT " ++ show proxy ++ " " ++ show n
-  show (DownT proxy n) = "DownT " ++ show proxy ++ " " ++ show n
-  show (FoldT nt totalLen) = "FoldT " ++ show nt ++ " " ++
-    show totalLen
-  show ForkJoinT = "ForkJoinT"
 
 -- left string is an error, right string is a valid result
 createMagmaInstanceOfNode :: NodeType -> Int -> Either String String
@@ -265,6 +186,10 @@ getPortNames ForkJoinT _ _ = Left "ForkJoin shouldn't be printed to magma"
 
 -- This is all the info about a dag necessary to compile it to Magma
 data CompilationData = CompilationData {
+  -- this tracks the number of nodes created
+  -- each nodes magma name is appended with its index
+  -- to ensure no duplicate python variable names
+  nodeIndex :: Int,
   -- list of strings in reverse of Magma code
   -- reversed as prepend is cheaper
   reversedOutputText :: [String],
@@ -293,40 +218,59 @@ divideThroughput n compData =
   compData { throughputDenominator = n * (throughputDenominator compData) }
 
 emptyCompData :: CompilationData
-emptyCompData = CompilationData [] 
+emptyCompData = CompilationData 0 [] [] [] [] 1 1
 
 validCircuitInterfaceString =
-  "args = ['I', inType, 'O', outType, 'valid', Out(Bit)] + ClockInterface(False, False)"
+  "args = ['I', inType, 'O', outType, 'valid', Out(Bit)] + ClockInterface(False, False)\n"
 noValidCircuitInterfaceString =
-  "args = ['I', inType, 'O', outType] + ClockInterface(False, False)"
+  "args = ['I', inType, 'O', outType] + ClockInterface(False, False)\n"
 
+type StatefulErrorMonad a = StateT CompilationData (ExceptT String Identity) a
 
-buildCompilationData :: (a -> State CompilationData b) -> CompilationData
+buildCompilationData :: (a -> StatefulErrorMonad b) -> CompilationData
 buildCompilationData functionYieldingMonad = snd $
-  runState (functionYieldingMonad undefined) emptyCompData 
+  runIdentity $ runExceptT $ runStateT (functionYieldingMonad undefined) emptyCompData 
 
-writeProgramToFile :: (Typeable (Proxy a), Typeable (Proxy b)) =>
-  String -> String -> (a -> State CompilationData b) -> IO ()
-writeProgramToFile preludeLocation epilogueLocation program = do
+writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
+  String -> String -> String -> (a -> State CompilationData b) -> IO ()
+writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   let compData = buildCompilationData program
   preludeString <- readFile preludeLocation
   epilogueString <- readFile epilogueLocation
   let inputType = typeToMagmaString $ typeOf (Proxy :: Proxy a)
-  let inputTypeString = "inType = In(" ++ inputTypeString ++ ")"
+  let inputTypeString = "inType = In(" ++ inputTypeString ++ ")\n"
   let outputType = typeToMagmaString $ typeOf (Proxy :: Proxy b)
-  let outputTypeString = "outType = Out(" ++ inputTypeString ++ ")"
-  let interfaceString = (if ((length $ reversedValidPorts compData) > 0)
+  let outputTypeString = "outType = Out(" ++ inputTypeString ++ ")\n"
+  let interfaceString = (if (not $ null $ reversedValidPorts compData)
                          then validCircuitInterfaceString
                          else noValidCircuitInterfaceString)
+  writeFile outputLocation (preludeString ++ inputTypeString ++
+                            outputTypeString ++ interfaceString ++
+                            (foldl (++) "" $ reverse $ reversedOutputText compData) ++
+                           epilogueString)
 
 
-
-appendToPipeline :: NodeInfo -> State PipelineDAG a
-appendToPipeline newStage = do  
-    PipelineDAG stages <- get 
-    put $ PipelineDAG (stages ++ [newStage])
+-- given a compilation data for a new stage, append it to the state
+-- for a set of existing stages
+appendToCompilationData :: CompilationData -> State CompilationData a
+appendToCompilationData (CompilationData ni rot ip op rvp tNum tDenom) = do  
+    priorData <- get 
+    let newOutText = rot ++ reversedOutputText priorData
+    let newInPorts = if (null $ (inputPorts priorData))
+                        then ip else inputPorts priorData
+    let newOutPorts = op
+    let newReversedValidPorts = rvp ++ reversedValidPorts priorData
+    -- just propagate throughput numerator and denominator 
+    -- as those are only modififed by scheduling combiators that are
+    -- parents, and this is for combining siblines
+    -- section as we are going along 
+    let newThroughputNumerator = throughputNumerator priorData
+    let newThroughputDenominator = throughputDenominator priorData
+    put $ (CompilationData ni newOutText newInPorts newOutPorts
+           newReversedValidPorts newThroughputNumerator newThroughputDenominator)
     return undefined
 
+{-
 getInnerPipeline :: (a -> State PipelineDAG b) -> PipelineDAG -> [NodeInfo]
 getInnerPipeline f startingDAG = innerStages
   where
@@ -525,6 +469,7 @@ instance Circuit (State PipelineDAG) where
 -- examples of programs in space and time
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition
+-}
 {-
 unscheduledPipeline = iterC (Proxy @4) $ (constGenC (Int 3) *** constGenC (Int 2)) >>> addC
 unscheduledNode = iterC (Proxy @4) $ addC
