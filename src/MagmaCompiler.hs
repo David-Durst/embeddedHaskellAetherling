@@ -474,7 +474,7 @@ instance Circuit (StatefulErrorMonad) where
       let fCompilerData = snd $ fromRight undefined fPipeline
       let gCompilerData = snd $ fromRight undefined gPipeline
       let mergedCompilerData = (CompilationData
-                               (nodeIndex gCompilerData + 1)
+                               (nodeIndex gCompilerData)
                                (reversedOutputText gCompilerData ++
                                  reversedOutputText fCompilerData)
                                (inputPorts fCompilerData ++ inputPorts gCompilerData)
@@ -493,7 +493,6 @@ instance Circuit (StatefulErrorMonad) where
     f undefined
     g undefined
 
-{-
   -- scheduling operators
   split_seq_to_sseqC :: forall totalInputLength totalOutputLength outerLength
                         innerInputLength innerOutputLength a b .
@@ -503,98 +502,114 @@ instance Circuit (StatefulErrorMonad) where
                          totalInputLength ~ (outerLength*innerInputLength),
                          totalOutputLength ~ (outerLength*innerOutputLength)) =>
                         Proxy outerLength ->
-    (Seq totalInputLength a -> State PipelineDAG (Seq totalOutputLength b)) ->
+    (Seq totalInputLength a -> StatefulErrorMonad (Seq totalOutputLength b)) ->
     (Seq outerLength (SSeq innerInputLength a) ->
-      State PipelineDAG (Seq outerLength (SSeq innerOutputLength b)))
+      StatefulErrorMonad (Seq outerLength (SSeq innerOutputLength b)))
   split_seq_to_sseqC _ f _ = do
-    PipelineDAG priorStages <- get 
-    let innerStages = getInnerPipeline f emptyDAG
+    priorData <- get 
     let innerLengthProxy = Proxy :: Proxy innerOutputLength
     let innerLength = (fromInteger $ natVal innerLengthProxy)
-    let scheduledInnerStages = (fmap (multiplyNodeThroughput innerLength) innerStages)
-    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
+    put $ multiplyThroughput innerLength priorData
+    f undefined
+    dataPostInnerPipeline <- get
+    put $ divideThroughput innerLength priorData
     return undefined
     
   -- ignore the tseq since it does nothing, its the same as an iter, just chewing
   -- up iterations that don't need to be parallelized
-  split_seq_to_tseqC _ f _ = appendInnerDAGToOuterDAG f
+  split_seq_to_tseqC _ f _ = do
+    f undefined
+    -- this is just a trick toget the return types to match, since the
+    -- type system thinks we need a seq of f's, but f is just producing state
+    -- when it runs
+    return undefined
 
   -- since getting rid of sseq, undo parallelism
   sseq_to_seqC :: forall a b inputLength outputLength .
                   (KnownNat inputLength, KnownNat outputLength) =>
-                  (SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)) ->
-                  Seq inputLength a -> State PipelineDAG (Seq outputLength b)
+                  (SSeq inputLength a -> StatefulErrorMonad (SSeq outputLength b)) ->
+                  Seq inputLength a -> StatefulErrorMonad (Seq outputLength b)
   sseq_to_seqC f _ = do 
-    PipelineDAG priorStages <- get 
-    let innerStages = getInnerPipeline f emptyDAG
-    let inputLengthProxy = Proxy :: Proxy inputLength 
+    priorData <- get 
+    let inputLengthProxy = Proxy :: Proxy inputLength
     let inputLength = (fromInteger $ natVal inputLengthProxy)
-    let scheduledInnerStages = (fmap (divideNodeThroughput inputLength) innerStages)
-    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
+    put $ divideThroughput inputLength priorData
+    f undefined
+    dataPostInnerPipeline <- get
+    put $ multiplyThroughput inputLength priorData
     return undefined
 
   -- ignore the seq since it does nothing and tseq did nothing as well 
-  tseq_to_seqC f _ = appendInnerDAGToOuterDAG f
+  tseq_to_seqC f _ = do
+    f undefined
+    return undefined
 
   seq_to_sseqC :: forall inputLength outputLength a b .
                   (KnownNat inputLength, KnownNat outputLength) =>
-                  (Seq inputLength a -> State PipelineDAG (Seq outputLength b)) ->
-                  SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)
+                  (Seq inputLength a -> StatefulErrorMonad (Seq outputLength b)) ->
+                  SSeq inputLength a -> StatefulErrorMonad (SSeq outputLength b)
   seq_to_sseqC f _ = do
-    PipelineDAG priorStages <- get 
-    let innerStages = getInnerPipeline f emptyDAG
-    let inputLengthProxy = Proxy :: Proxy inputLength 
+    priorData <- get 
+    let inputLengthProxy = Proxy :: Proxy inputLength
     let inputLength = (fromInteger $ natVal inputLengthProxy)
-    let scheduledInnerStages = (fmap (multiplyNodeThroughput inputLength) innerStages)
-    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
+    put $ multiplyThroughput inputLength priorData
+    f undefined
+    dataPostInnerPipeline <- get
+    put $ divideThroughput inputLength priorData
     return undefined
 
-  seq_to_tseqC f _ = appendInnerDAGToOuterDAG f
+  seq_to_tseqC f _ = do
+    f undefined
+    return undefined
 
   -- this is almost same as sseq_to_seq as tseq and seq both don't change parallelism
   sseq_to_tseqC :: forall inputLength outputLength a b u v .
                    (KnownNat inputLength, KnownNat outputLength) =>
-    Proxy v -> Proxy u -> (SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)) ->
-    TSeq inputLength v a -> State PipelineDAG (TSeq outputLength u b)
+    Proxy v -> Proxy u -> (SSeq inputLength a -> StatefulErrorMonad (SSeq outputLength b)) ->
+    TSeq inputLength v a -> StatefulErrorMonad (TSeq outputLength u b)
   sseq_to_tseqC _ _ f _ = do
-    PipelineDAG priorStages <- get 
-    let innerStages = getInnerPipeline f emptyDAG
-    let inputLengthProxy = Proxy :: Proxy inputLength 
+    priorData <- get 
+    let inputLengthProxy = Proxy :: Proxy inputLength
     let inputLength = (fromInteger $ natVal inputLengthProxy)
-    let scheduledInnerStages = (fmap (divideNodeThroughput inputLength) innerStages)
-    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
+    put $ divideThroughput inputLength priorData
+    f undefined
+    dataPostInnerPipeline <- get
+    put $ multiplyThroughput inputLength priorData
     return undefined
 
   -- this is almost same as seq_to_sseq as tseq and seq both don't change parallelism
   tseq_to_sseqC :: forall inputLength outputLength a b u v .
                    (KnownNat inputLength, KnownNat outputLength) =>
-    (TSeq inputLength v a -> State PipelineDAG (TSeq outputLength u b)) ->
-    SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)
+    (TSeq inputLength v a -> StatefulErrorMonad (TSeq outputLength u b)) ->
+    SSeq inputLength a -> StatefulErrorMonad (SSeq outputLength b)
   tseq_to_sseqC f _ = do 
-    PipelineDAG priorStages <- get 
-    let innerStages = getInnerPipeline f emptyDAG
-    let inputLengthProxy = Proxy :: Proxy inputLength 
+    priorData <- get 
+    let inputLengthProxy = Proxy :: Proxy inputLength
     let inputLength = (fromInteger $ natVal inputLengthProxy)
-    let scheduledInnerStages = (fmap (multiplyNodeThroughput inputLength) innerStages)
-    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
+    put $ multiplyThroughput inputLength priorData
+    f undefined
+    dataPostInnerPipeline <- get
+    put $ divideThroughput inputLength priorData
     return undefined
 
   underutilC :: forall n v o u a b underutilMult .
                 (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
                  KnownNat underutilMult, 1 <= underutilMult) => 
-    Proxy underutilMult -> (TSeq n v a -> State PipelineDAG (TSeq o u b)) ->
-    TSeq n ((n + v) * underutilMult) a -> State PipelineDAG (TSeq o ((o + u) * underutilMult) b)
+    Proxy underutilMult -> (TSeq n v a -> StatefulErrorMonad (TSeq o u b)) ->
+    TSeq n ((n + v) * underutilMult) a -> StatefulErrorMonad (TSeq o ((o + u) * underutilMult) b)
   underutilC underutilProxy f _ = do 
-    PipelineDAG priorStages <- get 
-    let innerStages = getInnerPipeline f emptyDAG
-    let underutilAmount = (fromInteger $ natVal underutilProxy)
-    let scheduledInnerStages = (fmap (divideNodeThroughput underutilAmount) innerStages)
-    put $ PipelineDAG (priorStages ++ scheduledInnerStages)
+    priorData <- get 
+    let inputLengthProxy = Proxy :: Proxy underutilMult
+    let inputLength = (fromInteger $ natVal inputLengthProxy)
+    put $ divideThroughput inputLength priorData
+    f undefined
+    dataPostInnerPipeline <- get
+    put $ multiplyThroughput inputLength priorData
     return undefined
 -- examples of programs in space and time
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition
--}
+
 {-
 unscheduledPipeline = iterC (Proxy @4) $ (constGenC (Int 3) *** constGenC (Int 2)) >>> addC
 unscheduledNode = iterC (Proxy @4) $ addC
