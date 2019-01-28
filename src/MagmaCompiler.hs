@@ -358,19 +358,28 @@ instance Circuit (StatefulErrorMonad) where
   -- unary operators
   absC _ = do
     priorData <- get
+    let curNodeIndex = nodeIndex priorData
     let par = throughputNumerator priorData `div` throughputDenominator priorData
-    let magmaInstances = duplicateAndInstantiateNode AbsT par
+    let magmaInstances = duplicateAndInstantiateNode AbsT par curNodeIndex
     if isLeft magmaInstances
-      then liftEither magmaInstances
+      then do
+      liftEither magmaInstances
+      return undefined
       else do
-      let ports = getDuplicatedPorts AbsT par
+      let ports = getDuplicatedPorts AbsT par curNodeIndex
       if isLeft ports
-        then liftEither ports
+        then do
+        liftEither ports
+        return undefined
         else do
         let instancesValues = fromRight undefined magmaInstances
         let portsValues = fromRight undefined ports
-        appendToCompilationData (CompilationData (inPorts ports) (outPorts ports)
-                                 (ce ports) (validPorts ports))
+        appendToCompilationData (CompilationData (curNodeIndex+1)
+                                [instancesValues] (inPorts portsValues)
+                                 (outPorts portsValues) 
+                                 (validPorts portsValues)
+                                 (throughputNumerator priorData)
+                                 (throughputDenominator priorData))
     return undefined
 
 {-
