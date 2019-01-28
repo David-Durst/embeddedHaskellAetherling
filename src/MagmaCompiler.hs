@@ -18,7 +18,12 @@ import Data.Either
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
+copyStringWithInt :: Int -> (Int -> String) -> String
+copyStringWithInt numCopies stringGenerator =
+  foldl (++) "" $ fmap stringGenerator [0..(numCopies-1)]
+
 -- left string is an error, right string is a valid result
+-- first int is the index, second is the parallelism
 createMagmaInstanceOfNode :: NodeType -> Int -> Either String String
 createMagmaInstanceOfNode AbsT _ = Left "Abs node not implemented" 
 createMagmaInstanceOfNode NotT _ = Right "DefineNegate(8)"
@@ -253,25 +258,43 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
                             (foldl (++) "" $ reverse $ reversedOutputText compData) ++
                            epilogueString)
 
+-- this returns the wire calls in reverse order so they can be prepended to the
+-- out text
+wirePorts :: [PortName] -> [PortName] -> Either String [String]
+wirePorts priorOutPorts nextInPorts |
+  length priorOutPorts == length nextInPorts = Right wireStrings
+  where
+    portPairs = reverse $ zip priorOutPorts nextInPorts
+    wireStrings = fmap (\(outName, inName) -> "wire(" ++ outName ++ ", " ++
+                         inName ++ ")") portPairs
+wirePorts priorOutPorts nextInPorts = Left ("Different lengths of ports " ++
+                                            show priorOutPorts ++
+                                            " and " ++
+                                            show nextInPorts)
 
 -- given a compilation data for a new stage, append it to the state
 -- for a set of existing stages
-appendToCompilationData :: CompilationData -> State CompilationData a
+appendToCompilationData :: CompilationData -> StatefulErrorMonad a
 appendToCompilationData (CompilationData ni rot ip op rvp tNum tDenom) = do  
     priorData <- get 
-    let newOutText = rot ++ reversedOutputText priorData
-    let newInPorts = if (null $ (inputPorts priorData))
-                        then ip else inputPorts priorData
-    let newOutPorts = op
-    let newReversedValidPorts = rvp ++ reversedValidPorts priorData
-    -- just propagate throughput numerator and denominator 
-    -- as those are only modififed by scheduling combiators that are
-    -- parents, and this is for combining siblines
-    -- section as we are going along 
-    let newThroughputNumerator = throughputNumerator priorData
-    let newThroughputDenominator = throughputDenominator priorData
-    put $ (CompilationData ni newOutText newInPorts newOutPorts
-           newReversedValidPorts newThroughputNumerator newThroughputDenominator)
+    let portWirings = wirePorts (outputPorts priorData) ip
+    if isLeft portWirings
+      then liftEither portWirings
+      else do
+        let newOutText = rot ++ reversedOutputText priorData
+        let newInPorts = if (null $ (inputPorts priorData))
+                            then ip else inputPorts priorData
+        let newOutPorts = op
+        let newReversedValidPorts = rvp ++ reversedValidPorts priorData
+        -- just propagate throughput numerator and denominator 
+        -- as those are only modififed by scheduling combiators that are
+        -- parents, and this is for combining siblines
+        -- section as we are going along 
+        let newThroughputNumerator = throughputNumerator priorData
+        let newThroughputDenominator = throughputDenominator priorData
+        put $ (CompilationData ni newOutText newInPorts newOutPorts
+              newReversedValidPorts newThroughputNumerator newThroughputDenominator)
+        return undefined
     return undefined
 
 {-
