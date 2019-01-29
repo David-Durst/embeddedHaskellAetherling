@@ -142,7 +142,8 @@ appendToCompilationData dd@(CompilationData ni rot ip it op ot rvp tNum tDenom) 
     priorData <- get 
     --traceM ("Old data" ++ show priorData)
     --traceM ("New data" ++ show dd)
-    let portWirings = wirePorts (outputPorts priorData) ip
+    let portWirings = if (null $ (reversedOutputText priorData))
+                       then Right [] else wirePorts (outputPorts priorData) ip
     if isLeft portWirings
       then liftEither portWirings
       else do
