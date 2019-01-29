@@ -33,11 +33,11 @@ data CompilationData = CompilationData {
   -- the input ports to the circuit
   -- this is NOT REVERSED
   inputPorts :: [PortName],
-  inputPortTypes :: [TypeRep],
+  inputPortTypes :: [(TypeRep, Int)],
   -- the output ports, used to wire up adjacent nodes
   -- this is NOT REVERSED
   outputPorts :: [PortName],
-  outputPortTypes :: [TypeRep],
+  outputPortTypes :: [(TypeRep, Int)],
   -- list of valid ports with last in DAG
   -- as the last element
   reversedValidPorts :: [PortName],
@@ -76,8 +76,8 @@ buildCompilationData functionYieldingMonad = getErrorOrCompDataAsCompData $
     getErrorOrCompDataAsCompData (Left s) = emptyCompData { reversedOutputText = [s] }
     getErrorOrCompDataAsCompData (Right (_, compData)) = compData
 
-getModulePortsString :: [(TypeRep, Int)] -> String -> String
-getModulePortsString ports baseString = foldl (++) "" portsStrings
+getModulePortsString :: String -> [(TypeRep, Int)] -> String
+getModulePortsString baseString ports = foldl (++) "" portsStrings
   where
     portsWithIdxs = zip ports [0..(length ports - 1)]
     portsStrings = fmap (\(port, idx) ->
@@ -91,10 +91,8 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   let compData = buildCompilationData program
   preludeString <- readFile preludeLocation
   epilogueString <- readFile epilogueLocation
-  let inputType = typeToMagmaString $ alltypeOf (Proxy :: Proxy a)
-  let inputTypeString = "inType = In(" ++ inputTypeString ++ ")\n"
-  let outputType = typeToMagmaString $ typeOf (Proxy :: Proxy b)
-  let outputTypeString = "outType = Out(" ++ inputTypeString ++ ")\n"
+  let inputTypeString = getModulePortsString "I" $ inputPortsTypes compData
+  let outputTypeString = getModulePortsString "O" $ outputPortsTypes compData
   let interfaceString = (circuitInterfaceString inputTypeString
                          outputTypeString (not $ null $ reversedValidPorts compData))
   traceM "howdy"
