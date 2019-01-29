@@ -63,7 +63,7 @@ circuitInterfaceString inTypesString outTypesString hasValid =
   startOfInterface ++ inTypesString ++ outTypesString ++ validStr ++ endOfInterface
   where
     startOfInterface = "args = ["
-    endOfInterface = "]"
+    endOfInterface = "]\n"
     validStr = if hasValid then "'valid', Out(Bit)," else ""
 
 type StatefulErrorMonad = StateT CompilationData (ExceptT String Identity) 
@@ -81,9 +81,9 @@ getModulePortsString baseString ports = foldl (++) "" portsStrings
   where
     portsWithIdxs = zip ports [0..(length ports - 1)]
     portsStrings = fmap (\(port, idx) ->
-                           "'I'" ++ show idx ++ ", " ++ typeToMagmaString port ++ ", ")
+                           "'" ++ baseString ++ show idx ++ "', " ++
+                           typeToMagmaString port ++ ", ")
                    portsWithIdxs
-    
 
 writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
   String -> String -> String -> (a -> StatefulErrorMonad b) -> IO ()
@@ -92,22 +92,27 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   preludeString <- readFile preludeLocation
   epilogueString <- readFile epilogueLocation
   let inputTypeString = getModulePortsString "I" $ inputPortsTypes compData
+  --traceM $ inputTypeString
   let outputTypeString = getModulePortsString "O" $ outputPortsTypes compData
+  --traceM $ outputTypeString
   let interfaceString = (circuitInterfaceString inputTypeString
                          outputTypeString (not $ null $ reversedValidPorts compData))
-  let circuitDefinition = "testcircuit = DefineCircuit('Test_Haskell_Circuit', *args)" 
+  let circuitDefinition = "testcircuit = DefineCircuit('Test_Haskell_Circuit', *args)\n" 
+  -- traceM $ show compData
   let wireInterfaceString = wireInterface "testcircuit" (inputPorts compData) (outputPorts compData)
+  {-
   traceM "howdy"
   let upToBodyString = preludeString ++ inputTypeString ++
                        outputTypeString ++ interfaceString 
   traceM upToBodyString
   let bodyString = (foldl (++) "" $ reverse $ reversedOutputText compData) 
   traceM bodyString
-  let outputString = (preludeString ++ inputTypeString ++
-                      outputTypeString ++ interfaceString ++
+  -}
+  let outputString = (preludeString ++ circuitDefinition ++
+                      interfaceString ++
                       (foldl (++) "" $ reverse $ reversedOutputText compData) ++
                       wireInterfaceString ++ epilogueString)
-  traceM outputString
+  --traceM outputString
   writeFile outputLocation outputString
 
 -- this returns the wire calls in reverse order so they can be prepended to the
