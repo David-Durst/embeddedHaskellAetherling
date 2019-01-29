@@ -85,6 +85,14 @@ getModulePortsString baseString ports = foldl (++) "" portsStrings
                            typeToMagmaString port ++ ", ")
                    portsWithIdxs
 
+saveToCoreIR :: String -> String
+saveToCoreIR circuitName = getCoreIRModuleString ++ runGeneratorsString ++
+  saveToFileString
+  where
+    getCoreIRModuleString = "haskell_test_module = GetCoreIRModule(cirb, " ++ circuitName ++ ")\n"
+    runGeneratorsString = "cirb.context.run_passes([\"rungenerators\", \"verifyconnectivity --noclkrst\"], [\"aetherlinglib\", \"commonlib\", \"mantle\", \"coreir\", \"global\"])\n"
+    saveToFileString = circuitName ++ ".save_to_file(\"haskellTest.json\")"
+
 writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
   String -> String -> String -> (a -> StatefulErrorMonad b) -> IO ()
 writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
@@ -97,9 +105,10 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   --traceM $ outputTypeString
   let interfaceString = (circuitInterfaceString inputTypeString
                          outputTypeString (not $ null $ reversedValidPorts compData))
-  let circuitDefinition = "testcircuit = DefineCircuit('Test_Haskell_Circuit', *args)\n" 
+  let circuitDefinition = "haskell_test_circuit = DefineCircuit('Test_Haskell_Circuit', *args)\n" 
   -- traceM $ show compData
-  let wireInterfaceString = wireInterface "testcircuit" (inputPorts compData) (outputPorts compData)
+  let wireInterfaceString = wireInterface "haskell_test_circuit" (inputPorts compData) (outputPorts compData)
+  let saveToCoreIRString = saveToCoreIR "haskell_test_circuit"
   {-
   traceM "howdy"
   let upToBodyString = preludeString ++ inputTypeString ++
@@ -110,7 +119,7 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   -}
   let outputString = (preludeString ++ interfaceString ++ circuitDefinition ++
                       (foldl (++) "" $ reverse $ reversedOutputText compData) ++
-                      wireInterfaceString ++ epilogueString)
+                      wireInterfaceString ++ epilogueString ++ saveToCoreIRString)
   --traceM outputString
   writeFile outputLocation outputString
 
@@ -241,27 +250,25 @@ instance Circuit (StatefulErrorMonad) where
   subC _ = createCompilationDataAndAppend SubT
   mulC _ = createCompilationDataAndAppend MulT
   divC _ = createCompilationDataAndAppend DivT
-{-
-  minC _ = appendToPipeline (NodeInfo MinT 2 1 ([],[]))
-  maxC _ = appendToPipeline (NodeInfo MaxT 2 1 ([],[]))
-  ashrC _ = appendToPipeline (NodeInfo AshrT 2 1 ([],[]))
-  shlC _ = appendToPipeline (NodeInfo ShlT 2 1 ([],[]))
-  andC _ = appendToPipeline (NodeInfo AndT 2 1 ([],[]))
-  orC _ = appendToPipeline (NodeInfo OrT 2 1 ([],[]))
-  xorC _ = appendToPipeline (NodeInfo XorT 2 1 ([],[]))
-  eqIntC _ = appendToPipeline (NodeInfo EqIntT 2 1 ([],[]))
-  eqBitC _ = appendToPipeline (NodeInfo EqBitT 2 1 ([],[]))
-  neqIntC _ = appendToPipeline (NodeInfo NeqIntT 2 1 ([],[]))
-  neqBitC _ = appendToPipeline (NodeInfo NeqBitT 2 1 ([],[]))
-  ltIntC _ = appendToPipeline (NodeInfo LtIntT 1 1 ([],[]))
-  ltBitC _ = appendToPipeline (NodeInfo LtBitT 2 1 ([],[]))
-  leqIntC _ = appendToPipeline (NodeInfo LeqIntT 2 1 ([],[]))
-  leqBitC _ = appendToPipeline (NodeInfo LeqBitT 2 1 ([],[]))
-  gtIntC _ = appendToPipeline (NodeInfo GtIntT 2 1 ([],[]))
-  gtBitC _ = appendToPipeline (NodeInfo GtBitT 2 1 ([],[]))
-  geqIntC _ = appendToPipeline (NodeInfo GeqIntT 2 1 ([],[]))
-  geqBitC _ = appendToPipeline (NodeInfo GeqBitT 2 1 ([],[]))
--}
+  minC _ = createCompilationDataAndAppend MinT
+  maxC _ = createCompilationDataAndAppend MaxT
+  ashrC _ = createCompilationDataAndAppend AshrT
+  shlC _ = createCompilationDataAndAppend ShlT
+  andC _ = createCompilationDataAndAppend AndT
+  orC _ = createCompilationDataAndAppend OrT
+  xorC _ = createCompilationDataAndAppend XorT
+  eqIntC _ = createCompilationDataAndAppend EqIntT
+  eqBitC _ = createCompilationDataAndAppend EqBitT
+  neqIntC _ = createCompilationDataAndAppend NeqIntT
+  neqBitC _ = createCompilationDataAndAppend NeqBitT
+  ltIntC _ = createCompilationDataAndAppend LtIntT
+  ltBitC _ = createCompilationDataAndAppend LtBitT
+  leqIntC _ = createCompilationDataAndAppend LeqIntT
+  leqBitC _ = createCompilationDataAndAppend LeqBitT
+  gtIntC _ = createCompilationDataAndAppend GtIntT
+  gtBitC _ = createCompilationDataAndAppend GtBitT
+  geqIntC _ = createCompilationDataAndAppend GeqIntT
+  geqBitC _ = createCompilationDataAndAppend GeqBitT
   -- module generator
   lutGenIntC as _ = createCompilationDataAndAppend (LutGenIntT as)
   lutGenBitC as _ = createCompilationDataAndAppend (LutGenBitT as) 
