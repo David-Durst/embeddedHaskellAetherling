@@ -33,11 +33,11 @@ data CompilationData = CompilationData {
   -- the input ports to the circuit
   -- this is NOT REVERSED
   inputPorts :: [PortName],
-  inputPortTypes :: [(TypeRep, Int)],
+  inputPortsTypes :: [(TypeRep, Int)],
   -- the output ports, used to wire up adjacent nodes
   -- this is NOT REVERSED
   outputPorts :: [PortName],
-  outputPortTypes :: [(TypeRep, Int)],
+  outputPortsTypes :: [(TypeRep, Int)],
   -- list of valid ports with last in DAG
   -- as the last element
   reversedValidPorts :: [PortName],
@@ -137,8 +137,8 @@ appendToCompilationData dd@(CompilationData ni rot ip it op ot rvp tNum tDenom) 
       let newOutText = portWiringsStrings ++ rot ++ reversedOutputText priorData
       let newInPorts = if (null $ (inputPorts priorData))
                        then ip else inputPorts priorData
-      let newInTypes = if (null $ (inputPortTypes priorData))
-                        then it else inputPortTypes priorData
+      let newInTypes = if (null $ (inputPortsTypes priorData))
+                        then it else inputPortsTypes priorData
       let newOutPorts = op
       let newOutTypes = ot
       let newReversedValidPorts = rvp ++ reversedValidPorts priorData
@@ -312,9 +312,9 @@ instance Circuit (StatefulErrorMonad) where
                                (reversedOutputText gCompilerData ++
                                  reversedOutputText fCompilerData)
                                (inputPorts fCompilerData ++ inputPorts gCompilerData)
-                               (inputPortTypes fCompilerData ++ inputPortTypes gCompilerData)
+                               (inputPortsTypes fCompilerData ++ inputPortsTypes gCompilerData)
                                (outputPorts fCompilerData ++ outputPorts gCompilerData)
-                               (outputPortTypes fCompilerData ++ outputPortTypes gCompilerData)
+                               (outputPortsTypes fCompilerData ++ outputPortsTypes gCompilerData)
                                (reversedValidPorts fCompilerData ++
                                  reversedValidPorts gCompilerData)
                                tNum tDenom

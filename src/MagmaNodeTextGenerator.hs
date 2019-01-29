@@ -77,7 +77,7 @@ createMagmaDefOfNode (ConstGenBitT x) _ = Right ("DefineCoreirConst(" ++
 createMagmaDefOfNode (UpT proxy upAmount) par | par == upAmount = Right (
                                                      "DefineUpsampleParallel(" ++
                                                      show par ++ ", " ++ 
-                                                     (typeToMagmaString $ typeOf proxy) ++
+                                                     (oneTypeToMagmaString $ typeOf proxy) ++
                                                      ")")
 createMagmaDefOfNode (UpT proxy upAmount) par | par > 1 = Left (
                                                    "Upsample partially parallel not implemented in Magma")
@@ -85,14 +85,14 @@ createMagmaDefOfNode (UpT proxy upAmount) 1 = Right (
                                                      "DefineUpsampleSequential(" ++
                                                      "cirb, " ++ show upAmount ++
                                                      ", " ++ 
-                                                     (typeToMagmaString $ typeOf proxy) ++
+                                                     (oneTypeToMagmaString $ typeOf proxy) ++
                                                      ")")
 -- can't upsample by less than 1
 createMagmaDefOfNode (UpT _ _) _ = Left "Upsample must have a par of at least 1"
 createMagmaDefOfNode (DownT proxy upAmount) par | par == upAmount = Right (
                                                      "DefineDownsampleParallel(" ++
                                                      "cirb, " ++ show par ++ ", " ++ 
-                                                     (typeToMagmaString $ typeOf proxy) ++
+                                                     (oneTypeToMagmaString $ typeOf proxy) ++
                                                      ")")
 createMagmaDefOfNode (DownT proxy upAmount) par | par > 1 = Left (
                                                    "Downsample partially parallel not implemented in Magma")
@@ -100,7 +100,7 @@ createMagmaDefOfNode (DownT proxy upAmount) 1 = Right (
                                                      "DefineDownsampleSequential(" ++
                                                      show upAmount ++
                                                      ", " ++ 
-                                                     (typeToMagmaString $ typeOf proxy) ++
+                                                     (oneTypeToMagmaString $ typeOf proxy) ++
                                                      ")")
 -- can't upsample by less than 1
 createMagmaDefOfNode (DownT _ _) _ = Left "Downsample must have a par of at least 1"
