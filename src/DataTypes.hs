@@ -66,28 +66,37 @@ replaceAString toReplace subtitute input = replaced
     replaced = L.foldl (\x -> \y -> x L.++ subtitute L.++ y)
       hdSplit tlSplit
 
-typeToMagmaString :: forall (a :: *) (b :: *) . (TypeRep, Int) -> String
-typeToMagmaString (typeRep, 1) = oneTypeToMagmaString typeRep
-typeToMagmaString (typeRep, n) | n > 1 = "Array(" L.++
-                                 oneTypeToMagmaString typeRep L.++ ")"
-typeToMagmaString (typeRep, n) =
+typeToMagmaString :: forall (a :: *) (b :: *) . Bool -> (TypeRep, Int) -> String
+typeToMagmaString isInput (typeRep, 1) = oneTypeToMagmaString isInput typeRep
+typeToMagmaString isInput (typeRep, n) | n > 1 = "Array(" L.++
+                                 oneTypeToMagmaString isInput typeRep L.++ ")"
+typeToMagmaString _ (_, n) =
   "parallelism for typeToMagmaString must be greater than 0, got" L.++ show n
 
-oneTypeToMagmaString :: forall (a :: *) (b :: *) . TypeRep -> String
-oneTypeToMagmaString typeRep
+-- if true, then input string, if false then output string
+directionalString :: Bool -> String
+directionalString True = "In"
+directionalString False = "Out"
+
+
+intTypeString isInput = "Array(" L.++ show intSizeInBits L.++ ", " L.++
+  directionalString isInput L.++ "(Bit))"
+bitTypeString isInput = "Array(" L.++ show bitSizeInBits L.++ ", " L.++
+  directionalString isInput L.++ "(Bit))"
+
+oneTypeToMagmaString :: forall (a :: *) (b :: *) . Bool -> TypeRep -> String
+oneTypeToMagmaString isInput typeRep
   | typeRep == typeOf (Proxy :: Proxy (Atom ())) = ""
-  | typeRep == typeOf (Proxy :: Proxy (Atom Int)) = "Array(" L.++
-                                                    show intSizeInBits L.++
-                                                    ", In(BitIn))"
-  | typeRep == typeOf (Proxy :: Proxy (Atom Bool)) = "Array(" L.++
-                                                    show bitSizeInBits L.++
-                                                    ", In(BitIn))"
+  | typeRep == typeOf (Proxy :: Proxy (Atom Int)) = 
+    intTypeString isInput
+  | typeRep == typeOf (Proxy :: Proxy (Atom Bool)) = 
+    bitTypeString isInput
   -- assume otherwise this is a tuple
   | otherwise = do
       let lastBraceRemoved = L.reverse . L.tail . L.reverse $ show typeRep
           proxyRemoved = L.foldl (L.++) "" $ splitOn "Proxy * (" $ lastBraceRemoved
-          intsReplaced = replaceAString "(Atom Int)" "Array(8,In(BitIn))" proxyRemoved
-          bitsReplaced = replaceAString "(Atom Bool)" "Array(1,In(BitIn))" intsReplaced
+          intsReplaced = replaceAString "(Atom Int)" (intTypeString isInput) proxyRemoved
+          bitsReplaced = replaceAString "(Atom Bool)" (bitTypeString isInput) intsReplaced
           tuplesReplaced = replaceAString "Atom (" "Tuple(" bitsReplaced
       tuplesReplaced
 {-

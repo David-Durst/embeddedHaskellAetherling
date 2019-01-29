@@ -85,11 +85,11 @@ class Monad m => Circuit m where
     SSeq inputLength a -> m (SSeq outputLength b)
 
   seq_to_tseqC :: (Seq inputLength a -> m (Seq outputLength b)) ->
-    TSeq inputLength v a -> m (TSeq outputLength u b)
+    TSeq inputLength 0 a -> m (TSeq outputLength 0 b)
 
   sseq_to_tseqC :: (KnownNat inputLength, KnownNat outputLength) =>
-    Proxy v -> Proxy u -> (SSeq inputLength a -> m (SSeq outputLength b)) ->
-    TSeq inputLength v a -> m (TSeq outputLength u b)
+    (SSeq inputLength a -> m (SSeq outputLength b)) ->
+    TSeq inputLength 0 a -> m (TSeq outputLength 0 b)
 
   tseq_to_sseqC :: (KnownNat inputLength, KnownNat outputLength) =>
     (TSeq inputLength v a -> m (TSeq outputLength u b)) ->

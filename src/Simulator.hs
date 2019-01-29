@@ -117,7 +117,7 @@ instance Circuit SimulatorEnv where
   tseq_to_seqC f seq = (f $ seqToTSeq seq) >>= (return . tseqToSeq)
   seq_to_sseqC f sseq = (f $ sseqToSeq sseq) >>= (return . seqToSSeq)
   seq_to_tseqC f tseq = (f $ tseqToSeq tseq) >>= (return . seqToTSeq)
-  sseq_to_tseqC _ _ f tseq = (f $ tseqToSSeq tseq) >>= (return . sseqToTSeq)
+  sseq_to_tseqC f tseq = (f $ tseqToSSeq tseq) >>= (return . sseqToTSeq)
   tseq_to_sseqC f sseq = (f $ sseqToTSeq sseq) >>= (return . tseqToSSeq)
   underutilC _ f tseq = do 
     innerResultTSeq :: TSeq o u b <- f $ changeUtilTSeq tseq

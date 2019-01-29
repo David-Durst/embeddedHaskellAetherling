@@ -218,11 +218,11 @@ instance Circuit (State PipelineDAG) where
   seq_to_tseqC f _ = appendInnerDAGToOuterDAG f
 
   -- this is almost same as sseq_to_seq as tseq and seq both don't change parallelism
-  sseq_to_tseqC :: forall inputLength outputLength a b u v .
+  sseq_to_tseqC :: forall inputLength outputLength a b .
                    (KnownNat inputLength, KnownNat outputLength) =>
-    Proxy v -> Proxy u -> (SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)) ->
-    TSeq inputLength v a -> State PipelineDAG (TSeq outputLength u b)
-  sseq_to_tseqC _ _ f _ = do
+    (SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)) ->
+    TSeq inputLength 0 a -> State PipelineDAG (TSeq outputLength 0 b)
+  sseq_to_tseqC f _ = do
     PipelineDAG priorStages <- get 
     let innerStages = getInnerPipeline f emptyDAG
     let inputLengthProxy = Proxy :: Proxy inputLength 

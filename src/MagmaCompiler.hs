@@ -76,13 +76,13 @@ buildCompilationData functionYieldingMonad = getErrorOrCompDataAsCompData $
     getErrorOrCompDataAsCompData (Left s) = emptyCompData { reversedOutputText = [s] }
     getErrorOrCompDataAsCompData (Right (_, compData)) = compData
 
-getModulePortsString :: String -> [(TypeRep, Int)] -> String
-getModulePortsString baseString ports = foldl (++) "" portsStrings
+getModulePortsString :: Bool -> String -> [(TypeRep, Int)] -> String
+getModulePortsString isInput baseString ports = foldl (++) "" portsStrings
   where
     portsWithIdxs = zip ports [0..(length ports - 1)]
     portsStrings = fmap (\(port, idx) ->
                            "'" ++ baseString ++ show idx ++ "', " ++
-                           typeToMagmaString port ++ ", ")
+                           typeToMagmaString isInput port ++ ", ")
                    portsWithIdxs
 
 saveToCoreIR :: String -> String
@@ -91,7 +91,7 @@ saveToCoreIR circuitName = getCoreIRModuleString ++ runGeneratorsString ++
   where
     getCoreIRModuleString = "haskell_test_module = GetCoreIRModule(cirb, " ++ circuitName ++ ")\n"
     runGeneratorsString = "cirb.context.run_passes([\"rungenerators\", \"verifyconnectivity --noclkrst\"], [\"aetherlinglib\", \"commonlib\", \"mantle\", \"coreir\", \"global\"])\n"
-    saveToFileString = circuitName ++ ".save_to_file(\"haskellTest.json\")"
+    saveToFileString = "haskell_test_module.save_to_file(\"haskellTest.json\")"
 
 writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
   String -> String -> String -> (a -> StatefulErrorMonad b) -> IO ()
@@ -99,9 +99,9 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   let compData = buildCompilationData program
   preludeString <- readFile preludeLocation
   epilogueString <- readFile epilogueLocation
-  let inputTypeString = getModulePortsString "I" $ inputPortsTypes compData
+  let inputTypeString = getModulePortsString True "I" $ inputPortsTypes compData
   --traceM $ inputTypeString
-  let outputTypeString = getModulePortsString "O" $ outputPortsTypes compData
+  let outputTypeString = getModulePortsString False "O" $ outputPortsTypes compData
   --traceM $ outputTypeString
   let interfaceString = (circuitInterfaceString inputTypeString
                          outputTypeString (not $ null $ reversedValidPorts compData))
@@ -150,8 +150,8 @@ wireInterface moduleName inputPorts outputPorts = foldl (++) "" $
 
 -- given a compilation data for a new stage, append it to the state
 -- for a set of existing stages
-appendToCompilationData :: CompilationData -> StatefulErrorMonad a
-appendToCompilationData dd@(CompilationData ni rot ip it op ot rvp tNum tDenom) = do  
+appendToCompilationData :: NodeType -> CompilationData -> StatefulErrorMonad a
+appendToCompilationData nodeType (CompilationData ni rot ip it op ot rvp tNum tDenom) = do  
     priorData <- get 
     --traceM ("Old data" ++ show priorData)
     --traceM ("New data" ++ show dd)
@@ -175,9 +175,11 @@ appendToCompilationData dd@(CompilationData ni rot ip it op ot rvp tNum tDenom) 
       -- section as we are going along 
       let newThroughputNumerator = throughputNumerator priorData
       let newThroughputDenominator = throughputDenominator priorData
-      put $ (CompilationData (ni+1) newOutText newInPorts newInTypes newOutPorts
-            newOutTypes newReversedValidPorts newThroughputNumerator
-            newThroughputDenominator)
+      let nodeIndexIncrement = if nodeParallelizesBySelf nodeType then 1 else (
+            newThroughputNumerator `div` newThroughputDenominator)
+      put $ (CompilationData (ni+nodeIndexIncrement) newOutText newInPorts
+             newInTypes newOutPorts newOutTypes newReversedValidPorts
+             newThroughputNumerator newThroughputDenominator)
       return undefined
     return undefined
 
@@ -205,14 +207,11 @@ createCompilationDataAndAppend nodeType = do
         let instancesValues = fromRight undefined magmaInstances
         let portsValues = fromRight undefined ports
         --traceM ("instanceValues" ++ show instancesValues)
-        appendToCompilationData (CompilationData curNodeIndex
-                                [instancesValues] (inPorts portsValues)
-                                (inTypes portsValues)
-                                (outPorts portsValues) 
-                                (outTypes portsValues)
-                                (validPorts portsValues)
-                                (throughputNumerator priorData)
-                                (throughputDenominator priorData))
+        appendToCompilationData nodeType
+          (CompilationData curNodeIndex [instancesValues] (inPorts portsValues)
+            (inTypes portsValues) (outPorts portsValues) 
+            (outTypes portsValues) (validPorts portsValues)
+            (throughputNumerator priorData) (throughputDenominator priorData))
     return undefined
 
 
@@ -352,7 +351,13 @@ instance Circuit (StatefulErrorMonad) where
                                  reversedValidPorts gCompilerData)
                                tNum tDenom
                                )
-      appendToCompilationData mergedCompilerData
+      -- passing in AddT to ensure that nodeIndex increases by parallelism amount
+      -- safer to over count than undercount
+      -- not sure how to peek inside g and see what its last node is and wehtehr
+      -- that is internally parallelized. The NodeType is only used to determine
+      -- how much to increment NodeIndex based on the paralleism technique of the
+      -- NodeType
+      appendToCompilationData AddT mergedCompilerData
       else do
       liftEither $ Left $ foldl (++) "" errorMessages
       return undefined
@@ -434,11 +439,11 @@ instance Circuit (StatefulErrorMonad) where
     return undefined
 
   -- this is almost same as sseq_to_seq as tseq and seq both don't change parallelism
-  sseq_to_tseqC :: forall inputLength outputLength a b u v .
+  sseq_to_tseqC :: forall inputLength outputLength a b .
                    (KnownNat inputLength, KnownNat outputLength) =>
-    Proxy v -> Proxy u -> (SSeq inputLength a -> StatefulErrorMonad (SSeq outputLength b)) ->
-    TSeq inputLength v a -> StatefulErrorMonad (TSeq outputLength u b)
-  sseq_to_tseqC _ _ f _ = do
+    (SSeq inputLength a -> StatefulErrorMonad (SSeq outputLength b)) ->
+    TSeq inputLength 0 a -> StatefulErrorMonad (TSeq outputLength 0 b)
+  sseq_to_tseqC f _ = do
     priorData <- get 
     let inputLengthProxy = Proxy :: Proxy inputLength
     let inputLength = (fromInteger $ natVal inputLengthProxy)
@@ -487,12 +492,15 @@ unscheduledNode = iterC (Proxy @4) $ addC
 unscheduledPipelineCData = buildCompilationData unscheduledPipeline
 unscheduledNodeCData = buildCompilationData unscheduledNode 
 
+sequentialPipeline = seq_to_tseqC unscheduledPipeline 
 sequentialPipelineCData = buildCompilationData $ seq_to_tseqC unscheduledPipeline 
 sequentialNodeCData = buildCompilationData $ seq_to_tseqC unscheduledNode
 
+parallelPipeline = seq_to_sseqC unscheduledPipeline 
 parallelPipelineCData = buildCompilationData $ seq_to_sseqC unscheduledPipeline 
 parallelNodeCData = buildCompilationData $ seq_to_sseqC unscheduledNode
 
+partialParallelPipeline = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledPipeline 
 partialParallelPipelineCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
   unscheduledPipeline 
 partialParallelNodeCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
