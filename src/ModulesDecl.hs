@@ -5,14 +5,19 @@ import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Typeable
+import GHC.Exts (Constraint)
 import qualified Data.Vector.Sized as V
 
-type family SeqBaseType (x :: *) :: * where
-  SeqBaseType (Seq _ a) = SeqBaseType a
-  SeqBaseType (TSeq _ _ a) = SeqBaseType a
-  SeqBaseType (SSeq _ a) = SeqBaseType a
-  SeqBaseType ((a, _)) = SeqBaseType a
-  SeqBaseType a = a
+-- this is hack to give better error messages
+-- when the AtomBaseType check fails
+newtype A_Type_Containing_Atoms = A_Type_Containing_Atoms Int
+
+type family AtomBaseType (x :: *) :: Constraint where
+  AtomBaseType (Atom a) = Atom a ~ Atom a
+  AtomBaseType (TSeq _ _ a) = AtomBaseType a
+  AtomBaseType (SSeq _ a) = AtomBaseType a
+  AtomBaseType ((a, _)) = AtomBaseType a
+  AtomBaseType a = a ~ A_Type_Containing_Atoms
 
 class Monad m => Circuit m where
   -- unary operators
@@ -46,14 +51,14 @@ class Monad m => Circuit m where
     Proxy o -> Seq p a -> m (Seq n (Seq o a))
 
   -- higher-order operators
-  iterC :: (KnownNat n, SeqBaseType a ~ Atom a', SeqBaseType b ~ Atom b') =>
+  iterC :: (KnownNat n, AtomBaseType a, AtomBaseType b) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
-  (***) :: (SeqBaseType a ~ Atom a', SeqBaseType b ~ Atom b', SeqBaseType c ~ Atom c',
-            SeqBaseType d ~ Atom d') =>
+  (***) :: (AtomBaseType a, AtomBaseType b, AtomBaseType c,
+            AtomBaseType d) =>
     (a -> m c) -> (b -> m d) -> ((a,b) -> m (c, d))
 
-  (>>>) ::  (SeqBaseType a ~ Atom a', SeqBaseType b ~ Atom b', SeqBaseType c ~ Atom c') =>
+  (>>>) ::  (AtomBaseType a, AtomBaseType b, AtomBaseType c) =>
     (a -> m b) -> (b -> m c) -> (a -> m c)
 
   -- scheduling operators
