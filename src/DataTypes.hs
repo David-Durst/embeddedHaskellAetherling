@@ -67,8 +67,16 @@ replaceAString toReplace subtitute input = replaced
     replaced = L.foldl (\x -> \y -> x L.++ subtitute L.++ y)
       hdSplit tlSplit
 
-typeToMagmaString :: forall (a :: *) (b :: *) . TypeRep -> String
-typeToMagmaString typeRep
+typeToMagmaString :: forall (a :: *) (b :: *) . (TypeRep, Int) -> String
+typeToMagmaString (typeRep, 1) = oneTypeToMagmaString typeRep
+typeToMagmaString (typeRep, n) | n > 1 = "Array(" L.++
+                                 oneTypeToMagmaString typeRep L.++ ")"
+typeToMagmaString (typeRep, n) =
+  "parallelism for typeToMagmaString must be greater than 0, got" L.++ show n
+
+oneTypeToMagmaString :: forall (a :: *) (b :: *) . TypeRep -> String
+oneTypeToMagmaString typeRep
+  | typeRep == typeOf (Proxy :: Proxy (Atom ())) = ""
   | typeRep == typeOf (Proxy :: Proxy (Atom Int)) = "Array(" L.++
                                                     show intSizeInBits L.++
                                                     ", In(BitIn))"

@@ -59,13 +59,11 @@ divideThroughput n compData =
 emptyCompData :: CompilationData
 emptyCompData = CompilationData 0 [] [] [] [] [] [] 1 1
 
-circuitInterfaceString inTypeString outTypeString hasValid =
-  startOfInterface ++ inInterfaceString ++ outInterfaceString ++ validStr ++ endOfInterface
+circuitInterfaceString inTypesString outTypesString hasValid =
+  startOfInterface ++ inTypesString ++ outTypesString ++ validStr ++ endOfInterface
   where
     startOfInterface = "args = ["
     endOfInterface = "]"
-    inInterfaceString = if inTypeString == "" then "" else "'I', " ++ inTypeString ++ ","
-    outInterfaceString = if outTypeString == "" then "" else "'I', " ++ outTypeString ++ ","
     validStr = if hasValid then "'valid', Out(Bit)," else ""
 
 type StatefulErrorMonad = StateT CompilationData (ExceptT String Identity) 
@@ -78,13 +76,22 @@ buildCompilationData functionYieldingMonad = getErrorOrCompDataAsCompData $
     getErrorOrCompDataAsCompData (Left s) = emptyCompData { reversedOutputText = [s] }
     getErrorOrCompDataAsCompData (Right (_, compData)) = compData
 
+getModulePortsString :: [(TypeRep, Int)] -> String -> String
+getModulePortsString ports baseString = foldl (++) "" portsStrings
+  where
+    portsWithIdxs = zip ports [0..(length ports - 1)]
+    portsStrings = fmap (\(port, idx) ->
+                           "'I'" ++ show idx ++ ", " ++ typeToMagmaString port ++ ", ")
+                   portsWithIdxs
+    
+
 writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
   String -> String -> String -> (a -> StatefulErrorMonad b) -> IO ()
 writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   let compData = buildCompilationData program
   preludeString <- readFile preludeLocation
   epilogueString <- readFile epilogueLocation
-  let inputType = typeToMagmaString $ typeOf (Proxy :: Proxy a)
+  let inputType = typeToMagmaString $ alltypeOf (Proxy :: Proxy a)
   let inputTypeString = "inType = In(" ++ inputTypeString ++ ")\n"
   let outputType = typeToMagmaString $ typeOf (Proxy :: Proxy b)
   let outputTypeString = "outType = Out(" ++ inputTypeString ++ ")\n"
