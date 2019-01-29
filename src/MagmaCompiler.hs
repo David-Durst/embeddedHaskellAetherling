@@ -95,6 +95,8 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   let outputTypeString = getModulePortsString "O" $ outputPortsTypes compData
   let interfaceString = (circuitInterfaceString inputTypeString
                          outputTypeString (not $ null $ reversedValidPorts compData))
+  let circuitDefinition = "testcircuit = DefineCircuit('Test_Haskell_Circuit', *args)" 
+  let wireInterfaceString = wireInterface "testcircuit" (inputPorts compData) (outputPorts compData)
   traceM "howdy"
   let upToBodyString = preludeString ++ inputTypeString ++
                        outputTypeString ++ interfaceString 
@@ -104,7 +106,7 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   let outputString = (preludeString ++ inputTypeString ++
                       outputTypeString ++ interfaceString ++
                       (foldl (++) "" $ reverse $ reversedOutputText compData) ++
-                      epilogueString)
+                      wireInterfaceString ++ epilogueString)
   traceM outputString
   writeFile outputLocation outputString
 
@@ -121,6 +123,17 @@ wirePorts priorOutPorts nextInPorts = Left ("Different lengths of ports " ++
                                             show priorOutPorts ++
                                             " and " ++
                                             show nextInPorts)
+
+wireInterface :: String -> [PortName] -> [PortName] -> String
+wireInterface moduleName inputPorts outputPorts = foldl (++) "" $ 
+  wireStrings "I" inputPortsWithIdxs ++ wireStrings "O" outputPortsWithIdxs
+  where
+    inputPortsWithIdxs = zip inputPorts [0..(length inputPorts - 1)]
+    outputPortsWithIdxs = zip outputPorts [0..(length outputPorts - 1)]
+    wireStrings baseString portsWithIdxs = fmap (\(inName, idx) -> "wire(" ++
+                                                  moduleName ++ "." ++ baseString ++
+                                                  show idx ++ ", " ++ inName ++ ")\n")
+                                           portsWithIdxs
 
 -- given a compilation data for a new stage, append it to the state
 -- for a set of existing stages
@@ -180,10 +193,12 @@ createCompilationDataAndAppend nodeType = do
         --traceM ("instanceValues" ++ show instancesValues)
         appendToCompilationData (CompilationData curNodeIndex
                                 [instancesValues] (inPorts portsValues)
-                                 (outPorts portsValues) 
-                                 (validPorts portsValues)
-                                 (throughputNumerator priorData)
-                                 (throughputDenominator priorData))
+                                (inTypes portsValues)
+                                (outPorts portsValues) 
+                                (outTypes portsValues)
+                                (validPorts portsValues)
+                                (throughputNumerator priorData)
+                                (throughputDenominator priorData))
     return undefined
 
 
