@@ -148,9 +148,9 @@ appendToCompilationData dd@(CompilationData ni rot ip it op ot rvp tNum tDenom) 
       else do
       let portWiringsStrings = fromRight [] portWirings
       let newOutText = portWiringsStrings ++ rot ++ reversedOutputText priorData
-      let newInPorts = if (null $ (inputPorts priorData))
+      let newInPorts = if (null $ (reversedOutputText priorData))
                        then ip else inputPorts priorData
-      let newInTypes = if (null $ (inputPortsTypes priorData))
+      let newInTypes = if (null $ (reversedOutputText priorData))
                         then it else inputPortsTypes priorData
       let newOutPorts = op
       let newOutTypes = ot
@@ -299,6 +299,12 @@ instance Circuit (StatefulErrorMonad) where
     let tNum = throughputNumerator priorData
     let tDenom = throughputDenominator priorData
     let firstNodeIndex = nodeIndex priorData
+    -- this has to have no prior text. appendToCompilationData 
+    -- checks if prior text exists to see if inputPorts are inputPorts
+    -- for modules. fPipeline and gPipeline are supposed to be
+    -- independent pipelines which then get merged into the larger pipelines
+    -- thus, no prior text so that their inputPorts are inputPorts for their
+    -- modules
     let cData = emptyCompData { throughputNumerator = tNum,
                                 throughputDenominator = tDenom,
                                 nodeIndex = firstNodeIndex
