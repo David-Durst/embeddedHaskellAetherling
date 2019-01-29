@@ -108,8 +108,7 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   let bodyString = (foldl (++) "" $ reverse $ reversedOutputText compData) 
   traceM bodyString
   -}
-  let outputString = (preludeString ++ circuitDefinition ++
-                      interfaceString ++
+  let outputString = (preludeString ++ interfaceString ++ circuitDefinition ++
                       (foldl (++) "" $ reverse $ reversedOutputText compData) ++
                       wireInterfaceString ++ epilogueString)
   --traceM outputString

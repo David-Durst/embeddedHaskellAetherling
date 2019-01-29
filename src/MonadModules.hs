@@ -33,6 +33,9 @@ instance Circuit SimulatorEnv where
 
 data CompilerEnv a = CompilerEnv a 
 
+{-
+This no longer works with gadt version of atoms that embeds the subtype (like int or bool)
+See how the actual compiler uses a Stateful Monad to track state
 compile :: CompilerEnv (Atom a) -> IO ()
 compile (CompilerEnv (CompilerResult s)) = putStrLn s
 compile (CompilerEnv _) = fail "Not Compiled"
@@ -48,9 +51,6 @@ instance Monad CompilerEnv where
   (CompilerEnv a) >>= f = f a
   return a = CompilerEnv a
 
-{-
-This no longer works with gadt version of atoms that embeds the subtype (like int or bool)
-See how the actual compiler uses a Writer Monad to track state
 instance Circuit CompilerEnv where
   and2 (Bit x, Bit y) = return $ CompilerResult (show x ++ " && " ++ show y)
   and2 (_, _) = fail "and2 only handles 2 bits"
