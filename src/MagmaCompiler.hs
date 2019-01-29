@@ -370,7 +370,7 @@ instance Circuit (StatefulErrorMonad) where
     put $ multiplyThroughput innerLength priorData
     f undefined
     dataPostInnerPipeline <- get
-    put $ divideThroughput innerLength priorData
+    put $ divideThroughput innerLength dataPostInnerPipeline
     return undefined
     
   -- ignore the tseq since it does nothing, its the same as an iter, just chewing
@@ -394,7 +394,7 @@ instance Circuit (StatefulErrorMonad) where
     put $ divideThroughput inputLength priorData
     f undefined
     dataPostInnerPipeline <- get
-    put $ multiplyThroughput inputLength priorData
+    put $ multiplyThroughput inputLength dataPostInnerPipeline
     return undefined
 
   -- ignore the seq since it does nothing and tseq did nothing as well 
@@ -411,9 +411,11 @@ instance Circuit (StatefulErrorMonad) where
     let inputLengthProxy = Proxy :: Proxy inputLength
     let inputLength = (fromInteger $ natVal inputLengthProxy)
     put $ multiplyThroughput inputLength priorData
+    --traceM $ "PriorData " ++ show priorData
     f undefined
     dataPostInnerPipeline <- get
-    put $ divideThroughput inputLength priorData
+    --traceM $ "dataPostInnerPipeline " ++ show dataPostInnerPipeline
+    put $ divideThroughput inputLength dataPostInnerPipeline 
     return undefined
 
   seq_to_tseqC f _ = do
@@ -432,7 +434,7 @@ instance Circuit (StatefulErrorMonad) where
     put $ divideThroughput inputLength priorData
     f undefined
     dataPostInnerPipeline <- get
-    put $ multiplyThroughput inputLength priorData
+    put $ multiplyThroughput inputLength dataPostInnerPipeline
     return undefined
 
   -- this is almost same as seq_to_sseq as tseq and seq both don't change parallelism
@@ -447,7 +449,7 @@ instance Circuit (StatefulErrorMonad) where
     put $ multiplyThroughput inputLength priorData
     f undefined
     dataPostInnerPipeline <- get
-    put $ divideThroughput inputLength priorData
+    put $ divideThroughput inputLength dataPostInnerPipeline
     return undefined
 
   underutilC :: forall n v o u a b underutilMult .
@@ -462,7 +464,7 @@ instance Circuit (StatefulErrorMonad) where
     put $ divideThroughput inputLength priorData
     f undefined
     dataPostInnerPipeline <- get
-    put $ multiplyThroughput inputLength priorData
+    put $ multiplyThroughput inputLength dataPostInnerPipeline
     return undefined
 -- examples of programs in space and time
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
