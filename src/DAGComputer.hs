@@ -154,6 +154,10 @@ instance Circuit (State PipelineDAG) where
     appendToPipeline (NodeInfo ForkJoinT 1 1
                       (getInnerPipeline g emptyDAG, getInnerPipeline f emptyDAG))
 
+  (f >***< g) _ = do
+    appendToPipeline (NodeInfo ForkJoinT 1 1
+                      (getInnerPipeline g emptyDAG, getInnerPipeline f emptyDAG))
+
   (f >>> g) x = do
     PipelineDAG stages <- get 
     let fAndgPipelineStages = getInnerPipeline g $ PipelineDAG $ getInnerPipeline f emptyDAG

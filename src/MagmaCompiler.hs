@@ -305,6 +305,7 @@ instance Circuit (StatefulErrorMonad) where
     -- this should run f to have it update the state, then do nothing
     f undefined
     return undefined
+
   (f *** g) _ = do
     priorData <- get
     let tNum = throughputNumerator priorData
@@ -361,7 +362,24 @@ instance Circuit (StatefulErrorMonad) where
       else do
       liftEither $ Left $ foldl (++) "" errorMessages
       return undefined
-      
+
+  (f >***< g) _ = do
+    (f *** g) undefined
+    priorData <- get
+    let allOutputPorts = outputPorts priorData
+    let allOutputPortsTypes = outputPortsTypes priorData
+    -- ZipSeqTypes should ensure that f and g have same number of output ports
+    -- will need to fix this if that assumption is not true
+    let fAndGOutputPorts =
+          chunksOf (length (outputPorts priorData) `div` 2) allOutputPorts
+    let fAndGOutputPortsTypes =
+          chunksOf (length (outputPortsTypes priorData) `div` 2) allOutputPortsTypes
+    put $ priorData {
+      outputPorts = (fAndGOutputPorts !! 0) ++ (fAndGOutputPorts !! 1),
+      outputPortsTypes = (fAndGOutputPortsTypes !! 0) ++ (fAndGOutputPortsTypes !! 1)
+      }
+    return undefined
+
 
   (f >>> g) _ = do
     f undefined

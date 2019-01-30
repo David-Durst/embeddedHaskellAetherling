@@ -28,6 +28,9 @@ instance Monad SimulatorEnv where
   (SimulatorEnv a) >>= f = f a
   return a = SimulatorEnv a
 
+zipSeqValues :: forall a b . (a, b) -> ZipSeqTypes a b
+zipSeqValues (Seq n) (Seq m) = undefined
+
 instance Circuit SimulatorEnv where
   -- unary operators
   absC (Int x) = return $ Int $ abs x
@@ -99,7 +102,12 @@ instance Circuit SimulatorEnv where
     outTypeC <- f inTypeA
     outTypeD <- g inTypeB
     return (outTypeC, outTypeD)
-
+{-
+  (f >***< g) (inTypeA, inTypeB) = do
+    outTypeC <- f inTypeA
+    outTypeD <- g inTypeB
+    return (outTypeC, outTypeD)
+-}
   (f >>> g) x = f x >>= g
 
   -- scheduling operators
@@ -123,7 +131,7 @@ instance Circuit SimulatorEnv where
     innerResultTSeq :: TSeq o u b <- f $ changeUtilTSeq tseq
     return $ changeUtilTSeq innerResultTSeq
 
-
+{-
 -- examples of programs in space and time
 iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition
@@ -138,3 +146,5 @@ partialParallelResult =
   simulate $
   (seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledCirc) $
   partialParallelInput
+
+-}

@@ -19,6 +19,35 @@ type family AtomBaseType (x :: *) :: Constraint where
   AtomBaseType ((a, _)) = AtomBaseType a
   AtomBaseType a = a ~ A_Type_Containing_Atoms
 
+-- this constraint also bans sequences or atoms
+newtype Atom_Or_Tuple_Of_Atom = Atom_Or_Tuple_Of_Atom Int
+
+type family AtomType (x :: *) :: Constraint where
+  AtomType (Atom a) = Atom a ~ Atom a
+  AtomType ((a, _)) = AtomType a
+  AtomType a = a ~ Atom_Or_Tuple_Of_Atom
+{-
+type family LineBufferOutputSeq (parallelism :: Nat)
+  (windowYSize :: KnownNat) (windowXSize :: Nat)
+-}
+newtype Not_Same_Nesting_As a = Not_Same_Nesting Int
+-- this verifies that a nested set of sequences (any parallelism)
+-- have the same amount of nested and same length at each layer
+type family SameSeqNesting (lType :: *) (rType :: *) :: Constraint where
+  SameSeqNesting (Seq n a) (Seq n b) = SameSeqNesting a b
+  SameSeqNesting (Seq n a) b = (Seq n a) ~ Not_Same_Nesting_As b
+  SameSeqNesting (SSeq n a) (SSeq n b) = SameSeqNesting a b
+  SameSeqNesting (SSeq n a) b = (SSeq n a) ~ Not_Same_Nesting_As b
+  SameSeqNesting (TSeq n v a) (TSeq n v b) = SameSeqNesting a b
+  SameSeqNesting (TSeq n v a) b = (TSeq n v a) ~ Not_Same_Nesting_As b
+  SameSeqNesting a b = True ~ True
+
+type family ZipSeqTypes (lType :: *) (rType :: *) :: * where
+  ZipSeqTypes (Seq n a) (Seq n b) = Seq n (ZipSeqTypes a b)
+  ZipSeqTypes (SSeq n a) (SSeq n b) = SSeq n (ZipSeqTypes a b)
+  ZipSeqTypes (TSeq n v a) (TSeq n v b) = TSeq n v (ZipSeqTypes a b)
+  ZipSeqTypes a b = Atom (a, b)
+  
 class Monad m => Circuit m where
   -- unary operators
   absC :: Atom Int -> m (Atom Int)
@@ -50,6 +79,20 @@ class Monad m => Circuit m where
   partitionC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
     Proxy o -> Seq p a -> m (Seq n (Seq o a))
 
+  -- if i make the inside of linebuffer sseq, and wrap that with a seq, then
+  -- everything else has to match it with parallelism that can't be down scheduled
+  -- without underutilizing.
+  -- need a way to zip this output with constants generated. Probably do this
+  -- by making *** either zip or join
+  -- need to convert *** to a tuple with a type family to lower the zip
+  -- to a seq of zipped atoms
+  lineBuffer :: (KnownNat yPerClk, KnownNat xPerClk, KnownNat windowYSize,
+                 KnownNat windowXSize, KnownNat imageYSize, KnownNat imageXSize,
+                 KnownNat strideY, KnownNat strideX, KnownNat originY,
+                 KnownNat originX, AtomType a, KnownNat outputParallelism,
+                 outputParallelism ~ ((yPerClk * xPerClk) `div` (strideY * strideX))) =>
+    Seq (yPerClk * xPerClk) a -> Seq outputParallelism a
+
   -- higher-order operators
   iterC :: (KnownNat n, AtomBaseType a, AtomBaseType b) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
@@ -57,6 +100,12 @@ class Monad m => Circuit m where
   (***) :: (AtomBaseType a, AtomBaseType b, AtomBaseType c,
             AtomBaseType d) =>
     (a -> m c) -> (b -> m d) -> ((a,b) -> m (c, d))
+
+  (>***<) :: (AtomBaseType a, AtomBaseType b, AtomBaseType c,
+              AtomBaseType d, SameSeqNesting c d) =>
+    (a -> m c) -> (b -> m d) -> ((a,b) -> m (ZipSeqTypes c d))
+
+  forkJoinMaybeZip :: (a -> m c) -> (b -> m d) -> (e -> m f)
 
   (>>>) ::  (AtomBaseType a, AtomBaseType b, AtomBaseType c) =>
     (a -> m b) -> (b -> m c) -> (a -> m c)
