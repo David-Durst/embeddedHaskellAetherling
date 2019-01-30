@@ -90,20 +90,7 @@ class Monad m => Circuit m where
   lineBuffer :: (KnownNat yPerClk, KnownNat xPerClk, KnownNat windowYSize,
                  KnownNat windowXSize, KnownNat imageYSize, KnownNat imageXSize,
                  KnownNat strideY, KnownNat strideX, KnownNat originY,
-                 KnownNat originX, Typeable a
-                 {-
-                 KnownNat imageArea, imgArea ~ (imageXSize * imageYSize),
-                 KnownNat strideArea, strideArea ~ (strideX * strideY),
-                 1 <= strideArea,
-                 KnownNat outputParallelism,
-                 1 <= (strideY * strideX),
-                 outputParallelism ~ (Max
-                                      (Div (yPerClk * xPerClk) (strideY * strideX))
-                                      1),
-                 1 <= outputParallelism,
-                 KnownNat windowCount, windowCount ~ (Div imageArea strideArea),
-                 KnownNat outerSequenceLength,
-                 outerSequenceLength ~ (Div windowCount outputParallelism)-}) =>
+                 KnownNat originX, Typeable a) =>
     Proxy yPerClk -> Proxy xPerClk -> Proxy windowYSize ->
     Proxy windowXSize -> Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
