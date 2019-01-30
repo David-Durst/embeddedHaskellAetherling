@@ -90,7 +90,8 @@ class Monad m => Circuit m where
   lineBuffer :: (KnownNat yPerClk, KnownNat xPerClk, KnownNat windowYSize,
                  KnownNat windowXSize, KnownNat imageYSize, KnownNat imageXSize,
                  KnownNat strideY, KnownNat strideX, KnownNat originY,
-                 KnownNat originX, 
+                 KnownNat originX, Typeable a
+                 {-
                  KnownNat imageArea, imgArea ~ (imageXSize * imageYSize),
                  KnownNat strideArea, strideArea ~ (strideX * strideY),
                  1 <= strideArea,
@@ -102,12 +103,18 @@ class Monad m => Circuit m where
                  1 <= outputParallelism,
                  KnownNat windowCount, windowCount ~ (Div imageArea strideArea),
                  KnownNat outerSequenceLength,
-                 outerSequenceLength ~ (Div windowCount outputParallelism)) =>
+                 outerSequenceLength ~ (Div windowCount outputParallelism)-}) =>
     Proxy yPerClk -> Proxy xPerClk -> Proxy windowYSize ->
     Proxy windowXSize -> Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
-    Seq (yPerClk * xPerClk) (Atom a) -> m (Seq outerSequenceLength (
-    SSeq outputParallelism (SSeq windowYSize (SSeq windowXSize (Atom a)))))
+    Seq (yPerClk * xPerClk) (Atom a) -> m (Seq (Div (Div
+                                                     (imageXSize * imageYSize)
+                                                     (strideX * strideY))
+                                                 (Max (Div (yPerClk * xPerClk)
+                                                       (strideY * strideX)) 1))
+                                            (SSeq (Max (Div (yPerClk * xPerClk)
+                                                        (strideY * strideX)) 1)
+                                              (SSeq windowYSize (SSeq windowXSize (Atom a)))))
 
   -- higher-order operators
   iterC :: (KnownNat n, AtomBaseType a, AtomBaseType b) =>

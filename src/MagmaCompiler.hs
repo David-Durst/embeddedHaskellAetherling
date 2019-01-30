@@ -302,27 +302,34 @@ instance Circuit (StatefulErrorMonad) where
   lineBuffer :: forall yPerClk xPerClk windowYSize windowXSize imageYSize imageXSize
                  strideY strideX originY originX imageArea strideArea
                  outputParallelism windowCount outerSequenceLength a.
-    (KnownNat yPerClk, KnownNat xPerClk, KnownNat windowYSize,
-      KnownNat windowXSize, KnownNat imageYSize, KnownNat imageXSize,
-      KnownNat strideY, KnownNat strideX, KnownNat originY,
-      KnownNat originX, Typeable a, 
-      KnownNat imageArea, imageArea ~ (imageXSize * imageYSize),
-      KnownNat strideArea, strideArea ~ (strideX * strideY),
-      1 <= strideArea,
-      KnownNat outputParallelism,
-      1 <= (strideY * strideX),
-      outputParallelism ~ (Max
-                            (Div (yPerClk * xPerClk) (strideY * strideX))
-                            1),
-      1 <= outputParallelism,
-      KnownNat windowCount, windowCount ~ (Div imageArea strideArea),
-      KnownNat outerSequenceLength,
-      outerSequenceLength ~ (Div windowCount outputParallelism)) =>
+                 (KnownNat yPerClk, KnownNat xPerClk, KnownNat windowYSize,
+                 KnownNat windowXSize, KnownNat imageYSize, KnownNat imageXSize,
+                 KnownNat strideY, KnownNat strideX, KnownNat originY,
+                 KnownNat originX, Typeable a
+                 {-
+                 KnownNat imageArea, imgArea ~ (imageXSize * imageYSize),
+                 KnownNat strideArea, strideArea ~ (strideX * strideY),
+                 1 <= strideArea,
+                 KnownNat outputParallelism,
+                 1 <= (strideY * strideX),
+                 outputParallelism ~ (Max
+                                      (Div (yPerClk * xPerClk) (strideY * strideX))
+                                      1),
+                 1 <= outputParallelism,
+                 KnownNat windowCount, windowCount ~ (Div imageArea strideArea),
+                 KnownNat outerSequenceLength,
+                 outerSequenceLength ~ (Div windowCount outputParallelism)-}) =>
     Proxy yPerClk -> Proxy xPerClk -> Proxy windowYSize ->
     Proxy windowXSize -> Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
-    Seq (yPerClk * xPerClk) a -> StatefulErrorMonad (Seq outerSequenceLength (
-    SSeq outputParallelism (SSeq windowYSize (SSeq windowXSize a))))
+    Seq (yPerClk * xPerClk) (Atom a) -> StatefulErrorMonad (Seq (Div (Div
+                                                     (imageXSize * imageYSize)
+                                                     (strideX * strideY))
+                                                 (Max (Div (yPerClk * xPerClk)
+                                                       (strideY * strideX)) 1))
+                                            (SSeq (Max (Div (yPerClk * xPerClk)
+                                                        (strideY * strideX)) 1)
+                                              (SSeq windowYSize (SSeq windowXSize (Atom a)))))
   lineBuffer _ _ _ _ _ _ _ _ _ _ _ = createCompilationDataAndAppend (
     LineBufferT $ LineBufferData
     (yPerClkValue, xPerClkValue) (windowYSizeValue, windowXSizeValue)
