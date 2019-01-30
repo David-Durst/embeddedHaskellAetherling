@@ -94,14 +94,12 @@ class Monad m => Circuit m where
     Proxy yPerClk -> Proxy xPerClk -> Proxy windowYSize ->
     Proxy windowXSize -> Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
-    Seq (yPerClk * xPerClk) (Atom a) -> m (Seq (Div (Div
-                                                     (imageXSize * imageYSize)
-                                                     (strideX * strideY))
-                                                 (Max (Div (yPerClk * xPerClk)
-                                                       (strideY * strideX)) 1))
-                                            (SSeq (Max (Div (yPerClk * xPerClk)
-                                                        (strideY * strideX)) 1)
-                                              (SSeq windowYSize (SSeq windowXSize (Atom a)))))
+    Seq (yPerClk * xPerClk) (Atom a) ->
+    m (Seq (Div
+             (Div (imageXSize * imageYSize) (strideX * strideY))
+             (Max (Div (yPerClk * xPerClk) (strideY * strideX)) 1))
+        (SSeq (Max (Div (yPerClk * xPerClk) (strideY * strideX)) 1)
+          (SSeq windowYSize (SSeq windowXSize (Atom a)))))
 
   -- higher-order operators
   iterC :: (KnownNat n, AtomBaseType a, AtomBaseType b) =>
