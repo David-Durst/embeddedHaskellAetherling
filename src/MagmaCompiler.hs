@@ -317,11 +317,10 @@ instance Circuit (StatefulErrorMonad) where
                                             (SSeq (Max (Div (yPerClk * xPerClk)
                                                         (strideY * strideX)) 1)
                                               (SSeq windowYSize (SSeq windowXSize (Atom a)))))
-  lineBuffer _ _ _ _ _ _ _ _ _ _ _ = createCompilationDataAndAppend (
-    LineBufferT $ LineBufferData
-    (yPerClkValue, xPerClkValue) (windowYSizeValue, windowXSizeValue)
-      (imageYSizeValue, imageXSizeValue) (strideYValue, strideXValue)
-      (originYValue, originXValue) tokenType)
+  lineBuffer _ _ _ _ _ _ _ _ _ _ _ = do
+    if linebufferDataValid lbData
+      then createCompilationDataAndAppend (LineBufferT lbData)
+      else liftEither $ Left $ "LineBuffer has invalid parameters, params are " ++ show lbData
     where
       yPerClkValue = fromInteger $ natVal $ (Proxy :: Proxy yPerClk)
       xPerClkValue = fromInteger $ natVal $ (Proxy :: Proxy xPerClk)
@@ -334,6 +333,10 @@ instance Circuit (StatefulErrorMonad) where
       originYValue = fromInteger $ natVal $ (Proxy :: Proxy originY)
       originXValue = fromInteger $ natVal $ (Proxy :: Proxy originX)
       tokenType = typeOf (Proxy :: Proxy (Atom a))
+      lbData = LineBufferData
+        (yPerClkValue, xPerClkValue) (windowYSizeValue, windowXSizeValue)
+        (imageYSizeValue, imageXSizeValue) (strideYValue, strideXValue)
+        (originYValue, originXValue) tokenType
       
   -- higher-order operators
   -- ignore the iter since it does nothing, needs to be wrapped with a tseq or
