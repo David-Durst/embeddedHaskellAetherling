@@ -28,9 +28,6 @@ instance Monad SimulatorEnv where
   (SimulatorEnv a) >>= f = f a
   return a = SimulatorEnv a
 
-zipSeqValues :: forall a b . (a, b) -> ZipSeqTypes a b
-zipSeqValues (Seq n) (Seq m) = undefined
-
 instance Circuit SimulatorEnv where
   -- unary operators
   absC (Int x) = return $ Int $ abs x
@@ -38,29 +35,29 @@ instance Circuit SimulatorEnv where
   noop x = return x 
 
   -- binary operators
-  addC (Int x, Int y) = return $ Int $ x + y
-  subC (Int x, Int y) = return $ Int $ x - y
-  mulC (Int x, Int y) = return $ Int $ x * y
-  divC (Int x, Int y) = return $ Int $ x `div` y
-  minC (Int x, Int y) = return $ Int $ min x y
-  maxC (Int x, Int y) = return $ Int $ max x y
-  ashrC (Int input, Int amount) = return $ Int $ shiftR input amount
-  shlC (Int input, Int amount) = return $ Int $ shiftL input amount
-  andC (Bit x, Bit y) = return $ Bit $ x && y
-  orC (Bit x, Bit y) = return $ Bit $ x || y
-  xorC (Bit x, Bit y) = return $ Bit $ (x /= y) && (x || y)
-  eqIntC (Int x, Int y) = return $ Bit $ x == y
-  eqBitC (Bit x, Bit y) = return $ Bit $ x == y
-  neqIntC (Int x, Int y) = return $ Bit $ x /= y
-  neqBitC (Bit x, Bit y) = return $ Bit $ x /= y
-  ltIntC (Int x, Int y) = return $ Bit $ x < y
-  ltBitC (Bit x, Bit y) = return $ Bit $ x < y
-  leqIntC (Int x, Int y) = return $ Bit $ x <= y
-  leqBitC (Bit x, Bit y) = return $ Bit $ x <= y
-  gtIntC (Int x, Int y) = return $ Bit $ x > y
-  gtBitC (Bit x, Bit y) = return $ Bit $ x > y
-  geqIntC (Int x, Int y) = return $ Bit $ x >= y
-  geqBitC (Bit x, Bit y) = return $ Bit $ x >= y
+  addC (Tuple (Int x) (Int y)) = return $ Int $ x + y
+  subC (Tuple (Int x) (Int y)) = return $ Int $ x - y
+  mulC (Tuple (Int x) (Int y)) = return $ Int $ x * y
+  divC (Tuple (Int x) (Int y)) = return $ Int $ x `div` y
+  minC (Tuple (Int x) (Int y)) = return $ Int $ min x y
+  maxC (Tuple (Int x) (Int y)) = return $ Int $ max x y
+  ashrC (Tuple (Int input) (Int amount)) = return $ Int $ shiftR input amount
+  shlC (Tuple (Int input) (Int amount)) = return $ Int $ shiftL input amount
+  andC (Tuple (Bit x) (Bit y)) = return $ Bit $ x && y
+  orC (Tuple (Bit x) (Bit y)) = return $ Bit $ x || y
+  xorC (Tuple (Bit x) (Bit y)) = return $ Bit $ (x /= y) && (x || y)
+  eqIntC (Tuple (Int x) (Int y)) = return $ Bit $ x == y
+  eqBitC (Tuple (Bit x) (Bit y)) = return $ Bit $ x == y
+  neqIntC (Tuple (Int x) (Int y)) = return $ Bit $ x /= y
+  neqBitC (Tuple (Bit x) (Bit y)) = return $ Bit $ x /= y
+  ltIntC (Tuple (Int x) (Int y)) = return $ Bit $ x < y
+  ltBitC (Tuple (Bit x) (Bit y)) = return $ Bit $ x < y
+  leqIntC (Tuple (Int x) (Int y)) = return $ Bit $ x <= y
+  leqBitC (Tuple (Bit x) (Bit y)) = return $ Bit $ x <= y
+  gtIntC (Tuple (Int x) (Int y)) = return $ Bit $ x > y
+  gtBitC (Tuple (Bit x) (Bit y)) = return $ Bit $ x > y
+  geqIntC (Tuple (Int x) (Int y)) = return $ Bit $ x >= y
+  geqBitC (Tuple (Bit x) (Bit y)) = return $ Bit $ x >= y
 
   -- module generator
   lutGenIntC as (Int i) = return $ as !! i 

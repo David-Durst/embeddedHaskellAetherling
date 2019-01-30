@@ -55,11 +55,11 @@ class Monad m => Circuit m where
   noop :: (KnownNat (TypeSize a)) => Atom a -> m (Atom a)
   -- binary operators
   addC, subC, divC, mulC, minC, maxC, ashrC,
-    shlC :: (Atom Int, Atom Int) -> m (Atom Int)
+    shlC :: Atom (Atom Int, Atom Int) -> m (Atom Int)
   eqIntC, neqIntC, ltIntC, leqIntC,
-    gtIntC, geqIntC :: (Atom Int, Atom Int) -> m (Atom Bool)
+    gtIntC, geqIntC :: Atom (Atom Int, Atom Int) -> m (Atom Bool)
   andC, orC, xorC, eqBitC, neqBitC, ltBitC, leqBitC,
-    gtBitC, geqBitC :: (Atom Bool, Atom Bool) -> m (Atom Bool)
+    gtBitC, geqBitC :: Atom (Atom Bool, Atom Bool) -> m (Atom Bool)
   -- generators
   lutGenIntC :: [Atom Int] -> (Atom Int) -> m (Atom Int)
   lutGenBitC :: [Atom Bool] -> (Atom Int) -> m (Atom Bool)
@@ -105,7 +105,7 @@ class Monad m => Circuit m where
               AtomBaseType d, SameSeqNesting c d) =>
     (a -> m c) -> (b -> m d) -> ((a,b) -> m (ZipSeqTypes c d))
 
-  forkJoinMaybeZip :: (a -> m c) -> (b -> m d) -> (e -> m f)
+  forkJoinMaybeZip :: Bool -> (a -> m c) -> (b -> m d) -> (e -> m f)
 
   (>>>) ::  (AtomBaseType a, AtomBaseType b, AtomBaseType c) =>
     (a -> m b) -> (b -> m c) -> (a -> m c)

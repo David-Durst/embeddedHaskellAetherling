@@ -504,7 +504,7 @@ instance Circuit (StatefulErrorMonad) where
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition
 
-unscheduledPipeline = iterC (Proxy @4) $ (constGenIntC (Int 3) *** constGenIntC (Int 2)) >>> addC
+unscheduledPipeline = iterC (Proxy @4) $ (constGenIntC (Int 3) >***< constGenIntC (Int 2)) >>> addC
 unscheduledNode = iterC (Proxy @4) $ addC
 
 unscheduledPipelineCData = buildCompilationData unscheduledPipeline
