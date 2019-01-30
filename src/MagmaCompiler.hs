@@ -17,6 +17,7 @@ import Data.Typeable
 import Data.Either
 import Debug.Trace
 import MagmaNodeTextGenerator
+import LineBuffer
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
@@ -297,8 +298,50 @@ instance Circuit (StatefulErrorMonad) where
     let numToFold = fromInteger $ natVal proxyNumToFold
     appendToPipeline (NodeInfo (FoldT (nodeType $ head innerPipeline) numToFold) 1 1 (innerPipeline, []))
 
-  -- higher-order operators
 -}
+  lineBuffer :: forall yPerClk xPerClk windowYSize windowXSize imageYSize imageXSize
+                 strideY strideX originY originX imageArea strideArea
+                 outputParallelism windowCount outerSequenceLength a.
+    (KnownNat yPerClk, KnownNat xPerClk, KnownNat windowYSize,
+      KnownNat windowXSize, KnownNat imageYSize, KnownNat imageXSize,
+      KnownNat strideY, KnownNat strideX, KnownNat originY,
+      KnownNat originX, Typeable a, 
+      KnownNat imageArea, imageArea ~ (imageXSize * imageYSize),
+      KnownNat strideArea, strideArea ~ (strideX * strideY),
+      1 <= strideArea,
+      KnownNat outputParallelism,
+      1 <= (strideY * strideX),
+      outputParallelism ~ (Max
+                            (Div (yPerClk * xPerClk) (strideY * strideX))
+                            1),
+      1 <= outputParallelism,
+      KnownNat windowCount, windowCount ~ (Div imageArea strideArea),
+      KnownNat outerSequenceLength,
+      outerSequenceLength ~ (Div windowCount outputParallelism)) =>
+    Proxy yPerClk -> Proxy xPerClk -> Proxy windowYSize ->
+    Proxy windowXSize -> Proxy imageYSize -> Proxy imageXSize ->
+    Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
+    Seq (yPerClk * xPerClk) a -> StatefulErrorMonad (Seq outerSequenceLength (
+    SSeq outputParallelism (SSeq windowYSize (SSeq windowXSize a))))
+  lineBuffer _ _ _ _ _ _ _ _ _ _ _ = createCompilationDataAndAppend (
+    LineBufferT $ LineBufferData
+    (yPerClkValue, xPerClkValue) (windowYSizeValue, windowXSizeValue)
+      (imageYSizeValue, imageXSizeValue) (strideYValue, strideXValue)
+      (originYValue, originXValue) tokenType)
+    where
+      yPerClkValue = fromInteger $ natVal $ (Proxy :: Proxy yPerClk)
+      xPerClkValue = fromInteger $ natVal $ (Proxy :: Proxy xPerClk)
+      windowYSizeValue = fromInteger $ natVal $ (Proxy :: Proxy windowYSize)
+      windowXSizeValue = fromInteger $ natVal $ (Proxy :: Proxy windowXSize)
+      imageYSizeValue = fromInteger $ natVal $ (Proxy :: Proxy imageYSize)
+      imageXSizeValue = fromInteger $ natVal $ (Proxy :: Proxy imageXSize)
+      strideYValue = fromInteger $ natVal $ (Proxy :: Proxy strideY)
+      strideXValue = fromInteger $ natVal $ (Proxy :: Proxy strideX)
+      originYValue = fromInteger $ natVal $ (Proxy :: Proxy originY)
+      originXValue = fromInteger $ natVal $ (Proxy :: Proxy originX)
+      tokenType = typeOf (Proxy :: Proxy (Atom a))
+      
+  -- higher-order operators
   -- ignore the iter since it does nothing, needs to be wrapped with a tseq or
   -- sseq converting function
   iterC _ f _ = do
@@ -500,6 +543,11 @@ instance Circuit (StatefulErrorMonad) where
     dataPostInnerPipeline <- get
     put $ multiplyThroughput inputLength dataPostInnerPipeline
     return undefined
+
+  -- since the ports and types are already flattened, and same amount of parallelism
+  -- flattened or unflattened, no need to do anything here
+  -- this is just for manipulating the type system.
+  mergeSSeqs _ = return undefined
 -- examples of programs in space and time
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition

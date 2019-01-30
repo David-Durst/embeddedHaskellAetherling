@@ -6,6 +6,7 @@ import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Typeable
 import GHC.Exts (Constraint)
+import LineBuffer
 import qualified Data.Vector.Sized as V
 
 -- this is hack to give better error messages
@@ -89,9 +90,24 @@ class Monad m => Circuit m where
   lineBuffer :: (KnownNat yPerClk, KnownNat xPerClk, KnownNat windowYSize,
                  KnownNat windowXSize, KnownNat imageYSize, KnownNat imageXSize,
                  KnownNat strideY, KnownNat strideX, KnownNat originY,
-                 KnownNat originX, AtomType a, KnownNat outputParallelism,
-                 outputParallelism ~ ((yPerClk * xPerClk) `div` (strideY * strideX))) =>
-    Seq (yPerClk * xPerClk) a -> Seq outputParallelism a
+                 KnownNat originX, 
+                 KnownNat imageArea, imgArea ~ (imageXSize * imageYSize),
+                 KnownNat strideArea, strideArea ~ (strideX * strideY),
+                 1 <= strideArea,
+                 KnownNat outputParallelism,
+                 1 <= (strideY * strideX),
+                 outputParallelism ~ (Max
+                                      (Div (yPerClk * xPerClk) (strideY * strideX))
+                                      1),
+                 1 <= outputParallelism,
+                 KnownNat windowCount, windowCount ~ (Div imageArea strideArea),
+                 KnownNat outerSequenceLength,
+                 outerSequenceLength ~ (Div windowCount outputParallelism)) =>
+    Proxy yPerClk -> Proxy xPerClk -> Proxy windowYSize ->
+    Proxy windowXSize -> Proxy imageYSize -> Proxy imageXSize ->
+    Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
+    Seq (yPerClk * xPerClk) (Atom a) -> m (Seq outerSequenceLength (
+    SSeq outputParallelism (SSeq windowYSize (SSeq windowXSize (Atom a)))))
 
   -- higher-order operators
   iterC :: (KnownNat n, AtomBaseType a, AtomBaseType b) =>
@@ -154,6 +170,8 @@ class Monad m => Circuit m where
     Proxy underutilMult -> (TSeq n v a -> m (TSeq o u b)) ->
     TSeq n ((n + v) * underutilMult) a -> m (TSeq o ((o + u) * underutilMult) b)
 
+  mergeSSeqs :: (KnownNat n, KnownNat o) => (SSeq n (SSeq o a)) -> m (SSeq (n*o) a)
+
 -- these are the types of the nodes in a DAG
 data NodeType =
   AbsT
@@ -193,6 +211,7 @@ data NodeType =
   -- int is total sequence length
   | forall a . FoldT NodeType Int
   | ForkJoinT
+  | LineBufferT LineBufferData
   --deriving (Show, Eq)
 
 instance Show NodeType where
@@ -231,3 +250,4 @@ instance Show NodeType where
   show (FoldT nt totalLen) = "FoldT " ++ show nt ++ " " ++
     show totalLen
   show ForkJoinT = "ForkJoinT"
+  show (LineBufferT lbData) = "LineBufferT " ++ show lbData
