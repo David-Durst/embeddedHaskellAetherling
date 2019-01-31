@@ -113,8 +113,6 @@ class Monad m => Circuit m where
               AtomBaseType d, SameSeqNesting c d) =>
     (a -> m c) -> (b -> m d) -> ((a,b) -> m (ZipSeqTypes c d))
 
-  forkJoinMaybeZip :: Bool -> (a -> m c) -> (b -> m d) -> (e -> m f)
-
   (>>>) ::  (AtomBaseType a, AtomBaseType b, AtomBaseType c) =>
     (a -> m b) -> (b -> m c) -> (a -> m c)
 
