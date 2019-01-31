@@ -95,9 +95,16 @@ oneTypeToMagmaString isInput typeRep
   | otherwise = do
       let lastBraceRemoved = L.reverse . L.tail . L.reverse $ show typeRep
           proxyRemoved = L.foldl (L.++) "" $ splitOn "Proxy * (" $ lastBraceRemoved
-          intsReplaced = replaceAString "(Atom Int)" (intTypeString isInput) proxyRemoved
+          -- need to replace all commas with ints to get tuple indexing
+          splitOnCommas = splitOn "," proxyRemoved
+          joinStrWithIdx idx str = ",_" L.++ show idx L.++ "=" L.++ str
+          withIndices = L.zipWith joinStrWithIdx [0..(L.length splitOnCommas)] splitOnCommas
+          -- will handle first element in tuples at end as it is different,
+          -- so need to remove first from prior step
+          withIndicesExcept0 = L.foldl (L.++) "" $ [L.head splitOnCommas] L.++ (L.tail withIndices)
+          intsReplaced = replaceAString "(Atom Int)" (intTypeString isInput) withIndicesExcept0
           bitsReplaced = replaceAString "(Atom Bool)" (bitTypeString isInput) intsReplaced
-          tuplesReplaced = replaceAString "Atom (" "Tuple(" bitsReplaced
+          tuplesReplaced = replaceAString "Atom (" "Tuple(_0=" bitsReplaced
       tuplesReplaced
 {-
       (hdSplitOnInts:tlSplitOnInts) = splitOn "(Atom Int)" $ proxyRemoved
