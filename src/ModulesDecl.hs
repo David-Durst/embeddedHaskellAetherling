@@ -87,19 +87,18 @@ class Monad m => Circuit m where
   -- by making *** either zip or join
   -- need to convert *** to a tuple with a type family to lower the zip
   -- to a seq of zipped atoms
-  lineBuffer :: (KnownNat yPerClk, KnownNat xPerClk, KnownNat windowYSize,
-                 KnownNat windowXSize, KnownNat imageYSize, KnownNat imageXSize,
+  lineBuffer :: (KnownNat windowYSize, KnownNat windowXSize,
+                 KnownNat imageYSize, KnownNat imageXSize,
                  KnownNat strideY, KnownNat strideX, KnownNat originY,
                  KnownNat originX, Typeable a) =>
-    Proxy yPerClk -> Proxy xPerClk -> Proxy windowYSize ->
-    Proxy windowXSize -> Proxy imageYSize -> Proxy imageXSize ->
+    Proxy windowYSize -> Proxy windowXSize ->
+    Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
-    Seq (yPerClk * xPerClk) (Atom a) ->
-    m (Seq (Div
-             (Div (imageXSize * imageYSize) (strideX * strideY))
-             (Max (Div (yPerClk * xPerClk) (strideY * strideX)) 1))
-        (SSeq (Max (Div (yPerClk * xPerClk) (strideY * strideX)) 1)
-          (SSeq windowYSize (SSeq windowXSize (Atom a)))))
+    -- need strideY*strideX here as, if running at least 1 pixel
+    -- out per clock, need at least these many pixels in per clock
+    -- can get rid of this once I have underutilize working
+    Seq (strideY * strideX) (Atom a) ->
+    m (Seq 1 (SSeq windowYSize (SSeq windowXSize (Atom a))))
 
   -- higher-order operators
   iterC :: (KnownNat n, AtomBaseType a, AtomBaseType b) =>

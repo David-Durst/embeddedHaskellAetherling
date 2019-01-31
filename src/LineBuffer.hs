@@ -13,7 +13,6 @@ import DataTypes
 -- the last one. Origin is the location of the window relative to the pixel
 -- that's being moved along the image. Last is the type of the pixel element
 data LineBufferData = LineBufferData {
-  lbPxPerClk :: (Int, Int),
   lbWindow :: (Int, Int),
   lbImage :: (Int, Int),
   lbStride :: (Int, Int),
@@ -21,23 +20,24 @@ data LineBufferData = LineBufferData {
   lbToken :: TypeRep
 } deriving (Eq, Show)
 
-linebufferDataValid :: LineBufferData -> Bool
-linebufferDataValid lbData = yParOk && xParOk && onlyYParIfXFullyPar &&
+linebufferDataValid :: Int -> LineBufferData -> Bool
+linebufferDataValid par lbData = yParOk && xParOk && onlyYParIfXFullyPar &&
   yStrideFitsImage && xStrideFitsImage && strideOrPixelsDivideEachOther &&
   yOriginFitsInWindow && xOriginFitsInWindow && yOriginOnlyBackward &&
   xOriginOnlyBackward && yWindowAndOriginFitInImage &&
   xWindowAndOriginFitInImage
   where
-    yParOk = (fst $ lbImage lbData) `mod` (fst $ lbPxPerClk lbData) == 0
-    xParOk = (snd $ lbImage lbData) `mod` (snd $ lbPxPerClk lbData) == 0
+    lbPxPerClk = (par `div` (snd $ lbImage lbData), par `mod` (snd $ lbImage lbData))
+    yParOk = (fst $ lbImage lbData) `mod` (fst $ lbPxPerClk) == 0
+    xParOk = (snd $ lbImage lbData) `mod` (snd $ lbPxPerClk) == 0
     onlyYParIfXFullyPar = ((fst $ lbImage lbData) == 1) || 
-      ((snd $ lbImage lbData) == (snd $ lbPxPerClk lbData))
+      ((snd $ lbImage lbData) == (snd lbPxPerClk))
     yStrideFitsImage = (fst $ lbImage lbData) `mod` (fst $ lbStride lbData) == 0
     xStrideFitsImage = (snd $ lbImage lbData) `mod` (snd $ lbStride lbData) == 0
     strideOrPixelsDivideEachOther =
       (((fst $ lbStride lbData) * (snd $ lbStride lbData)) `mod`
-       ((fst $ lbPxPerClk lbData) * (snd $ lbPxPerClk lbData)) == 0) ||
-      (((fst $ lbPxPerClk lbData) * (snd $ lbPxPerClk lbData)) `mod`
+       ((fst $ lbPxPerClk) * (snd $ lbPxPerClk)) == 0) ||
+      (((fst $ lbPxPerClk) * (snd $ lbPxPerClk)) `mod`
        ((fst $ lbStride lbData) * (snd $ lbStride lbData)) == 0)
     yOriginFitsInWindow = (fst $ lbWindow lbData) > abs (fst $ lbOrigin lbData)
     xOriginFitsInWindow = (snd $ lbWindow lbData) > abs (snd $ lbOrigin lbData)

@@ -299,29 +299,30 @@ instance Circuit (StatefulErrorMonad) where
     appendToPipeline (NodeInfo (FoldT (nodeType $ head innerPipeline) numToFold) 1 1 (innerPipeline, []))
 
 -}
-  lineBuffer :: forall yPerClk xPerClk windowYSize windowXSize imageYSize imageXSize
+  lineBuffer :: forall windowYSize windowXSize imageYSize imageXSize
                  strideY strideX originY originX imageArea strideArea
                  outputParallelism windowCount outerSequenceLength a.
-                 (KnownNat yPerClk, KnownNat xPerClk, KnownNat windowYSize,
+                 (KnownNat windowYSize,
                  KnownNat windowXSize, KnownNat imageYSize, KnownNat imageXSize,
                  KnownNat strideY, KnownNat strideX, KnownNat originY,
                  KnownNat originX, Typeable a) =>
-    Proxy yPerClk -> Proxy xPerClk -> Proxy windowYSize ->
-    Proxy windowXSize -> Proxy imageYSize -> Proxy imageXSize ->
+    Proxy windowYSize -> Proxy windowXSize ->
+    Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
-    Seq (yPerClk * xPerClk) (Atom a) ->
-    StatefulErrorMonad (Seq (Div
-                              (Div (imageXSize * imageYSize) (strideX * strideY))
-                              (Max (Div (yPerClk * xPerClk) (strideY * strideX)) 1))
-                         (SSeq (Max (Div (yPerClk * xPerClk) (strideY * strideX)) 1)
-                           (SSeq windowYSize (SSeq windowXSize (Atom a)))))
-  lineBuffer _ _ _ _ _ _ _ _ _ _ _ = do
-    if linebufferDataValid lbData
+    -- need strideY*strideX here as, if running at least 1 pixel
+    -- out per clock, need at least these many pixels in per clock
+    -- can get rid of this once I have underutilize working
+    Seq (strideY * strideX) (Atom a) ->
+    StatefulErrorMonad (Seq 1 (SSeq windowYSize (SSeq windowXSize (Atom a))))
+  lineBuffer _ _ _ _ _ _ _ _ _ = do
+    currentCompData <- get
+    let tNum = throughputNumerator currentCompData
+    let tDenom = throughputDenominator currentCompData
+    let par = tNum `div` tDenom
+    if linebufferDataValid par lbData
       then createCompilationDataAndAppend (LineBufferT lbData)
       else liftEither $ Left $ "LineBuffer has invalid parameters, params are " ++ show lbData
     where
-      yPerClkValue = fromInteger $ natVal $ (Proxy :: Proxy yPerClk)
-      xPerClkValue = fromInteger $ natVal $ (Proxy :: Proxy xPerClk)
       windowYSizeValue = fromInteger $ natVal $ (Proxy :: Proxy windowYSize)
       windowXSizeValue = fromInteger $ natVal $ (Proxy :: Proxy windowXSize)
       imageYSizeValue = fromInteger $ natVal $ (Proxy :: Proxy imageYSize)
@@ -332,7 +333,7 @@ instance Circuit (StatefulErrorMonad) where
       originXValue = fromInteger $ natVal $ (Proxy :: Proxy originX)
       tokenType = typeOf (Proxy :: Proxy (Atom a))
       lbData = LineBufferData
-        (yPerClkValue, xPerClkValue) (windowYSizeValue, windowXSizeValue)
+        (windowYSizeValue, windowXSizeValue)
         (imageYSizeValue, imageXSizeValue) (strideYValue, strideXValue)
         (originYValue, originXValue) tokenType
       

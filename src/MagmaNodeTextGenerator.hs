@@ -11,6 +11,7 @@ import Control.Monad.Except
 import Control.Monad.Identity
 import Data.Typeable
 import Data.Either
+import LineBuffer
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
@@ -24,6 +25,7 @@ nodeParallelizesBySelf :: NodeType -> Bool
 nodeParallelizesBySelf (UpT _ _) = True
 nodeParallelizesBySelf (DownT _ _) = True
 nodeParallelizesBySelf (FoldT _ _) = True
+nodeParallelizesBySelf (LineBufferT _) = True
 nodeParallelizesBySelf _ = False
 
 -- left string is an error, right string is a valid result
@@ -136,6 +138,26 @@ createMagmaDefOfNode (FoldT nt totalLen) 1 = Right (
                                                       createMagmaDefOfNode nt 1)
 createMagmaDefOfNode (FoldT _ _) _ = Left "FoldT must have a par of at least 1"
 createMagmaDefOfNode ForkJoinT _ = Left "ForkJoin shouldn't be printed to magma"
+createMagmaDefOfNode (LineBufferT lbData) par | not (linebufferDataValid par lbData) =
+                                                Left $ "LineBuffer has invalid" ++
+                                              " parameters, params are " ++
+                                              show lbData
+createMagmaDefOfNode (LineBufferT (LineBufferData windowSize imageSize
+                                   stride origin tokenType)) par =
+  Right ( "DefineTwoDimensionalLineBuffer(cirb, " ++
+          (oneTypeToMagmaString True tokenType) ++ ", " ++
+          -- this is the parallelism computation for row and col dimensions of image
+          (show $ (par * baseParallelism) `mod` fst imageSize) ++ ", " ++
+          (show $ (par * baseParallelism) `div` fst imageSize) ++ ", " ++
+          (show $ snd windowSize) ++ ", " ++ (show $ fst windowSize) ++ ", " ++
+          (show $ snd imageSize) ++ ", " ++ (show $ fst imageSize) ++ ", " ++
+          (show $ snd stride) ++ ", " ++ (show $ fst stride) ++ ", " ++
+          (show $ snd origin) ++ ", " ++ (show $ fst origin)
+        )
+  where
+    -- for now, need to emit at least a complete stride every clock so emit once
+    -- every clock as no underutil yet
+    baseParallelism = (fst stride) * (snd stride)
 
 type PortName = String
 data Ports = Ports {
@@ -143,6 +165,8 @@ data Ports = Ports {
   -- the int is how many copies in an array to make
   -- if this is 1, no array. If greater than 1, need to wrap the string
   -- from oneTypeToMagmaString in an array
+  -- may be able to get rid of all ints in these tuples. All ports are flattend out
+  -- so may not need to have a tracker of parallelism.
   inTypes :: [(TypeRep, Int)],
   outPorts :: [PortName],
   outTypes :: [(TypeRep, Int)],
@@ -226,7 +250,7 @@ getPorts (DownT _ _) _ _ = Left "Downsample not implemented yet for getPorts"
 getPorts (FoldT nt _) _ _ | isLeft (getPorts nt "" 1) = Left "Must be able to get ports of inner node in to get ports of FoldT"
 getPorts (FoldT nt totalLen) fnName par | par == totalLen = Right $
                                           Ports ([fnName ++ ".I.identity"] ++ inputsWithIndex)
-                                          [(innerPortInputType, 1)] [fnName ++ ".out"]
+                                          [(innerPortInputType, par)] [fnName ++ ".out"]
                                           [innerPortOutputType] [] []
   where
     copiedInputs = replicate par (\x -> fnName ++ ".I.data[" ++ show x ++ "]") 
@@ -258,3 +282,37 @@ getPorts (FoldT nt totalLen) fnName 1 = Right (
     innerPortOutputType = head $ outTypes $ innerPorts
 getPorts (FoldT _ _) _ _ = Left "FoldT must have a par of at least 1"
 getPorts ForkJoinT _ _ = Left "ForkJoin shouldn't be printed to magma"
+getPorts (LineBufferT lbData) _ par | not (linebufferDataValid par lbData) =
+                                                Left $ "LineBuffer has invalid" ++
+                                                " parameters, params are " ++
+                                                show lbData
+getPorts (LineBufferT (LineBufferData windowSize imageSize stride origin
+                       tokenType)) fnName par =
+  Right (Ports inputPorts (replicate (length inputPorts) (tokenType, 1))
+         outputPorts (replicate (length outputPorts) (tokenType, 1))
+         [fnName ++ ".CE"] [fnName ++ ".valid"])
+  where
+    -- for now, need to emit at least a complete stride every clock so emit once
+    -- every clock as no underutil yet
+    baseParallelism = (fst stride) * (snd stride)
+    rows_of_pixels_per_clock = (par * baseParallelism) `div` (snd $ imageSize)
+    pixels_per_row_per_clock = (par * baseParallelism) `mod` (snd $ imageSize)
+    inputPorts = [ fnName ++ ".I[" ++ show cur_row ++ "][" ++ show cur_col ++ "]"
+                 | cur_row <- [0..(rows_of_pixels_per_clock - 1)],
+                   cur_col <- [0..(pixels_per_row_per_clock - 1)]]
+    -- when underutil allowed, this will get much more complicated
+    -- check with ports in Python implementation
+    windows_per_active_clock = rows_of_pixels_per_clock * pixels_per_row_per_clock
+    outputPorts = [ fnName ++ ".O[" ++ show cur_window ++ "][" ++ show cur_row
+                    ++ "][" ++ show cur_col ++ "]"
+                 | cur_window <- [0 .. (windows_per_active_clock - 1)],
+                   cur_row <- [0..((fst windowSize) - 1)],
+                   cur_col <- [0..((snd windowSize) - 1)]]
+  {-
+windows_per_active_clock, Array(window_rows, Array(window_cols,
+ windows_per_row_per_clock = max(pixels_per_row_per_clock // stride_cols, 1)
+        rows_of_windows_per_clock = max(rows_of_pixels_per_clock // stride_rows, 1)
+        if stride_rows <= rows_of_pixels_per_clock:
+            windows_per_active_clock = windows_per_row_per_clock * rows_of_windows_per_clock
+-}
+
