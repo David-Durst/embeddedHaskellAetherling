@@ -18,6 +18,7 @@ import Data.Either
 import Debug.Trace
 import MagmaNodeTextGenerator
 import LineBuffer
+import Data.List
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
@@ -450,11 +451,13 @@ instance Circuit (StatefulErrorMonad) where
     -- traceM $ show fAndGOutputPortsTypes
     -- traceM $ show priorData
     put $ priorData {
-      outputPorts = (fAndGOutputPorts !! 0) ++ (fAndGOutputPorts !! 1),
-      outputPortsTypes = (fAndGOutputPortsTypes !! 0) ++ (fAndGOutputPortsTypes !! 1)
+      outputPorts = interleave (fAndGOutputPorts !! 0)  (fAndGOutputPorts !! 1),
+      outputPortsTypes = interleave (fAndGOutputPortsTypes !! 0) (fAndGOutputPortsTypes !! 1)
       }
     -- traceM "after !!"
     return undefined
+    where
+      interleave xs ys = concat (transpose [xs, ys])
 
   addUnitType _ = do
     return undefined
