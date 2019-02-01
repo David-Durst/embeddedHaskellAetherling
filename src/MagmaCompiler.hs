@@ -573,8 +573,8 @@ unscheduledNode = iterC (Proxy @4) $ addC
 
 lb2x2Example = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @10) (Proxy @10)
                 (Proxy @1) (Proxy @1) (Proxy @0) (Proxy @0))
-lbExampleConsts = iterC (Proxy @1) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
-lbExampleAdders = iterC (Proxy @1) $ mapC (Proxy @2) $ mapC (Proxy @2) $ addC
+lbExampleConsts = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
+lbExampleAdders = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ addC
 unscheduledLBExample = (lb2x2Example >***< lbExampleConsts) >>> lbExampleAdders
 
 unscheduledPipelineCData = buildCompilationData unscheduledPipeline
