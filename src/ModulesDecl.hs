@@ -66,7 +66,18 @@ type family TupleAllIntsAndBits (baseType :: *) :: * where
   TupleAllIntsAndBits (Seq n a) = Seq n (TupleAllIntsAndBits a)
   TupleAllIntsAndBits (SSeq n a) = SSeq n (TupleAllIntsAndBits a)
   TupleAllIntsAndBits (TSeq n v a) = TSeq n v (TupleAllIntsAndBits a)
-  
+
+-- verify that a type contains only units
+type family JustUnits (topType :: *) :: Constraint where
+  JustUnits (Atom ()) = True ~ True
+  JustUnits (Atom Int) = False ~ True
+  JustUnits (Atom Bool) = False ~ True
+  JustUnits (Atom (Atom a, Atom b)) = (JustUnits (Atom a), JustUnits (Atom b))
+  JustUnits (Atom (V.Vector n (Atom a))) = JustUnits (Atom a)
+  JustUnits (Seq n a) = JustUnits a
+  JustUnits (SSeq n a) = JustUnits a
+  JustUnits (TSeq n v a) = JustUnits a
+
 class Monad m => Circuit m where
   -- unary operators
   absC :: Atom Int -> m (Atom Int)
@@ -142,6 +153,9 @@ class Monad m => Circuit m where
   (>***<) :: (AtomBaseType a, AtomBaseType b, AtomBaseType c,
               AtomBaseType d, c ~ d) =>
     (a -> m c) -> (b -> m d) -> ((ZipSeqTypes a b) -> m (TupleAllIntsAndBits c))
+
+  -- helpers for filling in units for types automatically
+  addUnitType :: (JustUnits (Atom b)) => Atom a -> m (Atom (Atom a, Atom b))
 
   (>>>) ::  (AtomBaseType a, AtomBaseType b, AtomBaseType c) =>
     (a -> m b) -> (b -> m c) -> (a -> m c)

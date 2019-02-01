@@ -438,6 +438,8 @@ instance Circuit (StatefulErrorMonad) where
       }
     return undefined
 
+  addUnitType _ = do
+    return undefined
 
   (f >>> g) _ = do
     f undefined
@@ -576,6 +578,8 @@ lb2x2Example = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Pr
 lbExampleConsts = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
 lbExampleAdders = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ addC
 unscheduledLBExample = (lb2x2Example >***< lbExampleConsts) >>> lbExampleAdders
+unscheduledLBExampleNoUnits = (iterC (Proxy @100) addUnitType) >>>
+  (lb2x2Example >***< lbExampleConsts) >>> lbExampleAdders
 
 unscheduledPipelineCData = buildCompilationData unscheduledPipeline
 unscheduledNodeCData = buildCompilationData unscheduledNode 
@@ -604,7 +608,7 @@ partialParallelPipelineCData = buildCompilationData $ seq_to_tseqC $ split_seq_t
   unscheduledPipeline 
 partialParallelNodeCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
   unscheduledNode
-partialParallelLB = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledLBExample
+partialParallelLB = seq_to_tseqC $ split_seq_to_sseqC (Proxy @50) unscheduledLBExample
 partialParallelLBCData = buildCompilationData $ partialParallelLB
 {-
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput
