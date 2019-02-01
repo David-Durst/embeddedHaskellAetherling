@@ -98,16 +98,21 @@ saveToCoreIR circuitName = getCoreIRModuleString ++ runGeneratorsString ++
 writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
   String -> String -> String -> (a -> StatefulErrorMonad b) -> IO ()
 writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
+  traceM "preCompileData"
   let compData = buildCompilationData program
+  traceM $ show compData
+  traceM "postCompileData"
   preludeString <- readFile preludeLocation
   epilogueString <- readFile epilogueLocation
   let inputTypeString = getModulePortsString True "I" $ inputPortsTypes compData
-  --traceM $ inputTypeString
+  traceM inputTypeString
   let outputTypeString = getModulePortsString False "O" $ outputPortsTypes compData
-  --traceM $ outputTypeString
+  traceM outputTypeString
   let interfaceString = (circuitInterfaceString inputTypeString
                          outputTypeString (not $ null $ reversedValidPorts compData))
+  traceM interfaceString
   let circuitDefinition = "haskell_test_circuit = DefineCircuit('Test_Haskell_Circuit', *args)\n" 
+  traceM circuitDefinition
   -- traceM $ show compData
   let wireInterfaceString = wireInterface "haskell_test_circuit" (inputPorts compData) (outputPorts compData)
   let saveToCoreIRString = saveToCoreIR "haskell_test_circuit"
@@ -187,6 +192,7 @@ appendToCompilationData nodeType (CompilationData ni rot ip it op ot rvp tNum tD
 
 createCompilationDataAndAppend :: NodeType -> StatefulErrorMonad a
 createCompilationDataAndAppend nodeType = do
+    traceM "start of createCompilationDataAndAppend"
     priorData <- get
     let curNodeIndex = nodeIndex priorData
     let par = throughputNumerator priorData `div` throughputDenominator priorData
@@ -208,7 +214,7 @@ createCompilationDataAndAppend nodeType = do
         else do
         let instancesValues = fromRight undefined magmaInstances
         let portsValues = fromRight undefined ports
-        --traceM ("instanceValues" ++ show instancesValues)
+        traceM ("instanceValues" ++ show instancesValues)
         appendToCompilationData nodeType
           (CompilationData curNodeIndex [instancesValues] (inPorts portsValues)
             (inTypes portsValues) (outPorts portsValues) 
@@ -320,14 +326,24 @@ instance Circuit (StatefulErrorMonad) where
                                 (Atom (V.Vector windowXSize (Atom a))))))
   lineBuffer _ _ _ _ _ _ _ _ _ _ = do
     currentCompData <- get
+    traceM "hi2"
     let tNum = throughputNumerator currentCompData
     let tDenom = throughputDenominator currentCompData
+    traceM "hi3"
     let par = tNum `div` tDenom
-    if linebufferDataValid par lbData
+    let paramCheck = linebufferDataValid par lbData
+    traceM "hi4"
+    traceM $ show par
+    traceM $ show lbData
+    if null paramCheck
       then createCompilationDataAndAppend (LineBufferT lbData)
-      else liftEither $ Left $ "LineBuffer has invalid parameters, params are " ++ show lbData
+      else liftEither $ Left $ (
+      "LineBuffer has invalid parameters, params are " ++ show lbData ++
+      ". and the errors are " ++ (foldl (++) "" paramCheck))
+    traceM "dude"
+    return undefined
     where
-      windowYSizeValue = fromInteger $ natVal $ (Proxy :: Proxy windowYSize)
+      windowYSizeValue = trace "hi" $ fromInteger $ natVal $ (Proxy :: Proxy windowYSize)
       windowXSizeValue = fromInteger $ natVal $ (Proxy :: Proxy windowXSize)
       imageYSizeValue = fromInteger $ natVal $ (Proxy :: Proxy imageYSize)
       imageXSizeValue = fromInteger $ natVal $ (Proxy :: Proxy imageXSize)

@@ -138,10 +138,13 @@ createMagmaDefOfNode (FoldT nt totalLen) 1 = Right (
                                                       createMagmaDefOfNode nt 1)
 createMagmaDefOfNode (FoldT _ _) _ = Left "FoldT must have a par of at least 1"
 createMagmaDefOfNode ForkJoinT _ = Left "ForkJoin shouldn't be printed to magma"
-createMagmaDefOfNode (LineBufferT lbData) par | not (linebufferDataValid par lbData) =
+createMagmaDefOfNode (LineBufferT lbData) par | not (null paramCheck) =
                                                 Left $ "LineBuffer has invalid" ++
-                                              " parameters, params are " ++
-                                              show lbData
+                                                " parameters, params are " ++
+                                                show lbData ++ ". and the errors are" ++
+                                                (foldl (++) "" paramCheck)
+  where
+    paramCheck = linebufferDataValid par lbData
 createMagmaDefOfNode (LineBufferT (LineBufferData windowSize imageSize
                                    stride origin tokenType)) par =
   Right ( "DefineTwoDimensionalLineBuffer(cirb, " ++
@@ -282,10 +285,13 @@ getPorts (FoldT nt totalLen) fnName 1 = Right (
     innerPortOutputType = head $ outTypes $ innerPorts
 getPorts (FoldT _ _) _ _ = Left "FoldT must have a par of at least 1"
 getPorts ForkJoinT _ _ = Left "ForkJoin shouldn't be printed to magma"
-getPorts (LineBufferT lbData) _ par | not (linebufferDataValid par lbData) =
-                                                Left $ "LineBuffer has invalid" ++
-                                                " parameters, params are " ++
-                                                show lbData
+getPorts (LineBufferT lbData) _ par | not (null paramCheck) =
+                                        Left $ "LineBuffer has invalid" ++
+                                        " parameters, params are " ++
+                                        show lbData ++ ". and the errors are " ++
+                                        (foldl (++) "" paramCheck)
+  where
+    paramCheck = linebufferDataValid par lbData
 getPorts (LineBufferT (LineBufferData windowSize imageSize stride origin
                        tokenType)) fnName par =
   Right (Ports inputPorts (replicate (length inputPorts) (tokenType, 1))
