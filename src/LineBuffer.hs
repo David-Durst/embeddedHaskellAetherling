@@ -20,33 +20,59 @@ data LineBufferData = LineBufferData {
   lbToken :: TypeRep
 } deriving (Eq, Show)
 
-linebufferDataValid :: Int -> LineBufferData -> Bool
-linebufferDataValid par lbData = yParOk && xParOk && onlyYParIfXFullyPar &&
-  yStrideFitsImage && xStrideFitsImage && strideOrPixelsDivideEachOther &&
-  yOriginFitsInWindow && xOriginFitsInWindow && yOriginOnlyBackward &&
-  xOriginOnlyBackward && yWindowAndOriginFitInImage &&
-  xWindowAndOriginFitInImage
+linebufferDataValid :: Int -> LineBufferData -> [String]
+linebufferDataValid par lbData = yParOkReason ++ xParOkReason ++ onlyYParIfXFullyParReason ++
+  yStrideFitsImageReason ++ xStrideFitsImageReason ++ strideOrPixelsDivideEachOtherReason ++
+  yOriginFitsInWindowReason ++ xOriginFitsInWindowReason ++ yOriginOnlyBackwardReason ++
+  xOriginOnlyBackwardReason ++ yWindowAndOriginFitInImageReason ++
+  xWindowAndOriginFitInImageReason
   where
-    lbPxPerClk = (par `div` (snd $ lbImage lbData), par `mod` (snd $ lbImage lbData))
+    lbPxPerClk = (max (par `div` (snd $ lbImage lbData)) 1, par `mod` (snd $ lbImage lbData))
     yParOk = (fst $ lbImage lbData) `mod` (fst $ lbPxPerClk) == 0
+    yParOkReason = if yParOk then [] else ["y parallelism doesn't divide the y image dimension. "]
     xParOk = (snd $ lbImage lbData) `mod` (snd $ lbPxPerClk) == 0
-    onlyYParIfXFullyPar = ((fst $ lbImage lbData) == 1) || 
+    xParOkReason = if xParOk then [] else ["x parallelism doesn't divide the x image dimension. "]
+    onlyYParIfXFullyPar = ((fst lbPxPerClk) == 1) || 
       ((snd $ lbImage lbData) == (snd lbPxPerClk))
+    onlyYParIfXFullyParReason = if onlyYParIfXFullyPar then [] else ["y parallelism must be 1 unless x parallelism equals x dimension size. "]
     yStrideFitsImage = (fst $ lbImage lbData) `mod` (fst $ lbStride lbData) == 0
+    yStrideFitsImageReason = if yStrideFitsImage then [] else ["y stride must fit in y image size. "]
     xStrideFitsImage = (snd $ lbImage lbData) `mod` (snd $ lbStride lbData) == 0
+    xStrideFitsImageReason = if xStrideFitsImage then [] else ["x stride must fit in x image size. "]
     strideOrPixelsDivideEachOther =
       (((fst $ lbStride lbData) * (snd $ lbStride lbData)) `mod`
        ((fst $ lbPxPerClk) * (snd $ lbPxPerClk)) == 0) ||
       (((fst $ lbPxPerClk) * (snd $ lbPxPerClk)) `mod`
        ((fst $ lbStride lbData) * (snd $ lbStride lbData)) == 0)
-    yOriginFitsInWindow = (fst $ lbWindow lbData) > abs (fst $ lbOrigin lbData)
-    xOriginFitsInWindow = (snd $ lbWindow lbData) > abs (snd $ lbOrigin lbData)
-    yOriginOnlyBackward = (fst $ lbOrigin lbData) <= 0
-    xOriginOnlyBackward = (snd $ lbOrigin lbData) <= 0
-    yWindowAndOriginFitInImage = ((fst $ lbWindow lbData) -
+    strideOrPixelsDivideEachOtherReason = if strideOrPixelsDivideEachOther
+      then []
+      else ["either the stride area must divide the parallelism area or vice versa. "]
+    yOriginFitsInWindow = (fst $ lbWindow lbData) > (fst $ lbOrigin lbData)
+    yOriginFitsInWindowReason = if yOriginFitsInWindow
+      then []
+      else ["y origin offset must be less than 1 window in y dimension. "]
+    xOriginFitsInWindow = (snd $ lbWindow lbData) > (snd $ lbOrigin lbData)
+    xOriginFitsInWindowReason = if xOriginFitsInWindow
+      then []
+      else ["x origin offset must be less than 1 window in x dimension. "]
+    yOriginOnlyBackward = (fst $ lbOrigin lbData) >= 0
+    yOriginOnlyBackwardReason = if yOriginOnlyBackward
+      then []
+      else ["y origin must be non-negative as proxies can only have positive " ++
+            "knownnat's and thus the number must negated when printed to magma. "]
+    xOriginOnlyBackward = (snd $ lbOrigin lbData) >= 0
+    xOriginOnlyBackwardReason = if xOriginOnlyBackward
+      then []
+      else ["x origin must be non-negative as proxies can only have positive " ++
+            "knownnat's and thus the number must negated when printed to magma. "]
+    yWindowAndOriginFitInImage = ((fst $ lbWindow lbData) +
                                   (fst $ lbOrigin lbData)) < (fst $ lbImage lbData)
-    xWindowAndOriginFitInImage = ((snd $ lbWindow lbData) -
+    yWindowAndOriginFitInImageReason = if yWindowAndOriginFitInImage then []
+      else ["y window plus positive origin must fit in the image, this doesn't. "]
+    xWindowAndOriginFitInImage = ((snd $ lbWindow lbData) +
                                   (snd $ lbOrigin lbData)) < (snd $ lbImage lbData)
+    xWindowAndOriginFitInImageReason = if xWindowAndOriginFitInImage then []
+      else ["x window plus positive origin must fit in the image, this doesn't. "]
 
 {-
 lineBufferInputType :: (AtomBaseType a) => LineBufferData a -> Seq 
