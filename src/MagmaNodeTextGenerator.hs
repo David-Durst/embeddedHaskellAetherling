@@ -305,8 +305,8 @@ getPorts (LineBufferT (LineBufferData windowSize imageSize stride origin
     -- for now, need to emit at least a complete stride every clock so emit once
     -- every clock as no underutil yet
     baseParallelism = (fst stride) * (snd stride)
-    rows_of_pixels_per_clock = min (par * baseParallelism) (snd imageSize)
-    pixels_per_row_per_clock = max ((par * baseParallelism) `mod` (snd imageSize)) 1
+    rows_of_pixels_per_clock = max ((par * baseParallelism) `div` (snd imageSize)) 1
+    pixels_per_row_per_clock = min (par * baseParallelism) (snd imageSize)
     inputPorts = [ fnName ++ ".I[" ++ show cur_row ++ "][" ++ show cur_col ++ "]"
                  | cur_row <- [0..(rows_of_pixels_per_clock - 1)],
                    cur_col <- [0..(pixels_per_row_per_clock - 1)]]
