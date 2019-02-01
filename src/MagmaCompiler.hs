@@ -403,8 +403,8 @@ instance Circuit (StatefulErrorMonad) where
       then do
       let fCompilerData = snd $ fromRight undefined fPipeline
       let gCompilerData = snd $ fromRight undefined gPipeline
-      --traceM $ "f compilation: " ++ show fCompilerData
-      --traceM $ "g compilation: " ++ show gCompilerData
+      traceM $ "f compilation: " ++ show fCompilerData
+      traceM $ "g compilation: " ++ show gCompilerData
       let mergedCompilerData = (CompilationData
                                -- subtract 1 here as g compiler data's
                                -- node index is incremented by 1 for the
@@ -444,10 +444,15 @@ instance Circuit (StatefulErrorMonad) where
           chunksOf (length (outputPorts priorData) `div` 2) allOutputPorts
     let fAndGOutputPortsTypes =
           chunksOf (length (outputPortsTypes priorData) `div` 2) allOutputPortsTypes
+    traceM "priorTo !!"
+    traceM $ show fAndGOutputPorts
+    traceM $ show fAndGOutputPortsTypes
+    traceM $ show priorData
     put $ priorData {
       outputPorts = (fAndGOutputPorts !! 0) ++ (fAndGOutputPorts !! 1),
       outputPortsTypes = (fAndGOutputPortsTypes !! 0) ++ (fAndGOutputPortsTypes !! 1)
       }
+    traceM "after !!"
     return undefined
 
   addUnitType _ = do
