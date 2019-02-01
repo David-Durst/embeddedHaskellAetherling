@@ -95,11 +95,11 @@ instance Circuit SimulatorEnv where
     resultVec <- V.mapM f inputVec
     return $ Seq resultVec
 
+{-
   (f *** g) (inTypeA, inTypeB) = do
     outTypeC <- f inTypeA
     outTypeD <- g inTypeB
     return (outTypeC, outTypeD)
-{-
   (f >***< g) (inTypeA, inTypeB) = do
     outTypeC <- f inTypeA
     outTypeD <- g inTypeB

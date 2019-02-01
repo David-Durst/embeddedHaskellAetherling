@@ -15,6 +15,7 @@ newtype A_Type_Containing_Atoms = A_Type_Containing_Atoms Int
 
 type family AtomBaseType (x :: *) :: Constraint where
   AtomBaseType (Atom a) = Atom a ~ Atom a
+  AtomBaseType (Seq _ a) = AtomBaseType a
   AtomBaseType (TSeq _ _ a) = AtomBaseType a
   AtomBaseType (SSeq _ a) = AtomBaseType a
   AtomBaseType ((a, _)) = AtomBaseType a
@@ -35,6 +36,7 @@ newtype Not_Same_Nesting_As a = Not_Same_Nesting Int
 -- this verifies that a nested set of sequences (any parallelism)
 -- have the same amount of nested and same length at each layer
 type family SameSeqNesting (lType :: *) (rType :: *) :: Constraint where
+  SameSeqNesting a a = True ~ True
   SameSeqNesting (Seq n a) (Seq n b) = SameSeqNesting a b
   SameSeqNesting (Seq n a) b = (Seq n a) ~ Not_Same_Nesting_As b
   SameSeqNesting (SSeq n a) (SSeq n b) = SameSeqNesting a b
@@ -43,11 +45,27 @@ type family SameSeqNesting (lType :: *) (rType :: *) :: Constraint where
   SameSeqNesting (TSeq n v a) b = (TSeq n v a) ~ Not_Same_Nesting_As b
   SameSeqNesting a b = True ~ True
 
+-- zip together all sequences that are of the same length. Note that
+-- if each element is a nested structure like an ntuple, need to then
+-- apply TupleALlIntsAndBits to merge the structures for adders.
 type family ZipSeqTypes (lType :: *) (rType :: *) :: * where
   ZipSeqTypes (Seq n a) (Seq n b) = Seq n (ZipSeqTypes a b)
   ZipSeqTypes (SSeq n a) (SSeq n b) = SSeq n (ZipSeqTypes a b)
   ZipSeqTypes (TSeq n v a) (TSeq n v b) = TSeq n v (ZipSeqTypes a b)
   ZipSeqTypes a b = Atom (a, b)
+
+-- walk the atom structure, duplicating all ints and bits. This is for
+-- zipping two structures of nested NTuples together
+type family TupleAllIntsAndBits (baseType :: *) :: * where
+  TupleAllIntsAndBits (Atom Int) = Atom (Atom Int, Atom Int)
+  TupleAllIntsAndBits (Atom Bool) = Atom (Atom Bool, Atom Bool)
+  TupleAllIntsAndBits (Atom (Atom a, Atom b)) =
+    Atom (TupleAllIntsAndBits (Atom a), TupleAllIntsAndBits (Atom b))
+  TupleAllIntsAndBits (Atom (V.Vector n (Atom a))) =
+    Atom (V.Vector n (TupleAllIntsAndBits (Atom a)))
+  TupleAllIntsAndBits (Seq n a) = Seq n (TupleAllIntsAndBits a)
+  TupleAllIntsAndBits (SSeq n a) = SSeq n (TupleAllIntsAndBits a)
+  TupleAllIntsAndBits (TSeq n v a) = TSeq n v (TupleAllIntsAndBits a)
   
 class Monad m => Circuit m where
   -- unary operators
@@ -90,27 +108,40 @@ class Monad m => Circuit m where
   lineBuffer :: (KnownNat windowYSize, KnownNat windowXSize,
                  KnownNat imageYSize, KnownNat imageXSize,
                  KnownNat strideY, KnownNat strideX, KnownNat originY,
-                 KnownNat originX, Typeable a) =>
-    Proxy windowYSize -> Proxy windowXSize ->
+                 KnownNat originX, Typeable a, 1 <= (strideX * strideY)) =>
+    Proxy (Atom a) -> Proxy windowYSize -> Proxy windowXSize ->
     Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
     -- need strideY*strideX here as, if running at least 1 pixel
     -- out per clock, need at least these many pixels in per clock
     -- can get rid of this once I have underutilize working
-    Seq (strideY * strideX) (Atom a) ->
-    m (Seq 1 (SSeq windowYSize (SSeq windowXSize (Atom a))))
+    (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
+     (Atom (V.Vector (strideY * strideX) (Atom a)))) ->
+    m (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
+        (Atom (V.Vector windowYSize
+               (Atom (V.Vector windowXSize (Atom a))))))
 
   -- higher-order operators
+  mapC :: (KnownNat n) =>
+    Proxy n -> (Atom a -> m (Atom b)) ->
+    (Atom (V.Vector n (Atom a)) -> m (Atom (V.Vector n (Atom b))))
+
   iterC :: (KnownNat n, AtomBaseType a, AtomBaseType b) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
+  -- ***  and >***< can't produce (,) tuples, must use atom tuples
+  -- either from ZipSeqTypes or TupleAllIntsAndBits as the
+  -- scheudling primitives can schedules tuples of unsynchornoized primitives
+  -- (in implementation this is that the scheduling primitives can't
+  -- handle regular haskell tuples for types)
   (***) :: (AtomBaseType a, AtomBaseType b, AtomBaseType c,
-            AtomBaseType d) =>
-    (a -> m c) -> (b -> m d) -> ((a,b) -> m (c, d))
+            AtomBaseType d, SameSeqNesting c d) =>
+    (a -> m c) -> (b -> m d) -> ((ZipSeqTypes a b) -> m (ZipSeqTypes c d))
 
+  -- need this to also merge inputs, allow tuples of sseqs 
   (>***<) :: (AtomBaseType a, AtomBaseType b, AtomBaseType c,
-              AtomBaseType d, SameSeqNesting c d) =>
-    (a -> m c) -> (b -> m d) -> ((a,b) -> m (ZipSeqTypes c d))
+              AtomBaseType d, c ~ d) =>
+    (a -> m c) -> (b -> m d) -> ((ZipSeqTypes a b) -> m (TupleAllIntsAndBits c))
 
   (>>>) ::  (AtomBaseType a, AtomBaseType b, AtomBaseType c) =>
     (a -> m b) -> (b -> m c) -> (a -> m c)

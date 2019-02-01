@@ -130,10 +130,10 @@ instance Circuit (State ResourceEstimate) where
     resultVec <- V.mapM f inputVec
     return $ Seq resultVec
 
-  (f *** g) (inTypeA, inTypeB) = do
-    outTypeC <- f inTypeA
-    outTypeD <- g inTypeB
-    return (outTypeC, outTypeD)
+  (f *** g) _ = do
+    f undefined 
+    g undefined
+    return undefined
 
   (f >>> g) x = f x >>= g
 

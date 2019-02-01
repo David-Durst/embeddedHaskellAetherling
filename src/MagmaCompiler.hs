@@ -65,6 +65,7 @@ circuitInterfaceString inTypesString outTypesString hasValid =
   where
     startOfInterface = "args = ["
     endOfInterface = "]\n"
+    --validStr = "'valid_in', Out(Bit), 'ready_in', Out(Bit)"
     validStr = if hasValid then "'valid', Out(Bit)," else ""
 
 type StatefulErrorMonad = StateT CompilationData (ExceptT String Identity) 
@@ -305,16 +306,19 @@ instance Circuit (StatefulErrorMonad) where
                  (KnownNat windowYSize,
                  KnownNat windowXSize, KnownNat imageYSize, KnownNat imageXSize,
                  KnownNat strideY, KnownNat strideX, KnownNat originY,
-                 KnownNat originX, Typeable a) =>
-    Proxy windowYSize -> Proxy windowXSize ->
+                 KnownNat originX, Typeable a, 1 <= (strideX * strideY)) =>
+    Proxy (Atom a) -> Proxy windowYSize -> Proxy windowXSize ->
     Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
     -- need strideY*strideX here as, if running at least 1 pixel
     -- out per clock, need at least these many pixels in per clock
     -- can get rid of this once I have underutilize working
-    Seq (strideY * strideX) (Atom a) ->
-    StatefulErrorMonad (Seq 1 (SSeq windowYSize (SSeq windowXSize (Atom a))))
-  lineBuffer _ _ _ _ _ _ _ _ _ = do
+    (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
+      (Atom (V.Vector (strideY * strideX) (Atom a)))) ->
+    StatefulErrorMonad (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
+                         (Atom (V.Vector windowYSize
+                                (Atom (V.Vector windowXSize (Atom a))))))
+  lineBuffer _ _ _ _ _ _ _ _ _ _ = do
     currentCompData <- get
     let tNum = throughputNumerator currentCompData
     let tDenom = throughputDenominator currentCompData
@@ -338,6 +342,21 @@ instance Circuit (StatefulErrorMonad) where
         (originYValue, originXValue) tokenType
       
   -- higher-order operators
+  mapC :: forall n a b . (KnownNat n) =>
+    Proxy n -> (Atom a -> StatefulErrorMonad (Atom b)) ->
+    (Atom (V.Vector n (Atom a)) -> StatefulErrorMonad (Atom (V.Vector n (Atom b))))
+  mapC _ f _ = do
+    priorData <- get 
+    let parallelismProxy = Proxy :: Proxy n 
+    let parallelism = (fromInteger $ natVal parallelismProxy)
+    put $ multiplyThroughput parallelism priorData
+    --traceM $ "PriorData " ++ show priorData
+    f undefined
+    dataPostInnerPipeline <- get
+    --traceM $ "dataPostInnerPipeline " ++ show dataPostInnerPipeline
+    put $ divideThroughput parallelism dataPostInnerPipeline 
+    return undefined
+
   -- ignore the iter since it does nothing, needs to be wrapped with a tseq or
   -- sseq converting function
   iterC _ f _ = do
@@ -544,6 +563,7 @@ instance Circuit (StatefulErrorMonad) where
   -- flattened or unflattened, no need to do anything here
   -- this is just for manipulating the type system.
   mergeSSeqs _ = return undefined
+
 -- examples of programs in space and time
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition
@@ -551,22 +571,41 @@ instance Circuit (StatefulErrorMonad) where
 unscheduledPipeline = iterC (Proxy @4) $ (constGenIntC (Int 3) >***< constGenIntC (Int 2)) >>> addC
 unscheduledNode = iterC (Proxy @4) $ addC
 
+lb2x2Example = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @10) (Proxy @10)
+                (Proxy @1) (Proxy @1) (Proxy @0) (Proxy @0))
+lbExampleConsts = iterC (Proxy @1) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
+lbExampleAdders = iterC (Proxy @1) $ mapC (Proxy @2) $ mapC (Proxy @2) $ addC
+unscheduledLBExample = (lb2x2Example >***< lbExampleConsts) >>> lbExampleAdders
+
 unscheduledPipelineCData = buildCompilationData unscheduledPipeline
 unscheduledNodeCData = buildCompilationData unscheduledNode 
+unscheduledLBCData = buildCompilationData unscheduledLBExample
 
 sequentialPipeline = seq_to_tseqC unscheduledPipeline 
 sequentialPipelineCData = buildCompilationData $ seq_to_tseqC unscheduledPipeline 
 sequentialNodeCData = buildCompilationData $ seq_to_tseqC unscheduledNode
-
+sequentialLB = seq_to_tseqC unscheduledLBExample
+sequentialLBCData = buildCompilationData $ seq_to_tseqC unscheduledLBExample
+{-
+sequentialLBCData = buildCompilationData $ seq_to_tseqC (unscheduledLBExample .
+                                                         (mergeSeqTuples
+                                                          (Proxy :: Proxy 1)
+                                                          (Proxy :: Proxy (Atom Int))
+                                                          (Proxy :: Proxy (SSeq 2 (SSeq 2 (Atom ()))))))
+-}
 parallelPipeline = seq_to_sseqC unscheduledPipeline 
 parallelPipelineCData = buildCompilationData $ seq_to_sseqC unscheduledPipeline 
 parallelNodeCData = buildCompilationData $ seq_to_sseqC unscheduledNode
+parallelLB = seq_to_sseqC unscheduledLBExample
+parallelLBCData = buildCompilationData $ seq_to_sseqC unscheduledLBExample
 
 partialParallelPipeline = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledPipeline 
 partialParallelPipelineCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
   unscheduledPipeline 
 partialParallelNodeCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
   unscheduledNode
+partialParallelLB = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledLBExample
+partialParallelLBCData = buildCompilationData $ partialParallelLB
 {-
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput
 partialParallelInput :: TSeq 2 0 (SSeq 2 (Atom, Atom))

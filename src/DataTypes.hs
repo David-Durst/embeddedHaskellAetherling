@@ -25,6 +25,8 @@ data Atom a where
   Int :: Int -> Atom Int
   Bit :: Bool -> Atom Bool
   Tuple :: Atom a -> Atom b -> Atom (Atom a, Atom b)
+  -- example of how I'm going to restrict to sseqs of atoms or sseqs
+  NTuple :: V.Vector n a -> Atom (V.Vector n (Atom a))
 
 atomInt :: Int -> Atom Int
 atomInt x = Int x
