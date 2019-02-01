@@ -76,9 +76,11 @@ circuitInterfaceString inTypesString outTypesString hasValid =
   startOfInterface ++ inTypesString ++ outTypesString ++ validStr ++ endOfInterface
   where
     startOfInterface = "args = ["
-    endOfInterface = "]\n"
-    --validStr = "'valid_in', Out(Bit), 'ready_in', Out(Bit)"
-    validStr = if hasValid then "'valid', Out(Bit)," else ""
+    endOfInterface = "] + ClockInterface(has_ce=True)\n"
+    validInStr = "'valid_data_in', In(Bit), 'ready_data_in', Out(Bit), "
+    validOutStr = "'valid_data_out', Out(Bit), 'ready_data_out', In(Bit), "
+    validStr = validInStr ++ validOutStr
+
 
 type StatefulErrorMonad = StateT CompilationData (ExceptT String Identity) 
 
