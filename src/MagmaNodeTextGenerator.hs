@@ -152,7 +152,7 @@ createMagmaDefOfNode (LineBufferT (LineBufferData windowSize imageSize
           (show $ snd windowSize) ++ ", " ++ (show $ fst windowSize) ++ ", " ++
           (show $ snd imageSize) ++ ", " ++ (show $ fst imageSize) ++ ", " ++
           (show $ snd stride) ++ ", " ++ (show $ fst stride) ++ ", " ++
-          (show $ snd origin) ++ ", " ++ (show $ fst origin)
+          (show $ ((*) (-1)) $ snd origin) ++ ", " ++ (show $ ((*) (-1)) $ fst origin)
         )
   where
     -- for now, need to emit at least a complete stride every clock so emit once
