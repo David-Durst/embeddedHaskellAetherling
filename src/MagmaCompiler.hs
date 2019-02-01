@@ -93,7 +93,7 @@ saveToCoreIR circuitName = getCoreIRModuleString ++ runGeneratorsString ++
   saveToFileString
   where
     getCoreIRModuleString = "haskell_test_module = GetCoreIRModule(cirb, " ++ circuitName ++ ")\n"
-    runGeneratorsString = "cirb.context.run_passes([\"rungenerators\", \"verifyconnectivity --noclkrst\"], [\"aetherlinglib\", \"commonlib\", \"mantle\", \"coreir\", \"global\"])\n"
+    runGeneratorsString = "cirb.context.run_passes([\"rungenerators\", \"wireclocks-coreir\", \"verifyconnectivity --noclkrst\", \"flattentypes\", \"flatten\", \"verifyconnectivity --noclkrst\", \"deletedeadinstances\"], [\"aetherlinglib\", \"commonlib\", \"mantle\", \"coreir\", \"global\"])\n"
     saveToFileString = "haskell_test_module.save_to_file(\"haskellTest.json\")"
 
 writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
