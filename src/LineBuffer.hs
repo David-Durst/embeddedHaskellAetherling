@@ -27,7 +27,7 @@ linebufferDataValid par lbData = yParOkReason ++ xParOkReason ++ onlyYParIfXFull
   xOriginOnlyBackwardReason ++ yWindowAndOriginFitInImageReason ++
   xWindowAndOriginFitInImageReason
   where
-    lbPxPerClk = (max (par `div` (snd $ lbImage lbData)) 1, par `mod` (snd $ lbImage lbData))
+    lbPxPerClk = (max (par `div` (snd $ lbImage lbData)) 1, max (par `mod` (snd $ lbImage lbData)) 1)
     yParOk = (fst $ lbImage lbData) `mod` (fst $ lbPxPerClk) == 0
     yParOkReason = if yParOk then [] else ["y parallelism doesn't divide the y image dimension. "]
     xParOk = (snd $ lbImage lbData) `mod` (snd $ lbPxPerClk) == 0

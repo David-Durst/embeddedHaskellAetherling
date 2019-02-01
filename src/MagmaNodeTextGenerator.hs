@@ -150,7 +150,7 @@ createMagmaDefOfNode (LineBufferT (LineBufferData windowSize imageSize
   Right ( "DefineTwoDimensionalLineBuffer(cirb, " ++
           (oneTypeToMagmaString True tokenType) ++ ", " ++
           -- this is the parallelism computation for row and col dimensions of image
-          (show $ (par * baseParallelism) `mod` fst imageSize) ++ ", " ++
+          (show $ max ((par * baseParallelism) `mod` (fst imageSize)) 1) ++ ", " ++
           (show $ max ((par * baseParallelism) `div` (fst imageSize)) 1) ++ ", " ++
           (show $ snd windowSize) ++ ", " ++ (show $ fst windowSize) ++ ", " ++
           (show $ snd imageSize) ++ ", " ++ (show $ fst imageSize) ++ ", " ++
@@ -302,7 +302,7 @@ getPorts (LineBufferT (LineBufferData windowSize imageSize stride origin
     -- every clock as no underutil yet
     baseParallelism = (fst stride) * (snd stride)
     rows_of_pixels_per_clock = max ((par * baseParallelism) `div` (snd $ imageSize)) 1
-    pixels_per_row_per_clock = (par * baseParallelism) `mod` (snd $ imageSize)
+    pixels_per_row_per_clock = max ((par * baseParallelism) `mod` (snd $ imageSize)) 1
     inputPorts = [ fnName ++ ".I[" ++ show cur_row ++ "][" ++ show cur_col ++ "]"
                  | cur_row <- [0..(rows_of_pixels_per_clock - 1)],
                    cur_col <- [0..(pixels_per_row_per_clock - 1)]]
