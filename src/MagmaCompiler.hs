@@ -40,12 +40,23 @@ data CompilationData = CompilationData {
   -- this is NOT REVERSED
   outputPorts :: [PortName],
   outputPortsTypes :: [(TypeRep, Int)],
-  -- list of valid ports with last in DAG
-  -- as the last element
-  reversedValidPorts :: [PortName],
+  -- list of ready ports at start of DAG that should be wired
+  -- to the module's outer dataInReady port
+  firstReadyPorts :: [PortName],
+  -- list of ready ports at end of DAG that should be wired
+  -- to the module's outer dataOutReady port
+  lastReadyPorts :: [PortName],
+  -- list of ready ports at start of DAG that should be wired
+  -- to the module's outer dataInValid port
+  firstValidPorts :: [PortName],
+  -- list of ready ports at end of DAG that should be wired
+  -- to the module's outer dataOutValid port
+  lastValidPorts :: [PortName],
   -- this tracks how parallel to make everything in the subpart
   throughputNumerator :: Int,
-  throughputDenominator :: Int
+  throughputDenominator :: Int,
+  -- this tracks how many clock cycle delays prior stages have added
+  priorDelay :: Int
   }
   deriving Show
 
