@@ -337,7 +337,7 @@ instance Circuit (StatefulErrorMonad) where
       then createCompilationDataAndAppend (LineBufferT lbData)
       else liftEither $ Left $ (
       "LineBuffer has invalid parameters, params are " ++ show lbData ++
-      ". and the errors are " ++ (foldl (++) "" paramCheck))
+      ". par is " ++ show par ++ " and the errors are " ++ (foldl (++) "" paramCheck))
     return undefined
     where
       windowYSizeValue = fromInteger $ natVal $ (Proxy :: Proxy windowYSize)

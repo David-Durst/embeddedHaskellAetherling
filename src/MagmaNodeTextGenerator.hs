@@ -141,7 +141,8 @@ createMagmaDefOfNode ForkJoinT _ = Left "ForkJoin shouldn't be printed to magma"
 createMagmaDefOfNode (LineBufferT lbData) par | not (null paramCheck) =
                                                 Left $ "LineBuffer has invalid" ++
                                                 " parameters, params are " ++
-                                                show lbData ++ ". and the errors are " ++
+                                                show lbData ++ ". par is " ++
+                                                show par ++ " and the errors are " ++
                                                 (foldl (++) "" paramCheck)
   where
     paramCheck = linebufferDataValid par lbData
@@ -289,7 +290,8 @@ getPorts ForkJoinT _ _ = Left "ForkJoin shouldn't be printed to magma"
 getPorts (LineBufferT lbData) _ par | not (null paramCheck) =
                                         Left $ "LineBuffer has invalid" ++
                                         " parameters, params are " ++
-                                        show lbData ++ ". and the errors are " ++
+                                        show lbData ++ ". par is " ++
+                                        show par ++ "and the errors are " ++
                                         (foldl (++) "" paramCheck)
   where
     paramCheck = linebufferDataValid par lbData
