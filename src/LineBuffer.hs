@@ -27,9 +27,6 @@ linebufferDataValid par lbData = yParOkReason ++ xParOkReason ++ onlyYParIfXFull
   xOriginOnlyBackwardReason ++ yWindowAndOriginFitInImageReason ++
   xWindowAndOriginFitInImageReason
   where
-    lbPxPerClk = (max (par `div` (snd $ lbImage lbData)) 1, max (par `mod` (snd $ lbImage lbData)) 1)
-    yPxPerClock = fst lbPxPerClk
-    xPxPerClock = snd lbPxPerClk
     yWindow = fst $ lbWindow lbData
     xWindow = snd $ lbWindow lbData
     yImageSize = fst $ lbImage lbData
@@ -38,13 +35,15 @@ linebufferDataValid par lbData = yParOkReason ++ xParOkReason ++ onlyYParIfXFull
     xStride = snd $ lbStride lbData
     yOrigin = fst $ lbOrigin lbData
     xOrigin = snd $ lbOrigin lbData
+    yPxPerClock = max (par `div` (snd $ lbImage lbData)) 1
+    xPxPerClock = min par xImageSize
     yParOk = yImageSize `mod` yPxPerClock == 0
     yParOkReason = if yParOk then [] else ["y parallelism doesn't divide the y image dimension. "]
     xParOk = xImageSize `mod` xPxPerClock == 0
     xParOkReason = if xParOk then [] else ["x parallelism doesn't divide the x image dimension. "]
-    onlyYParIfXFullyPar = (yPxPerClock == 1) || 
-      (xImageSize == xPxPerClock)
-    onlyYParIfXFullyParReason = if onlyYParIfXFullyPar then [] else ["y parallelism must be 1 unless x parallelism equals x dimension size. "]
+    onlyYParIfXFullyPar = (yPxPerClock == 1) || (xImageSize == xPxPerClock)
+    onlyYParIfXFullyParReason = if onlyYParIfXFullyPar then []
+      else ["y parallelism must be 1 unless x parallelism equals x dimension size. y parallelism is " ++ show yPxPerClock ++ " and x parallelism is " ++ show xPxPerClock ++ " and x dim size is " ++ show xImageSize]
     yStrideFitsImage = yImageSize `mod` yStride == 0
     yStrideFitsImageReason = if yStrideFitsImage then [] else ["y stride must fit in y image size. "]
     xStrideFitsImage = xImageSize `mod` xStride == 0
