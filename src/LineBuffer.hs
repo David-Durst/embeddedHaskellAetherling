@@ -20,6 +20,10 @@ data LineBufferData = LineBufferData {
   lbToken :: TypeRep
 } deriving (Eq, Show)
 
+-- given a parallelism for number of pixels out per clock, and the
+-- image size, this determines the input parallelism 
+linebufferPxPerClock :: Int -> (Int, Int)
+
 linebufferDataValid :: Int -> LineBufferData -> [String]
 linebufferDataValid par lbData = yParOkReason ++ xParOkReason ++ onlyYParIfXFullyParReason ++
   yStrideFitsImageReason ++ xStrideFitsImageReason ++ strideOrPixelsDivideEachOtherReason ++
