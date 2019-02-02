@@ -126,7 +126,7 @@ class Monad m => Circuit m where
     -- need strideY*strideX here as, if running at least 1 pixel
     -- out per clock, need at least these many pixels in per clock
     -- can get rid of this once I have underutilize working
-    (Seq (imageYSize * imageXSize)
+    (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
      (Atom (V.Vector (strideY * strideX) (Atom a)))) ->
     m (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
         (Atom (V.Vector windowYSize
