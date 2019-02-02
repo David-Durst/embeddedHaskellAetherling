@@ -15,6 +15,8 @@ import LineBuffer
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
+-- I don't think getNodeClockDelay is necessary if we require
+-- that every stateful operator have a ready-valid interface
 -- left string is an error, right string is a valid result
 -- int is the parallelism
 getNodeClockDelay :: NodeType -> Int -> Int
@@ -61,27 +63,26 @@ getNodeClockDelay (FoldT nt totalLen) par = totalLen `div` par
 getNodeClockDelay ForkJoinT _ = 0
 getNodeClockDelay (LineBufferT lbData) par =
   let
-    (yPerClk, xPerClk) = lbPxPerClk lbData
     (originY, originX) = lbOrigin lbData
     (windowY, windowX) = lbWindow lbData
     (strideY, strideX) = lbStride lbData
     (imgY, imgX) = lbImage lbData
-    parallelism = getLineBufferParallelism lbData
+    (yPerClk, xPerClk) = linebufferPxPerClock par imgX
 
     -- First output window's lower-right coordinate.
-    (firstLower, firstRight) = (originY + windowY - 1, originX + windowX - 1)
+    -- note that origins are positive rather than negative in this layer
+    -- for conversion to proxies
+    (firstLower, firstRight) = ((-1 * originY) + windowY - 1, (-1 * originX) + windowX - 1)
 
     -- Lower-right coordinate of the first batch of output windows'
     -- last (rightmost) window. (Crystal clear if you think about it).
-    (lower, right) = (firstLower, firstRight + (parallelism-1)*strideX)
-    -- I believe that the current constraints guarantee that the
-    -- parallel output windows are all on the same row (so see that I
-    -- could just add some multiple of strideX). Check that assumption
-    -- at (1).
+    (lower, right) = (firstLower + (yPerClk-1)*strideY,
+                      firstRight + (xPerClk-1)*strideX)
 
     -- index of lower-right pixel in overall ordering of pixels
-    -- (left-to-right then top-to-bottom). Assume yPerClk = 1.
+    -- (left-to-right then top-to-bottom). I think this is
+    -- able to support x and y parallelism
     pixelIndex = imgX * lower + right
 
-    latency = (pixelIndex `div` xPerClk)
+    latency = (pixelIndex `div` (yPerClk * xPerClk))
     in latency
