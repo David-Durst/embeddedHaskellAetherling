@@ -48,15 +48,15 @@ data CompilationData = CompilationData {
   lastReadyPorts :: [PortName],
   -- list of ready ports at start of DAG that should be wired
   -- to the module's outer dataInValid port
-  firstValidPorts :: [PortName],
+  firstCEPorts :: [PortName],
   -- list of ready ports at end of DAG that should be wired
   -- to the module's outer dataOutValid port
-  lastValidPorts :: [PortName],
+  lastCePorts :: [PortName],
   -- this tracks how parallel to make everything in the subpart
   throughputNumerator :: Int,
-  throughputDenominator :: Int,
+  throughputDenominator :: Int
   -- this tracks how many clock cycle delays prior stages have added
-  priorDelay :: Int
+  -- priorDelay :: Int
   }
   deriving Show
 

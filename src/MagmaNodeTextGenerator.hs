@@ -282,7 +282,7 @@ getPorts (FoldT nt totalLen) fnName par | par > 1 = Right (
 
 getPorts (FoldT nt totalLen) fnName 1 = Right (
   Ports [fnName ++ ".I"] [innerPortInputType] [fnName ++ ".out"]
-  [innerPortOutputType] [] [fnName ++ ".valid"])
+  [innerPortOutputType] [] [])
   where
     innerPorts = fromRight undefined $ getPorts nt "" 0
     innerPortInputType = head $ inTypes $ innerPorts
