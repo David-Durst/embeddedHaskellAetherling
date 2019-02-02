@@ -1,4 +1,4 @@
-module DelayCompute where
+module ReadyValid where
 import DataTypes
 import Data.Proxy
 import Data.Maybe
@@ -14,6 +14,57 @@ import Data.Either
 import LineBuffer
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
+
+data ReadyValidPorts = ReadyValidPorts {readyPort :: String, validPorts :: String}
+
+getReadyValidPorts :: NodeType -> Int -> Maybe ReadyValidPorts
+getReadyValidPorts AbsT _ = Nothing
+getReadyValidPorts NotT _ = Nothing
+getReadyValidPorts NoopT _ = Nothing
+getReadyValidPorts AddT _ = Nothing
+getReadyValidPorts SubT _ = Nothing
+getReadyValidPorts DivT _ = Nothing
+getReadyValidPorts MulT _ = Nothing
+getReadyValidPorts MinT _ = Nothing
+getReadyValidPorts MaxT _ = Nothing
+getReadyValidPorts AshrT _ = Nothing
+getReadyValidPorts ShlT _ = Nothing
+getReadyValidPorts EqIntT _ = Nothing
+getReadyValidPorts NeqIntT _ = Nothing
+getReadyValidPorts LtIntT _ = Nothing
+getReadyValidPorts LeqIntT _ = Nothing
+getReadyValidPorts GtIntT _ = Nothing
+getReadyValidPorts GeqIntT _ = Nothing
+getReadyValidPorts AndT _ = Nothing
+getReadyValidPorts OrT _ = Nothing
+getReadyValidPorts XorT _ = Nothing
+getReadyValidPorts EqBitT _ = Nothing
+getReadyValidPorts NeqBitT _ = Nothing
+getReadyValidPorts LtBitT _ = Nothing
+getReadyValidPorts LeqBitT _ = Nothing
+getReadyValidPorts GtBitT _ = Nothing
+getReadyValidPorts GeqBitT _ = Nothing
+getReadyValidPorts (LutGenIntT as) _ = Nothing
+getReadyValidPorts (LutGenBitT as) _ = Nothing
+getReadyValidPorts (ConstGenIntT x) _ = Nothing
+getReadyValidPorts (ConstGenBitT x) _ = Nothing
+-- up and down never should have delay
+-- always emits on first clock
+getReadyValidPorts (UpT _ _) _ = Nothing
+getReadyValidPorts (DownT _ _) _ = Nothing
+-- later when have register retiming in fold,
+-- reenable the lines below for computing ready valid ports for fold
+getReadyValidPorts (FoldT nt totalLen) _ = Nothing
+--getReadyValidPorts (FoldT nt totalLen) par | par == totalLen = Nothing
+-- need to update this if adding registers inside the fold
+--getReadyValidPorts (FoldT nt totalLen) par =
+--  Just $ ReadyValidPorts "CE" "valid"
+-- forkjoin does nothing by itself, need to handle merging ports
+getReadyValidPorts ForkJoinT _ = Nothing
+getReadyValidPorts (LineBufferT lbData) par =
+  Just $ ReadyValidPorts "CE" "valid"
+
+
 
 -- I don't think getNodeClockDelay is necessary if we require
 -- that every stateful operator have a ready-valid interface
