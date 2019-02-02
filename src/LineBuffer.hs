@@ -21,8 +21,14 @@ data LineBufferData = LineBufferData {
 } deriving (Eq, Show)
 
 -- given a parallelism for number of pixels out per clock, and the
--- image size, this determines the input parallelism 
-linebufferPxPerClock :: Int -> (Int, Int)
+-- image size in the x dimension, this determines the input parallelism
+linebufferPxPerClock :: Int -> Int -> (Int, Int)
+linebufferPxPerClock par xImageSize = 
+  let
+    yPxPerClock = max (par `div` xImageSize) 1
+    xPxPerClock = min par xImageSize
+  in (yPxPerClock, xPxPerClock)
+
 
 linebufferDataValid :: Int -> LineBufferData -> [String]
 linebufferDataValid par lbData = yParOkReason ++ xParOkReason ++ onlyYParIfXFullyParReason ++
@@ -39,8 +45,7 @@ linebufferDataValid par lbData = yParOkReason ++ xParOkReason ++ onlyYParIfXFull
     xStride = snd $ lbStride lbData
     yOrigin = fst $ lbOrigin lbData
     xOrigin = snd $ lbOrigin lbData
-    yPxPerClock = max (par `div` (snd $ lbImage lbData)) 1
-    xPxPerClock = min par xImageSize
+    (yPxPerClock, xPxPerClock) = linebufferPxPerClock par xImageSize
     yParOk = yImageSize `mod` yPxPerClock == 0
     yParOkReason = if yParOk then [] else ["y parallelism doesn't divide the y image dimension. "]
     xParOk = xImageSize `mod` xPxPerClock == 0

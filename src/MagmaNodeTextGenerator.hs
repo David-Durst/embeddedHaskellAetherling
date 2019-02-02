@@ -152,7 +152,7 @@ createMagmaDefOfNode (LineBufferT (LineBufferData windowSize imageSize
           (oneTypeToMagmaString True tokenType) ++ ", " ++
           -- this is the parallelism computation for row and col dimensions of image
           (show xParallelism) ++ ", " ++
-          (show $ max ((par * baseParallelism) `div` (snd imageSize)) 1) ++ ", " ++
+          (show yParallelism) ++ ", " ++
           (show $ snd windowSize) ++ ", " ++ (show $ fst windowSize) ++ ", " ++
           (show $ snd imageSize) ++ ", " ++ (show $ fst imageSize) ++ ", " ++
           (show $ snd stride) ++ ", " ++ (show $ fst stride) ++ ", " ++
@@ -163,7 +163,8 @@ createMagmaDefOfNode (LineBufferT (LineBufferData windowSize imageSize
     -- for now, need to emit at least a complete stride every clock so emit once
     -- every clock as no underutil yet
     baseParallelism = (fst stride) * (snd stride)
-    xParallelism = min (par * baseParallelism) (snd imageSize)
+    (yParallelism, xParallelism) =
+      linebufferPxPerClock (par * baseParallelism) (snd imageSize)
 
 type PortName = String
 data Ports = Ports {
@@ -305,8 +306,8 @@ getPorts (LineBufferT (LineBufferData windowSize imageSize stride origin
     -- for now, need to emit at least a complete stride every clock so emit once
     -- every clock as no underutil yet
     baseParallelism = (fst stride) * (snd stride)
-    rows_of_pixels_per_clock = max ((par * baseParallelism) `div` (snd imageSize)) 1
-    pixels_per_row_per_clock = min (par * baseParallelism) (snd imageSize)
+    (rows_of_pixels_per_clock, pixels_per_row_per_clock) =
+      linebufferPxPerClock (par * baseParallelism) (snd imageSize)
     inputPorts = [ fnName ++ ".I[" ++ show cur_row ++ "][" ++ show cur_col ++ "]"
                  | cur_row <- [0..(rows_of_pixels_per_clock - 1)],
                    cur_col <- [0..(pixels_per_row_per_clock - 1)]]

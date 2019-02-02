@@ -333,7 +333,7 @@ instance Circuit (StatefulErrorMonad) where
     -- need strideY*strideX here as, if running at least 1 pixel
     -- out per clock, need at least these many pixels in per clock
     -- can get rid of this once I have underutilize working
-    (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
+    (Seq (imageYSize * imageXSize)
       (Atom (V.Vector (strideY * strideX) (Atom a)))) ->
     StatefulErrorMonad (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
                          (Atom (V.Vector windowYSize
