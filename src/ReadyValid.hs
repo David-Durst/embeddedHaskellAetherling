@@ -26,7 +26,7 @@ connectReadyValidPorts firstStageValidPorts secondStageCEPorts =
       null secondStageCEPorts
     -- safe to use head and tail as atLeastOneStageEmpty prevents
     -- evaluation if empty
-    allFirstStageValids = foldl (\x -> \y -> x ++ " && " ++ y)
+    allFirstStageValids = foldl (\x -> \y -> x ++ " & " ++ y)
       (head firstStageValidPorts) (tail firstStageValidPorts)
     wireCEToValids cePort = "wire(" ++ allFirstStageValids ++ ", " ++ cePort ++ ")\n"
   in 

@@ -177,7 +177,7 @@ wireRVInterface moduleName innerStartingCEPorts innerEndingValidPorts = foldl (+
   connectReadyValidPorts lastValidPorts [moduleName ++ "." ++ valid_data_out_str]
   where
     valid_data_in_port = moduleName ++ "." ++ valid_data_in_str
-    ce_port = moduleName ++ ".CE"
+    ce_port = "bit(" ++ moduleName ++ ".CE)"
     -- if there are no valid ports in the module, wire the input valid port
     -- to the output valid port
     lastValidPorts = if null innerEndingValidPorts then [valid_data_in_port]
