@@ -24,7 +24,10 @@ connectReadyValidPorts firstStageValidPorts secondStageCEPorts =
   let
     atLeastOneStageEmpty = null firstStageValidPorts ||
       null secondStageCEPorts
-    allFirstStageValids = foldl (\x -> \y -> x ++ "&&" ++ y) "" firstStageValidPorts
+    -- safe to use head and tail as atLeastOneStageEmpty prevents
+    -- evaluation if empty
+    allFirstStageValids = foldl (\x -> \y -> x ++ " && " ++ y)
+      (head firstStageValidPorts) (tail firstStageValidPorts)
     wireCEToValids cePort = "wire(" ++ allFirstStageValids ++ ", " ++ cePort ++ ")\n"
   in 
     if atLeastOneStageEmpty then [] else fmap wireCEToValids secondStageCEPorts

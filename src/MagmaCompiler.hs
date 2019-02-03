@@ -171,10 +171,17 @@ wireRVInterface moduleName innerStartingCEPorts innerEndingValidPorts = foldl (+
   ["wire(" ++ moduleName ++ "." ++ ready_data_in_str ++ ", " ++ moduleName ++
     "." ++ ready_data_out_str ++ ")\n"] ++
   -- enable the top of the module when input is valid
-  connectReadyValidPorts [moduleName ++ "." ++ valid_data_in_str] innerStartingCEPorts ++
+  connectReadyValidPorts [valid_data_in_port, ce_port] innerStartingCEPorts ++
   -- instead of a CE port at end, send all the last valid ports out of the data out
   -- valid port of the whole module
-  connectReadyValidPorts innerEndingValidPorts [moduleName ++ "." ++ valid_data_out_str]
+  connectReadyValidPorts lastValidPorts [moduleName ++ "." ++ valid_data_out_str]
+  where
+    valid_data_in_port = moduleName ++ "." ++ valid_data_in_str
+    ce_port = moduleName ++ ".CE"
+    -- if there are no valid ports in the module, wire the input valid port
+    -- to the output valid port
+    lastValidPorts = if null innerEndingValidPorts then [valid_data_in_port]
+      else innerEndingValidPorts
 
 wireDataInterface :: String -> [PortName] -> [PortName] -> String
 wireDataInterface moduleName inputPorts outputPorts = foldl (++) "" $ 
@@ -190,11 +197,11 @@ wireDataInterface moduleName inputPorts outputPorts = foldl (++) "" $
 -- given a compilation data for a new stage, append it to the state
 -- for a set of existing stages
 appendToCompilationData :: NodeType -> CompilationData -> StatefulErrorMonad a
-appendToCompilationData nodeType (CompilationData ni rot ip it op ot
-                                  fcp lcp fvp lvp tNum tDenom) = do  
+appendToCompilationData nodeType newData@(CompilationData ni rot ip it op ot
+                                          fcp lcp fvp lvp tNum tDenom) = do  
     priorData <- get 
     --traceM ("Old data" ++ show priorData)
-    --traceM ("New data" ++ show dd)
+    --traceM ("New data" ++ show newData)
     let portWirings = if (null $ (reversedOutputText priorData))
                        then Right [] else wirePorts (outputPorts priorData) ip
     if isLeft portWirings
@@ -223,10 +230,10 @@ appendToCompilationData nodeType (CompilationData ni rot ip it op ot
       -- propagate last ones from priorData only if current stage has no ports
       let newLastCEPorts =
             if (null lcp)
-            then lcp else lastCEPorts priorData
+            then lastCEPorts priorData else lcp
       let newLastValidPorts =
             if (null lvp)
-            then lvp else lastValidPorts priorData
+            then lastValidPorts priorData else lvp
 
       -- just propagate throughput numerator and denominator 
       -- as those are only modififed by scheduling combiators that are
