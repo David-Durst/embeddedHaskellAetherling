@@ -70,9 +70,9 @@ emptyCompData :: CompilationData
 emptyCompData = CompilationData 0 [] [] [] [] [] [] [] [] [] 1 1
 
 valid_data_in_str = "valid_data_in"
-valid_data_out_str = "valid_data_in"
+valid_data_out_str = "valid_data_out"
 ready_data_in_str = "ready_data_in"
-ready_data_out_str = "ready_data_in"
+ready_data_out_str = "ready_data_out"
 
 circuitInterfaceString inTypesString outTypesString =
   startOfInterface ++ inTypesString ++ outTypesString ++ validStr ++ endOfInterface

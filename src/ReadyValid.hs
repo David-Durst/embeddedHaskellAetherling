@@ -18,13 +18,16 @@ import qualified Data.Vector.Sized as V
 
 -- wire up all the valid ports from an earlier stage to the CE ports for a
 -- later stage
+-- do nothing if at least one of the list of ports is empty
 connectReadyValidPorts :: [PortName] -> [PortName] -> [String]
 connectReadyValidPorts firstStageValidPorts secondStageCEPorts =
   let
+    atLeastOneStageEmpty = null firstStageValidPorts ||
+      null secondStageCEPorts
     allFirstStageValids = foldl (\x -> \y -> x ++ "&&" ++ y) "" firstStageValidPorts
     wireCEToValids cePort = "wire(" ++ allFirstStageValids ++ ", " ++ cePort ++ ")\n"
   in 
-    fmap wireCEToValids secondStageCEPorts
+    if atLeastOneStageEmpty then [] else fmap wireCEToValids secondStageCEPorts
 
 
 -- this is necessary, for when have two different, non-zero
