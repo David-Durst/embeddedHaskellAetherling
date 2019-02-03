@@ -115,6 +115,7 @@ instance Circuit (State ResourceEstimate) where
     Proxy n -> (Seq n a) -> State ResourceEstimate (Seq 1 a)
   downC _ (Seq vec) = incrementResourcesBy 0 (size (Proxy :: Proxy a)) undefined
 
+{-
   foldC sublistLength f _ _ = do
     -- this runs the inner function to compute its state
     f undefined
@@ -124,6 +125,7 @@ instance Circuit (State ResourceEstimate) where
     put $ ResourceEstimate (innerWires * (fromInteger $ natVal sublistLength))
       (innerALU * (fromInteger $ natVal sublistLength))
     return undefined
+-}
 
   -- higher-order operators
   iterC _ f (Seq inputVec) = do

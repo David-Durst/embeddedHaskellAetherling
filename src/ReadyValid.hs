@@ -31,7 +31,7 @@ connectReadyValidPorts firstStageValidPorts secondStageCEPorts =
     wireCEToValids cePort = "wire(" ++ allFirstStageValids ++ ", " ++ cePort ++ ")\n"
   in 
     if atLeastOneStageEmpty then [] else fmap wireCEToValids secondStageCEPorts
-
+{-
 
 -- this is necessary, for when have two different, non-zero
 -- delays in a forkjoin, need to balance out their delays
@@ -78,7 +78,7 @@ getNodeClockDelay (FoldT nt totalLen) par | par == totalLen = 0
 getNodeClockDelay (FoldT nt totalLen) par = totalLen `div` par
 -- forkjoin does nothing by itself, need to handle merging delays
 -- in the compiler code
-getNodeClockDelay ForkJoinT _ = 0
+getNodeClockDelay (ForkJoinT _ _) _ = 0
 getNodeClockDelay (LineBufferT lbData) par =
   let
     (originY, originX) = lbOrigin lbData
@@ -104,3 +104,4 @@ getNodeClockDelay (LineBufferT lbData) par =
 
     latency = (pixelIndex `div` (yPerClk * xPerClk))
     in latency
+-}

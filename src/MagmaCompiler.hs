@@ -30,6 +30,9 @@ data CompilationData = CompilationData {
   -- each nodes magma name is appended with its index
   -- to ensure no duplicate python variable names
   nodeIndex :: Int,
+  -- the list of nodes in this dag
+  -- this won't track for the nodes that don't have node types
+  nodeTypes :: [NodeType],
   -- list of strings in reverse of Magma code
   -- reversed as prepend is cheaper
   reversedOutputText :: [String],
@@ -67,7 +70,7 @@ divideThroughput n compData =
   compData { throughputDenominator = n * (throughputDenominator compData) }
 
 emptyCompData :: CompilationData
-emptyCompData = CompilationData 0 [] [] [] [] [] [] [] [] [] 1 1
+emptyCompData = CompilationData 0 [] [] [] [] [] [] [] [] [] [] 1 1
 
 valid_data_in_str = "valid_data_in"
 valid_data_out_str = "valid_data_out"
@@ -197,9 +200,15 @@ wireDataInterface moduleName inputPorts outputPorts = foldl (++) "" $
 -- given a compilation data for a new stage, append it to the state
 -- for a set of existing stages
 appendToCompilationData :: NodeType -> CompilationData -> StatefulErrorMonad a
-appendToCompilationData nodeType newData@(CompilationData ni rot ip it op ot
+appendToCompilationData nodeType newData@(CompilationData ni nts rot ip it op ot
                                           fcp lcp fvp lvp tNum tDenom) = do  
     priorData <- get 
+    -- just propagate throughput numerator and denominator 
+    -- as those are only modififed by scheduling combiators that are
+    -- parents, and this is for combining siblines
+    -- section as we are going along 
+    let newThroughputNumerator = throughputNumerator priorData
+    let newThroughputDenominator = throughputDenominator priorData
     --traceM ("Old data" ++ show priorData)
     --traceM ("New data" ++ show newData)
     let portWirings = if (null $ (reversedOutputText priorData))
@@ -210,8 +219,10 @@ appendToCompilationData nodeType newData@(CompilationData ni rot ip it op ot
       let readyValidWiringsStrings =
             connectReadyValidPorts (lastCEPorts priorData) fvp
       let dataWiringsStrings = fromRight [] portWirings
-      let newOutText = readyValidWiringsStrings ++ dataWiringsStrings ++ rot ++
-            reversedOutputText priorData
+      let newOutText = readyValidWiringsStrings ++ dataWiringsStrings ++
+            wireIDGen nts ni (newThroughputNumerator `div` newThroughputDenominator) ++
+            getIDGenString nts ni (newThroughputNumerator `div` newThroughputDenominator) ++
+            rot ++ reversedOutputText priorData
       let newInPorts = if (null $ (reversedOutputText priorData))
                        then ip else inputPorts priorData
       let newInTypes = if (null $ (reversedOutputText priorData))
@@ -235,20 +246,29 @@ appendToCompilationData nodeType newData@(CompilationData ni rot ip it op ot
             if (null lvp)
             then lastValidPorts priorData else lvp
 
-      -- just propagate throughput numerator and denominator 
-      -- as those are only modififed by scheduling combiators that are
-      -- parents, and this is for combining siblines
-      -- section as we are going along 
-      let newThroughputNumerator = throughputNumerator priorData
-      let newThroughputDenominator = throughputDenominator priorData
       let nodeIndexIncrement = if nodeParallelizesBySelf nodeType then 1 else (
             newThroughputNumerator `div` newThroughputDenominator)
-      put $ (CompilationData (ni+nodeIndexIncrement) newOutText newInPorts
-             newInTypes newOutPorts newOutTypes newFirstCEPorts newLastCEPorts
-             newFirstValidPorts newLastValidPorts
+      put $ (CompilationData (ni+nodeIndexIncrement) (nodeTypes priorData ++ nts)
+             newOutText newInPorts newInTypes newOutPorts newOutTypes
+             newFirstCEPorts newLastCEPorts newFirstValidPorts newLastValidPorts
              newThroughputNumerator newThroughputDenominator)
       return undefined
     return undefined
+  where
+    -- in the case of fold, need a helper here to create its identity generator
+    -- and wire that into the fold. A better version of this system
+    -- would allow identity generators to be injected smarter than
+    -- this, ideally in the monad
+    getIDGenString :: [NodeType] -> Int -> Int -> [String]
+    getIDGenString [FoldT _ idGenType _] curNodeIndex par | par > 1 =
+      [magmaNodeBaseName ++ show curNodeIndex ++ "_identityGen = " ++
+       (fromRight "" $ createMagmaDefOfNode idGenType 1) ++ "()\n"]
+    getIDGenString _ _ _ = []
+    wireIDGen :: [NodeType] -> Int -> Int -> [String]
+    wireIDGen [FoldT _ _ _] curNodeIndex par | par > 1 =
+      ["wire(" ++ magmaNodeBaseName ++ show curNodeIndex ++ "_identityGen.O, " ++
+       magmaNodeBaseName ++ show curNodeIndex ++ ".identity)\n"]
+    wireIDGen _ _ _ = []
 
 createCompilationDataAndAppend :: NodeType -> StatefulErrorMonad a
 createCompilationDataAndAppend nodeType = do
@@ -276,7 +296,7 @@ createCompilationDataAndAppend nodeType = do
         let portsValues = fromRight undefined ports
         -- traceM ("instanceValues" ++ show instancesValues)
         appendToCompilationData nodeType
-          (CompilationData curNodeIndex [instancesValues] (inPorts portsValues)
+          (CompilationData curNodeIndex [nodeType] [instancesValues] (inPorts portsValues)
             (inTypes portsValues) (outPorts portsValues) 
             (outTypes portsValues) 
             (ce portsValues) (ce portsValues)
@@ -357,33 +377,38 @@ instance Circuit (StatefulErrorMonad) where
                                                       (fromInteger $ natVal amountProxy))
                                                    1 1 ([],[]))
 -}
-  foldC :: forall n o p a . (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o),
-            (KnownNat (TypeSize a))) =>
-           Proxy o -> (Atom (Atom a, Atom a) -> StatefulErrorMonad (Atom a)) ->
+  foldC :: forall n a . (KnownNat n, (KnownNat (TypeSize a))) =>
+           Proxy n -> (Atom (Atom a, Atom a) -> StatefulErrorMonad (Atom a)) ->
            (Atom () -> Atom a) ->
-           Seq p (Atom a) -> StatefulErrorMonad (Seq n (Atom a))
+           Seq n (Atom a) -> StatefulErrorMonad (Atom a)
   foldC sublistLength f _ _ = do
     priorData <- get
-    let tNum = throughputNumerator priorData
-    let tDenom = throughputDenominator priorData
-    let firstNodeIndex = nodeIndex priorData
     -- this has to have no prior text. appendToCompilationData 
     -- checks if prior text exists to see if inputPorts are inputPorts
     -- for modules. fPipeline and gPipeline are supposed to be
     -- independent pipelines which then get merged into the larger pipelines
     -- thus, no prior text so that their inputPorts are inputPorts for their
     -- modules
-    let cData = emptyCompData { throughputNumerator = tNum,
-                                throughputDenominator = tDenom,
-                                nodeIndex = firstNodeIndex
-                                }
     let fPipeline = runIdentity $ runExceptT $ (runStateT
-          (f undefined) cData)
-    let innerPipeline = getInnerPipeline f emptyDAG
-    let proxyNumToFold = Proxy :: Proxy o
-    let numToFold = fromInteger $ natVal proxyNumToFold
-    appendToPipeline (NodeInfo (FoldT (nodeType $ head innerPipeline) numToFold) 1 1 (innerPipeline, []))
-
+          (f undefined) emptyCompData)
+    let identityPipeline = runIdentity $ runExceptT $ (runStateT
+          (f undefined) emptyCompData)
+    let totalLengthProxy = Proxy :: Proxy n
+    let totalLength = fromInteger $ natVal totalLengthProxy
+    if isLeft fPipeline
+      then do
+      liftEither fPipeline
+      return undefined
+      else do
+      if isLeft identityPipeline
+        then do
+        liftEither identityPipeline
+        return undefined
+        else do
+        createCompilationDataAndAppend (FoldT
+                                        (head $ nodeTypes $ snd $ fromRight undefined fPipeline)
+                                        (head $ nodeTypes $ snd $ fromRight undefined identityPipeline)
+                                        totalLength)
 
   lineBuffer :: forall windowYSize windowXSize imageYSize imageXSize
                  strideY strideX originY originX imageArea strideArea
@@ -492,6 +517,7 @@ instance Circuit (StatefulErrorMonad) where
                                -- will increment again. -1 to prevent double
                                -- counting.
                                (nodeIndex gCompilerData - 1)
+                               [ForkJoinT (nodeTypes fCompilerData) (nodeTypes gCompilerData)]
                                (reversedOutputText gCompilerData ++
                                  reversedOutputText fCompilerData)
                                (inputPorts fCompilerData ++ inputPorts gCompilerData)

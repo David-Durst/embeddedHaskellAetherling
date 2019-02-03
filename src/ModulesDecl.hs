@@ -102,11 +102,10 @@ class Monad m => Circuit m where
   -- maybe in future allow them to be different types (accum and seq elements)
   -- take seqences of length p, break them up into sequences of length o and
   -- fold over each subsequence of length o
-  foldC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o),
-            (KnownNat (TypeSize a))) =>
-           Proxy o -> (Atom (Atom a, Atom a) -> m (Atom a)) ->
+  foldC :: (KnownNat n, (KnownNat (TypeSize a))) =>
+           Proxy n -> (Atom (Atom a, Atom a) -> m (Atom a)) ->
            (Atom () -> Atom a) ->
-           Seq p (Atom a) -> m (Seq n (Atom a))
+           Seq n (Atom a) -> m (Atom a)
   partitionC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
     Proxy o -> Seq p a -> m (Seq n (Seq o a))
 
@@ -241,11 +240,12 @@ data NodeType =
   | ConstGenBitT (Atom Bool)
   | forall a . (Typeable (Proxy a)) => UpT (Proxy a) Int
   | forall a . (Typeable (Proxy a)) => DownT (Proxy a) Int
-  -- nodet is the operation inside the fold
+  -- first node is the operation inside the fold
   -- at this point only single operations are supports
+  -- second node is the identity generator
   -- int is total sequence length
-  | forall a . FoldT NodeType Int
-  | ForkJoinT
+  | FoldT NodeType NodeType Int
+  | ForkJoinT [NodeType] [NodeType]
   | LineBufferT LineBufferData
   --deriving (Show, Eq)
 
@@ -282,7 +282,7 @@ instance Show NodeType where
   show (ConstGenBitT a) = "ConstGenBitT " ++ show a
   show (UpT proxy n) = "UpT " ++ show proxy ++ " " ++ show n
   show (DownT proxy n) = "DownT " ++ show proxy ++ " " ++ show n
-  show (FoldT nt totalLen) = "FoldT " ++ show nt ++ " " ++
-    show totalLen
-  show ForkJoinT = "ForkJoinT"
+  show (FoldT nt idGen totalLen) = "FoldT " ++ show nt ++ " " ++
+    show idGen ++ " " ++ show totalLen
+  show (ForkJoinT node0 node1) = "ForkJoinT " ++ show node0 ++ " " ++ show node1
   show (LineBufferT lbData) = "LineBufferT " ++ show lbData

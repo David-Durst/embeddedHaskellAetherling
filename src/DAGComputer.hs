@@ -26,16 +26,16 @@ data NodeInfo = NodeInfo {
   deriving Show
 
 multiplyNodeThroughput :: Int -> NodeInfo -> NodeInfo
-multiplyNodeThroughput n (NodeInfo nt@(FoldT _ _) numerator denominator children) =
-  NodeInfo nt (numerator * n) denominator children
+--multiplyNodeThroughput n (NodeInfo nt@(FoldT _ _) numerator denominator children) =
+--  NodeInfo nt (numerator * n) denominator children
 multiplyNodeThroughput n (NodeInfo nt numerator denominator children) =
   NodeInfo nt (numerator * n) denominator
   (fmap (multiplyNodeThroughput n) $ fst children,
    fmap (multiplyNodeThroughput n) $ snd children)
 
 divideNodeThroughput :: Int -> NodeInfo -> NodeInfo
-divideNodeThroughput n (NodeInfo nt@(FoldT _ _) numerator denominator children) =
-  NodeInfo nt numerator (denominator * n) children
+--divideNodeThroughput n (NodeInfo nt@(FoldT _ _) numerator denominator children) =
+--  NodeInfo nt numerator (denominator * n) children
 divideNodeThroughput n (NodeInfo nt numerator denominator children) =
   NodeInfo nt numerator (denominator * n) 
   (fmap (divideNodeThroughput n) $ fst children,
@@ -133,7 +133,7 @@ instance Circuit (State PipelineDAG) where
   downC amountProxy _ = appendToPipeline (NodeInfo (DownT (Proxy :: Proxy a)
                                                       (fromInteger $ natVal amountProxy))
                                                    1 1 ([],[]))
-
+{-
   foldC :: forall n o p a . (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o),
             (KnownNat (TypeSize a))) =>
            Proxy o -> (Atom (Atom a, Atom a) -> State PipelineDAG (Atom a)) ->
@@ -143,6 +143,7 @@ instance Circuit (State PipelineDAG) where
     appendToPipeline (NodeInfo (FoldT (nodeType $ innerNode) 1) 1 1 ([innerNode], []))
       where 
         innerNode = head $ getInnerPipeline f emptyDAG
+-}
 
 
   -- higher-order operators
@@ -150,7 +151,7 @@ instance Circuit (State PipelineDAG) where
   -- ignore the iter since it does nothing, needs to be wrapped with a tseq or
   -- sseq converting function
   iterC _ f _ = appendInnerDAGToOuterDAG f 
-
+{-
   (f *** g) _ = do
     appendToPipeline (NodeInfo ForkJoinT 1 1
                       (getInnerPipeline g emptyDAG, getInnerPipeline f emptyDAG))
@@ -158,7 +159,7 @@ instance Circuit (State PipelineDAG) where
   (f >***< g) _ = do
     appendToPipeline (NodeInfo ForkJoinT 1 1
                       (getInnerPipeline g emptyDAG, getInnerPipeline f emptyDAG))
-
+-}
   (f >>> g) x = do
     PipelineDAG stages <- get 
     let fAndgPipelineStages = getInnerPipeline g $ PipelineDAG $ getInnerPipeline f emptyDAG

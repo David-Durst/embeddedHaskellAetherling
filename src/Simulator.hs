@@ -71,6 +71,7 @@ instance Circuit SimulatorEnv where
   upC _ (Seq vec) = return $ Seq $ V.replicate $ V.head vec
   downC _ (Seq vec) = return $ Seq $ V.singleton $ V.head vec
 
+{-
   foldC sublistLength f accum (Seq inputVec) =
     let
       zipAtoms atom1 atom2 = Tuple atom1 atom2
@@ -82,6 +83,7 @@ instance Circuit SimulatorEnv where
       seqOfResults = liftM (\vec -> Seq vec) vectorOfResults
     in
       seqOfResults 
+-}
 
   partitionC sublistLength (Seq inputVec) =
     let

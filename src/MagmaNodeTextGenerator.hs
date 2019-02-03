@@ -24,7 +24,7 @@ copyStringWithInt baseNum numCopies stringGenerator =
 nodeParallelizesBySelf :: NodeType -> Bool
 nodeParallelizesBySelf (UpT _ _) = True
 nodeParallelizesBySelf (DownT _ _) = True
-nodeParallelizesBySelf (FoldT _ _) = True
+nodeParallelizesBySelf (FoldT _ _ _) = True
 nodeParallelizesBySelf (LineBufferT _) = True
 nodeParallelizesBySelf _ = False
 
@@ -110,9 +110,9 @@ createMagmaDefOfNode (DownT proxy upAmount) 1 = Right (
 -- can't upsample by less than 1
 createMagmaDefOfNode (DownT _ _) _ = Left "Downsample must have a par of at least 1"
 -- if the inner node doesn't work, just fail
-createMagmaDefOfNode (FoldT nt totalLen) par |
+createMagmaDefOfNode (FoldT nt _ totalLen) par |
   isLeft (createMagmaDefOfNode nt 1) = createMagmaDefOfNode nt 1
-createMagmaDefOfNode (FoldT nt totalLen) par | par == totalLen = Right (
+createMagmaDefOfNode (FoldT nt _ totalLen) par | par == totalLen = Right (
                                                      "ReduceParallel(" ++
                                                      "cirb, " ++ show par ++ ", " ++ 
                                                      "renameCircuitForReduce(" ++
@@ -120,7 +120,7 @@ createMagmaDefOfNode (FoldT nt totalLen) par | par == totalLen = Right (
                                                   where
                                                     innerString = fromLeft "" (
                                                       createMagmaDefOfNode nt 1)
-createMagmaDefOfNode (FoldT nt totalLen) par | par > 1 = Right (
+createMagmaDefOfNode (FoldT nt _ totalLen) par | par > 1 = Right (
                                                      "DefineReducePartiallyParallel(" ++
                                                      "cirb, " ++ show totalLen ++ ", " ++ 
                                                      show par ++ ", " ++
@@ -128,7 +128,7 @@ createMagmaDefOfNode (FoldT nt totalLen) par | par > 1 = Right (
                                                   where
                                                     innerString = fromLeft "" (
                                                       createMagmaDefOfNode nt 1)
-createMagmaDefOfNode (FoldT nt totalLen) 1 = Right (
+createMagmaDefOfNode (FoldT nt _ totalLen) 1 = Right (
                                                      "ReduceSequential(" ++
                                                      "cirb, " ++ show totalLen ++ ", " ++ 
                                                      "renameCircuitForReduce(" ++
@@ -136,8 +136,8 @@ createMagmaDefOfNode (FoldT nt totalLen) 1 = Right (
                                                   where
                                                     innerString = fromLeft "" (
                                                       createMagmaDefOfNode nt 1)
-createMagmaDefOfNode (FoldT _ _) _ = Left "FoldT must have a par of at least 1"
-createMagmaDefOfNode ForkJoinT _ = Left "ForkJoin shouldn't be printed to magma"
+createMagmaDefOfNode (FoldT _ _ _) _ = Left "FoldT must have a par of at least 1"
+createMagmaDefOfNode (ForkJoinT _ _) _ = Left "ForkJoin shouldn't be printed to magma"
 createMagmaDefOfNode (LineBufferT lbData) par | not (null paramCheck) =
                                                 Left $ "LineBuffer has invalid" ++
                                                 " parameters, params are " ++
@@ -254,9 +254,9 @@ getPorts (ConstGenBitT x) fnName _ = Right $ Ports [] [] [fnName ++ ".O"] [bitTy
 getPorts (UpT _ _) _ _ = Left "Upsample not implemented yet for getPorts"
 getPorts (DownT _ _) _ _ = Left "Downsample not implemented yet for getPorts"
 -- if the inner node doesn't work, just fail
-getPorts (FoldT nt _) _ _ | isLeft (getPorts nt "" 1) = Left "Must be able to get ports of inner node in to get ports of FoldT"
-getPorts (FoldT nt totalLen) fnName par | par == totalLen = Right $
-                                          Ports ([fnName ++ ".I.identity"] ++ inputsWithIndex)
+getPorts (FoldT nt _ _) _ _ | isLeft (getPorts nt "" 1) = Left "Must be able to get ports of inner node in to get ports of FoldT"
+getPorts (FoldT nt _ totalLen) fnName par | par == totalLen = Right $
+                                          Ports inputsWithIndex
                                           [(innerPortInputType, par)] [fnName ++ ".out"]
                                           [innerPortOutputType] [] []
   where
@@ -268,8 +268,8 @@ getPorts (FoldT nt totalLen) fnName par | par == totalLen = Right $
     innerPortInputType = fst $ head $ inTypes $ innerPorts
     innerPortOutputType = head $ outTypes $ innerPorts
 
-getPorts (FoldT nt totalLen) fnName par | par > 1 = Right (
-                                            Ports ([fnName ++ ".identity"] ++ inputsWithIndex)
+getPorts (FoldT nt _ totalLen) fnName par | par > 1 = Right (
+                                            Ports inputsWithIndex
                                             [(innerPortInputType, par)] [fnName ++ ".O"]
                                             [innerPortOutputType] [] [fnName ++ ".valid"])
   where
@@ -280,15 +280,15 @@ getPorts (FoldT nt totalLen) fnName par | par > 1 = Right (
     innerPortInputType = fst $ head $ inTypes $ innerPorts
     innerPortOutputType = head $ outTypes $ innerPorts
 
-getPorts (FoldT nt totalLen) fnName 1 = Right (
+getPorts (FoldT nt _ totalLen) fnName 1 = Right (
   Ports [fnName ++ ".I"] [innerPortInputType] [fnName ++ ".out"]
   [innerPortOutputType] [] [])
   where
     innerPorts = fromRight undefined $ getPorts nt "" 0
     innerPortInputType = head $ inTypes $ innerPorts
     innerPortOutputType = head $ outTypes $ innerPorts
-getPorts (FoldT _ _) _ _ = Left "FoldT must have a par of at least 1"
-getPorts ForkJoinT _ _ = Left "ForkJoin shouldn't be printed to magma"
+getPorts (FoldT _ _ _) _ _ = Left "FoldT must have a par of at least 1"
+getPorts (ForkJoinT _ _) _ _ = Left "ForkJoin shouldn't be printed to magma"
 getPorts (LineBufferT lbData) _ par | not (null paramCheck) =
                                         Left $ "LineBuffer has invalid" ++
                                         " parameters, params are " ++
