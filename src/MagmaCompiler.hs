@@ -19,6 +19,7 @@ import Debug.Trace
 import MagmaNodeTextGenerator
 import LineBuffer
 import Data.List
+import ReadyValid
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
@@ -40,18 +41,14 @@ data CompilationData = CompilationData {
   -- this is NOT REVERSED
   outputPorts :: [PortName],
   outputPortsTypes :: [(TypeRep, Int)],
-  -- list of ready ports at start of DAG that should be wired
-  -- to the module's outer dataInReady port
-  firstReadyPorts :: [PortName],
-  -- list of ready ports at end of DAG that should be wired
-  -- to the module's outer dataOutReady port
-  lastReadyPorts :: [PortName],
-  -- list of ready ports at start of DAG that should be wired
-  -- to the module's outer dataInValid port
+  -- list of CE ports at start of DAG 
   firstCEPorts :: [PortName],
-  -- list of ready ports at end of DAG that should be wired
-  -- to the module's outer dataOutValid port
-  lastCePorts :: [PortName],
+  -- list of CE ports at end of DAG 
+  lastCEPorts :: [PortName],
+  -- list of valid ports at start of DAG
+  firstValidPorts :: [PortName],
+  -- list of valid ports at end of DAG
+  lastValidPorts :: [PortName],
   -- this tracks how parallel to make everything in the subpart
   throughputNumerator :: Int,
   throughputDenominator :: Int
@@ -70,15 +67,22 @@ divideThroughput n compData =
   compData { throughputDenominator = n * (throughputDenominator compData) }
 
 emptyCompData :: CompilationData
-emptyCompData = CompilationData 0 [] [] [] [] [] [] 1 1
+emptyCompData = CompilationData 0 [] [] [] [] [] [] [] [] [] 1 1
 
-circuitInterfaceString inTypesString outTypesString hasValid =
+valid_data_in_str = "valid_data_in"
+valid_data_out_str = "valid_data_in"
+ready_data_in_str = "ready_data_in"
+ready_data_out_str = "ready_data_in"
+
+circuitInterfaceString inTypesString outTypesString =
   startOfInterface ++ inTypesString ++ outTypesString ++ validStr ++ endOfInterface
   where
     startOfInterface = "args = ["
     endOfInterface = "] + ClockInterface(has_ce=True)\n"
-    validInStr = "'valid_data_in', In(Bit), 'ready_data_in', Out(Bit), "
-    validOutStr = "'valid_data_out', Out(Bit), 'ready_data_out', In(Bit), "
+    validInStr = "'" ++ valid_data_in_str ++ "', In(Bit), '" ++ ready_data_in_str ++
+      "', Out(Bit), "
+    validOutStr = "'" ++ valid_data_out_str ++ "', Out(Bit), '" ++ ready_data_out_str ++
+      "', In(Bit), "
     validStr = validInStr ++ validOutStr
 
 
@@ -122,13 +126,15 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   -- traceM inputTypeString
   let outputTypeString = getModulePortsString False "O" $ outputPortsTypes compData
   -- traceM outputTypeString
-  let interfaceString = (circuitInterfaceString inputTypeString
-                         outputTypeString (not $ null $ reversedValidPorts compData))
+  let interfaceString = circuitInterfaceString inputTypeString outputTypeString
   -- traceM interfaceString
   let circuitDefinition = "haskell_test_circuit = DefineCircuit('Test_Haskell_Circuit', *args)\n" 
   -- traceM circuitDefinition
   -- traceM $ show compData
-  let wireInterfaceString = wireInterface "haskell_test_circuit" (inputPorts compData) (outputPorts compData)
+  let wireDataInterfaceString = wireDataInterface "haskell_test_circuit"
+                                (inputPorts compData) (outputPorts compData)
+  let wireRVInterfaceString = wireRVInterface "haskell_test_circuit"
+                             (firstCEPorts compData) (lastValidPorts compData)
   let saveToCoreIRString = saveToCoreIR "haskell_test_circuit"
   {-
   traceM "howdy"
@@ -140,7 +146,8 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   -}
   let outputString = (preludeString ++ interfaceString ++ circuitDefinition ++
                       (foldl (++) "" $ reverse $ reversedOutputText compData) ++
-                      wireInterfaceString ++ epilogueString ++ saveToCoreIRString)
+                      wireDataInterfaceString ++ wireRVInterfaceString ++
+                      epilogueString ++ saveToCoreIRString)
   --traceM outputString
   writeFile outputLocation outputString
 
@@ -158,8 +165,19 @@ wirePorts priorOutPorts nextInPorts = Left ("Different lengths of ports " ++
                                             " and " ++
                                             show nextInPorts)
 
-wireInterface :: String -> [PortName] -> [PortName] -> String
-wireInterface moduleName inputPorts outputPorts = foldl (++) "" $ 
+wireRVInterface :: String -> [PortName] -> [PortName] -> String
+wireRVInterface moduleName innerStartingCEPorts innerEndingValidPorts = foldl (++) "" $ 
+  -- this module is ready to process when the downstream is ready 
+  ["wire(" ++ moduleName ++ "." ++ ready_data_in_str ++ ", " ++ moduleName ++
+    "." ++ ready_data_out_str ++ ")\n"] ++
+  -- enable the top of the module when input is valid
+  connectReadyValidPorts [moduleName ++ "." ++ valid_data_in_str] innerStartingCEPorts ++
+  -- instead of a CE port at end, send all the last valid ports out of the data out
+  -- valid port of the whole module
+  connectReadyValidPorts innerEndingValidPorts [moduleName ++ "." ++ valid_data_out_str]
+
+wireDataInterface :: String -> [PortName] -> [PortName] -> String
+wireDataInterface moduleName inputPorts outputPorts = foldl (++) "" $ 
   wireStrings "I" inputPortsWithIdxs ++ wireStrings "O" outputPortsWithIdxs
   where
     inputPortsWithIdxs = zip inputPorts [0..(length inputPorts - 1)]
@@ -172,7 +190,8 @@ wireInterface moduleName inputPorts outputPorts = foldl (++) "" $
 -- given a compilation data for a new stage, append it to the state
 -- for a set of existing stages
 appendToCompilationData :: NodeType -> CompilationData -> StatefulErrorMonad a
-appendToCompilationData nodeType (CompilationData ni rot ip it op ot rvp tNum tDenom) = do  
+appendToCompilationData nodeType (CompilationData ni rot ip it op ot
+                                  fcp lcp fvp lvp tNum tDenom) = do  
     priorData <- get 
     --traceM ("Old data" ++ show priorData)
     --traceM ("New data" ++ show dd)
@@ -181,15 +200,34 @@ appendToCompilationData nodeType (CompilationData ni rot ip it op ot rvp tNum tD
     if isLeft portWirings
       then liftEither portWirings
       else do
-      let portWiringsStrings = fromRight [] portWirings
-      let newOutText = portWiringsStrings ++ rot ++ reversedOutputText priorData
+      let readyValidWiringsStrings =
+            connectReadyValidPorts (lastCEPorts priorData) fvp
+      let dataWiringsStrings = fromRight [] portWirings
+      let newOutText = readyValidWiringsStrings ++ dataWiringsStrings ++ rot ++
+            reversedOutputText priorData
       let newInPorts = if (null $ (reversedOutputText priorData))
                        then ip else inputPorts priorData
       let newInTypes = if (null $ (reversedOutputText priorData))
                         then it else inputPortsTypes priorData
+      let newFirstCEPorts =
+            if (null $ (firstCEPorts priorData))
+            then fcp else firstCEPorts priorData
+      let newFirstValidPorts =
+            if (null $ (firstValidPorts priorData))
+            then fvp else firstValidPorts priorData
+      let newInTypes = if (null $ (reversedOutputText priorData))
+                        then it else inputPortsTypes priorData
       let newOutPorts = op
       let newOutTypes = ot
-      let newReversedValidPorts = rvp ++ reversedValidPorts priorData
+      -- unlike at for first CE and valid ports,
+      -- propagate last ones from priorData only if current stage has no ports
+      let newLastCEPorts =
+            if (null lcp)
+            then lcp else lastCEPorts priorData
+      let newLastValidPorts =
+            if (null lvp)
+            then lvp else lastValidPorts priorData
+
       -- just propagate throughput numerator and denominator 
       -- as those are only modififed by scheduling combiators that are
       -- parents, and this is for combining siblines
