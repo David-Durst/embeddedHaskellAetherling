@@ -377,6 +377,9 @@ instance Circuit (StatefulErrorMonad) where
                                                       (fromInteger $ natVal amountProxy))
                                                    1 1 ([],[]))
 -}
+  -- note that getIDGenString and wireIDGen in appendToCompilationData are
+  -- a hack that are a special case for fold to work. They make the idgen and wire it up
+  -- to the identity port of the fold.
   foldC :: forall n a . (KnownNat n, (KnownNat (TypeSize a))) =>
            Proxy n -> (Atom (Atom a, Atom a) -> StatefulErrorMonad (Atom a)) ->
            (Atom () -> Atom a) ->
