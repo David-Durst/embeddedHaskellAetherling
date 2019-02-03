@@ -113,12 +113,12 @@ createMagmaDefOfNode (DownT _ _) _ = Left "Downsample must have a par of at leas
 createMagmaDefOfNode (FoldT nt _ totalLen) par |
   isLeft (createMagmaDefOfNode nt 1) = createMagmaDefOfNode nt 1
 createMagmaDefOfNode (FoldT nt _ totalLen) par | par == totalLen = Right (
-                                                     "ReduceParallel(" ++
+                                                     "DefineReduceParallel(" ++
                                                      "cirb, " ++ show par ++ ", " ++ 
                                                      "renameCircuitForReduce(" ++
-                                                     innerString ++ ")).defn")
+                                                     innerString ++ "))")
                                                   where
-                                                    innerString = fromLeft "" (
+                                                    innerString = fromRight "" (
                                                       createMagmaDefOfNode nt 1)
 createMagmaDefOfNode (FoldT nt _ totalLen) par | par > 1 = Right (
                                                      "DefineReducePartiallyParallel(" ++
@@ -126,15 +126,15 @@ createMagmaDefOfNode (FoldT nt _ totalLen) par | par > 1 = Right (
                                                      show par ++ ", " ++
                                                      innerString ++ ")()")
                                                   where
-                                                    innerString = fromLeft "" (
+                                                    innerString = fromRight "" (
                                                       createMagmaDefOfNode nt 1)
 createMagmaDefOfNode (FoldT nt _ totalLen) 1 = Right (
-                                                     "ReduceSequential(" ++
+                                                     "DefineReduceSequential(" ++
                                                      "cirb, " ++ show totalLen ++ ", " ++ 
                                                      "renameCircuitForReduce(" ++
-                                                     innerString ++ ")).defn")
+                                                     innerString ++ "))")
                                                   where
-                                                    innerString = fromLeft "" (
+                                                    innerString = fromRight "" (
                                                       createMagmaDefOfNode nt 1)
 createMagmaDefOfNode (FoldT _ _ _) _ = Left "FoldT must have a par of at least 1"
 createMagmaDefOfNode (ForkJoinT _ _) _ = Left "ForkJoin shouldn't be printed to magma"
@@ -257,7 +257,7 @@ getPorts (DownT _ _) _ _ = Left "Downsample not implemented yet for getPorts"
 getPorts (FoldT nt _ _) _ _ | isLeft (getPorts nt "" 1) = Left "Must be able to get ports of inner node in to get ports of FoldT"
 getPorts (FoldT nt _ totalLen) fnName par | par == totalLen = Right $
                                           Ports inputsWithIndex
-                                          [(innerPortInputType, par)] [fnName ++ ".out"]
+                                          inputTypes [fnName ++ ".out"]
                                           [innerPortOutputType] [] []
   where
     copiedInputs = replicate par (\x -> fnName ++ ".I.data[" ++ show x ++ "]") 
@@ -266,11 +266,12 @@ getPorts (FoldT nt _ totalLen) fnName par | par == totalLen = Right $
     -- this is used to get the type of the inner port
     innerPorts = fromRight undefined $ getPorts nt "" 0
     innerPortInputType = fst $ head $ inTypes $ innerPorts
+    inputTypes = replicate (length inputsWithIndex) (innerPortInputType, 1)
     innerPortOutputType = head $ outTypes $ innerPorts
 
 getPorts (FoldT nt _ totalLen) fnName par | par > 1 = Right (
                                             Ports inputsWithIndex
-                                            [(innerPortInputType, par)] [fnName ++ ".O"]
+                                            inputTypes [fnName ++ ".O"]
                                             [innerPortOutputType] [] [fnName ++ ".valid"])
   where
     copiedInputs = replicate par (\x -> fnName ++ ".I[" ++ show x ++ "]") 
@@ -278,6 +279,7 @@ getPorts (FoldT nt _ totalLen) fnName par | par > 1 = Right (
     inputsWithIndex = zipWith (\f -> \x -> f x) copiedInputs [0..(par - 1)]
     innerPorts = fromRight undefined $ getPorts nt "" 0
     innerPortInputType = fst $ head $ inTypes $ innerPorts
+    inputTypes = replicate (length inputsWithIndex) (innerPortInputType, 1)
     innerPortOutputType = head $ outTypes $ innerPorts
 
 getPorts (FoldT nt _ totalLen) fnName 1 = Right (

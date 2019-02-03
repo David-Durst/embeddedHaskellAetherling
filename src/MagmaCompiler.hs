@@ -39,6 +39,11 @@ data CompilationData = CompilationData {
   -- the input ports to the circuit
   -- this is NOT REVERSED
   inputPorts :: [PortName],
+  -- the int was supposed to be if these ports
+  -- need to be wrapped in an array. But that is actually
+  -- not done since all ports are flattened. Future
+  -- code revision is to make this (and outputPortsTypes)
+  -- just [TypeRep]
   inputPortsTypes :: [(TypeRep, Int)],
   -- the output ports, used to wire up adjacent nodes
   -- this is NOT REVERSED
@@ -138,6 +143,8 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
                                 (inputPorts compData) (outputPorts compData)
   let wireRVInterfaceString = wireRVInterface "haskell_test_circuit"
                              (firstCEPorts compData) (lastValidPorts compData)
+  -- always wire the CE to a term so that if nothing else uses it, no problems
+  let wireCEToTerm = "ceTerm = TermAnyType(cirb, Enable)\nwire(ceTerm.I, haskell_test_circuit.CE)\n" 
   let saveToCoreIRString = saveToCoreIR "haskell_test_circuit"
   {-
   traceM "howdy"
@@ -150,6 +157,7 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   let outputString = (preludeString ++ interfaceString ++ circuitDefinition ++
                       (foldl (++) "" $ reverse $ reversedOutputText compData) ++
                       wireDataInterfaceString ++ wireRVInterfaceString ++
+                      wireCEToTerm ++
                       epilogueString ++ saveToCoreIRString)
   --traceM outputString
   writeFile outputLocation outputString
@@ -260,12 +268,16 @@ appendToCompilationData nodeType newData@(CompilationData ni nts rot ip it op ot
     -- would allow identity generators to be injected smarter than
     -- this, ideally in the monad
     getIDGenString :: [NodeType] -> Int -> Int -> [String]
-    getIDGenString [FoldT _ idGenType _] curNodeIndex par | par > 1 =
+    getIDGenString [FoldT _ idGenType totalLen] curNodeIndex par | par > 1 ||
+                                                                   par == totalLen =
       [magmaNodeBaseName ++ show curNodeIndex ++ "_identityGen = " ++
        (fromRight "" $ createMagmaDefOfNode idGenType 1) ++ "()\n"]
     getIDGenString _ _ _ = []
     wireIDGen :: [NodeType] -> Int -> Int -> [String]
-    wireIDGen [FoldT _ _ _] curNodeIndex par | par > 1 =
+    wireIDGen [FoldT _ _ totalLen] curNodeIndex par | par == totalLen =
+      ["wire(" ++ magmaNodeBaseName ++ show curNodeIndex ++ "_identityGen.O, " ++
+       magmaNodeBaseName ++ show curNodeIndex ++ ".I.identity)\n"]
+    wireIDGen [FoldT _ _ totalLen] curNodeIndex par | par > 1 =
       ["wire(" ++ magmaNodeBaseName ++ show curNodeIndex ++ "_identityGen.O, " ++
        magmaNodeBaseName ++ show curNodeIndex ++ ".identity)\n"]
     wireIDGen _ _ _ = []
@@ -384,7 +396,7 @@ instance Circuit (StatefulErrorMonad) where
            Proxy n -> (Atom (Atom a, Atom a) -> StatefulErrorMonad (Atom a)) ->
            (Atom () -> StatefulErrorMonad (Atom a)) ->
            Seq n (Atom a) -> StatefulErrorMonad (Seq 1 (Atom a))
-  foldC sublistLength f _ _ = do
+  foldC sublistLength f idGen _ = do
     priorData <- get
     -- this has to have no prior text. appendToCompilationData 
     -- checks if prior text exists to see if inputPorts are inputPorts
@@ -395,7 +407,7 @@ instance Circuit (StatefulErrorMonad) where
     let fPipeline = runIdentity $ runExceptT $ (runStateT
           (f undefined) emptyCompData)
     let identityPipeline = runIdentity $ runExceptT $ (runStateT
-          (f undefined) emptyCompData)
+          (idGen undefined) emptyCompData)
     let totalLengthProxy = Proxy :: Proxy n
     let totalLength = fromInteger $ natVal totalLengthProxy
     if isLeft fPipeline
@@ -769,7 +781,7 @@ partialParallelResult =
 
 preludeLocationStrForEx = "../../aetherling/aetherling/HaskellPrelude.py"
 epilogueLocationStrForEx = "../../aetherling/aetherling/HaskellEpilogue.py"
-writeAllExamples _ = do
+writeAllExamples = do
   writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/sequentialSimpleAdd.py" sequentialPipeline
   writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
@@ -782,7 +794,7 @@ writeAllExamples _ = do
     "pyExamples/parallelLineBufferWithAdd.py" parallelLB
   writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/partialParallelLineBufferWithAdd.py" partialParallelLB
-  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx 
     "pyExamples/sequentialConvolution.py" sequentialConvolution
   writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/parallelConvolution.py" parallelConvolution
