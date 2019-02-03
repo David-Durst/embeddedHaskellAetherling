@@ -78,7 +78,7 @@ instance Circuit SimulatorEnv where
       vectorOfResults = V.mapM (\subVec ->
                                   V.foldM (\atom1 -> (\atom2 -> f $
                                                        Tuple atom1 atom2))
-                                  accum subVec) vectorOfVectors
+                                  (accum Unit) subVec) vectorOfVectors
       seqOfResults = liftM (\vec -> Seq vec) vectorOfResults
     in
       seqOfResults 

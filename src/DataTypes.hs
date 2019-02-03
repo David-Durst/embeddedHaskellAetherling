@@ -21,7 +21,7 @@ data Atom =
 -}
 
 data Atom a where
-  Unit :: () -> Atom ()
+  Unit :: Atom ()
   Int :: Int -> Atom Int
   Bit :: Bool -> Atom Bool
   Tuple :: Atom a -> Atom b -> Atom (Atom a, Atom b)
@@ -32,13 +32,13 @@ atomInt :: Int -> Atom Int
 atomInt x = Int x
 atomInt2 = Int 3
 instance Eq (Atom a) where
-  (Unit _) == (Unit _) = True
+  (Unit) == (Unit) = True
   (Int x) == (Int y) = x == y
   (Bit x) == (Bit y) = x == y
   (Tuple x y) == (Tuple x' y') = (x == x') && (y == y')
 
 instance Show (Atom a) where
-  show (Unit x) = show x
+  show Unit = show ()
   show (Int x) = show x
   show (Bit x) = show x
   show (Tuple x y) = "(" L.++ show x L.++ ", " L.++ show y L.++ ")"

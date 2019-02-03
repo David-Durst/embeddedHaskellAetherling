@@ -356,18 +356,35 @@ instance Circuit (StatefulErrorMonad) where
   downC amountProxy _ = appendToPipeline (NodeInfo (DownT (Proxy :: Proxy a)
                                                       (fromInteger $ natVal amountProxy))
                                                    1 1 ([],[]))
-
+-}
   foldC :: forall n o p a . (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o),
             (KnownNat (TypeSize a))) =>
-           Proxy o -> (Atom (Atom a, Atom a) -> State PipelineDAG (Atom a)) -> Atom a ->
-           Seq p (Atom a) -> State PipelineDAG (Seq n (Atom a))
+           Proxy o -> (Atom (Atom a, Atom a) -> StatefulErrorMonad (Atom a)) ->
+           (Atom () -> Atom a) ->
+           Seq p (Atom a) -> StatefulErrorMonad (Seq n (Atom a))
   foldC sublistLength f _ _ = do
+    priorData <- get
+    let tNum = throughputNumerator priorData
+    let tDenom = throughputDenominator priorData
+    let firstNodeIndex = nodeIndex priorData
+    -- this has to have no prior text. appendToCompilationData 
+    -- checks if prior text exists to see if inputPorts are inputPorts
+    -- for modules. fPipeline and gPipeline are supposed to be
+    -- independent pipelines which then get merged into the larger pipelines
+    -- thus, no prior text so that their inputPorts are inputPorts for their
+    -- modules
+    let cData = emptyCompData { throughputNumerator = tNum,
+                                throughputDenominator = tDenom,
+                                nodeIndex = firstNodeIndex
+                                }
+    let fPipeline = runIdentity $ runExceptT $ (runStateT
+          (f undefined) cData)
     let innerPipeline = getInnerPipeline f emptyDAG
     let proxyNumToFold = Proxy :: Proxy o
     let numToFold = fromInteger $ natVal proxyNumToFold
     appendToPipeline (NodeInfo (FoldT (nodeType $ head innerPipeline) numToFold) 1 1 (innerPipeline, []))
 
--}
+
   lineBuffer :: forall windowYSize windowXSize imageYSize imageXSize
                  strideY strideX originY originX imageArea strideArea
                  outputParallelism windowCount outerSequenceLength a.

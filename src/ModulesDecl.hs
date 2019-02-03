@@ -104,7 +104,8 @@ class Monad m => Circuit m where
   -- fold over each subsequence of length o
   foldC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o),
             (KnownNat (TypeSize a))) =>
-           Proxy o -> (Atom (Atom a, Atom a) -> m (Atom a)) -> Atom a ->
+           Proxy o -> (Atom (Atom a, Atom a) -> m (Atom a)) ->
+           (Atom () -> Atom a) ->
            Seq p (Atom a) -> m (Seq n (Atom a))
   partitionC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
     Proxy o -> Seq p a -> m (Seq n (Seq o a))

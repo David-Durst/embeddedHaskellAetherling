@@ -136,7 +136,8 @@ instance Circuit (State PipelineDAG) where
 
   foldC :: forall n o p a . (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o),
             (KnownNat (TypeSize a))) =>
-           Proxy o -> (Atom (Atom a, Atom a) -> State PipelineDAG (Atom a)) -> Atom a ->
+           Proxy o -> (Atom (Atom a, Atom a) -> State PipelineDAG (Atom a)) ->
+           (Atom () -> Atom a) ->
            Seq p (Atom a) -> State PipelineDAG (Seq n (Atom a))
   foldC sublistLength f _ _ = do
     appendToPipeline (NodeInfo (FoldT (nodeType $ innerNode) 1) 1 1 ([innerNode], []))
