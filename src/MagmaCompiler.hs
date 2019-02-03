@@ -382,8 +382,8 @@ instance Circuit (StatefulErrorMonad) where
   -- to the identity port of the fold.
   foldC :: forall n a . (KnownNat n, (KnownNat (TypeSize a))) =>
            Proxy n -> (Atom (Atom a, Atom a) -> StatefulErrorMonad (Atom a)) ->
-           (Atom () -> Atom a) ->
-           Seq n (Atom a) -> StatefulErrorMonad (Atom a)
+           (Atom () -> StatefulErrorMonad (Atom a)) ->
+           Seq n (Atom a) -> StatefulErrorMonad (Seq 1 (Atom a))
   foldC sublistLength f _ _ = do
     priorData <- get
     -- this has to have no prior text. appendToCompilationData 
@@ -696,6 +696,8 @@ instance Circuit (StatefulErrorMonad) where
   -- this is just for manipulating the type system.
   mergeSSeqs _ = return undefined
 
+  reshapeC _ _ _ = return undefined
+
 -- examples of programs in space and time
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition
@@ -708,18 +710,29 @@ lb2x2Example = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Pr
 lbExampleConsts = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
 lbExampleAdders = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ addC
 unscheduledLBExample = (lb2x2Example >***< lbExampleConsts) >>> lbExampleAdders
+nestedNTuplesToFlatSSeq = iterC (Proxy @100) $
+  reshapeC (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
+  (Proxy :: Proxy (SSeq 4 (Atom Int)))
 unscheduledLBExampleNoUnits = (iterC (Proxy @100) addUnitType) >>>
-  (lb2x2Example >***< lbExampleConsts) >>> lbExampleAdders
+  (lb2x2Example >***< lbExampleConsts) >>> lbExampleAdders >>> nestedNTuplesToFlatSSeq
+foldExample = iterC (Proxy @ 100) $ seq_to_sseqC $
+  foldC (Proxy @4) addC (constGenIntC (Int 0))
+unscheduledConvolution = unscheduledLBExampleNoUnits >>> foldExample
+  
+  
 
 unscheduledPipelineCData = buildCompilationData unscheduledPipeline
 unscheduledNodeCData = buildCompilationData unscheduledNode 
 unscheduledLBCData = buildCompilationData unscheduledLBExample
+unscheduledConvolutionCData = buildCompilationData unscheduledConvolution
 
 sequentialPipeline = seq_to_tseqC unscheduledPipeline 
 sequentialPipelineCData = buildCompilationData $ seq_to_tseqC unscheduledPipeline 
 sequentialNodeCData = buildCompilationData $ seq_to_tseqC unscheduledNode
 sequentialLB = seq_to_tseqC unscheduledLBExample
 sequentialLBCData = buildCompilationData $ seq_to_tseqC unscheduledLBExample
+sequentialConvolution = seq_to_tseqC unscheduledConvolution
+sequentialConvolutionCData = buildCompilationData sequentialConvolution
 {-
 sequentialLBCData = buildCompilationData $ seq_to_tseqC (unscheduledLBExample .
                                                          (mergeSeqTuples
@@ -732,6 +745,8 @@ parallelPipelineCData = buildCompilationData $ seq_to_sseqC unscheduledPipeline
 parallelNodeCData = buildCompilationData $ seq_to_sseqC unscheduledNode
 parallelLB = seq_to_sseqC unscheduledLBExample
 parallelLBCData = buildCompilationData $ seq_to_sseqC unscheduledLBExample
+parallelConvolution = seq_to_sseqC unscheduledConvolution
+parallelConvolutionCData = buildCompilationData parallelConvolution
 
 partialParallelPipeline = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledPipeline 
 partialParallelPipelineCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
@@ -740,6 +755,8 @@ partialParallelNodeCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_ss
   unscheduledNode
 partialParallelLB = seq_to_tseqC $ split_seq_to_sseqC (Proxy @50) unscheduledLBExample
 partialParallelLBCData = buildCompilationData $ partialParallelLB
+partialParallelConvolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @50) unscheduledConvolution
+partialParallelConvolutionCData = buildCompilationData partialParallelConvolution
 {-
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput
 partialParallelInput :: TSeq 2 0 (SSeq 2 (Atom, Atom))
@@ -749,3 +766,25 @@ partialParallelResult =
   (seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledCirc) $
   partialParallelInput
 -}
+
+preludeLocationStrForEx = "../../aetherling/aetherling/HaskellPrelude.py"
+epilogueLocationStrForEx = "../../aetherling/aetherling/HaskellEpilogue.py"
+writeAllExamples _ = do
+  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/sequentialSimpleAdd.py" sequentialPipeline
+  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/parallelSimpleAdd.py" parallelPipeline
+  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/partialParallelSimpleAdd.py" partialParallelPipeline
+  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/sequentialLineBufferWithAdd.py" sequentialLB
+  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/parallelLineBufferWithAdd.py" parallelLB
+  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/partialParallelLineBufferWithAdd.py" partialParallelLB
+  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/sequentialConvolution.py" sequentialConvolution
+  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/parallelConvolution.py" parallelConvolution
+  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/partialParallelConvolution.py" partialParallelConvolution

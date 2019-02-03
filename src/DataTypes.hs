@@ -51,8 +51,9 @@ type family TypeSize (x :: *) :: Nat where
   TypeSize (Atom Int) = 8
   TypeSize (Atom Bool) = 1
   TypeSize (Atom (x, y)) = (TypeSize x) + (TypeSize y)
+  TypeSize (Atom (V.Vector n (Atom a))) =  n * (TypeSize (Atom a))
   TypeSize (SSeq n a) = n * (TypeSize a)
-  TypeSize (TSeq n _ a) = (TypeSize a)
+ -- TypeSize (TSeq n _ a) = (TypeSize a)
   TypeSize a = 0
 
 size :: forall a . (KnownNat (TypeSize a)) => Proxy a -> Int

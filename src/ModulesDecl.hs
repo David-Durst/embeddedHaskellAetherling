@@ -104,8 +104,8 @@ class Monad m => Circuit m where
   -- fold over each subsequence of length o
   foldC :: (KnownNat n, (KnownNat (TypeSize a))) =>
            Proxy n -> (Atom (Atom a, Atom a) -> m (Atom a)) ->
-           (Atom () -> Atom a) ->
-           Seq n (Atom a) -> m (Atom a)
+           (Atom () -> m (Atom a)) ->
+           Seq n (Atom a) -> m (Seq 1 (Atom a))
   partitionC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
     Proxy o -> Seq p a -> m (Seq n (Seq o a))
 
@@ -205,6 +205,8 @@ class Monad m => Circuit m where
     TSeq n ((n + v) * underutilMult) a -> m (TSeq o ((o + u) * underutilMult) b)
 
   mergeSSeqs :: (KnownNat n, KnownNat o) => (SSeq n (SSeq o a)) -> m (SSeq (n*o) a)
+
+  reshapeC :: (TypeSize a ~ TypeSize b) => Proxy a -> Proxy b -> a -> m b 
 
 -- these are the types of the nodes in a DAG
 data NodeType =
