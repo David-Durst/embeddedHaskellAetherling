@@ -237,7 +237,8 @@ appendToCompilationData nodeType (CompilationData ni rot ip it op ot
       let nodeIndexIncrement = if nodeParallelizesBySelf nodeType then 1 else (
             newThroughputNumerator `div` newThroughputDenominator)
       put $ (CompilationData (ni+nodeIndexIncrement) newOutText newInPorts
-             newInTypes newOutPorts newOutTypes newReversedValidPorts
+             newInTypes newOutPorts newOutTypes newFirstCEPorts newLastCEPorts
+             newFirstValidPorts newLastValidPorts
              newThroughputNumerator newThroughputDenominator)
       return undefined
     return undefined
@@ -270,7 +271,9 @@ createCompilationDataAndAppend nodeType = do
         appendToCompilationData nodeType
           (CompilationData curNodeIndex [instancesValues] (inPorts portsValues)
             (inTypes portsValues) (outPorts portsValues) 
-            (outTypes portsValues) (validPorts portsValues)
+            (outTypes portsValues) 
+            (ce portsValues) (ce portsValues)
+            (validPorts portsValues) (validPorts portsValues)
             (throughputNumerator priorData) (throughputDenominator priorData))
     return undefined
 
@@ -471,8 +474,10 @@ instance Circuit (StatefulErrorMonad) where
                                (inputPortsTypes fCompilerData ++ inputPortsTypes gCompilerData)
                                (outputPorts fCompilerData ++ outputPorts gCompilerData)
                                (outputPortsTypes fCompilerData ++ outputPortsTypes gCompilerData)
-                               (reversedValidPorts fCompilerData ++
-                                 reversedValidPorts gCompilerData)
+                               (firstCEPorts fCompilerData ++ firstCEPorts gCompilerData)
+                               (lastCEPorts fCompilerData ++ lastCEPorts gCompilerData)
+                               (firstValidPorts fCompilerData ++ firstValidPorts gCompilerData)
+                               (lastValidPorts fCompilerData ++ lastValidPorts gCompilerData)
                                tNum tDenom
                                )
       -- passing in AddT to ensure that nodeIndex increases by parallelism amount
