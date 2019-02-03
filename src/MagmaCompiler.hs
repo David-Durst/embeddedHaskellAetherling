@@ -119,11 +119,11 @@ saveToCoreIR circuitName = getCoreIRModuleString ++ runGeneratorsString ++
   where
     getCoreIRModuleString = "haskell_test_module = GetCoreIRModule(cirb, " ++ circuitName ++ ")\n"
     runGeneratorsString = "cirb.context.run_passes([\"rungenerators\", \"wireclocks-coreir\", \"verifyconnectivity --noclkrst\", \"flattentypes\", \"flatten\", \"verifyconnectivity --noclkrst\", \"deletedeadinstances\"], [\"aetherlinglib\", \"commonlib\", \"mantle\", \"coreir\", \"global\"])\n"
-    saveToFileString = "haskell_test_module.save_to_file(\"haskellTest.json\")"
+    saveToFileString = "haskell_test_module.save_to_file(\"" ++ circuitName ++ ".json\")"
 
 writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
-  String -> String -> String -> (a -> StatefulErrorMonad b) -> IO ()
-writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
+  String -> String -> String -> String -> (a -> StatefulErrorMonad b) -> IO ()
+writeProgramToFile circuitName preludeLocation epilogueLocation outputLocation program = do
   -- traceM "preCompileData"
   let compData = buildCompilationData program
   -- traceM $ show compData
@@ -136,16 +136,16 @@ writeProgramToFile preludeLocation epilogueLocation outputLocation program = do
   -- traceM outputTypeString
   let interfaceString = circuitInterfaceString inputTypeString outputTypeString
   -- traceM interfaceString
-  let circuitDefinition = "haskell_test_circuit = DefineCircuit('Test_Haskell_Circuit', *args)\n" 
+  let circuitDefinition = circuitName ++ " = DefineCircuit('" ++ circuitName ++ "_Circuit', *args)\n" 
   -- traceM circuitDefinition
   -- traceM $ show compData
-  let wireDataInterfaceString = wireDataInterface "haskell_test_circuit"
+  let wireDataInterfaceString = wireDataInterface circuitName
                                 (inputPorts compData) (outputPorts compData)
-  let wireRVInterfaceString = wireRVInterface "haskell_test_circuit"
+  let wireRVInterfaceString = wireRVInterface circuitName
                              (firstCEPorts compData) (lastValidPorts compData)
   -- always wire the CE to a term so that if nothing else uses it, no problems
-  let wireCEToTerm = "ceTerm = TermAnyType(cirb, Enable)\nwire(ceTerm.I, haskell_test_circuit.CE)\n" 
-  let saveToCoreIRString = saveToCoreIR "haskell_test_circuit"
+  let wireCEToTerm = "ceTerm = TermAnyType(cirb, Enable)\nwire(ceTerm.I, " ++ circuitName ++ ".CE)\n" 
+  let saveToCoreIRString = saveToCoreIR circuitName
   {-
   traceM "howdy"
   let upToBodyString = preludeString ++ inputTypeString ++
@@ -782,21 +782,21 @@ partialParallelResult =
 preludeLocationStrForEx = "../../aetherling/aetherling/HaskellPrelude.py"
 epilogueLocationStrForEx = "../../aetherling/aetherling/HaskellEpilogue.py"
 writeAllExamples = do
-  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+  writeProgramToFile "sequentialSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/sequentialSimpleAdd.py" sequentialPipeline
-  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+  writeProgramToFile "parallelSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/parallelSimpleAdd.py" parallelPipeline
-  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+  writeProgramToFile "partialParallelSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/partialParallelSimpleAdd.py" partialParallelPipeline
-  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+  writeProgramToFile "sequentialLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/sequentialLineBufferWithAdd.py" sequentialLB
-  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+  writeProgramToFile "parallelLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/parallelLineBufferWithAdd.py" parallelLB
-  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+  writeProgramToFile "partialParallelLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/partialParallelLineBufferWithAdd.py" partialParallelLB
-  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx 
+  writeProgramToFile "sequentialConvolution" preludeLocationStrForEx epilogueLocationStrForEx 
     "pyExamples/sequentialConvolution.py" sequentialConvolution
-  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+  writeProgramToFile "parallelConvolution" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/parallelConvolution.py" parallelConvolution
-  writeProgramToFile preludeLocationStrForEx epilogueLocationStrForEx
+  writeProgramToFile "partialParallelConvolution" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/partialParallelConvolution.py" partialParallelConvolution
