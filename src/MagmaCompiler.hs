@@ -719,7 +719,14 @@ unscheduledNode = iterC (Proxy @4) $ addC
 
 lb2x2Example = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @10) (Proxy @10)
                 (Proxy @1) (Proxy @1) (Proxy @0) (Proxy @0))
-lbExampleConsts = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
+
+lbExampleConsts = iterC (Proxy @100) $
+  (constGenIntC (Int 1) *** constGenIntC (Int 2)) ***
+  (constGenIntC (Int 2) *** constGenIntC (Int 1)) >>>
+  reshapeC (Proxy :: Proxy (Atom (Atom (Atom Int, Atom Int), Atom (Atom Int, Atom Int))))
+  (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
+
+--lbExampleConsts = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
 lbExampleAdders = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ addC
 unscheduledLBExample = (lb2x2Example >***< lbExampleConsts) >>> lbExampleAdders
 nestedNTuplesToFlatSSeq = iterC (Proxy @100) $
