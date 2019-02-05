@@ -11,6 +11,7 @@ import Control.Monad.Except
 import Control.Monad.Identity
 import Data.Typeable
 import Data.Either
+import Debug.Trace
 import LineBuffer
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
@@ -21,12 +22,15 @@ copyStringWithInt :: Int -> Int -> (Int -> String) -> String
 copyStringWithInt baseNum numCopies stringGenerator =
   foldl (++) "" $ fmap stringGenerator [baseNum..(baseNum + numCopies - 1)]
 
-nodeParallelizesBySelf :: NodeType -> Bool
-nodeParallelizesBySelf (UpT _ _) = True
-nodeParallelizesBySelf (DownT _ _) = True
-nodeParallelizesBySelf (FoldT _ _ _) = True
-nodeParallelizesBySelf (LineBufferT _) = True
-nodeParallelizesBySelf _ = False
+-- how many copies of a node are necessary to parallelize it
+-- some nodes internally parallelize, so don't need to copy
+-- to parallelize
+numCopiesToParallelize :: NodeType -> Int -> Int
+numCopiesToParallelize (UpT _ _) _ = 1
+numCopiesToParallelize (DownT _ _) _ = 1
+numCopiesToParallelize (FoldT _ _ totalLen) par = max 1 (par `div` totalLen)
+numCopiesToParallelize (LineBufferT _) _ = 1
+numCopiesToParallelize _ par = par
 
 -- left string is an error, right string is a valid result
 -- first int is the index, second is the parallelism
@@ -38,7 +42,7 @@ duplicateAndInstantiateNode nodeType baseNum par |
   \x -> magmaNodeBaseName ++ show x ++ " = " ++
         (fromRight "" $ createMagmaDefOfNode nodeType par) ++ "()\n"
   where
-    numCopies = if nodeParallelizesBySelf nodeType then 1 else par
+    numCopies = numCopiesToParallelize nodeType par
 duplicateAndInstantiateNode nodeType _ par = createMagmaDefOfNode nodeType par
 
 -- left string is an error, right string is a valid result
@@ -112,22 +116,19 @@ createMagmaDefOfNode (DownT _ _) _ = Left "Downsample must have a par of at leas
 -- if the inner node doesn't work, just fail
 createMagmaDefOfNode (FoldT nt _ totalLen) par |
   isLeft (createMagmaDefOfNode nt 1) = createMagmaDefOfNode nt 1
-createMagmaDefOfNode (FoldT nt _ totalLen) par | par == totalLen = Right (
-                                                     "DefineReduceParallel(" ++
-                                                     "cirb, " ++ show par ++ ", " ++ 
-                                                     "renameCircuitForReduce(" ++
-                                                     innerString ++ "))")
-                                                  where
-                                                    innerString = fromRight "" (
-                                                      createMagmaDefOfNode nt 1)
-createMagmaDefOfNode (FoldT nt _ totalLen) par | par > 1 = Right (
-                                                     "DefineReducePartiallyParallel(" ++
-                                                     "cirb, " ++ show totalLen ++ ", " ++ 
-                                                     show par ++ ", " ++
-                                                     innerString ++ ")()")
-                                                  where
-                                                    innerString = fromRight "" (
-                                                      createMagmaDefOfNode nt 1)
+createMagmaDefOfNode (FoldT nt _ totalLen) par |
+  (par >= totalLen) && (par `mod` totalLen == 0) = Right (
+    "DefineReduceParallel(cirb, " ++ show totalLen ++ ", " ++
+    "renameCircuitForReduce(" ++ innerString ++ "))")
+  where
+    innerString = fromRight "" (createMagmaDefOfNode nt 1)
+createMagmaDefOfNode (FoldT nt _ totalLen) par |
+  (par > 1) && (par < totalLen) && (totalLen `mod` par == 0) = Right (
+    "DefineReducePartiallyParallel(cirb, " ++ show totalLen ++ ", " ++
+      show par ++ ", " ++ innerString ++ ")()")
+  where
+    innerString = fromRight "" (
+      createMagmaDefOfNode nt 1)
 createMagmaDefOfNode (FoldT nt _ totalLen) 1 = Right (
                                                      "DefineReduceSequential(" ++
                                                      "cirb, " ++ show totalLen ++ ", " ++ 
@@ -136,7 +137,9 @@ createMagmaDefOfNode (FoldT nt _ totalLen) 1 = Right (
                                                   where
                                                     innerString = fromRight "" (
                                                       createMagmaDefOfNode nt 1)
-createMagmaDefOfNode (FoldT _ _ _) _ = Left "FoldT must have a par of at least 1"
+createMagmaDefOfNode (FoldT _ _ _) _ = Left ("FoldT must have a par of " ++
+  "at least 1 and either totalLen % par == 0 (if par < totalLen) or " ++
+  "par % totalLen == 0 (if par >= totalLen)")
 createMagmaDefOfNode (ForkJoinT _ _) _ = Left "ForkJoin shouldn't be printed to magma"
 createMagmaDefOfNode (LineBufferT lbData) par | not (null paramCheck) =
                                                 Left $ "LineBuffer has invalid" ++
@@ -203,7 +206,8 @@ getDuplicatedPorts nodeType baseNum par |
            allNodesOutPorts allNodesOutTypes
            allNodesCEPorts allNodesValidPorts)
   where
-    numCopies = if nodeParallelizesBySelf nodeType then 1 else par
+    --numCopies = trace (show (numCopiesToParallelize nodeType par) ++ " " ++ show par ++ " " ++ show nodeType) $ numCopiesToParallelize nodeType par
+    numCopies = numCopiesToParallelize nodeType par
     allNodesPorts = fmap (\idx -> fromRight undefined $ getPorts nodeType ("magmaInstance" ++ show idx)
                            par) [baseNum .. (baseNum + numCopies - 1)]
     allNodesInPorts = foldl (++) [] $ fmap inPorts allNodesPorts
@@ -255,24 +259,24 @@ getPorts (UpT _ _) _ _ = Left "Upsample not implemented yet for getPorts"
 getPorts (DownT _ _) _ _ = Left "Downsample not implemented yet for getPorts"
 -- if the inner node doesn't work, just fail
 getPorts (FoldT nt _ _) _ _ | isLeft (getPorts nt "" 1) = Left "Must be able to get ports of inner node in to get ports of FoldT"
-getPorts (FoldT nt _ totalLen) fnName par | par == totalLen = Right $
-                                          Ports inputsWithIndex
-                                          inputTypes [fnName ++ ".out"]
-                                          [innerPortOutputType] [] []
+getPorts (FoldT nt _ totalLen) fnName par |
+  (par >= totalLen) && (par `mod` totalLen == 0) = Right (
+    Ports inputsWithIndex inputTypes [fnName ++ ".out"]
+      [innerPortOutputType] [] [])
   where
-    copiedInputs = replicate par (\x -> fnName ++ ".I.data[" ++ show x ++ "]") 
+    copiedInputs = replicate totalLen (\x -> fnName ++ ".I.data[" ++ show x ++ "]") 
     inputsWithIndex :: [String]
-    inputsWithIndex = zipWith (\f -> \x -> f x) copiedInputs [0..(par - 1)]
+    inputsWithIndex = zipWith (\f -> \x -> f x) copiedInputs [0..(totalLen - 1)]
     -- this is used to get the type of the inner port
     innerPorts = fromRight undefined $ getPorts nt "" 0
     innerPortInputType = fst $ head $ inTypes $ innerPorts
     inputTypes = replicate (length inputsWithIndex) (innerPortInputType, 1)
     innerPortOutputType = head $ outTypes $ innerPorts
 
-getPorts (FoldT nt _ totalLen) fnName par | par > 1 = Right (
-                                            Ports inputsWithIndex
-                                            inputTypes [fnName ++ ".O"]
-                                            [innerPortOutputType] [] [fnName ++ ".valid"])
+getPorts (FoldT nt _ totalLen) fnName par |
+  (par > 1) && (par < totalLen) && (totalLen `mod` par == 0) = Right (
+    Ports inputsWithIndex inputTypes [fnName ++ ".O"]
+      [innerPortOutputType] [] [fnName ++ ".valid"])
   where
     copiedInputs = replicate par (\x -> fnName ++ ".I[" ++ show x ++ "]") 
     inputsWithIndex :: [String]
@@ -289,7 +293,9 @@ getPorts (FoldT nt _ totalLen) fnName 1 = Right (
     innerPorts = fromRight undefined $ getPorts nt "" 0
     innerPortInputType = head $ inTypes $ innerPorts
     innerPortOutputType = head $ outTypes $ innerPorts
-getPorts (FoldT _ _ _) _ _ = Left "FoldT must have a par of at least 1"
+getPorts (FoldT _ _ _) _ _ = Left ("FoldT must have a par of " ++
+  "at least 1 and either totalLen % par == 0 (if par < totalLen) or " ++
+  "par % totalLen == 0 (if par >= totalLen)")
 getPorts (ForkJoinT _ _) _ _ = Left "ForkJoin shouldn't be printed to magma"
 getPorts (LineBufferT lbData) _ par | not (null paramCheck) =
                                         Left $ "LineBuffer has invalid" ++

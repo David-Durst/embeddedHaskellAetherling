@@ -122,8 +122,9 @@ saveToCoreIR circuitName = getCoreIRModuleString ++ runGeneratorsString ++
     saveToFileString = "haskell_test_module.save_to_file(\"" ++ circuitName ++ ".json\")"
 
 writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
-  String -> String -> String -> String -> (a -> StatefulErrorMonad b) -> IO ()
-writeProgramToFile circuitName preludeLocation epilogueLocation outputLocation program = do
+  String -> String -> String -> String -> Bool -> (a -> StatefulErrorMonad b) -> IO ()
+writeProgramToFile circuitName preludeLocation epilogueLocation outputLocation
+  shouldSaveToCoreIR program = do
   -- traceM "preCompileData"
   let compData = buildCompilationData program
   -- traceM $ show compData
@@ -145,7 +146,7 @@ writeProgramToFile circuitName preludeLocation epilogueLocation outputLocation p
                              (firstCEPorts compData) (lastValidPorts compData)
   -- always wire the CE to a term so that if nothing else uses it, no problems
   let wireCEToTerm = "ceTerm = TermAnyType(cirb, Enable)\nwire(ceTerm.I, " ++ circuitName ++ ".CE)\n" 
-  let saveToCoreIRString = saveToCoreIR circuitName
+  let saveToCoreIRString = if shouldSaveToCoreIR then saveToCoreIR circuitName else ""
   {-
   traceM "howdy"
   let upToBodyString = preludeString ++ inputTypeString ++
@@ -254,8 +255,8 @@ appendToCompilationData nodeType newData@(CompilationData ni nts rot ip it op ot
             if (null lvp)
             then lastValidPorts priorData else lvp
 
-      let nodeIndexIncrement = if nodeParallelizesBySelf nodeType then 1 else (
-            newThroughputNumerator `div` newThroughputDenominator)
+      let newPar = newThroughputNumerator `div` newThroughputDenominator
+      let nodeIndexIncrement = numCopiesToParallelize nodeType newPar
       put $ (CompilationData (ni+nodeIndexIncrement) (nodeTypes priorData ++ nts)
              newOutText newInPorts newInTypes newOutPorts newOutTypes
              newFirstCEPorts newLastCEPorts newFirstValidPorts newLastValidPorts
@@ -274,10 +275,12 @@ appendToCompilationData nodeType newData@(CompilationData ni nts rot ip it op ot
        (fromRight "" $ createMagmaDefOfNode idGenType 1) ++ "()\n"]
     getIDGenString _ _ _ = []
     wireIDGen :: [NodeType] -> Int -> Int -> [String]
-    wireIDGen [FoldT _ _ totalLen] curNodeIndex par | par == totalLen =
-      ["wire(" ++ magmaNodeBaseName ++ show curNodeIndex ++ "_identityGen.O, " ++
-       magmaNodeBaseName ++ show curNodeIndex ++ ".I.identity)\n"]
-    wireIDGen [FoldT _ _ totalLen] curNodeIndex par | par > 1 =
+    wireIDGen [nt@(FoldT _ _ totalLen)] curNodeIndex par | par >= totalLen =
+      foldl (++) [] $ (fmap (\idx -> ["wire(" ++ magmaNodeBaseName ++
+                              show curNodeIndex ++ "_identityGen.O, " ++
+                              magmaNodeBaseName ++ show (curNodeIndex + idx) ++
+                              ".I.identity)\n"]) [0..(numCopiesToParallelize nt par - 1)])
+    wireIDGen [FoldT _ _ totalLen] curNodeIndex par | (par > 1) && par < totalLen =
       ["wire(" ++ magmaNodeBaseName ++ show curNodeIndex ++ "_identityGen.O, " ++
        magmaNodeBaseName ++ show curNodeIndex ++ ".identity)\n"]
     wireIDGen _ _ _ = []
@@ -717,24 +720,24 @@ instance Circuit (StatefulErrorMonad) where
 unscheduledPipeline = iterC (Proxy @4) $ (constGenIntC (Int 3) >***< constGenIntC (Int 2)) >>> addC
 unscheduledNode = iterC (Proxy @4) $ addC
 
-lb2x2Example = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @10) (Proxy @10)
+lb2x2Example = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @8) (Proxy @8)
                 (Proxy @1) (Proxy @1) (Proxy @0) (Proxy @0))
 
-lbExampleConsts = iterC (Proxy @100) $
-  (constGenIntC (Int 1) *** constGenIntC (Int 2)) ***
-  (constGenIntC (Int 2) *** constGenIntC (Int 1)) >>>
+lbExampleConsts = iterC (Proxy @64) $
+  (constGenIntC (Int 1) >***< constGenIntC (Int 2)) >***<
+  (constGenIntC (Int 2) >***< constGenIntC (Int 1)) >>>
   reshapeC (Proxy :: Proxy (Atom (Atom (Atom Int, Atom Int), Atom (Atom Int, Atom Int))))
   (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
 
 --lbExampleConsts = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
-lbExampleMuls = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
+lbExampleMuls = iterC (Proxy @64) $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
 unscheduledLBExample = (lb2x2Example >***< lbExampleConsts) >>> lbExampleMuls
-nestedNTuplesToFlatSSeq = iterC (Proxy @100) $
+nestedNTuplesToFlatSSeq = iterC (Proxy @64) $
   reshapeC (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
   (Proxy :: Proxy (SSeq 4 (Atom Int)))
-unscheduledLBExampleNoUnits = (iterC (Proxy @100) addUnitType) >>>
+unscheduledLBExampleNoUnits = (iterC (Proxy @64) addUnitType) >>>
   (lb2x2Example >***< lbExampleConsts) >>> lbExampleMuls >>> nestedNTuplesToFlatSSeq
-foldExample = iterC (Proxy @ 100) $ seq_to_sseqC $
+foldExample = iterC (Proxy @64) $ seq_to_sseqC $
   foldC (Proxy @4) addC (constGenIntC (Int 0))
 unscheduledConvolution = unscheduledLBExampleNoUnits >>> foldExample
   
@@ -772,10 +775,16 @@ partialParallelPipelineCData = buildCompilationData $ seq_to_tseqC $ split_seq_t
   unscheduledPipeline 
 partialParallelNodeCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
   unscheduledNode
-partialParallelLB = seq_to_tseqC $ split_seq_to_sseqC (Proxy @50) unscheduledLBExample
+partialParallelLB = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) unscheduledLBExample
 partialParallelLBCData = buildCompilationData $ partialParallelLB
-partialParallelConvolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @50) unscheduledConvolution
-partialParallelConvolutionCData = buildCompilationData partialParallelConvolution
+partialParallel2Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) unscheduledConvolution
+partialParallel2ConvolutionCData = buildCompilationData partialParallel2Convolution
+partialParallel4Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) unscheduledConvolution
+partialParallel4ConvolutionCData = buildCompilationData partialParallel4Convolution
+partialParallel8Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) unscheduledConvolution
+partialParallel8ConvolutionCData = buildCompilationData partialParallel8Convolution
+partialParallel16Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) unscheduledConvolution
+partialParallel16ConvolutionCData = buildCompilationData partialParallel16Convolution
 {-
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput
 partialParallelInput :: TSeq 2 0 (SSeq 2 (Atom, Atom))
@@ -790,20 +799,26 @@ preludeLocationStrForEx = "../../aetherling/aetherling/HaskellPrelude.py"
 epilogueLocationStrForEx = "../../aetherling/aetherling/HaskellEpilogue.py"
 writeAllExamples = do
   writeProgramToFile "sequentialSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/sequentialSimpleAdd.py" sequentialPipeline
+    "pyExamples/sequentialSimpleAdd.py" False sequentialPipeline
   writeProgramToFile "parallelSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/parallelSimpleAdd.py" parallelPipeline
+    "pyExamples/parallelSimpleAdd.py" False parallelPipeline
   writeProgramToFile "partialParallelSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallelSimpleAdd.py" partialParallelPipeline
+    "pyExamples/partialParallelSimpleAdd.py" False partialParallelPipeline
   writeProgramToFile "sequentialLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/sequentialLineBufferWithAdd.py" sequentialLB
+    "pyExamples/sequentialLineBufferWithAdd.py" False sequentialLB
   writeProgramToFile "parallelLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/parallelLineBufferWithAdd.py" parallelLB
+    "pyExamples/parallelLineBufferWithAdd.py" False parallelLB
   writeProgramToFile "partialParallelLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallelLineBufferWithAdd.py" partialParallelLB
+    "pyExamples/partialParallelLineBufferWithAdd.py" False partialParallelLB
   writeProgramToFile "sequentialConvolution" preludeLocationStrForEx epilogueLocationStrForEx 
-    "pyExamples/sequentialConvolution.py" sequentialConvolution
+    "pyExamples/sequentialConvolution.py" False sequentialConvolution
   writeProgramToFile "parallelConvolution" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/parallelConvolution.py" parallelConvolution
-  writeProgramToFile "partialParallelConvolution" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallelConvolution.py" partialParallelConvolution
+    "pyExamples/parallelConvolution.py" False parallelConvolution
+  writeProgramToFile "partialParallel2Convolution" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/partialParallel2Convolution.py" False partialParallel2Convolution
+  writeProgramToFile "partialParallel4Convolution" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/partialParallel4Convolution.py" False partialParallel4Convolution
+  writeProgramToFile "partialParallel8Convolution" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/partialParallel8Convolution.py" False partialParallel8Convolution
+  writeProgramToFile "partialParallel16Convolution" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/partialParallel16Convolution.py" False partialParallel16Convolution
