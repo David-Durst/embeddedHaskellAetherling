@@ -712,6 +712,7 @@ instance Circuit (StatefulErrorMonad) where
   mergeSSeqs _ = return undefined
 
   reshapeC _ _ _ = return undefined
+  reshapeImplicitC _ = return undefined
 
 -- examples of programs in space and time
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
@@ -741,12 +742,17 @@ foldExample = iterC (Proxy @64) $ seq_to_sseqC $
   foldC (Proxy @4) addC (constGenIntC (Int 0))
 unscheduledConvolution = unscheduledLBExampleNoUnits >>> foldExample
   
-  
+convOutputToInput = iterC (Proxy @64) $ reshapeC (Proxy :: Proxy (SSeq 1 (Atom Int)))
+  (Proxy :: Proxy (Atom (V.Vector 1 (Atom Int))))
+
+unscheduledConvChain = unscheduledConvolution >>> convOutputToInput >>>
+  unscheduledConvolution >>> convOutputToInput >>> unscheduledConvolution
 
 unscheduledPipelineCData = buildCompilationData unscheduledPipeline
 unscheduledNodeCData = buildCompilationData unscheduledNode 
 unscheduledLBCData = buildCompilationData unscheduledLBExample
 unscheduledConvolutionCData = buildCompilationData unscheduledConvolution
+unscheduledConvChainCData = buildCompilationData unscheduledConvChain
 
 sequentialPipeline = seq_to_tseqC unscheduledPipeline 
 sequentialPipelineCData = buildCompilationData $ seq_to_tseqC unscheduledPipeline 
@@ -755,6 +761,8 @@ sequentialLB = seq_to_tseqC unscheduledLBExample
 sequentialLBCData = buildCompilationData $ seq_to_tseqC unscheduledLBExample
 sequentialConvolution = seq_to_tseqC unscheduledConvolution
 sequentialConvolutionCData = buildCompilationData sequentialConvolution
+sequentialConvChain = seq_to_tseqC unscheduledConvChain
+sequentialConvChainCData = buildCompilationData unscheduledConvChain
 {-
 sequentialLBCData = buildCompilationData $ seq_to_tseqC (unscheduledLBExample .
                                                          (mergeSeqTuples
@@ -777,6 +785,8 @@ partialParallelNodeCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_ss
   unscheduledNode
 partialParallelLB = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) unscheduledLBExample
 partialParallelLBCData = buildCompilationData $ partialParallelLB
+-- note that the proxy for the split is the outer sequence length. Divide into 32
+-- segments to get inner parallelism of 2 in an 8x8 image
 partialParallel2Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) unscheduledConvolution
 partialParallel2ConvolutionCData = buildCompilationData partialParallel2Convolution
 partialParallel4Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) unscheduledConvolution
@@ -785,6 +795,14 @@ partialParallel8Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) unsch
 partialParallel8ConvolutionCData = buildCompilationData partialParallel8Convolution
 partialParallel16Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) unscheduledConvolution
 partialParallel16ConvolutionCData = buildCompilationData partialParallel16Convolution
+partialParallel2ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) unscheduledConvChain
+partialParallel2ConvChainCData = buildCompilationData partialParallel2ConvChain
+partialParallel4ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) unscheduledConvChain
+partialParallel4ConvChainCData = buildCompilationData partialParallel4ConvChain
+partialParallel8ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) unscheduledConvChain
+partialParallel8ConvChainCData = buildCompilationData partialParallel8ConvChain
+partialParallel16ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) unscheduledConvChain
+partialParallel16ConvChainCData = buildCompilationData partialParallel16ConvChain
 {-
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput
 partialParallelInput :: TSeq 2 0 (SSeq 2 (Atom, Atom))
@@ -822,3 +840,13 @@ writeAllExamples = do
     "pyExamples/partialParallel8Convolution.py" False partialParallel8Convolution
   writeProgramToFile "partialParallel16Convolution" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/partialParallel16Convolution.py" False partialParallel16Convolution
+  writeProgramToFile "sequentialConvChain" preludeLocationStrForEx epilogueLocationStrForEx 
+    "pyExamples/sequentialConvChain.py" False sequentialConvChain
+  writeProgramToFile "partialParallel2ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/partialParallel2ConvChain.py" False partialParallel2ConvChain
+  writeProgramToFile "partialParallel4ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/partialParallel4ConvChain.py" False partialParallel4ConvChain
+  writeProgramToFile "partialParallel8ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/partialParallel8ConvChain.py" False partialParallel8ConvChain
+  writeProgramToFile "partialParallel16ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/partialParallel16ConvChain.py" False partialParallel16ConvChain

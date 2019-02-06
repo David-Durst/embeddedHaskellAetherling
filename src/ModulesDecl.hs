@@ -207,6 +207,7 @@ class Monad m => Circuit m where
   mergeSSeqs :: (KnownNat n, KnownNat o) => (SSeq n (SSeq o a)) -> m (SSeq (n*o) a)
 
   reshapeC :: (TypeSize a ~ TypeSize b) => Proxy a -> Proxy b -> a -> m b 
+  reshapeImplicitC :: (TypeSize a ~ TypeSize b) => a -> m b 
 
 -- these are the types of the nodes in a DAG
 data NodeType =
