@@ -196,6 +196,7 @@ wireRV moduleName allCPorts = foldl (++) "" $
     valid_data_out_port = moduleName ++ "." ++ valid_data_out_str
     ready_data_in_port = moduleName ++ "." ++ ready_data_in_str
     ready_data_out_port = moduleName ++ "." ++ ready_data_out_str
+    outerCEPort = moduleName ++ ".CE"
     -- the first cePort i
     -- thus the top node in the DAG gets a valid signal when input data is good
     -- the last cePort is wired to the interfaces data out valid port
@@ -203,10 +204,11 @@ wireRV moduleName allCPorts = foldl (++) "" $
     -- is given a ready signal
     alignedPorts = zip3 cePorts ([[valid_data_in_port]] ++ vPorts)
       -- intentionally using drop 1 so empty list if its empty
-      ((drop 1 rPorts) ++ [[ready_data_out_str]])
+      ((drop 1 rPorts) ++ [[ready_data_out_port]])
     -- wiring of rv interfaces to dags in node, not outer interface
     -- of this whole circuit
-    internalRVWiring = fmap (\(c,v,r) -> connectReadyValidPorts c v r) alignedPorts
+    internalRVWiring = fmap (\(c,v,r) -> connectReadyValidPorts c v r outerCEPort)
+      alignedPorts
     -- these are the ports that will be used to wiring to the outer interface
     firstReadyPorts = if null rPorts then [ready_data_out_port] else head rPorts
     combinedFirstReadyPorts = andRVPorts firstReadyPorts
