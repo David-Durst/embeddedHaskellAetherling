@@ -170,6 +170,27 @@ createMagmaDefOfNode (LineBufferT (LineBufferData windowSize imageSize
       linebufferPxPerClock (par * baseParallelism) (snd imageSize)
 
 type PortName = String
+
+-- the control ports for one stage of the DAG, duplicated
+-- ports for parallelism or zip stages with multiple elements
+-- that all need to be parallelized
+data ControlPorts = ControlPorts {
+  ce :: [PortName],
+  readyPorts :: [PortName],
+  validPorts :: [PortName]
+  } deriving (Show, Eq)
+
+emptyControlPorts = ControlPorts [] [] []
+standardControlPorts fnName =
+  ControlPorts [fnName ++ ".CE"] [fnName ++ ".ready"] [fnName ++ ".valid"]
+
+-- zip together the control ports that are in the same stage of the pipeline
+zipControlPorts :: ControlPorts -> ControlPorts -> ControlPorts
+zipControlPorts ports1 ports2 = ControlPorts
+  (ce ports1 ++ ce ports2)
+  (readyPorts ports1 ++ readyPorts ports2)
+  (validPorts ports1 ++ validPorts ports2)
+
 data Ports = Ports {
   inPorts :: [PortName],
   -- the int is how many copies in an array to make
@@ -180,42 +201,48 @@ data Ports = Ports {
   inTypes :: [(TypeRep, Int)],
   outPorts :: [PortName],
   outTypes :: [(TypeRep, Int)],
-  ce :: [PortName],
-  validPorts :: [PortName]
-  } deriving Show
+  controlPorts :: ControlPorts
+  } deriving (Show, Eq)
+
 
 mergePorts :: Ports -> Ports -> Ports
 mergePorts ports1 ports2 =
-  Ports allInPorts allInTypes allOutPorts allOutTypes allCEPorts allValidPorts
+  Ports allInPorts allInTypes allOutPorts allOutTypes (ControlPorts allCEPorts
+                                                      allReadyPorts allValidPorts)
   where
     allInPorts = (inPorts ports1) ++ (inPorts ports2)
     allInTypes = (inTypes ports1) ++ (inTypes ports2)
     allOutPorts = (outPorts ports1) ++ (outPorts ports2)
     allOutTypes = (outTypes ports1) ++ (outTypes ports2)
-    allCEPorts = (ce ports1) ++ (ce ports2)
-    allValidPorts = (validPorts ports1) ++ (validPorts ports2)
+    zippedControlPorts = zipControlPorts (controlPorts ports1) (controlPorts ports2)
+    allCEPorts = ce zippedControlPorts
+    allReadyPorts = readyPorts zippedControlPorts
+    allValidPorts = validPorts zippedControlPorts
 
 binaryFunctionPorts fnName fnInTypes fnOutTypes =
-  Ports [fnName ++ ".I0", fnName ++ ".I1"] fnInTypes [fnName ++ ".O"] fnOutTypes [] [] 
+  Ports [fnName ++ ".I0", fnName ++ ".I1"] fnInTypes [fnName ++ ".O"]
+  fnOutTypes emptyControlPorts 
 
 -- get duplicated ports for parallel versions of nodes
 getDuplicatedPorts :: NodeType -> Int -> Int -> Either String Ports
 getDuplicatedPorts nodeType baseNum par |
   isRight (getPorts nodeType magmaNodeBaseName par) =
   Right $ (Ports allNodesInPorts allNodesInTypes
-           allNodesOutPorts allNodesOutTypes
-           allNodesCEPorts allNodesValidPorts)
+           allNodesOutPorts allNodesOutTypes allControlPorts)
   where
     --numCopies = trace (show (numCopiesToParallelize nodeType par) ++ " " ++ show par ++ " " ++ show nodeType) $ numCopiesToParallelize nodeType par
     numCopies = numCopiesToParallelize nodeType par
-    allNodesPorts = fmap (\idx -> fromRight undefined $ getPorts nodeType ("magmaInstance" ++ show idx)
+    allNodesPorts = fmap (\idx -> fromRight undefined $
+                           getPorts nodeType ("magmaInstance" ++ show idx)
                            par) [baseNum .. (baseNum + numCopies - 1)]
     allNodesInPorts = foldl (++) [] $ fmap inPorts allNodesPorts
     allNodesInTypes = foldl (++) [] $ fmap inTypes allNodesPorts
     allNodesOutPorts = foldl (++) [] $ fmap outPorts allNodesPorts
     allNodesOutTypes = foldl (++) [] $ fmap outTypes allNodesPorts
-    allNodesCEPorts = foldl (++) [] $ fmap ce allNodesPorts
-    allNodesValidPorts = foldl (++) [] $ fmap validPorts allNodesPorts
+    allNodesCEPorts = foldl (++) [] $ fmap (ce . controlPorts) allNodesPorts
+    allNodesReadyPorts = foldl (++) [] $ fmap (readyPorts . controlPorts) allNodesPorts
+    allNodesValidPorts = foldl (++) [] $ fmap (validPorts . controlPorts) allNodesPorts
+    allControlPorts = ControlPorts allNodesCEPorts allNodesReadyPorts allNodesValidPorts
 getDuplicatedPorts nodeType baseNum par = getPorts nodeType magmaNodeBaseName par
 
 bitType = (typeOf (Proxy :: Proxy (Atom Bool)), 1)
@@ -225,7 +252,7 @@ unitType = (typeOf (Proxy :: Proxy (Atom ())), 1)
 getPorts :: NodeType -> String -> Int -> Either String Ports
 getPorts AbsT _ _ = Left "Abs node not implemented" 
 getPorts NotT fnName _ = Right $ Ports [fnName ++ "I"] [bitType]
-                         [fnName ++ "O"] [bitType] [] []
+                         [fnName ++ "O"] [bitType] emptyControlPorts
 getPorts NoopT _ _ = Left "NoOp shouldn't be printed to magma"
 getPorts AddT fnName _ = Right $ binaryFunctionPorts fnName [intType, intType] [intType]
 getPorts SubT fnName _ = Right $ binaryFunctionPorts fnName [intType, intType] [intType]
@@ -252,8 +279,8 @@ getPorts GtBitT fnName _ = Right $ binaryFunctionPorts fnName [bitType, bitType]
 getPorts GeqBitT fnName _ = Right $ binaryFunctionPorts fnName [bitType, bitType] [bitType]
 getPorts (LutGenIntT as) _ _ = Left "LUT not implemented in Magma"
 getPorts (LutGenBitT as) _ _ = Left "LUT not implemented in Magma"
-getPorts (ConstGenIntT x) fnName _ = Right $ Ports [] [] [fnName ++ ".O"] [intType] [] []
-getPorts (ConstGenBitT x) fnName _ = Right $ Ports [] [] [fnName ++ ".O"] [bitType] [] []
+getPorts (ConstGenIntT x) fnName _ = Right $ Ports [] [] [fnName ++ ".O"] [intType] emptyControlPorts
+getPorts (ConstGenBitT x) fnName _ = Right $ Ports [] [] [fnName ++ ".O"] [bitType] emptyControlPorts
 -- can't upsample by less than 1
 getPorts (UpT _ _) _ _ = Left "Upsample not implemented yet for getPorts"
 getPorts (DownT _ _) _ _ = Left "Downsample not implemented yet for getPorts"
@@ -262,7 +289,7 @@ getPorts (FoldT nt _ _) _ _ | isLeft (getPorts nt "" 1) = Left "Must be able to 
 getPorts (FoldT nt _ totalLen) fnName par |
   (par >= totalLen) && (par `mod` totalLen == 0) = Right (
     Ports inputsWithIndex inputTypes [fnName ++ ".out"]
-      [innerPortOutputType] [] [])
+      [innerPortOutputType] emptyControlPorts)
   where
     copiedInputs = replicate totalLen (\x -> fnName ++ ".I.data[" ++ show x ++ "]") 
     inputsWithIndex :: [String]
@@ -276,7 +303,7 @@ getPorts (FoldT nt _ totalLen) fnName par |
 getPorts (FoldT nt _ totalLen) fnName par |
   (par > 1) && (par < totalLen) && (totalLen `mod` par == 0) = Right (
     Ports inputsWithIndex inputTypes [fnName ++ ".O"]
-      [innerPortOutputType] [] [fnName ++ ".valid"])
+      [innerPortOutputType] (standardControlPorts fnName))
   where
     copiedInputs = replicate par (\x -> fnName ++ ".I[" ++ show x ++ "]") 
     inputsWithIndex :: [String]
@@ -288,7 +315,7 @@ getPorts (FoldT nt _ totalLen) fnName par |
 
 getPorts (FoldT nt _ totalLen) fnName 1 = Right (
   Ports [fnName ++ ".I"] [innerPortInputType] [fnName ++ ".out"]
-  [innerPortOutputType] [] [])
+  [innerPortOutputType] (standardControlPorts fnName))
   where
     innerPorts = fromRight undefined $ getPorts nt "" 0
     innerPortInputType = head $ inTypes $ innerPorts
@@ -309,7 +336,7 @@ getPorts (LineBufferT (LineBufferData windowSize imageSize stride origin
                        tokenType)) fnName par =
   Right (Ports inputPorts (replicate (length inputPorts) (tokenType, 1))
          outputPorts (replicate (length outputPorts) (tokenType, 1))
-         [fnName ++ ".CE"] [fnName ++ ".valid"])
+         (standardControlPorts fnName))
   where
     -- for now, need to emit at least a complete stride every clock so emit once
     -- every clock as no underutil yet

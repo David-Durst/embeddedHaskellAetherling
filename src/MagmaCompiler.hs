@@ -49,14 +49,10 @@ data CompilationData = CompilationData {
   -- this is NOT REVERSED
   outputPorts :: [PortName],
   outputPortsTypes :: [(TypeRep, Int)],
-  -- list of CE ports at start of DAG 
-  firstCEPorts :: [PortName],
-  -- list of CE ports at end of DAG 
-  lastCEPorts :: [PortName],
-  -- list of valid ports at start of DAG
-  firstValidPorts :: [PortName],
-  -- list of valid ports at end of DAG
-  lastValidPorts :: [PortName],
+  -- this represents the ready, valid, and CE ports
+  -- of the entire dag rather than just the interface edges
+  -- like the inputPorts and outputPorts
+  entireDAGControlPorts :: [ControlPorts],
   -- this tracks how parallel to make everything in the subpart
   throughputNumerator :: Int,
   throughputDenominator :: Int
@@ -69,13 +65,12 @@ multiplyThroughput :: Int -> CompilationData -> CompilationData
 multiplyThroughput n compData =
   compData { throughputNumerator = n * (throughputNumerator compData) }
 
-
 divideThroughput :: Int -> CompilationData -> CompilationData
 divideThroughput n compData =
   compData { throughputDenominator = n * (throughputDenominator compData) }
 
 emptyCompData :: CompilationData
-emptyCompData = CompilationData 0 [] [] [] [] [] [] [] [] [] [] 1 1
+emptyCompData = CompilationData 0 [] [] [] [] [] [] [] 1 1
 
 valid_data_in_str = "valid_data_in"
 valid_data_out_str = "valid_data_out"
@@ -142,8 +137,7 @@ writeProgramToFile circuitName preludeLocation epilogueLocation outputLocation
   -- traceM $ show compData
   let wireDataInterfaceString = wireDataInterface circuitName
                                 (inputPorts compData) (outputPorts compData)
-  let wireRVInterfaceString = wireRVInterface circuitName
-                             (firstCEPorts compData) (lastValidPorts compData)
+  let wireRVString = wireRV circuitName (entireDAGControlPorts compData)
   -- always wire the CE to a term so that if nothing else uses it, no problems
   let wireCEToTerm = "ceTerm = TermAnyType(cirb, Enable)\nwire(ceTerm.I, " ++ circuitName ++ ".CE)\n" 
   let saveToCoreIRString = if shouldSaveToCoreIR then saveToCoreIR circuitName else ""
@@ -157,7 +151,7 @@ writeProgramToFile circuitName preludeLocation epilogueLocation outputLocation
   -}
   let outputString = (preludeString ++ interfaceString ++ circuitDefinition ++
                       (foldl (++) "" $ reverse $ reversedOutputText compData) ++
-                      wireDataInterfaceString ++ wireRVInterfaceString ++
+                      wireDataInterfaceString ++ wireRVString ++
                       wireCEToTerm ++
                       epilogueString ++ saveToCoreIRString)
   --traceM outputString
@@ -177,8 +171,14 @@ wirePorts priorOutPorts nextInPorts = Left ("Different lengths of ports " ++
                                             " and " ++
                                             show nextInPorts)
 
-wireRVInterface :: String -> [PortName] -> [PortName] -> String
-wireRVInterface moduleName innerStartingCEPorts innerEndingValidPorts = foldl (++) "" $ 
+wireRV :: String -> [ControlPorts] -> String
+wireRV moduleName allCPorts = foldl (++) "" $
+  [
+    "wire(" ++ combinedFirstReadyPorts ++ ", " ++ ready_data_in_port ++ ")\n",
+    "wire(" ++ combinedLastValidPorts ++ ", " ++ valid_data_out_port ++ ")\n"
+  ] ++ internalRVWiring
+  {-
+  foldl (++) "" $ 
   -- this module is ready to process when the downstream is ready 
   ["wire(" ++ moduleName ++ "." ++ ready_data_in_str ++ ", " ++ moduleName ++
     "." ++ ready_data_out_str ++ ")\n"] ++
@@ -187,13 +187,41 @@ wireRVInterface moduleName innerStartingCEPorts innerEndingValidPorts = foldl (+
   -- instead of a CE port at end, send all the last valid ports out of the data out
   -- valid port of the whole module
   connectReadyValidPorts lastValidPorts [moduleName ++ "." ++ valid_data_out_str]
+-}
   where
+    cePorts = fmap ce allCPorts
+    rPorts = fmap readyPorts allCPorts
+    vPorts = fmap validPorts allCPorts
+    valid_data_in_port = moduleName ++ "." ++ valid_data_in_str
+    valid_data_out_port = moduleName ++ "." ++ valid_data_out_str
+    ready_data_in_port = moduleName ++ "." ++ ready_data_in_str
+    ready_data_out_port = moduleName ++ "." ++ ready_data_out_str
+    -- the first cePort i
+    -- thus the top node in the DAG gets a valid signal when input data is good
+    -- the last cePort is wired to the interfaces data out valid port
+    -- thus the last node in the DAG gets a readyy signal when the overall system
+    -- is given a ready signal
+    alignedPorts = zip3 cePorts ([[valid_data_in_port]] ++ vPorts)
+      -- intentionally using drop 1 so empty list if its empty
+      ((drop 1 rPorts) ++ [[ready_data_out_str]])
+    -- wiring of rv interfaces to dags in node, not outer interface
+    -- of this whole circuit
+    internalRVWiring = fmap (\(c,v,r) -> connectReadyValidPorts c v r) alignedPorts
+    -- these are the ports that will be used to wiring to the outer interface
+    firstReadyPorts = if null rPorts then [ready_data_out_port] else head rPorts
+    combinedFirstReadyPorts = andRVPorts firstReadyPorts
+    lastValidPorts = if null vPorts then [valid_data_in_port] else last vPorts
+    combinedLastValidPorts = andRVPorts lastValidPorts
+    
+    --
+  {-
     valid_data_in_port = moduleName ++ "." ++ valid_data_in_str
     ce_port = "bit(" ++ moduleName ++ ".CE)"
     -- if there are no valid ports in the module, wire the input valid port
     -- to the output valid port
     lastValidPorts = if null innerEndingValidPorts then [valid_data_in_port]
       else innerEndingValidPorts
+-}
 
 wireDataInterface :: String -> [PortName] -> [PortName] -> String
 wireDataInterface moduleName inputPorts outputPorts = foldl (++) "" $ 
@@ -210,7 +238,7 @@ wireDataInterface moduleName inputPorts outputPorts = foldl (++) "" $
 -- for a set of existing stages
 appendToCompilationData :: NodeType -> CompilationData -> StatefulErrorMonad a
 appendToCompilationData nodeType newData@(CompilationData ni nts rot ip it op ot
-                                          fcp lcp fvp lvp tNum tDenom) = do  
+                                          cp tNum tDenom) = do  
     priorData <- get 
     -- just propagate throughput numerator and denominator 
     -- as those are only modififed by scheduling combiators that are
@@ -225,10 +253,8 @@ appendToCompilationData nodeType newData@(CompilationData ni nts rot ip it op ot
     if isLeft portWirings
       then liftEither portWirings
       else do
-      let readyValidWiringsStrings =
-            connectReadyValidPorts (lastCEPorts priorData) fvp
       let dataWiringsStrings = fromRight [] portWirings
-      let newOutText = readyValidWiringsStrings ++ dataWiringsStrings ++
+      let newOutText = dataWiringsStrings ++
             wireIDGen nts ni (newThroughputNumerator `div` newThroughputDenominator) ++
             getIDGenString nts ni (newThroughputNumerator `div` newThroughputDenominator) ++
             rot ++ reversedOutputText priorData
@@ -236,31 +262,20 @@ appendToCompilationData nodeType newData@(CompilationData ni nts rot ip it op ot
                        then ip else inputPorts priorData
       let newInTypes = if (null $ (reversedOutputText priorData))
                         then it else inputPortsTypes priorData
-      let newFirstCEPorts =
-            if (null $ (firstCEPorts priorData))
-            then fcp else firstCEPorts priorData
-      let newFirstValidPorts =
-            if (null $ (firstValidPorts priorData))
-            then fvp else firstValidPorts priorData
       let newInTypes = if (null $ (reversedOutputText priorData))
                         then it else inputPortsTypes priorData
       let newOutPorts = op
       let newOutTypes = ot
       -- unlike at for first CE and valid ports,
       -- propagate last ones from priorData only if current stage has no ports
-      let newLastCEPorts =
-            if (null lcp)
-            then lastCEPorts priorData else lcp
-      let newLastValidPorts =
-            if (null lvp)
-            then lastValidPorts priorData else lvp
+      let newControlPorts = (entireDAGControlPorts priorData) ++ (
+            if cp == [emptyControlPorts] then [] else cp)
 
       let newPar = newThroughputNumerator `div` newThroughputDenominator
       let nodeIndexIncrement = numCopiesToParallelize nodeType newPar
       put $ (CompilationData (ni+nodeIndexIncrement) (nodeTypes priorData ++ nts)
              newOutText newInPorts newInTypes newOutPorts newOutTypes
-             newFirstCEPorts newLastCEPorts newFirstValidPorts newLastValidPorts
-             newThroughputNumerator newThroughputDenominator)
+             newControlPorts newThroughputNumerator newThroughputDenominator)
       return undefined
     return undefined
   where
@@ -314,8 +329,7 @@ createCompilationDataAndAppend nodeType = do
           (CompilationData curNodeIndex [nodeType] [instancesValues] (inPorts portsValues)
             (inTypes portsValues) (outPorts portsValues) 
             (outTypes portsValues) 
-            (ce portsValues) (ce portsValues)
-            (validPorts portsValues) (validPorts portsValues)
+            [controlPorts portsValues]
             (throughputNumerator priorData) (throughputDenominator priorData))
     return undefined
 
@@ -528,6 +542,8 @@ instance Circuit (StatefulErrorMonad) where
       let gCompilerData = snd $ fromRight undefined gPipeline
       -- traceM $ "f compilation: " ++ show fCompilerData
       -- traceM $ "g compilation: " ++ show gCompilerData
+      let fControlPorts = entireDAGControlPorts fCompilerData
+      let gControlPorts = entireDAGControlPorts gCompilerData
       let mergedCompilerData = (CompilationData
                                -- subtract 1 here as g compiler data's
                                -- node index is incremented by 1 for the
@@ -542,10 +558,9 @@ instance Circuit (StatefulErrorMonad) where
                                (inputPortsTypes fCompilerData ++ inputPortsTypes gCompilerData)
                                (outputPorts fCompilerData ++ outputPorts gCompilerData)
                                (outputPortsTypes fCompilerData ++ outputPortsTypes gCompilerData)
-                               (firstCEPorts fCompilerData ++ firstCEPorts gCompilerData)
-                               (lastCEPorts fCompilerData ++ lastCEPorts gCompilerData)
-                               (firstValidPorts fCompilerData ++ firstValidPorts gCompilerData)
-                               (lastValidPorts fCompilerData ++ lastValidPorts gCompilerData)
+                               -- at this point, only allow left or right part of zip
+                               -- to have ready-valid ports, will address this later
+                               (if null fControlPorts then gControlPorts else fControlPorts)
                                tNum tDenom
                                )
       -- passing in AddT to ensure that nodeIndex increases by parallelism amount

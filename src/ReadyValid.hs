@@ -16,21 +16,19 @@ import MagmaNodeTextGenerator
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
--- wire up all the valid ports from an earlier stage to the CE ports for a
--- later stage
+andRVPorts (hdRVPorts:tlRVPorts) = foldl (\x -> \y -> x ++ " & " ++ y) hdRVPorts tlRVPorts
+
+-- for each node's CE, wire the valid port of the prior node and the ready port
+-- of the next node
 -- do nothing if at least one of the list of ports is empty
-connectReadyValidPorts :: [PortName] -> [PortName] -> [String]
-connectReadyValidPorts firstStageValidPorts secondStageCEPorts =
+connectReadyValidPorts :: [PortName] -> [PortName] -> [PortName] -> String
+connectReadyValidPorts curNodeCEs priorValids@(hdPriorValid:tlPriorValids) nextReadys =
   let
-    atLeastOneStageEmpty = null firstStageValidPorts ||
-      null secondStageCEPorts
-    -- safe to use head and tail as atLeastOneStageEmpty prevents
-    -- evaluation if empty
-    allFirstStageValids = foldl (\x -> \y -> x ++ " & " ++ y)
-      (head firstStageValidPorts) (tail firstStageValidPorts)
-    wireCEToValids cePort = "wire(" ++ allFirstStageValids ++ ", " ++ cePort ++ ")\n"
+    allCEInputs = andRVPorts (priorValids ++ nextReadys)
+    wireCEPort cePort = "wire(" ++ allCEInputs ++ ", " ++ cePort ++ ")\n"
+    wiredToEachCEPort = fmap wireCEPort curNodeCEs
   in 
-    if atLeastOneStageEmpty then [] else fmap wireCEToValids secondStageCEPorts
+    foldl (++) [] wiredToEachCEPort
 {-
 
 -- this is necessary, for when have two different, non-zero
