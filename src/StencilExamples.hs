@@ -61,13 +61,15 @@ firstConv = iterC lengthProxy addUnitType >>>
   where
     lengthProxy = Proxy @16
 
-secondConv = downsampleLB4x4 >>> scalableConvConstsForLB lengthProxy >>>
+secondConv = iterC lengthProxy addUnitType >>>
+  (downsampleLB4x4 >***< scalableConvConsts lengthProxy) >>>
   scalableConvMuls lengthProxy >>> scalableNTuplesToFlatSSeq lengthProxy >>>
   scalableConvFold lengthProxy
   where
     lengthProxy = Proxy @4
 
-thirdConv = downsampleLB2x2 >>> scalableConvConstsForLB lengthProxy >>>
+thirdConv = iterC lengthProxy addUnitType >>>
+  (downsampleLB2x2 >***< scalableConvConsts lengthProxy) >>>
   scalableConvMuls lengthProxy >>> scalableNTuplesToFlatSSeq lengthProxy >>>
   scalableConvFold lengthProxy
   where
