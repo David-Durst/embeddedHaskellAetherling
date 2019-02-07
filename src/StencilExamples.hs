@@ -53,7 +53,9 @@ scalableNTuplesToFlatSSeq lengthProxy = iterC lengthProxy $
 scalableConvFold lengthProxy = iterC lengthProxy $ seq_to_sseqC $
   foldC (Proxy @4) addC (constGenIntC (Int 0))
 
-firstConv = downsampleLB8x8 >>> scalableConvConstsForLB lengthProxy >>>
+-- downsampleLB8x8 >>> scalableConvConstsForLB lengthProxy >>>
+firstConv = iterC lengthProxy addUnitType >>>
+  (downsampleLB8x8 >***< scalableConvConsts lengthProxy) >>>
   scalableConvMuls lengthProxy >>> scalableNTuplesToFlatSSeq lengthProxy >>>
   scalableConvFold lengthProxy
   where
@@ -76,3 +78,7 @@ downsampleStencilChain =
   seq_to_sseqC firstConv >>> reshapeImplicitC >>>
   seq_to_sseqC secondConv >>> reshapeImplicitC >>>
   seq_to_sseqC thirdConv
+
+writeAllStencils = do
+  writeProgramToFile "parallelConvChain" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/parallelConvChain.py" False downsampleStencilChain
