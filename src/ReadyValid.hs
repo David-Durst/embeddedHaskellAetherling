@@ -18,13 +18,14 @@ import qualified Data.Vector.Sized as V
 
 andRVPorts (hdRVPorts:tlRVPorts) = foldl (\x -> \y -> x ++ " & " ++ y) hdRVPorts tlRVPorts
 
--- for each node's CE, wire the valid port of the prior node and the ready port
--- of the next node
+-- for each node's CE, wire the valid port of the prior node, the ready port
+-- of the next node, and the CE port on the outer interface of the porgram
 -- do nothing if at least one of the list of ports is empty
-connectReadyValidPorts :: [PortName] -> [PortName] -> [PortName] -> String
-connectReadyValidPorts curNodeCEs priorValids@(hdPriorValid:tlPriorValids) nextReadys =
+connectReadyValidPorts :: [PortName] -> [PortName] -> [PortName] -> PortName -> String
+connectReadyValidPorts curNodeCEs priorValids@(hdPriorValid:tlPriorValids)
+  nextReadys outerCEPort =
   let
-    allCEInputs = andRVPorts (priorValids ++ nextReadys)
+    allCEInputs = andRVPorts (priorValids ++ nextReadys ++ ["bit(" ++ outerCEPort ++ ")"])
     wireCEPort cePort = "wire(" ++ allCEInputs ++ ", " ++ cePort ++ ")\n"
     wiredToEachCEPort = fmap wireCEPort curNodeCEs
   in 
