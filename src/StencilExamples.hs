@@ -60,12 +60,17 @@ scalableConvFold lengthProxy underutilMult = underutilC underutilMult $
   seq_to_tseqC $ iterC lengthProxy $ seq_to_sseqC $
   forceMinPortParallelism (Proxy @4) $ foldC (Proxy @4) addC (constGenIntC (Int 0))
 
+divBy4 lengthProxy underutilMult = underutilC underutilMult $
+  seq_to_tseqC $ iterC lengthProxy $ seq_to_sseqC $ iterC (Proxy @1) $
+  addUnitType >>> (noop (constGenIntC (Int 0)) >***< constGenIntC (Int 4)) >>> divC
+
 firstConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
   (downsampleLB16x16 >***< (produceRightUnitMix (Proxy :: Proxy (TSeq 256 0 (Atom ()))) >>>
                            scalableConvConsts underutilLengthProxy underutilMult)) >>>
   scalableConvMuls underutilLengthProxy underutilMult >>>
   scalableNTuplesToFlatSSeq underutilLengthProxy underutilMult >>>
-  scalableConvFold underutilLengthProxy underutilMult
+  scalableConvFold underutilLengthProxy underutilMult >>>
+  divBy4 underutilLengthProxy underutilMult
   where
     fullLengthProxy = Proxy @256
     underutilLengthProxy = Proxy @64
@@ -80,7 +85,8 @@ secondConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
                            scalableConvConsts underutilLengthProxy underutilMult)) >>>
   scalableConvMuls underutilLengthProxy underutilMult >>>
   scalableNTuplesToFlatSSeq underutilLengthProxy underutilMult >>>
-  scalableConvFold underutilLengthProxy underutilMult
+  scalableConvFold underutilLengthProxy underutilMult >>>
+  divBy4 underutilLengthProxy underutilMult
   where
     fullLengthProxy = Proxy @64
     underutilLengthProxy = Proxy @16
@@ -91,7 +97,8 @@ thirdConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
                            scalableConvConsts underutilLengthProxy underutilMult)) >>>
   scalableConvMuls underutilLengthProxy underutilMult >>>
   scalableNTuplesToFlatSSeq underutilLengthProxy underutilMult >>>
-  scalableConvFold underutilLengthProxy underutilMult
+  scalableConvFold underutilLengthProxy underutilMult >>>
+  divBy4 underutilLengthProxy underutilMult
   where
     fullLengthProxy = Proxy @16
     underutilLengthProxy = Proxy @4

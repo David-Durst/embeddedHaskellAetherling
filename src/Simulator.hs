@@ -32,7 +32,7 @@ instance Circuit SimulatorEnv where
   -- unary operators
   absC (Int x) = return $ Int $ abs x
   notC (Bit x) = return $ Bit $ not x
-  noop f x = f x
+  noop _ x = return x
 
   -- binary operators
   addC (Tuple (Int x) (Int y)) = return $ Int $ x + y

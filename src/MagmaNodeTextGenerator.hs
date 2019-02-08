@@ -255,13 +255,13 @@ getPorts AbsT _ _ = Left "Abs node not implemented"
 getPorts NotT fnName _ = Right $ Ports [fnName ++ "I"] [bitType]
                          [fnName ++ "O"] [bitType] emptyControlPorts
 getPorts (NoopT nt) fnName par = Right (
-  Ports noopInputPortNames (inTypes innerPorts)
+  Ports noopInputPortNames (outTypes innerPorts)
     noopOutputPortNames (outTypes innerPorts) emptyControlPorts)
   where
     innerPorts = fromRight (emptyPorts {inPorts = ["bad inner ports to Noop"]}) $
                  getPorts nt "toRemove" par
-    noopInputPortNames = fmap (replaceAString "toRemove." "") $ inPorts innerPorts
-    noopOutputPortNames = fmap (replaceAString "toRemove." "") $ outPorts innerPorts
+    noopInputPortNames = fmap (replaceAString "toRemove." (fnName ++ ".in_")) $ outPorts innerPorts
+    noopOutputPortNames = fmap (replaceAString "toRemove" (fnName)) $ outPorts innerPorts
 getPorts AddT fnName _ = Right $ binaryFunctionPorts fnName [intType, intType] [intType]
 getPorts SubT fnName _ = Right $ binaryFunctionPorts fnName [intType, intType] [intType]
 getPorts DivT fnName _ = Right $ binaryFunctionPorts fnName [intType, intType] [intType]

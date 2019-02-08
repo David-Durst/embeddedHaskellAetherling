@@ -82,7 +82,7 @@ class Monad m => Circuit m where
   -- unary operators
   absC :: Atom Int -> m (Atom Int)
   notC :: Atom Bool -> m (Atom Bool)
-  noop :: (a -> m b) -> a -> m b
+  noop :: (a -> m b) -> b -> m b
   -- binary operators
   addC, subC, divC, mulC, minC, maxC, ashrC,
     shlC :: Atom (Atom Int, Atom Int) -> m (Atom Int)
