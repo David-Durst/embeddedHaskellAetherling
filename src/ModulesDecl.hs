@@ -203,7 +203,9 @@ class Monad m => Circuit m where
   underutilC :: (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
                  KnownNat underutilMult, 1 <= underutilMult) => 
     Proxy underutilMult -> (TSeq n v a -> m (TSeq o u b)) ->
-    TSeq n ((n + v) * underutilMult + v) a -> m (TSeq o ((o + u) * underutilMult + u) b)
+    -- subtract n/o as n + v * underutilMult is the new base of the utilization
+    -- and keeping n around
+    TSeq n ((n + v) * underutilMult - n) a -> m (TSeq o ((o + u) * underutilMult - o) b)
 
   mergeSSeqs :: (KnownNat n, KnownNat o) => (SSeq n (SSeq o a)) -> m (SSeq (n*o) a)
 

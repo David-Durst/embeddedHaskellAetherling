@@ -255,7 +255,7 @@ instance Circuit (State PipelineDAG) where
                 (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
                  KnownNat underutilMult, 1 <= underutilMult) => 
     Proxy underutilMult -> (TSeq n v a -> State PipelineDAG (TSeq o u b)) ->
-    TSeq n ((n + v) * underutilMult + v) a -> State PipelineDAG (TSeq o ((o + u) * underutilMult + u) b)
+    TSeq n ((n + v) * underutilMult - n) a -> State PipelineDAG (TSeq o ((o + u) * underutilMult - o) b)
   underutilC underutilProxy f _ = do 
     PipelineDAG priorStages <- get 
     let innerStages = getInnerPipeline f emptyDAG

@@ -63,17 +63,17 @@ scalableConvFold lengthProxy underutilMult = underutilC underutilMult $
 -- downsampleLB8x8 >>> scalableConvConstsForLB lengthProxy >>>
 xxz = (downsampleLB8x8 >***<
         (produceRightUnitMix (Proxy :: Proxy (TSeq 64 0 (Atom ()))) >>>
-         scalableConvConsts (Proxy @16) (Proxy @3)))
+         scalableConvConsts (Proxy @16) (Proxy @4)))
 firstConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
   (downsampleLB8x8 >***< (produceRightUnitMix (Proxy :: Proxy (TSeq 64 0 (Atom ()))) >>>
                            scalableConvConsts underutilLengthProxy underutilMult)) >>>
-  scalableConvMuls underutilLengthProxy underutilMult {- >>>
-  scalableNTuplesToFlatSSeq underutilLengthProxy underutilMult >>>
+  scalableConvMuls underutilLengthProxy underutilMult >>>
+  scalableNTuplesToFlatSSeq underutilLengthProxy underutilMult {- >>>
   scalableConvFold underutilLengthProxy underutilMult-}
   where
     fullLengthProxy = Proxy @64
     underutilLengthProxy = Proxy @16
-    underutilMult = Proxy @3
+    underutilMult = Proxy @4
 {-
 secondConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
   (downsampleLB4x4 >***< (produceRightUnitMix (Proxy :: Proxy (TSeq 16 0 (Atom ()))) >>>
@@ -84,7 +84,7 @@ secondConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
   where
     fullLengthProxy = Proxy @16
     underutilLengthProxy = Proxy @4
-    underutilMult = Proxy @3
+    underutilMult = Proxy @4
 
 thirdConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
   (downsampleLB2x2 >***< (produceRightUnitMix (Proxy :: Proxy (TSeq 4 0 (Atom ()))) >>>

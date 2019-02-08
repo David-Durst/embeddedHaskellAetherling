@@ -334,6 +334,7 @@ createCompilationDataAndAppend nodeType = do
     return undefined
 
 
+
 {-
 getInnerPipeline :: (a -> State PipelineDAG b) -> PipelineDAG -> [NodeInfo]
 getInnerPipeline f startingDAG = innerStages
@@ -723,7 +724,7 @@ instance Circuit (StatefulErrorMonad) where
                 (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
                  KnownNat underutilMult, 1 <= underutilMult) => 
     Proxy underutilMult -> (TSeq n v a -> StatefulErrorMonad (TSeq o u b)) ->
-    TSeq n ((n + v) * underutilMult + v) a -> StatefulErrorMonad (TSeq o ((o + u) * underutilMult + u) b)
+    TSeq n ((n + v) * underutilMult - n) a -> StatefulErrorMonad (TSeq o ((o + u) * underutilMult - o) b)
   underutilC underutilProxy f _ = do 
     priorData <- get 
     let inputLengthProxy = Proxy :: Proxy underutilMult
