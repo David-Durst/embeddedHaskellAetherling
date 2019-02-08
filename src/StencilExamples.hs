@@ -38,7 +38,7 @@ scalableConvMuls lengthProxy underutilMult = underutilC underutilMult $
   seq_to_tseqC $ iterC lengthProxy $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
 scalableConvConsts lengthProxy underutilMult = underutilC underutilMult $
   seq_to_tseqC $ iterC lengthProxy $ 
-  (constGenIntC (Int 1) >***< constGenIntC (Int 2)) >***<
+  (constGenIntC (Int 1) >***< constGenIntC (Int 2)) ***
   (constGenIntC (Int 3) >***< constGenIntC (Int 4)) >>>
   reshapeC (Proxy :: Proxy (Atom (Atom (Atom Int, Atom Int), Atom (Atom Int, Atom Int))))
   (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
@@ -67,14 +67,14 @@ xxz = (downsampleLB8x8 >***<
 firstConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
   (downsampleLB8x8 >***< (produceRightUnitMix (Proxy :: Proxy (TSeq 64 0 (Atom ()))) >>>
                            scalableConvConsts underutilLengthProxy underutilMult)) >>>
-  scalableConvMuls underutilLengthProxy underutilMult >>>
+  scalableConvMuls underutilLengthProxy underutilMult {- >>>
   scalableNTuplesToFlatSSeq underutilLengthProxy underutilMult >>>
-  scalableConvFold underutilLengthProxy underutilMult
+  scalableConvFold underutilLengthProxy underutilMult-}
   where
     fullLengthProxy = Proxy @64
     underutilLengthProxy = Proxy @16
     underutilMult = Proxy @3
-
+{-
 secondConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
   (downsampleLB4x4 >***< (produceRightUnitMix (Proxy :: Proxy (TSeq 16 0 (Atom ()))) >>>
                            scalableConvConsts underutilLengthProxy underutilMult)) >>>
@@ -123,7 +123,8 @@ downsampleStencilChain =
   seq_to_sseqC secondConv >>> reshapeImplicitC >>>
   seq_to_sseqC thirdConv
 -}
+-}
 writeAllStencils = do
   writeProgramToFile "parallelConvChain" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/parallelConvChain.py" False downsampleStencilChain
+    "pyExamples/parallelConvChain.py" False firstConv --downsampleStencilChain
 

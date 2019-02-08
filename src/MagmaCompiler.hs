@@ -61,6 +61,9 @@ data CompilationData = CompilationData {
   }
   deriving Show
 
+parDiv :: Int -> Int -> Int
+parDiv n d = max (n `div` d) 1
+
 multiplyThroughput :: Int -> CompilationData -> CompilationData
 multiplyThroughput n compData =
   compData { throughputNumerator = n * (throughputNumerator compData) }
@@ -257,8 +260,8 @@ appendToCompilationData nodeType newData@(CompilationData ni nts rot ip it op ot
       else do
       let dataWiringsStrings = fromRight [] portWirings
       let newOutText = dataWiringsStrings ++
-            wireIDGen nts ni (newThroughputNumerator `div` newThroughputDenominator) ++
-            getIDGenString nts ni (newThroughputNumerator `div` newThroughputDenominator) ++
+            wireIDGen nts ni (newThroughputNumerator `parDiv` newThroughputDenominator) ++
+            getIDGenString nts ni (newThroughputNumerator `parDiv` newThroughputDenominator) ++
             rot ++ reversedOutputText priorData
       let newInPorts = if (null $ (reversedOutputText priorData))
                        then ip else inputPorts priorData
@@ -273,7 +276,7 @@ appendToCompilationData nodeType newData@(CompilationData ni nts rot ip it op ot
       let newControlPorts = (entireDAGControlPorts priorData) ++ (
             if cp == [emptyControlPorts] then [] else cp)
 
-      let newPar = newThroughputNumerator `div` newThroughputDenominator
+      let newPar = newThroughputNumerator `parDiv` newThroughputDenominator
       let nodeIndexIncrement = numCopiesToParallelize nodeType newPar
       put $ (CompilationData (ni+nodeIndexIncrement) (nodeTypes priorData ++ nts)
              newOutText newInPorts newInTypes newOutPorts newOutTypes
@@ -307,7 +310,7 @@ createCompilationDataAndAppend nodeType = do
     -- traceM "start of createCompilationDataAndAppend"
     priorData <- get
     let curNodeIndex = nodeIndex priorData
-    let par = throughputNumerator priorData `div` throughputDenominator priorData
+    let par = throughputNumerator priorData `parDiv` throughputDenominator priorData
     let magmaInstances = duplicateAndInstantiateNode nodeType curNodeIndex par 
     --traceM ("nodeType" ++ show nodeType)
     --traceM ("par" ++ show par)
@@ -468,7 +471,7 @@ instance Circuit (StatefulErrorMonad) where
     currentCompData <- get
     let tNum = throughputNumerator currentCompData
     let tDenom = throughputDenominator currentCompData
-    let par = tNum `div` tDenom
+    let par = tNum `parDiv` tDenom
     let paramCheck = linebufferDataValid par lbData
     -- traceM $ show par
     -- traceM $ show lbData
@@ -499,14 +502,23 @@ instance Circuit (StatefulErrorMonad) where
     (Atom (V.Vector n (Atom a)) -> StatefulErrorMonad (Atom (V.Vector n (Atom b))))
   mapC _ f _ = do
     priorData <- get 
-    let parallelismProxy = Proxy :: Proxy n 
-    let parallelism = (fromInteger $ natVal parallelismProxy)
-    put $ multiplyThroughput parallelism priorData
+    let priorNum = throughputNumerator priorData
+    let priorDenom = throughputDenominator priorData
+    let priorPar = priorNum `parDiv` priorDenom
+    let mapParallelismProxy = Proxy :: Proxy n 
+    let mapParallelism = (fromInteger $ natVal mapParallelismProxy)
+    -- since this map is doing atoms, it's parallelism must be at least the n.
+    -- any less and we are underutilizng a vector that cannot be underutilized
+    put $ priorData {
+      throughputNumerator = priorPar * mapParallelism,
+      throughputDenominator = 1}
     --traceM $ "PriorData " ++ show priorData
     f undefined
     dataPostInnerPipeline <- get
     --traceM $ "dataPostInnerPipeline " ++ show dataPostInnerPipeline
-    put $ divideThroughput parallelism dataPostInnerPipeline 
+    put $ dataPostInnerPipeline {
+      throughputNumerator = priorNum,
+      throughputDenominator = priorDenom} 
     return undefined
 
   -- ignore the iter since it does nothing, needs to be wrapped with a tseq or

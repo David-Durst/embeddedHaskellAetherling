@@ -346,12 +346,14 @@ getPorts (LineBufferT (LineBufferData windowSize imageSize stride origin
                    cur_col <- [0..(pixels_per_row_per_clock - 1)]]
     -- when underutil allowed, this will get much more complicated
     -- check with ports in Python implementation
-    windows_per_active_clock = rows_of_pixels_per_clock * pixels_per_row_per_clock
+    windows_per_active_clock =
+      max ((rows_of_pixels_per_clock * pixels_per_row_per_clock) `div`
+      (fst stride * snd stride)) 1
     outputPorts = [ fnName ++ ".O[" ++ show cur_window ++ "][" ++ show cur_row
                     ++ "][" ++ show cur_col ++ "]"
-                 | cur_window <- [0 .. (windows_per_active_clock - 1)],
-                   cur_row <- [0..((fst windowSize) - 1)],
-                   cur_col <- [0..((snd windowSize) - 1)]]
+                  | cur_window <- [0 .. (windows_per_active_clock - 1)],
+                    cur_row <- [0..((fst windowSize) - 1)],
+                    cur_col <- [0..((snd windowSize) - 1)]]
   {-
 windows_per_active_clock, Array(window_rows, Array(window_cols,
  windows_per_row_per_clock = max(pixels_per_row_per_clock // stride_cols, 1)
