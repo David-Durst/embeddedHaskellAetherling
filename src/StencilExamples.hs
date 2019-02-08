@@ -129,6 +129,8 @@ downsampleStencilChain =
 -}
 
 writeAllStencils = do
-  writeProgramToFile "parallelConvChain" preludeLocationStrForEx epilogueLocationStrForEx
+  writeProgramToFile "stencilChain1Per64" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/parallelConvChain.py" False downsampleStencilChain
+  writeProgramToFile "stencilChain1Per32" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/parallelConvChain.py" False downsampleStencilChain
 
