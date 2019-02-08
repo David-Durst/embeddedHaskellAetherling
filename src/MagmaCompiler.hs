@@ -743,6 +743,30 @@ instance Circuit (StatefulErrorMonad) where
   reshapeC _ _ _ = return undefined
   reshapeImplicitC _ = return undefined
 
+  forceMinPortParallelism :: forall p a b . (KnownNat p) => Proxy p ->
+                             (a -> StatefulErrorMonad b) -> a -> StatefulErrorMonad b
+  forceMinPortParallelism _ f _ = do
+    priorData <- get 
+    let priorNum = throughputNumerator priorData
+    let priorDenom = throughputDenominator priorData
+    let priorPar = priorNum `parDiv` priorDenom
+    let minParallelismProxy = Proxy :: Proxy p
+    let minParallelism = (fromInteger $ natVal minParallelismProxy)
+    let parallelism = max minParallelism priorPar
+    -- since this map is doing atoms, it's parallelism must be at least the n.
+    -- any less and we are underutilizng a vector that cannot be underutilized
+    put $ priorData {
+      throughputNumerator = parallelism,
+      throughputDenominator = 1}
+    --traceM $ "PriorData " ++ show priorData
+    f undefined
+    dataPostInnerPipeline <- get
+    --traceM $ "dataPostInnerPipeline " ++ show dataPostInnerPipeline
+    put $ dataPostInnerPipeline {
+      throughputNumerator = priorNum,
+      throughputDenominator = priorDenom} 
+    return undefined
+
 -- examples of programs in space and time
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition

@@ -29,6 +29,16 @@ linebufferPxPerClock par xImageSize =
     xPxPerClock = min par xImageSize
   in (yPxPerClock, xPxPerClock)
 
+-- type helpers for linebuffer sequence computation
+-- these assume x and y px per clock of 1, as par will increase that later
+type LBTimePerBufferedCycle (imageCols :: Nat) (strideRows :: Nat) =
+  imageCols * strideRows
+
+type LBWindowsPerActiveClock (imageCols :: Nat) (strideCols :: Nat)
+  (timePerBufferedCycle :: Nat) = Max 1 (Div
+                                         (Div imageCols strideCols)
+                                         timePerBufferedCycle)
+  
 
 linebufferDataValid :: Int -> LineBufferData -> [String]
 linebufferDataValid par lbData = yParOkReason ++ xParOkReason ++ onlyYParIfXFullyParReason ++

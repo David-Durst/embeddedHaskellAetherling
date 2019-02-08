@@ -24,15 +24,15 @@ import ReadyValid
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector.Sized as V
 
+downsampleLB16x16 = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @16) (Proxy @16)
+                   (Proxy @2) (Proxy @2) (Proxy @0) (Proxy @0))
+sequentialDownsampleLB16x16CData = buildCompilationData downsampleLB16x16
 downsampleLB8x8 = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @8) (Proxy @8)
                    (Proxy @2) (Proxy @2) (Proxy @0) (Proxy @0))
 sequentialDownsampleLB8x8CData = buildCompilationData downsampleLB8x8
 downsampleLB4x4 = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @4) (Proxy @4)
                    (Proxy @2) (Proxy @2) (Proxy @0) (Proxy @0))
 sequentialDownsampleLB4x4CData = buildCompilationData downsampleLB4x4
-downsampleLB2x2 = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @2) (Proxy @2)
-                   (Proxy @2) (Proxy @2) (Proxy @0) (Proxy @0))
-sequentialDownsampleLB2x2CData = buildCompilationData downsampleLB2x2
 
 scalableConvMuls lengthProxy underutilMult = underutilC underutilMult $
   seq_to_tseqC $ iterC lengthProxy $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
@@ -58,24 +58,35 @@ scalableNTuplesToFlatSSeq lengthProxy underutilMult = underutilC underutilMult $
 
 scalableConvFold lengthProxy underutilMult = underutilC underutilMult $
   seq_to_tseqC $ iterC lengthProxy $ seq_to_sseqC $
-  foldC (Proxy @4) addC (constGenIntC (Int 0))
+  forceMinPortParallelism (Proxy @4) $ foldC (Proxy @4) addC (constGenIntC (Int 0))
+
+firstConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
+  (downsampleLB16x16 >***< (produceRightUnitMix (Proxy :: Proxy (TSeq 256 0 (Atom ()))) >>>
+                           scalableConvConsts underutilLengthProxy underutilMult)) >>>
+  scalableConvMuls underutilLengthProxy underutilMult >>>
+  scalableNTuplesToFlatSSeq underutilLengthProxy underutilMult >>>
+  scalableConvFold underutilLengthProxy underutilMult
+  where
+    fullLengthProxy = Proxy @256
+    underutilLengthProxy = Proxy @64
+    underutilMult = Proxy @4
 
 -- downsampleLB8x8 >>> scalableConvConstsForLB lengthProxy >>>
 xxz = (downsampleLB8x8 >***<
         (produceRightUnitMix (Proxy :: Proxy (TSeq 64 0 (Atom ()))) >>>
          scalableConvConsts (Proxy @16) (Proxy @4)))
-firstConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
+secondConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
   (downsampleLB8x8 >***< (produceRightUnitMix (Proxy :: Proxy (TSeq 64 0 (Atom ()))) >>>
                            scalableConvConsts underutilLengthProxy underutilMult)) >>>
   scalableConvMuls underutilLengthProxy underutilMult >>>
-  scalableNTuplesToFlatSSeq underutilLengthProxy underutilMult {- >>>
-  scalableConvFold underutilLengthProxy underutilMult-}
+  scalableNTuplesToFlatSSeq underutilLengthProxy underutilMult >>>
+  scalableConvFold underutilLengthProxy underutilMult
   where
     fullLengthProxy = Proxy @64
     underutilLengthProxy = Proxy @16
     underutilMult = Proxy @4
-{-
-secondConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
+
+thirdConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
   (downsampleLB4x4 >***< (produceRightUnitMix (Proxy :: Proxy (TSeq 16 0 (Atom ()))) >>>
                            scalableConvConsts underutilLengthProxy underutilMult)) >>>
   scalableConvMuls underutilLengthProxy underutilMult >>>
@@ -86,22 +97,15 @@ secondConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
     underutilLengthProxy = Proxy @4
     underutilMult = Proxy @4
 
-thirdConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
-  (downsampleLB2x2 >***< (produceRightUnitMix (Proxy :: Proxy (TSeq 4 0 (Atom ()))) >>>
-                           scalableConvConsts underutilLengthProxy underutilMult)) >>>
-  scalableConvMuls underutilLengthProxy underutilMult >>>
-  scalableNTuplesToFlatSSeq underutilLengthProxy underutilMult >>>
-  scalableConvFold underutilLengthProxy underutilMult
-  where
-    fullLengthProxy = Proxy @4
-    underutilLengthProxy = Proxy @1
-    underutilMult = Proxy @3
 
+-- later stencils are underutiled as they are only going to take in 1 input every nth
+-- the second every 4th (as it is a 4x4 image that runs for as many clocks as the 8x8)
+-- the third every 16th (as it is a 2x2 image that runs for as many clocks as the 8x8)
 downsampleStencilChain = firstConv >>>
-  (underutilC (Proxy @3) $ seq_to_tseqC $ iterC (Proxy @16) reshapeImplicitC) >>>
-  underutilC (Proxy @3) secondConv >>>
-  (underutilC (Proxy @15) $ seq_to_tseqC $ iterC (Proxy @4) reshapeImplicitC) >>>
-  underutilC (Proxy @15) thirdConv
+  (underutilC (Proxy @4) $ seq_to_tseqC $ iterC (Proxy @64) reshapeImplicitC) >>>
+  underutilC (Proxy @4) secondConv >>>
+  (underutilC (Proxy @16) $ seq_to_tseqC $ iterC (Proxy @16) reshapeImplicitC) >>>
+  underutilC (Proxy @16) thirdConv
 {-
 secondConv = iterC lengthProxy addUnitType >>>
   (downsampleLB4x4 >***< scalableConvConsts lengthProxy) >>>
@@ -123,8 +127,8 @@ downsampleStencilChain =
   seq_to_sseqC secondConv >>> reshapeImplicitC >>>
   seq_to_sseqC thirdConv
 -}
--}
+
 writeAllStencils = do
   writeProgramToFile "parallelConvChain" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/parallelConvChain.py" False firstConv --downsampleStencilChain
+    "pyExamples/parallelConvChain.py" False downsampleStencilChain
 

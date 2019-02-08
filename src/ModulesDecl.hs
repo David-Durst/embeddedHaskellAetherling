@@ -207,10 +207,19 @@ class Monad m => Circuit m where
     -- and keeping n around
     TSeq n ((n + v) * underutilMult - n) a -> m (TSeq o ((o + u) * underutilMult - o) b)
 
+  increaseutilC :: (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
+                 KnownNat increaseutilMult, 1 <= increaseutilMult) => 
+    Proxy increaseutilMult -> (TSeq n v a -> m (TSeq o u b)) ->
+    -- subtract n/o as n + v * underutilMult is the new base of the utilization
+    -- and keeping n around
+    TSeq n ((n + v) `Div` increaseutilMult - n) a -> m (TSeq o ((o + u) `Div` increaseutilMult - o) b)
+
   mergeSSeqs :: (KnownNat n, KnownNat o) => (SSeq n (SSeq o a)) -> m (SSeq (n*o) a)
 
   reshapeC :: (TypeSize a ~ TypeSize b) => Proxy a -> Proxy b -> a -> m b 
   reshapeImplicitC :: (TypeSize a ~ TypeSize b) => a -> m b 
+
+  forceMinPortParallelism :: (KnownNat p) => Proxy p -> (a -> m b) -> (a -> m b)
 
 -- these are the types of the nodes in a DAG
 data NodeType =
