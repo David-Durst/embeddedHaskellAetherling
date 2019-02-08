@@ -165,9 +165,8 @@ createMagmaDefOfNode (LineBufferT (LineBufferData windowSize imageSize
   where
     -- for now, need to emit at least a complete stride every clock so emit once
     -- every clock as no underutil yet
-    baseParallelism = (fst stride) * (snd stride)
     (yParallelism, xParallelism) =
-      linebufferPxPerClock (par * baseParallelism) (snd imageSize)
+      linebufferPxPerClock par (snd imageSize)
 
 type PortName = String
 
@@ -340,9 +339,8 @@ getPorts (LineBufferT (LineBufferData windowSize imageSize stride origin
   where
     -- for now, need to emit at least a complete stride every clock so emit once
     -- every clock as no underutil yet
-    baseParallelism = (fst stride) * (snd stride)
     (rows_of_pixels_per_clock, pixels_per_row_per_clock) =
-      linebufferPxPerClock (par * baseParallelism) (snd imageSize)
+      linebufferPxPerClock par (snd imageSize)
     inputPorts = [ fnName ++ ".I[" ++ show cur_row ++ "][" ++ show cur_col ++ "]"
                  | cur_row <- [0..(rows_of_pixels_per_clock - 1)],
                    cur_col <- [0..(pixels_per_row_per_clock - 1)]]

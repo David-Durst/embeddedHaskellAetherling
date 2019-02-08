@@ -102,7 +102,7 @@ class Monad m => Circuit m where
   -- maybe in future allow them to be different types (accum and seq elements)
   -- take seqences of length p, break them up into sequences of length o and
   -- fold over each subsequence of length o
-  foldC :: (KnownNat n, (KnownNat (TypeSize a))) =>
+  foldC :: (KnownNat n, (KnownNat (TypeSize (Atom a)))) =>
            Proxy n -> (Atom (Atom a, Atom a) -> m (Atom a)) ->
            (Atom () -> m (Atom a)) ->
            Seq n (Atom a) -> m (Seq 1 (Atom a))
@@ -123,12 +123,11 @@ class Monad m => Circuit m where
     Proxy (Atom a) -> Proxy windowYSize -> Proxy windowXSize ->
     Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
-    -- need strideY*strideX here as, if running at least 1 pixel
-    -- out per clock, need at least these many pixels in per clock
-    -- can get rid of this once I have underutilize working
-    (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
-     (Atom (V.Vector (strideY * strideX) (Atom a)))) ->
-    m (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
+    (TSeq (imageYSize * imageXSize) 0 (Atom a)) ->
+    m (TSeq (Div (imageYSize * imageXSize) (strideY * strideX))
+        -- underutilized when not emitting. 
+        ((imageYSize * imageXSize) -
+          (Div (imageYSize * imageXSize) (strideY * strideX)))
         (Atom (V.Vector windowYSize
                (Atom (V.Vector windowXSize (Atom a))))))
 
@@ -156,6 +155,8 @@ class Monad m => Circuit m where
 
   -- helpers for filling in units for types automatically
   addUnitType :: (JustUnits (Atom b)) => Atom a -> m (Atom (Atom a, Atom b))
+  -- this converts a single unit into a nested tuple or seq of units
+  produceRightUnitMix :: (JustUnits a, JustUnits b) => Proxy a -> a -> m b
 
   (>>>) ::  (AtomBaseType a, AtomBaseType b, AtomBaseType c) =>
     (a -> m b) -> (b -> m c) -> (a -> m c)
@@ -196,13 +197,13 @@ class Monad m => Circuit m where
     TSeq inputLength 0 a -> m (TSeq outputLength 0 b)
 
   tseq_to_sseqC :: (KnownNat inputLength, KnownNat outputLength) =>
-    (TSeq inputLength v a -> m (TSeq outputLength u b)) ->
+    (TSeq inputLength 0 a -> m (TSeq outputLength 0 b)) ->
     SSeq inputLength a -> m (SSeq outputLength b)
 
   underutilC :: (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
                  KnownNat underutilMult, 1 <= underutilMult) => 
     Proxy underutilMult -> (TSeq n v a -> m (TSeq o u b)) ->
-    TSeq n ((n + v) * underutilMult) a -> m (TSeq o ((o + u) * underutilMult) b)
+    TSeq n ((n + v) * underutilMult + v) a -> m (TSeq o ((o + u) * underutilMult + u) b)
 
   mergeSSeqs :: (KnownNat n, KnownNat o) => (SSeq n (SSeq o a)) -> m (SSeq (n*o) a)
 

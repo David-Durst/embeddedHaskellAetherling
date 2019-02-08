@@ -411,7 +411,7 @@ instance Circuit (StatefulErrorMonad) where
   -- note that getIDGenString and wireIDGen in appendToCompilationData are
   -- a hack that are a special case for fold to work. They make the idgen and wire it up
   -- to the identity port of the fold.
-  foldC :: forall n a . (KnownNat n, (KnownNat (TypeSize a))) =>
+  foldC :: forall n a . (KnownNat n, (KnownNat (TypeSize (Atom a)))) =>
            Proxy n -> (Atom (Atom a, Atom a) -> StatefulErrorMonad (Atom a)) ->
            (Atom () -> StatefulErrorMonad (Atom a)) ->
            Seq n (Atom a) -> StatefulErrorMonad (Seq 1 (Atom a))
@@ -457,11 +457,13 @@ instance Circuit (StatefulErrorMonad) where
     -- need strideY*strideX here as, if running at least 1 pixel
     -- out per clock, need at least these many pixels in per clock
     -- can get rid of this once I have underutilize working
-    (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
-      (Atom (V.Vector (strideY * strideX) (Atom a)))) ->
-    StatefulErrorMonad (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
-                         (Atom (V.Vector windowYSize
-                                (Atom (V.Vector windowXSize (Atom a))))))
+    (TSeq (imageYSize * imageXSize) 0 (Atom a)) ->
+    StatefulErrorMonad (TSeq (Div (imageYSize * imageXSize) (strideY * strideX))
+                       -- underutilized when not emitting. 
+                        ((imageYSize * imageXSize) -
+                          (Div (imageYSize * imageXSize) (strideY * strideX)))
+                        (Atom (V.Vector windowYSize
+                               (Atom (V.Vector windowXSize (Atom a))))))
   lineBuffer _ _ _ _ _ _ _ _ _ _ = do
     currentCompData <- get
     let tNum = throughputNumerator currentCompData
@@ -602,6 +604,8 @@ instance Circuit (StatefulErrorMonad) where
 
   addUnitType _ = do
     return undefined
+  produceRightUnitMix _ _ = do
+    return undefined
 
   (f >>> g) _ = do
     f undefined
@@ -694,9 +698,9 @@ instance Circuit (StatefulErrorMonad) where
     return undefined
 
   -- this is almost same as seq_to_sseq as tseq and seq both don't change parallelism
-  tseq_to_sseqC :: forall inputLength outputLength a b u v .
+  tseq_to_sseqC :: forall inputLength outputLength a b .
                    (KnownNat inputLength, KnownNat outputLength) =>
-    (TSeq inputLength v a -> StatefulErrorMonad (TSeq outputLength u b)) ->
+    (TSeq inputLength 0 a -> StatefulErrorMonad (TSeq outputLength 0 b)) ->
     SSeq inputLength a -> StatefulErrorMonad (SSeq outputLength b)
   tseq_to_sseqC f _ = do 
     priorData <- get 
@@ -712,7 +716,7 @@ instance Circuit (StatefulErrorMonad) where
                 (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
                  KnownNat underutilMult, 1 <= underutilMult) => 
     Proxy underutilMult -> (TSeq n v a -> StatefulErrorMonad (TSeq o u b)) ->
-    TSeq n ((n + v) * underutilMult) a -> StatefulErrorMonad (TSeq o ((o + u) * underutilMult) b)
+    TSeq n ((n + v) * underutilMult + v) a -> StatefulErrorMonad (TSeq o ((o + u) * underutilMult + u) b)
   underutilC underutilProxy f _ = do 
     priorData <- get 
     let inputLengthProxy = Proxy :: Proxy underutilMult
@@ -741,45 +745,43 @@ unscheduledNode = iterC (Proxy @4) $ addC
 lb2x2Example = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @8) (Proxy @8)
                 (Proxy @1) (Proxy @1) (Proxy @0) (Proxy @0))
 
-lbExampleConsts = iterC (Proxy @64) $
+lbExampleConsts = seq_to_tseqC $ iterC (Proxy @64) $
   (constGenIntC (Int 1) >***< constGenIntC (Int 2)) >***<
   (constGenIntC (Int 2) >***< constGenIntC (Int 1)) >>>
   reshapeC (Proxy :: Proxy (Atom (Atom (Atom Int, Atom Int), Atom (Atom Int, Atom Int))))
   (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
 
 --lbExampleConsts = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
-lbExampleMuls = iterC (Proxy @64) $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
-unscheduledLBExample = (lb2x2Example >***< lbExampleConsts) >>> lbExampleMuls
-nestedNTuplesToFlatSSeq = iterC (Proxy @64) $
+lbExampleMuls = seq_to_tseqC $ iterC (Proxy @64) $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
+nestedNTuplesToFlatSSeq = seq_to_tseqC $ iterC (Proxy @64) $
   reshapeC (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
   (Proxy :: Proxy (SSeq 4 (Atom Int)))
-unscheduledLBExampleNoUnits = (iterC (Proxy @64) addUnitType) >>>
+sequentialLBExampleNoUnits = (seq_to_tseqC $ iterC (Proxy @64) addUnitType) >>>
   (lb2x2Example >***< lbExampleConsts) >>> lbExampleMuls >>> nestedNTuplesToFlatSSeq
-foldExample = iterC (Proxy @64) $ seq_to_sseqC $
+foldExample = seq_to_tseqC $ iterC (Proxy @64) $ seq_to_sseqC $
   foldC (Proxy @4) addC (constGenIntC (Int 0))
-unscheduledConvolution = unscheduledLBExampleNoUnits >>> foldExample
+sequentialConvolution = sequentialLBExampleNoUnits >>> foldExample
   
-convOutputToInput = iterC (Proxy @64) $ reshapeC (Proxy :: Proxy (SSeq 1 (Atom Int)))
-  (Proxy :: Proxy (Atom (V.Vector 1 (Atom Int))))
+convOutputToInput = seq_to_tseqC $ iterC (Proxy @64) $
+  reshapeC (Proxy :: Proxy (SSeq 1 (Atom Int))) (Proxy :: Proxy (Atom Int))
 
-unscheduledConvChain = unscheduledConvolution >>> convOutputToInput >>>
-  unscheduledConvolution >>> convOutputToInput >>> unscheduledConvolution
+sequentialConvChain = sequentialConvolution >>> convOutputToInput >>>
+  sequentialConvolution >>> convOutputToInput >>> sequentialConvolution
 
 unscheduledPipelineCData = buildCompilationData unscheduledPipeline
 unscheduledNodeCData = buildCompilationData unscheduledNode 
-unscheduledLBCData = buildCompilationData unscheduledLBExample
-unscheduledConvolutionCData = buildCompilationData unscheduledConvolution
-unscheduledConvChainCData = buildCompilationData unscheduledConvChain
+-- unscheduledLBCData = buildCompilationData unscheduledLBExample
+--unscheduledConvolutionCData = buildCompilationData unscheduledConvolution
+--unscheduledConvChainCData = buildCompilationData unscheduledConvChain
 
 sequentialPipeline = seq_to_tseqC unscheduledPipeline 
 sequentialPipelineCData = buildCompilationData $ seq_to_tseqC unscheduledPipeline 
 sequentialNodeCData = buildCompilationData $ seq_to_tseqC unscheduledNode
-sequentialLB = seq_to_tseqC unscheduledLBExample
-sequentialLBCData = buildCompilationData $ seq_to_tseqC unscheduledLBExample
-sequentialConvolution = seq_to_tseqC unscheduledConvolution
+sequentialLB = (lb2x2Example >***< lbExampleConsts) >>> lbExampleMuls
+sequentialLBCData = buildCompilationData sequentialLB 
 sequentialConvolutionCData = buildCompilationData sequentialConvolution
-sequentialConvChain = seq_to_tseqC unscheduledConvChain
-sequentialConvChainCData = buildCompilationData unscheduledConvChain
+--sequentialConvChain = seq_to_tseqC unscheduledConvChain
+sequentialConvChainCData = buildCompilationData sequentialConvChain
 {-
 sequentialLBCData = buildCompilationData $ seq_to_tseqC (unscheduledLBExample .
                                                          (mergeSeqTuples
@@ -790,9 +792,9 @@ sequentialLBCData = buildCompilationData $ seq_to_tseqC (unscheduledLBExample .
 parallelPipeline = seq_to_sseqC unscheduledPipeline 
 parallelPipelineCData = buildCompilationData $ seq_to_sseqC unscheduledPipeline 
 parallelNodeCData = buildCompilationData $ seq_to_sseqC unscheduledNode
-parallelLB = seq_to_sseqC unscheduledLBExample
-parallelLBCData = buildCompilationData $ seq_to_sseqC unscheduledLBExample
-parallelConvolution = seq_to_sseqC unscheduledConvolution
+parallelLB = tseq_to_sseqC sequentialLB
+parallelLBCData = buildCompilationData $ tseq_to_sseqC sequentialLB
+parallelConvolution = tseq_to_sseqC sequentialConvolution
 parallelConvolutionCData = buildCompilationData parallelConvolution
 
 partialParallelPipeline = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledPipeline 
@@ -800,25 +802,25 @@ partialParallelPipelineCData = buildCompilationData $ seq_to_tseqC $ split_seq_t
   unscheduledPipeline 
 partialParallelNodeCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_sseqC (Proxy @2)
   unscheduledNode
-partialParallelLB = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) unscheduledLBExample
-partialParallelLBCData = buildCompilationData $ partialParallelLB
+-- partialParallelLB = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) unscheduledLBExample
+--partialParallelLBCData = buildCompilationData $ partialParallelLB
 -- note that the proxy for the split is the outer sequence length. Divide into 32
 -- segments to get inner parallelism of 2 in an 8x8 image
-partialParallel2Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) unscheduledConvolution
+partialParallel2Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) $ tseq_to_seqC sequentialConvolution
 partialParallel2ConvolutionCData = buildCompilationData partialParallel2Convolution
-partialParallel4Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) unscheduledConvolution
+partialParallel4Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) $ tseq_to_seqC sequentialConvolution
 partialParallel4ConvolutionCData = buildCompilationData partialParallel4Convolution
-partialParallel8Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) unscheduledConvolution
+partialParallel8Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) $ tseq_to_seqC sequentialConvolution
 partialParallel8ConvolutionCData = buildCompilationData partialParallel8Convolution
-partialParallel16Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) unscheduledConvolution
+partialParallel16Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) $ tseq_to_seqC sequentialConvolution
 partialParallel16ConvolutionCData = buildCompilationData partialParallel16Convolution
-partialParallel2ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) unscheduledConvChain
+partialParallel2ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) $ tseq_to_seqC sequentialConvChain
 partialParallel2ConvChainCData = buildCompilationData partialParallel2ConvChain
-partialParallel4ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) unscheduledConvChain
+partialParallel4ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) $ tseq_to_seqC sequentialConvChain
 partialParallel4ConvChainCData = buildCompilationData partialParallel4ConvChain
-partialParallel8ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) unscheduledConvChain
+partialParallel8ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) $ tseq_to_seqC sequentialConvChain
 partialParallel8ConvChainCData = buildCompilationData partialParallel8ConvChain
-partialParallel16ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) unscheduledConvChain
+partialParallel16ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) $ tseq_to_seqC sequentialConvChain
 partialParallel16ConvChainCData = buildCompilationData partialParallel16ConvChain
 {-
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput
@@ -843,8 +845,8 @@ writeAllExamples = do
     "pyExamples/sequentialLineBufferWithAdd.py" False sequentialLB
   writeProgramToFile "parallelLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/parallelLineBufferWithAdd.py" False parallelLB
-  writeProgramToFile "partialParallelLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallelLineBufferWithAdd.py" False partialParallelLB
+  --writeProgramToFile "partialParallelLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
+  -- "pyExamples/partialParallelLineBufferWithAdd.py" False partialParallelLB
   writeProgramToFile "sequentialConvolution" preludeLocationStrForEx epilogueLocationStrForEx 
     "pyExamples/sequentialConvolution.py" False sequentialConvolution
   writeProgramToFile "parallelConvolution" preludeLocationStrForEx epilogueLocationStrForEx
