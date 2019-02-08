@@ -82,7 +82,7 @@ class Monad m => Circuit m where
   -- unary operators
   absC :: Atom Int -> m (Atom Int)
   notC :: Atom Bool -> m (Atom Bool)
-  noop :: (KnownNat (TypeSize a)) => Atom a -> m (Atom a)
+  noop :: (a -> m b) -> a -> m b
   -- binary operators
   addC, subC, divC, mulC, minC, maxC, ashrC,
     shlC :: Atom (Atom Int, Atom Int) -> m (Atom Int)
@@ -236,7 +236,7 @@ class Monad m => Circuit m where
 data NodeType =
   AbsT
   | NotT
-  | NoopT
+  | NoopT NodeType
   | AddT
   | SubT
   | DivT
@@ -278,7 +278,7 @@ data NodeType =
 instance Show NodeType where
   show AbsT = "AbsT"
   show NotT = "NotT"
-  show NoopT = "NoopT"
+  show (NoopT nt) = "NoopT " ++ (show nt)
   show AddT = "AddT"
   show SubT = "SubT"
   show DivT = "DivT"

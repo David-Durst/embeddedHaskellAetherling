@@ -360,7 +360,16 @@ instance Circuit (StatefulErrorMonad) where
   -- unary operators
   absC _ = createCompilationDataAndAppend AbsT 
   notC _ = createCompilationDataAndAppend NotT
-  noop c = return undefined
+  noop f _ = do
+    let fPipeline = runIdentity $ runExceptT $ (runStateT
+          (f undefined) emptyCompData)
+    if isLeft fPipeline
+      then do
+      liftEither fPipeline
+      return undefined
+      else do
+      createCompilationDataAndAppend (NoopT
+                                      (head $ nodeTypes $ snd $ fromRight undefined fPipeline))
 
   -- binary operators
   -- the values returned here, they are only to emit things of the right types

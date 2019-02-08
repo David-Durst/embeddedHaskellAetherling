@@ -50,7 +50,8 @@ duplicateAndInstantiateNode nodeType _ par = createMagmaDefOfNode nodeType par
 createMagmaDefOfNode :: NodeType -> Int -> Either String String
 createMagmaDefOfNode AbsT _ = Left "Abs node not implemented" 
 createMagmaDefOfNode NotT _ = Right "DefineNegate(8)"
-createMagmaDefOfNode NoopT _ = Left "NoOp shouldn't be printed to magma"
+createMagmaDefOfNode (NoopT nt) par = Right $ "DefineNoop(" ++
+  (fromRight "bad Noop inner def" $ createMagmaDefOfNode nt par) ++ ")"
 createMagmaDefOfNode AddT _ = Right "DefineAdd(8)"
 createMagmaDefOfNode SubT _ = Right "DefineSub(8)"
 createMagmaDefOfNode DivT _ = Right "DefineCoreirUDiv(8)"
@@ -203,6 +204,7 @@ data Ports = Ports {
   controlPorts :: ControlPorts
   } deriving (Show, Eq)
 
+emptyPorts = Ports [] [] [] [] emptyControlPorts
 
 mergePorts :: Ports -> Ports -> Ports
 mergePorts ports1 ports2 =
@@ -252,7 +254,14 @@ getPorts :: NodeType -> String -> Int -> Either String Ports
 getPorts AbsT _ _ = Left "Abs node not implemented" 
 getPorts NotT fnName _ = Right $ Ports [fnName ++ "I"] [bitType]
                          [fnName ++ "O"] [bitType] emptyControlPorts
-getPorts NoopT _ _ = Left "NoOp shouldn't be printed to magma"
+getPorts (NoopT nt) fnName par = Right (
+  Ports noopInputPortNames (inTypes innerPorts)
+    noopOutputPortNames (outTypes innerPorts) emptyControlPorts)
+  where
+    innerPorts = fromRight (emptyPorts {inPorts = ["bad inner ports to Noop"]}) $
+                 getPorts nt "toRemove" par
+    noopInputPortNames = fmap (replaceAString "toRemove." "") $ inPorts innerPorts
+    noopOutputPortNames = fmap (replaceAString "toRemove." "") $ outPorts innerPorts
 getPorts AddT fnName _ = Right $ binaryFunctionPorts fnName [intType, intType] [intType]
 getPorts SubT fnName _ = Right $ binaryFunctionPorts fnName [intType, intType] [intType]
 getPorts DivT fnName _ = Right $ binaryFunctionPorts fnName [intType, intType] [intType]

@@ -69,8 +69,7 @@ instance Circuit (State ResourceEstimate) where
   -- unary operators
   absC _ = incrementResourcesBy intSizeInBits intSizeInBits (Int 2)
   notC _ = incrementResourcesBy bitSizeInBits bitSizeInBits undefined
-  noop :: forall a . (KnownNat (TypeSize a)) => Atom a -> State ResourceEstimate (Atom a)
-  noop c = incrementResourcesBy (size (Proxy :: Proxy a)) (size (Proxy :: Proxy a)) c
+  noop _ _ = incrementResourcesBy 0 0 undefined
 
   -- binary operators
   -- the values returned here, they are only to emit things of the right types
