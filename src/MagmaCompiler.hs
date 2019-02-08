@@ -33,11 +33,8 @@ data CompilationData = CompilationData {
   -- the list of nodes in this dag
   -- this won't track for the nodes that don't have node types
   nodeTypes :: [NodeType],
-  -- list of strings in reverse of Magma code
-  -- reversed as prepend is cheaper
-  reversedOutputText :: [String],
+  outputText :: [String],
   -- the input ports to the circuit
-  -- this is NOT REVERSED
   inputPorts :: [PortName],
   -- the int was supposed to be if these ports
   -- need to be wrapped in an array. But that is actually
@@ -46,7 +43,6 @@ data CompilationData = CompilationData {
   -- just [TypeRep]
   inputPortsTypes :: [(TypeRep, Int)],
   -- the output ports, used to wire up adjacent nodes
-  -- this is NOT REVERSED
   outputPorts :: [PortName],
   outputPortsTypes :: [(TypeRep, Int)],
   -- this represents the ready, valid, and CE ports
@@ -99,7 +95,7 @@ buildCompilationData functionYieldingMonad = getErrorOrCompDataAsCompData $
   runIdentity $ runExceptT $ runStateT (functionYieldingMonad undefined) emptyCompData 
   where
     getErrorOrCompDataAsCompData :: Either String (b, CompilationData) -> CompilationData
-    getErrorOrCompDataAsCompData (Left s) = emptyCompData { reversedOutputText = [s] }
+    getErrorOrCompDataAsCompData (Left s) = emptyCompData { outputText = [s] }
     getErrorOrCompDataAsCompData (Right (_, compData)) = compData
 
 getModulePortsString :: Bool -> String -> [(TypeRep, Int)] -> String
@@ -153,20 +149,19 @@ writeProgramToFile circuitName preludeLocation epilogueLocation outputLocation
   traceM bodyString
   -}
   let outputString = (preludeString ++ interfaceString ++ circuitDefinition ++
-                      (foldl (++) "" $ reverse $ reversedOutputText compData) ++
+                      (foldl (++) "" $ outputText compData) ++
                       wireDataInterfaceString ++ wireRVString ++
                       wireCEToTerm ++
                       epilogueString ++ saveToCoreIRString)
   --traceM outputString
   writeFile outputLocation outputString
 
--- this returns the wire calls in reverse order so they can be prepended to the
--- out text
+-- this returns the wire calls
 wirePorts :: [PortName] -> [PortName] -> Either String [String]
 wirePorts priorOutPorts nextInPorts |
   length priorOutPorts == length nextInPorts = Right wireStrings
   where
-    portPairs = reverse $ zip priorOutPorts nextInPorts
+    portPairs = zip priorOutPorts nextInPorts
     wireStrings = fmap (\(outName, inName) -> "wire(" ++ outName ++ ", " ++
                          inName ++ ")\n") portPairs
 wirePorts priorOutPorts nextInPorts = Left ("Different lengths of ports " ++
@@ -242,7 +237,7 @@ wireDataInterface moduleName inputPorts outputPorts = foldl (++) "" $
 -- given a compilation data for a new stage, append it to the state
 -- for a set of existing stages
 appendToCompilationData :: NodeType -> CompilationData -> StatefulErrorMonad a
-appendToCompilationData nodeType newData@(CompilationData ni nts rot ip it op ot
+appendToCompilationData nodeType newData@(CompilationData ni nts ot ip iTypes op oTypes
                                           cp tNum tDenom) = do  
     priorData <- get 
     -- just propagate throughput numerator and denominator 
@@ -253,24 +248,24 @@ appendToCompilationData nodeType newData@(CompilationData ni nts rot ip it op ot
     let newThroughputDenominator = throughputDenominator priorData
     --traceM ("Old data" ++ show priorData)
     --traceM ("New data" ++ show newData)
-    let portWirings = if (null $ (reversedOutputText priorData))
+    let portWirings = if (null $ (outputText priorData))
                        then Right [] else wirePorts (outputPorts priorData) ip
     if isLeft portWirings
       then liftEither portWirings
       else do
       let dataWiringsStrings = fromRight [] portWirings
-      let newOutText = dataWiringsStrings ++
-            wireIDGen nts ni (newThroughputNumerator `parDiv` newThroughputDenominator) ++
+      let newOutText = outputText priorData ++ ot ++
             getIDGenString nts ni (newThroughputNumerator `parDiv` newThroughputDenominator) ++
-            rot ++ reversedOutputText priorData
-      let newInPorts = if (null $ (reversedOutputText priorData))
+            wireIDGen nts ni (newThroughputNumerator `parDiv` newThroughputDenominator) ++
+            dataWiringsStrings
+      let newInPorts = if (null $ (outputText priorData))
                        then ip else inputPorts priorData
-      let newInTypes = if (null $ (reversedOutputText priorData))
-                        then it else inputPortsTypes priorData
-      let newInTypes = if (null $ (reversedOutputText priorData))
-                        then it else inputPortsTypes priorData
+      let newInTypes = if (null $ (outputText priorData))
+                        then iTypes else inputPortsTypes priorData
+      let newInTypes = if (null $ (outputText priorData))
+                        then iTypes else inputPortsTypes priorData
       let newOutPorts = op
-      let newOutTypes = ot
+      let newOutTypes = oTypes
       -- unlike at for first CE and valid ports,
       -- propagate last ones from priorData only if current stage has no ports
       let newControlPorts = (entireDAGControlPorts priorData) ++ (
@@ -568,8 +563,8 @@ instance Circuit (StatefulErrorMonad) where
                                -- counting.
                                (nodeIndex gCompilerData - 1)
                                [ForkJoinT (nodeTypes fCompilerData) (nodeTypes gCompilerData)]
-                               (reversedOutputText gCompilerData ++
-                                 reversedOutputText fCompilerData)
+                               (outputText fCompilerData ++
+                                 outputText gCompilerData)
                                (inputPorts fCompilerData ++ inputPorts gCompilerData)
                                (inputPortsTypes fCompilerData ++ inputPortsTypes gCompilerData)
                                (outputPorts fCompilerData ++ outputPorts gCompilerData)
