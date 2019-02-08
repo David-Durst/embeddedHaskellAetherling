@@ -207,12 +207,23 @@ class Monad m => Circuit m where
     -- and keeping n around
     TSeq n ((n + v) * underutilMult - n) a -> m (TSeq o ((o + u) * underutilMult - o) b)
 
-  increaseutilC :: (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
-                 KnownNat increaseutilMult, 1 <= increaseutilMult) => 
-    Proxy increaseutilMult -> (TSeq n v a -> m (TSeq o u b)) ->
+  increaseUtilC :: (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
+                 KnownNat increaseUtilMult, 1 <= increaseUtilMult,
+                 1 <= v, 1 <= u,
+                 increaseUtilMult <= (n + v), increaseUtilMult <= (o + u)) => 
+    Proxy increaseUtilMult -> (TSeq n v a -> m (TSeq o u b)) ->
     -- subtract n/o as n + v * underutilMult is the new base of the utilization
     -- and keeping n around
-    TSeq n ((n + v) `Div` increaseutilMult - n) a -> m (TSeq o ((o + u) `Div` increaseutilMult - o) b)
+    TSeq n ((n + v) `Div` increaseUtilMult - n) a -> m (TSeq o ((o + u) `Div` increaseUtilMult - o) b)
+
+  increaseUtilTtoSC :: (KnownNat n, KnownNat o, KnownNat u,
+                 KnownNat increaseUtilMult, 1 <= increaseUtilMult,
+                 increaseUtilMult <= u) =>
+    Proxy increaseUtilMult -> (TSeq n 0 a -> m (TSeq o u b)) ->
+    -- subtract n/o as n + v * underutilMult is the new base of the utilization
+    -- and keeping n around
+    TSeq (n `Div` increaseUtilMult) 0 (SSeq increaseUtilMult a) ->
+    m (TSeq o ((o + u) `Div` increaseUtilMult - o) b)
 
   mergeSSeqs :: (KnownNat n, KnownNat o) => (SSeq n (SSeq o a)) -> m (SSeq (n*o) a)
 

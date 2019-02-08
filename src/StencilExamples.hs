@@ -128,9 +128,12 @@ downsampleStencilChain =
   seq_to_sseqC thirdConv
 -}
 
+downsampleStencilChain1Per64 = downsampleStencilChain
+downsampleStencilChain1Per32 = increaseUtilTtoSC (Proxy @2) downsampleStencilChain
+
 writeAllStencils = do
-  writeProgramToFile "stencilChain1Per64" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/parallelConvChain.py" False downsampleStencilChain
+  writeProgramToFile "downsampleStencilChain1Per64" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/downsampleStencilChain1Per64.py" False downsampleStencilChain1Per64
   writeProgramToFile "stencilChain1Per32" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/parallelConvChain.py" False downsampleStencilChain
+    "pyExamples/downsampleStencilChain1Per32.py" False downsampleStencilChain1Per32
 
