@@ -465,11 +465,8 @@ instance Circuit (StatefulErrorMonad) where
     -- need strideY*strideX here as, if running at least 1 pixel
     -- out per clock, need at least these many pixels in per clock
     -- can get rid of this once I have underutilize working
-    (TSeq (imageYSize * imageXSize) 0 (Atom a)) ->
-    StatefulErrorMonad (TSeq (Div (imageYSize * imageXSize) (strideY * strideX))
-                       -- underutilized when not emitting. 
-                        ((imageYSize * imageXSize) -
-                          (Div (imageYSize * imageXSize) (strideY * strideX)))
+    (Seq (imageYSize * imageXSize) (Atom a)) ->
+    StatefulErrorMonad (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
                         (Atom (V.Vector windowYSize
                                (Atom (V.Vector windowXSize (Atom a))))))
   lineBuffer _ _ _ _ _ _ _ _ _ _ = do
@@ -629,20 +626,19 @@ instance Circuit (StatefulErrorMonad) where
     g undefined
 
   -- scheduling operators
-  split_seq_to_sseqC :: forall totalInputLength totalOutputLength outerLength
-                        innerInputLength innerOutputLength a b .
+  split_seq_to_sseqC :: forall totalInputLength totalOutputLength innerLength
+                        outerInputLength outerOutputLength a b .
                         (KnownNat totalInputLength, KnownNat totalOutputLength,
-                         KnownNat outerLength, KnownNat innerInputLength,
-                         KnownNat innerOutputLength,
-                         totalInputLength ~ (outerLength*innerInputLength),
-                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
-                        Proxy outerLength ->
+                         KnownNat innerLength, KnownNat outerInputLength,
+                         KnownNat outerOutputLength,
+                         totalInputLength ~ (innerLength*outerInputLength),
+                         totalOutputLength ~ (innerLength*outerOutputLength)) =>
+                        Proxy innerLength ->
     (Seq totalInputLength a -> StatefulErrorMonad (Seq totalOutputLength b)) ->
-    (Seq outerLength (SSeq innerInputLength a) ->
-      StatefulErrorMonad (Seq outerLength (SSeq innerOutputLength b)))
-  split_seq_to_sseqC _ f _ = do
+    (Seq outerInputLength (SSeq innerLength a) ->
+      StatefulErrorMonad (Seq outerOutputLength (SSeq innerLength b)))
+  split_seq_to_sseqC innerLengthProxy f _ = do
     priorData <- get 
-    let innerLengthProxy = Proxy :: Proxy innerOutputLength
     let innerLength = (fromInteger $ natVal innerLengthProxy)
     put $ multiplyThroughput innerLength priorData
     f undefined
@@ -703,7 +699,8 @@ instance Circuit (StatefulErrorMonad) where
   sseq_to_tseqC :: forall inputLength outputLength a b .
                    (KnownNat inputLength, KnownNat outputLength) =>
     (SSeq inputLength a -> StatefulErrorMonad (SSeq outputLength b)) ->
-    TSeq inputLength 0 a -> StatefulErrorMonad (TSeq outputLength 0 b)
+    TSeq inputLength ((Max inputLength outputLength) - inputLength) a ->
+    StatefulErrorMonad (TSeq outputLength ((Max inputLength outputLength) - outputLength) b)
   sseq_to_tseqC f _ = do
     priorData <- get 
     let inputLengthProxy = Proxy :: Proxy inputLength
@@ -715,9 +712,9 @@ instance Circuit (StatefulErrorMonad) where
     return undefined
 
   -- this is almost same as seq_to_sseq as tseq and seq both don't change parallelism
-  tseq_to_sseqC :: forall inputLength outputLength a b .
+  tseq_to_sseqC :: forall inputLength outputLength a b v u .
                    (KnownNat inputLength, KnownNat outputLength) =>
-    (TSeq inputLength 0 a -> StatefulErrorMonad (TSeq outputLength 0 b)) ->
+    (TSeq inputLength v a -> StatefulErrorMonad (TSeq outputLength u b)) ->
     SSeq inputLength a -> StatefulErrorMonad (SSeq outputLength b)
   tseq_to_sseqC f _ = do 
     priorData <- get 
@@ -884,21 +881,21 @@ partialParallelNodeCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_ss
 --partialParallelLBCData = buildCompilationData $ partialParallelLB
 -- note that the proxy for the split is the outer sequence length. Divide into 32
 -- segments to get inner parallelism of 2 in an 8x8 image
-partialParallel2Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) $ tseq_to_seqC sequentialConvolution
+partialParallel2Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) $ tseq_to_seqC sequentialConvolution
 partialParallel2ConvolutionCData = buildCompilationData partialParallel2Convolution
-partialParallel4Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) $ tseq_to_seqC sequentialConvolution
+partialParallel4Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) $ tseq_to_seqC sequentialConvolution
 partialParallel4ConvolutionCData = buildCompilationData partialParallel4Convolution
 partialParallel8Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) $ tseq_to_seqC sequentialConvolution
 partialParallel8ConvolutionCData = buildCompilationData partialParallel8Convolution
-partialParallel16Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) $ tseq_to_seqC sequentialConvolution
+partialParallel16Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) $ tseq_to_seqC sequentialConvolution
 partialParallel16ConvolutionCData = buildCompilationData partialParallel16Convolution
-partialParallel2ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @32) $ tseq_to_seqC sequentialConvChain
+partialParallel2ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) $ tseq_to_seqC sequentialConvChain
 partialParallel2ConvChainCData = buildCompilationData partialParallel2ConvChain
-partialParallel4ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) $ tseq_to_seqC sequentialConvChain
+partialParallel4ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) $ tseq_to_seqC sequentialConvChain
 partialParallel4ConvChainCData = buildCompilationData partialParallel4ConvChain
 partialParallel8ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) $ tseq_to_seqC sequentialConvChain
 partialParallel8ConvChainCData = buildCompilationData partialParallel8ConvChain
-partialParallel16ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) $ tseq_to_seqC sequentialConvChain
+partialParallel16ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) $ tseq_to_seqC sequentialConvChain
 partialParallel16ConvChainCData = buildCompilationData partialParallel16ConvChain
 {-
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput

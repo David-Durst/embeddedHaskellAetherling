@@ -168,21 +168,20 @@ instance Circuit (State PipelineDAG) where
     return undefined
 
   -- scheduling operators
-  split_seq_to_sseqC :: forall totalInputLength totalOutputLength outerLength
-                        innerInputLength innerOutputLength a b .
+  split_seq_to_sseqC :: forall totalInputLength totalOutputLength innerLength
+                        outerInputLength outerOutputLength a b .
                         (KnownNat totalInputLength, KnownNat totalOutputLength,
-                         KnownNat outerLength, KnownNat innerInputLength,
-                         KnownNat innerOutputLength,
-                         totalInputLength ~ (outerLength*innerInputLength),
-                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
-                        Proxy outerLength ->
+                         KnownNat innerLength, KnownNat outerInputLength,
+                         KnownNat outerOutputLength,
+                         totalInputLength ~ (innerLength*outerInputLength),
+                         totalOutputLength ~ (innerLength*outerOutputLength)) =>
+                        Proxy innerLength ->
     (Seq totalInputLength a -> State PipelineDAG (Seq totalOutputLength b)) ->
-    (Seq outerLength (SSeq innerInputLength a) ->
-      State PipelineDAG (Seq outerLength (SSeq innerOutputLength b)))
-  split_seq_to_sseqC _ f _ = do
+    (Seq outerInputLength (SSeq innerLength a) ->
+      State PipelineDAG (Seq outerOutputLength (SSeq innerLength b)))
+  split_seq_to_sseqC innerLengthProxy f _ = do
     PipelineDAG priorStages <- get 
     let innerStages = getInnerPipeline f emptyDAG
-    let innerLengthProxy = Proxy :: Proxy innerOutputLength
     let innerLength = (fromInteger $ natVal innerLengthProxy)
     let scheduledInnerStages = (fmap (multiplyNodeThroughput innerLength) innerStages)
     put $ PipelineDAG (priorStages ++ scheduledInnerStages)
@@ -226,9 +225,10 @@ instance Circuit (State PipelineDAG) where
 
   -- this is almost same as sseq_to_seq as tseq and seq both don't change parallelism
   sseq_to_tseqC :: forall inputLength outputLength a b .
-                   (KnownNat inputLength, KnownNat outputLength) =>
+    (KnownNat inputLength, KnownNat outputLength) =>
     (SSeq inputLength a -> State PipelineDAG (SSeq outputLength b)) ->
-    TSeq inputLength 0 a -> State PipelineDAG (TSeq outputLength 0 b)
+    TSeq inputLength ((Max inputLength outputLength) - inputLength) a ->
+    State PipelineDAG (TSeq outputLength ((Max inputLength outputLength) - outputLength) b)
   sseq_to_tseqC f _ = do
     PipelineDAG priorStages <- get 
     let innerStages = getInnerPipeline f emptyDAG

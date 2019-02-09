@@ -123,11 +123,9 @@ class Monad m => Circuit m where
     Proxy (Atom a) -> Proxy windowYSize -> Proxy windowXSize ->
     Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
-    (TSeq (imageYSize * imageXSize) 0 (Atom a)) ->
-    m (TSeq (Div (imageYSize * imageXSize) (strideY * strideX))
+    (Seq (imageYSize * imageXSize) (Atom a)) ->
+    m (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
         -- underutilized when not emitting. 
-        ((imageYSize * imageXSize) -
-          (Div (imageYSize * imageXSize) (strideY * strideX)))
         (Atom (V.Vector windowYSize
                (Atom (V.Vector windowXSize (Atom a))))))
 
@@ -163,20 +161,20 @@ class Monad m => Circuit m where
 
   -- scheduling operators
   split_seq_to_sseqC :: (KnownNat totalInputLength, KnownNat totalOutputLength,
-                         KnownNat outerLength, KnownNat innerInputLength,
-                         KnownNat innerOutputLength,
-                         totalInputLength ~ (outerLength*innerInputLength),
-                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
-    Proxy outerLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
-    Seq outerLength (SSeq innerInputLength a) -> m (Seq outerLength (SSeq innerOutputLength b))
+                         KnownNat outerInputLength, KnownNat outerOutputLength,
+                         KnownNat innerLength,
+                         totalInputLength ~ (outerInputLength*innerLength),
+                         totalOutputLength ~ (outerOutputLength*innerLength)) =>
+    Proxy innerLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
+    Seq outerInputLength (SSeq innerLength a) -> m (Seq outerOutputLength (SSeq innerLength b))
 
   split_seq_to_tseqC :: (KnownNat totalInputLength, KnownNat totalOutputLength,
-                         KnownNat outerLength, KnownNat innerInputLength,
-                         KnownNat innerOutputLength,
-                         totalInputLength ~ (outerLength*innerInputLength),
-                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
-    Proxy outerLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
-    Seq outerLength (TSeq innerInputLength 0 a) -> m (Seq outerLength (TSeq innerOutputLength 0 b))
+                         KnownNat outerInputLength, KnownNat outerOutputLength,
+                         KnownNat innerLength,
+                         totalInputLength ~ (outerInputLength*innerLength),
+                         totalOutputLength ~ (outerOutputLength*innerLength)) =>
+    Proxy innerLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
+    Seq outerInputLength (TSeq innerLength 0 a) -> m (Seq outerOutputLength (TSeq innerLength 0 b))
 
   sseq_to_seqC :: (KnownNat inputLength, KnownNat outputLength) =>
     (SSeq inputLength a -> m (SSeq outputLength b)) ->
@@ -190,14 +188,16 @@ class Monad m => Circuit m where
     SSeq inputLength a -> m (SSeq outputLength b)
 
   seq_to_tseqC :: (Seq inputLength a -> m (Seq outputLength b)) ->
-    TSeq inputLength 0 a -> m (TSeq outputLength 0 b)
+    TSeq inputLength ((Max inputLength outputLength) - inputLength) a ->
+    m (TSeq outputLength ((Max inputLength outputLength) - outputLength) b)
 
   sseq_to_tseqC :: (KnownNat inputLength, KnownNat outputLength) =>
     (SSeq inputLength a -> m (SSeq outputLength b)) ->
-    TSeq inputLength 0 a -> m (TSeq outputLength 0 b)
+    TSeq inputLength ((Max inputLength outputLength) - inputLength) a ->
+    m (TSeq outputLength ((Max inputLength outputLength) - outputLength) b)
 
   tseq_to_sseqC :: (KnownNat inputLength, KnownNat outputLength) =>
-    (TSeq inputLength 0 a -> m (TSeq outputLength 0 b)) ->
+    (TSeq inputLength v a -> m (TSeq outputLength u b)) ->
     SSeq inputLength a -> m (SSeq outputLength b)
 
   underutilC :: (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
