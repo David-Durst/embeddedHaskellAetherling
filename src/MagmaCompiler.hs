@@ -822,31 +822,32 @@ lbExampleMuls = iterC (Proxy @64) $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
 nestedNTuplesToFlatSSeq = iterC (Proxy @64) $
   reshapeC (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
   (Proxy :: Proxy (SSeq 4 (Atom Int)))
-unscheduledLBExampleNoUnits = (iterC (Proxy @64) addUnitType) >>>
+unscheduledLBExample = (iterC (Proxy @64) addUnitType) >>>
   (lb2x2Example >***< lbExampleConsts) >>> lbExampleMuls >>> nestedNTuplesToFlatSSeq
 foldExample = iterC (Proxy @64) $ seq_to_sseqC $
   foldC (Proxy @4) addC (constGenIntC (Int 0))
-unscheduledConvolution = unscheduledLBExampleNoUnits >>> foldExample
+unscheduledConvolution = unscheduledLBExample >>> foldExample
   
-convOutputToInput = seq_to_tseqC $ iterC (Proxy @64) $
+convOutputToInput = iterC (Proxy @64) $
   reshapeC (Proxy :: Proxy (SSeq 1 (Atom Int))) (Proxy :: Proxy (Atom Int))
 
-unscheduledConvChain = sequentialConvolution >>> convOutputToInput >>>
-  sequentialConvolution >>> convOutputToInput >>> sequentialConvolution
+unscheduledConvChain = unscheduledConvolution >>> convOutputToInput >>>
+  unscheduledConvolution >>> convOutputToInput >>> unscheduledConvolution
 
 unscheduledPipelineCData = buildCompilationData unscheduledPipeline
 unscheduledNodeCData = buildCompilationData unscheduledNode 
--- unscheduledLBCData = buildCompilationData unscheduledLBExample
---unscheduledConvolutionCData = buildCompilationData unscheduledConvolution
---unscheduledConvChainCData = buildCompilationData unscheduledConvChain
+unscheduledLBCData = buildCompilationData unscheduledLBExample
+unscheduledConvolutionCData = buildCompilationData unscheduledConvolution
+unscheduledConvChainCData = buildCompilationData unscheduledConvChain
 
 sequentialPipeline = seq_to_tseqC unscheduledPipeline 
 sequentialPipelineCData = buildCompilationData $ seq_to_tseqC unscheduledPipeline 
 sequentialNodeCData = buildCompilationData $ seq_to_tseqC unscheduledNode
-sequentialLB = (lb2x2Example >***< lbExampleConsts) >>> lbExampleMuls
+sequentialLB = seq_to_tseqC unscheduledLBExample
 sequentialLBCData = buildCompilationData sequentialLB 
+sequentialConvolution = seq_to_tseqC unscheduledConvolution
 sequentialConvolutionCData = buildCompilationData sequentialConvolution
---sequentialConvChain = seq_to_tseqC unscheduledConvChain
+sequentialConvChain = seq_to_tseqC unscheduledConvChain
 sequentialConvChainCData = buildCompilationData sequentialConvChain
 {-
 sequentialLBCData = buildCompilationData $ seq_to_tseqC (unscheduledLBExample .
@@ -858,9 +859,9 @@ sequentialLBCData = buildCompilationData $ seq_to_tseqC (unscheduledLBExample .
 parallelPipeline = seq_to_sseqC unscheduledPipeline 
 parallelPipelineCData = buildCompilationData $ seq_to_sseqC unscheduledPipeline 
 parallelNodeCData = buildCompilationData $ seq_to_sseqC unscheduledNode
-parallelLB = tseq_to_sseqC sequentialLB
-parallelLBCData = buildCompilationData $ tseq_to_sseqC sequentialLB
-parallelConvolution = tseq_to_sseqC sequentialConvolution
+parallelLB = seq_to_sseqC unscheduledLBExample
+parallelLBCData = buildCompilationData parallelLB
+parallelConvolution = seq_to_sseqC unscheduledConvolution
 parallelConvolutionCData = buildCompilationData parallelConvolution
 
 partialParallelPipeline = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledPipeline 
@@ -872,21 +873,21 @@ partialParallelNodeCData = buildCompilationData $ seq_to_tseqC $ split_seq_to_ss
 --partialParallelLBCData = buildCompilationData $ partialParallelLB
 -- note that the proxy for the split is the outer sequence length. Divide into 32
 -- segments to get inner parallelism of 2 in an 8x8 image
-partialParallel2Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) $ tseq_to_seqC sequentialConvolution
+partialParallel2Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledConvolution
 partialParallel2ConvolutionCData = buildCompilationData partialParallel2Convolution
-partialParallel4Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) $ tseq_to_seqC sequentialConvolution
+partialParallel4Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) unscheduledConvolution
 partialParallel4ConvolutionCData = buildCompilationData partialParallel4Convolution
-partialParallel8Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) $ tseq_to_seqC sequentialConvolution
+partialParallel8Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) unscheduledConvolution
 partialParallel8ConvolutionCData = buildCompilationData partialParallel8Convolution
-partialParallel16Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) $ tseq_to_seqC sequentialConvolution
+partialParallel16Convolution = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) unscheduledConvolution
 partialParallel16ConvolutionCData = buildCompilationData partialParallel16Convolution
-partialParallel2ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) $ tseq_to_seqC sequentialConvChain
+partialParallel2ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) unscheduledConvChain
 partialParallel2ConvChainCData = buildCompilationData partialParallel2ConvChain
-partialParallel4ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) $ tseq_to_seqC sequentialConvChain
+partialParallel4ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @4) unscheduledConvChain
 partialParallel4ConvChainCData = buildCompilationData partialParallel4ConvChain
-partialParallel8ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) $ tseq_to_seqC sequentialConvChain
+partialParallel8ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @8) unscheduledConvChain
 partialParallel8ConvChainCData = buildCompilationData partialParallel8ConvChain
-partialParallel16ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) $ tseq_to_seqC sequentialConvChain
+partialParallel16ConvChain = seq_to_tseqC $ split_seq_to_sseqC (Proxy @16) unscheduledConvChain
 partialParallel16ConvChainCData = buildCompilationData partialParallel16ConvChain
 {-
 parallelResult = simulate $ seq_to_sseqC unscheduledCirc $ to iterInput
