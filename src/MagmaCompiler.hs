@@ -735,10 +735,7 @@ instance Circuit (StatefulErrorMonad) where
     priorData <- get 
     let inputLengthProxy = Proxy :: Proxy underutilMult
     let inputLength = (fromInteger $ natVal inputLengthProxy)
-    put $ divideThroughput inputLength priorData
     f undefined
-    dataPostInnerPipeline <- get
-    put $ multiplyThroughput inputLength dataPostInnerPipeline
     return undefined
 
   increaseUtilC :: forall n v o u a b increaseUtilMult .
@@ -753,10 +750,7 @@ instance Circuit (StatefulErrorMonad) where
     priorData <- get 
     let inputLengthProxy = Proxy :: Proxy increaseUtilMult
     let inputLength = (fromInteger $ natVal inputLengthProxy)
-    put $ multiplyThroughput inputLength priorData
     f undefined
-    dataPostInnerPipeline <- get
-    put $ divideThroughput inputLength dataPostInnerPipeline
     return undefined
 
   increaseUtilTtoSC :: forall n o u a b increaseUtilMult .
@@ -772,10 +766,7 @@ instance Circuit (StatefulErrorMonad) where
     priorData <- get 
     let inputLengthProxy = Proxy :: Proxy increaseUtilMult
     let inputLength = (fromInteger $ natVal inputLengthProxy)
-    put $ multiplyThroughput inputLength priorData
     f undefined
-    dataPostInnerPipeline <- get
-    put $ divideThroughput inputLength dataPostInnerPipeline
     return undefined
 
   -- since the ports and types are already flattened, and same amount of parallelism
@@ -820,27 +811,27 @@ unscheduledNode = iterC (Proxy @4) $ addC
 lb2x2Example = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @8) (Proxy @8)
                 (Proxy @1) (Proxy @1) (Proxy @0) (Proxy @0))
 
-lbExampleConsts = seq_to_tseqC $ iterC (Proxy @64) $
+lbExampleConsts = iterC (Proxy @64) $
   (constGenIntC (Int 1) >***< constGenIntC (Int 2)) >***<
   (constGenIntC (Int 2) >***< constGenIntC (Int 1)) >>>
   reshapeC (Proxy :: Proxy (Atom (Atom (Atom Int, Atom Int), Atom (Atom Int, Atom Int))))
   (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
 
 --lbExampleConsts = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
-lbExampleMuls = seq_to_tseqC $ iterC (Proxy @64) $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
-nestedNTuplesToFlatSSeq = seq_to_tseqC $ iterC (Proxy @64) $
+lbExampleMuls = iterC (Proxy @64) $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
+nestedNTuplesToFlatSSeq = iterC (Proxy @64) $
   reshapeC (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
   (Proxy :: Proxy (SSeq 4 (Atom Int)))
-sequentialLBExampleNoUnits = (seq_to_tseqC $ iterC (Proxy @64) addUnitType) >>>
+unscheduledLBExampleNoUnits = (iterC (Proxy @64) addUnitType) >>>
   (lb2x2Example >***< lbExampleConsts) >>> lbExampleMuls >>> nestedNTuplesToFlatSSeq
-foldExample = seq_to_tseqC $ iterC (Proxy @64) $ seq_to_sseqC $
+foldExample = iterC (Proxy @64) $ seq_to_sseqC $
   foldC (Proxy @4) addC (constGenIntC (Int 0))
-sequentialConvolution = sequentialLBExampleNoUnits >>> foldExample
+unscheduledConvolution = unscheduledLBExampleNoUnits >>> foldExample
   
 convOutputToInput = seq_to_tseqC $ iterC (Proxy @64) $
   reshapeC (Proxy :: Proxy (SSeq 1 (Atom Int))) (Proxy :: Proxy (Atom Int))
 
-sequentialConvChain = sequentialConvolution >>> convOutputToInput >>>
+unscheduledConvChain = sequentialConvolution >>> convOutputToInput >>>
   sequentialConvolution >>> convOutputToInput >>> sequentialConvolution
 
 unscheduledPipelineCData = buildCompilationData unscheduledPipeline
