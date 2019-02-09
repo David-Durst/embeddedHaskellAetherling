@@ -75,7 +75,7 @@ firstConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
     fullLengthProxy = Proxy @256
     underutilLengthProxy = Proxy @64
     underutilMult = Proxy @4
-
+{-
 -- downsampleLB8x8 >>> scalableConvConstsForLB lengthProxy >>>
 xxz = (downsampleLB8x8 >***<
         (produceRightUnitMix (Proxy :: Proxy (TSeq 64 0 (Atom ()))) >>>
@@ -137,10 +137,10 @@ downsampleStencilChain =
 
 downsampleStencilChain1Per64 = downsampleStencilChain
 downsampleStencilChain1Per32 = increaseUtilTtoSC (Proxy @2) downsampleStencilChain
-
+-}
 writeAllStencils = do
   writeProgramToFile "downsampleStencilChain1Per64" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/downsampleStencilChain1Per64.py" False downsampleStencilChain1Per64
-  writeProgramToFile "stencilChain1Per32" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/downsampleStencilChain1Per32.py" False downsampleStencilChain1Per32
+    "pyExamples/downsampleStencilChain1Per64.py" False firstConv --(divBy4 (Proxy @64) (Proxy @4))-- firstConv --downsampleStencilChain1Per64
+--  writeProgramToFile "stencilChain1Per32" preludeLocationStrForEx epilogueLocationStrForEx
+--    "pyExamples/downsampleStencilChain1Per32.py" False downsampleStencilChain1Per32
 
