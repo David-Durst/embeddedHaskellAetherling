@@ -134,6 +134,10 @@ class Monad m => Circuit m where
     Proxy n -> (Atom a -> m (Atom b)) ->
     (Atom (V.Vector n (Atom a)) -> m (Atom (V.Vector n (Atom b))))
 
+  seq_to_vectorC :: (KnownNat n, KnownNat o) =>
+    (Seq n (Atom a) -> m ((Seq o (Atom b)))) ->
+    (Atom (V.Vector n (Atom a)) -> m (Atom (V.Vector o (Atom b))))
+
   iterC :: (KnownNat n, AtomBaseType a, AtomBaseType b) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 

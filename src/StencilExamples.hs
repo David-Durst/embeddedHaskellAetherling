@@ -26,22 +26,23 @@ import qualified Data.Vector.Sized as V
 
 downsampleLB16x16 = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @16) (Proxy @16)
                    (Proxy @2) (Proxy @2) (Proxy @0) (Proxy @0))
-sequentialDownsampleLB16x16CData = buildCompilationData downsampleLB16x16
+downsampleLB16x16CData = buildCompilationData downsampleLB16x16
 downsampleLB8x8 = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @8) (Proxy @8)
                    (Proxy @2) (Proxy @2) (Proxy @0) (Proxy @0))
-sequentialDownsampleLB8x8CData = buildCompilationData downsampleLB8x8
+downsampleLB8x8CData = buildCompilationData downsampleLB8x8
 downsampleLB4x4 = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @4) (Proxy @4)
                    (Proxy @2) (Proxy @2) (Proxy @0) (Proxy @0))
-sequentialDownsampleLB4x4CData = buildCompilationData downsampleLB4x4
+downsampleLB4x4CData = buildCompilationData downsampleLB4x4
 
-scalableConvMuls lengthProxy underutilMult = underutilC underutilMult $
-  seq_to_tseqC $ iterC lengthProxy $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
-scalableConvConsts lengthProxy underutilMult = underutilC underutilMult $
-  seq_to_tseqC $ iterC lengthProxy $ 
+convMuls lengthProxy = iterC lengthProxy $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
+convConsts lengthProxy = iterC lengthProxy $
   (constGenIntC (Int 1) >***< constGenIntC (Int 2)) ***
   (constGenIntC (Int 3) >***< constGenIntC (Int 4)) >>>
   reshapeC (Proxy :: Proxy (Atom (Atom (Atom Int, Atom Int), Atom (Atom Int, Atom Int))))
   (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
+
+tupleLBOutWithConvConsts lengthProxy lb = iterC lengthProxy addUnitType >>>
+  (noop lb >***< convConsts lengthProxy)
 -- actually not doing this, issue was just braces ordering for zipping
 -- need to pair consts with a noop as can't get consts to type match with a downsampling 
 -- linebuffer. The different seq in and out lengths of the downsample lb mean it
@@ -51,30 +52,48 @@ scalableConvConstsForLB lengthProxy = (iterC lengthProxy addUnitType) >>>
   ((iterC lengthProxy noop) >***< (scalableConvConsts lengthProxy))
 -}
 
-scalableNTuplesToFlatSSeq lengthProxy underutilMult = underutilC underutilMult $
-  seq_to_tseqC $ iterC lengthProxy $
+flattenNTuples lengthProxy = iterC lengthProxy $
   reshapeC (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
-  (Proxy :: Proxy (SSeq 4 (Atom Int)))
+  (Proxy :: Proxy (Atom (V.Vector 4 (Atom Int))))
 
-scalableConvFold lengthProxy underutilMult = underutilC underutilMult $
-  seq_to_tseqC $ iterC lengthProxy $ seq_to_sseqC $
-  forceMinPortParallelism (Proxy @4) $ foldC (Proxy @4) addC (constGenIntC (Int 0))
+convFold lengthProxy = iterC lengthProxy $ seq_to_vectorC $
+  foldC (Proxy @4) addC (constGenIntC (Int 0)) 
 
-divBy4 lengthProxy underutilMult = underutilC underutilMult $
-  seq_to_tseqC $ iterC lengthProxy $ seq_to_sseqC $ iterC (Proxy @1) $
+foldOutputToDivInput lengthProxy = iterC lengthProxy $
+  reshapeC (Proxy :: Proxy (Atom (V.Vector 1 (Atom Int)))) (Proxy :: Proxy (Atom Int))
+
+divBy4 lengthProxy = iterC lengthProxy $
   addUnitType >>> (noop (constGenIntC (Int 0)) >***< constGenIntC (Int 4)) >>> divC
 
-firstConv = seq_to_tseqC (iterC fullLengthProxy addUnitType) >>>
-  (downsampleLB16x16 >***< (produceRightUnitMix (Proxy :: Proxy (TSeq 256 0 (Atom ()))) >>>
-                           scalableConvConsts underutilLengthProxy underutilMult)) >>>
-  scalableConvMuls underutilLengthProxy underutilMult >>>
-  scalableNTuplesToFlatSSeq underutilLengthProxy underutilMult >>>
-  scalableConvFold underutilLengthProxy underutilMult >>>
-  divBy4 underutilLengthProxy underutilMult
+firstConv = downsampleLB16x16 >>>
+  tupleLBOutWithConvConsts lengthProxy downsampleLB16x16 >>>
+  convMuls lengthProxy >>>
+  flattenNTuples lengthProxy >>>
+  convFold lengthProxy >>>
+  foldOutputToDivInput lengthProxy >>>
+  divBy4 lengthProxy
   where
-    fullLengthProxy = Proxy @256
-    underutilLengthProxy = Proxy @64
-    underutilMult = Proxy @4
+    lengthProxy = Proxy @64
+
+secondConv = downsampleLB8x8 >>>
+  tupleLBOutWithConvConsts lengthProxy downsampleLB8x8 >>>
+  convMuls lengthProxy >>>
+  flattenNTuples lengthProxy >>>
+  convFold lengthProxy >>>
+  foldOutputToDivInput lengthProxy >>>
+  divBy4 lengthProxy
+  where
+    lengthProxy = Proxy @16
+
+thirdConv = downsampleLB4x4 >>>
+  tupleLBOutWithConvConsts lengthProxy downsampleLB4x4 >>>
+  convMuls lengthProxy >>>
+  flattenNTuples lengthProxy >>>
+  convFold lengthProxy >>>
+  foldOutputToDivInput lengthProxy >>>
+  divBy4 lengthProxy
+  where
+    lengthProxy = Proxy @4
 {-
 -- downsampleLB8x8 >>> scalableConvConstsForLB lengthProxy >>>
 xxz = (downsampleLB8x8 >***<
@@ -128,19 +147,20 @@ thirdConv = iterC lengthProxy addUnitType >>>
   where
     lengthProxy = Proxy @1
 
---downsampleConvChain = firstConv >>> secondConv >>> thirdConv
+-}
 downsampleStencilChain =
   seq_to_sseqC firstConv >>> reshapeImplicitC >>>
   seq_to_sseqC secondConv >>> reshapeImplicitC >>>
   seq_to_sseqC thirdConv
--}
 
-downsampleStencilChain1Per64 = downsampleStencilChain
-downsampleStencilChain1Per32 = increaseUtilTtoSC (Proxy @2) downsampleStencilChain
 -}
+downsampleStencilChain = firstConv >>> secondConv >>> thirdConv
+downsampleStencilChain1Per64 = seq_to_tseqC downsampleStencilChain
+downsampleStencilChain1Per32 = increaseUtilTtoSC (Proxy @2) downsampleStencilChain1Per64
 writeAllStencils = do
   writeProgramToFile "downsampleStencilChain1Per64" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/downsampleStencilChain1Per64.py" False firstConv --(divBy4 (Proxy @64) (Proxy @4))-- firstConv --downsampleStencilChain1Per64
---  writeProgramToFile "stencilChain1Per32" preludeLocationStrForEx epilogueLocationStrForEx
---    "pyExamples/downsampleStencilChain1Per32.py" False downsampleStencilChain1Per32
+    "pyExamples/downsampleStencilChain1Per64.py" False downsampleStencilChain1Per64 --firstConv --(divBy4 (Proxy @64) (Proxy @4))-- firstConv --downsampleStencilChain1Per64
+  writeProgramToFile "stencilChain1Per32" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/downsampleStencilChain1Per32.py" False downsampleStencilChain1Per32
+
 

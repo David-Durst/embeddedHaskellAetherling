@@ -523,6 +523,21 @@ instance Circuit (StatefulErrorMonad) where
       throughputDenominator = priorDenom} 
     return undefined
 
+  seq_to_vectorC :: forall n o a b . (KnownNat n, KnownNat o) =>
+    (Seq n (Atom a) -> StatefulErrorMonad (Seq o (Atom b))) ->
+    (Atom (V.Vector n (Atom a)) -> StatefulErrorMonad (Atom (V.Vector o (Atom b))))
+  seq_to_vectorC f _ = do
+    priorData <- get 
+    let inputLengthProxy = Proxy :: Proxy n
+    let inputLength = (fromInteger $ natVal inputLengthProxy)
+    put $ multiplyThroughput inputLength priorData
+    --traceM $ "PriorData " ++ show priorData
+    f undefined
+    dataPostInnerPipeline <- get
+    --traceM $ "dataPostInnerPipeline " ++ show dataPostInnerPipeline
+    put $ divideThroughput inputLength dataPostInnerPipeline 
+    return undefined
+
   -- ignore the iter since it does nothing, needs to be wrapped with a tseq or
   -- sseq converting function
   iterC _ f _ = do
@@ -819,17 +834,17 @@ lbExampleConsts = iterC (Proxy @64) $
 
 --lbExampleConsts = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
 lbExampleMuls = iterC (Proxy @64) $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
-nestedNTuplesToFlatSSeq = iterC (Proxy @64) $
+flattenNestedNTuples = iterC (Proxy @64) $
   reshapeC (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
-  (Proxy :: Proxy (SSeq 4 (Atom Int)))
+  (Proxy :: Proxy (Atom (V.Vector 4 (Atom Int))))
 unscheduledLBExample = (iterC (Proxy @64) addUnitType) >>>
-  (lb2x2Example >***< lbExampleConsts) >>> lbExampleMuls >>> nestedNTuplesToFlatSSeq
-foldExample = iterC (Proxy @64) $ seq_to_sseqC $
+  (lb2x2Example >***< lbExampleConsts) >>> lbExampleMuls >>> flattenNestedNTuples
+foldExample = iterC (Proxy @64) $ seq_to_vectorC $
   foldC (Proxy @4) addC (constGenIntC (Int 0))
 unscheduledConvolution = unscheduledLBExample >>> foldExample
   
 convOutputToInput = iterC (Proxy @64) $
-  reshapeC (Proxy :: Proxy (SSeq 1 (Atom Int))) (Proxy :: Proxy (Atom Int))
+  reshapeC (Proxy :: Proxy (Atom (V.Vector 1 (Atom Int)))) (Proxy :: Proxy (Atom Int))
 
 unscheduledConvChain = unscheduledConvolution >>> convOutputToInput >>>
   unscheduledConvolution >>> convOutputToInput >>> unscheduledConvolution
