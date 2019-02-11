@@ -165,20 +165,20 @@ class Monad m => Circuit m where
 
   -- scheduling operators
   split_seq_to_sseqC :: (KnownNat totalInputLength, KnownNat totalOutputLength,
-                         KnownNat outerInputLength, KnownNat outerOutputLength,
-                         KnownNat innerLength,
-                         totalInputLength ~ (outerInputLength*innerLength),
-                         totalOutputLength ~ (outerOutputLength*innerLength)) =>
-    Proxy innerLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
-    Seq outerInputLength (SSeq innerLength a) -> m (Seq outerOutputLength (SSeq innerLength b))
+                         KnownNat outerLength, KnownNat innerInputLength,
+                         KnownNat innerOutputLength,
+                         totalInputLength ~ (outerLength*innerInputLength),
+                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
+    Proxy innerInputLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
+    Seq outerLength (SSeq innerInputLength a) -> m (Seq outerLength (SSeq innerOutputLength b))
 
   split_seq_to_tseqC :: (KnownNat totalInputLength, KnownNat totalOutputLength,
-                         KnownNat outerInputLength, KnownNat outerOutputLength,
-                         KnownNat innerLength,
-                         totalInputLength ~ (outerInputLength*innerLength),
-                         totalOutputLength ~ (outerOutputLength*innerLength)) =>
-    Proxy innerLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
-    Seq outerInputLength (TSeq innerLength 0 a) -> m (Seq outerOutputLength (TSeq innerLength 0 b))
+                         KnownNat outerLength, KnownNat innerInputLength,
+                         KnownNat innerOutputLength,
+                         totalInputLength ~ (outerLength*innerInputLength),
+                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
+    Proxy innerInputLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
+    Seq outerLength (TSeq innerInputLength 0 a) -> m (Seq outerLength (TSeq innerOutputLength 0 b))
 
   sseq_to_seqC :: (KnownNat inputLength, KnownNat outputLength) =>
     (SSeq inputLength a -> m (SSeq outputLength b)) ->

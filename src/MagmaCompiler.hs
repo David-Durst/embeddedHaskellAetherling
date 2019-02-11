@@ -641,17 +641,17 @@ instance Circuit (StatefulErrorMonad) where
     g undefined
 
   -- scheduling operators
-  split_seq_to_sseqC :: forall totalInputLength totalOutputLength innerLength
-                        outerInputLength outerOutputLength a b .
+  split_seq_to_sseqC :: forall totalInputLength totalOutputLength outerLength
+                        innerInputLength innerOutputLength a b .
                         (KnownNat totalInputLength, KnownNat totalOutputLength,
-                         KnownNat innerLength, KnownNat outerInputLength,
-                         KnownNat outerOutputLength,
-                         totalInputLength ~ (innerLength*outerInputLength),
-                         totalOutputLength ~ (innerLength*outerOutputLength)) =>
-                        Proxy innerLength ->
+                         KnownNat outerLength, KnownNat innerInputLength,
+                         KnownNat innerOutputLength,
+                         totalInputLength ~ (outerLength*innerInputLength),
+                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
+                        Proxy innerInputLength ->
     (Seq totalInputLength a -> StatefulErrorMonad (Seq totalOutputLength b)) ->
-    (Seq outerInputLength (SSeq innerLength a) ->
-      StatefulErrorMonad (Seq outerOutputLength (SSeq innerLength b)))
+    (Seq outerLength (SSeq innerInputLength a) ->
+      StatefulErrorMonad (Seq outerLength (SSeq innerOutputLength b)))
   split_seq_to_sseqC innerLengthProxy f _ = do
     priorData <- get 
     let innerLength = (fromInteger $ natVal innerLengthProxy)
@@ -660,7 +660,7 @@ instance Circuit (StatefulErrorMonad) where
     dataPostInnerPipeline <- get
     put $ divideThroughput innerLength dataPostInnerPipeline
     return undefined
-    
+
   -- ignore the tseq since it does nothing, its the same as an iter, just chewing
   -- up iterations that don't need to be parallelized
   split_seq_to_tseqC _ f _ = do

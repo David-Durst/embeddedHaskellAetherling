@@ -110,12 +110,14 @@ instance Circuit SimulatorEnv where
   (f >>> g) x = f x >>= g
 
   -- scheduling operators
-  split_seq_to_sseqC innerLengthProxy f seqOfSSeq = do
+  split_seq_to_sseqC _ f seqOfSSeq = do
     resultingFlatSeq <- f $ seqOfSeqToSeq $ seqOfSSeqToSeqOfSeq seqOfSSeq
+    let innerLengthProxy = Proxy :: Proxy innerOutputLength
     return $ seqOfSeqToSeqOfSSeq $ seqToSeqOfSeq innerLengthProxy resultingFlatSeq
     
-  split_seq_to_tseqC innerLengthProxy f seqOfTSeq = do
+  split_seq_to_tseqC _ f seqOfTSeq = do
     resultingFlatSeq <- f $ seqOfSeqToSeq $ seqOfTSeqToSeqOfSeq seqOfTSeq
+    let innerLengthProxy = Proxy :: Proxy innerOutputLength
     return $ seqOfSeqToSeqOfTSeq $ seqToSeqOfSeq innerLengthProxy resultingFlatSeq
 
   sseq_to_seqC f seq = (f $ seqToSSeq seq) >>= (return . sseqToSeq)
