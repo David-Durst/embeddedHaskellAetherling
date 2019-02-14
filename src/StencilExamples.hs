@@ -156,7 +156,8 @@ downsampleStencilChain =
 -}
 downsampleStencilChain = firstConv >>> secondConv >>> thirdConv
 downsampleStencilChain1Per64 = seq_to_tseqC downsampleStencilChain
-downsampleStencilChain1Per32 = increaseUtilTtoSC (Proxy @2) downsampleStencilChain1Per64
+downsampleStencilChain1Per32 = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) downsampleStencilChain
+--increaseUtilTtoSC (Proxy @2) downsampleStencilChain1Per64
 writeAllStencils = do
   writeProgramToFile "downsampleStencilChain1Per64" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/downsampleStencilChain1Per64.py" False downsampleStencilChain1Per64 --firstConv --(divBy4 (Proxy @64) (Proxy @4))-- firstConv --downsampleStencilChain1Per64

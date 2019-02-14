@@ -168,17 +168,20 @@ instance Circuit (State PipelineDAG) where
     return undefined
 
   -- scheduling operators
-  split_seq_to_sseqC :: forall totalInputLength totalOutputLength outerLength
+  split_seq_to_sseqC :: forall totalInputLength totalOutputLength
+                        outerInputLength outerOutputLength
                         innerInputLength innerOutputLength a b .
                         (KnownNat totalInputLength, KnownNat totalOutputLength,
-                         KnownNat outerLength, KnownNat innerInputLength,
-                         KnownNat innerOutputLength,
-                         totalInputLength ~ (outerLength*innerInputLength),
-                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
+                         KnownNat outerInputLength, KnownNat outerOutputLength,
+                         KnownNat innerInputLength, KnownNat innerOutputLength,
+                         innerOutputLength ~ Max 1 (
+                            Div (totalOutputLength * innerInputLength) totalInputLength),
+                         totalInputLength ~ (outerInputLength*innerInputLength),
+                         totalOutputLength ~ (outerOutputLength*innerOutputLength)) =>
                         Proxy innerInputLength ->
     (Seq totalInputLength a -> State PipelineDAG (Seq totalOutputLength b)) ->
-    (Seq outerLength (SSeq innerInputLength a) ->
-      State PipelineDAG (Seq outerLength (SSeq innerOutputLength b)))
+    (Seq outerInputLength (SSeq innerInputLength a) ->
+      State PipelineDAG (Seq outerOutputLength (SSeq innerOutputLength b)))
   split_seq_to_sseqC innerLengthProxy f _ = do
     PipelineDAG priorStages <- get 
     let innerStages = getInnerPipeline f emptyDAG

@@ -141,6 +141,10 @@ class Monad m => Circuit m where
   iterC :: (KnownNat n, AtomBaseType a, AtomBaseType b) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
+  -- helper function that takes a bool for whether to sort f and g separately
+  -- and then zip them together (>***<) or just sort all the ports at once (***)
+  -- this is just an internal function used for consistent backend for two real zips
+  zipC :: Bool -> (a -> m c) -> (b -> m d) -> (e -> m f)
   -- ***  and >***< can't produce (,) tuples, must use atom tuples
   -- either from ZipSeqTypes or TupleAllIntsAndBits as the
   -- scheudling primitives can schedules tuples of unsynchornoized primitives
@@ -160,17 +164,21 @@ class Monad m => Circuit m where
   -- this converts a single unit into a nested tuple or seq of units
   produceRightUnitMix :: (JustUnits a, JustUnits b) => Proxy a -> a -> m b
 
-  (>>>) ::  (AtomBaseType a, AtomBaseType b, AtomBaseType c) =>
+  (>>>) ::  (KnownNat (UnscheduledLength a), KnownNat (UnscheduledLength b),
+             AtomBaseType a, AtomBaseType b, AtomBaseType c) =>
     (a -> m b) -> (b -> m c) -> (a -> m c)
 
   -- scheduling operators
   split_seq_to_sseqC :: (KnownNat totalInputLength, KnownNat totalOutputLength,
-                         KnownNat outerLength, KnownNat innerInputLength,
-                         KnownNat innerOutputLength,
-                         totalInputLength ~ (outerLength*innerInputLength),
-                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
+                         KnownNat outerInputLength, KnownNat outerOutputLength,
+                         KnownNat innerInputLength, KnownNat innerOutputLength,
+                         innerOutputLength ~ Max 1 (
+                            Div (totalOutputLength * innerInputLength) totalInputLength),
+                         totalInputLength ~ (outerInputLength*innerInputLength),
+                         totalOutputLength ~ (outerOutputLength*innerOutputLength)) =>
     Proxy innerInputLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
-    Seq outerLength (SSeq innerInputLength a) -> m (Seq outerLength (SSeq innerOutputLength b))
+    Seq outerInputLength (SSeq innerInputLength a) ->
+    m (Seq outerOutputLength (SSeq innerOutputLength b))
 
   split_seq_to_tseqC :: (KnownNat totalInputLength, KnownNat totalOutputLength,
                          KnownNat outerLength, KnownNat innerInputLength,

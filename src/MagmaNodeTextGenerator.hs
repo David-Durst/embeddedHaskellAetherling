@@ -166,8 +166,7 @@ createMagmaDefOfNode (LineBufferT (LineBufferData windowSize imageSize
   where
     -- for now, need to emit at least a complete stride every clock so emit once
     -- every clock as no underutil yet
-    (yParallelism, xParallelism) =
-      linebufferPxPerClock par (snd imageSize)
+    (yParallelism, xParallelism) = linebufferPxPerClock par (snd imageSize)
 
 type PortName = String
 
@@ -239,7 +238,16 @@ getDuplicatedPorts nodeType baseNum par |
     allNodesInPorts = foldl (++) [] $ fmap inPorts allNodesPorts
     allNodesInTypes = foldl (++) [] $ fmap inTypes allNodesPorts
     allNodesOutPorts = foldl (++) [] $ fmap outPorts allNodesPorts
-    allNodesOutTypes = foldl (++) [] $ fmap outTypes allNodesPorts
+    -- for all nodes out types, set the second number in tuple to indicate
+    -- which parallel instance they correspond to
+    -- for the nodes which parallelize themselves, length of top level list is
+    -- 1, so will just multiply by 1 for all them, allowing their own grouping
+    -- for the nodes that don't parallelize themselves, their initial numbers
+    -- are all 1, so they will all take their groups number
+    setAllTypesOfSameIndex (pts, idx) = fmap (\pt -> (fst pt, snd pt * idx)) pts
+    setAllParallelTypes listOfListOfTypes = fmap setAllTypesOfSameIndex
+      (zip listOfListOfTypes [1..length listOfListOfTypes])
+    allNodesOutTypes = foldl (++) [] $ setAllParallelTypes $ fmap outTypes allNodesPorts
     allNodesCEPorts = foldl (++) [] $ fmap (ce . controlPorts) allNodesPorts
     allNodesReadyPorts = foldl (++) [] $ fmap (readyPorts . controlPorts) allNodesPorts
     allNodesValidPorts = foldl (++) [] $ fmap (validPorts . controlPorts) allNodesPorts
@@ -342,8 +350,8 @@ getPorts (LineBufferT lbData) _ par | not (null paramCheck) =
     paramCheck = linebufferDataValid par lbData
 getPorts (LineBufferT (LineBufferData windowSize imageSize stride origin
                        tokenType)) fnName par =
-  Right (Ports inputPorts (replicate (length inputPorts) (tokenType, 1))
-         outputPorts (replicate (length outputPorts) (tokenType, 1))
+  Right (Ports inputPorts (replicate (length inputPorts) (tokenType, 0))
+         outputPorts outputTypes
          (standardControlPorts fnName))
   where
     -- for now, need to emit at least a complete stride every clock so emit once
@@ -363,6 +371,9 @@ getPorts (LineBufferT (LineBufferData windowSize imageSize stride origin
                   | cur_window <- [0 .. (windows_per_active_clock - 1)],
                     cur_row <- [0..((fst windowSize) - 1)],
                     cur_col <- [0..((snd windowSize) - 1)]]
+    outputTypes = [(tokenType, cur_window) |
+                   cur_window <- [1 .. windows_per_active_clock],
+                   element_in_window <- [1..(fst windowSize * snd windowSize)]]
   {-
 windows_per_active_clock, Array(window_rows, Array(window_cols,
  windows_per_row_per_clock = max(pixels_per_row_per_clock // stride_cols, 1)

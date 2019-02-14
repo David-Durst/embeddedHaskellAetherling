@@ -48,6 +48,7 @@ intSizeInBits = 8
 bitSizeInBits :: Int
 bitSizeInBits = 1
 type family TypeSize (x :: *) :: Nat where
+  TypeSize (Atom ()) = 0
   TypeSize (Atom Int) = 8
   TypeSize (Atom Bool) = 1
   TypeSize (Atom (x, y)) = (TypeSize x) + (TypeSize y)
@@ -55,6 +56,13 @@ type family TypeSize (x :: *) :: Nat where
   TypeSize (SSeq n a) = n * (TypeSize a)
  -- TypeSize (TSeq n _ a) = (TypeSize a)
   --TypeSize a = 0
+
+
+-- the number of unscheduled values
+type family UnscheduledLength (x :: *) :: Nat where
+  UnscheduledLength (Atom _) = 1
+  UnscheduledLength (Seq n a) = n * (UnscheduledLength a)
+ -- NumInputs (TSeq n _ a) = (NumInputs a)
 
 size :: forall a . (KnownNat (TypeSize a)) => Proxy a -> Int
 size _ = fromInteger $ natVal $ (Proxy :: Proxy (TypeSize a) )

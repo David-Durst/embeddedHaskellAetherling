@@ -331,6 +331,17 @@ createCompilationDataAndAppend nodeType = do
     return undefined
 
 
+-- note this zip is to get the ports and types together so than can be organized together
+groupPortsAndTypes ungroupedParallelPorts ungroupedParallelPortsTypes = (groupedParallelPorts, groupedParallelPortTypes)
+  where
+    ungroupedParallelPortsAndTypes = zip ungroupedParallelPorts
+                                        ungroupedParallelPortsTypes
+    groupedParallelPortsAndTypes = groupBy (\x -> \y -> ((snd $ snd x) == (snd $ snd y))) $
+                                      sortBy (\x -> \y -> compare (snd $ snd x) (snd $ snd y))
+                                      ungroupedParallelPortsAndTypes
+    groupedFlattenedParallelPortsAndTypes = foldl (++) [] groupedParallelPortsAndTypes
+    groupedParallelPorts = fmap fst groupedFlattenedParallelPortsAndTypes
+    groupedParallelPortTypes = fmap snd groupedFlattenedParallelPortsAndTypes
 
 {-
 getInnerPipeline :: (a -> State PipelineDAG b) -> PipelineDAG -> [NodeInfo]
@@ -542,7 +553,7 @@ instance Circuit (StatefulErrorMonad) where
     f undefined
     return undefined
 
-  (f *** g) _ = do
+  zipC shouldMergePortsAfterSort f g _ = do
     priorData <- get
     let tNum = throughputNumerator priorData
     let tDenom = throughputDenominator priorData
@@ -574,6 +585,27 @@ instance Circuit (StatefulErrorMonad) where
       -- traceM $ "g compilation: " ++ show gCompilerData
       let fControlPorts = entireDAGControlPorts fCompilerData
       let gControlPorts = entireDAGControlPorts gCompilerData
+      -- group the parallel output ports together
+      -- only need this for output ports as need order right for next stage for those
+      let (groupedParallelPorts, groupedParallelPortTypes) =
+            if shouldMergePortsAfterSort
+            then do
+              -- ZipSeqTypes should ensure that f and g have same number of output ports
+              -- will need to fix this if that assumption is not true
+              -- only get to this condition if called from >***< which means
+              -- f and g produce types that satisfy ZipSeqTypes
+              let (fParallelPorts, fParallelPortTypes) =
+                    groupPortsAndTypes (outputPorts fCompilerData) (outputPortsTypes fCompilerData)
+              let (gParallelPorts, gParallelPortTypes) =
+                    groupPortsAndTypes (outputPorts gCompilerData) (outputPortsTypes gCompilerData)
+              let interleave xs ys = concat (transpose [xs, ys])
+              (interleave fParallelPorts gParallelPorts,
+               interleave fParallelPortTypes gParallelPortTypes)
+            else do
+              let ungroupedParallelPorts = outputPorts fCompilerData ++ outputPorts gCompilerData
+              let ungroupedParallelPortsTypes = outputPortsTypes fCompilerData ++
+                                                outputPortsTypes gCompilerData
+              groupPortsAndTypes ungroupedParallelPorts ungroupedParallelPortsTypes
       let mergedCompilerData = (CompilationData
                                -- subtract 1 here as g compiler data's
                                -- node index is incremented by 1 for the
@@ -586,8 +618,8 @@ instance Circuit (StatefulErrorMonad) where
                                  outputText gCompilerData)
                                (inputPorts fCompilerData ++ inputPorts gCompilerData)
                                (inputPortsTypes fCompilerData ++ inputPortsTypes gCompilerData)
-                               (outputPorts fCompilerData ++ outputPorts gCompilerData)
-                               (outputPortsTypes fCompilerData ++ outputPortsTypes gCompilerData)
+                               groupedParallelPorts
+                               groupedParallelPortTypes
                                -- at this point, only allow left or right part of zip
                                -- to have ready-valid ports, will address this later
                                (if null fControlPorts then gControlPorts else fControlPorts)
@@ -604,17 +636,24 @@ instance Circuit (StatefulErrorMonad) where
       liftEither $ Left $ foldl (++) "" errorMessages
       return undefined
 
-  (f >***< g) _ = do
+  (f *** g) _ = zipC False f g undefined
+
+  (f >***< g) _ = zipC True f g undefined --do
+    {-
     (f *** g) undefined
     priorData <- get
     let allOutputPorts = outputPorts priorData
     let allOutputPortsTypes = outputPortsTypes priorData
     -- ZipSeqTypes should ensure that f and g have same number of output ports
     -- will need to fix this if that assumption is not true
+    -- instead of just merging these, need to merge those with same parallelism number
     let fAndGOutputPorts =
           chunksOf (length (outputPorts priorData) `div` 2) allOutputPorts
     let fAndGOutputPortsTypes =
           chunksOf (length (outputPortsTypes priorData) `div` 2) allOutputPortsTypes
+    -- this zipping is to merge
+    let (fGroupedParallelPorts, fGroupedParallelPortTypes) =
+            groupPortsAndTypes (fAndGOutputPorts !! 0) (fAndGOutputPortsTypes !! 0)
     -- traceM "priorTo !!"
     -- traceM $ show fAndGOutputPorts
     -- traceM $ show fAndGOutputPortsTypes
@@ -627,35 +666,78 @@ instance Circuit (StatefulErrorMonad) where
     return undefined
     where
       interleave xs ys = concat (transpose [xs, ys])
+-}
 
   addUnitType _ = do
     return undefined
   produceRightUnitMix _ _ = do
     return undefined
 
+  (>>>) :: forall a b c.
+    (KnownNat (UnscheduledLength a), KnownNat (UnscheduledLength b),
+      AtomBaseType a, AtomBaseType b, AtomBaseType c) =>
+    (a -> StatefulErrorMonad b) -> (b -> StatefulErrorMonad c) -> (a -> StatefulErrorMonad c)
   (f >>> g) _ = do
+    priorData <- get
+    let priorThroughputNumerator = throughputNumerator priorData
+    let priorThroughputDenominator = throughputDenominator priorData
+    --traceM $ "throughput before f " ++ show (throughputNumerator priorData, throughputDenominator priorData)
     f undefined
+    -- the parallelism for the second one depends on the parallelism of the first one
+    -- since we are always setting parallelism based on inputs per clock,
+    -- make the second node run at the right rate to match the parallelism of
+    -- the first node.
+    dataAfterF <- get
+    let fInputLengthProxy = Proxy :: Proxy (UnscheduledLength a)
+    let fInputLength = (fromInteger $ natVal fInputLengthProxy)
+    let fOutputLengthProxy = Proxy :: Proxy (UnscheduledLength b)
+    let fOutputLength = (fromInteger $ natVal fOutputLengthProxy)
+    --traceM $ show fInputLength
+    --traceM $ show fOutputLength
+    --traceM $ "throughput before change " ++ show (throughputNumerator dataAfterF, throughputDenominator dataAfterF)
+    -- increase/decrease output parallelism depending on if a is rate increase or
+    -- decreasing
+    if fInputLength > fOutputLength
+      then do
+      --traceM "a"
+      put $ divideThroughput (fInputLength `div` fOutputLength) dataAfterF
+      else do
+      --traceM "b"
+      put $ multiplyThroughput (fOutputLength `div` fInputLength) dataAfterF
+    --traceM $ "throughput after change " ++ show (throughputNumerator dataAfterF, throughputDenominator dataAfterF)
+    ----traceM $ "PriorData " ++ show priorData
     g undefined
+    dataPostInnerPipeline <- get
+    --traceM $ "throughput after g " ++ show (throughputNumerator dataPostInnerPipeline, throughputDenominator dataPostInnerPipeline)
+    put $ dataPostInnerPipeline {
+      throughputNumerator = priorThroughputNumerator,
+      throughputDenominator = priorThroughputDenominator
+                     }
+    --traceM $ "throughput after setting " ++ show (priorThroughputNumerator, priorThroughputDenominator)
+    return undefined
 
   -- scheduling operators
-  split_seq_to_sseqC :: forall totalInputLength totalOutputLength outerLength
+  split_seq_to_sseqC :: forall totalInputLength totalOutputLength
+                        outerInputLength outerOutputLength
                         innerInputLength innerOutputLength a b .
                         (KnownNat totalInputLength, KnownNat totalOutputLength,
-                         KnownNat outerLength, KnownNat innerInputLength,
-                         KnownNat innerOutputLength,
-                         totalInputLength ~ (outerLength*innerInputLength),
-                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
+                         KnownNat outerInputLength, KnownNat outerOutputLength,
+                         KnownNat innerInputLength, KnownNat innerOutputLength,
+                         innerOutputLength ~ Max 1 (
+                            Div (totalOutputLength * innerInputLength) totalInputLength),
+                         totalInputLength ~ (outerInputLength*innerInputLength),
+                         totalOutputLength ~ (outerOutputLength*innerOutputLength)) =>
                         Proxy innerInputLength ->
     (Seq totalInputLength a -> StatefulErrorMonad (Seq totalOutputLength b)) ->
-    (Seq outerLength (SSeq innerInputLength a) ->
-      StatefulErrorMonad (Seq outerLength (SSeq innerOutputLength b)))
-  split_seq_to_sseqC innerLengthProxy f _ = do
+    (Seq outerInputLength (SSeq innerInputLength a) ->
+      StatefulErrorMonad (Seq outerOutputLength (SSeq innerOutputLength b)))
+  split_seq_to_sseqC innerInputLengthProxy f _ = do
     priorData <- get 
-    let innerLength = (fromInteger $ natVal innerLengthProxy)
-    put $ multiplyThroughput innerLength priorData
+    let innerInputLength = (fromInteger $ natVal innerInputLengthProxy)
+    put $ multiplyThroughput innerInputLength priorData
     f undefined
     dataPostInnerPipeline <- get
-    put $ divideThroughput innerLength dataPostInnerPipeline
+    put $ divideThroughput innerInputLength dataPostInnerPipeline
     return undefined
 
   -- ignore the tseq since it does nothing, its the same as an iter, just chewing
@@ -825,8 +907,8 @@ lb2x2Example = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Pr
                 (Proxy @1) (Proxy @1) (Proxy @0) (Proxy @0))
 
 lbExampleConsts = iterC (Proxy @64) $
-  (constGenIntC (Int 1) >***< constGenIntC (Int 2)) >***<
-  (constGenIntC (Int 2) >***< constGenIntC (Int 1)) >>>
+  (constGenIntC (Int 1) *** constGenIntC (Int 2)) ***
+  (constGenIntC (Int 2) *** constGenIntC (Int 1)) >>>
   reshapeC (Proxy :: Proxy (Atom (Atom (Atom Int, Atom Int), Atom (Atom Int, Atom Int))))
   (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
 
