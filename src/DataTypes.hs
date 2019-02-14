@@ -78,11 +78,15 @@ replaceAString toReplace subtitute input = replaced
       hdSplit tlSplit
 
 typeToMagmaString :: forall (a :: *) (b :: *) . Bool -> (TypeRep, Int) -> String
-typeToMagmaString isInput (typeRep, 1) = oneTypeToMagmaString isInput typeRep
-typeToMagmaString isInput (typeRep, n) | n > 1 = "Array(" L.++ show n L.++ ", " L.++
-                                         oneTypeToMagmaString isInput typeRep L.++ ")"
+typeToMagmaString isInput (typeRep, _) = oneTypeToMagmaString isInput typeRep
+
+{-
+-- this is a relic of a prior approach to port parallelism.
+typeToMagmaString isInput (typeRep, _) | n > 1 = "Array(" L.++ show n L.++ ", " L.++
+                                         {--}oneTypeToMagmaString isInput typeRep L.++ ")"
 typeToMagmaString _ (_, n) =
   "parallelism for typeToMagmaString must be greater than 0, got" L.++ show n
+-}
 
 -- if true, then input string, if false then output string
 directionalString :: Bool -> String

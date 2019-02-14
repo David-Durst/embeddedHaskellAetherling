@@ -517,6 +517,7 @@ instance Circuit (StatefulErrorMonad) where
     let priorPar = priorNum `parDiv` priorDenom
     let mapParallelismProxy = Proxy :: Proxy n 
     let mapParallelism = (fromInteger $ natVal mapParallelismProxy)
+    --traceM $ "Prior parallelism: " ++ show priorPar
     -- since this map is doing atoms, it's parallelism must be at least the n.
     -- any less and we are underutilizng a vector that cannot be underutilized
     put $ priorData {
@@ -536,14 +537,24 @@ instance Circuit (StatefulErrorMonad) where
     (Atom (V.Vector n (Atom a)) -> StatefulErrorMonad (Atom (V.Vector o (Atom b))))
   seq_to_vectorC f _ = do
     priorData <- get 
-    let inputLengthProxy = Proxy :: Proxy n
-    let inputLength = (fromInteger $ natVal inputLengthProxy)
-    put $ multiplyThroughput inputLength priorData
+    let priorNum = throughputNumerator priorData
+    let priorDenom = throughputDenominator priorData
+    let priorPar = priorNum `parDiv` priorDenom
+    let mapParallelismProxy = Proxy :: Proxy n 
+    let mapParallelism = (fromInteger $ natVal mapParallelismProxy)
+    --traceM $ "Prior parallelism: " ++ show priorPar
+    -- since this map is doing atoms, it's parallelism must be at least the n.
+    -- any less and we are underutilizng a vector that cannot be underutilized
+    put $ priorData {
+      throughputNumerator = priorPar * mapParallelism,
+      throughputDenominator = 1}
     --traceM $ "PriorData " ++ show priorData
     f undefined
     dataPostInnerPipeline <- get
     --traceM $ "dataPostInnerPipeline " ++ show dataPostInnerPipeline
-    put $ divideThroughput inputLength dataPostInnerPipeline 
+    put $ dataPostInnerPipeline {
+      throughputNumerator = priorNum,
+      throughputDenominator = priorDenom} 
     return undefined
 
   -- ignore the iter since it does nothing, needs to be wrapped with a tseq or
