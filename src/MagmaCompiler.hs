@@ -108,12 +108,9 @@ getModulePortsString isInput baseString ports = foldl (++) "" portsStrings
                    portsWithIdxs
 
 saveToCoreIR :: String -> String
-saveToCoreIR circuitName = getCoreIRModuleString ++ runGeneratorsString ++
-  saveToFileString
+saveToCoreIR circuitName = getCoreIRModuleString
   where
-    getCoreIRModuleString = "haskell_test_module = GetCoreIRModule(cirb, " ++ circuitName ++ ")\n"
-    runGeneratorsString = "cirb.context.run_passes([\"rungenerators\", \"wireclocks-coreir\", \"verifyconnectivity --noclkrst\", \"flattentypes\", \"flatten\", \"verifyconnectivity --noclkrst\", \"deletedeadinstances\"], [\"aetherlinglib\", \"commonlib\", \"mantle\", \"coreir\", \"global\"])\n"
-    saveToFileString = "haskell_test_module.save_to_file(\"" ++ circuitName ++ ".json\")"
+    getCoreIRModuleString = "magma.compile(\"" ++ circuitName ++ "\", " ++ circuitName ++ ", output=\"verilog\", passes=[\"rungenerators\", \"wireclocks-coreir\", \"verifyconnectivity --noclkrst\", \"flattentypes\", \"flatten\", \"verifyconnectivity --noclkrst\", \"deletedeadinstances\"], namespaces=[\"aetherlinglib\", \"commonlib\", \"mantle\", \"coreir\", \"global\"], context=c)\n"
 
 writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
   String -> String -> String -> String -> Bool -> (a -> StatefulErrorMonad b) -> IO ()
@@ -781,6 +778,7 @@ instance Circuit (StatefulErrorMonad) where
     priorData <- get 
     let inputLengthProxy = Proxy :: Proxy increaseUtilMult
     let inputLength = (fromInteger $ natVal inputLengthProxy)
+    put $ multiplyThroughput inputLength priorData
     f undefined
     return undefined
 
