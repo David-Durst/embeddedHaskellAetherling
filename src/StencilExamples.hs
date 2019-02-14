@@ -161,7 +161,7 @@ downsampleStencilChain1Per32 = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) down
 writeAllStencils = do
   writeProgramToFile "downsampleStencilChain1Per64" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/downsampleStencilChain1Per64.py" False downsampleStencilChain1Per64 --firstConv --(divBy4 (Proxy @64) (Proxy @4))-- firstConv --downsampleStencilChain1Per64
-  writeProgramToFile "stencilChain1Per32" preludeLocationStrForEx epilogueLocationStrForEx
+  writeProgramToFile "downsampleStencilChain1Per32" preludeLocationStrForEx epilogueLocationStrForEx
     "pyExamples/downsampleStencilChain1Per32.py" False downsampleStencilChain1Per32
 
 
