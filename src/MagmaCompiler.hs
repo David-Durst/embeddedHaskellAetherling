@@ -911,7 +911,8 @@ instance Circuit (StatefulErrorMonad) where
 -- iterInput = Seq $ V.fromTuple ((Int 1, Int 2), (Int 3, Int 4), (Int 5, Int 6), (Int 7, Int 8))
 -- replace unscheduledCirc with this one to see a composition
 
-unscheduledPipeline = iterC (Proxy @4) $ (constGenIntC (Int 3) >***< constGenIntC (Int 2)) >>> addC
+unscheduledPipeline = iterC (Proxy @4) $ addUnitType >>>
+                                     (noop (constGenIntC (Int 1)) *** constGenIntC (Int 1)) >>> addC
 unscheduledNode = iterC (Proxy @4) $ addC
 
 lb2x2Example = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) (Proxy @8) (Proxy @8)
@@ -1007,38 +1008,46 @@ partialParallelResult =
 
 preludeLocationStrForEx = "../../aetherling/aetherling/HaskellPrelude.py"
 epilogueLocationStrForEx = "../../aetherling/aetherling/HaskellEpilogue.py"
-writeAllExamples = do
+-- if compile to verilog is set, put this in the verilog directory. Otherwise
+-- put it in the normal py examples directory
+writeAllExamples compileToVerilog = do
+  let dirToWrite = if compileToVerilog then "pyExamples/verilog/" else "pyExamples/simulation/"
   writeProgramToFile "sequentialSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/sequentialSimpleAdd.py" False sequentialPipeline
+    (dirToWrite ++ "sequentialSimpleAdd.py") compileToVerilog sequentialPipeline
   writeProgramToFile "parallelSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/parallelSimpleAdd.py" False parallelPipeline
+    (dirToWrite ++ "parallelSimpleAdd.py") compileToVerilog parallelPipeline
   writeProgramToFile "partialParallelSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallelSimpleAdd.py" False partialParallelPipeline
+    (dirToWrite ++ "partialParallelSimpleAdd.py") compileToVerilog partialParallelPipeline
   writeProgramToFile "sequentialLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/sequentialLineBufferWithAdd.py" False sequentialLB
+    (dirToWrite ++ "sequentialLineBufferWithAdd.py") compileToVerilog sequentialLB
   writeProgramToFile "parallelLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/parallelLineBufferWithAdd.py" False parallelLB
+    (dirToWrite ++ "parallelLineBufferWithAdd.py") compileToVerilog parallelLB
   --writeProgramToFile "partialParallelLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
-  -- "pyExamples/partialParallelLineBufferWithAdd.py" False partialParallelLB
+  -- (dirToWrite ++ "partialParallelLineBufferWithAdd.py") compileToVerilog partialParallelLB
   writeProgramToFile "sequentialConvolution" preludeLocationStrForEx epilogueLocationStrForEx 
-    "pyExamples/sequentialConvolution.py" False sequentialConvolution
+    (dirToWrite ++ "sequentialConvolution.py") compileToVerilog sequentialConvolution
   writeProgramToFile "parallelConvolution" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/parallelConvolution.py" False parallelConvolution
+    (dirToWrite ++ "parallelConvolution.py") compileToVerilog parallelConvolution
   writeProgramToFile "partialParallel2Convolution" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallel2Convolution.py" False partialParallel2Convolution
+    (dirToWrite ++ "partialParallel2Convolution.py") compileToVerilog partialParallel2Convolution
   writeProgramToFile "partialParallel4Convolution" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallel4Convolution.py" False partialParallel4Convolution
+    (dirToWrite ++ "partialParallel4Convolution.py") compileToVerilog partialParallel4Convolution
   writeProgramToFile "partialParallel8Convolution" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallel8Convolution.py" False partialParallel8Convolution
+    (dirToWrite ++ "partialParallel8Convolution.py") compileToVerilog partialParallel8Convolution
   writeProgramToFile "partialParallel16Convolution" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallel16Convolution.py" False partialParallel16Convolution
+    (dirToWrite ++ "partialParallel16Convolution.py") compileToVerilog partialParallel16Convolution
   writeProgramToFile "sequentialConvChain" preludeLocationStrForEx epilogueLocationStrForEx 
-    "pyExamples/sequentialConvChain.py" False sequentialConvChain
+    (dirToWrite ++ "sequentialConvChain.py") compileToVerilog sequentialConvChain
   writeProgramToFile "partialParallel2ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallel2ConvChain.py" False partialParallel2ConvChain
+    (dirToWrite ++ "partialParallel2ConvChain.py") compileToVerilog partialParallel2ConvChain
   writeProgramToFile "partialParallel4ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallel4ConvChain.py" False partialParallel4ConvChain
+    (dirToWrite ++ "partialParallel4ConvChain.py") compileToVerilog partialParallel4ConvChain
   writeProgramToFile "partialParallel8ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallel8ConvChain.py" False partialParallel8ConvChain
+    (dirToWrite ++ "partialParallel8ConvChain.py") compileToVerilog partialParallel8ConvChain
   writeProgramToFile "partialParallel16ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
-    "pyExamples/partialParallel16ConvChain.py" False partialParallel16ConvChain
+    (dirToWrite ++ "partialParallel16ConvChain.py") compileToVerilog partialParallel16ConvChain
+
+writeSingleIO = do
+  writeProgramToFile "singleIOAdder" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/singleIOAdder.py" True (seq_to_tseqC $ iterC (Proxy @5) $ addUnitType >>>
+                                     (noop (constGenIntC (Int 1)) *** constGenIntC (Int 1)) >>> addC)
