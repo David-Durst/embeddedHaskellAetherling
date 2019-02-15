@@ -52,18 +52,18 @@ sseqToTSeq = seqToTSeq . sseqToSeq
 
 -- ability to convert nested Seqs to flat, at one level
 
-instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
+instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n GHC.TypeLits.* m)) =>
   Injective (Seq n (Seq m a)) (Seq o a) where
   to (Seq vecOfSeqs) =
     let
       vecOfVecs = fmap stVec vecOfSeqs
       flatVec = flattenNestedVector vecOfVecs
     in Seq flatVec 
-seqOfSeqToSeq :: (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
+seqOfSeqToSeq :: (KnownNat n, KnownNat m, KnownNat o, o ~ (n GHC.TypeLits.* m)) =>
   Seq n (Seq m a) -> Seq o a
 seqOfSeqToSeq = to
   
-instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
+instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n GHC.TypeLits.* m)) =>
   Injective (Seq o a) (Seq n (Seq m a)) where
   to (Seq flatVec) =
     let
@@ -72,14 +72,14 @@ instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
       vecOfVecs = nestVector sublistLengthProxy flatVec
       vecOfSeqs = fmap Seq vecOfVecs 
     in Seq vecOfSeqs
-seqToSeqOfSeq :: (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
+seqToSeqOfSeq :: (KnownNat n, KnownNat m, KnownNat o, o ~ (n GHC.TypeLits.* m)) =>
   Proxy m -> Seq o a -> Seq n (Seq m a)
 seqToSeqOfSeq _ = to
 
-instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
+instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n GHC.TypeLits.* m)) =>
   Iso (Seq o a) (Seq n (Seq m a))
 
-instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
+instance (KnownNat n, KnownNat m, KnownNat o, o ~ (n GHC.TypeLits.* m)) =>
   Iso (Seq n (Seq m a)) (Seq o a)
 
   
@@ -133,19 +133,19 @@ vectorOfVectorToSeqOfSeq :: (KnownNat n, KnownNat m) =>
                             Vector n (Vector m a) -> Seq n (Seq m a) 
 vectorOfVectorToSeqOfSeq vecOfVecs = Seq $ V.map (\vec -> Seq vec) vecOfVecs
 
-flattenNestedVector :: (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
+flattenNestedVector :: (KnownNat n, KnownNat m, KnownNat o, o ~ (n GHC.TypeLits.* m)) =>
                        (Vector n (Vector m a)) -> (Vector o a)
 flattenNestedVector (vectorOfVectors :: Vector n (Vector m a)) =
   let
     vectorOfLists = fmap vectorToList vectorOfVectors
     listOfLists = vectorToList vectorOfLists
     flatList = concat listOfLists
-    totalLength :: Proxy (n*m)
+    totalLength :: Proxy (n GHC.TypeLits.* m)
     totalLength = Proxy
     flatVector = listToVector totalLength flatList
   in flatVector
 
-nestVector :: (KnownNat n, KnownNat m, KnownNat o, o ~ (n*m)) =>
+nestVector :: (KnownNat n, KnownNat m, KnownNat o, o ~ (n GHC.TypeLits.* m)) =>
               Proxy m -> (Vector o a) -> (Vector n (Vector m a))
 nestVector sublistLengthProxy (flatVector :: Vector o a) =
   let

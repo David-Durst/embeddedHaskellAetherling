@@ -32,7 +32,7 @@ linebufferPxPerClock par xImageSize =
 -- type helpers for linebuffer sequence computation
 -- these assume x and y px per clock of 1, as par will increase that later
 type LBTimePerBufferedCycle (imageCols :: Nat) (strideRows :: Nat) =
-  imageCols * strideRows
+  imageCols  GHC.TypeLits.*  strideRows
 
 type LBWindowsPerActiveClock (imageCols :: Nat) (strideCols :: Nat)
   (timePerBufferedCycle :: Nat) = Max 1 (Div

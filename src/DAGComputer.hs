@@ -175,9 +175,9 @@ instance Circuit (State PipelineDAG) where
                          KnownNat outerInputLength, KnownNat outerOutputLength,
                          KnownNat innerInputLength, KnownNat innerOutputLength,
                          innerOutputLength ~ Max 1 (
-                            Div (totalOutputLength * innerInputLength) totalInputLength),
-                         totalInputLength ~ (outerInputLength*innerInputLength),
-                         totalOutputLength ~ (outerOutputLength*innerOutputLength)) =>
+                            Div (totalOutputLength GHC.TypeLits.* innerInputLength) totalInputLength),
+                         totalInputLength ~ (outerInputLength GHC.TypeLits.* innerInputLength),
+                         totalOutputLength ~ (outerOutputLength GHC.TypeLits.* innerOutputLength)) =>
                         Proxy innerInputLength ->
     (Seq totalInputLength a -> State PipelineDAG (Seq totalOutputLength b)) ->
     (Seq outerInputLength (SSeq innerInputLength a) ->
@@ -259,7 +259,7 @@ instance Circuit (State PipelineDAG) where
                 (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
                  KnownNat underutilMult, 1 <= underutilMult) => 
     Proxy underutilMult -> (TSeq n v a -> State PipelineDAG (TSeq o u b)) ->
-    TSeq n ((n + v) * underutilMult - n) a -> State PipelineDAG (TSeq o ((o + u) * underutilMult - o) b)
+    TSeq n ((n + v) GHC.TypeLits.* underutilMult - n) a -> State PipelineDAG (TSeq o ((o + u) GHC.TypeLits.* underutilMult - o) b)
   underutilC underutilProxy f _ = do 
     PipelineDAG priorStages <- get 
     let innerStages = getInnerPipeline f emptyDAG

@@ -106,7 +106,7 @@ class Monad m => Circuit m where
            Proxy n -> (Atom (Atom a, Atom a) -> m (Atom a)) ->
            (Atom () -> m (Atom a)) ->
            Seq n (Atom a) -> m (Seq 1 (Atom a))
-  partitionC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n*o)) => 
+  partitionC :: (KnownNat n, KnownNat o, KnownNat p, p ~ (n GHC.TypeLits.* o)) => 
     Proxy o -> Seq p a -> m (Seq n (Seq o a))
 
   -- if i make the inside of linebuffer sseq, and wrap that with a seq, then
@@ -119,12 +119,12 @@ class Monad m => Circuit m where
   lineBuffer :: (KnownNat windowYSize, KnownNat windowXSize,
                  KnownNat imageYSize, KnownNat imageXSize,
                  KnownNat strideY, KnownNat strideX, KnownNat originY,
-                 KnownNat originX, Typeable a, 1 <= (strideX * strideY)) =>
+                 KnownNat originX, Typeable a, 1 <= (strideX GHC.TypeLits.* strideY)) =>
     Proxy (Atom a) -> Proxy windowYSize -> Proxy windowXSize ->
     Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
-    (Seq (imageYSize * imageXSize) (Atom a)) ->
-    m (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
+    (Seq (imageYSize GHC.TypeLits.* imageXSize) (Atom a)) ->
+    m (Seq (Div (imageYSize GHC.TypeLits.* imageXSize) (strideY GHC.TypeLits.* strideX))
         -- underutilized when not emitting. 
         (Atom (V.Vector windowYSize
                (Atom (V.Vector windowXSize (Atom a))))))
@@ -173,9 +173,9 @@ class Monad m => Circuit m where
                          KnownNat outerInputLength, KnownNat outerOutputLength,
                          KnownNat innerInputLength, KnownNat innerOutputLength,
                          innerOutputLength ~ Max 1 (
-                            Div (totalOutputLength * innerInputLength) totalInputLength),
-                         totalInputLength ~ (outerInputLength*innerInputLength),
-                         totalOutputLength ~ (outerOutputLength*innerOutputLength)) =>
+                            Div (totalOutputLength GHC.TypeLits.* innerInputLength) totalInputLength),
+                         totalInputLength ~ (outerInputLength GHC.TypeLits.* innerInputLength),
+                         totalOutputLength ~ (outerOutputLength GHC.TypeLits.* innerOutputLength)) =>
     Proxy innerInputLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
     Seq outerInputLength (SSeq innerInputLength a) ->
     m (Seq outerOutputLength (SSeq innerOutputLength b))
@@ -183,8 +183,8 @@ class Monad m => Circuit m where
   split_seq_to_tseqC :: (KnownNat totalInputLength, KnownNat totalOutputLength,
                          KnownNat outerLength, KnownNat innerInputLength,
                          KnownNat innerOutputLength,
-                         totalInputLength ~ (outerLength*innerInputLength),
-                         totalOutputLength ~ (outerLength*innerOutputLength)) =>
+                         totalInputLength ~ (outerLength GHC.TypeLits.* innerInputLength),
+                         totalOutputLength ~ (outerLength GHC.TypeLits.* innerOutputLength)) =>
     Proxy innerInputLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
     Seq outerLength (TSeq innerInputLength 0 a) -> m (Seq outerLength (TSeq innerOutputLength 0 b))
 
@@ -217,7 +217,7 @@ class Monad m => Circuit m where
     Proxy underutilMult -> (TSeq n v a -> m (TSeq o u b)) ->
     -- subtract n/o as n + v * underutilMult is the new base of the utilization
     -- and keeping n around
-    TSeq n ((n + v) * underutilMult - n) a -> m (TSeq o ((o + u) * underutilMult - o) b)
+    TSeq n ((n + v) GHC.TypeLits.* underutilMult - n) a -> m (TSeq o ((o + u) GHC.TypeLits.* underutilMult - o) b)
 
   increaseUtilC :: (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
                  KnownNat increaseUtilMult, 1 <= increaseUtilMult,
@@ -237,7 +237,7 @@ class Monad m => Circuit m where
     TSeq (n `Div` increaseUtilMult) 0 (SSeq increaseUtilMult a) ->
     m (TSeq o ((o + u) `Div` increaseUtilMult - o) b)
 
-  mergeSSeqs :: (KnownNat n, KnownNat o) => (SSeq n (SSeq o a)) -> m (SSeq (n*o) a)
+  mergeSSeqs :: (KnownNat n, KnownNat o) => (SSeq n (SSeq o a)) -> m (SSeq (n GHC.TypeLits.* o) a)
 
   reshapeC :: (TypeSize a ~ TypeSize b) => Proxy a -> Proxy b -> a -> m b 
   reshapeImplicitC :: (TypeSize a ~ TypeSize b) => a -> m b 

@@ -69,7 +69,7 @@ instance Circuit SimulatorEnv where
 
   -- sequence operators
   upC _ (Seq vec) = return $ Seq $ V.replicate $ V.head vec
-  downC _ (Seq vec) = return $ Seq $ V.singleton $ V.head vec
+  --downC _ (Seq vec) = return $ Seq $ V.singleton $ V.head vec
 
 {-
   foldC sublistLength f accum (Seq inputVec) =

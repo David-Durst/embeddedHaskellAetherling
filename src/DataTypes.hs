@@ -52,8 +52,8 @@ type family TypeSize (x :: *) :: Nat where
   TypeSize (Atom Int) = 8
   TypeSize (Atom Bool) = 1
   TypeSize (Atom (x, y)) = (TypeSize x) + (TypeSize y)
-  TypeSize (Atom (V.Vector n (Atom a))) =  n * (TypeSize (Atom a))
-  TypeSize (SSeq n a) = n * (TypeSize a)
+  TypeSize (Atom (V.Vector n (Atom a))) =  n GHC.TypeLits.* (TypeSize (Atom a))
+  TypeSize (SSeq n a) = n GHC.TypeLits.* (TypeSize a)
  -- TypeSize (TSeq n _ a) = (TypeSize a)
   --TypeSize a = 0
 
@@ -61,7 +61,7 @@ type family TypeSize (x :: *) :: Nat where
 -- the number of unscheduled values
 type family UnscheduledLength (x :: *) :: Nat where
   UnscheduledLength (Atom _) = 1
-  UnscheduledLength (Seq n a) = n * (UnscheduledLength a)
+  UnscheduledLength (Seq n a) = n GHC.TypeLits.* (UnscheduledLength a)
  -- NumInputs (TSeq n _ a) = (NumInputs a)
 
 size :: forall a . (KnownNat (TypeSize a)) => Proxy a -> Int

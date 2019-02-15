@@ -466,15 +466,15 @@ instance Circuit (StatefulErrorMonad) where
                  (KnownNat windowYSize,
                  KnownNat windowXSize, KnownNat imageYSize, KnownNat imageXSize,
                  KnownNat strideY, KnownNat strideX, KnownNat originY,
-                 KnownNat originX, Typeable a, 1 <= (strideX * strideY)) =>
+                 KnownNat originX, Typeable a, 1 <= (strideX GHC.TypeLits.* strideY)) =>
     Proxy (Atom a) -> Proxy windowYSize -> Proxy windowXSize ->
     Proxy imageYSize -> Proxy imageXSize ->
     Proxy strideY -> Proxy strideX -> Proxy originY -> Proxy originX ->
     -- need strideY*strideX here as, if running at least 1 pixel
     -- out per clock, need at least these many pixels in per clock
     -- can get rid of this once I have underutilize working
-    (Seq (imageYSize * imageXSize) (Atom a)) ->
-    StatefulErrorMonad (Seq (Div (imageYSize * imageXSize) (strideY * strideX))
+    (Seq (imageYSize GHC.TypeLits.* imageXSize) (Atom a)) ->
+    StatefulErrorMonad (Seq (Div (imageYSize GHC.TypeLits.* imageXSize) (strideY GHC.TypeLits.* strideX))
                         (Atom (V.Vector windowYSize
                                (Atom (V.Vector windowXSize (Atom a))))))
   lineBuffer _ _ _ _ _ _ _ _ _ _ = do
@@ -735,9 +735,9 @@ instance Circuit (StatefulErrorMonad) where
                          KnownNat outerInputLength, KnownNat outerOutputLength,
                          KnownNat innerInputLength, KnownNat innerOutputLength,
                          innerOutputLength ~ Max 1 (
-                            Div (totalOutputLength * innerInputLength) totalInputLength),
-                         totalInputLength ~ (outerInputLength*innerInputLength),
-                         totalOutputLength ~ (outerOutputLength*innerOutputLength)) =>
+                            Div (totalOutputLength GHC.TypeLits.* innerInputLength) totalInputLength),
+                         totalInputLength ~ (outerInputLength GHC.TypeLits.* innerInputLength),
+                         totalOutputLength ~ (outerOutputLength GHC.TypeLits.* innerOutputLength)) =>
                         Proxy innerInputLength ->
     (Seq totalInputLength a -> StatefulErrorMonad (Seq totalOutputLength b)) ->
     (Seq outerInputLength (SSeq innerInputLength a) ->
@@ -835,7 +835,7 @@ instance Circuit (StatefulErrorMonad) where
                 (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
                  KnownNat underutilMult, 1 <= underutilMult) => 
     Proxy underutilMult -> (TSeq n v a -> StatefulErrorMonad (TSeq o u b)) ->
-    TSeq n ((n + v) * underutilMult - n) a -> StatefulErrorMonad (TSeq o ((o + u) * underutilMult - o) b)
+    TSeq n ((n + v) GHC.TypeLits.* underutilMult - n) a -> StatefulErrorMonad (TSeq o ((o + u) GHC.TypeLits.* underutilMult - o) b)
   underutilC underutilProxy f _ = do 
     priorData <- get 
     let inputLengthProxy = Proxy :: Proxy underutilMult
