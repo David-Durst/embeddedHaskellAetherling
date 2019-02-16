@@ -377,16 +377,16 @@ instance Circuit (StatefulErrorMonad) where
   notC _ = createCompilationDataAndAppend NotT
   noop f _ = do
     outerData <- get
-    traceM "outerData in NoOp"
-    traceM $ show outerData
+    --traceM "outerData in NoOp"
+    --traceM $ show outerData
     let compWithThroughput = emptyCompData {
           throughputNumerator = lastThroughputNumerator outerData,
           throughputDenominator = lastThroughputDenominator outerData}
-    traceM $ show compWithThroughput
+    --traceM $ show compWithThroughput
     let fPipeline = runIdentity $ runExceptT $ (runStateT
           (f undefined) compWithThroughput)
-    traceM $ show $ snd $ fromRight undefined fPipeline
-    traceM "done NoOp"
+    --traceM $ show $ snd $ fromRight undefined fPipeline
+    --traceM "done NoOp"
     if isLeft fPipeline
       then do
       liftEither fPipeline
@@ -714,6 +714,11 @@ instance Circuit (StatefulErrorMonad) where
   (f >>> g) _ = do
     traceM "\n\nstarting"
     priorData <- get
+    let priorThroughputNumerator = throughputNumerator priorData
+    let priorThroughputDenominator = throughputDenominator priorData
+    let priorOutPorts = outputPorts priorData
+    --traceM $ "throughput before f " ++ show (throughputNumerator priorData, throughputDenominator priorData)
+    f undefined
     traceM "\npriorData:"
     traceM $ show $ inputPorts priorData
     traceM $ show $ outputPorts priorData
@@ -721,11 +726,6 @@ instance Circuit (StatefulErrorMonad) where
     traceM $ show $ throughputDenominator priorData
     traceM $ show $ lastThroughputNumerator priorData
     traceM $ show $ lastThroughputDenominator priorData
-    let priorThroughputNumerator = throughputNumerator priorData
-    let priorThroughputDenominator = throughputDenominator priorData
-    let priorOutPorts = outputPorts priorData
-    --traceM $ "throughput before f " ++ show (throughputNumerator priorData, throughputDenominator priorData)
-    f undefined
     -- the parallelism for the second one depends on the parallelism of the first one
     -- since we are always setting parallelism based on inputs per clock,
     -- make the second node run at the right rate to match the parallelism of
