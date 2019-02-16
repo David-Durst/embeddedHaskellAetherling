@@ -30,6 +30,7 @@ numCopiesToParallelize (UpT _ _) _ = 1
 numCopiesToParallelize (DownT _ _) _ = 1
 numCopiesToParallelize (FoldT _ _ totalLen) par = max 1 (par `div` totalLen)
 numCopiesToParallelize (LineBufferT _) _ = 1
+numCopiesToParallelize (NoopT nt par) _ = numCopiesToParallelize nt par
 numCopiesToParallelize _ par = par
 
 -- left string is an error, right string is a valid result
@@ -50,7 +51,7 @@ duplicateAndInstantiateNode nodeType _ par = createMagmaDefOfNode nodeType par
 createMagmaDefOfNode :: NodeType -> Int -> Either String String
 createMagmaDefOfNode AbsT _ = Left "Abs node not implemented" 
 createMagmaDefOfNode NotT _ = Right "DefineNegate(8)"
-createMagmaDefOfNode (NoopT nt) par = Right $ "DefineNoop(" ++
+createMagmaDefOfNode (NoopT nt par) _ = Right $ "DefineNoop(" ++
   (fromRight "bad Noop inner def" $ createMagmaDefOfNode nt par) ++ ")"
 createMagmaDefOfNode AddT _ = Right "DefineAdd(8)"
 createMagmaDefOfNode SubT _ = Right "DefineSub(8)"
@@ -262,7 +263,7 @@ getPorts :: NodeType -> String -> Int -> Either String Ports
 getPorts AbsT _ _ = Left "Abs node not implemented" 
 getPorts NotT fnName _ = Right $ Ports [fnName ++ "I"] [bitType]
                          [fnName ++ "O"] [bitType] emptyControlPorts
-getPorts (NoopT nt) fnName par = Right (
+getPorts (NoopT nt par) fnName _ = Right (
   Ports noopInputPortNames (outTypes innerPorts)
     noopOutputPortNames (outTypes innerPorts) emptyControlPorts)
   where

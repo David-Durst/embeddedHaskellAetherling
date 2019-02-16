@@ -87,7 +87,7 @@ instance Circuit (State PipelineDAG) where
   absC _ = appendToPipeline (NodeInfo AbsT 1 1 ([],[]))
   notC _ = appendToPipeline (NodeInfo NotT 1 1 ([],[]))
   -- look at work in noop in magma to get inner node correctly
-  noop _ _ = appendToPipeline  (NodeInfo (NoopT AbsT) 1 1 ([],[]))
+  noop _ _ = appendToPipeline  (NodeInfo (NoopT AbsT 1) 1 1 ([],[]))
 
   -- binary operators
   -- the values returned here, they are only to emit things of the right types

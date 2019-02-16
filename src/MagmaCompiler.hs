@@ -51,9 +51,14 @@ data CompilationData = CompilationData {
   entireDAGControlPorts :: [ControlPorts],
   -- this tracks how parallel to make everything in the subpart
   throughputNumerator :: Int,
-  throughputDenominator :: Int
+  throughputDenominator :: Int,
   -- this tracks how many clock cycle delays prior stages have added
   -- priorDelay :: Int
+  -- this is for communicating from a >>> to the right hand node
+  -- what the throuhgput of the left thing was. This is so
+  -- the noop can compute it's ports correctly
+  lastThroughputNumerator :: Int,
+  lastThroughputDenominator :: Int
   }
   deriving Show
 
@@ -69,7 +74,7 @@ divideThroughput n compData =
   compData { throughputDenominator = n * (throughputDenominator compData) }
 
 emptyCompData :: CompilationData
-emptyCompData = CompilationData 0 [] [] [] [] [] [] [] 1 1
+emptyCompData = CompilationData 0 [] [] [] [] [] [] [] 1 1 1 1
 
 valid_data_in_str = "valid_data_in"
 valid_data_out_str = "valid_data_out"
@@ -235,7 +240,7 @@ wireDataInterface moduleName inputPorts outputPorts = foldl (++) "" $
 -- for a set of existing stages
 appendToCompilationData :: NodeType -> CompilationData -> StatefulErrorMonad a
 appendToCompilationData nodeType newData@(CompilationData ni nts ot ip iTypes op oTypes
-                                          cp tNum tDenom) = do  
+                                          cp tNum tDenom priorTNum priorTDenom) = do  
     priorData <- get 
     -- just propagate throughput numerator and denominator 
     -- as those are only modififed by scheduling combiators that are
@@ -272,7 +277,8 @@ appendToCompilationData nodeType newData@(CompilationData ni nts ot ip iTypes op
       let nodeIndexIncrement = numCopiesToParallelize nodeType newPar
       put $ (CompilationData (ni+nodeIndexIncrement) (nodeTypes priorData ++ nts)
              newOutText newInPorts newInTypes newOutPorts newOutTypes
-             newControlPorts newThroughputNumerator newThroughputDenominator)
+             newControlPorts newThroughputNumerator newThroughputDenominator
+             priorTNum priorTDenom) --(lastThroughputNumerator priorData) (lastThroughputDenominator priorData))
       return undefined
     return undefined
   where
@@ -327,7 +333,8 @@ createCompilationDataAndAppend nodeType = do
             (inTypes portsValues) (outPorts portsValues) 
             (outTypes portsValues) 
             [controlPorts portsValues]
-            (throughputNumerator priorData) (throughputDenominator priorData))
+            (throughputNumerator priorData) (throughputDenominator priorData)
+            (lastThroughputNumerator priorData) (lastThroughputDenominator priorData))
     return undefined
 
 
@@ -369,15 +376,28 @@ instance Circuit (StatefulErrorMonad) where
   absC _ = createCompilationDataAndAppend AbsT 
   notC _ = createCompilationDataAndAppend NotT
   noop f _ = do
+    outerData <- get
+    traceM "outerData in NoOp"
+    traceM $ show outerData
+    let compWithThroughput = emptyCompData {
+          throughputNumerator = lastThroughputNumerator outerData,
+          throughputDenominator = lastThroughputDenominator outerData}
+    traceM $ show compWithThroughput
     let fPipeline = runIdentity $ runExceptT $ (runStateT
-          (f undefined) emptyCompData)
+          (f undefined) compWithThroughput)
+    traceM $ show $ snd $ fromRight undefined fPipeline
+    traceM "done NoOp"
     if isLeft fPipeline
       then do
       liftEither fPipeline
       return undefined
       else do
+      --traceM $ show $ snd $ fromRight undefined fPipeline
       createCompilationDataAndAppend (NoopT
-                                      (head $ nodeTypes $ snd $ fromRight undefined fPipeline))
+                                      (head $ nodeTypes $ snd $
+                                       fromRight undefined fPipeline)
+                                     (lastThroughputNumerator outerData `parDiv`
+                                     lastThroughputDenominator outerData))
 
   -- binary operators
   -- the values returned here, they are only to emit things of the right types
@@ -577,6 +597,8 @@ instance Circuit (StatefulErrorMonad) where
     -- modules
     let cData = emptyCompData { throughputNumerator = tNum,
                                 throughputDenominator = tDenom,
+                                lastThroughputNumerator = lastThroughputNumerator priorData,
+                                lastThroughputDenominator = lastThroughputDenominator priorData,
                                 nodeIndex = firstNodeIndex
                                 }
     let fPipeline = runIdentity $ runExceptT $ (runStateT
@@ -635,6 +657,7 @@ instance Circuit (StatefulErrorMonad) where
                                -- to have ready-valid ports, will address this later
                                (if null fControlPorts then gControlPorts else fControlPorts)
                                tNum tDenom
+                               (lastThroughputNumerator priorData) (lastThroughputDenominator priorData)
                                )
       -- passing in AddT to ensure that nodeIndex increases by parallelism amount
       -- safer to over count than undercount
@@ -689,9 +712,18 @@ instance Circuit (StatefulErrorMonad) where
       AtomBaseType a, AtomBaseType b, AtomBaseType c) =>
     (a -> StatefulErrorMonad b) -> (b -> StatefulErrorMonad c) -> (a -> StatefulErrorMonad c)
   (f >>> g) _ = do
+    traceM "\n\nstarting"
     priorData <- get
+    traceM "\npriorData:"
+    traceM $ show $ inputPorts priorData
+    traceM $ show $ outputPorts priorData
+    traceM $ show $ throughputNumerator priorData
+    traceM $ show $ throughputDenominator priorData
+    traceM $ show $ lastThroughputNumerator priorData
+    traceM $ show $ lastThroughputDenominator priorData
     let priorThroughputNumerator = throughputNumerator priorData
     let priorThroughputDenominator = throughputDenominator priorData
+    let priorOutPorts = outputPorts priorData
     --traceM $ "throughput before f " ++ show (throughputNumerator priorData, throughputDenominator priorData)
     f undefined
     -- the parallelism for the second one depends on the parallelism of the first one
@@ -706,15 +738,48 @@ instance Circuit (StatefulErrorMonad) where
     --traceM $ show fInputLength
     --traceM $ show fOutputLength
     --traceM $ "throughput before change " ++ show (throughputNumerator dataAfterF, throughputDenominator dataAfterF)
+    traceM "\ndataAfterF:"
+    traceM $ show $ inputPorts dataAfterF
+    traceM $ show $ outputPorts dataAfterF
+    traceM $ show $ throughputNumerator dataAfterF
+    traceM $ show $ throughputDenominator dataAfterF
+    traceM $ show $ lastThroughputNumerator dataAfterF
+    traceM $ show $ lastThroughputDenominator dataAfterF
+    -- only update lastThrouhgput if f was first in whole pipline (aka priorOutPorts null)
+    -- or if the prior node changed the ports
+    -- otherwise it was just a type modifier and propagate lastThrouhgpuot
+    -- from prior stages in pipeline
+    let dataForG = if (null priorOutPorts) || not (priorOutPorts == outputPorts dataAfterF)
+          then dataAfterF {
+          lastThroughputNumerator = throughputNumerator dataAfterF,
+          lastThroughputDenominator = throughputDenominator dataAfterF
+          }
+          else dataAfterF
+    traceM "\ndataForG:"
+    traceM $ show $ inputPorts dataForG
+    traceM $ show $ outputPorts dataForG
+    traceM $ show $ throughputNumerator dataForG
+    traceM $ show $ throughputDenominator dataForG
+    traceM $ show $ lastThroughputNumerator dataForG
+    traceM $ show $ lastThroughputDenominator dataForG
+    --traceM $ "dataForG: " ++ show dataForG
     -- increase/decrease output parallelism depending on if a is rate increase or
     -- decreasing
     if fInputLength > fOutputLength
       then do
       --traceM "a"
-      put $ divideThroughput (fInputLength `div` fOutputLength) dataAfterF
+      put $ divideThroughput (fInputLength `div` fOutputLength) dataForG
       else do
       --traceM "b"
-      put $ multiplyThroughput (fOutputLength `div` fInputLength) dataAfterF
+      put $ multiplyThroughput (fOutputLength `div` fInputLength) dataForG
+    dataPreG <- get
+    traceM "\ndataPreG:"
+    traceM $ show $ inputPorts dataPreG
+    traceM $ show $ outputPorts dataPreG
+    traceM $ show $ throughputNumerator dataPreG
+    traceM $ show $ throughputDenominator dataPreG
+    traceM $ show $ lastThroughputNumerator dataPreG
+    traceM $ show $ lastThroughputDenominator dataPreG
     --traceM $ "throughput after change " ++ show (throughputNumerator dataAfterF, throughputDenominator dataAfterF)
     ----traceM $ "PriorData " ++ show priorData
     g undefined
@@ -906,6 +971,13 @@ instance Circuit (StatefulErrorMonad) where
       throughputNumerator = priorNum,
       throughputDenominator = priorDenom} 
     return undefined
+{-
+writeSingleIO = do
+  writeProgramToFile "singleIOAdder" preludeLocationStrForEx epilogueLocationStrForEx
+    "pyExamples/singleIOAdder.py" True (seq_to_tseqC $ iterC (Proxy @5) $ addUnitType >>>
+                                     (noop (constGenIntC (Int 1)) *** constGenIntC (Int 1)) >>> addC)
+
+-}
 
 preludeLocationStrForEx = "../../aetherling/aetherling/HaskellPrelude.py"
 epilogueLocationStrForEx = "../../aetherling/aetherling/HaskellEpilogue.py"

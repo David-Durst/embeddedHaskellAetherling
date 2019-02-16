@@ -248,7 +248,9 @@ class Monad m => Circuit m where
 data NodeType =
   AbsT
   | NotT
-  | NoopT NodeType
+  -- int is for the par of the nodetype
+  -- this is from prior in the DAG
+  | NoopT NodeType Int
   | AddT
   | SubT
   | DivT
@@ -290,7 +292,7 @@ data NodeType =
 instance Show NodeType where
   show AbsT = "AbsT"
   show NotT = "NotT"
-  show (NoopT nt) = "NoopT " ++ (show nt)
+  show (NoopT nt par) = "NoopT " ++ show nt ++ show par
   show AddT = "AddT"
   show SubT = "SubT"
   show DivT = "DivT"
