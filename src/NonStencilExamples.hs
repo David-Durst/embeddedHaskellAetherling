@@ -128,9 +128,13 @@ lb_32x32Im_2x2Win_Example = (lineBuffer (Proxy :: Proxy (Atom Int))
                              (Proxy @2) (Proxy @2) (Proxy @32) (Proxy @32)
                              (Proxy @1) (Proxy @1) (Proxy @0) (Proxy @0))
 
+foldParameterizedExample lengthProxy = iterC lengthProxy $ seq_to_vectorC $
+  foldC (Proxy @4) addC (constGenIntC (Int 0))
+
 unscheduledConvolution_32x32Im_2x2Win_Example = (iterC lengthProxy addUnitType) >>>
   (lb_32x32Im_2x2Win_Example >***< lbExampleConsts lengthProxy) >>>
-  lbExampleMuls lengthProxy >>> flattenNestedNTuples lengthProxy
+  lbExampleMuls lengthProxy >>> flattenNestedNTuples lengthProxy >>>
+  foldParameterizedExample lengthProxy
   where
     lengthProxy = Proxy @1024
 

@@ -145,7 +145,9 @@ downsampleStencilChain1Per32 = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) down
 writeAllStencils compileToVerilog = do
   let dirToWrite = if compileToVerilog then "pyExamples/verilog/" else "pyExamples/simulation/"
   writeProgramToFile "downsampleStencilChain1Per64" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "downsampleStencilChain1Per64.py") compileToVerilog downsampleStencilChain1Per64 --firstConv --(divBy4 (Proxy @64) (Proxy @4))-- firstConv --downsampleStencilChain1Per64
+    (dirToWrite ++ "downsampleStencilChain1Per64.py") compileToVerilog downsampleStencilChain1Per64 
+  writeProgramToFile "downsampleStencilChain1Per32" preludeLocationStrForEx epilogueLocationStrForEx
+    (dirToWrite ++ "downsampleStencilChain1Per32.py") compileToVerilog downsampleStencilChain1Per32 
   writeProgramToFile "downsample_256x256_to_32x32_1px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "downsample_256x256_to_32x32_1px_in_per_clk.py")
