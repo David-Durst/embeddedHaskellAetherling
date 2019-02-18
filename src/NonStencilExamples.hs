@@ -42,7 +42,8 @@ lbExampleConsts lengthProxy = iterC lengthProxy $
   (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
 
 --lbExampleConsts = iterC (Proxy @100) $ mapC (Proxy @2) $ mapC (Proxy @2) $ constGenIntC (Int 3)
-lbExampleMuls lengthProxy = iterC lengthProxy $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
+lbExampleMuls lengthProxy = iterC lengthProxy $ seq_to_vectorC $ iterC (Proxy @2) $
+  seq_to_vectorC $ iterC (Proxy @2) $ mulC
 flattenNestedNTuples lengthProxy = iterC lengthProxy $
   reshapeC (Proxy :: Proxy (Atom (V.Vector 2 (Atom (V.Vector 2 (Atom Int))))))
   (Proxy :: Proxy (Atom (V.Vector 4 (Atom Int))))

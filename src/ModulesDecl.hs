@@ -130,10 +130,6 @@ class Monad m => Circuit m where
                (Atom (V.Vector windowXSize (Atom a))))))
 
   -- higher-order operators
-  mapC :: (KnownNat n) =>
-    Proxy n -> (Atom a -> m (Atom b)) ->
-    (Atom (V.Vector n (Atom a)) -> m (Atom (V.Vector n (Atom b))))
-
   seq_to_vectorC :: (KnownNat n, KnownNat o) =>
     (Seq n (Atom a) -> m ((Seq o (Atom b)))) ->
     (Atom (V.Vector n (Atom a)) -> m (Atom (V.Vector o (Atom b))))

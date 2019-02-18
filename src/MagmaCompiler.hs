@@ -534,37 +534,6 @@ instance Circuit (StatefulErrorMonad) where
         (originYValue, originXValue) tokenType
       
   -- higher-order operators
-  mapC :: forall n a b . (KnownNat n) =>
-    Proxy n -> (Atom a -> StatefulErrorMonad (Atom b)) ->
-    (Atom (V.Vector n (Atom a)) -> StatefulErrorMonad (Atom (V.Vector n (Atom b))))
-  mapC _ f _ = do
-    priorData <- get 
-    let priorNum = throughputNumerator priorData
-    let priorDenom = throughputDenominator priorData
-    -- since this is not actually changing thoruhgput, need to reset last throuhgput
-    -- for later stages
-    let priorLastNum = lastThroughputNumerator priorData
-    let priorLastDenom = lastThroughputDenominator priorData
-    let priorPar = priorNum `parDiv` priorDenom
-    let mapParallelismProxy = Proxy :: Proxy n 
-    let mapParallelism = (fromInteger $ natVal mapParallelismProxy)
-    --traceM $ "Prior parallelism: " ++ show priorPar
-    -- since this map is doing atoms, it's parallelism must be at least the n.
-    -- any less and we are underutilizng a vector that cannot be underutilized
-    put $ priorData {
-      throughputNumerator = priorPar * mapParallelism,
-      throughputDenominator = 1}
-    --traceM $ "PriorData " ++ show priorData
-    f undefined
-    dataPostInnerPipeline <- get
-    --traceM $ "dataPostInnerPipeline " ++ show dataPostInnerPipeline
-    put $ dataPostInnerPipeline {
-      throughputNumerator = priorNum,
-      throughputDenominator = priorDenom,
-      lastThroughputNumerator = priorLastNum,
-      lastThroughputDenominator = priorLastDenom} 
-    return undefined
-
   seq_to_vectorC :: forall n o a b . (KnownNat n, KnownNat o) =>
     (Seq n (Atom a) -> StatefulErrorMonad (Seq o (Atom b))) ->
     (Atom (V.Vector n (Atom a)) -> StatefulErrorMonad (Atom (V.Vector o (Atom b))))

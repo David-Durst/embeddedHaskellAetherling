@@ -34,7 +34,8 @@ downsampleLB4x4 = (lineBuffer (Proxy :: Proxy (Atom Int)) (Proxy @2) (Proxy @2) 
                    (Proxy @2) (Proxy @2) (Proxy @0) (Proxy @0))
 downsampleLB4x4CData = buildCompilationData downsampleLB4x4
 
-convMuls lengthProxy = iterC lengthProxy $ mapC (Proxy @2) $ mapC (Proxy @2) $ mulC
+convMuls lengthProxy = iterC lengthProxy $ seq_to_vectorC $ iterC (Proxy @2) $
+  seq_to_vectorC $ iterC (Proxy @2) $ mulC
 convConsts lengthProxy = iterC lengthProxy $
   (constGenIntC (Int 1) *** constGenIntC (Int 2)) ***
   (constGenIntC (Int 3) *** constGenIntC (Int 4)) >>>
