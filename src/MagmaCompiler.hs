@@ -935,69 +935,8 @@ instance Circuit (StatefulErrorMonad) where
     f undefined
     return undefined
 
-  increaseUtilC :: forall n v o u a b increaseUtilMult .
-                (KnownNat n, KnownNat v, KnownNat o, KnownNat u,
-                 KnownNat increaseUtilMult, 1 <= increaseUtilMult,
-                 1 <= v, 1 <= u,
-                 increaseUtilMult <= (n + v), increaseUtilMult <= (o + u)) => 
-    Proxy increaseUtilMult -> (TSeq n v a -> StatefulErrorMonad (TSeq o u b)) ->
-    TSeq n ((n + v) `Div` increaseUtilMult - n) a ->
-    StatefulErrorMonad (TSeq o ((o + u) `Div` increaseUtilMult - o) b)
-  increaseUtilC increaseUtilProxy f _ = do 
-    priorData <- get 
-    let inputLengthProxy = Proxy :: Proxy increaseUtilMult
-    let inputLength = (fromInteger $ natVal inputLengthProxy)
-    f undefined
-    return undefined
-
-  increaseUtilTtoSC :: forall n o u a b increaseUtilMult .
-                       (KnownNat n, KnownNat o, KnownNat u,
-                        KnownNat increaseUtilMult, 1 <= increaseUtilMult,
-                        increaseUtilMult <= u) =>
-    Proxy increaseUtilMult -> (TSeq n 0 a -> StatefulErrorMonad (TSeq o u b)) ->
-    -- subtract n/o as n + v * underutilMult is the new base of the utilization
-    -- and keeping n around
-    TSeq (n `Div` increaseUtilMult) 0 (SSeq increaseUtilMult a) ->
-    StatefulErrorMonad (TSeq o ((o + u) `Div` increaseUtilMult - o) b)
-  increaseUtilTtoSC increaseUtilProxy f _ = do
-    priorData <- get 
-    let inputLengthProxy = Proxy :: Proxy increaseUtilMult
-    let inputLength = (fromInteger $ natVal inputLengthProxy)
-    put $ multiplyThroughput inputLength priorData
-    f undefined
-    return undefined
-
-  -- since the ports and types are already flattened, and same amount of parallelism
-  -- flattened or unflattened, no need to do anything here
-  -- this is just for manipulating the type system.
-  mergeSSeqs _ = return undefined
-
   reshapeC _ _ _ = return undefined
   reshapeImplicitC _ = return undefined
-
-  forceMinPortParallelism :: forall p a b . (KnownNat p) => Proxy p ->
-                             (a -> StatefulErrorMonad b) -> a -> StatefulErrorMonad b
-  forceMinPortParallelism _ f _ = do
-    priorData <- get 
-    let priorNum = throughputNumerator priorData
-    let priorDenom = throughputDenominator priorData
-    let priorPar = priorNum `parDiv` priorDenom
-    let minParallelismProxy = Proxy :: Proxy p
-    let minParallelism = (fromInteger $ natVal minParallelismProxy)
-    let parallelism = max minParallelism priorPar
-    -- since this map is doing atoms, it's parallelism must be at least the n.
-    -- any less and we are underutilizng a vector that cannot be underutilized
-    put $ priorData {
-      throughputNumerator = parallelism,
-      throughputDenominator = 1}
-    --traceM $ "PriorData " ++ show priorData
-    f undefined
-    dataPostInnerPipeline <- get
-    --traceM $ "dataPostInnerPipeline " ++ show dataPostInnerPipeline
-    put $ dataPostInnerPipeline {
-      throughputNumerator = priorNum,
-      throughputDenominator = priorDenom} 
-    return undefined
 {-
 writeSingleIO = do
   writeProgramToFile "singleIOAdder" preludeLocationStrForEx epilogueLocationStrForEx
