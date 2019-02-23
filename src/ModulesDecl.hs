@@ -177,12 +177,15 @@ class Monad m => Circuit m where
     m (Seq outerOutputLength (SSeq innerOutputLength b))
 
   split_seq_to_tseqC :: (KnownNat totalInputLength, KnownNat totalOutputLength,
-                         KnownNat outerLength, KnownNat innerInputLength,
-                         KnownNat innerOutputLength,
-                         totalInputLength ~ (outerLength GHC.TypeLits.* innerInputLength),
-                         totalOutputLength ~ (outerLength GHC.TypeLits.* innerOutputLength)) =>
+                         KnownNat outerInputLength, KnownNat outerOutputLength,
+                         KnownNat innerInputLength, KnownNat innerOutputLength,
+                         innerOutputLength ~ Max 1 (
+                            Div (totalOutputLength GHC.TypeLits.* innerInputLength) totalInputLength),
+                         totalInputLength ~ (outerInputLength GHC.TypeLits.* innerInputLength),
+                         totalOutputLength ~ (outerOutputLength GHC.TypeLits.* innerOutputLength)) =>
     Proxy innerInputLength -> (Seq totalInputLength a -> m (Seq totalOutputLength b)) ->
-    Seq outerLength (TSeq innerInputLength 0 a) -> m (Seq outerLength (TSeq innerOutputLength 0 b))
+    Seq outerInputLength (TSeq innerInputLength ((Max innerInputLength innerOutputLength) - innerInputLength) a) ->
+    m (Seq outerOutputLength (TSeq innerOutputLength ((Max innerOutputLength innerInputLength) - innerOutputLength) b))
 
   sseq_to_seqC :: (KnownNat inputLength, KnownNat outputLength) =>
     (SSeq inputLength a -> m (SSeq outputLength b)) ->
