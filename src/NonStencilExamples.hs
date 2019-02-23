@@ -147,55 +147,58 @@ convolution_32x32Im_2x2Win_8px_in_per_clk = seq_to_tseqC $ split_seq_to_sseqC (P
   
 -- if compile to verilog is set, put this in the verilog directory. Otherwise
 -- put it in the normal py examples directory
-writeAllExamples compileToVerilog = do
-  let dirToWrite = if compileToVerilog then "pyExamples/verilog/" else "pyExamples/simulation/"
+writeAllExamples compileToCoreIR flattenToVerilog = do
+  let dirToWrite = if compileToCoreIR
+        then
+        if flattenToVerilog then "pyExamples/verilog/" else "pyExamples/coreIR/"
+        else "pyExamples/simulation/"
   writeProgramToFile "sequentialSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "sequentialSimpleAdd.py") compileToVerilog sequentialPipeline
+    (dirToWrite ++ "sequentialSimpleAdd.py") compileToCoreIR flattenToVerilog sequentialPipeline
   writeProgramToFile "parallelSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "parallelSimpleAdd.py") compileToVerilog parallelPipeline
+    (dirToWrite ++ "parallelSimpleAdd.py") compileToCoreIR flattenToVerilog parallelPipeline
   writeProgramToFile "partialParallelSimpleAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "partialParallelSimpleAdd.py") compileToVerilog partialParallelPipeline
+    (dirToWrite ++ "partialParallelSimpleAdd.py") compileToCoreIR flattenToVerilog partialParallelPipeline
   writeProgramToFile "sequentialLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "sequentialLineBufferWithAdd.py") compileToVerilog sequentialLB
+    (dirToWrite ++ "sequentialLineBufferWithAdd.py") compileToCoreIR flattenToVerilog sequentialLB
   writeProgramToFile "parallelLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "parallelLineBufferWithAdd.py") compileToVerilog parallelLB
+    (dirToWrite ++ "parallelLineBufferWithAdd.py") compileToCoreIR flattenToVerilog parallelLB
   --writeProgramToFile "partialParallelLineBufferWithAdd" preludeLocationStrForEx epilogueLocationStrForEx
-  -- (dirToWrite ++ "partialParallelLineBufferWithAdd.py") compileToVerilog partialParallelLB
+  -- (dirToWrite ++ "partialParallelLineBufferWithAdd.py") compileToCoreIR flattenToVerilog partialParallelLB
   writeProgramToFile "sequentialConvolution" preludeLocationStrForEx epilogueLocationStrForEx 
-    (dirToWrite ++ "sequentialConvolution.py") compileToVerilog sequentialConvolution
+    (dirToWrite ++ "sequentialConvolution.py") compileToCoreIR flattenToVerilog sequentialConvolution
   writeProgramToFile "parallelConvolution" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "parallelConvolution.py") compileToVerilog parallelConvolution
+    (dirToWrite ++ "parallelConvolution.py") compileToCoreIR flattenToVerilog parallelConvolution
   writeProgramToFile "partialParallel2Convolution" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "partialParallel2Convolution.py") compileToVerilog partialParallel2Convolution
+    (dirToWrite ++ "partialParallel2Convolution.py") compileToCoreIR flattenToVerilog partialParallel2Convolution
   writeProgramToFile "partialParallel4Convolution" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "partialParallel4Convolution.py") compileToVerilog partialParallel4Convolution
+    (dirToWrite ++ "partialParallel4Convolution.py") compileToCoreIR flattenToVerilog partialParallel4Convolution
   writeProgramToFile "partialParallel8Convolution" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "partialParallel8Convolution.py") compileToVerilog partialParallel8Convolution
+    (dirToWrite ++ "partialParallel8Convolution.py") compileToCoreIR flattenToVerilog partialParallel8Convolution
   writeProgramToFile "partialParallel16Convolution" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "partialParallel16Convolution.py") compileToVerilog partialParallel16Convolution
+    (dirToWrite ++ "partialParallel16Convolution.py") compileToCoreIR flattenToVerilog partialParallel16Convolution
   writeProgramToFile "sequentialConvChain" preludeLocationStrForEx epilogueLocationStrForEx 
-    (dirToWrite ++ "sequentialConvChain.py") compileToVerilog sequentialConvChain
+    (dirToWrite ++ "sequentialConvChain.py") compileToCoreIR flattenToVerilog sequentialConvChain
   writeProgramToFile "partialParallel2ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "partialParallel2ConvChain.py") compileToVerilog partialParallel2ConvChain
+    (dirToWrite ++ "partialParallel2ConvChain.py") compileToCoreIR flattenToVerilog partialParallel2ConvChain
   writeProgramToFile "partialParallel4ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "partialParallel4ConvChain.py") compileToVerilog partialParallel4ConvChain
+    (dirToWrite ++ "partialParallel4ConvChain.py") compileToCoreIR flattenToVerilog partialParallel4ConvChain
   writeProgramToFile "partialParallel8ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "partialParallel8ConvChain.py") compileToVerilog partialParallel8ConvChain
+    (dirToWrite ++ "partialParallel8ConvChain.py") compileToCoreIR flattenToVerilog partialParallel8ConvChain
   writeProgramToFile "partialParallel16ConvChain" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "partialParallel16ConvChain.py") compileToVerilog partialParallel16ConvChain
+    (dirToWrite ++ "partialParallel16ConvChain.py") compileToCoreIR flattenToVerilog partialParallel16ConvChain
   writeProgramToFile "convolution_32x32Im_2x2Win_1px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "convolution_32x32Im_2x2Win_1px_in_per_clk.py")
-    compileToVerilog convolution_32x32Im_2x2Win_1px_in_per_clk
+    compileToCoreIR flattenToVerilog convolution_32x32Im_2x2Win_1px_in_per_clk
   writeProgramToFile "convolution_32x32Im_2x2Win_2px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "convolution_32x32Im_2x2Win_2px_in_per_clk.py")
-    compileToVerilog convolution_32x32Im_2x2Win_2px_in_per_clk
+    compileToCoreIR flattenToVerilog convolution_32x32Im_2x2Win_2px_in_per_clk
   writeProgramToFile "convolution_32x32Im_2x2Win_4px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "convolution_32x32Im_2x2Win_4px_in_per_clk.py")
-    compileToVerilog convolution_32x32Im_2x2Win_4px_in_per_clk
+    compileToCoreIR flattenToVerilog convolution_32x32Im_2x2Win_4px_in_per_clk
   writeProgramToFile "convolution_32x32Im_2x2Win_8px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "convolution_32x32Im_2x2Win_8px_in_per_clk.py")
-    compileToVerilog convolution_32x32Im_2x2Win_8px_in_per_clk
+    compileToCoreIR flattenToVerilog convolution_32x32Im_2x2Win_8px_in_per_clk

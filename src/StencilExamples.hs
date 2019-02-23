@@ -143,37 +143,40 @@ downsampleStencilChain1Per64 = seq_to_tseqC downsampleStencilChain
 downsampleStencilChain1Per32 = seq_to_tseqC $ split_seq_to_sseqC (Proxy @2) downsampleStencilChain
 -}
 --increaseUtilTtoSC (Proxy @2) downsampleStencilChain1Per64
-writeAllStencils compileToVerilog = do
-  let dirToWrite = if compileToVerilog then "pyExamples/verilog/" else "pyExamples/simulation/"
+writeAllStencils compileToCoreIR flattenToVerilog = do
+  let dirToWrite = if compileToCoreIR
+        then
+        if flattenToVerilog then "pyExamples/verilog/" else "pyExamples/coreIR/"
+        else "pyExamples/simulation/"
   writeProgramToFile "downsampleStencilChain1Per64" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "downsampleStencilChain1Per64.py") compileToVerilog downsampleStencilChain1Per64 
+    (dirToWrite ++ "downsampleStencilChain1Per64.py") compileToCoreIR flattenToVerilog downsampleStencilChain1Per64 
   writeProgramToFile "downsampleStencilChain1Per32" preludeLocationStrForEx epilogueLocationStrForEx
-    (dirToWrite ++ "downsampleStencilChain1Per32.py") compileToVerilog downsampleStencilChain1Per32 
+    (dirToWrite ++ "downsampleStencilChain1Per32.py") compileToCoreIR flattenToVerilog downsampleStencilChain1Per32 
   writeProgramToFile "downsample_256x256_to_32x32_1px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "downsample_256x256_to_32x32_1px_in_per_clk.py")
-    compileToVerilog downsample_256x256_to_32x32_1px_in_per_clk
+    compileToCoreIR flattenToVerilog downsample_256x256_to_32x32_1px_in_per_clk
   writeProgramToFile "downsample_256x256_to_32x32_2px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "downsample_256x256_to_32x32_2px_in_per_clk.py")
-    compileToVerilog downsample_256x256_to_32x32_2px_in_per_clk
+    compileToCoreIR flattenToVerilog downsample_256x256_to_32x32_2px_in_per_clk
   writeProgramToFile "downsample_256x256_to_32x32_4px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "downsample_256x256_to_32x32_4px_in_per_clk.py")
-    compileToVerilog downsample_256x256_to_32x32_4px_in_per_clk
+    compileToCoreIR flattenToVerilog downsample_256x256_to_32x32_4px_in_per_clk
   writeProgramToFile "downsample_256x256_to_32x32_8px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "downsample_256x256_to_32x32_8px_in_per_clk.py")
-    compileToVerilog downsample_256x256_to_32x32_8px_in_per_clk
+    compileToCoreIR flattenToVerilog downsample_256x256_to_32x32_8px_in_per_clk
   writeProgramToFile "downsample_256x256_to_32x32_16px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "downsample_256x256_to_32x32_16px_in_per_clk.py")
-    compileToVerilog downsample_256x256_to_32x32_16px_in_per_clk
+    compileToCoreIR flattenToVerilog downsample_256x256_to_32x32_16px_in_per_clk
   writeProgramToFile "downsample_256x256_to_32x32_32px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "downsample_256x256_to_32x32_32px_in_per_clk.py")
-    compileToVerilog downsample_256x256_to_32x32_32px_in_per_clk
+    compileToCoreIR flattenToVerilog downsample_256x256_to_32x32_32px_in_per_clk
   writeProgramToFile "downsample_256x256_to_32x32_64px_in_per_clk"
     preludeLocationStrForEx epilogueLocationStrForEx
     (dirToWrite ++ "downsample_256x256_to_32x32_64px_in_per_clk.py")
-    compileToVerilog downsample_256x256_to_32x32_64px_in_per_clk
+    compileToCoreIR flattenToVerilog downsample_256x256_to_32x32_64px_in_per_clk

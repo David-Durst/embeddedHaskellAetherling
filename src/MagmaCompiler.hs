@@ -112,15 +112,19 @@ getModulePortsString isInput baseString ports = foldl (++) "" portsStrings
                            typeToMagmaString isInput port ++ ", ")
                    portsWithIdxs
 
-saveToCoreIR :: String -> String
-saveToCoreIR circuitName = getCoreIRModuleString
+-- boolean true if flatten and to verilog, false if unflattned and just coreir
+saveToCoreIR :: Bool -> String -> String
+saveToCoreIR flattenBool circuitName = if flattenBool
+  then getFlattenedVerilogModuleString
+  else getCoreIRModuleString
   where
-    getCoreIRModuleString = "magma.compile(\"" ++ circuitName ++ "\", " ++ circuitName ++ ", output=\"verilog\", passes=[\"rungenerators\", \"wireclocks-coreir\", \"verifyconnectivity --noclkrst\", \"flattentypes\", \"flatten\", \"verifyconnectivity --noclkrst\", \"deletedeadinstances\"], namespaces=[\"aetherlinglib\", \"commonlib\", \"mantle\", \"coreir\", \"global\"], context=c)\n"
+    getFlattenedVerilogModuleString = "magma.compile(\"" ++ circuitName ++ "\", " ++ circuitName ++ ", output=\"verilog\", passes=[\"rungenerators\", \"wireclocks-coreir\", \"verifyconnectivity --noclkrst\", \"flattentypes\", \"flatten\", \"verifyconnectivity --noclkrst\", \"deletedeadinstances\"], namespaces=[\"aetherlinglib\", \"commonlib\", \"mantle\", \"coreir\", \"global\"], context=c)\n"
+    getCoreIRModuleString = "magma.compile(\"" ++ circuitName ++ "\", " ++ circuitName ++ ", output=\"coreir\", passes=[\"rungenerators\", \"wireclocks-coreir\", \"verifyconnectivity --noclkrst\", \"deletedeadinstances\", \"instancecount\"], namespaces=[\"aetherlinglib\", \"commonlib\", \"mantle\", \"coreir\", \"global\"], context=c)\n"
 
 writeProgramToFile :: forall a b . (Typeable (Proxy a), Typeable (Proxy b)) =>
-  String -> String -> String -> String -> Bool -> (a -> StatefulErrorMonad b) -> IO ()
+  String -> String -> String -> String -> Bool -> Bool -> (a -> StatefulErrorMonad b) -> IO ()
 writeProgramToFile circuitName preludeLocation epilogueLocation outputLocation
-  shouldSaveToCoreIR program = do
+  shouldSaveToCoreIR shouldFlattenToVerilog program = do
   -- traceM "preCompileData"
   let compData = buildCompilationData program
   -- traceM $ show compData
@@ -141,7 +145,7 @@ writeProgramToFile circuitName preludeLocation epilogueLocation outputLocation
   let wireRVString = wireRV circuitName (entireDAGControlPorts compData)
   -- always wire the CE to a term so that if nothing else uses it, no problems
   let wireCEToTerm = "ceTerm = TermAnyType(cirb, Enable)\nwire(ceTerm.I, " ++ circuitName ++ ".CE)\n" 
-  let saveToCoreIRString = if shouldSaveToCoreIR then saveToCoreIR circuitName else ""
+  let saveToCoreIRString = if shouldSaveToCoreIR then saveToCoreIR shouldFlattenToVerilog circuitName else ""
   {-
   traceM "howdy"
   let upToBodyString = preludeString ++ inputTypeString ++
