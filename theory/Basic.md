@@ -32,8 +32,6 @@ Note: I'm including duplicate types from above to be thorough.
 5. `Partition n m :: SSeq (n*m) t -> TSeq n v (SSeq m t)`
     - Should the input `SSeq` be wrapped in a `TSeq`? Otherwise, this is deferring until later the underutilization of the input TSeq that will eventually wrap the SSeq.
 5. `Unpartition n m :: TSeq n v (SSeq m t) -> SSeq (n*m) t`
-5. `Remove_SSeq_1 n :: TSeq n v (SSeq 1 t) -> TSeq n v t`
-5. `Add_SSeq_1 n :: TSeq n v t -> TSeq n v (SSeq 1 t)`
 6. `Vectorize n m :: TSeq (n*m) v t -> TSeq n (v + n*(m-1)) (SSeq m t)`
 6. `Devectorize n m :: TSeq n (v + n*(m-1)) (SSeq m t) -> TSeq (n*m) v t`
 
@@ -52,13 +50,20 @@ Each entry is the rule. Below it are the input and output types of the input and
 1. `Up_1d n -> Up_1d_s n`
     1. `Up_1d n :: Seq 1 t -> Seq n t`
     1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
-1. `Up_1d_s (n*m) -> Unpartition n m . Map_t n (Up_1d_s m) . Add_SSeq_1 n . Up_1d_t n . Remove_SSeq_1 1 . Partition 1 1`
+1. `Up_1d_s (n*m) -> Unpartition n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition 1 1`
     1. `Up_1d_s (n*m) :: SSeq 1 t -> SSeq (n*m) t`
     1. `Map_t n (Up_1d_s m) :: TSeq n (SSeq 1 t) -> TSeq n (SSeq m t)`
-    1. `Add_SSeq_1 n . Up_1d_t n . Remove_SSeq_1 1 :: (TSeq 1 (SSeq 1 t)) -> (TSeq n (SSeq 1 t))`
-    1. `Unpartition n m . Map_t n (Up_1d_s m) . Add_SSeq_1 n . Up_1d_t n . Remove_SSeq_1 1 . Partition 1 1 :: SSeq 1 t -> SSeq (n*m) t`
+    1. `Up_1d_t n :: (TSeq 1 (SSeq 1 t)) -> (TSeq n (SSeq 1 t))`
+    1. `Unpartition n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition 1 1 :: SSeq 1 t -> SSeq (n*m) t`
 
-Note: I dropped the underutilization computation from types where it became onerous.
+Note: I dropped the underutilization computation from `TSeq` where it became onerous.
 
 ### Downsample
-
+1. `Down_1d n -> Down_1d_s n`
+    1. `Down_1d n :: Seq n t -> Seq 1 t`
+    1. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
+1. `Down_1d_s (n*m) -> Unpartition 1 1 . (Map_t 1 (Down_1d_s m)) . Down_1d_t n . Partition n m`
+    1. `Down_1d_s (n*m) :: SSeq (n*m) t -> SSeq 1 t`
+    1. `Map_t 1 (Down_1d_s m) :: TSeq 1 (SSeq m t) -> TSeq 1 (SSeq 1 t)`
+    1. `Down_1d_t n :: (TSeq n (SSeq m t)) -> (TSeq 1 (SSeq m t))`
+    1. `Unpartition 1 1 . (Map_t 1 (Down_1d_s m)) . Down_1d_t n . Partition n m :: SSeq (n*m) t -> SSeq 1 t`
