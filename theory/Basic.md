@@ -35,7 +35,7 @@ Note: I'm including duplicate types from above to be thorough.
 5. `Devectorize n :: TSeq m (v + m*(n-1)) (SSeq n t) -> TSeq (m*n) v t`
 
 ## Rewrite Rules
-1. `Map_s n f -> Vectorize m . Map_t (n/m) (Map_s m f) . Devectorize m`
-  - `Map n f :: SSeq n t -> SSeq n t'`
-  - `Map (n/m) (Map_s m f) :: TSeq (n/m) 0 (SSeq m t) -> TSeq (n/m) 0 (SSeq m t)`
-  - `Devectorize m . Map (n/m) (Map_s m f) . Vectorize m :: TSeq ()`
+1. `Map_s n f -> Unpartition (n*m) . Map_t n (Map_s m f) . Unpartition (n*m)`
+    1. `Map n f :: SSeq n t -> SSeq n t'`
+    1. `Map_t n (Map_s m f) :: TSeq n 0 (SSeq m t) -> TSeq n 0 (SSeq m t)`
+    1. `Unpartition m . Map (n/m) (Map_s m f) . Vectorize m :: TSeq ()`
