@@ -2,7 +2,7 @@
 This language has the most simple types and operators necessary to get multi-rate pipelines
 
 ## Types
-1. `Ant` - integer
+1. `Int` - integer
 2. `Tuple n t` - homogeneous ntuple
 2. `t x t'` - heterogeneous tuple
 3. `Seq n t` - homogeneous, fixed-length sequence
