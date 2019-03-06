@@ -31,7 +31,7 @@ Note: I'm duplicating types from above to be thorough.
 1. `Int` - integer
 2. `Tuple n t` - homogeneous ntuple
 3. `SSeq n t` - homogeneous, fixed-length sequence in space
-3. `TSeq n v t` - homogeneous, fixed-length sequence in time. n is number of utilized periods. v is number of unutilized periods. Total time for a TSeq is `(n+v) * time to process one t`.
+3. `TSeq n v t` - homogeneous, fixed-length sequence in time. n is number of utilized periods. v is number of underutilized periods. Total time for a TSeq is `(n+v) * time to process one t`.
 4. `t -> t'` - function
 
 ## Space-Time Operators
