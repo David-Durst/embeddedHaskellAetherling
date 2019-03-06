@@ -47,7 +47,6 @@ Note: I'm duplicating types from above to be thorough.
 
 
 ## Rewrite Rules
-Each entry is the rule. Below it are the input and output types of the input and output expressions of the rule. I also may include the types of subexpressions that are useful.
 ### Map
 1. Sequence To Space - `Map n f -> Map_s n f`
     1. `Map n f :: Seq n t -> Seq n t'`
@@ -81,5 +80,5 @@ Note: I dropped the underutilization computation from `TSeq` where it became one
 
 ### Unpartition/Partition Removal
 1. `Partition n m . Unpartition n m = Id`
-**Danger: This is not really Id in Space-Time. There will be underutilized clocks here. The partitioning and unpartitioning takes n clocks. However, the interface to both of these functions is just an `SSeq`. The `SSeq` doesn't account for time.**
+**Danger: `Partition . Unpartition` is not really Id in Space-Time. There will be underutilized clocks here. The partitioning and unpartitioning takes n clocks. However, the interface to both of these functions is just an `SSeq`. The `SSeq` doesn't account for time.**
 2. `Unpartition n m . Partition n m = I`
