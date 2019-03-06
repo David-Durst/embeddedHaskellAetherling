@@ -42,7 +42,7 @@ Note: I'm duplicating types from above to be thorough.
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
 5. `Partition n m :: SSeq (n*m) t -> TSeq n v (SSeq m t)`
-    - Should the input `SSeq` be wrapped in a `TSeq`? Otherwise, this is deferring until later the underutilization of the input TSeq that will eventually wrap the SSeq.
+    - **Should the input `SSeq` be wrapped in a `TSeq`? Otherwise, this is deferring until later the underutilization of the input TSeq that will eventually wrap the SSeq.**
 5. `Unpartition n m :: TSeq n v (SSeq m t) -> SSeq (n*m) t`
 
 
