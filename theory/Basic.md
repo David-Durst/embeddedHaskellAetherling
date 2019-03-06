@@ -27,7 +27,7 @@ These create types from other types. They are modeled after Haskell's type famil
 6. `Add_Unit t :: t -> (Add_Unit t)`
 
 ## Space-Time Types
-Note: I'm including duplicate types from above to be thorough. 
+Note: I'm duplicating types from above to be thorough. 
 1. `Int` - integer
 2. `Tuple n t` - homogeneous ntuple
 3. `SSeq n t` - homogeneous, fixed-length sequence in space
