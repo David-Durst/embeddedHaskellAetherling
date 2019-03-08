@@ -29,7 +29,7 @@ Unpartition 4 2 . Map_t 4 (Map_s 2 Add) . Partition 4 2 :: TSeq 1 3 (SSeq 8 (Int
 The following shows the hardware produced by each schedule. For the Space-Time schedules, data values in the same column occur on the same clock. 
 
 Inline-style: 
-![Map schedules](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/mapApp.svg "Map Schedules")
+![Map schedules](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/mapApp.svg?sanitize=true "Map Schedules")
 
 ## Upsample 1 Element To 8, Add 2 To Each
 ### Sequence Language
