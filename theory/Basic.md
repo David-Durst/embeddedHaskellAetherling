@@ -39,15 +39,16 @@ Note: I'm duplicating types from above to be thorough.
 4. `t -> t'` - function
 
 An empty period is one in which the sequence does not produce new data. `v` enables Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization 
-    1. An operator's input and output `TSeq`s must take the same amount of time. The empty clocks allow matching the input and output time lengths. 
-        a. For example, `Up_1d_t` takes in one input and then repeats it multiple times. While the output sequence is busy emitting data, the input cannot accept the next input. Otherwise, the `Up_1d_t` will bottleneck
-    1. Underutilized hardware is hardware that is unused on some clock cycles.
-    An operator with an input or output `TSeq` that has a non-zero `v` will receive or produce no input on those clocks. The operator may do nothing during those clocks, and be underutilized, depending on the operator. 
-        a. For example, if `Map_t 1 Add` had any empty clocks, the `Add` would be underutilized.
+1. An operator's input and output `TSeq`s must take the same amount of time. The empty clocks allow matching the input and output time lengths. 
+    a. Multi-rate operators demonstrate the need for the empty clocks. `Up_1d_t` takes in one input and then repeats it multiple times. While the output sequence is busy emitting data, the input cannot accept the next input. Otherwise, the `Up_1d_t` will bottleneck
+1. Underutilized hardware is hardware that is unused on some clock cycles.
+An operator with an input or output `TSeq` that has a non-zero `v` will receive or produce no input on those clocks. The operator may do nothing during those clocks, and be underutilized, depending on the operator. 
+    a. For example, if `Map_t 1 Add` had any empty clocks, the `Add` would be underutilized.
+
         
 ## Space-Time Operators
-2. `Map_s n :: (t -> t') -> SSeq n t -> SSeq n t'`
-2. `Map_t n :: (t -> t') -> TSeq n v t -> TSeq n v t'`
+2. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
+2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 3. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
 3. `Up_1d_t n :: TSeq 1 (n+w-1) t -> TSeq n w t`
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
@@ -60,7 +61,7 @@ An empty period is one in which the sequence does not produce new data. `v` enab
 ### Map
 1. Sequence To Space - `Map n f -> Map_t 1 (Map_s n f)`
     1. `Map n f :: Seq n t -> Seq n t'`
-    1. `Map_t 1 (Map_s n f) :: TSeq 1 v (SSeq n t) -> TSeq 1 v (SSeq n t)'`
+    1. `Map_t 1 (Map_s n f) :: TSeq 1 0 (SSeq n t) -> TSeq 1 0 (SSeq n t')'`
 1. Slowdown - `Map_t 1 (Map_s (n*m) f) -> Unpartition n m . Map_t n (Map_s m f) . Partition n m`
     1. `Map_t 1 (Map_s (n*m) f) :: TSeq 1 _ (SSeq (n*m) t) -> TSeq 1 _ (SSeq (n*m) t)'`
     1. `Map_t n (Map_s m f) :: TSeq n v (SSeq m t) -> TSeq n v (SSeq m t')`
@@ -71,7 +72,7 @@ Note: I dropped the underutilization computation from `TSeq` where it became one
 ### Upsample
 1. Sequence To Space - `Up_1d n -> Map_t 1 (Up_1d_s n)`
     1. `Up_1d n :: Seq 1 t -> Seq n t`
-    1. `Map_t 1 (Up_1d_s n) :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq n t)`
+    1. `Map_t 1 (Up_1d_s n) :: TSeq 1 0 (SSeq 1 t) -> TSeq 1 0 (SSeq n t)`
 1. Slowdown - `Map_t 1 (Up_1d_s (n*m)) -> Unpartition n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition 1 1`
     1. `Map_t 1 (Up_1d_s (n*m)) :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (n*m) t)`
     1. `Map_t n (Up_1d_s m) :: TSeq n (SSeq 1 t) -> TSeq n (SSeq m t)`
@@ -81,7 +82,7 @@ Note: I dropped the underutilization computation from `TSeq` where it became one
 ### Downsample
 1. Sequence To Space - `Down_1d n -> Map_t 1 (Down_1d_s n)`
     1. `Down_1d n :: Seq n t -> Seq 1 t`
-    1. `Map_t 1 (Down_1d_s n) :: TSeq 1 _ (SSeq n t) -> TSeq 1 _ (SSeq 1 t)`
+    1. `Map_t 1 (Down_1d_s n) :: TSeq 1 0 (SSeq n t) -> TSeq 1 0 (SSeq 1 t)`
 1. Slowdown - `Map_t 1 (Down_1d_s (n*m)) -> Unpartition 1 1 . (Map_t 1 (Down_1d_s m)) . Down_1d_t n . Partition n m`
     1. `Map_t 1 (Down_1d_s (n*m)) :: TSeq 1 _ (SSeq n t) -> TSeq 1 _ (SSeq 1 t)`
     1. `Map_t 1 (Down_1d_s m) :: TSeq 1 (SSeq m t) -> TSeq 1 (SSeq 1 t)`
