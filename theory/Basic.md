@@ -2,6 +2,9 @@
 This language has the most simple types and operators necessary to get multi-rate pipelines
 
 ## Types
+Aetherling has two collection types, tuples and sequences. A tuple enables the unary, combinator operators to accept multiple arguments. A sequence shows how many elements an operator processes. 
+Sequence are reshaped below into space-sequences (`SSeq`) and time-sequences (`TSeq`). Aetherling uses the type reshaping to express differently parallelized schedules.
+
 1. `Int` - integer
 2. `Tuple n t` - homogeneous ntuple
 2. `t x t'` - heterogeneous tuple
@@ -31,9 +34,17 @@ Note: I'm duplicating types from above to be thorough.
 1. `Int` - integer
 2. `Tuple n t` - homogeneous ntuple
 3. `SSeq n t` - homogeneous, fixed-length sequence in space
-3. `TSeq n v t` - homogeneous, fixed-length sequence in time. n is number of utilized periods. v is number of underutilized periods. Total time for a TSeq is `(n+v) * time to process one t`.
+3. `TSeq n v t` - homogeneous, fixed-length sequence in time. n is number of utilized periods. v is number of empty periods. Total time for a TSeq is `(n+v) * time to process one t`.
+    1. An `Up_1d_t` is not always underutilized when it has 
 4. `t -> t'` - function
 
+An empty period is one in which the sequence does not produce new data. `v` enables Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization 
+    1. An operator's input and output `TSeq`s must take the same amount of time. The empty clocks allow matching the input and output time lengths. 
+        a. For example, `Up_1d_t` takes in one input and then repeats it multiple times. While the output sequence is busy emitting data, the input cannot accept the next input. Otherwise, the `Up_1d_t` will bottleneck
+    1. Underutilized hardware is hardware that is unused on some clock cycles.
+    An operator with an input or output `TSeq` that has a non-zero `v` will receive or produce no input on those clocks. The operator may do nothing during those clocks, and be underutilized, depending on the operator. 
+        a. For example, if `Map_t 1 Add` had any empty clocks, the `Add` would be underutilized.
+        
 ## Space-Time Operators
 2. `Map_s n :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n :: (t -> t') -> TSeq n v t -> TSeq n v t'`
