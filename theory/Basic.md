@@ -13,8 +13,8 @@ These create types from other types. They are modeled after Haskell's type famil
 1. `Merge_Seqs (t1 :: Seq n t) (t2 :: Seq n t') = Seq n (Merge_Seqs t t')`
 1. `Merge_Seqs (t1 :: Int Or Tuple Or ()) (t2 :: Int Or Tuple Or ()) = t1 x t2`
 1. `Merge_Seqs _ _ = Error`
-1. `Add_Unit (t :: Seq n t) = Seq n (Add_Unit t)`
-1. `Add_Unit (t :: Int Or Tuple Or ()) = t x ()`
+1. `Add_Unit_To_Type (t :: Seq n t) = Seq n (Add_Unit_To_Type t)`
+1. `Add_Unit_To_Type (t :: Int Or Tuple Or ()) = t x ()`
 
 ## Sequence Operators
 1. `Id :: t -> t`
@@ -24,7 +24,7 @@ These create types from other types. They are modeled after Haskell's type famil
 3. `Up_1d n :: Seq 1 t -> Seq n t`
 4. `Down_1d n :: Seq n t -> Seq 1 t`
 5. `Fork_Join (f :: t1 -> t1') (g :: t2 -> t2') :: (Merge_Seqs t1 t2) -> (Merge_Seqs t1' t2')`
-6. `Add_Unit t :: t -> (Add_Unit t)`
+6. `Add_Unit t :: t -> (Add_Unit_To_Type t)`
 
 ## Space-Time Types
 Note: I'm duplicating types from above to be thorough. 
