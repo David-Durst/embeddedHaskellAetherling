@@ -40,10 +40,10 @@ Note: I'm duplicating types from above to be thorough.
 
 An empty period is one in which the sequence does not produce new data. `v` enables Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization 
 1. An operator's input and output `TSeq`s must take the same amount of time. The empty clocks allow matching the input and output time lengths. 
-    a. Multi-rate operators demonstrate the need for the empty clocks. `Up_1d_t` takes in one input and then repeats it multiple times. While the output sequence is busy emitting data, the input cannot accept the next input. Otherwise, the `Up_1d_t` will bottleneck
+    1. Multi-rate operators demonstrate the need for the empty clocks. `Up_1d_t` takes in one input and then repeats it multiple times. While the output sequence is busy emitting data, the input cannot accept the next input. Otherwise, the `Up_1d_t` will bottleneck
 1. Underutilized hardware is hardware that is unused on some clock cycles.
 An operator with an input or output `TSeq` that has a non-zero `v` will receive or produce no input on those clocks. The operator may do nothing during those clocks, and be underutilized, depending on the operator. 
-    a. For example, if `Map_t 1 Add` had any empty clocks, the `Add` would be underutilized.
+    1. For example, if `Map_t 1 Add` had any empty clocks, the `Add` would be underutilized.
 
         
 ## Space-Time Operators
