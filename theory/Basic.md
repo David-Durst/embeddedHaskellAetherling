@@ -148,20 +148,19 @@ As a reminder:
 - A `TSeq` materializes `n` values of type `t` over `(n+v) * periods to process one t` periods.
 
 An empty period is one in which the sequence does not process new data. `v` enables Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization 
-1. An operator's input and output `TSeq`s must take the same amount of time. Empty clocks equalize time lengths for `TSeq`s with different `n` parameters. 
+1. An operator's input and output `TSeq`s must take the same amount of time. Empty clocks can equalize time lengths for `TSeq`s with different `n` parameters. 
     1. For example, `Up_1d_t` takes in one input on one clock cycle and then repeatedly outputs it for multiple clock cycles. 
     While the output is busy emitting data, the input cannot accept the next value. 
-    The empty clocks indicate this waiting period so that the input and output `TSeq`s take the same amount of time.
+    The empty periods indicate this waiting so that the input and output `TSeq`s take the same amount of time.
 1. Underutilized hardware is hardware that is unused on some clock cycles.
-An operator with an input or output `TSeq` that has a non-zero `v` will receive or produce no input on those clocks. 
-The operator may do nothing during those clocks, and be underutilized, depending on the operator. 
+An operator with input and output `TSeq`s that have non-zero `v`s may do nothing during those periods.
     1. If `Map_t 1 Add` had any empty clocks, it would be underutilized. 
     This is unlike `Up_1d_t`. 
     It is operator specific whether empty clocks mean underutilization or waiting while processing occurs.
     1. Underutilization is necessary to compose operators in multi-rate pipelines. 
     Consider `Up_1d_t 4 . Map_t 1 Add`.
     `Map_t` must emit an output every fourth clock so that its output throughput matches `Up_1d_t`'s input throughput.
-    To accomplish this rate matching, `Map_t` must be underutilized by adding empty clocks to its `v` parameter.
+    To accomplish this rate matching, `Map_t` must be underutilized.
 
 ### Operators
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
