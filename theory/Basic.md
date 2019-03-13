@@ -1,9 +1,13 @@
 # Basic Sequence Language Theory
 This language has the most simple types and operators necessary to get multi-rate pipelines
 
+# Sequence Language
+The sequence language is a combinator language for data flow programs with standard functional programming operators. 
+Program in the language are **unscheduled**: it is unspecified whether operations occur in parallel or in sequence. 
+There is no clear interpretation of programs as hardware accelerators.
+
 ## Types
-Aetherling has two collection types, tuples and sequences. A tuple enables the unary, combinator operators to accept multiple arguments. A sequence shows how many elements an operator processes. 
-Sequence are reshaped below into space-sequences (`SSeq`) and time-sequences (`TSeq`). Aetherling uses the type reshaping to express differently parallelized schedules.
+There are two collection types, tuples and sequences. A tuple enables the unary, combinator operators to accept multiple arguments. A sequence shows how many elements an operator processes. 
 
 1. `Int` - integer
 2. `Tuple n t` - homogeneous ntuple
@@ -11,7 +15,7 @@ Sequence are reshaped below into space-sequences (`SSeq`) and time-sequences (`T
 3. `Seq n t` - homogeneous, fixed-length sequence
 4. `t -> t'` - function
 
-### Type Constructors
+## Type Constructors
 These create types from other types. They are modeled after Haskell's type families.
 1. `Merge_Seqs (t1 :: Seq n t) (t2 :: Seq n t') = Seq n (Merge_Seqs t t')`
 1. `Merge_Seqs (t1 :: Int Or Tuple Or ()) (t2 :: Int Or Tuple Or ()) = t1 x t2`
@@ -28,8 +32,13 @@ These create types from other types. They are modeled after Haskell's type famil
 4. `Down_1d n :: Seq n t -> Seq 1 t`
 5. `Fork_Join (f :: t1 -> t1') (g :: t2 -> t2') :: (Merge_Seqs t1 t2) -> (Merge_Seqs t1' t2')`
 6. `Add_Unit t :: t -> (Add_Unit_To_Type t)`
+7. `Partition n m :: Seq (n*m) t -> Seq n (Seq m t)`
+7. `Unpartition n m :: Seq n (Seq m t) -> Seq (n*m) t`
 
+# Space-Time IR
+The space-time IR that defines how to interpret the data flow programs as hardware accelerators.  A program in the space-time IR is considered scheduled as the parallelism of all operators is specified. An operator can be parallel (scheduled in space) or sequential (scheduled in time).k
 ## Space-Time Types
+Sequence are reshaped below into space-sequences (`SSeq`) and time-sequences (`TSeq`). Aetherling uses the type reshaping to express differently parallelized schedules.
 Note: I'm duplicating types from above to be thorough. 
 1. `Int` - integer
 2. `Tuple n t` - homogeneous ntuple
