@@ -148,7 +148,7 @@ As a reminder:
 - A `TSeq` materializes `n` values of type `t` over `(n+v) * periods to process one t` periods.
 
 An empty period is one in which the sequence does not process new data. `v` enables Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization 
-1. An operator's input and output `TSeq`s must take the same amount of time. The empty clocks allow matching the input and output time lengths. 
+1. An operator's input and output `TSeq`s must take the same amount of time. Empty clocks equalize time lengths for `TSeq`s with different `n` parameters. 
     1. For example, `Up_1d_t` takes in one input on one clock cycle and then repeatedly outputs it for multiple clock cycles. 
     While the output is busy emitting data, the input cannot accept the next value. 
     The empty clocks indicate this waiting period so that the input and output `TSeq`s take the same amount of time.
