@@ -36,16 +36,23 @@ These create types from other types. They are modeled after Haskell's type famil
 7. `Unpartition n m :: Seq n (Seq m t) -> Seq (n*m) t`
 
 # Space-Time IR
-The space-time IR that defines how to interpret the data flow programs as hardware accelerators.  A program in the space-time IR is considered scheduled as the parallelism of all operators is specified. An operator can be parallel (scheduled in space) or sequential (scheduled in time).k
-## Space-Time Types
-Sequence are reshaped below into space-sequences (`SSeq`) and time-sequences (`TSeq`). Aetherling uses the type reshaping to express differently parallelized schedules.
-Note: I'm duplicating types from above to be thorough. 
-1. `Int` - integer
-2. `Tuple n t` - homogeneous ntuple
-3. `SSeq n t` - homogeneous, fixed-length sequence in space
-3. `TSeq n v t` - homogeneous, fixed-length sequence in time. n is number of utilized periods. v is number of empty periods. Total time for a TSeq is `(n+v) * time to process one t`.
-    1. An `Up_1d_t` is not always underutilized when it has 
-4. `t -> t'` - function
+The space-time IR defines how to interpret the data flow programs as hardware accelerators. 
+Programs in the IR are **scheduled**: the parallelism of all operators is specified. 
+An operator can be parallel (scheduled in space) or sequential (scheduled in time).
+
+## Single-Rate Pipelines
+A rate (or throughput) is the average number of `Int`s per clock when processing a sequence.
+Operators and pipelines have both input throughputs and output throughputs.
+A **single-rate pipeline** is a pipeline of operators in which all input and output throughputs are equal. 
+
+### Single-Rate Space-Time Types
+Sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`). 
+
+3. `SSeq n t` - homogeneous, fixed-length sequence in space. This sequence is parallel.
+    1. An `SSeq` takes 1 period and materializes `n` values of type `t` in that period.
+3. `TSeq n v t` - homogeneous, fixed-length sequence in time. This sequence is sequential.
+    1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more when we get to multi-rate pipelines
+    1. A `TSeq` materializes `n` values of type `t` over `(n+v) * periods to process one t` periods.
 
 An empty period is one in which the sequence does not produce new data. `v` enables Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization 
 1. An operator's input and output `TSeq`s must take the same amount of time. The empty clocks allow matching the input and output time lengths. 
@@ -55,11 +62,50 @@ An operator with an input or output `TSeq` that has a non-zero `v` will receive 
     1. For example, if `Map_t 1 Add` had any empty clocks, the `Add` would be underutilized.
 
         
-## Space-Time Operators
+### Single-Rate Space-Time Operators
 2. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
+
+## Multi-Rate Pipelines
+A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
+If two functions are composed (such as `g . f`), the output throughput of the producer function `f` must equal the input of the consumer function `g`.
+This requirement is known as **producer-consumer rate matching**.
+
+We require producer-consumer rate matching to ensure all pipelines compile to efficient hardware accelerators. 
+Hardware accelerators are efficient if they use minimal compute and storage resources. Matching rates ensures enables minimizes these resources. 
+1. **Compute** - matching rates ensures all nodes run at the exact rate required by their upstream producers and downstream consumers. 
+Thus, all operators are implemented using the minimal parallelism necessary to achieve the target throughput. 
+(**Note:** this assumes that higher throughput operators requires more resources and lower throughput ones requires less resources.)
+1. **Storage** - matching rates ensure that nodes can perform streaming computation. 
+As soon as a producer emits data, the consumer can start operating on it without buffering. 
+No buffering between operators means minimal storage resources. 
+
+### Mutli-Rate Space-Time Types
+Multi-rate modules are expressed in the type system using the `v` parameter of `TSeq n v t`. 
+As a reminder:
+- `n` is number of utilized periods.
+- `v` is number of empty periods. 
+- A `TSeq` materializes `n` values of type `t` over `(n+v) * periods to process one t` periods.
+
+An empty period is one in which the sequence does not process new data. `v` enables Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization 
+1. An operator's input and output `TSeq`s must take the same amount of time. The empty clocks allow matching the input and output time lengths. 
+    1. For example, `Up_1d_t` takes in one input on one clock cycle and then repeatedly outputs it for multiple clock cycles. 
+    While the output is busy emitting data, the input cannot accept the next value. 
+    The empty clocks indicate this waiting period so that the input and output `TSeq`s take the same amount of time.
+1. Underutilized hardware is hardware that is unused on some clock cycles.
+An operator with an input or output `TSeq` that has a non-zero `v` will receive or produce no input on those clocks. 
+The operator may do nothing during those clocks, and be underutilized, depending on the operator. 
+    1. If `Map_t 1 Add` had any empty clocks, it would be underutilized. 
+    This is unlike `Up_1d_t`. 
+    It is operator specific whether empty clocks mean underutilization or waiting while processing occurs.
+    1. Underutilization is necessary to compose operators in multi-rate pipelines. 
+    Consider `Up_1d_t 4 . Map_t 1 Add`.
+    `Map_t` must emit an output every fourth clock so that its output throughput matches `Up_1d_t`'s input throughput.
+    To accomplish this rate matching, `Map_t` must be underutilized by adding empty clocks to its `v` parameter.
+
+### Multi-Rate Space-Time Operators
 3. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
-3. `Up_1d_t n :: TSeq 1 (n+w-1) t -> TSeq n w t`
+3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
 5. `Partition n m :: TSeq 1 (n + v - 1) (SSeq (n*m) t) -> TSeq n v (SSeq m t)`
