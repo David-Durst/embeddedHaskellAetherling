@@ -3,8 +3,8 @@ This language has the most simple types and operators necessary to get multi-rat
 
 # Sequence Language
 The sequence language is a combinator language for data flow programs with standard functional programming operators. 
-Program in the language are **unscheduled**: it is unspecified whether operations occur in parallel or in sequence. 
-There is no clear interpretation of programs as hardware accelerators.
+Programs in the language are **unscheduled**: it is unspecified whether operations area parallel or sequential. 
+There is no clear interpretation of unscheduled programs as hardware accelerators.
 
 ## Types
 There are two collection types, tuples and sequences. A tuple enables the unary, combinator operators to accept multiple arguments. A sequence shows how many elements an operator processes. 
@@ -20,8 +20,8 @@ These create types from other types. They are modeled after Haskell's type famil
 1. `Merge_Seqs (t1 :: Seq n t) (t2 :: Seq n t') = Seq n (Merge_Seqs t t')`
 1. `Merge_Seqs (t1 :: Int Or Tuple Or ()) (t2 :: Int Or Tuple Or ()) = t1 x t2`
 1. `Merge_Seqs _ _ = Error`
-1. `Add_Unit_To_Type (t :: Seq n t) = Seq n (Add_Unit_To_Type t)`
 1. `Add_Unit_To_Type (t :: Int Or Tuple Or ()) = t x ()`
+1. `Add_Unit_To_Type _ = Error`
 
 ## Sequence Operators
 1. `Id :: t -> t`
@@ -66,45 +66,63 @@ An operator with an input or output `TSeq` that has a non-zero `v` will receive 
 1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 
-### Operators' Throughputs
+### Throughput
 A throughput has two parts: the type of the element processed each clock and their rate. 
 We represent this as `throughput_numerator type_of_element per throughput_denominator clocks`.
-Multiplying or dividing a throughput by a scalar changes the `numerator` or `denominator` but not the type of the element.
+Adding two throughputs creates a tuple of their element types. It does not change the `numerator` or `denominator`.
+Multiplying or dividing a throughput by a scalar changes the `numerator` or `denominator`. It does not change the element type.
 
-1. `Map_s n f`
-    1. **Input Throughput:** `n * input throughput f`
-    1. **Output Throughput:** `n * output throughput f`
-2. `Map_t n f`
-    1. **Input Throughput:** `n/(n+v) * input throughput f`
-    1. **Output Throughput:** `n/(n+v) * output throughput f`
+1. `Map_s`
+    1. `input_throughput(Map_s n f) = n * input_throughput(f)`
+    1. `output_throughput(Map_s n f) = n * output_throughput(f)`
+2. `Map_t`
+    1. `input_throughput(Map_t n f) = n/(n+v) * input_throughput(f)`
+    1. `output_throughput(Map_t n f) = n/(n+v) * output_throughput(f)`
 
-The following operators do not need to be translated from the sequence language to the space-time IR.
-They do not operate on sequences.
+The following operators do not operate on sequences. 
+They have throughputs without being lowered to the space-time IR.
 
-1. `Id :: t -> t`
-    1. **Input Throughput:** `1 t per 1 clocks`
-    1. **Output Throughput:** `1 t per 1 clock`
-1. `Const_Gen n :: () -> Int`
-    1. **Input Throughput:** `1 () per 1 clocks`
-    1. **Output Throughput:** `1 Int per 1 clocks`
-1. `Add :: (Int x Int) -> Int`
-    1. **Input Throughput:** `1 (Int x Int) per 1 clocks`
-    1. **Output Throughput:** `1 Int per 1 clocks`
+1. `Id`
+    1. `input_throughput(Id) = 1 t per 1 clocks`
+    1. `output_throughput(Id) = 1 t per 1 clocks`
+1. `Const_Gen n`
+    1. `input_throughput(Const_Gen n) = 1 () per 1 clocks`
+    1. `output_throughput(Const_Gen n) = 1 Int per 1 clocks`
+1. `Add`
+    1. `input_throughput(Add) = 1 (Int x Int) per 1 clocks`
+    1. `output_throughput(Add) = 1 Int per 1 clocks`
+5. `Fork_Join`
+    1. `input_throuhgput(Fork_Join f g) = input_throughput(f)+input_throughput(g)`
+        1. `f` and `g` need to have the same `seq` lengths. 
+        They will have the same throughputs after lowering to the space-time IR using the same rewrite rules (see Rewrite Rules section at bottom of document).
+        Thus, `+` performs the correct operation by tupling and assuming the same `numerator` and `denominator`.
+    1. `output_throughput(Fork_Join f g) = output_throughput(f)+output_throughput(g)`
+6. `Add_Unit`
+    1. `input_throughput(Add_Unit t) = 1 t per 1 clocks`
+    1. `output_throughput(Add_Unit t) = 1 (t x ()) per 1 clocks`
 
-### Operators' Areas
-The implementation of each operator requires certain resources. 
-We model these resource requirements as three types of area:
+### Area
+The hardware implementation of each operator requires resources on the chip.
+We model resource requirements as three types of area:
 
 1. **Compute Area** is relative to a one-bit adder. 
-For example, `Add` has eight compute units of area as it is roughly equivalent to eight one bit adders.
+For example, `Add` for an eight bit integer has eight compute units of area as it is roughly equivalent to eight one bit adders.
 1. **Storage Area** is relative to a one-bit register. 
 1. **Wire Area** is relative to one-bit wire connecting two components. 
 The wiring is for connecting composed operators.
 To avoid double counting wiring area, we only consider an operator's output wires.
 
-We represent area as `{compute_area, storage_area, wire_area}`. 
+We represent area as the vector `{compute_area, storage_area, wire_area}`. 
+The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
+`num_bits` returns the number of bits in an `Int` or tuple type.
 
-
+1. `area(Map_s n f) = n * area(f)`
+2. `area(Map_t n f) = area(f)`
+1. `area(Id) = {0, 0, 0}`
+1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
+1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
+5. `area(Fork_Join f g) = area(f) + area(g)`
+6. `area(Add_Unit t) = {0, 0, 0}`
 
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
@@ -120,7 +138,7 @@ Thus, all operators are implemented using the minimal parallelism necessary to a
 As soon as a producer emits data, the consumer can start operating on it without buffering. 
 No buffering between operators means minimal storage resources. 
 
-### Multi-Rate Space-Time Types
+### Types
 Multi-rate modules are expressed in the type system using the `v` parameter of `TSeq n v t`. 
 As a reminder:
 - `n` is number of utilized periods.
@@ -143,7 +161,7 @@ The operator may do nothing during those clocks, and be underutilized, depending
     `Map_t` must emit an output every fourth clock so that its output throughput matches `Up_1d_t`'s input throughput.
     To accomplish this rate matching, `Map_t` must be underutilized by adding empty clocks to its `v` parameter.
 
-### Multi-Rate Space-Time Operators
+### Operators
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
@@ -154,31 +172,41 @@ The operator may do nothing during those clocks, and be underutilized, depending
 5. `Unpartition_ss n m :: SSeq n (SSeq m t) -> SSeq 1 (SSeq (n*m) t)`
 
 
-### Multi-Rate Space-Time Operators' Throughputs
-1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
-    1. **Input Throughput:** `1 t per 1 clocks`
-    1. **Output Throughput:** `n t per 1 clocks`
-3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
-    1. **Input Throughput:** `1 t per (n+v) clocks`
-    1. **Output Throughput:** `n t per (n+v) clocks`
-4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
-    1. **Input Throughput:** `n t per 1 clocks`
-    1. **Output Throughput:** `1 t per 1 clocks`
-4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
-    1. **Input Throughput:** `n t per (n+v) clocks`
-    1. **Output Throughput:** `1 t per (n+v) clocks`
-5. `Partition_ts n m :: TSeq 1 (n + v - 1) (SSeq (n*m) t) -> TSeq n v (SSeq m t)`
-    1. **Input Throughput:** `(n*m) t per (n+v) clocks`
-    1. **Output Throughput:** `(n*m) t per (n+v) clocks`
-5. `Unpartition_ts n m :: TSeq n v (SSeq m t) -> TSeq 1 (n + v - 1) (SSeq (n*m) t)`
-    1. **Input Throughput:** `(n*m) t per (n+v) clocks`
-    1. **Output Throughput:** `(n*m) t per (n+v) clocks`
-5. `Partition_ss n m :: SSeq (n*m) t -> SSeq n (SSeq m t)`
-    1. **Input Throughput:** `(n*m) t per 1 clocks`
-    1. **Output Throughput:** `(n*m) t per 1 clocks`
-5. `Unpartition_ss n m :: SSeq n (SSeq m t) -> SSeq 1 (SSeq (n*m) t)`
-    1. **Input Throughput:** `(n*m) t per 1 clocks`
-    1. **Output Throughput:** `(n*m) t per 1 clocks`
+### Throughput
+1. `Up_1d_s`
+    1. `input_throughput(Up_1d_s n) = 1 t per 1 clocks`
+    1. `output_throughput(Up_1d_s n) = n t per 1 clocks`
+3. `Up_1d_t`
+    1. `input_throughput(Up_1d_t n) = 1 t per (n+v) clocks`
+    1. `output_throughput(Up_1d_t n) = n t per (n+v) clocks`
+4. `Down_1d_s`
+    1. `input_throughput(Down_1d_s n) = n t per 1 clocks`
+    1. `output_throughput(Down_1d_s n) = 1 t per 1 clocks`
+4. `Down_1d_t`
+    1. `input_throughput(Down_1d_t n) = n t per (n+v) clocks`
+    1. `output_throughput(Down_1d_t n) = 1 t per (n+v) clocks`
+5. `Partition_ts`
+    1. `input_throughput(Partition_ts n m) = (n*m) t per (n+v) clocks`
+    1. `output_throughput(Partition_ts n m) = (n*m) t per (n+v) clocks`
+5. `Unpartition_ts`
+    1. `input_throughput(Unpartition_ts n m) = (n*m) t per (n+v) clocks`
+    1. `output_throughput(Unpartition_ts n m) = (n*m) t per (n+v) clocks`
+5. `Partition_ss`
+    1. `input_throughput(Partition_ss n m) = (n*m) t per 1 clocks`
+    1. `output_throughput(Partition_ss n m) = (n*m) t per 1 clocks`
+5. `Unpartition_ss`
+    1. `input_throughput(Unpartition_ss n m) = (n*m) t per 1 clocks`
+    1. `output_throughput(Unpartition_ss n m) = (n*m) t per 1 clocks`
+
+### Area
+1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
+1. `area(Up_1d_t n) = {}`
+1. `area(Down_1d_s n) = n t per 1 clocks`
+1. `area(Down_1d_t n) = n t per (n+v) clocks`
+1. `area(Partition_ts n m) = (n*m) t per (n+v) clocks`
+1. `area(Unpartition_ts n m) = (n*m) t per (n+v) clocks`
+1. `area(Partition_ss n m) = (n*m) t per 1 clocks`
+1. `area(Unpartition_ss n m) = (n*m) t per 1 clocks`
 
 ## Rewrite Rules
 ### Map
