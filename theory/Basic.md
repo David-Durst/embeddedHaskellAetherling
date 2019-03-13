@@ -67,8 +67,9 @@ An operator with an input or output `TSeq` that has a non-zero `v` will receive 
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 
 ### Throughput
-A throughput has two parts: the type of the element processed each clock and their rate. 
-We represent this as `throughput_numerator type_of_element per throughput_denominator clocks`.
+A throughput has two parts: the element type and the rate of elements per clock. 
+We represent this as `rate_numerator type_of_element per rate_denominator clocks`.
+Element types are the types that the rewrite rules (see below) will not reshape: `Int`s or tuples.
 Adding two throughputs creates a tuple of their element types. It does not change the `numerator` or `denominator`.
 Multiplying or dividing a throughput by a scalar changes the `numerator` or `denominator`. It does not change the element type.
 
@@ -200,13 +201,16 @@ The operator may do nothing during those clocks, and be underutilized, depending
 
 ### Area
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
-1. `area(Up_1d_t n) = {}`
-1. `area(Down_1d_s n) = n t per 1 clocks`
-1. `area(Down_1d_t n) = n t per (n+v) clocks`
-1. `area(Partition_ts n m) = (n*m) t per (n+v) clocks`
-1. `area(Unpartition_ts n m) = (n*m) t per (n+v) clocks`
-1. `area(Partition_ss n m) = (n*m) t per 1 clocks`
-1. `area(Unpartition_ss n m) = (n*m) t per 1 clocks`
+1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
+1. `area(Down_1d_s n) = {0, 0, num_bits(t)}`
+1. `area(Down_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
+1. `area(Partition_ts n m) = {0, ((n-1) * m) * num_bits(t), m * num_bits(t)} + area(counter)`
+1. `area(Unpartition_ts n m) = {0, ((n-1) * m) * num_bits(t), (n * m) * num_bits(t)} + area(counter)`
+1. `area(Partition_ss n m) = {0, 0, 0}`
+1. `area(Unpartition_ss n m) = {0, 0, 0}`
+
+Many of the sequential modules require a counter to track clock cycles.
+1. `area(counter) = {num_bits(Int), num_bits(Int), 1}`
 
 ## Rewrite Rules
 ### Map
