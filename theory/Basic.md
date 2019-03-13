@@ -23,7 +23,7 @@ These create types from other types. They are modeled after Haskell's type famil
 1. `Add_Unit_To_Type (t :: Int Or Tuple Or ()) = t x ()`
 1. `Add_Unit_To_Type _ = Error`
 
-## Sequence Operators
+## Operators
 1. `Id :: t -> t`
 1. `Const_Gen n :: () -> Int`
 1. `Add :: (Int x Int) -> Int`
@@ -210,8 +210,8 @@ The operator may do nothing during those clocks, and be underutilized, depending
 1. `area(Partition_ss n m) = {0, 0, 0}`
 1. `area(Unpartition_ss n m) = {0, 0, 0}`
 
-Many of the sequential modules require a counter to track clock cycles.
-1. `area(counter) = {num_bits(Int), num_bits(Int), 1}`
+Many of the sequential operators require a counter to track clock cycles.
+1. `area(counter) = {num_bits(Int), num_bits(Int), num_bits(Int)}`
 
 ## Rewrite Rules
 ### Map
