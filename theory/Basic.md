@@ -70,6 +70,7 @@ An operator with an input or output `TSeq` that has a non-zero `v` will receive 
 A throughput has two parts: the type of the element processed each clock and their rate. 
 We represent this as `throughput_numerator type_of_element per throughput_denominator clocks`.
 Multiplying or dividing a throughput by a scalar changes the `numerator` or `denominator` but not the type of the element.
+
 2. `Map_s n f`
     1. **Input Throughput:** `n * input throughput f`
     1. **Output Throughput:** `n * output throughput f`
@@ -93,6 +94,7 @@ They do not operate on sequences.
 ### Operators' Areas
 The implementation of each operator requires certain resources. 
 We model these resource requirements as three types of area:
+
 1. **Compute Area** is relative to a one-bit adder. 
 For example, `Add` has eight compute units of area as it is roughly equivalent to eight one bit adders.
 1. **Storage Area** is relative to a one-bit register. 
