@@ -50,10 +50,10 @@ A **single-rate pipeline** is a pipeline of operators in which all input and out
 Sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`). 
 
 1. `SSeq n t` - homogeneous, fixed-length sequence in space. This sequence is parallel.
-    1. An `SSeq` takes 1 period and materializes `n` values of type `t` in that period.
+    1. An `SSeq` materializes `n` values of type `t` over one period.
 3. `TSeq n v t` - homogeneous, fixed-length sequence in time. This sequence is sequential.
-    1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more when we get to multi-rate pipelines
-    1. A `TSeq` materializes `n` values of type `t` over `(n+v) * periods to process one t` periods.
+    1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more in the multi-rate pipelines section.
+    1. A `TSeq` materializes `n` values of type `t` over `(n+v)` periods.
 
 **Note:** A period is one or more clock cycles. We use the term period for `SSeq` and `TSeq` as each `t` may be a nested `TSeq`s that takes multiple clock cycles.
         
