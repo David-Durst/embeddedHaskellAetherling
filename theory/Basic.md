@@ -108,8 +108,10 @@ The operator may do nothing during those clocks, and be underutilized, depending
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
-5. `Partition n m :: TSeq 1 (n + v - 1) (SSeq (n*m) t) -> TSeq n v (SSeq m t)`
-5. `Unpartition n m :: TSeq n v (SSeq m t) -> TSeq 1 (n + v - 1) (SSeq (n*m) t)`
+5. `Partition_ts n m :: TSeq 1 (n + v - 1) (SSeq (n*m) t) -> TSeq n v (SSeq m t)`
+5. `Unpartition_ts n m :: TSeq n v (SSeq m t) -> TSeq 1 (n + v - 1) (SSeq (n*m) t)`
+5. `Partition_ss n m :: SSeq (n*m) t -> SSeq n (SSeq m t)`
+5. `Unpartition_ss n m :: SSeq n (SSeq m t) -> SSeq 1 (SSeq (n*m) t)`
 
 
 ## Rewrite Rules
@@ -117,10 +119,10 @@ The operator may do nothing during those clocks, and be underutilized, depending
 1. Sequence To Space - `Map n f -> Map_t 1 (Map_s n f)`
     1. `Map n f :: Seq n t -> Seq n t'`
     1. `Map_t 1 (Map_s n f) :: TSeq 1 0 (SSeq n t) -> TSeq 1 0 (SSeq n t')'`
-1. Slowdown - `Map_t 1 (Map_s (n*m) f) -> Unpartition n m . Map_t n (Map_s m f) . Partition n m`
+1. Slowdown - `Map_t 1 (Map_s (n*m) f) -> Unpartition_ts n m . Map_t n (Map_s m f) . Partition_ts n m`
     1. `Map_t 1 (Map_s (n*m) f) :: TSeq 1 _ (SSeq (n*m) t) -> TSeq 1 _ (SSeq (n*m) t)'`
     1. `Map_t n (Map_s m f) :: TSeq n v (SSeq m t) -> TSeq n v (SSeq m t')`
-    1. `Unpartition n m . Map_t n (Map_s m f) . Partition n m :: TSeq 1 _ (SSeq (n*m) t) -> TSeq 1 _ (SSeq (n*m) t)'`
+    1. `Unpartition_ts n m . Map_t n (Map_s m f) . Partition_ts n m :: TSeq 1 _ (SSeq (n*m) t) -> TSeq 1 _ (SSeq (n*m) t)'`
     
 Note: I dropped the underutilization computation from `TSeq` where it became onerous.
 
@@ -128,23 +130,23 @@ Note: I dropped the underutilization computation from `TSeq` where it became one
 1. Sequence To Space - `Up_1d n -> Map_t 1 (Up_1d_s n)`
     1. `Up_1d n :: Seq 1 t -> Seq n t`
     1. `Map_t 1 (Up_1d_s n) :: TSeq 1 0 (SSeq 1 t) -> TSeq 1 0 (SSeq n t)`
-1. Slowdown - `Map_t 1 (Up_1d_s (n*m)) -> Unpartition n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition 1 1`
+1. Slowdown - `Map_t 1 (Up_1d_s (n*m)) -> Unpartition_ts n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition_ts 1 1`
     1. `Map_t 1 (Up_1d_s (n*m)) :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (n*m) t)`
     1. `Map_t n (Up_1d_s m) :: TSeq n (SSeq 1 t) -> TSeq n (SSeq m t)`
     1. `Up_1d_t n :: (TSeq 1 (SSeq 1 t)) -> (TSeq n (SSeq 1 t))`
-    1. `Unpartition n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition 1 1 :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (n*m) t)`
+    1. `Unpartition_ts n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition_ts 1 1 :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (n*m) t)`
 
 ### Downsample
 1. Sequence To Space - `Down_1d n -> Map_t 1 (Down_1d_s n)`
     1. `Down_1d n :: Seq n t -> Seq 1 t`
     1. `Map_t 1 (Down_1d_s n) :: TSeq 1 0 (SSeq n t) -> TSeq 1 0 (SSeq 1 t)`
-1. Slowdown - `Map_t 1 (Down_1d_s (n*m)) -> Unpartition 1 1 . (Map_t 1 (Down_1d_s m)) . Down_1d_t n . Partition n m`
+1. Slowdown - `Map_t 1 (Down_1d_s (n*m)) -> Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s m)) . Down_1d_t n . Partition_ts n m`
     1. `Map_t 1 (Down_1d_s (n*m)) :: TSeq 1 _ (SSeq n t) -> TSeq 1 _ (SSeq 1 t)`
     1. `Map_t 1 (Down_1d_s m) :: TSeq 1 (SSeq m t) -> TSeq 1 (SSeq 1 t)`
     1. `Down_1d_t n :: (TSeq n (SSeq m t)) -> (TSeq 1 (SSeq m t))`
-    1. `Unpartition 1 1 . (Map_t 1 (Down_1d_s m)) . Down_1d_t n . Partition n m :: TSeq 1 _ (SSeq n t) -> TSeq 1 _ (SSeq 1 t)`
+    1. `Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s m)) . Down_1d_t n . Partition_ts n m :: TSeq 1 _ (SSeq n t) -> TSeq 1 _ (SSeq 1 t)`
 
-### Unpartition/Partition Removal
-1. `Partition n m . Unpartition n m = Id`
-**Danger: `Partition . Unpartition` is not really Id in Space-Time. There will be underutilized clocks here. The partitioning and unpartitioning takes n clocks. However, the interface to both of these functions is just an `SSeq`. The `SSeq` doesn't account for time.**
-2. `Unpartition n m . Partition n m = Id`
+### Unpartition_ts/Partition_ts Removal
+1. `Partition_ts n m . Unpartition_ts n m = Id`
+**Danger: `Partition_ts . Unpartition_ts` is not really Id in Space-Time. There will be underutilized clocks here. The partition_tsing and unpartition_tsing takes n clocks. However, the interface to both of these functions is just an `SSeq`. The `SSeq` doesn't account for time.**
+2. `Unpartition_ts n m . Partition_ts n m = Id`

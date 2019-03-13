@@ -16,13 +16,13 @@ Map_t 1 (Map_s 8 (Add)) :: TSeq 1 0 (SSeq 8 (Int x Int)) -> TSeq 1 0 (SSeq 8 Int
 ### Fully Sequential
 Applying the `Map` slowdown rule to the fully parallel program
 ```
-Unpartition 8 1 . Map_t 8 (Map_s 1 Add) . Partition 8 1 :: TSeq 1 7 (SSeq 8 (Int x Int)) -> TSeq 1 7 (SSeq 8 Int)
+Unpartition_ts 8 1 . Map_t 8 (Map_s 1 Add) . Partition_ts 8 1 :: TSeq 1 7 (SSeq 8 (Int x Int)) -> TSeq 1 7 (SSeq 8 Int)
 ```
 
 ### Partially Parallel 
 Applying the `Map` slowdown rule to the fully parallel program
 ```
-Unpartition 4 2 . Map_t 4 (Map_s 2 Add) . Partition 4 2 :: TSeq 1 3 (SSeq 8 (Int x Int)) -> TSeq 1 3 (SSeq 8 Int)
+Unpartition_ts 4 2 . Map_t 4 (Map_s 2 Add) . Partition_ts 4 2 :: TSeq 1 3 (SSeq 8 (Int x Int)) -> TSeq 1 3 (SSeq 8 Int)
 ```
 
 ### Visual Representation
@@ -61,21 +61,21 @@ Map_t 1 (Map_s 8 (
 ### Fully Sequential
 Applying the `Map` and `Up_1d` slowdown rules to the fully parallel program
 ```
-Unpartition 8 1 .
+Unpartition_ts 8 1 .
 Map_t 8 (Map_s 1 (
     Add . 
     (Fork_Join 
         Id 
         (Const_Gen 2)
     ) . Add_Unit Int
-)) . Partition 8 1 . 
-Unpartition 8 1 . Map_t 8 (Up_1d_s 1) . Up_1d_t 8 . Partition 1 1
+)) . Partition_ts 8 1 . 
+Unpartition_ts 8 1 . Map_t 8 (Up_1d_s 1) . Up_1d_t 8 . Partition_ts 1 1
     :: TSeq 1 7 (SSeq 1 Int) -> TSeq 1 7 (SSeq 8 Int)
 ```
 
-Applying the `Unpartition` and `Partition` removal rules to the above step
+Applying the `Unpartition_ts` and `Partition_ts` removal rules to the above step
 ```
-Unpartition 8 1 .
+Unpartition_ts 8 1 .
 Map_t 8 (Map_s 1 (
     Add . 
     (Fork_Join 
@@ -83,16 +83,16 @@ Map_t 8 (Map_s 1 (
         (Const_Gen 2)
     ) . Add_Unit Int
 )) .
-Map_t 8 (Up_1d_s 1) . Up_1d_t 8 . Partition 1 1
+Map_t 8 (Up_1d_s 1) . Up_1d_t 8 . Partition_ts 1 1
     :: TSeq 1 7 (SSeq 1 Int) -> TSeq 1 7 (SSeq 8 Int)
 ```
 
 ![Upsample Fully Sequential Schedule](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/up_app_fully_sequential.png "Upsample Fully Sequential Schedule")
 
 ### Partially Parallel
-Applying the `Map` and `Up_1d` slowdown rules and the `Unpartition` and `Partition` removal rules to the fully parallel program
+Applying the `Map` and `Up_1d` slowdown rules and the `Unpartition_ts` and `Partition_ts` removal rules to the fully parallel program
 ```
-Unpartition 4 2 .
+Unpartition_ts 4 2 .
 Map_t 4 (Map_s 2 (
     Add . 
     (Fork_Join 
@@ -100,7 +100,7 @@ Map_t 4 (Map_s 2 (
         (Const_Gen 2)
     ) . Add_Unit Int
 )) .
-Map_t 4 (Up_1d_s 2) . Up_1d_t 4 . Partition 1 1
+Map_t 4 (Up_1d_s 2) . Up_1d_t 4 . Partition_ts 1 1
     :: TSeq 1 3 (SSeq 1 Int) -> TSeq 1 3 (SSeq 8 Int)
 ```
 
