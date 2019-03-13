@@ -70,6 +70,7 @@ An operator with an input or output `TSeq` that has a non-zero `v` will receive 
 A throughput has two parts: the element type and the rate of elements per clock. 
 We represent this as `rate_numerator type_of_element per rate_denominator clocks`.
 Element types are the types that the rewrite rules (see below) will not reshape: `Int`s or tuples.
+
 Adding two throughputs creates a tuple of their element types. It does not change the `numerator` or `denominator`.
 Multiplying or dividing a throughput by a scalar changes the `numerator` or `denominator`. It does not change the element type.
 
