@@ -66,6 +66,30 @@ An operator with an input or output `TSeq` that has a non-zero `v` will receive 
 2. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 
+### Single-Rate Space-Time Operators' Throughputs
+A throughput has two parts: the type of the element processed each clock and their rate. 
+We represent this as `throughput_numerator type_of_element per throughput_denominator clocks`.
+Multiplying or dividing a throughput by a scalar changes the `numerator` or `denominator` but not the type of the element.
+2. `Map_s n f`
+    1. **Input Throughput:** `n * input throughput f`
+    1. **Output Throughput:** `n * output throughput f`
+2. `Map_t n f`
+    1. **Input Throughput:** `n/(n+v) * input throughput f`
+    1. **Output Throughput:** `n/(n+v) * output throughput f`
+
+The following operators do not need to be translated from the sequence language to the space-time IR.
+They do not operate on sequences.
+
+1. `Id :: t -> t`
+    1. **Input Throughput:** `1 t per 1 clocks`
+    1. **Output Throughput:** `1 t per 1 clock`
+1. `Const_Gen n :: () -> Int`
+    1. **Input Throughput:** `1 () per 1 clocks`
+    1. **Output Throughput:** `1 Int per 1 clocks`
+1. `Add :: (Int x Int) -> Int`
+    1. **Input Throughput:** `1 (Int x Int) per 1 clocks`
+    1. **Output Throughput:** `1 Int per 1 clocks`
+
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
 If two functions are composed (such as `g . f`), the output throughput of the producer function `f` must equal the input of the consumer function `g`.
@@ -80,7 +104,7 @@ Thus, all operators are implemented using the minimal parallelism necessary to a
 As soon as a producer emits data, the consumer can start operating on it without buffering. 
 No buffering between operators means minimal storage resources. 
 
-### Mutli-Rate Space-Time Types
+### Multi-Rate Space-Time Types
 Multi-rate modules are expressed in the type system using the `v` parameter of `TSeq n v t`. 
 As a reminder:
 - `n` is number of utilized periods.
@@ -113,6 +137,32 @@ The operator may do nothing during those clocks, and be underutilized, depending
 5. `Partition_ss n m :: SSeq (n*m) t -> SSeq n (SSeq m t)`
 5. `Unpartition_ss n m :: SSeq n (SSeq m t) -> SSeq 1 (SSeq (n*m) t)`
 
+
+### Multi-Rate Space-Time Operators' Throughputs
+3. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
+    1. **Input Throughput:** `1 t per 1 clocks`
+    1. **Output Throughput:** `n t per 1 clocks`
+3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
+    1. **Input Throughput:** `1 t per (n+v) clocks`
+    1. **Output Throughput:** `n t per (n+v) clocks`
+4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
+    1. **Input Throughput:** `n t per 1 clocks`
+    1. **Output Throughput:** `1 t per 1 clocks`
+4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
+    1. **Input Throughput:** `n t per (n+v) clocks`
+    1. **Output Throughput:** `1 t per (n+v) clocks`
+5. `Partition_ts n m :: TSeq 1 (n + v - 1) (SSeq (n*m) t) -> TSeq n v (SSeq m t)`
+    1. **Input Throughput:** `(n*m) t per (n+v) clocks`
+    1. **Output Throughput:** `(n*m) t per (n+v) clocks`
+5. `Unpartition_ts n m :: TSeq n v (SSeq m t) -> TSeq 1 (n + v - 1) (SSeq (n*m) t)`
+    1. **Input Throughput:** `(n*m) t per (n+v) clocks`
+    1. **Output Throughput:** `(n*m) t per (n+v) clocks`
+5. `Partition_ss n m :: SSeq (n*m) t -> SSeq n (SSeq m t)`
+    1. **Input Throughput:** `(n*m) t per 1 clocks`
+    1. **Output Throughput:** `(n*m) t per 1 clocks`
+5. `Unpartition_ss n m :: SSeq n (SSeq m t) -> SSeq 1 (SSeq (n*m) t)`
+    1. **Input Throughput:** `(n*m) t per 1 clocks`
+    1. **Output Throughput:** `(n*m) t per 1 clocks`
 
 ## Rewrite Rules
 ### Map
