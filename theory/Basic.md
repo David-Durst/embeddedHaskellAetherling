@@ -55,14 +55,7 @@ Sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`).
     1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more when we get to multi-rate pipelines
     1. A `TSeq` materializes `n` values of type `t` over `(n+v) * periods to process one t` periods.
 
-An empty period is one in which the sequence does not produce new data. `v` enables Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization 
-1. An operator's input and output `TSeq`s must take the same amount of time. The empty clocks allow matching the input and output time lengths. 
-    1. Multi-rate operators demonstrate the need for the empty clocks. `Up_1d_t` takes in one input and then repeats it multiple times. While the output sequence is busy emitting data, the input cannot accept the next input. Otherwise, the `Up_1d_t` will bottleneck
-1. Underutilized hardware is hardware that is unused on some clock cycles.
-An operator with an input or output `TSeq` that has a non-zero `v` will receive or produce no input on those clocks. The operator may do nothing during those clocks, and be underutilized, depending on the operator. 
-    1. For example, if `Map_t 1 Add` had any empty clocks, the `Add` would be underutilized.
-
-**Note:** A period is one or more clock cycles. We use the term period for `Map_t` and `Map_s` as the lifted operator `f` may take multiple clock cycles.
+**Note:** A period is one or more clock cycles. We use the term period for `SSeq` and `TSeq` as each `t` may be a nested `TSeq`s that takes multiple clock cycles.
         
 ### Operators
 1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
@@ -154,7 +147,7 @@ An empty period is one in which the sequence does not process new data. `v` enab
     While the output is busy emitting data, the input cannot accept the next value. 
     The empty periods indicate this waiting so that the input and output `TSeq`s take the same amount of time.
 1. Underutilized hardware is hardware that is unused on some clock cycles.
-An operator with input and output `TSeq`s that have non-zero `v`s may do nothing during those periods.
+An operator with input and output `TSeq`s that have non-zero `v`s may be unused during those periods.
     1. If `Map_t 1 Add` had any empty clocks, it would be underutilized. 
     This is unlike `Up_1d_t`. 
     It is operator specific whether empty clocks mean underutilization or waiting while processing occurs.
