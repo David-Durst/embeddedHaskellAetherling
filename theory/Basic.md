@@ -55,7 +55,7 @@ Sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`).
     1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more in the multi-rate pipelines section.
     1. A `TSeq` materializes `n` values of type `t` over `(n+v)` periods.
 
-**Note:** A period is one or more clock cycles. We use the term period for `SSeq` and `TSeq` as each `t` may be a nested `TSeq`s that takes multiple clock cycles.
+**Note:** A period is one or more clock cycles. We use the term period for `SSeq` and `TSeq` as each `t` may be a nested `TSeq` that takes multiple clock cycles.
         
 ### Operators
 1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
