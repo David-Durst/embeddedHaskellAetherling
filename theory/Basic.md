@@ -41,7 +41,8 @@ Programs in the IR are **scheduled**: the parallelism of all operators is specif
 An operator can be parallel (scheduled in space) or sequential (scheduled in time).
 
 ## Single-Rate Pipelines
-A rate (or throughput) is the average number of `Int`s per clock when processing a sequence.
+A rate (or throughput) is the average number of tokens per clock when processing a sequence.
+Tokens are `Int`s or tuples, the types unaffected by the rewrite rules (see below).
 Operators and pipelines have both input throughputs and output throughputs.
 A **single-rate pipeline** is a pipeline of operators in which all input and output throughputs are equal. 
 
@@ -61,15 +62,15 @@ An empty period is one in which the sequence does not produce new data. `v` enab
 An operator with an input or output `TSeq` that has a non-zero `v` will receive or produce no input on those clocks. The operator may do nothing during those clocks, and be underutilized, depending on the operator. 
     1. For example, if `Map_t 1 Add` had any empty clocks, the `Add` would be underutilized.
 
+**Note:** A period is one or more clock cycles. We use the term period for `Map_t` and `Map_s` as the lifted operator `f` may take multiple clock cycles.
         
 ### Operators
 1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 
 ### Throughput
-A throughput has two parts: the element type and the rate of elements per clock. 
-We represent this as `rate_numerator type_of_element per rate_denominator clocks`.
-Element types are the types that the rewrite rules (see below) will not reshape: `Int`s or tuples.
+A throughput has two parts: the token type and the rate of tokens per clock. 
+We represent this as `rate_numerator token_type per rate_denominator clocks`.
 
 Adding two throughputs creates a tuple of their element types. It does not change the `numerator` or `denominator`.
 Multiplying or dividing a throughput by a scalar changes the `numerator` or `denominator`. It does not change the element type.
@@ -160,8 +161,8 @@ An operator with input and output `TSeq`s that have non-zero `v`s may do nothing
     1. Underutilization is necessary to compose operators in multi-rate pipelines. 
     Consider `Up_1d_t 4 . Map_t 1 Add`.
     `Map_t` must emit an output every fourth clock so that its output throughput matches `Up_1d_t`'s input throughput.
-    To accomplish this rate matching, `Map_t` must be underutilized.
-
+    To accomplish this rate matching, `Map_t** must be underutilized.
+    
 ### Operators
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
