@@ -48,7 +48,7 @@ A **single-rate pipeline** is a pipeline of operators in which all input and out
 ### Types
 Sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`). 
 
-3. `SSeq n t` - homogeneous, fixed-length sequence in space. This sequence is parallel.
+1. `SSeq n t` - homogeneous, fixed-length sequence in space. This sequence is parallel.
     1. An `SSeq` takes 1 period and materializes `n` values of type `t` in that period.
 3. `TSeq n v t` - homogeneous, fixed-length sequence in time. This sequence is sequential.
     1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more when we get to multi-rate pipelines
@@ -63,7 +63,7 @@ An operator with an input or output `TSeq` that has a non-zero `v` will receive 
 
         
 ### Operators
-2. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
+1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 
 ### Operators' Throughputs
@@ -71,7 +71,7 @@ A throughput has two parts: the type of the element processed each clock and the
 We represent this as `throughput_numerator type_of_element per throughput_denominator clocks`.
 Multiplying or dividing a throughput by a scalar changes the `numerator` or `denominator` but not the type of the element.
 
-2. `Map_s n f`
+1. `Map_s n f`
     1. **Input Throughput:** `n * input throughput f`
     1. **Output Throughput:** `n * output throughput f`
 2. `Map_t n f`
@@ -144,7 +144,7 @@ The operator may do nothing during those clocks, and be underutilized, depending
     To accomplish this rate matching, `Map_t` must be underutilized by adding empty clocks to its `v` parameter.
 
 ### Multi-Rate Space-Time Operators
-3. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
+1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
@@ -155,7 +155,7 @@ The operator may do nothing during those clocks, and be underutilized, depending
 
 
 ### Multi-Rate Space-Time Operators' Throughputs
-3. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
+1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
     1. **Input Throughput:** `1 t per 1 clocks`
     1. **Output Throughput:** `n t per 1 clocks`
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
