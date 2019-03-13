@@ -45,7 +45,7 @@ A rate (or throughput) is the average number of `Int`s per clock when processing
 Operators and pipelines have both input throughputs and output throughputs.
 A **single-rate pipeline** is a pipeline of operators in which all input and output throughputs are equal. 
 
-### Single-Rate Space-Time Types
+### Types
 Sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`). 
 
 3. `SSeq n t` - homogeneous, fixed-length sequence in space. This sequence is parallel.
@@ -62,11 +62,11 @@ An operator with an input or output `TSeq` that has a non-zero `v` will receive 
     1. For example, if `Map_t 1 Add` had any empty clocks, the `Add` would be underutilized.
 
         
-### Single-Rate Space-Time Operators
+### Operators
 2. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 
-### Single-Rate Space-Time Operators' Throughputs
+### Operators' Throughputs
 A throughput has two parts: the type of the element processed each clock and their rate. 
 We represent this as `throughput_numerator type_of_element per throughput_denominator clocks`.
 Multiplying or dividing a throughput by a scalar changes the `numerator` or `denominator` but not the type of the element.
@@ -89,6 +89,20 @@ They do not operate on sequences.
 1. `Add :: (Int x Int) -> Int`
     1. **Input Throughput:** `1 (Int x Int) per 1 clocks`
     1. **Output Throughput:** `1 Int per 1 clocks`
+
+### Operators' Areas
+The implementation of each operator requires certain resources. 
+We model these resource requirements as three types of area:
+1. **Compute Area** is relative to a one-bit adder. 
+For example, `Add` has eight compute units of area as it is roughly equivalent to eight one bit adders.
+1. **Storage Area** is relative to a one-bit register. 
+1. **Wire Area** is relative to one-bit wire connecting two components. 
+The wiring is for connecting composed operators.
+To avoid double counting wiring area, we only consider an operator's output wires.
+
+We represent area as `{compute_area, storage_area, wire_area}`. 
+
+
 
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
