@@ -132,7 +132,7 @@ If two functions are composed (such as `g . f`), the output throughput of the pr
 This requirement is known as **producer-consumer rate matching**.
 
 We require producer-consumer rate matching to ensure all pipelines compile to efficient hardware accelerators. 
-Hardware accelerators are efficient if they use minimal compute and storage resources. Matching rates ensures enables minimizes these resources. 
+Hardware accelerators are efficient if they use minimal compute and storage resources. Matching rates minimizes these resources. 
 1. **Compute** - matching rates ensures all nodes run at the exact rate required by their upstream producers and downstream consumers. 
 Thus, all operators are implemented using the minimal parallelism necessary to achieve the target throughput. 
 (**Note:** this assumes that higher throughput operators requires more resources and lower throughput ones requires less resources.)
