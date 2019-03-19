@@ -95,15 +95,7 @@ They have throughputs without being lowered to the space-time IR.
 1. `Add`
     1. `input_throughput(Add) = 1 (Int x Int) per 1 clocks`
     1. `output_throughput(Add) = 1 Int per 1 clocks`
-5. `Fork_Join`
-    1. `input_throuhgput(Fork_Join f g) = input_throughput(f)+input_throughput(g)`
-        1. `f` and `g` need to have the same `seq` lengths. 
-        They will have the same throughputs after lowering to the space-time IR using the same rewrite rules (see Rewrite Rules section at bottom of document).
-        Thus, `+` performs the correct operation by tupling and assuming the same `numerator` and `denominator`.
-    1. `output_throughput(Fork_Join f g) = output_throughput(f)+output_throughput(g)`
-6. `Add_Unit`
-    1. `input_throughput(Add_Unit t) = 1 t per 1 clocks`
-    1. `output_throughput(Add_Unit t) = 1 (t x ()) per 1 clocks`
+5. `Zip`, `Fst`, `Snd`, and `Add_Unit` have no throughput. They are just used for connecting other operators.
 
 ### Area
 The hardware implementation of each operator requires resources on the chip.
@@ -125,8 +117,7 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 1. `area(Id) = {0, 0, 0}`
 1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
 1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
-5. `area(Fork_Join f g) = area(f) + area(g)`
-6. `area(Add_Unit t) = {0, 0, 0}`
+5. `Zip`, `Fst`, `Snd`, and `Add_Unit` have area. They are just used for connecting other operators.
 
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
