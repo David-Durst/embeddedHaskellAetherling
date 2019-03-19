@@ -15,11 +15,17 @@ There are two collection types, tuples and sequences. A tuple enables the unary,
 3. `Seq n t` - homogeneous, fixed-length sequence
 4. `t -> t'` - function
 
+## Type Constraints
+These ensure that functions can only be called with the correct input types.
+1. `Check_Conforming (t1 :: Seq n t) (t2 :: Seq n t') = Check_Conforming t t'`
+1. `Check_Conforming (t1 :: Int Or Tuple Or ()) (t2 :: Int Or Tuple Or ()) = True`
+1. `Check_Conforming _ _ = False`
+
 ## Type Constructors
 These create types from other types. They are modeled after Haskell's type families.
-1. `Merge_Seqs (t1 :: Seq n t) (t2 :: Seq n t') = Seq n (Merge_Seqs t t')`
-1. `Merge_Seqs (t1 :: Int Or Tuple Or ()) (t2 :: Int Or Tuple Or ()) = t1 x t2`
-1. `Merge_Seqs _ _ = Error`
+1. `Zipped_Seqs (t1 :: Seq n t) (t2 :: Seq n t') = Seq n (Zipped_Seqs t t')`
+1. `Zipped_Seqs (t1 :: Int Or Tuple Or ()) (t2 :: Int Or Tuple Or ()) = t1 x t2`
+1. `Zipped_Seqs _ _ = Error`
 1. `Add_Unit_To_Type (t :: Int Or Tuple Or ()) = t x ()`
 1. `Add_Unit_To_Type _ = Error`
 
@@ -30,10 +36,12 @@ These create types from other types. They are modeled after Haskell's type famil
 2. `Map n :: (t -> t') -> Seq n t -> Seq n t'`
 3. `Up_1d n :: Seq 1 t -> Seq n t`
 4. `Down_1d n :: Seq n t -> Seq 1 t`
-5. `Fork_Join (f :: t1 -> t1') (g :: t2 -> t2') :: (Merge_Seqs t1 t2) -> (Merge_Seqs t1' t2')`
+1. `Fst :: (t x t') -> t`
+1. `Snd :: (t x t') -> t'`
+5. `Zip :: Check_Conforming t1 t2 => Seq n t1 -> Seq n t2 -> Seq n (Zipped_Seqs t1 t2)`
 6. `Add_Unit t :: t -> (Add_Unit_To_Type t)`
 7. `Partition n m :: Seq (n*m) t -> Seq n (Seq m t)`
-7. `Unpartition n m :: Seq n (Seq m t) -> Seq (n*m) t`
+7. `Unpartition no ni :: Seq no (Seq ni t) -> Seq (no*ni) t`
 
 # Space-Time IR
 The space-time IR defines how to interpret the data flow programs as hardware accelerators. 
@@ -163,8 +171,8 @@ An operator with input and output `TSeq`s that have non-zero `v`s may be unused 
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
 5. `Partition_ts n m :: TSeq 1 (n + v - 1) (SSeq (n*m) t) -> TSeq n v (SSeq m t)`
 5. `Unpartition_ts n m :: TSeq n v (SSeq m t) -> TSeq 1 (n + v - 1) (SSeq (n*m) t)`
-5. `Partition_ss n m :: SSeq (n*m) t -> SSeq n (SSeq m t)`
-5. `Unpartition_ss n m :: SSeq n (SSeq m t) -> SSeq 1 (SSeq (n*m) t)`
+5. `Partition_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
+5. `Unpartition_ss no ni :: SSeq no (SSeq ni t) -> SSeq 1 (SSeq (no*ni) t)`
 
 
 ### Throughput
@@ -181,27 +189,27 @@ An operator with input and output `TSeq`s that have non-zero `v`s may be unused 
     1. `input_throughput(Down_1d_t n) = n t per (n+v) clocks`
     1. `output_throughput(Down_1d_t n) = 1 t per (n+v) clocks`
 5. `Partition_ts`
-    1. `input_throughput(Partition_ts n m) = (n*m) t per (n+v) clocks`
-    1. `output_throughput(Partition_ts n m) = (n*m) t per (n+v) clocks`
+    1. `input_throughput(Partition_ts no ni) = (no*ni) t per (no+v) clocks`
+    1. `output_throughput(Partition_ts no ni) = (no*ni) t per (no+v) clocks`
 5. `Unpartition_ts`
-    1. `input_throughput(Unpartition_ts n m) = (n*m) t per (n+v) clocks`
-    1. `output_throughput(Unpartition_ts n m) = (n*m) t per (n+v) clocks`
+    1. `input_throughput(Unpartition_ts n ni) = (no*ni) t per (no+v) clocks`
+    1. `output_throughput(Unpartition_ts n ni) = (no*ni) t per (no+v) clocks`
 5. `Partition_ss`
-    1. `input_throughput(Partition_ss n m) = (n*m) t per 1 clocks`
-    1. `output_throughput(Partition_ss n m) = (n*m) t per 1 clocks`
+    1. `input_throughput(Partition_ss no ni) = (no*ni) t per 1 clocks`
+    1. `output_throughput(Partition_ss no ni) = (no*ni) t per 1 clocks`
 5. `Unpartition_ss`
-    1. `input_throughput(Unpartition_ss n m) = (n*m) t per 1 clocks`
-    1. `output_throughput(Unpartition_ss n m) = (n*m) t per 1 clocks`
+    1. `input_throughput(Unpartition_ss no ni) = (no*ni) t per 1 clocks`
+    1. `output_throughput(Unpartition_ss no ni) = (no*ni) t per 1 clocks`
 
 ### Area
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
 1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Down_1d_s n) = {0, 0, num_bits(t)}`
 1. `area(Down_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
-1. `area(Partition_ts n m) = {0, ((n-1) * m) * num_bits(t), m * num_bits(t)} + area(counter)`
-1. `area(Unpartition_ts n m) = {0, ((n-1) * m) * num_bits(t), (n * m) * num_bits(t)} + area(counter)`
-1. `area(Partition_ss n m) = {0, 0, 0}`
-1. `area(Unpartition_ss n m) = {0, 0, 0}`
+1. `area(Partition_ts no ni) = {0, ((no-1) * ni) * num_bits(t), ni * num_bits(t)} + area(counter)`
+1. `area(Unpartition_ts no ni) = {0, ((no-1) * ni) * num_bits(t), (no * ni) * num_bits(t)} + area(counter)`
+1. `area(Partition_ss no ni) = {0, 0, 0}`
+1. `area(Unpartition_ss no ni) = {0, 0, 0}`
 
 Many of the sequential operators require a counter to track clock cycles.
 1. `area(counter) = {num_bits(Int), num_bits(Int), num_bits(Int)}`
@@ -211,10 +219,10 @@ Many of the sequential operators require a counter to track clock cycles.
 1. Sequence To Space - `Map n f -> Map_t 1 (Map_s n f)`
     1. `Map n f :: Seq n t -> Seq n t'`
     1. `Map_t 1 (Map_s n f) :: TSeq 1 0 (SSeq n t) -> TSeq 1 0 (SSeq n t')'`
-1. Slowdown - `Map_t 1 (Map_s (n*m) f) -> Unpartition_ts n m . Map_t n (Map_s m f) . Partition_ts n m`
-    1. `Map_t 1 (Map_s (n*m) f) :: TSeq 1 _ (SSeq (n*m) t) -> TSeq 1 _ (SSeq (n*m) t)'`
-    1. `Map_t n (Map_s m f) :: TSeq n v (SSeq m t) -> TSeq n v (SSeq m t')`
-    1. `Unpartition_ts n m . Map_t n (Map_s m f) . Partition_ts n m :: TSeq 1 _ (SSeq (n*m) t) -> TSeq 1 _ (SSeq (n*m) t)'`
+1. Slowdown - `Map_t 1 (Map_s (no*ni) f) -> Unpartition_ts no ni . Map_t no (Map_s ni f) . Partition_ts no ni`
+    1. `Map_t 1 (Map_s (no*ni) f) :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq (no*ni) t)'`
+    1. `Map_t no (Map_s ni f) :: TSeq no v (SSeq ni t) -> TSeq no v (SSeq ni t')`
+    1. `Unpartition_ts no ni . Map_t no (Map_s ni f) . Partition_ts no ni :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq (no*ni) t)'`
     
 Note: I dropped the underutilization computation from `TSeq` where it became onerous.
 
@@ -222,23 +230,23 @@ Note: I dropped the underutilization computation from `TSeq` where it became one
 1. Sequence To Space - `Up_1d n -> Map_t 1 (Up_1d_s n)`
     1. `Up_1d n :: Seq 1 t -> Seq n t`
     1. `Map_t 1 (Up_1d_s n) :: TSeq 1 0 (SSeq 1 t) -> TSeq 1 0 (SSeq n t)`
-1. Slowdown - `Map_t 1 (Up_1d_s (n*m)) -> Unpartition_ts n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition_ts 1 1`
-    1. `Map_t 1 (Up_1d_s (n*m)) :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (n*m) t)`
-    1. `Map_t n (Up_1d_s m) :: TSeq n (SSeq 1 t) -> TSeq n (SSeq m t)`
-    1. `Up_1d_t n :: (TSeq 1 (SSeq 1 t)) -> (TSeq n (SSeq 1 t))`
-    1. `Unpartition_ts n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition_ts 1 1 :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (n*m) t)`
+1. Slowdown - `Map_t 1 (Up_1d_s (no*ni)) -> Unpartition_ts no ni . Map_t no (Up_1d_s ni) . Up_1d_t no . Partition_ts 1 1`
+    1. `Map_t 1 (Up_1d_s (no*ni)) :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (no*ni) t)`
+    1. `Map_t no (Up_1d_s ni) :: TSeq no (SSeq 1 t) -> TSeq no (SSeq ni t)`
+    1. `Up_1d_t no :: (TSeq 1 (SSeq 1 t)) -> (TSeq no (SSeq 1 t))`
+    1. `Unpartition_ts no ni . Map_t no (Up_1d_s ni) . Up_1d_t no . Partition_ts 1 1 :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (no*ni) t)`
 
 ### Downsample
 1. Sequence To Space - `Down_1d n -> Map_t 1 (Down_1d_s n)`
     1. `Down_1d n :: Seq n t -> Seq 1 t`
     1. `Map_t 1 (Down_1d_s n) :: TSeq 1 0 (SSeq n t) -> TSeq 1 0 (SSeq 1 t)`
-1. Slowdown - `Map_t 1 (Down_1d_s (n*m)) -> Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s m)) . Down_1d_t n . Partition_ts n m`
-    1. `Map_t 1 (Down_1d_s (n*m)) :: TSeq 1 _ (SSeq n t) -> TSeq 1 _ (SSeq 1 t)`
-    1. `Map_t 1 (Down_1d_s m) :: TSeq 1 (SSeq m t) -> TSeq 1 (SSeq 1 t)`
-    1. `Down_1d_t n :: (TSeq n (SSeq m t)) -> (TSeq 1 (SSeq m t))`
-    1. `Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s m)) . Down_1d_t n . Partition_ts n m :: TSeq 1 _ (SSeq n t) -> TSeq 1 _ (SSeq 1 t)`
+1. Slowdown - `Map_t 1 (Down_1d_s (no*ni)) -> Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s ni)) . Down_1d_t no . Partition_ts no ni`
+    1. `Map_t 1 (Down_1d_s (no*ni)) :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq 1 t)`
+    1. `Map_t 1 (Down_1d_s ni) :: TSeq 1 (SSeq ni t) -> TSeq 1 (SSeq 1 t)`
+    1. `Down_1d_t no :: (TSeq no (SSeq ni t)) -> (TSeq 1 (SSeq ni t))`
+    1. `Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s ni)) . Down_1d_t no . Partition_ts no ni :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq 1 t)`
 
 ### Unpartition_ts/Partition_ts Removal
-1. `Partition_ts n m . Unpartition_ts n m = Id`
+1. `Partition_ts no ni . Unpartition_ts no ni = Id`
 **Danger: `Partition_ts . Unpartition_ts` is not really Id in Space-Time. There will be underutilized clocks here. The partition_tsing and unpartition_tsing takes n clocks. However, the interface to both of these functions is just an `SSeq`. The `SSeq` doesn't account for time.**
-2. `Unpartition_ts n m . Partition_ts n m = Id`
+2. `Unpartition_ts no ni . Partition_ts no ni = Id`
