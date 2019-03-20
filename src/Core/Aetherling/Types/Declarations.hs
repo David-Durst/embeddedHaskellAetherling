@@ -39,24 +39,6 @@ data Atom_Int =
   | Atom_Int_Resources Resources
   deriving (Show, Eq)
 
-data Atom_Tuple a b =
-  Atom_Tuple (a, b)
-  | Atom_Tuple_Wires Wires
-  | Atom_Tuple_Resources Resources
-  deriving (Show, Eq)
-
-data Atom_NTuple n a =
-  Atom_NTuple (V.Vector n a)
-  | Atom_NTuple_Wires Wires
-  | Atom_NTuple_Resources Resources
-  {-
-  Int :: Int -> Atom Int
-  Bit :: Bool -> Atom Bool
-  Tuple :: Atom a -> Atom b -> Atom (Atom a, Atom b)
-  -- example of how I'm going to restrict to sseqs of atoms or sseqs
-  NTuple :: V.Vector n a -> Atom (V.Vector n (Atom a))
--}
-
 data Seq n a =
   Seq {sVec :: Vector n a}
   | Seq_Wires Wires

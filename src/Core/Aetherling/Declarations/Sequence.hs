@@ -15,16 +15,16 @@ class Monad m => Sequence_Language m where
   notC :: Atom_Bit -> m Atom_Bit
 
   -- binary operators
-  addC :: Atom_Tuple Atom_Int Atom_Int -> m Atom_Int
+  addC :: Atom_Int -> Atom_Int -> m Atom_Int
   eqC :: (Check_Type_Is_Atom a) =>
-    Atom_Tuple a a -> m Atom_Bit
+    a -> a -> m Atom_Bit
 
   -- generators
   lut_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
     [a] -> Atom_Int -> m a
 
   const_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
-    a -> Atom_Unit -> m a
+    a -> m a
 
   -- sequence operators
   up_1dC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
@@ -44,19 +44,7 @@ class Monad m => Sequence_Language m where
     Seq no (Seq ni a) -> m (Seq (no GHC.TypeLits.* ni) a)
 
   -- higher order operators
-  mapC :: (KnownNat n) =>
-    Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
-
-  -- tuple operations
-  fstC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
-    Atom_Tuple a b -> m a
-  sndC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
-    Atom_Tuple a b -> m b
-  nthC :: (KnownNat i, KnownNat n, (i+1) <= n) =>
-    Proxy i -> Atom_NTuple n a -> m a
-
-  zipC :: (Check_Types_Conform a b) =>
-    a -> b -> m (Zipped_Types a b)
+  mapC :: (KnownNat n) => Proxy n -> a -> m (Type_Lifted_To_Seq n a)
 
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
@@ -65,6 +53,4 @@ class Sequence_Language m => Symbolic_Sequence_Language m where
   input_unit :: m Atom_Unit
   input_int :: m Atom_Int
   input_bit :: m Atom_Bit
-  input_tuple :: m (Atom_Tuple a b)
-  input_ntuple :: m (Atom_NTuple n a)
   input_seq :: m (Seq n a)
