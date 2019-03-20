@@ -1,4 +1,4 @@
-module Aetherling.LanguageDeclarations.SequenceDeclaration where 
+module Aetherling.Declarations.SpaceTime where 
 import Aetherling.Types.TypeDeclarations
 import Aetherling.Types.TypeFunctions
 import Data.Bits
