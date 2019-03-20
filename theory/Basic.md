@@ -40,7 +40,7 @@ These create types from other types. They are modeled after Haskell's type famil
 1. `Snd :: (t x t') -> t'`
 5. `Zip :: Check_Conforming t1 t2 => Seq n t1 -> Seq n t2 -> Seq n (Zipped_Seqs t1 t2)`
 6. `Add_Unit t :: t -> (Add_Unit_To_Type t)`
-7. `Partition n m :: Seq (n*m) t -> Seq n (Seq m t)`
+7. `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)`
 7. `Unpartition no ni :: Seq no (Seq ni t) -> Seq (no*ni) t`
 
 # Space-Time IR
@@ -160,8 +160,8 @@ An operator with input and output `TSeq`s that have non-zero `v`s may be unused 
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
-5. `Partition_ts n m :: TSeq 1 (n + v - 1) (SSeq (n*m) t) -> TSeq n v (SSeq m t)`
-5. `Unpartition_ts n m :: TSeq n v (SSeq m t) -> TSeq 1 (n + v - 1) (SSeq (n*m) t)`
+5. `Partition_ts no ni :: TSeq 1 (no + v - 1) (SSeq (no*ni) t) -> TSeq no v (SSeq ni t)`
+5. `Unpartition_ts no ni :: TSeq no v (SSeq ni t) -> TSeq 1 (no + v - 1) (SSeq (no*ni) t)`
 5. `Partition_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
 5. `Unpartition_ss no ni :: SSeq no (SSeq ni t) -> SSeq 1 (SSeq (no*ni) t)`
 
