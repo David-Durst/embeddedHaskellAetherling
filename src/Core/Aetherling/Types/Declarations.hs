@@ -1,4 +1,4 @@
-module Aetherling.Types.TypeDeclarations where
+module Aetherling.Types.Declarations where
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Vector.Sized as V

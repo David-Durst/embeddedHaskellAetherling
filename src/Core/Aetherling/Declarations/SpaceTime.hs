@@ -1,6 +1,6 @@
 module Aetherling.Declarations.SpaceTime where 
-import Aetherling.Types.TypeDeclarations
-import Aetherling.Types.TypeFunctions
+import Aetherling.Types.Declarations
+import Aetherling.Types.Functions
 import Data.Bits
 import Data.Proxy
 import GHC.TypeLits
@@ -16,9 +16,8 @@ class Monad m => Space_Time_Language m where
   notC :: Atom_Bit -> m Atom_Bit
 
   -- binary operators
-  addC :: Atom_Tuple Atom_Int Atom_Int -> m Atom_Int
-  eqC :: (Check_Type_Is_Atom a) =>
-    Atom_Tuple a a -> m Atom_Bit
+  addC :: Atom_Int -> Atom_Int -> m Atom_Int
+  eqC :: (Check_Type_Is_Atom a) => a -> a -> m Atom_Bit
 
   -- generators
   lut_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>

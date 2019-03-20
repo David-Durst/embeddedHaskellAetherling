@@ -1,5 +1,5 @@
-module Aetherling.Types.TypeFunctions where
-import Aetherling.Types.TypeDeclarations
+module Aetherling.Types.Functions where
+import Aetherling.Types.Declarations
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Vector.Sized as V

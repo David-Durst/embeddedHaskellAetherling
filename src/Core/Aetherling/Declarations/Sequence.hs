@@ -1,6 +1,6 @@
 module Aetherling.Declarations.Sequence where 
-import Aetherling.Types.TypeDeclarations
-import Aetherling.Types.TypeFunctions
+import Aetherling.Types.Declarations
+import Aetherling.Types.Functions
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Extra
