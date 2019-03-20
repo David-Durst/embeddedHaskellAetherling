@@ -13,76 +13,63 @@ import qualified Data.Vector.Sized as V
 
 -- verify that a type contains only units
 type family JustUnits (topType :: *) :: Constraint where
-  JustUnits (Atom ()) = True ~ True
-  JustUnits (Atom Int) = False ~ True
-  JustUnits (Atom Bool) = False ~ True
-  JustUnits (Atom (Atom a, Atom b)) = (JustUnits (Atom a), JustUnits (Atom b))
-  JustUnits (Atom (V.Vector n (Atom a))) = JustUnits (Atom a)
+  JustUnits (Atom_Unit) = True ~ True
+  JustUnits (Atom_Int) = False ~ True
+  JustUnits (Atom_Bit) = False ~ True
+  JustUnits (Atom_Tuple a b) = (JustUnits a, JustUnits b)
+  JustUnits (Atom_NTuple n a) = JustUnits a
   JustUnits (Seq n a) = JustUnits a
   JustUnits (SSeq n a) = JustUnits a
   JustUnits (TSeq n v a) = JustUnits a
 
-class Monad m => SequenceLanguage m where
+class Monad m => Sequence_Language m where
   -- unary operators
-  id :: Atom a -> m (Atom a)
-  constGenC :: (KnownNat (TypeSize (Atom a))) => Atom a ->
-    Atom () -> m (Atom Int)
-  absC :: Atom Int -> m (Atom Int)
-  notC :: Atom Bool -> m (Atom Bool)
+  id :: (Check_Type_Is_Atom a) => a -> m a
+  absC :: Atom_Int -> m Atom_Int
+  notC :: Atom_Bit -> m Atom_Bit
 
   -- binary operators
-  addC :: Atom (Atom Int, Atom Int) -> m (Atom Int)
-  eqIntC :: Atom (Atom Int, Atom Int) -> m (Atom Bool)
-  eqBitC :: Atom (Atom Bool, Atom Bool) -> m (Atom Bool)
+  addC :: Atom_Tuple Atom_Int Atom_Int -> m Atom_Int
+  eqC :: (Check_Type_Is_Atom a) =>
+    Atom_Tuple a a -> m Atom_Bit
 
   -- generators
-  lutGenIntC :: [Atom Int] -> (Atom Int) -> m (Atom Int)
-  lutGenBitC :: [Atom Bool] -> (Atom Int) -> m (Atom Bool)
+  lut_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
+    [a] -> Atom_Int -> m a
+
+  const_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
+    a -> Atom_Unit -> m a
 
   -- higher order operators
   mapC :: (KnownNat n) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
-  up_1dC :: (KnownNat n, KnownNat (TypeSize a), Typeable (Proxy a)) =>
+  up_1dC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
+             Check_Type_Is_Atom a, Typeable (Proxy a)) =>
     Proxy n -> Seq 1 a -> m (Seq n a)
 
-  down_1dC :: (KnownNat n, 1 <= n,
-               KnownNat (TypeSize a), Typeable (Proxy a)) =>
+  down_1dC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
+                Check_Type_Is_Atom a, Typeable (Proxy a)) =>
     Proxy n -> (Seq n a) -> m (Seq 1 a)
 
   -- tuple operations
-  fstC :: Atom (Atom a, Atom b) -> Atom a
-  sndC :: Atom (Atom a, Atom b) -> Atom b
+  fstC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
+    Atom_Tuple a b -> m a
+  sndC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
+    Atom_Tuple a b -> m b
   nthC :: (KnownNat i, KnownNat n, (i+1) <= n) =>
-    Proxy i -> Atom (V.Vector n (Atom a)) -> m (Atom a)
+    Proxy i -> Atom_NTuple n a -> m a
 
   zipC :: (Check_Types_Conform (Seq n a) (Seq n b)) =>
-    a -> b -> c
+    Seq n a -> Seq n b -> m c
 
   -- composition operators
-  (<=) :: Variable c -> (a -> m b) -> m (Variable (a -> m b))
-  (>=) :: Variable (a -> m b) -> (b -> m c) -> (a -> m c)
-
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
 
--- these are the types of the nodes in a DAG
-data NodeType =
-  AbsT
-  | NotT
-  | AddT
-  | EqIntT
-  | EqBitT
-  | LutGenIntT [Atom Int]
-  | LutGenBitT [Atom Bool]
-  | ConstGenIntT (Atom Int)
-  | ConstGenBitT (Atom Bool)
-
-instance Show NodeType where
-  show AbsT = "AbsT"
-  show AddT = "AddT"
-  show EqIntT = "EqIntT"
-  show EqBitT = "EqBitT"
-  show (LutGenIntT as) = "LutGenIntT " ++ show as
-  show (LutGenBitT as) = "LutGenBitT " ++ show as
-  show (ConstGenIntT a) = "ConstGenIntT " ++ show a
-  show (ConstGenBitT a) = "ConstGenBitT " ++ show a
+class Sequence_Language m => Symbolic_Sequence_Language m where
+  input_unit :: m Atom_Unit
+  input_int :: m Atom_Int
+  input_bit :: m Atom_Bit
+  input_tuple :: m (Atom_Tuple a b)
+  input_ntuple :: m (Atom_NTuple n a)
+  input_seq :: m (Seq n a)
