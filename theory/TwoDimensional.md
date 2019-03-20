@@ -64,32 +64,24 @@ Note: I'm duplicating types from above to be thorough.
 
 
 ## Rewrite Rules
-### Map
-1. Sequence To Space - `Map n f -> Map_t 1 (Map_s n f)`
-    1. `Map n f :: Seq n t -> Seq n t'`
-    1. `Map_t 1 (Map_s n f) :: TSeq 1 v (SSeq n t) -> TSeq 1 v (SSeq n t)'`
-1. Slowdown - `Map_t 1 (Map_s (n*m) f) -> Unpartition_ts n m . Map_t n (Map_s m f) . Partition_ts n m`
-    1. `Map_t 1 (Map_s (n*m) f) :: TSeq 1 _ (SSeq (n*m) t) -> TSeq 1 _ (SSeq (n*m) t)'`
-    1. `Map_t n (Map_s m f) :: TSeq n v (SSeq m t) -> TSeq n v (SSeq m t')`
-    1. `Unpartition_ts n m . Map_t n (Map_s m f) . Partition_ts n m :: TSeq 1 _ (SSeq (n*m) t) -> TSeq 1 _ (SSeq (n*m) t)'`
-    
-Note: I dropped the underutilization computation from `TSeq` where it became onerous.
-
-### Upsample 1D
-1. Sequence To Space - `Up_1d n -> Map_t 1 (Up_1d_s n)`
-    1. `Up_1d n :: Seq 1 t -> Seq n t`
-    1. `Map_t 1 (Up_1d_s n) :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq n t)`
-1. Slowdown - `Map_t 1 (Up_1d_s (n*m)) -> Unpartition_ts n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition_ts 1 1`
+### Upsample 2D
+1. Sequence To Space - `Up_2d nx ny w h -> Up_2d_s nx ny w h`
+    1. `Up_2d nx ny w h :: Seq (w*h) t -> Seq (nx*ny*w*h) t`
+    1. `Map_t 1 (Up_2d_s nx ny w h) :: SSeq (w*h) t -> SSeq (nx*ny*w*h) t`
+1. Slowdown to `p` input pixels per clock, `p >= w` - `Up_2d_s nx ny w (n*m) -> Map_t n (Up_2d_s nx ny w m)` **need to fix types for this entry**
     1. `Map_t 1 (Up_1d_s (n*m)) :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (n*m) t)`
     1. `Map_t n (Up_1d_s m) :: TSeq n (SSeq 1 t) -> TSeq n (SSeq m t)`
     1. `Up_1d_t n :: (TSeq 1 (SSeq 1 t)) -> (TSeq n (SSeq 1 t))`
     1. `Unpartition_ts n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition_ts 1 1 :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (n*m) t)`
-
-### Upsample 2D
-1. Sequence To Space - `Up_2d nx ny w -> Map_t 1 (Up_2d_s nx ny w)`
-    1. `Up_2d nx ny w :: Seq w t -> Seq (nx*ny*w) t`
-    1. `Map_t 1 (Up_2d_s nx ny w) :: TSeq 1 _ (SSeq w t) -> TSeq 1 _ (SSeq (nx*ny*w) t)`
-1. Slowdown - `Map_t 1 (Up_1d_s (nx*(m/2) (ny*(m/2)))) -> Unpartition_ts n m . Map_t n (Up_1d_s m) . Up_1d_t n . Partition_ts 1 1`
+1. Slowdown to `p` input pixels per clock, `p < w`, `p < 1 || nx % (1/p) == 0`, `p*nx*ny > 1` - 
+    1. Original - `Up_2d_s nx ny (o*p) h`
+    1. Type Variables
+        1. `input_pixels_per_clock=p`
+        1. `output_pixels_per_clock=p*ny*nx`
+        1. `input_to_all_time_upsamples=max 1 (p*ny)` - all time upsamples will feed into an `nx` space upsample if necessary
+        1. `amount_space_upsamples=output_pixels_per_clock / input_to_all_time_upsamples` 
+    1. New ` Map_t h (Map_s p (Up_1d_s (nx_p * p) . Up_2d_t (nx*p) ny o 1)) . retime` **need to fix types for this entry, figure out semantics of retime buffer, which loads a whole row and then distributes it over a shorter priod of time. This increases initial latency but ensures constant rate**
+1. Slowdown to less than w pixels in per clock - `Map_t 1 (Up_1d_s (nx*(m/2) (ny*(m/2)))) -> Map_t n (Up_1d_s m) . Up_1d_t n . `
     1. `Map_t 1 (Up_1d_s (n*m)) :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (n*m) t)`
     1. `Map_t n (Up_1d_s m) :: TSeq n (SSeq 1 t) -> TSeq n (SSeq m t)`
     1. `Up_1d_t n :: (TSeq 1 (SSeq 1 t)) -> (TSeq n (SSeq 1 t))`
