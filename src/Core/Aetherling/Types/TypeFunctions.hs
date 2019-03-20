@@ -52,12 +52,12 @@ type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom (Atom_Tuple a b) = True ~ True
   Check_Type_Is_Atom (Atom_NTuple n a) = True ~ True 
   Check_Type_Is_Atom x =
-    TypeError (ShowType x :<>: Text " is not an Atom.")
+    TypeError (ShowType x :<>: Text " is not an atom.")
 
 -- zip together all sequences that are of the same length.
-type family Zipped_Seqs (lType :: *) (rType :: *) :: * where
-  Zipped_Seqs (Seq n a) (Seq n b) = Seq n (Zipped_Seqs a b)
-  Zipped_Seqs a b = Atom_Tuple a b
+type family Zipped_Types (lType :: *) (rType :: *) :: * where
+  Zipped_Types (Seq n a) (Seq n b) = Seq n (Zipped_Types a b)
+  Zipped_Types a b = Atom_Tuple a b
 
 {-
 Below functions are for converting a type representation to a string

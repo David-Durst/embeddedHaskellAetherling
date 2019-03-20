@@ -9,19 +9,6 @@ import Data.Typeable
 import GHC.Exts (Constraint)
 import qualified Data.Vector.Sized as V
 
-
-
--- verify that a type contains only units
-type family JustUnits (topType :: *) :: Constraint where
-  JustUnits (Atom_Unit) = True ~ True
-  JustUnits (Atom_Int) = False ~ True
-  JustUnits (Atom_Bit) = False ~ True
-  JustUnits (Atom_Tuple a b) = (JustUnits a, JustUnits b)
-  JustUnits (Atom_NTuple n a) = JustUnits a
-  JustUnits (Seq n a) = JustUnits a
-  JustUnits (SSeq n a) = JustUnits a
-  JustUnits (TSeq n v a) = JustUnits a
-
 class Monad m => Sequence_Language m where
   -- unary operators
   id :: (Check_Type_Is_Atom a) => a -> m a
@@ -40,17 +27,26 @@ class Monad m => Sequence_Language m where
   const_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
     a -> Atom_Unit -> m a
 
-  -- higher order operators
-  mapC :: (KnownNat n) =>
-    Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
-
+  -- sequence operators
   up_1dC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
              Check_Type_Is_Atom a, Typeable (Proxy a)) =>
     Proxy n -> Seq 1 a -> m (Seq n a)
 
   down_1dC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
                 Check_Type_Is_Atom a, Typeable (Proxy a)) =>
-    Proxy n -> (Seq n a) -> m (Seq 1 a)
+    Proxy n -> Seq n a -> m (Seq 1 a)
+
+  partitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni) =>
+    Proxy no -> Proxy ni ->
+    Seq (no GHC.TypeLits.* ni) a -> m (Seq no (Seq ni a))
+
+  unpartitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni) =>
+    Proxy no -> Proxy ni ->
+    Seq no (Seq ni a) -> m (Seq (no GHC.TypeLits.* ni) a)
+
+  -- higher order operators
+  mapC :: (KnownNat n) =>
+    Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
   -- tuple operations
   fstC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
@@ -60,8 +56,8 @@ class Monad m => Sequence_Language m where
   nthC :: (KnownNat i, KnownNat n, (i+1) <= n) =>
     Proxy i -> Atom_NTuple n a -> m a
 
-  zipC :: (Check_Types_Conform (Seq n a) (Seq n b)) =>
-    Seq n a -> Seq n b -> m c
+  zipC :: (Check_Types_Conform a b) =>
+    a -> b -> m (Zipped_Types a b)
 
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
