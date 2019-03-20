@@ -34,12 +34,12 @@ class Monad m => Space_Time_Language m where
                Check_Type_Is_Atom a, Typeable (Proxy a)) =>
     Proxy n -> TSeq 1 (n-1) a -> m (TSeq n 0 a)
 
-  down_1d_sC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
+  down_1d_sC :: (KnownNat n, KnownNat (Type_Size a),
                  Check_Type_Is_Atom a, Typeable (Proxy a)) =>
-    Proxy n -> SSeq n a -> m (SSeq 1 a)
-  down_1d_tC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
+    Proxy n -> SSeq (1+n) a -> m (SSeq 1 a)
+  down_1d_tC :: (KnownNat n, KnownNat (Type_Size a),
                  Check_Type_Is_Atom a, Typeable (Proxy a)) =>
-    Proxy n -> TSeq n 0 a -> m (TSeq 1 (n-1) a)
+    Proxy n -> TSeq (1+n) 0 a -> m (TSeq 1 n a)
 
   partition_tsC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni) =>
     Proxy no -> Proxy ni ->

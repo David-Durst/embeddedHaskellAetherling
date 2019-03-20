@@ -27,13 +27,13 @@ class Monad m => Sequence_Language m where
     a -> m a
 
   -- sequence operators
-  up_1dC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
+  up_1dC :: (KnownNat n, KnownNat (Type_Size a),
              Check_Type_Is_Atom a, Typeable (Proxy a)) =>
     Proxy n -> Seq 1 a -> m (Seq n a)
 
-  down_1dC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
+  down_1dC :: (KnownNat n, KnownNat (Type_Size a),
                 Check_Type_Is_Atom a, Typeable (Proxy a)) =>
-    Proxy n -> Seq n a -> m (Seq 1 a)
+    Proxy n -> Seq (1+n) a -> m (Seq 1 a)
 
   partitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni) =>
     Proxy no -> Proxy ni ->

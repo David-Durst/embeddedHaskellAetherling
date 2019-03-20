@@ -2,6 +2,7 @@ module Aetherling.Interpretations.Simulator where
 import Aetherling.Declarations.Sequence
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
+import Aetherling.Types.Isomorphisms
 import Data.Typeable
 import Unsafe.Coerce
 import qualified Data.Vector.Sized as V
@@ -15,42 +16,40 @@ instance Sequence_Language Simulator where
   id x = return x
 
   absC (Atom_Int x) = return $ Atom_Int $ abs x
-  absC _ = fail "absC simulator must receive an Atom_Int"
+  absC _ = fail $ fail_message "absC" "Atom_Int"
   
   notC (Atom_Bit x) = return $ Atom_Bit $ not x
-  notC _ = fail "absC simulator must receive an Atom_Bit"
+  notC _ = fail $ fail_message "absC" "Atom_Bit"
 
   -- binary operators
   addC (Atom_Int x) (Atom_Int y) = return $ Atom_Int $ x+y
-  addC _ _ = fail "addC simulator must received 2 Atom_Int values"
+  addC _ _ = fail $ fail_message "addC" "Atom_Int's"
 
   eqC x y = return $ Atom_Bit $ x == y 
 
   -- generators
   lut_genC xs (Atom_Int i) | i < length xs = return $ xs !! i 
   lut_genC xs (Atom_Int i) = fail "lut lookup index out of bounds"
-  lut_genC _ _ = fail "lut must receive an Atom_Int"
+  lut_genC _ _ = fail $ fail_message "lut_genC" "Atom_Int"
 
   const_genC x = return x
 
-{-
   -- sequence operators
-  up_1dC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
-             Check_Type_Is_Atom a, Typeable (Proxy a)) =>
-    Proxy n -> Seq 1 a -> m (Seq n a)
+  up_1dC proxyN (Seq elem) = return $ Seq $
+    V.replicate' proxyN $ V.head elem
+  up_1dC _ _ = fail $ fail_message "up_1dC" "Seq"
 
-  down_1dC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
-                Check_Type_Is_Atom a, Typeable (Proxy a)) =>
-    Proxy n -> Seq n a -> m (Seq 1 a)
+  down_1dC proxyN (Seq vec) = return $ Seq $
+    V.replicate' (Proxy @1) $ V.head vec
+  down_1dC _ _ = fail $ fail_message "down_1dC" "Seq"
 
-  partitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni) =>
-    Proxy no -> Proxy ni ->
-    Seq (no GHC.TypeLits.* ni) a -> m (Seq no (Seq ni a))
+  partitionC _ proxy_ni unnested_seq =
+    return $ seqToSeqOfSeq proxy_ni unnested_seq 
 
-  unpartitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni) =>
-    Proxy no -> Proxy ni ->
-    Seq no (Seq ni a) -> m (Seq (no GHC.TypeLits.* ni) a)
+  unpartitionC _ _ unflattened_seq =
+    return $ seqOfSeqToSeq unflattened_seq
 
+ {-
   -- higher order operators
   mapC :: (KnownNat n) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
@@ -76,9 +75,12 @@ instance Sequence_Language Simulator where
       seq_all_args f | is_function f =
                        V.zipWith ($)
 -}
-    
+
   -- composition operators
   (>>>) f g x = f x >>= g
+
+fail_message fName tName = fName ++ " must receive " ++ tName ++
+  "not " ++ tName ++ "_Wires or " ++ tName ++ "_Resources."
 
 data Simulator a = Simulator a
   deriving (Show, Eq, Functor)
