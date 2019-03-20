@@ -1,6 +1,9 @@
 module Aetherling.Interpretations.Simulator where
 import Aetherling.Declarations.Sequence
 import Aetherling.Types.Declarations
+import Aetherling.Types.Functions
+import Data.Typeable
+import qualified Data.Vector.Sized as V
 
 simulate :: Simulator a -> a
 simulate (Simulator a) = a
@@ -10,24 +13,25 @@ instance Sequence_Language Simulator where
   id x = return x
 
   absC (Atom_Int x) = return $ Atom_Int $ abs x
-  absC _ = fail "absC simulator must receive an int"
+  absC _ = fail "absC simulator must receive an Atom_Int"
   
   notC (Atom_Bit x) = return $ Atom_Bit $ not x
-  notC _ = fail "absC simulator must receive a bit"
+  notC _ = fail "absC simulator must receive an Atom_Bit"
 
-{-
   -- binary operators
-  addC :: Atom_Tuple Atom_Int Atom_Int -> m Atom_Int
-  eqC :: (Check_Type_Is_Atom a) =>
-    Atom_Tuple a a -> m Atom_Bit
+  addC (Atom_Int x) (Atom_Int y) = return $ Atom_Int $ x+y
+  addC _ _ = fail "addC simulator must received 2 Atom_Int values"
+
+  eqC x y = return $ Atom_Bit $ x == y 
 
   -- generators
-  lut_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
-    [a] -> Atom_Int -> m a
+  lut_genC xs (Atom_Int i) | i < length xs = return $ xs !! i 
+  lut_genC xs (Atom_Int i) = fail "lut lookup index out of bounds"
+  lut_genC _ _ = fail "lut must receive an Atom_Int"
 
-  const_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
-    a -> Atom_Unit -> m a
+  const_genC x = return x
 
+{-
   -- sequence operators
   up_1dC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
              Check_Type_Is_Atom a, Typeable (Proxy a)) =>
@@ -49,20 +53,15 @@ instance Sequence_Language Simulator where
   mapC :: (KnownNat n) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
-  -- tuple operations
-  fstC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
-    Atom_Tuple a b -> m a
-  sndC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
-    Atom_Tuple a b -> m b
-  nthC :: (KnownNat i, KnownNat n, (i+1) <= n) =>
-    Proxy i -> Atom_NTuple n a -> m a
-
-  zipC :: (Check_Types_Conform a b) =>
-    a -> b -> m (Zipped_Types a b)
-
-  -- composition operators
-  (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
+  mapC proxyN f |
+    typeOf f == typeOf Atom_Unit {-||
+    typeOf f == typeOf Atom_Bit True ||
+    typeOf f == typeOf Atom_Int 1-} =
+    return $ Seq $ V.replicate' proxyN f
+    
  -} 
+  -- composition operators
+  (>>>) f g x = f x >>= g
 
 data Simulator a = Simulator a
   deriving (Show, Eq, Functor)

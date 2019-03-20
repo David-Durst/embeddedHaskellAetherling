@@ -16,7 +16,7 @@ class Monad m => Sequence_Language m where
 
   -- binary operators
   addC :: Atom_Int -> Atom_Int -> m Atom_Int
-  eqC :: (Check_Type_Is_Atom a) =>
+  eqC :: (Check_Type_Is_Atom a, Eq a) =>
     a -> a -> m Atom_Bit
 
   -- generators
@@ -44,7 +44,8 @@ class Monad m => Sequence_Language m where
     Seq no (Seq ni a) -> m (Seq (no GHC.TypeLits.* ni) a)
 
   -- higher order operators
-  mapC :: (KnownNat n) => Proxy n -> a -> m (Type_Lifted_To_Seq n a)
+  mapC :: (KnownNat n, Typeable a) => Proxy n ->
+    a -> m (Type_Lifted_To_Seq n a)
 
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)

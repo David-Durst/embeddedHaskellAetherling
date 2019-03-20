@@ -17,7 +17,7 @@ class Monad m => Space_Time_Language m where
 
   -- binary operators
   addC :: Atom_Int -> Atom_Int -> m Atom_Int
-  eqC :: (Check_Type_Is_Atom a) => a -> a -> m Atom_Bit
+  eqC :: (Check_Type_Is_Atom a, Eq a) => a -> a -> m Atom_Bit
 
   -- generators
   lut_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
