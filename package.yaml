@@ -44,7 +44,7 @@ ghc-options:
     #- -fplugin GHC.TypeLits.KnownNat.Solver
 
 library:
-  source-dirs: src/
+  source-dirs: src/Core
   default-extensions:
     - DataKinds
     - TypeOperators
