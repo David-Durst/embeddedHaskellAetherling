@@ -3,7 +3,9 @@ import Aetherling.Declarations.Sequence
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
 import Data.Typeable
+import Unsafe.Coerce
 import qualified Data.Vector.Sized as V
+  
 
 simulate :: Simulator a -> a
 simulate (Simulator a) = a
@@ -53,13 +55,28 @@ instance Sequence_Language Simulator where
   mapC :: (KnownNat n) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
-  mapC proxyN f |
-    typeOf f == typeOf Atom_Unit {-||
-    typeOf f == typeOf Atom_Bit True ||
-    typeOf f == typeOf Atom_Int 1-} =
-    return $ Seq $ V.replicate' proxyN f
-    
  -} 
+  mapC proxyN f |
+    typeOf f == typeOf Atom_Unit || 
+    typeOf f == typeOf (Atom_Bit True) ||
+    typeOf f == typeOf (Atom_Int 1) =
+    -- I need to say that Seq n a is the same as
+    -- Type_Lifted_To_Seq n a. I know this as I'm only
+    -- allowing things that are not functions in here.
+    return $ unsafeCoerce $ Seq $ V.replicate' proxyN f
+  -- only do following on functions
+  {-
+  mapC proxyN f |
+    is_function f =
+    return $ unsafeCoerce $ seq_all_args vector_of_fs
+    where
+      f_as_function :: 
+      vector_of_fs = V.replicate' proxyN f
+      is_function f = L.isInfixOf "->" $ show $ typeOf f
+      seq_all_args f | is_function f =
+                       V.zipWith ($)
+-}
+    
   -- composition operators
   (>>>) f g x = f x >>= g
 
