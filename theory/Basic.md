@@ -6,42 +6,62 @@ The sequence language is a combinator language for data flow programs with stand
 Programs in the language are **unscheduled**: it is unspecified whether operations area parallel or sequential. 
 There is no clear interpretation of unscheduled programs as hardware accelerators.
 
-## Types
-There are two collection types, tuples and sequences. A tuple enables the unary, combinator operators to accept multiple arguments. A sequence shows how many elements an operator processes. 
+## Atom Types
+The sequence language has two parts. The first part of the sequence language is the atoms. 
+Atoms are individual values that are processed by the standard arithmetic and boolean operators. 
+The atomic types describe these values and the operators on them. 
 
 1. `Int` - integer
-2. `Tuple n t` - homogeneous ntuple
 2. `t x t'` - heterogeneous tuple
-3. `Seq n t` - homogeneous, fixed-length sequence
 4. `t -> t'` - function
 
-## Type Constraints
-These ensure that functions can only be called with the correct input types.
-1. `Check_Conforming (t1 :: Seq n t) (t2 :: Seq n t') = Check_Conforming t t'`
-1. `Check_Conforming (t1 :: Int Or Tuple Or ()) (t2 :: Int Or Tuple Or ()) = True`
-1. `Check_Conforming _ _ = False`
+Even though tuples are collections of data rather than individual values, we include them in the atomic group. 
+Tuples are used to describe the types of atomic arithemtic operators, such as `Add`. 
 
-## Type Constructors
-These create types from other types. They are modeled after Haskell's type families.
-1. `Zipped_Seqs (t1 :: Seq n t) (t2 :: Seq n t') = Seq n (Zipped_Seqs t t')`
-1. `Zipped_Seqs (t1 :: Int Or Tuple Or ()) (t2 :: Int Or Tuple Or ()) = t1 x t2`
-1. `Zipped_Seqs _ _ = Error`
-1. `Add_Unit_To_Type (t :: Int Or Tuple Or ()) = t x ()`
-1. `Add_Unit_To_Type _ = Error`
-
-## Operators
+## Atom Operators
 1. `Id :: t -> t`
-1. `Const_Gen n :: () -> Int`
+1. `Const :: t -> t`
+1. `Const_Gen :: t -> () -> t`
 1. `Add :: (Int x Int) -> Int`
-2. `Map n :: (t -> t') -> Seq n t -> Seq n t'`
-3. `Up_1d n :: Seq 1 t -> Seq n t`
-4. `Down_1d n :: Seq n t -> Seq 1 t`
 1. `Fst :: (t x t') -> t`
 1. `Snd :: (t x t') -> t'`
-5. `Zip :: Check_Conforming t1 t2 => Seq n t1 -> Seq n t2 -> Seq n (Zipped_Seqs t1 t2)`
-6. `Add_Unit t :: t -> (Add_Unit_To_Type t)`
+5. `Zip :: t1 -> t2 -> t1 x t2`
+
+## Sequence Types
+The second part of the language lifts the atomic values and functions onto fixed-length collections.
+
+1. `Seq n t` - homogeneous, fixed-length sequence
+
+`Seq` is a functor. It is a fixed length version of the `[]` list functor in Haskell. 
+`Seq n t` lifts a type `t` onto a sequence of `n` elements of type `t`. 
+The `Map` operator in the below operator section is `Seq`'s `fmap`. 
+`Map` lifts functions from `t -> t'` to `Seq n t -> Seq n t'`. 
+
+**Pat** - Is this enough of a callout to the fact that `Seq` is a functor? I really dislike making it its own section. Making a whole section about `Seq` due to it being a functor overplays its differences from the other types. Both `t x t'` and `t -> t'` are also functors when one type is applied.
+
+## Sequence Operators
+1. `Map n :: (t -> t') -> Seq n t -> Seq n t'`
+1. `Map2 n :: (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
+3. `Up_1d n :: Seq 1 t -> Seq n t`
+4. `Down_1d n :: Seq n t -> Seq 1 t`
 7. `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)`
 7. `Unpartition no ni :: Seq no (Seq ni t) -> Seq (no*ni) t`
+
+Note: Seq must also be an applicative functor. What Aetherling calls `Map2` is equivalent to Haskell's `liftA2` for applicative functors.
+
+## Isomorphisms
+`Seq (no*ni) t` and `Seq no (Seq ni t)` are isomorphic for all choices of `no` and `ni`. 
+They are both objects in the category of types. 
+`Partition no ni` and `Unpartition no ni` are the operators for converting between the types in a way that preserves the identity function. 
+```
+Unpartition no ni . Partition no ni == Id
+```
+
+The following commutativity diagram shows that:
+1. For any function `f :: Seq (no*ni) t -> Seq (no*ni) f` there is a function `f' :: Seq no (Seq ni t) -> Seq no (Seq ni t')`. 
+1. The inputs and outputs of `f` and `f'`  are equivalent up to isomorphism. 
+
+![General Isomorphism Diagram](isomorphism_general.png "General Isomorphism Diagram")
 
 # Space-Time IR
 The space-time IR defines how to interpret the data flow programs as hardware accelerators. 
@@ -117,7 +137,7 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 1. `area(Id) = {0, 0, 0}`
 1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
 1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
-5. `Zip`, `Fst`, `Snd`, and `Add_Unit` have area. They are just used for connecting other operators.
+5. `Zip`, `Fst`, `Snd`, and `Add_Unit` don't have area. They are just used for connecting other operators.
 
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
