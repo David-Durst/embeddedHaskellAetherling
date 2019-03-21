@@ -50,9 +50,9 @@ The `Map` operator in the below operator section is `Seq`'s `fmap`.
 Note: Seq must also be an applicative functor. What Aetherling calls `Map2` is equivalent to Haskell's `liftA2` for applicative functors.
 
 ## Isomorphisms
-`Seq (no*ni) t` and `Seq no (Seq ni t)` are isomorphic for all choices of `no` and `ni`. 
-They are both objects in the category of types. 
-`Partition no ni` and `Unpartition no ni` are the operators for converting between the types in a way that preserves the identity function. 
+`Partition no ni` and `Unpartition no ni` form an isomorphism between the types `Seq (no*ni) t` and `Seq no (Seq ni t)` for all choices of `no` and `ni`. 
+Both types are objects in the category of types. 
+`Partition` and `Unpartition` convert between the types in a way that preserves the identity function. 
 ```
 Unpartition no ni . Partition no ni == Id
 ```
@@ -67,7 +67,9 @@ Specializing this diagram for `Seq` proves:
 
 We can repeatedly apply this isomorphism to convert between a flat `Seq` and any arbitrarily nested `Seq`
 
-We will use these isomorphisms to produce Aetherling's rewrite rules that lower from the sequence language into the space-time IR.
+We will use these isomorphisms to produce Aetherling's rewrite rules that:
+1. lower from the sequence language into the space-time IR.
+1. schedule programs in the space-time IR.
 
 # Space-Time IR
 The space-time IR defines how to interpret the data flow programs as hardware accelerators. 
