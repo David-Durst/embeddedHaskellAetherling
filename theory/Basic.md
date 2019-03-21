@@ -57,11 +57,16 @@ They are both objects in the category of types.
 Unpartition no ni . Partition no ni == Id
 ```
 
-The following commutativity diagram shows that:
+The following commutativity diagram shows the relationship between functions on isomorphic types. 
+Specializing this diagram for `Seq` proves:
 1. For any function `f :: Seq (no*ni) t -> Seq (no*ni) f` there is a function `f' :: Seq no (Seq ni t) -> Seq no (Seq ni t')`. 
 1. The inputs and outputs of `f` and `f'`  are equivalent up to isomorphism. 
 
 ![General Isomorphism Diagram](isomorphism_general.png "General Isomorphism Diagram")
+
+We can repeatedly apply this isomorphism to convert between a flat `Seq` and any arbitrarily nested `Seq`
+
+We will use these isomorphisms to produce Aetherling's rewrite rules that lower from the sequence language into the space-time IR.
 
 # Space-Time IR
 The space-time IR defines how to interpret the data flow programs as hardware accelerators. 
