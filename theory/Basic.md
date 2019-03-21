@@ -77,27 +77,71 @@ Programs in the IR are **scheduled**: the parallelism of all operators is specif
 An operator can be parallel (scheduled in space) or sequential (scheduled in time).
 
 ## Single-Rate Pipelines
-A rate (or throughput) is the average number of tokens per clock when processing a sequence.
-Tokens are `Int`s or tuples, the types unaffected by the rewrite rules (see below).
+A rate (or throughput) is the average number of atoms per clock when processing a sequence.
 Operators and pipelines have both input throughputs and output throughputs.
 A **single-rate pipeline** is a pipeline of operators in which all input and output throughputs are equal. 
 
 ### Types
 Sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`). 
+`SSeq`s and `TSeq`s define the number of clock cycles over which an operator accepts output or emits input. 
+They also define the data type accepted or emitted by the operator each clock cycle.
+
+A period for a `SSeq n t` or `TSeq n t` is the number of clock cycles required for an operator to accept or emit one `t`.
+If `t` is an atomic type, then the period is 1.
 
 1. `SSeq n t` - homogeneous, fixed-length sequence in space. This sequence is parallel.
-    1. An `SSeq` materializes `n` values of type `t` over one period.
+    1. An operator that produces a `SSeq` emits `n` values of type `t` over one period. 
 3. `TSeq n v t` - homogeneous, fixed-length sequence in time. This sequence is sequential.
     1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more in the multi-rate pipelines section.
-    1. A `TSeq` materializes `n` values of type `t` over `(n+v)` periods.
+    1. An operator that produces a `TSeq` emits `n` values of type `t` over `(n+v)` periods.
+     
+#### Period Example
+`SSeq` and `TSeq` are defined in terms of periods rather than clock cycles in order to support nested sequence types.
+We will demonstrate the need for the term period first by showing two examples where a period is the same as a clock, and then showing a nested example where the two are different.
 
-**Note:** A period is one or more clock cycles. We use the term period as each `t` may be a nested `TSeq` that takes multiple clock cycles.
-        
+An operator `SSeq 5 Int -> SSeq 5 Int` accepts and emits 5 ints each clock. An `SSeq` takes one period. Since `Int` is an atomic type, a period is one clock.
+
+An operator `TSeq 5 1 Int -> TSeq 1 5 Int` accepts ints on five of six periods. It accepts nothing on the sixth period. Note that these periods can be in any order. A period is one clock because `Int` is an atomic type.
+
+An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3 0 Int` on five of six periods. A period is three clocks as each `TSeq 3 0 Int` requires three clocks.
+
 ### Operators
 1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 
+### Area
+The hardware implementation of each operator requires resources on the hardware accelerator.
+We model resource requirements as three types of area:
+
+1. **Compute Area** is relative to a one-bit adder. 
+For example, `Add` for an eight bit integer has eight compute units of area as it is roughly equivalent to eight one bit adders.
+1. **Storage Area** is relative to a one-bit register. 
+1. **Wire Area** is relative to one-bit wire connecting two components. 
+The wiring is for connecting composed operators.
+To avoid double counting wiring area, we only consider an operator's output wires.
+
+We represent area as the vector `{compute_area, storage_area, wire_area}`. 
+The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
+`num_bits` returns the number of bits in an `Int` or tuple type.
+
+1. `area(Map_s n f) = n * area(f)`
+2. `area(Map_t n f) = area(f)`
+1. `area(Id) = {0, 0, 0}`
+1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
+1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
+5. `Zip`, `Fst`, `Snd`, and `Add_Unit` don't have area. They are just used for connecting other operators.
+
+### Time
+The hardware implementation of each operator requires a statically known number of clock cycles to accept and emit its sequences.
+The type signature of an operator specifies the number of clock cycles it requires. 
+
+1. `time(f :: TSeq n v t -> TSeq n' v' t') = (n+v)`
+
+**Axiom** - For all operators in the space-time IR, the input and output sequences must require the same number of clock cycles.
 ### Throughput
+These quantities determine the throughput of each specify the throughput of operators. 
+the the number of clock cycles and the data type accept and emitted on each clock cycle and time of operators. Fr
+
 A throughput has two parts: the token type and the rate of tokens per clock. 
 We represent this as `rate_numerator token_type per rate_denominator clocks`.
 
@@ -124,29 +168,6 @@ They have throughputs without being lowered to the space-time IR.
     1. `input_throughput(Add) = 1 (Int x Int) per 1 clocks`
     1. `output_throughput(Add) = 1 Int per 1 clocks`
 5. `Zip`, `Fst`, `Snd`, and `Add_Unit` have no throughput. They are just used for connecting other operators.
-
-### Area
-The hardware implementation of each operator requires resources on the chip.
-We model resource requirements as three types of area:
-
-1. **Compute Area** is relative to a one-bit adder. 
-For example, `Add` for an eight bit integer has eight compute units of area as it is roughly equivalent to eight one bit adders.
-1. **Storage Area** is relative to a one-bit register. 
-1. **Wire Area** is relative to one-bit wire connecting two components. 
-The wiring is for connecting composed operators.
-To avoid double counting wiring area, we only consider an operator's output wires.
-
-We represent area as the vector `{compute_area, storage_area, wire_area}`. 
-The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
-`num_bits` returns the number of bits in an `Int` or tuple type.
-
-1. `area(Map_s n f) = n * area(f)`
-2. `area(Map_t n f) = area(f)`
-1. `area(Id) = {0, 0, 0}`
-1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
-1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
-5. `Zip`, `Fst`, `Snd`, and `Add_Unit` don't have area. They are just used for connecting other operators.
-
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
 If two functions are composed (such as `g . f`), the output throughput of the producer function `f` must equal the input of the consumer function `g`.
