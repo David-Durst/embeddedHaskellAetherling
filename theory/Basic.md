@@ -58,11 +58,12 @@ Unpartition no ni . Partition no ni == Id
 ```
 
 The following commutativity diagram shows the relationship between functions on isomorphic types. 
-Specializing this diagram for `Seq` proves:
-1. For any function `f :: Seq (no*ni) t -> Seq (no*ni) f` there is a function `f' :: Seq no (Seq ni t) -> Seq no (Seq ni t')`. 
-1. The inputs and outputs of `f` and `f'`  are equivalent up to isomorphism. 
 
 ![General Isomorphism Diagram](isomorphism_general.png "General Isomorphism Diagram")
+
+Specializing this diagram for `Seq` proves:
+1. For any function `f :: Seq (no*ni) t -> Seq (no*ni) t` there is a function `f' :: Seq no (Seq ni t) -> Seq no (Seq ni t')`. 
+1. The inputs and outputs of `f` and `f'`  are equivalent up to isomorphism. 
 
 We can repeatedly apply this isomorphism to convert between a flat `Seq` and any arbitrarily nested `Seq`
 
