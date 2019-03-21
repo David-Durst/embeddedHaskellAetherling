@@ -37,6 +37,8 @@ The second part of the language lifts the atomic values and functions onto fixed
 The `Map` operator in the below operator section is `Seq`'s `fmap`. 
 `Map` lifts functions from `t -> t'` to `Seq n t -> Seq n t'`. 
 
+We do not allow sequences of functions.
+
 **Pat** - Is this enough of a callout to the fact that `Seq` is a functor? I really dislike making it its own section. Making a whole section about `Seq` due to it being a functor overplays its differences from the other types. Both `t x t'` and `t -> t'` are also functors when one type is applied.
 
 ## Sequence Operators
@@ -47,7 +49,7 @@ The `Map` operator in the below operator section is `Seq`'s `fmap`.
 7. `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)`
 7. `Unpartition no ni :: Seq no (Seq ni t) -> Seq (no*ni) t`
 
-Note: Seq must also be an applicative functor. What Aetherling calls `Map2` is equivalent to Haskell's `liftA2` for applicative functors.
+Note: Seq is also an applicative functor. Aetherling's `Map2` is equivalent to Haskell's `liftA2` for applicative functors.
 
 ## Isomorphisms
 `Partition no ni` and `Unpartition no ni` form an isomorphism between the types `Seq (no*ni) t` and `Seq no (Seq ni t)` for all choices of `no` and `ni`. 
@@ -84,7 +86,7 @@ A **single-rate pipeline** is a pipeline of operators in which all input and out
 ### Types
 Sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`). 
 `SSeq`s and `TSeq`s define the number of clock cycles over which an operator accepts output or emits input. 
-They also define the data type accepted or emitted by the operator each clock cycle.
+They also define the atom data type accepted or emitted by the operator. 
 
 A period for a `SSeq n t` or `TSeq n t` is the number of clock cycles required for an operator to accept or emit one `t`.
 If `t` is an atomic type, then the period is 1.
@@ -97,7 +99,7 @@ If `t` is an atomic type, then the period is 1.
      
 #### Period Example
 `SSeq` and `TSeq` are defined in terms of periods rather than clock cycles in order to support nested sequence types.
-We will demonstrate the need for the term period first by showing two examples where a period is the same as a clock, and then showing a nested example where the two are different.
+We demonstrate the need for the term period first by showing two examples where a period is the same as a clock, and then showing a nested example where the two are different.
 
 An operator `SSeq 5 Int -> SSeq 5 Int` accepts and emits 5 ints each clock. An `SSeq` takes one period. Since `Int` is an atomic type, a period is one clock.
 
@@ -105,12 +107,48 @@ An operator `TSeq 5 1 Int -> TSeq 1 5 Int` accepts ints on five of six periods. 
 
 An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3 0 Int` on five of six periods. A period is three clocks as each `TSeq 3 0 Int` requires three clocks.
 
+### Type Time
+`type_time(t)` is the number of clock cycles needed for an operator to accept or emit one `t`.
+`type_time` formalizes the above definitions of `TSeq` and `SSeq`.
+
+1. `type_time(Int) = 1`
+1. `type_time(t x t') = 1`
+1. `type_time(SSeq n t) = n * type_time(t)`
+1. `type_time(TSeq n v t) = (n+v) * type_time(t)`
+
+`time(f)` is the number of clock cycles required for a space-time operator `f`. 
+`time(f :: t -> t') = type_time(t)`. 
+We introduce the `time` operator, even though it is an alias for `type_time`, to more succinctly discuss an operator's time. 
+Below, we prove that `time(f) == type_time(t')`.
+
+### Parallelism
+`type_parallelism` is the number of atoms accepted or emitted by an operator on each utilized clock cycle. 
+
+1. `type_parallelism(Int) = 1`
+1. `type_parallelism(t x t') = 1`
+1. `type_parallelism(SSeq n t) = n * type_time(t)`
+1. `type_parallelism(TSeq n v t) = type_time(t)`
+
+`input_parallelism(f)` and `output_parallelism(f)` define an operator's parallelism.
+
+1. `input_parallelism(f :: t -> t') = type_parallelism(t)`
+1. `output_parallelism(f :: t -> t') = type_parallelism(t')`
+
+### Type Atoms
+`type_atom` is the atom type used in a potentially nested `TSeq` or `SSeq`.
+
+1. `type_atom(Int) = Int`
+1. `type_atom(t x t') = t x t'`
+1. `type_atom(SSeq n t) = type_atom(t)`
+1. `type_atom(TSeq n t) = type_atom(t)`
+
 ### Operators
 1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 
+
 ### Area
-The hardware implementation of each operator requires resources on the hardware accelerator.
+`area(f)` is the amount of area on the hardware accelerator required for a space-time operator `f`.
 We model resource requirements as three types of area:
 
 1. **Compute Area** is relative to a one-bit adder. 
@@ -138,6 +176,7 @@ The type signature of an operator specifies the number of clock cycles it requir
 1. `time(f :: TSeq n v t -> TSeq n' v' t') = (n+v)`
 
 **Axiom** - For all operators in the space-time IR, the input and output sequences must require the same number of clock cycles.
+
 ### Throughput
 These quantities determine the throughput of each specify the throughput of operators. 
 the the number of clock cycles and the data type accept and emitted on each clock cycle and time of operators. Fr
@@ -168,6 +207,7 @@ They have throughputs without being lowered to the space-time IR.
     1. `input_throughput(Add) = 1 (Int x Int) per 1 clocks`
     1. `output_throughput(Add) = 1 Int per 1 clocks`
 5. `Zip`, `Fst`, `Snd`, and `Add_Unit` have no throughput. They are just used for connecting other operators.
+
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
 If two functions are composed (such as `g . f`), the output throughput of the producer function `f` must equal the input of the consumer function `g`.
