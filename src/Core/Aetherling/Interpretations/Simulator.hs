@@ -8,12 +8,12 @@ import Unsafe.Coerce
 import qualified Data.Vector.Sized as V
   
 
-simulate :: Simulator a -> a
-simulate (Simulator a) = a
+simulate :: Simulation_Env a -> a
+simulate (Simulation_Env a) = a
 
-instance Sequence_Language Simulator where
+instance Sequence_Language Simulation_Env where
   -- unary operators
-  id x = return x
+  idC x = return x
 
   absC (Atom_Int x) = return $ Atom_Int $ abs x
   absC _ = fail $ fail_message "absC" "Atom_Int"
@@ -82,13 +82,13 @@ instance Sequence_Language Simulator where
 fail_message fName tName = fName ++ " must receive " ++ tName ++
   "not " ++ tName ++ "_Wires or " ++ tName ++ "_Resources."
 
-data Simulator a = Simulator a
+data Simulation_Env a = Simulation_Env a
   deriving (Show, Eq, Functor)
 
-instance Applicative Simulator where
-  pure a = Simulator a
-  Simulator f <*> Simulator a = Simulator $ f a
+instance Applicative Simulation_Env where
+  pure a = Simulation_Env a
+  Simulation_Env f <*> Simulation_Env a = Simulation_Env $ f a
 
-instance Monad Simulator where
-  (Simulator a) >>= f = f a
-  return a = Simulator a
+instance Monad Simulation_Env where
+  (Simulation_Env a) >>= f = f a
+  return a = Simulation_Env a

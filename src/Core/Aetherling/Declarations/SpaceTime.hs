@@ -11,7 +11,7 @@ import qualified Data.Vector.Sized as V
 
 class Monad m => Space_Time_Language m where
   -- unary operators
-  id :: (Check_Type_Is_Atom a) => a -> m a
+  idC :: (Check_Type_Is_Atom a) => a -> m a
   absC :: Atom_Int -> m Atom_Int
   notC :: Atom_Bit -> m Atom_Bit
 

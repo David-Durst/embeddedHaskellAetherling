@@ -15,40 +15,35 @@ to wire to the next operator
 resources of a pipeline
 -}
 type Wires = [String]
-data Resources = Resources {
-  computeResources :: Int,
-  memoryResources :: Int,
-  wireResources :: Int
-  } deriving (Show, Eq)
 
 data Atom_Unit =
   Atom_Unit
   | Atom_Unit_Wires Wires
-  | Atom_Unit_Resources Resources
+  | Atom_Unit_Resources
   deriving (Show, Eq)
 
 data Atom_Bit =
   Atom_Bit Bool
   | Atom_Bit_Wires Wires
-  | Atom_Bit_Resources Resources
+  | Atom_Bit_Resources
   deriving (Show, Eq)
 
 data Atom_Int =
   Atom_Int Int
   | Atom_Int_Wires Wires
-  | Atom_Int_Resources Resources
+  | Atom_Int_Resources
   deriving (Show, Eq)
 
 data Seq n a =
   Seq {sVec :: Vector n a}
   | Seq_Wires Wires
-  | Seq_Resources Resources
+  | Seq_Resources
   deriving (Functor, Show, Eq)
 
 data SSeq n a =
   SSeq {ssVec :: Vector n a}
   | SSeq_Wires Wires
-  | SSeq_Resources Resources
+  | SSeq_Resources
   deriving (Functor, Show, Eq)
 
 -- n is number of elements, v is number of clocks of delay
@@ -56,7 +51,7 @@ data SSeq n a =
 data TSeq n v a =
   TSeq {tsVec :: Vector n a}
   | TSeq_Wires Wires
-  | TSeq_Resources Resources
+  | TSeq_Resources
   deriving (Functor, Show, Eq)
 
 sSSeq0_2 :: SSeq 2 Int
