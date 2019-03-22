@@ -131,7 +131,7 @@ We demonstrate the need for the term period first by showing two examples where 
 
 An operator `SSeq 5 Int -> SSeq 5 Int` accepts and emits 5 ints each period. Since `Int` is an atomic type, a period is one clock.
 
-An operator `TSeq 5 1 Int -> TSeq 1 5 Int` accepts ints on five of six periods. It accepts nothing on the sixth period. Note that these periods can be in any order. A period is one clock because `Int` is an atomic type.
+An operator `TSeq 5 1 Int -> TSeq 1 5 Int` accepts ints on five of six periods. It emits ints on one of six periods. A period is one clock because `Int` is an atomic type.
 
 An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3 0 Int` on five of six periods. A period is three clocks as each `TSeq 3 0 Int` requires three clocks.
 
