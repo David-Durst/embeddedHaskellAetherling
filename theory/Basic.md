@@ -139,7 +139,7 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 `Seq n t` is isomorphic to `SSeq n t` and `TSeq n t` by construction. 
 They are all ordered sequences of the same length. 
 
-Since they are isomorphic, any `f :: Seq n t -> Seq m t'` function must have contextual equivalent versions `f_t :: TSeq n v t -> TSeq m u t'` and `f_s :: SSeq n t -> SSeq m t'`.
+Since they are isomorphic, any `f :: Seq n t -> Seq m t'` function must have contextually equivalent versions `f_t :: TSeq n v t -> TSeq m u t'` and `f_s :: SSeq n t -> SSeq m t'`.
 This is proven in the same way as shown in [the `Seq` isomorphism section.](#sequence-isomorphisms)
 
 We will use these isomorphisms to produce the rewrite rules that convert programs from the sequence language to the space-time.
@@ -147,6 +147,8 @@ We will use these isomorphisms to produce the rewrite rules that convert program
 ### Operators
 1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
+2. `Map2_s n f :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
+2. `Map2_t n f :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
 
 ## Operator Properties
 In order to guarantee time and throughput matching, we must model the time, parallelism, and throughput of operators.
@@ -214,6 +216,8 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 
 1. `area(Map_s n f) = n * area(f)`
 2. `area(Map_t n f) = area(f)`
+1. `area(Map2_s n f) = n * area(f)`
+2. `area(Map2_t n f) = area(f)`
 1. `area(Id) = {0, 0, 0}`
 1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
 1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
@@ -230,7 +234,7 @@ As a reminder:
 - A `TSeq` materializes `n` values of type `t` over `(n+v) * periods to process one t` periods.
 
 An empty period is one in which the sequence does not process new data. `v` enables Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization 
-1. An operator's input and output `TSeq`s must take the same amount of time. Empty clocks can equalize time lengths for `TSeq`s with different `n` parameters. 
+1. The time matching property requires operators' input and output `TSeq`s to take the same amount of time. Empty clocks equalize time lengths for `TSeq`s with different `n` parameters. 
     1. For example, `Up_1d_t` takes in one input on one clock cycle and then repeatedly outputs it for multiple clock cycles. 
     While the output is busy emitting data, the input cannot accept the next value. 
     The empty periods indicate this waiting so that the input and output `TSeq`s take the same amount of time.
@@ -242,44 +246,19 @@ An operator with input and output `TSeq`s that have non-zero `v`s may be unused 
     1. Underutilization is necessary to compose operators in multi-rate pipelines. 
     Consider `Up_1d_t 4 . Map_t 1 Add`.
     `Map_t` must emit an output every fourth clock so that its output throughput matches `Up_1d_t`'s input throughput.
-    To accomplish this rate matching, `Map_t** must be underutilized.
+    To accomplish this rate matching, `Map_t` must be underutilized.
     
 ### Operators
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
+5. `Partition_tt no ni :: TSeq (no*ni) (vo*vi) t -> TSeq no vo (TSeq ni vi t)`
+5. `Unpartition_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) (vo*vi) t`
 5. `Partition_ts no ni :: TSeq 1 (no + v - 1) (SSeq (no*ni) t) -> TSeq no v (SSeq ni t)`
 5. `Unpartition_ts no ni :: TSeq no v (SSeq ni t) -> TSeq 1 (no + v - 1) (SSeq (no*ni) t)`
 5. `Partition_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
 5. `Unpartition_ss no ni :: SSeq no (SSeq ni t) -> SSeq 1 (SSeq (no*ni) t)`
-
-
-### Throughput
-1. `Up_1d_s`
-    1. `input_throughput(Up_1d_s n) = 1 t per 1 clocks`
-    1. `output_throughput(Up_1d_s n) = n t per 1 clocks`
-3. `Up_1d_t`
-    1. `input_throughput(Up_1d_t n) = 1 t per (n+v) clocks`
-    1. `output_throughput(Up_1d_t n) = n t per (n+v) clocks`
-4. `Down_1d_s`
-    1. `input_throughput(Down_1d_s n) = n t per 1 clocks`
-    1. `output_throughput(Down_1d_s n) = 1 t per 1 clocks`
-4. `Down_1d_t`
-    1. `input_throughput(Down_1d_t n) = n t per (n+v) clocks`
-    1. `output_throughput(Down_1d_t n) = 1 t per (n+v) clocks`
-5. `Partition_ts`
-    1. `input_throughput(Partition_ts no ni) = (no*ni) t per (no+v) clocks`
-    1. `output_throughput(Partition_ts no ni) = (no*ni) t per (no+v) clocks`
-5. `Unpartition_ts`
-    1. `input_throughput(Unpartition_ts n ni) = (no*ni) t per (no+v) clocks`
-    1. `output_throughput(Unpartition_ts n ni) = (no*ni) t per (no+v) clocks`
-5. `Partition_ss`
-    1. `input_throughput(Partition_ss no ni) = (no*ni) t per 1 clocks`
-    1. `output_throughput(Partition_ss no ni) = (no*ni) t per 1 clocks`
-5. `Unpartition_ss`
-    1. `input_throughput(Unpartition_ss no ni) = (no*ni) t per 1 clocks`
-    1. `output_throughput(Unpartition_ss no ni) = (no*ni) t per 1 clocks`
 
 ### Area
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
@@ -294,7 +273,20 @@ An operator with input and output `TSeq`s that have non-zero `v`s may be unused 
 Many of the sequential operators require a counter to track clock cycles.
 1. `area(counter) = {num_bits(Int), num_bits(Int), num_bits(Int)}`
 
-## Rewrite Rules
+### Space-Time Isomorphisms
+Just like [`Partition` and `Unpartition` for `Seq`](#sequence-isomorphisms), the partitions and unpartitions in the space-time IR form isomorphisms between nested combinations of `TSeq` and `SSeq`.
+
+These isomorphisms, along with those between `Seq` and `SSeq` and between different `Seq` nestings, mean that any `f :: Seq n t -> Seq m t'` function must have contextually equivalent versions with any nesting of `TSeq`s and `SSeq`s. 
+The different nestings are different schedules. 
+`f :: SSeq (no*ni) t -> SSeq (no*ni) t` is more parallel than `f :: TSeq (no*ni) 0 t -> TSeq (no*ni) 0 t`
+`f :: TSeq no (SSeq ni t) -> TSeq no (SSeq ni t)` is a schedule that trades off parallelism and area.
+It is more parallel than the pure `TSeq` schedule, but uses fewer resources than the `SSeq` schedule.
+
+# Rewrite Rules
+The rewrite rules show how to use the above isomorphisms to schedule Aetherling operators. 
+Each operator in the sequence language is rewritten as a contextually equivalent, fully parallel operator in the space-time IR.
+Then, this operator is converted to a less parallel one in order to trade off area and throughput.
+
 ### Map
 1. Sequence To Space - `Map n f -> Map_t 1 (Map_s n f)`
     1. `Map n f :: Seq n t -> Seq n t'`
@@ -304,6 +296,8 @@ Many of the sequential operators require a counter to track clock cycles.
     1. `Map_t no (Map_s ni f) :: TSeq no v (SSeq ni t) -> TSeq no v (SSeq ni t')`
     1. `Unpartition_ts no ni . Map_t no (Map_s ni f) . Partition_ts no ni :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq (no*ni) t)'`
     
+`Map2` has the same rewrite rules as `Map`.
+
 Note: I dropped the underutilization computation from `TSeq` where it became onerous.
 
 ### Upsample
@@ -326,7 +320,16 @@ Note: I dropped the underutilization computation from `TSeq` where it became one
     1. `Down_1d_t no :: (TSeq no (SSeq ni t)) -> (TSeq 1 (SSeq ni t))`
     1. `Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s ni)) . Down_1d_t no . Partition_ts no ni :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq 1 t)`
 
-### Unpartition_ts/Partition_ts Removal
+### Unpartition/Partition Removal
 1. `Partition_ts no ni . Unpartition_ts no ni = Id`
 **Danger: `Partition_ts . Unpartition_ts` is not really Id in Space-Time. There will be underutilized clocks here. The partition_tsing and unpartition_tsing takes n clocks. However, the interface to both of these functions is just an `SSeq`. The `SSeq` doesn't account for time.**
 2. `Unpartition_ts no ni . Partition_ts no ni = Id`
+
+The same removal rule can be used for `Partition_tt`/`Unpartition_tt` and `Partition_ss`/`Unpartition_ss`.
+
+## Rewrite Rule Correctness
+We prove that applying the rewrite rules to a pipeline:
+
+1. preserves time matching
+2. preserves producer-consumer rate matching
+3. trades-off time and area. Applying the slowdown rewrite rules decrease time without decreasing area. 
