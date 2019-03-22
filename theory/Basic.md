@@ -1,26 +1,24 @@
 # Basic Sequence Language Theory
-Aetherling is a system for expressing data flow pipelines and compiling them to efficient implementations in hardware accelerators.
+Aetherling is a system for compiling data flow pipelines to efficient implementations in hardware accelerators.
 Aetherling uses category theory and dependent types to ensure all expressible programs compile to efficient hardware.
 
 This document's version of Aetherling has the most simple types and operators necessary to get multi-rate pipelines. 
 Section [Multi-Rate Pipelines](#multi-rate-pipelines) explains why these pipelines are the simplest demonstration of the advantages of Aetherling's approach.
 
 # Sequence Language
+Programmers use Aetherling by writing code in the sequence language.
 The sequence language is a combinator language for data flow programs with standard functional programming operators. 
-Programs in the language are **unscheduled**: it is unspecified whether operations area parallel or sequential. 
+Programs in the language are **unscheduled**: it is unspecified whether operations are parallel or sequential. 
 There is no clear interpretation of unscheduled programs as hardware accelerators.
 
 ## Atom Types
 The sequence language has two parts. The first part of the sequence language is the atoms. 
-Atoms are individual values that are processed by the standard arithmetic and boolean operators. 
-The atomic types describe these values and the operators on them. 
+Atoms are standard programming primitives, such as integers. 
+Atoms also include the minimal derived types necessary to express arithmetic and boolean operators on the primitives. 
 
 1. `Int` - integer
 2. `t x t'` - heterogeneous tuple
 4. `t -> t'` - function
-
-Even though tuples are collections of data rather than individual values, we include them in the atomic group. 
-Tuples are used to describe the types of atomic arithemtic operators, such as `Add`. 
 
 ## Atom Operators
 1. `Id :: t -> t`
@@ -41,7 +39,7 @@ The second part of the language lifts the atomic values and functions onto fixed
 The `Map` operator in the below operator section is `Seq`'s `fmap`. 
 `Map` lifts functions from `t -> t'` to `Seq n t -> Seq n t'`. 
 
-We do not allow sequences of functions.
+We do not allow sequences of functions, such as `Seq n (Int -> Int)`.
 
 **Pat** - Is this enough of a callout to the fact that `Seq` is a functor? I really dislike making it its own section. Making a whole section about `Seq` due to it being a functor overplays its differences from the other types. Both `t x t'` and `t -> t'` are also functors when one type is applied.
 
@@ -78,31 +76,52 @@ We will use these isomorphisms to produce Aetherling's rewrite rules that:
 1. schedule programs in the space-time IR.
 
 # Space-Time IR
-The space-time IR defines how to interpret the data flow programs as hardware accelerators. 
-Programs in the IR are **scheduled**: the parallelism of all operators is specified. 
+Aetherling converts the sequence language to a space-time IR. 
+Programs in the IR are **scheduled**: the parallelism of each operators is specified. 
 An operator can be parallel (scheduled in space) or sequential (scheduled in time).
+The space-time IR uses these schedules to interpret the data flow programs as hardware accelerators. 
+
+In hardware accelerators, all operators are implemented using separate hardware components that run in parallel. 
+If two functions are composed (such as `g . f`) in the sequence language, then `f`'s hardware component emits output that is consumed as input by `g`'s component'.
+Operators and pipelines of operators have both input throughputs and output throughputs.
+A **rate** (or **throughput**) is the average number of atoms per clock when processing a sequence.
+The output throughput of the producer function `f` must equal the input of the consumer function `g`.
+This requirement is known as **producer-consumer rate matching**.
+Without rate matching, there will be a bottleneck.
+Either the producer or consumer will stall while waiting for the other one to catch up.
+
+We require producer-consumer rate matching to ensure all pipelines compile to efficient hardware accelerators. 
+Hardware accelerators are efficient if they use minimal compute and storage resources. 
+Matching rates minimizes these resources. 
+1. **Compute** - matching rates ensures all nodes run at the exact rate required by their upstream producers and downstream consumers. 
+Thus, all operators are implemented using the minimal parallelism necessary to achieve the target throughput. 
+(**Note:** this assumes that higher throughput operators requires more resources and lower throughput ones requires less resources.)
+1. **Storage** - matching rates ensure that nodes can perform streaming computation. 
+As soon as a producer emits data, the consumer can start operating on the entire output without buffering. 
+If the producer had a higher throughput, a buffer would be required to store part of the producer's output while the consumer handled a separate piece of the output.
+No buffering between operators means minimal storage resources. 
 
 ## Single-Rate Pipelines
-A rate (or throughput) is the average number of atoms per clock when processing a sequence.
-Operators and pipelines have both input throughputs and output throughputs.
-A **single-rate pipeline** is a pipeline of operators in which all input and output throughputs are equal. 
+We first focus on **single-rate pipelines**, those in which all operators have the same input and output throughputs. 
+These pipelines always satisfy the producer-consumer rate-matching requirement.
 
 ### Types
-Sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`). 
+Aetherling expresses schedules using the type system.
+Operators' input and output sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`). 
 `SSeq`s and `TSeq`s define the number of clock cycles over which an operator accepts output or emits input. 
 They also define the atom data type accepted or emitted by the operator. 
 
 A period for a `SSeq n t` or `TSeq n t` is the number of clock cycles required for an operator to accept or emit one `t`.
 If `t` is an atomic type, then the period is 1.
+`SSeq` and `TSeq` are defined in terms of periods rather than clock cycles in order to support nested sequence types.
 
 1. `SSeq n t` - homogeneous, fixed-length sequence in space. This sequence is parallel.
     1. An operator that produces a `SSeq` emits `n` values of type `t` over one period. 
 3. `TSeq n v t` - homogeneous, fixed-length sequence in time. This sequence is sequential.
-    1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more in the multi-rate pipelines section.
+    1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more in the [multi-rate pipelines section](#multi-rate-pipelines).
     1. An operator that produces a `TSeq` emits `n` values of type `t` over `(n+v)` periods.
      
 #### Period Example
-`SSeq` and `TSeq` are defined in terms of periods rather than clock cycles in order to support nested sequence types.
 We demonstrate the need for the term period first by showing two examples where a period is the same as a clock, and then showing a nested example where the two are different.
 
 An operator `SSeq 5 Int -> SSeq 5 Int` accepts and emits 5 ints each clock. An `SSeq` takes one period. Since `Int` is an atomic type, a period is one clock.
@@ -196,17 +215,6 @@ An operator's throughput is the number of atoms produced or consumed per clock.
 
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
-If two functions are composed (such as `g . f`), the output throughput of the producer function `f` must equal the input of the consumer function `g`.
-This requirement is known as **producer-consumer rate matching**.
-
-We require producer-consumer rate matching to ensure all pipelines compile to efficient hardware accelerators. 
-Hardware accelerators are efficient if they use minimal compute and storage resources. Matching rates minimizes these resources. 
-1. **Compute** - matching rates ensures all nodes run at the exact rate required by their upstream producers and downstream consumers. 
-Thus, all operators are implemented using the minimal parallelism necessary to achieve the target throughput. 
-(**Note:** this assumes that higher throughput operators requires more resources and lower throughput ones requires less resources.)
-1. **Storage** - matching rates ensure that nodes can perform streaming computation. 
-As soon as a producer emits data, the consumer can start operating on it without buffering. 
-No buffering between operators means minimal storage resources. 
 
 ### Types
 Multi-rate modules are expressed in the type system using the `v` parameter of `TSeq n v t`. 
