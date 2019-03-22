@@ -333,3 +333,18 @@ We prove that applying the rewrite rules to a pipeline:
 1. preserves time matching
 2. preserves producer-consumer rate matching
 3. trades-off time and area. Applying the slowdown rewrite rules decrease time without decreasing area. 
+
+### Time Matching
+Need to show:
+1. Base Case - applying rewrite rules converts everything to fully parallel, so all time is 1.
+1. Scheduling Case - applying rewrite rules slows everything down by same amount. Thus, all have same type. This means all time matches
+
+### Rate matching
+Need to show:
+If types amtch, rates match. Do types always match?
+1. Base case - applying rewrite rules converts everything to fully parallel. Since seq types matched before, must match now
+1. Scheduling case - applying rewrite rules slows down everything by same amount
+
+### Time-Area Tradeoffs
+Show for each operator that time value goes up, resources go down by evaluating the resources operator for each one
+
