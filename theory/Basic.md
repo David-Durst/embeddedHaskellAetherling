@@ -129,7 +129,7 @@ If `t` is an atomic type, then the period is 1.
 #### Period Example
 We demonstrate the need for the term period first by showing two examples where a period is the same as a clock, and then showing a nested example where the two are different.
 
-An operator `SSeq 5 Int -> SSeq 5 Int` accepts and emits 5 ints each clock. An `SSeq` takes one period. Since `Int` is an atomic type, a period is one clock.
+An operator `SSeq 5 Int -> SSeq 5 Int` accepts and emits 5 ints each period. An `SSeq` takes one period. Since `Int` is an atomic type, a period is one clock.
 
 An operator `TSeq 5 1 Int -> TSeq 1 5 Int` accepts ints on five of six periods. It accepts nothing on the sixth period. Note that these periods can be in any order. A period is one clock because `Int` is an atomic type.
 
