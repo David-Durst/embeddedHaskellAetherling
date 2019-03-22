@@ -76,29 +76,34 @@ We will use these isomorphisms to produce Aetherling's rewrite rules that:
 1. schedule programs in the space-time IR.
 
 # Space-Time IR
-Aetherling converts the sequence language to a space-time IR. 
+Aetherling lowers the sequence language to a space-time IR. 
 Programs in the IR are **scheduled**: the parallelism of each operators is specified. 
 An operator can be parallel (scheduled in space) or sequential (scheduled in time).
 The space-time IR uses these schedules to interpret the data flow programs as hardware accelerators. 
 
 In hardware accelerators, all operators are implemented using separate hardware components that run in parallel. 
-If two functions are composed (such as `g . f`) in the sequence language, then `f`'s hardware component emits output that is consumed as input by `g`'s component'.
-Operators and pipelines of operators have both input throughputs and output throughputs.
-A **rate** (or **throughput**) is the average number of atoms per clock when processing a sequence.
-The output throughput of the producer function `f` must equal the input of the consumer function `g`.
-This requirement is known as **producer-consumer rate matching**.
-Without rate matching, there will be a bottleneck.
-Either the producer or consumer will stall while waiting for the other one to catch up.
+If two functions are composed in the sequence language (such as `g . f`), they form a pipeline.
+`f`'s hardware component emits output that is consumed as input by `g`'s component'.
+All composed operators in a pipeline must process data over the same amount of time, which we count in clock cycles. 
+This requirement is known as **time matching**
 
-We require producer-consumer rate matching to ensure all pipelines compile to efficient hardware accelerators. 
+In addition to a time property, operators and pipelines also have input throughputs and output throughputs.
+A **throughput** (or **rate**) is the average number of atoms accepted or emitted per clock.
+In a pipeline, the output throughput of each producer function must equal the input throughput of its consumer function.
+In `g . f`, `f`'s output throughput must equal `g`'s input throughput.
+This requirement is known as **producer-consumer rate matching**. 
+
+The first benefit of rate matching is that, together with time matching, it ensures all components in a pipeline operate on the same amount of data over the same clock cycles.
+
+The second benefit of producer-consumer rate matching is that all pipelines compile to efficient hardware accelerators. 
 Hardware accelerators are efficient if they use minimal compute and storage resources. 
 Matching rates minimizes these resources. 
 1. **Compute** - matching rates ensures all nodes run at the exact rate required by their upstream producers and downstream consumers. 
 Thus, all operators are implemented using the minimal parallelism necessary to achieve the target throughput. 
-(**Note:** this assumes that higher throughput operators requires more resources and lower throughput ones requires less resources.)
 1. **Storage** - matching rates ensure that nodes can perform streaming computation. 
 As soon as a producer emits data, the consumer can start operating on the entire output without buffering. 
-If the producer had a higher throughput, a buffer would be required to store part of the producer's output while the consumer handled a separate piece of the output.
+If the producer had a higher throughput, a buffer would be required to store part of the producer's output while the consumer handled a separate piece of it.
+If the producer had a lower throughput, a buffer would be required to collect multiple of the producer's outputs into a single input for the consumer. 
 No buffering between operators means minimal storage resources. 
 
 ## Single-Rate Pipelines
@@ -135,7 +140,9 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 
 ## Operator Properties
-Each space-time operator has the following properties.
+We model the throughput and area (resources) of operators. 
+In order to model throughput, we must model the time 
+These numbers enable us to prove that the schedules match consumer-producer throuhgputs and are resource efficient.
 
 ### Time
 `type_time(t)` is the number of clock cycles needed for an operator to accept or emit one `t`.
