@@ -1,5 +1,9 @@
 # Basic Sequence Language Theory
-This language has the most simple types and operators necessary to get multi-rate pipelines
+Aetherling is a system for expressing data flow pipelines and compiling them to efficient implementations in hardware accelerators.
+Aetherling uses category theory and dependent types to ensure all expressible programs compile to efficient hardware.
+
+This document's version of Aetherling has the most simple types and operators necessary to get multi-rate pipelines. 
+Section [Multi-Rate Pipelines](#multi-rate-pipelines) explains why these pipelines are the simplest demonstration of the advantages of Aetherling's approach.
 
 # Sequence Language
 The sequence language is a combinator language for data flow programs with standard functional programming operators. 
@@ -107,7 +111,14 @@ An operator `TSeq 5 1 Int -> TSeq 1 5 Int` accepts ints on five of six periods. 
 
 An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3 0 Int` on five of six periods. A period is three clocks as each `TSeq 3 0 Int` requires three clocks.
 
-### Type Time
+### Operators
+1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
+2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
+
+## Operator Properties
+Each space-time operator has the following properties.
+
+### Time
 `type_time(t)` is the number of clock cycles needed for an operator to accept or emit one `t`.
 `type_time` formalizes the above definitions of `TSeq` and `SSeq`.
 
@@ -116,7 +127,7 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 1. `type_time(SSeq n t) = n * type_time(t)`
 1. `type_time(TSeq n v t) = (n+v) * type_time(t)`
 
-`time(f)` is the number of clock cycles required for a space-time operator `f`. 
+`time(f)` provide the syntax for applying `type_time` to an operator.
 `time(f :: t -> t') = type_time(t)`. 
 We introduce the `time` operator, even though it is an alias for `type_time`, to more succinctly discuss an operator's time. 
 Below, we prove that `time(f) == type_time(t')`.
@@ -129,7 +140,7 @@ Below, we prove that `time(f) == type_time(t')`.
 1. `type_parallelism(SSeq n t) = n * type_time(t)`
 1. `type_parallelism(TSeq n v t) = type_time(t)`
 
-`input_parallelism(f)` and `output_parallelism(f)` define an operator's parallelism.
+`input_parallelism(f)` and `output_parallelism(f)` provide the syntax for applying `type_parallelism` to an operator.
 
 1. `input_parallelism(f :: t -> t') = type_parallelism(t)`
 1. `output_parallelism(f :: t -> t') = type_parallelism(t')`
@@ -142,10 +153,10 @@ Below, we prove that `time(f) == type_time(t')`.
 1. `type_atom(SSeq n t) = type_atom(t)`
 1. `type_atom(TSeq n t) = type_atom(t)`
 
-### Operators
-1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
-2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
+`input_atom(f)` and `output_atom(f)` provide the syntax for applying `type_atom` to an operator.
 
+1. `input_atom(f :: t -> t') = type_atom(t)`
+1. `output_atom(f :: t -> t') = type_atom(t')`
 
 ### Area
 `area(f)` is the amount of area on the hardware accelerator required for a space-time operator `f`.
@@ -178,35 +189,10 @@ The type signature of an operator specifies the number of clock cycles it requir
 **Axiom** - For all operators in the space-time IR, the input and output sequences must require the same number of clock cycles.
 
 ### Throughput
-These quantities determine the throughput of each specify the throughput of operators. 
-the the number of clock cycles and the data type accept and emitted on each clock cycle and time of operators. Fr
+An operator's throughput is the number of atoms produced or consumed per clock.
 
-A throughput has two parts: the token type and the rate of tokens per clock. 
-We represent this as `rate_numerator token_type per rate_denominator clocks`.
-
-Adding two throughputs creates a tuple of their element types. It does not change the `numerator` or `denominator`.
-Multiplying or dividing a throughput by a scalar changes the `numerator` or `denominator`. It does not change the element type.
-
-1. `Map_s`
-    1. `input_throughput(Map_s n f) = n * input_throughput(f)`
-    1. `output_throughput(Map_s n f) = n * output_throughput(f)`
-2. `Map_t`
-    1. `input_throughput(Map_t n f) = n/(n+v) * input_throughput(f)`
-    1. `output_throughput(Map_t n f) = n/(n+v) * output_throughput(f)`
-
-The following operators do not operate on sequences. 
-They have throughputs without being lowered to the space-time IR.
-
-1. `Id`
-    1. `input_throughput(Id) = 1 t per 1 clocks`
-    1. `output_throughput(Id) = 1 t per 1 clocks`
-1. `Const_Gen n`
-    1. `input_throughput(Const_Gen n) = 1 () per 1 clocks`
-    1. `output_throughput(Const_Gen n) = 1 Int per 1 clocks`
-1. `Add`
-    1. `input_throughput(Add) = 1 (Int x Int) per 1 clocks`
-    1. `output_throughput(Add) = 1 Int per 1 clocks`
-5. `Zip`, `Fst`, `Snd`, and `Add_Unit` have no throughput. They are just used for connecting other operators.
+1. `input_throughput(f) = input_parallelism(f) / time(f)`
+1. `output_throughput(f) = output_parallelism(f) / time(f)`
 
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
