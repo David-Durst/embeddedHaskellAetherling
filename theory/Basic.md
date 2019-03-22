@@ -53,7 +53,7 @@ We do not allow sequences of functions, such as `Seq n (Int -> Int)`.
 
 Note: Seq is also an applicative functor. Aetherling's `Map2` is equivalent to Haskell's `liftA2` for applicative functors.
 
-## Isomorphisms
+## Sequence Isomorphisms
 `Partition no ni` and `Unpartition no ni` form an isomorphism between the types `Seq (no*ni) t` and `Seq no (Seq ni t)` for all choices of `no` and `ni`. 
 Both types are objects in the category of types. 
 `Partition` and `Unpartition` convert between the types in a way that preserves the identity function. 
@@ -110,7 +110,7 @@ No buffering between operators means minimal storage resources.
 We first focus on **single-rate pipelines**, those in which all operators have the same input and output throughputs. 
 These pipelines always satisfy the producer-consumer rate-matching requirement.
 
-### Types
+### Space-Time Types
 Aetherling expresses schedules using the type system.
 Operators' input and output sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`). 
 `SSeq`s and `TSeq`s define the number of clock cycles over which an operator accepts output or emits input. 
@@ -135,28 +135,35 @@ An operator `TSeq 5 1 Int -> TSeq 1 5 Int` accepts ints on five of six periods. 
 
 An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3 0 Int` on five of six periods. A period is three clocks as each `TSeq 3 0 Int` requires three clocks.
 
+### Sequence To Space-Time Isomorphisms
+`Seq n t` is isomorphic to `SSeq n t` and `TSeq n t` by construction. 
+They are all ordered sequences of the same length. 
+
+Since they are isomorphic, any `f :: Seq n t -> Seq m t'` function must have contextual equivalent versions `f_t :: TSeq n v t -> TSeq m u t'` and `f_s :: SSeq n t -> SSeq m t'`.
+This is proven in the same way as shown in [the `Seq` isomorphism section.](#sequence-isomorphisms)
+
+We will use these isomorphisms to produce the rewrite rules that convert programs from the sequence language to the space-time.
+
 ### Operators
 1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 
 ## Operator Properties
-We model the throughput and area (resources) of operators. 
-In order to model throughput, we must model the time 
-These numbers enable us to prove that the schedules match consumer-producer throuhgputs and are resource efficient.
+In order to guarantee time and throughput matching, we must model the time, parallelism, and throughput of operators.
+We also model the resources of operators to prove that our schedules produce efficient hardware accelerators. (We use the terms area and resources interchangeably.)
 
 ### Time
 `type_time(t)` is the number of clock cycles needed for an operator to accept or emit one `t`.
-`type_time` formalizes the above definitions of `TSeq` and `SSeq`.
+`type_time` formalizes the [above definitions](#space-time-types) of `TSeq` and `SSeq`.
 
 1. `type_time(Int) = 1`
 1. `type_time(t x t') = 1`
 1. `type_time(SSeq n t) = n * type_time(t)`
 1. `type_time(TSeq n v t) = (n+v) * type_time(t)`
 
-`time(f)` provide the syntax for applying `type_time` to an operator.
-`time(f :: t -> t') = type_time(t)`. 
-We introduce the `time` operator, even though it is an alias for `type_time`, to more succinctly discuss an operator's time. 
-Below, we prove that `time(f) == type_time(t')`.
+`time(f :: t -> t') = type_time(t)` provides the syntax for applying `type_time` to an operator.
+
+**Axiom** - `type_time(t) == type_time(t')` forall operators `f :: t -> t'`
 
 ### Parallelism
 `type_parallelism` is the number of atoms accepted or emitted by an operator on each utilized clock cycle. 
@@ -170,6 +177,12 @@ Below, we prove that `time(f) == type_time(t')`.
 
 1. `input_parallelism(f :: t -> t') = type_parallelism(t)`
 1. `output_parallelism(f :: t -> t') = type_parallelism(t')`
+
+### Throughput
+An operator's throughput is the number of atoms produced or consumed per clock.
+
+1. `input_throughput(f) = input_parallelism(f) / time(f)`
+1. `output_throughput(f) = output_parallelism(f) / time(f)`
 
 ### Type Atoms
 `type_atom` is the atom type used in a potentially nested `TSeq` or `SSeq`.
@@ -205,20 +218,6 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
 1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
 5. `Zip`, `Fst`, `Snd`, and `Add_Unit` don't have area. They are just used for connecting other operators.
-
-### Time
-The hardware implementation of each operator requires a statically known number of clock cycles to accept and emit its sequences.
-The type signature of an operator specifies the number of clock cycles it requires. 
-
-1. `time(f :: TSeq n v t -> TSeq n' v' t') = (n+v)`
-
-**Axiom** - For all operators in the space-time IR, the input and output sequences must require the same number of clock cycles.
-
-### Throughput
-An operator's throughput is the number of atoms produced or consumed per clock.
-
-1. `input_throughput(f) = input_parallelism(f) / time(f)`
-1. `output_throughput(f) = output_parallelism(f) / time(f)`
 
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
