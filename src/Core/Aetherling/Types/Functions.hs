@@ -21,6 +21,8 @@ type family Type_Size (x :: *) :: Nat where
   Type_Size (Atom_Unit) = 0
   Type_Size (Atom_Int) = 8
   Type_Size (Atom_Bit) = 1
+  Type_Size (Atom_Tuple a b) = (Type_Size a) + (Type_Size b)
+  Type_Size (Atom_NTuple n a) =  n GHC.TypeLits.* (Type_Size a)
 
 size :: forall a . (KnownNat (Type_Size a)) => Proxy a -> Int
 size _ = fromInteger $ natVal $ (Proxy :: Proxy (Type_Size a) )
@@ -47,23 +49,16 @@ type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom Atom_Unit = True ~ True
   Check_Type_Is_Atom (Atom_Int) = True ~ True
   Check_Type_Is_Atom (Atom_Bit) = True ~ True
+  Check_Type_Is_Atom (Atom_Tuple a b) = True ~ True
+  Check_Type_Is_Atom (Atom_NTuple n a) = True ~ True 
   Check_Type_Is_Atom x =
     TypeError (ShowType x :<>: Text " is not an atom.")
 
-{-
-Below functions are for lifting types onto seqs, sseqs, and tseqs
--}
-type family Type_Lifted_To_Seq (n :: Nat) (x :: *) :: * where
-  Type_Lifted_To_Seq n (a -> b) = Seq n a -> Type_Lifted_To_Seq n b
-  Type_Lifted_To_Seq n a = Seq n a 
+-- zip together all sequences that are of the same length.
+type family Zipped_Types (lType :: *) (rType :: *) :: * where
+  Zipped_Types (Seq n a) (Seq n b) = Seq n (Zipped_Types a b)
+  Zipped_Types a b = Atom_Tuple a b
 
-type family Type_Lifted_To_SSeq (n :: Nat) (x :: *) :: * where
-  Type_Lifted_To_SSeq n (a -> b) = SSeq n a -> Type_Lifted_To_SSeq n b
-  Type_Lifted_To_SSeq n a = SSeq n a 
-
-type family Type_Lifted_To_TSeq (n :: Nat) (e :: Nat) (x :: *) :: * where
-  Type_Lifted_To_TSeq n e (a -> b) = TSeq n e a -> Type_Lifted_To_TSeq n e b
-  Type_Lifted_To_TSeq n e a = TSeq n e a 
 {-
 Below functions are for converting a type representation to a string
 for compilation to Magma
@@ -96,3 +91,18 @@ typeToMagmaString isInput typeRep
     intTypeString isInput
   | typeRep == typeOf (Proxy :: Proxy Atom_Bit) = 
     bitTypeString isInput
+  -- assume otherwise this is a tuple
+  | otherwise = do
+      let lastBraceRemoved = L.reverse . L.tail . L.reverse $ show typeRep
+          proxyRemoved = L.foldl (L.++) "" $ splitOn "Proxy * (" $ lastBraceRemoved
+          -- need to replace all commas with ints to get tuple indexing
+          splitOnCommas = splitOn "," proxyRemoved
+          joinStrWithIdx idx str = ",_" L.++ show idx L.++ "=" L.++ str
+          withIndices = L.zipWith joinStrWithIdx [0..(L.length splitOnCommas)] splitOnCommas
+          -- will handle first element in tuples at end as it is different,
+          -- so need to remove first from prior step
+          withIndicesExcept0 = L.foldl (L.++) "" $ [L.head splitOnCommas] L.++ (L.tail withIndices)
+          intsReplaced = replaceAString "(Atom Int)" (intTypeString isInput) withIndicesExcept0
+          bitsReplaced = replaceAString "(Atom Bool)" (bitTypeString isInput) intsReplaced
+          tuplesReplaced = replaceAString "Atom (" "Tuple(_0=" bitsReplaced
+      tuplesReplaced
