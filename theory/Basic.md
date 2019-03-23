@@ -225,6 +225,8 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
+These pipelines are the simplest ones that demonstrate the type system's ability to ensure producer-consumer rates match. 
+Single-rate pipelines are not sufficiently complicated. If all operators have the same rate, then obviously all pairs of operators have the same rate.
 
 ### Types
 Multi-rate modules are expressed in the type system using the `v` parameter of `TSeq n v t`. 
