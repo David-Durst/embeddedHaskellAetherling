@@ -28,23 +28,6 @@ size :: forall a . (KnownNat (Type_Size a)) => Proxy a -> Int
 size _ = fromInteger $ natVal $ (Proxy :: Proxy (Type_Size a) )
 
 
-{-
-Keeps track of original types when doing recursion. Prints out top level types
-in error message.
--}
-type family Check_Types_Conform (lType :: *) (rType :: *) :: Constraint where
-  Check_Types_Conform l l = True ~ True
-  Check_Types_Conform l r = Check_Types_Conform_Inner l l r r
-
-type family Check_Types_Conform_Inner (lType :: *) (lTypeOrig :: *)
-  (rType :: *) (rTypeOrig :: *) :: Constraint where
-  Check_Types_Conform_Inner a _ a _ = True ~ True
-  Check_Types_Conform_Inner (Seq n lInner) lOrig (Seq n rInner) rOrig =
-    Check_Types_Conform_Inner lInner lOrig rInner rOrig
-  Check_Types_Conform_Inner _ lOrig _ rOrig =
-    TypeError (Text "The types " :<>: ShowType lOrig :<>: Text " and " :<>:
-               Text " do not conform.")
-
 type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom Atom_Unit = True ~ True
   Check_Type_Is_Atom (Atom_Int) = True ~ True
@@ -53,11 +36,6 @@ type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom (Atom_NTuple n a) = True ~ True 
   Check_Type_Is_Atom x =
     TypeError (ShowType x :<>: Text " is not an atom.")
-
--- zip together all sequences that are of the same length.
-type family Zipped_Types (lType :: *) (rType :: *) :: * where
-  Zipped_Types (Seq n a) (Seq n b) = Seq n (Zipped_Types a b)
-  Zipped_Types a b = Atom_Tuple a b
 
 {-
 Below functions are for converting a type representation to a string

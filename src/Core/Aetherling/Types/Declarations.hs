@@ -37,13 +37,13 @@ data Atom_Int =
 data Atom_Tuple a b =
   Atom_Tuple (a, b)
   | Atom_Tuple_Wires Wires
-  | Atom_Tuple_Resources Resources
+  | Atom_Tuple_Resources 
   deriving (Show, Eq)
 
 data Atom_NTuple n a =
   Atom_NTuple (V.Vector n a)
   | Atom_NTuple_Wires Wires
-  | Atom_NTuple_Resources Resources
+  | Atom_NTuple_Resources
   {-
   Int :: Int -> Atom Int
   Bit :: Bool -> Atom Bool
@@ -58,11 +58,19 @@ data Seq n a =
   | Seq_Resources
   deriving (Functor, Show, Eq)
 
+instance (KnownNat n) => Applicative (Seq n) where
+  pure a = (Seq ((pure :: a -> Vector n a) a))
+  (Seq f) <*> (Seq a) = Seq (f <*> a)
+
 data SSeq n a =
   SSeq {ssVec :: Vector n a}
   | SSeq_Wires Wires
   | SSeq_Resources
   deriving (Functor, Show, Eq)
+
+instance (KnownNat n) => Applicative (SSeq n) where
+  pure a = (SSeq ((pure :: a -> Vector n a) a))
+  (SSeq f) <*> (SSeq a) = SSeq (f <*> a)
 
 -- n is number of elements, v is number of clocks of delay
 -- v is always 0 for now. Please ignore it for the time being
@@ -71,6 +79,10 @@ data TSeq n v a =
   | TSeq_Wires Wires
   | TSeq_Resources
   deriving (Functor, Show, Eq)
+
+instance (KnownNat n) => Applicative (TSeq n v) where
+  pure a = (TSeq ((pure :: a -> Vector n a) a))
+  (TSeq f) <*> (TSeq a) = TSeq (f <*> a)
 
 sSSeq0_2 :: SSeq 2 Int
 sSSeq0_2 = SSeq $ fromTuple (2, 2)

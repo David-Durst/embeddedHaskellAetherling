@@ -63,6 +63,11 @@ class Monad m => Space_Time_Language m where
   map_tC :: (KnownNat n) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
+  map2_sC :: (KnownNat n) =>
+    Proxy n -> (a -> b -> m c) -> (Seq n a -> Seq n b -> m (Seq n c))
+  map2_tC :: (KnownNat n) =>
+    Proxy n -> (a -> b -> m c) -> (Seq n a -> Seq n b -> m (Seq n c))
+
   -- tuple operations
   fstC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
     Atom_Tuple a b -> m a
@@ -71,8 +76,8 @@ class Monad m => Space_Time_Language m where
   nthC :: (KnownNat i, KnownNat n, (i+1) <= n) =>
     Proxy i -> Atom_NTuple n a -> m a
 
-  zipC :: (Check_Types_Conform a b) =>
-    a -> b -> m (Zipped_Types a b)
+  zipC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
+    a -> b -> m (Atom_Tuple a b)
 
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
