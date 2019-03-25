@@ -54,6 +54,19 @@ We do not allow sequences of functions, such as `Seq n (Int -> Int)`.
 
 Note: Seq is also an applicative functor. Aetherling's `Map2` is equivalent to Haskell's `liftA2` for applicative functors. I will not put this note in final paper. This note is here to justify to Pat and Kayvon why `Map2` is a standard Haskell function.
 
+## Length Property
+The following operator tracks the total number of atoms accepted and emitted by a sequence operator.
+
+1. `type_length(Int) = 1`
+1. `type_length(t x t') = 1`
+1. `type_length(Seq n t) = n * type_length(t)`
+
+`input_length(f)` and `output_length(f)` provide the syntax for applying `type_length` to an operator.
+1. `input_length(f :: t -> t') = type_length(t)`
+1. `output_length(f :: t -> t') = type_length(t')`
+
+Since types incorporate length, two operators `f` and `g` in the sequence language cannot be composed unless `input_length(g) == output_length(f)`.
+
 ## Sequence Isomorphisms
 `Partition no ni` and `Unpartition no ni` form an isomorphism between the types `Seq (no*ni) t` and `Seq no (Seq ni t)` for all choices of `no` and `ni`. 
 Both types are objects in the category of types. 
@@ -182,6 +195,8 @@ We also model the resources of operators to prove that our schedules produce eff
 
 1. `input_parallelism(f :: t -> t') = type_parallelism(t)`
 1. `output_parallelism(f :: t -> t') = type_parallelism(t')`
+
+The parallelism property of a fully parallel operator is equivalent to the length property of the corresponding operator in the sequence language.
 
 ### Throughput
 An operator's throughput is the number of atoms produced or consumed per clock.
@@ -370,15 +385,34 @@ We will show that all pipelines in the space-time IR that are produced by the au
     1. Base Case `i = 0`: `P_i` is `P_space`.
     1. Inductive Case: Each operator `f` in `P_i` is slowed down by `factor` in `P_i+1`. 
     Each operator took `t` clock cycles in `P_i`.
-    Each operator now takes `factor*t` clock cycles.
+    Each operator takes `factor*t` clock cycles in `P_i+1`.
     All operators take same amount of time.
 1. All operators in pipeline take same amount of time.
 
 ### Rate matching
-Need to show:
-If types amtch, rates match. Do types always match?
-1. Base case - applying rewrite rules converts everything to fully parallel. Since seq types matched before, must match now
-1. Scheduling case - applying rewrite rules slows down everything by same amount
+We will show that all pipelines in the space-time IR that are produced by the auto-scheduler satisfy the rate matching constraint.
+
+1. `P_seq`. It has no rate property.
+1. `P_space` is fully parallel. 
+    1. Let `f_seq` be an operator in `P_seq`. 
+    1. Let `f_space` be the one or more operators produced by applying the Sequence to Space rewrite rule to `f_seq`.
+    1. `time(f_space) = 1`.
+    1. `input_parallelism(f_space) = input_length(f_seq)` and `output_parallelism(f_space) = output_length(f_seq)`, as noted in the [parallelism property](#parallelism) section.
+    1. For any composition of operators `g_seq . f_seq`, `input_length(g_seq) == output_length(f_seq)`, as noted in the [length property](#length-property) section.
+    1. For the corresponding `g_space . f_space`, `input_parallelism(g_space) == output_parallelism(f_space)`.
+    1. `input_throughput(g_space) == input_parallelism(g_space) / time(g_space) == input_parallelism(f_space) / time(f_space) == output_throughput(f_space)`
+1. We will prove the property holds for all `P_i` by induction. 
+    1. Base Case `i = 0`: `P_i` is `P_space`.
+    1. Inductive Case: Each operator `f` in `P_i` is slowed down by `factor` in `P_i+1`. 
+    By inductive assumption `input_parallelism(g_i) == output_parallelism(f_i)` and `time(g_i) == time(f_i)` for all composed `g_i . f_i` in `P_i`.
+    Each operator took `t` clock cycles in `P_i`.
+    Each operator takes `factor*t` clock cycles in `P_i+1`
+    Each operator now has `input_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
+    Each operator now has `output_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
+    For all `g_i . f_i`, 
+        - `input_throughput(g_i+1) == input_parallelism(g_i+1) / time(g_i+1) == (max 1 (input_parallelism(g_i) / factor)) / (t * factor) == `
+        - `(max 1 (output_parallelism(f_i) / factor)) / (t * factor) == output_parallelism(f_i+1) / time(f_i+1) == output_throughput(f_i+1)`
+1. All producer-consumer throughputs match in all pipelines.
 
 ### Time-Area Tradeoffs
 Show for each operator that time value goes up, resources go down by evaluating the resources operator for each one
