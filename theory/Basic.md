@@ -410,8 +410,8 @@ We will show that all pipelines in the space-time IR that are produced by the au
     Each operator now has `input_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
     Each operator now has `output_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
     For all `g_i . f_i`, 
-        - `input_throughput(g_i+1) == input_parallelism(g_i+1) / time(g_i+1) == (max 1 (input_parallelism(g_i) / factor)) / (t * factor) == `
-        - `(max 1 (output_parallelism(f_i) / factor)) / (t * factor) == output_parallelism(f_i+1) / time(f_i+1) == output_throughput(f_i+1)`
+        `input_throughput(g_i+1) == input_parallelism(g_i+1) / time(g_i+1) == (max 1 (input_parallelism(g_i) / factor)) / (t * factor) == `
+        `(max 1 (output_parallelism(f_i) / factor)) / (t * factor) == output_parallelism(f_i+1) / time(f_i+1) == output_throughput(f_i+1)`
 1. All producer-consumer throughputs match in all pipelines.
 
 ### Time-Area Tradeoffs
