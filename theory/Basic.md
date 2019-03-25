@@ -331,16 +331,51 @@ Note: I dropped the underutilization computation from `TSeq` where it became one
 **Danger: `Partition_ts . Unpartition_ts` is not really Id in Space-Time. There will be underutilized clocks here. The partition_tsing and unpartition_tsing takes n clocks. However, the interface to both of these functions is just an `SSeq`. The `SSeq` doesn't account for time.**
 2. `Unpartition_ts no ni . Partition_ts no ni = Id`
 
-The same removal rule can be used for `Partition_tt`/`Unpartition_tt` and `Partition_ss`/`Unpartition_ss`.
+The same removal rule can be used for `Partition_tt`/`Unpartition_tt` and `Partition_ss`/`Unpartition_ss**.
+
+## Auto-Scheduler
+We use the following technique for applying the rewrite rules. 
+We will prove below that this technique chooses the schedule with the maximum throughput given resource constraints.
+
+1. Let `P_seq` be the program in the sequence language.
+1. Apply the Sequence To Space rewrite rule to all operators. Let `P_space` be the result.
+1. If `area(P_space)` is less than the resources on the target chip, stop.
+1. Otherwise, let `N` be the set of all input and output sequence lengths, `n`, of all operators.
+1. Let `N_factors` be the set of the common factors of all numbers in `N`. Alias `P_space` as `P_0`
+1. For each `factor` in `N_factors`, increment `i` starting at 0:
+    1. Apply Slowdown rewrite rule to all operators in `P_i`. Let `P_i+1` be the new program.
+    1. If `area(P_space)` is less than the resources on the target chip, stop.
+1. If reached this point, fail as not able to fit program on chip even when fully slowed.
+
+**Note:** I think the auto-scheduler has to be added here. 
+You cannot prove the time matching and throuhgput matching properties on just the rewrite rules.
+You must prove those properties on how the rules are applied.
+The rules could be applied in a way that breaks the properties. 
+For example, slowing down only `f` in `g.f` is a valid application of the rewrite rules.
+However, this application breaks time and throughput matching.
 
 ## Rewrite Rule Correctness
-We prove that applying the rewrite rules to a pipeline:
+We prove that the auto-scheduler's approach for applying the rewrite rules:
 
 1. preserves time matching
 2. preserves producer-consumer rate matching
 3. trades-off time and area. Applying the slowdown rewrite rules decrease time without decreasing area. 
 
 ### Time Matching
+We will show that all pipelines in the space-time IR that are produced by the auto-scheduler satisfy the time matching constraint.
+
+1. `P_seq`. It has no time property.
+1. `P_space` is fully parallel. For each operator `f` in `P_space`, `time(f) = 1`.
+1. We will prove the property holds for all `P_i` by induction. 
+    1. Base Case `i = 0`: `P_i` is `P_space`.
+    1. Inductive Case: Each operator `f` in `P_i` is slowed down by `factor` in `P_i+1`. 
+    Each operator took `t` clock cycles in `P_i`.
+    Each operator now takes `factor*t` clock cycles.
+    All operators take same amount of time.
+1. All operators in pipeline take same amount of time.
+
+1. We will lower `P_seq` to `P_space`. This is done by applying the Sequence To Space rewrite rule to each other in `P_seq`. These are the only rewrite rules available for operators in the sequence language.
+1. `P_space` satisfies the time matching constraint. Inspecting all operators' rewrite rules shows that the `time` of every operator is 1.
 Need to show:
 1. Base Case - applying rewrite rules converts everything to fully parallel, so all time is 1.
 1. Scheduling Case - applying rewrite rules slows everything down by same amount. Thus, all have same type. This means all time matches
