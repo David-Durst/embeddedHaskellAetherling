@@ -7,7 +7,7 @@ Section [Multi-Rate Pipelines](#multi-rate-pipelines) explains why these pipelin
 
 # Sequence Language
 Programmers use Aetherling by writing code in the sequence language.
-The sequence language is a combinator language for data flow programs with standard functional programming operators. 
+The sequence language uses standard functional programming operators to express data flow programs. 
 Programs in the language are **unscheduled**: it is unspecified whether operations are parallel or sequential. 
 There is no clear interpretation of unscheduled programs as hardware accelerators.
 
@@ -17,13 +17,14 @@ Atoms are standard programming primitives, such as integers.
 Atoms also include the minimal derived types necessary to express arithmetic and boolean operators on the primitives. 
 
 1. `Int` - integer
-2. `t x t'` - heterogeneous tuple
+2. `t x t'` - tuple
 4. `t -> t'` - function
 
 ## Atom Operators
+`t` must be an atomic type for the following operators.
+
 1. `Id :: t -> t`
-1. `Const :: t -> t`
-1. `Const_Gen :: t -> () -> t`
+1. `Const_Gen :: t -> t' -> t`
 1. `Add :: (Int x Int) -> Int`
 1. `Fst :: (t x t') -> t`
 1. `Snd :: (t x t') -> t'`
@@ -36,7 +37,7 @@ The second part of the language lifts the atomic values and functions onto fixed
 
 `Seq` is a functor. It is a fixed length version of the `[]` list functor in Haskell. 
 `Seq n t` lifts a type `t` onto a sequence of `n` elements of type `t`. 
-The `Map` operator in the below operator section is `Seq`'s `fmap`. 
+The `Map` operator in the [Sequence Operators](#sequence-operators) section is `Seq`'s `fmap`. 
 `Map` lifts functions from `t -> t'` to `Seq n t -> Seq n t'`. 
 
 We do not allow sequences of functions, such as `Seq n (Int -> Int)`.
@@ -51,7 +52,7 @@ We do not allow sequences of functions, such as `Seq n (Int -> Int)`.
 7. `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)`
 7. `Unpartition no ni :: Seq no (Seq ni t) -> Seq (no*ni) t`
 
-Note: Seq is also an applicative functor. Aetherling's `Map2` is equivalent to Haskell's `liftA2` for applicative functors.
+Note: Seq is also an applicative functor. Aetherling's `Map2` is equivalent to Haskell's `liftA2` for applicative functors. I will not put this note in final paper. This note is here to justify to Pat and Kayvon why `Map2` is a standard Haskell function.
 
 ## Sequence Isomorphisms
 `Partition no ni` and `Unpartition no ni` form an isomorphism between the types `Seq (no*ni) t` and `Seq no (Seq ni t)` for all choices of `no` and `ni`. 
@@ -59,6 +60,7 @@ Both types are objects in the category of types.
 `Partition` and `Unpartition` convert between the types in a way that preserves the identity function. 
 ```
 Unpartition no ni . Partition no ni == Id
+Partition no ni . Unpartition no ni == Id
 ```
 
 The following commutativity diagram shows the relationship between functions on isomorphic types. 
@@ -71,7 +73,7 @@ Specializing this diagram for `Seq` proves:
 
 We can repeatedly apply this isomorphism to convert between a flat `Seq` and any arbitrarily nested `Seq`
 
-We will use these isomorphisms to produce Aetherling's rewrite rules that:
+We will use these isomorphisms to prove the existence of Aetherling's [rewrite rules](#rewrite-rules) that:
 1. lower from the sequence language into the space-time IR.
 1. schedule programs in the space-time IR.
 
@@ -83,12 +85,13 @@ The space-time IR uses these schedules to interpret the data flow programs as ha
 
 In hardware accelerators, all operators are implemented using separate hardware components that run in parallel. 
 If two functions are composed in the sequence language (such as `g . f`), they form a pipeline.
-`f`'s hardware component emits output that is consumed as input by `g`'s component'.
+`f`'s hardware component produces values that are consumed by `g`'s component'.
 All composed operators in a pipeline must process data over the same amount of time, which we count in clock cycles. 
-This requirement is known as **time matching**
+This requirement is known as **time matching**.
 
-In addition to a time property, operators and pipelines also have input throughputs and output throughputs.
+In addition matching time, operators in a pipeline must also match throughputs.
 A **throughput** (or **rate**) is the average number of atoms accepted or emitted per clock.
+Each operator has both an input and output throughput, which may be different.
 In a pipeline, the output throughput of each producer function must equal the input throughput of its consumer function.
 In `g . f`, `f`'s output throughput must equal `g`'s input throughput.
 This requirement is known as **producer-consumer rate matching**. 
@@ -108,7 +111,7 @@ No buffering between operators means minimal storage resources.
 
 ## Single-Rate Pipelines
 We first focus on **single-rate pipelines**, those in which all operators have the same input and output throughputs. 
-These pipelines always satisfy the producer-consumer rate-matching requirement.
+These pipelines always satisfy the producer-consumer rate matching requirement.
 
 ### Space-Time Types
 Aetherling expresses schedules using the type system.
@@ -129,11 +132,11 @@ If `t` is an atomic type, then the period is 1.
 #### Period Example
 We demonstrate the need for the term period first by showing two examples where a period is the same as a clock, and then showing a nested example where the two are different.
 
-An operator `SSeq 5 Int -> SSeq 5 Int` accepts and emits 5 ints each period. Since `Int` is an atomic type, a period is one clock.
+An operator `SSeq 5 Int -> SSeq 5 Int` accepts and emits 5 ints each period. A period is one clock because `Int` is an atomic type.
 
 An operator `TSeq 5 1 Int -> TSeq 1 5 Int` accepts ints on five of six periods. It emits ints on one of six periods. A period is one clock because `Int` is an atomic type.
 
-An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3 0 Int` on five of six periods. A period is three clocks as each `TSeq 3 0 Int` requires three clocks.
+An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3 0 Int` on five of six periods. A period is three clocks because each `TSeq 3 0 Int` requires three clocks.
 
 ### Sequence To Space-Time Isomorphisms
 `Seq n t` is isomorphic to `SSeq n t` and `TSeq n t` by construction. 
@@ -142,7 +145,7 @@ They are all ordered sequences of the same length.
 Since they are isomorphic, any `f :: Seq n t -> Seq m t'` function must have contextually equivalent versions `f_t :: TSeq n v t -> TSeq m u t'` and `f_s :: SSeq n t -> SSeq m t'`.
 This is proven in the same way as shown in [the `Seq` isomorphism section.](#sequence-isomorphisms)
 
-We will use these isomorphisms to produce the rewrite rules that convert programs from the sequence language to the space-time.
+We will use these isomorphisms to produce the rewrite rules that lower programs from the sequence language to the space-time IR.
 
 ### Operators
 1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
@@ -233,13 +236,14 @@ Multi-rate modules are expressed in the type system using the `v` parameter of `
 As a reminder:
 - `n` is number of utilized periods.
 - `v` is number of empty periods. 
-- A `TSeq` materializes `n` values of type `t` over `(n+v) * periods to process one t` periods.
+- An operator with a `TSeq` output type emits `n` values of type `t` over `n+v` periods.
 
-An empty period is one in which the sequence does not process new data. `v` enables Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization 
+Operators does not accept or emit data during empty periods. 
+Empty periods enable Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization.
 1. The time matching property requires operators' input and output `TSeq`s to take the same amount of time. Empty clocks equalize time lengths for `TSeq`s with different `n` parameters. 
     1. For example, `Up_1d_t` takes in one input on one clock cycle and then repeatedly outputs it for multiple clock cycles. 
-    While the output is busy emitting data, the input cannot accept the next value. 
-    The empty periods indicate this waiting so that the input and output `TSeq`s take the same amount of time.
+    While `Up_1d_t` is busy emitting data, it cannot accept new input. 
+    The empty periods indicate the lack of input so that the input and output `TSeq`s take the same amount of time.
 1. Underutilized hardware is hardware that is unused on some clock cycles.
 An operator with input and output `TSeq`s that have non-zero `v`s may be unused during those periods.
     1. If `Map_t 1 Add` had any empty clocks, it would be underutilized. 
@@ -247,7 +251,7 @@ An operator with input and output `TSeq`s that have non-zero `v`s may be unused 
     It is operator specific whether empty clocks mean underutilization or waiting while processing occurs.
     1. Underutilization is necessary to compose operators in multi-rate pipelines. 
     Consider `Up_1d_t 4 . Map_t 1 Add`.
-    `Map_t` must emit an output every fourth clock so that its output throughput matches `Up_1d_t`'s input throughput.
+    `Map_t` must accept input and emit output every fourth clock so that its output throughput matches `Up_1d_t`'s input throughput.
     To accomplish this rate matching, `Map_t` must be underutilized.
     
 ### Operators
@@ -280,7 +284,7 @@ Just like [`Partition` and `Unpartition` for `Seq`](#sequence-isomorphisms), the
 
 These isomorphisms, along with those between `Seq` and `SSeq` and between different `Seq` nestings, mean that any `f :: Seq n t -> Seq m t'` function must have contextually equivalent versions with any nesting of `TSeq`s and `SSeq`s. 
 The different nestings are different schedules. 
-`f :: SSeq (no*ni) t -> SSeq (no*ni) t` is more parallel than `f :: TSeq (no*ni) 0 t -> TSeq (no*ni) 0 t`
+`f :: SSeq (no*ni) t -> SSeq (no*ni) t` is more parallel than `f :: TSeq (no*ni) 0 t -> TSeq (no*ni) 0 t`.
 `f :: TSeq no (SSeq ni t) -> TSeq no (SSeq ni t)` is a schedule that trades off parallelism and area.
 It is more parallel than the pure `TSeq` schedule, but uses fewer resources than the `SSeq` schedule.
 
