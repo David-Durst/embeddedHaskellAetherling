@@ -400,6 +400,7 @@ We will show that all pipelines in the space-time IR that are produced by the au
     1. `input_parallelism(f_space) = input_length(f_seq)` and `output_parallelism(f_space) = output_length(f_seq)`, as noted in the [parallelism property](#parallelism) section.
     1. For any composition of operators `g_seq . f_seq`, `input_length(g_seq) == output_length(f_seq)`, as noted in the [length property](#length-property) section.
     1. For the corresponding `g_space . f_space`, `input_parallelism(g_space) == output_parallelism(f_space)`.
+    1. Also, `input_throughput(g_space) == output_throughput(f_space)`.
 
     ```
     input_throughput(g_space) == 
@@ -416,15 +417,16 @@ We will show that all pipelines in the space-time IR that are produced by the au
         1. Each operator takes `factor*t` clock cycles in `P_i+1`
         1. Each operator now has `input_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
         1. Each operator now has `output_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
-        1. For all `g_i . f_i`, 
-```
-input_throughput(g_i+1) == 
-input_length(g_i+1) / time(g_i+1) == 
-(max 1 (input_parallelism(g_i) / factor)) / (t * factor) == 
-(max 1 (output_parallelism(f_i) / factor)) / (t * factor) == 
-output_parallelism(f_i+1) / time(f_i+1) == 
-output_throughput(f_i+1)
-```
+        1. For all `g_i+1 . f_i+1`, `input_parallelism(g_i+1) == output_parallelism(f_i+1)` and `time(g_i+1) == time(f_i+1)` .
+        1. Also, `input_throughput(g_i+1) == output_throughput(f_i+1)`.
+        ```
+        input_throughput(g_i+1) == 
+        input_length(g_i+1) / time(g_i+1) == 
+        (max 1 (input_parallelism(g_i) / factor)) / (t * factor) == 
+        (max 1 (output_parallelism(f_i) / factor)) / (t * factor) == 
+        output_parallelism(f_i+1) / time(f_i+1) == 
+        output_throughput(f_i+1)
+        ```
 
 All producer-consumer throughputs match in all pipelines.
 
