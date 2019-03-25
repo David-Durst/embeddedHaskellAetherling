@@ -400,7 +400,12 @@ We will show that all pipelines in the space-time IR that are produced by the au
     1. `input_parallelism(f_space) = input_length(f_seq)` and `output_parallelism(f_space) = output_length(f_seq)`, as noted in the [parallelism property](#parallelism) section.
     1. For any composition of operators `g_seq . f_seq`, `input_length(g_seq) == output_length(f_seq)`, as noted in the [length property](#length-property) section.
     1. For the corresponding `g_space . f_space`, `input_parallelism(g_space) == output_parallelism(f_space)`.
-    1. `input_throughput(g_space) == input_parallelism(g_space) / time(g_space) == input_parallelism(f_space) / time(f_space) == output_throughput(f_space)`
+```
+input_throughput(g_space) == 
+input_parallelism(g_space) / time(g_space) == 
+input_parallelism(f_space) / time(f_space) == 
+output_throughput(f_space)
+```
 1. We will prove the property holds for all `P_i` by induction. 
     1. Base Case `i = 0`: `P_i` is `P_space`.
     1. Inductive Case: Each operator `f` in `P_i` is slowed down by `factor` in `P_i+1`. 
