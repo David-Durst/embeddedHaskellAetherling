@@ -404,15 +404,22 @@ We will show that all pipelines in the space-time IR that are produced by the au
 1. We will prove the property holds for all `P_i` by induction. 
     1. Base Case `i = 0`: `P_i` is `P_space`.
     1. Inductive Case: Each operator `f` in `P_i` is slowed down by `factor` in `P_i+1`. 
-    By inductive assumption `input_parallelism(g_i) == output_parallelism(f_i)` and `time(g_i) == time(f_i)` for all composed `g_i . f_i` in `P_i`.
-    Each operator took `t` clock cycles in `P_i`.
-    Each operator takes `factor*t` clock cycles in `P_i+1`
-    Each operator now has `input_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
-    Each operator now has `output_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
-    For all `g_i . f_i`, 
-        `input_throughput(g_i+1) == input_parallelism(g_i+1) / time(g_i+1) == (max 1 (input_parallelism(g_i) / factor)) / (t * factor) == `
-        `(max 1 (output_parallelism(f_i) / factor)) / (t * factor) == output_parallelism(f_i+1) / time(f_i+1) == output_throughput(f_i+1)`
-1. All producer-consumer throughputs match in all pipelines.
+        1. By inductive assumption `input_parallelism(g_i) == output_parallelism(f_i)` and `time(g_i) == time(f_i)` for all composed `g_i . f_i` in `P_i`.
+        1. Each operator took `t` clock cycles in `P_i`.
+        1. Each operator takes `factor*t` clock cycles in `P_i+1`
+        1. Each operator now has `input_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
+        1. Each operator now has `output_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
+        1. For all `g_i . f_i`, 
+```
+input_throughput(g_i+1) == 
+input_length(g_i+1) / time(g_i+1) == 
+(max 1 (input_parallelism(g_i) / factor)) / (t * factor) == 
+(max 1 (output_parallelism(f_i) / factor)) / (t * factor) == 
+output_parallelism(f_i+1) / time(f_i+1) == 
+output_throughput(f_i+1)
+```
+
+All producer-consumer throughputs match in all pipelines.
 
 ### Time-Area Tradeoffs
 Show for each operator that time value goes up, resources go down by evaluating the resources operator for each one
