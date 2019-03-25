@@ -22,7 +22,6 @@ type family Type_Size (x :: *) :: Nat where
   Type_Size (Atom_Int) = 8
   Type_Size (Atom_Bit) = 1
   Type_Size (Atom_Tuple a b) = (Type_Size a) + (Type_Size b)
-  Type_Size (Atom_NTuple n a) =  n GHC.TypeLits.* (Type_Size a)
 
 size :: forall a . (KnownNat (Type_Size a)) => Proxy a -> Int
 size _ = fromInteger $ natVal $ (Proxy :: Proxy (Type_Size a) )
@@ -33,7 +32,6 @@ type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom (Atom_Int) = True ~ True
   Check_Type_Is_Atom (Atom_Bit) = True ~ True
   Check_Type_Is_Atom (Atom_Tuple a b) = True ~ True
-  Check_Type_Is_Atom (Atom_NTuple n a) = True ~ True 
   Check_Type_Is_Atom x =
     TypeError (ShowType x :<>: Text " is not an atom.")
 

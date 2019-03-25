@@ -35,6 +35,7 @@ dependencies:
 - mtl
 - containers
 - reflection
+- util
 
 ghc-options:
 - -fwarn-incomplete-patterns 

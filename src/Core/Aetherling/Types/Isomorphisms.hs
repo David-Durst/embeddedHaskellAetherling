@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 module Aetherling.Types.Isomorphisms where
 import Aetherling.Types.Declarations
 import GHC.TypeLits

@@ -6,6 +6,7 @@ import Aetherling.Types.Isomorphisms
 import Data.Typeable
 import Unsafe.Coerce
 import qualified Data.Vector.Sized as V
+import Util
   
 
 simulate :: Simulation_Env a -> a
@@ -26,6 +27,7 @@ instance Sequence_Language Simulation_Env where
   addC _ = fail $ fail_message "addC" "Atom_Int's"
 
   eqC (Atom_Tuple (x,y)) = return $ Atom_Bit $ x == y 
+  eqC _ = fail $ fail_message "eqC" "Atom_Tuple"
 
   -- generators
   lut_genC xs (Atom_Int i) | i < length xs = return $ xs !! i 
@@ -49,13 +51,17 @@ instance Sequence_Language Simulation_Env where
   unpartitionC _ _ unflattened_seq =
     return $ seqOfSeqToSeq unflattened_seq
 
- {-
-  -- higher order operators
-  mapC :: (KnownNat n) =>
-    Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
+  mapC _ f input = mapM f input
+  map2C _ f input = traverse2 f input
 
- -} 
-  mapC _ f input = return $ fmap f input
+  -- tuple operations
+  fstC (Atom_Tuple (x, _)) = return x
+  fstC _ = fail $ fail_message "fstC" "Atom_Tuple"
+
+  sndC (Atom_Tuple (_, y)) = return y
+  sndC _ = fail $ fail_message "sndC" "Atom_Tuple"
+
+  zipC x y = return $ Atom_Tuple (x,y) 
 
   -- composition operators
   (>>>) f g x = f x >>= g

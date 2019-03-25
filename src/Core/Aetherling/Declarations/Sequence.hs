@@ -16,7 +16,7 @@ class Monad m => Sequence_Language m where
 
   -- binary operators
   addC :: Atom_Tuple Atom_Int Atom_Int -> m Atom_Int
-  eqC :: Check_Type_Is_Atom a => Atom_Tuple a a -> m Atom_Bit
+  eqC :: (Check_Type_Is_Atom a, Eq a) => Atom_Tuple a a -> m Atom_Bit
 
   -- generators
   lut_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
@@ -54,8 +54,6 @@ class Monad m => Sequence_Language m where
     Atom_Tuple a b -> m a
   sndC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
     Atom_Tuple a b -> m b
-  nthC :: (KnownNat i, KnownNat n, (i+1) <= n) =>
-    Proxy i -> Atom_NTuple n a -> m a
 
   zipC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
     a -> b -> m (Atom_Tuple a b)
@@ -68,5 +66,4 @@ class Sequence_Language m => Symbolic_Sequence_Language m where
   input_int :: m Atom_Int
   input_bit :: m Atom_Bit
   input_tuple :: m (Atom_Tuple a b)
-  input_ntuple :: m (Atom_NTuple n a)
   input_seq :: m (Seq n a)
