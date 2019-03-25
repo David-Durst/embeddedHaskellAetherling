@@ -374,12 +374,6 @@ We will show that all pipelines in the space-time IR that are produced by the au
     All operators take same amount of time.
 1. All operators in pipeline take same amount of time.
 
-1. We will lower `P_seq` to `P_space`. This is done by applying the Sequence To Space rewrite rule to each other in `P_seq`. These are the only rewrite rules available for operators in the sequence language.
-1. `P_space` satisfies the time matching constraint. Inspecting all operators' rewrite rules shows that the `time` of every operator is 1.
-Need to show:
-1. Base Case - applying rewrite rules converts everything to fully parallel, so all time is 1.
-1. Scheduling Case - applying rewrite rules slows everything down by same amount. Thus, all have same type. This means all time matches
-
 ### Rate matching
 Need to show:
 If types amtch, rates match. Do types always match?
