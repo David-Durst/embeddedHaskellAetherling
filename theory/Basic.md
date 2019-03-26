@@ -377,7 +377,7 @@ We prove that the auto-scheduler's approach for applying the rewrite rules:
 
 1. preserves time matching
 2. preserves producer-consumer rate matching
-3. trades-off time and area. Applying the slowdown rewrite rules decrease time without decreasing area. 
+3. trades-off time and area. Applying the slowdown rewrite rules decrease time without decreasing area. **Note: this can't be proven, see below.**
 
 ### Slowdown Impact On Time And Area
 Before proving the properties, we must formalize the impact of the slowdown rewrite rule on length, time, throughput.
@@ -405,8 +405,6 @@ We will show that all pipelines in the space-time IR that are produced by the au
 
 ### Rate matching
 We will show that all pipelines in the space-time IR that are produced by the auto-scheduler satisfy the producer-consumer rate matching constraint.
-
-Note: inspection of all Slowdown rewrite rules show that they decrease parallelism by the amount of the factor, up to the point 
 
 1. `P_seq`. It has no rate property.
 1. `P_space` is fully parallel. We will prove that, for each pair of operators `g_space . f_space` in `P_space`, `input_throughput(g_space) == output_throughput(f_space)`.
@@ -446,3 +444,9 @@ All producer-consumer throughputs match in all pipelines.
 ### Time-Area Tradeoffs
 Show for each operator that time value goes up, resources go down by evaluating the resources operator for each one
 
+**Negative** - I don't think this can actually be proven. Increases decreasing time increases area for `up_1d`. `up_1d_s` requires no memory area. `up_1d_t` requires memory. 
+
+**Positive** - We still can have a linear search (following the common factors). The auto-scheduler provided above does this. It finds the most parallel implementation that fits on the target chip.
+
+## Auto-Scheduler Optimality
+This is the same proof as in the paper. I'm not going to reproduce here as it is not good. We already agreed it was too wordy.
