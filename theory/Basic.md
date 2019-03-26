@@ -183,26 +183,25 @@ We also model the resources of operators to prove that our schedules produce eff
 
 **Axiom** - `type_time(t) == type_time(t')` forall operators `f :: t -> t'`
 
-### Parallelism
-`type_parallelism` is the number of atoms accepted or emitted by an operator on each utilized clock cycle. 
+### Length
+This property is the same as `length` for sequence operators.
+`type_length` is the number of atoms accepted or emitted by an operator. 
 
-1. `type_parallelism(Int) = 1`
-1. `type_parallelism(t x t') = 1`
-1. `type_parallelism(SSeq n t) = n * type_time(t)`
-1. `type_parallelism(TSeq n v t) = type_time(t)`
+1. `type_length(Int) = 1`
+1. `type_length(t x t') = 1`
+1. `type_length(SSeq n t) = n * type_length(t)`
+1. `type_length(TSeq n v t) = n * type_length(t)`
 
-`input_parallelism(f)` and `output_parallelism(f)` provide the syntax for applying `type_parallelism` to an operator.
+`input_length(f)` and `output_length(f)` provide the syntax for applying `type_length` to an operator.
 
-1. `input_parallelism(f :: t -> t') = type_parallelism(t)`
-1. `output_parallelism(f :: t -> t') = type_parallelism(t')`
-
-The parallelism property of a fully parallel operator is equivalent to the length property of the corresponding operator in the sequence language.
+1. `input_length(f :: t -> t') = type_length(t)`
+1. `output_length(f :: t -> t') = type_length(t')`
 
 ### Throughput
 An operator's throughput is the number of atoms produced or consumed per clock.
 
-1. `input_throughput(f) = input_parallelism(f) / time(f)`
-1. `output_throughput(f) = output_parallelism(f) / time(f)`
+1. `input_throughput(f) = input_length(f) / time(f)`
+1. `output_throughput(f) = output_length(f) / time(f)`
 
 ### Type Atoms
 `type_atom` is the atom type used in a potentially nested `TSeq` or `SSeq`.
@@ -355,11 +354,15 @@ We will prove below that this technique chooses the schedule with the maximum th
 1. Let `P_seq` be the program in the sequence language.
 1. Apply the Sequence To Space rewrite rule to all operators. Let `P_space` be the result.
 1. If `area(P_space)` is less than the resources on the target chip, stop.
-1. Otherwise, let `N` be the set of all input and output sequence lengths, `n`, of all operators.
-1. Let `N_factors` be the set of the common factors of all numbers in `N`. Alias `P_space` as `P_0`
-1. For each `factor` in `N_factors`, increment `i` starting at 0:
-    1. Apply Slowdown rewrite rule to all operators in `P_i`. Let `P_i+1` be the new program.
-    1. If `area(P_space)` is less than the resources on the target chip, stop.
+1. Let `N` be the set of all input and output sequence lengths, `n`, of all operators.
+1. Let `N_factors` be the set of the common factors of all numbers in `N`. 
+1. Sort `N_factors` from smallest to largest.
+1. Let `factor_i = N_factors[i]`.
+1. For `i` in `range(0, len(N_factors))`:
+    1. Apply Slowdown rewrite rule to all operators in `P_space`. 
+        1. Let `prod_factor_i` = product of `factor_j` for all j from 0 to i (inclusive).
+        1. Let `P_i` be `P_space` after applying the slowdown rewrite rule with factor `prod_factor_i` rule to each operator in `P_space`.
+    1. If `area(P_i)` is less than the resources on the target chip, stop.
 1. If reached this point, fail as not able to fit program on chip even when fully slowed.
 
 **Note:** I think the auto-scheduler has to be added here. 
@@ -376,57 +379,68 @@ We prove that the auto-scheduler's approach for applying the rewrite rules:
 2. preserves producer-consumer rate matching
 3. trades-off time and area. Applying the slowdown rewrite rules decrease time without decreasing area. 
 
+### Slowdown Impact On Time And Area
+Before proving the properties, we must formalize the impact of the slowdown rewrite rule on length, time, throughput.
+
+1. **Length** - Inspecting the rewrite rules shows that length is unaffected by slowdown.
+1. **Time** - Inspecting the rewrite rules shows that time is increased by slowdown `factor`. Formally, this is:
+    - `time(slowdown(f, factor)) = time(f) * factor` 
+1. **Throughput** - Since throughput is computed based on length and time:
+    - `throughput(slowdown(f, factor)) = length(slowdown(f, factor)) / time(slowdown(f, factor)) =`
+    - `length(f) / (time(f) * factor) = throuhgput(f) / factor**
+
+**I don't know how to prove these statements.**
+
 ### Time Matching
 We will show that all pipelines in the space-time IR that are produced by the auto-scheduler satisfy the time matching constraint.
 
 1. `P_seq`. It has no time property.
-1. `P_space` is fully parallel. For each operator `f` in `P_space`, `time(f) = 1`.
-1. We will prove the property holds for all `P_i` by induction. 
-    1. Base Case `i = 0`: `P_i` is `P_space`.
-    1. Inductive Case: Each operator `f` in `P_i` is slowed down by `factor` in `P_i+1`. 
-    Each operator took `t` clock cycles in `P_i`.
-    Each operator takes `factor*t` clock cycles in `P_i+1`.
-    All operators take same amount of time.
+1. `P_space` is fully parallel. For each operator `f_space` in `P_space`, `time(f_space) = 1`.
+1. We will prove the property holds for all `P_i`. 
+    1. Each operator `f` in `P_space` is slowed down by `prod_factor_i`: `f_i = slowdown(f_space, prod_factor_i)`
+    1. `time(f_space) = 1`
+    1. `time(f_i) = prod_factor_i`
+    1. All operators take same amount of time.
 1. All operators in pipeline take same amount of time.
 
 ### Rate matching
 We will show that all pipelines in the space-time IR that are produced by the auto-scheduler satisfy the rate matching constraint.
+
+Note: inspection of all Slowdown rewrite rules show that they decrease parallelism by the amount of the factor, up to the point 
 
 1. `P_seq`. It has no rate property.
 1. `P_space` is fully parallel. 
     1. Let `f_seq` be an operator in `P_seq`. 
     1. Let `f_space` be the one or more operators produced by applying the Sequence to Space rewrite rule to `f_seq`.
     1. `time(f_space) = 1`.
-    1. `input_parallelism(f_space) = input_length(f_seq)` and `output_parallelism(f_space) = output_length(f_seq)`, as noted in the [parallelism property](#parallelism) section.
-    1. For any composition of operators `g_seq . f_seq`, `input_length(g_seq) == output_length(f_seq)`, as noted in the [length property](#length-property) section.
-    1. For the corresponding `g_space . f_space`, `input_parallelism(g_space) == output_parallelism(f_space)`.
+    1. `input_length(f_space) = input_length(f_seq)` and `output_length(f_space) = output_length(f_seq)`, as noted in the [length property](#length) section.
+    1. For any composition of operators `g_seq . f_seq`, `input_length(g_seq) == output_length(f_seq)`, as noted in the [sequence length property](#length-property) section.
+    1. For the corresponding `g_space . f_space`, `input_length(g_space) == output_length(f_space)`.
     1. Also, `input_throughput(g_space) == output_throughput(f_space)`.
 
     ```
     input_throughput(g_space) == 
-    input_parallelism(g_space) / time(g_space) == 
-    input_parallelism(f_space) / time(f_space) == 
+    input_length(g_space) / time(g_space) == 
+    output_length(f_space) / time(f_space) == 
     output_throughput(f_space)
     ```
 
-1. We will prove the property holds for all `P_i` by induction. 
-    1. Base Case `i = 0`: `P_i` is `P_space`.
-    1. Inductive Case: Each operator `f` in `P_i` is slowed down by `factor` in `P_i+1`. 
-        1. By inductive assumption `input_parallelism(g_i) == output_parallelism(f_i)` and `time(g_i) == time(f_i)` for all composed `g_i . f_i` in `P_i`.
-        1. Each operator took `t` clock cycles in `P_i`.
-        1. Each operator takes `factor*t` clock cycles in `P_i+1`
-        1. Each operator now has `input_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
-        1. Each operator now has `output_parallelism(f_i+1) = max 1 (input_parallelism(f_i) / factor)`
-        1. For all `g_i+1 . f_i+1`, `input_parallelism(g_i+1) == output_parallelism(f_i+1)` and `time(g_i+1) == time(f_i+1)` .
-        1. Also, `input_throughput(g_i+1) == output_throughput(f_i+1)`.
-        ```
-        input_throughput(g_i+1) == 
-        input_length(g_i+1) / time(g_i+1) == 
-        (max 1 (input_parallelism(g_i) / factor)) / (t * factor) == 
-        (max 1 (output_parallelism(f_i) / factor)) / (t * factor) == 
-        output_parallelism(f_i+1) / time(f_i+1) == 
-        output_throughput(f_i+1)
-        ```
+1. We will prove the property holds for all `P_i`. 
+    1. Let `f_i` be the one or more operators produced by applying the slowdown rewrite rule to `f_space`.
+    1. Each operator `f_space` in `P_space` is slowed down by `prod_factor_i` in `P_i`. 
+    1. `time(f_space) = 1`
+    1. `time(f_i) = prod_factor_i`
+    1. `input_length(f_i) = input_length(f_space)`
+    1. `output_length(f_i) = output_length(f_space)`
+    1. For all `g_i . f_i`, `input_throughput(g_i) == output_throughput(f_i)`.
+    ```
+    input_throughput(g_i) == 
+    input_length(g_i) / time(g_i) == 
+    input_length(g_space) / prod_factor_i == 
+    output_length(f_space) / prod_factor_i == 
+    output_length(f_i) / time(f_i) == 
+    output_throughput(f_i)
+    ```
 
 All producer-consumer throughputs match in all pipelines.
 
