@@ -409,7 +409,7 @@ We will show that all pipelines in the space-time IR that are produced by the au
 Note: inspection of all Slowdown rewrite rules show that they decrease parallelism by the amount of the factor, up to the point 
 
 1. `P_seq`. It has no rate property.
-1. `P_space` is fully parallel. We will prove that for each pair of operators `g_space . f_space` in `P_space`, `input_throughput(g_space) == output_throughput(f_space)`.
+1. `P_space` is fully parallel. We will prove that, for each pair of operators `g_space . f_space` in `P_space`, `input_throughput(g_space) == output_throughput(f_space)`.
     1. Let `f_seq` be an operator in `P_seq`. 
     1. Let `f_space` be the one or more operators produced by applying the Sequence to Space rewrite rule to `f_seq`.
     1. `time(f_space) = 1`.
