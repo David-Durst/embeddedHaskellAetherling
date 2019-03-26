@@ -65,7 +65,7 @@ The following operator tracks the total number of atoms accepted and emitted by 
 1. `input_length(f :: t -> t') = type_length(t)`
 1. `output_length(f :: t -> t') = type_length(t')`
 
-Since types incorporate length, two operators `f` and `g` in the sequence language cannot be composed unless `input_length(g) == output_length(f)`.
+Since types incorporate length, two operators `f` and `g` in the sequence language cannot be composed as `g . f` unless `input_length(g) == output_length(f)`.
 
 ## Sequence Isomorphisms
 `Partition no ni` and `Unpartition no ni` form an isomorphism between the types `Seq (no*ni) t` and `Seq no (Seq ni t)` for all choices of `no` and `ni`. 
@@ -404,12 +404,12 @@ We will show that all pipelines in the space-time IR that are produced by the au
 1. All operators in pipeline take same amount of time.
 
 ### Rate matching
-We will show that all pipelines in the space-time IR that are produced by the auto-scheduler satisfy the rate matching constraint.
+We will show that all pipelines in the space-time IR that are produced by the auto-scheduler satisfy the producer-consumer rate matching constraint.
 
 Note: inspection of all Slowdown rewrite rules show that they decrease parallelism by the amount of the factor, up to the point 
 
 1. `P_seq`. It has no rate property.
-1. `P_space` is fully parallel. 
+1. `P_space` is fully parallel. We will prove that for each pair of operators `g_space . f_space` in `P_space`, `input_throughput(g_space) == output_throughput(f_space)`.
     1. Let `f_seq` be an operator in `P_seq`. 
     1. Let `f_space` be the one or more operators produced by applying the Sequence to Space rewrite rule to `f_seq`.
     1. `time(f_space) = 1`.
@@ -425,7 +425,7 @@ Note: inspection of all Slowdown rewrite rules show that they decrease paralleli
     output_throughput(f_space)
     ```
 
-1. We will prove the property holds for all `P_i`. 
+1. We will prove that, for each pair of operators `g_i . f_i` in `P_i`, `input_throughput(g_i) == output_throughput(f_i)`.
     1. Let `f_i` be the one or more operators produced by applying the slowdown rewrite rule to `f_space`.
     1. Each operator `f_space` in `P_space` is slowed down by `prod_factor_i` in `P_i`. 
     1. `time(f_space) = 1`
