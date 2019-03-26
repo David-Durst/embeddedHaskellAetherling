@@ -444,7 +444,7 @@ All producer-consumer throughputs match in all pipelines.
 ### Time-Area Tradeoffs
 Show for each operator that time value goes up, resources go down by evaluating the resources operator for each one
 
-**Negative** - I don't think this can actually be proven. Increases decreasing time increases area for `up_1d`. `up_1d_s` requires no memory area. `up_1d_t` requires memory. 
+**Negative** - I don't think this can actually be proven. Increases increasing time increases area for `up_1d`. `up_1d_s` requires no memory area. `up_1d_t` requires memory. 
 
 **Positive** - We still can have a linear search (following the common factors). The auto-scheduler provided above does this. It finds the most parallel implementation that fits on the target chip.
 
