@@ -387,7 +387,7 @@ Before proving the properties, we must formalize the impact of the slowdown rewr
     - `time(slowdown(f, factor)) = time(f) * factor` 
 1. **Throughput** - Since throughput is computed based on length and time:
     - `throughput(slowdown(f, factor)) = length(slowdown(f, factor)) / time(slowdown(f, factor)) =`
-    - `length(f) / (time(f) * factor) = throuhgput(f) / factor**
+    - `length(f) / (time(f) * factor) = throuhgput(f) / factor`
 
 **I don't know how to prove these statements.**
 
@@ -396,8 +396,8 @@ We will show that all pipelines in the space-time IR that are produced by the au
 
 1. `P_seq`. It has no time property.
 1. `P_space` is fully parallel. For each operator `f_space` in `P_space`, `time(f_space) = 1`.
-1. We will prove the property holds for all `P_i`. 
-    1. Each operator `f` in `P_space` is slowed down by `prod_factor_i`: `f_i = slowdown(f_space, prod_factor_i)`
+1. We will prove that `time(f_i)` is equal for all operators `f_i` in `P_i`. 
+    1. Let `f_i` be the one or more operators produced by applying the slowdown rewrite rule to `f_space`: `f_i = slowdown(f_space, prod_factor_i)`.
     1. `time(f_space) = 1`
     1. `time(f_i) = prod_factor_i`
     1. All operators take same amount of time.
@@ -411,7 +411,7 @@ Note: inspection of all Slowdown rewrite rules show that they decrease paralleli
 1. `P_seq`. It has no rate property.
 1. `P_space` is fully parallel. We will prove that, for each pair of operators `g_space . f_space` in `P_space`, `input_throughput(g_space) == output_throughput(f_space)`.
     1. Let `f_seq` be an operator in `P_seq`. 
-    1. Let `f_space` be the one or more operators produced by applying the Sequence to Space rewrite rule to `f_seq`.
+    1. Let `f_space` be the one or more operators produced by applying the sequence to space rewrite rule to `f_seq`.
     1. `time(f_space) = 1`.
     1. `input_length(f_space) = input_length(f_seq)` and `output_length(f_space) = output_length(f_seq)`, as noted in the [length property](#length) section.
     1. For any composition of operators `g_seq . f_seq`, `input_length(g_seq) == output_length(f_seq)`, as noted in the [sequence length property](#length-property) section.
@@ -426,8 +426,7 @@ Note: inspection of all Slowdown rewrite rules show that they decrease paralleli
     ```
 
 1. We will prove that, for each pair of operators `g_i . f_i` in `P_i`, `input_throughput(g_i) == output_throughput(f_i)`.
-    1. Let `f_i` be the one or more operators produced by applying the slowdown rewrite rule to `f_space`.
-    1. Each operator `f_space` in `P_space` is slowed down by `prod_factor_i` in `P_i`. 
+    1. For each `f_space`, let `f_i` be the one or more operators produced by applying the slowdown rewrite rule to `f_space`: `f_i = slowdown(f_space, prod_factor_i)`.
     1. `time(f_space) = 1`
     1. `time(f_i) = prod_factor_i`
     1. `input_length(f_i) = input_length(f_space)`
