@@ -13,9 +13,10 @@ There is no clear interpretation of unscheduled programs as hardware accelerator
 
 ## Atom Types
 The sequence language has two parts. The first part of the sequence language is the atoms. 
-Atoms are standard programming primitives, such as integers. 
+Atoms are standard primitives, such as integers and units.
 Atoms also include the minimal derived types necessary to express arithmetic and boolean operators on the primitives. 
 
+1. `()` - Unit
 1. `Int` - integer
 2. `t x t'` - tuple
 4. `t -> t'` - function
@@ -24,23 +25,23 @@ Atoms also include the minimal derived types necessary to express arithmetic and
 `t` must be an atomic type for the following operators.
 
 1. `Id :: t -> t`
-1. `Const_Gen :: t -> t' -> t`
+1. `Const_Gen :: t -> () -> t`
 1. `Add :: (Int x Int) -> Int`
 1. `Fst :: (t x t') -> t`
 1. `Snd :: (t x t') -> t'`
 5. `Zip :: t1 -> t2 -> t1 x t2`
 
 ## Sequence Types
-The second part of the language lifts the atomic values and functions onto fixed-length collections.
+The second part of the language lifts types to fixed-length collections containing those types.
 
 1. `Seq n t` - homogeneous, fixed-length sequence
 
 `Seq` is a functor. It is a fixed length version of the `[]` list functor in Haskell. 
-`Seq n t` lifts a type `t` onto a sequence of `n` elements of type `t`. 
+`Seq n t` lifts a type `t` to a sequence of `n` elements of type `t`. 
 The `Map` operator in the [Sequence Operators](#sequence-operators) section is `Seq`'s `fmap`. 
-`Map` lifts functions from `t -> t'` to `Seq n t -> Seq n t'`. 
+`Map` lifts a function `t -> t'` to a function `Seq n t -> Seq n t'`. 
 
-We do not allow sequences of functions, such as `Seq n (Int -> Int)`.
+We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples of sequences, such as `(Seq n Int) x (Seq n Int)`.
 
 **Pat** - Is this enough of a callout to the fact that `Seq` is a functor? I really dislike making it its own section. Making a whole section about `Seq` due to it being a functor overplays its differences from the other types. Both `t x t'` and `t -> t'` are also functors when one type is applied.
 
@@ -65,11 +66,10 @@ The following operator tracks the total number of atoms accepted and emitted by 
 1. `input_length(f :: t -> t') = type_length(t)`
 1. `output_length(f :: t -> t') = type_length(t')`
 
-Since types incorporate length, two operators `f` and `g` in the sequence language cannot be composed as `g . f` unless `input_length(g) == output_length(f)`.
+Since types incorporate length, two operators `f` and `g` in the sequence language cannot be composed as `g . f` unless `input_length(g) == output_length(f)`. **From Kayvon: move this down to proof section.**
 
 ## Sequence Isomorphisms
 `Partition no ni` and `Unpartition no ni` form an isomorphism between the types `Seq (no*ni) t` and `Seq no (Seq ni t)` for all choices of `no` and `ni`. 
-Both types are objects in the category of types. 
 `Partition` and `Unpartition` convert between the types in a way that preserves the identity function. 
 ```
 Unpartition no ni . Partition no ni == Id
@@ -94,44 +94,24 @@ We will use these isomorphisms to prove the existence of Aetherling's [rewrite r
 Aetherling lowers the sequence language to a space-time IR. 
 Programs in the IR are **scheduled**: the parallelism of each operators is specified. 
 An operator can be parallel (scheduled in space) or sequential (scheduled in time).
-The space-time IR uses these schedules to interpret the data flow programs as hardware accelerators. 
+All programs in the space-time IR can be interpreted as efficient hardware accelerators with the following properties: all operators correspond to hardware components that run in parallel with minimal buffering between components.
 
-In hardware accelerators, all operators are implemented using separate hardware components that run in parallel. 
-If two functions are composed in the sequence language (such as `g . f`), they form a pipeline.
-`f`'s hardware component produces values that are consumed by `g`'s component'.
-All composed operators in a pipeline must process data over the same amount of time, which we count in clock cycles. 
-This requirement is known as **time matching**.
-
-In addition matching time, operators in a pipeline must also match throughputs.
+In order to ensure minimal buffering, the space-time IR must guarantee that producers and consumers match throughputs.
 A **throughput** (or **rate**) is the average number of atoms accepted or emitted per clock.
 Each operator has both an input and output throughput, which may be different.
 In a pipeline, the output throughput of each producer function must equal the input throughput of its consumer function.
 In `g . f`, `f`'s output throughput must equal `g`'s input throughput.
 This requirement is known as **producer-consumer rate matching**. 
-
-The first benefit of rate matching is that, together with time matching, it ensures all components in a pipeline operate on the same amount of data over the same clock cycles.
-
-The second benefit of producer-consumer rate matching is that all pipelines compile to efficient hardware accelerators. 
-Hardware accelerators are efficient if they use minimal compute and storage resources. 
-Matching rates minimizes these resources. 
-1. **Compute** - matching rates ensures all nodes run at the exact rate required by their upstream producers and downstream consumers. 
-Thus, all operators are implemented using the minimal parallelism necessary to achieve the target throughput. 
-1. **Storage** - matching rates ensure that nodes can perform streaming computation. 
-As soon as a producer emits data, the consumer can start operating on the entire output without buffering. 
-If the producer had a higher throughput, a buffer would be required to store part of the producer's output while the consumer handled a separate piece of it.
-If the producer had a lower throughput, a buffer would be required to collect multiple of the producer's outputs into a single input for the consumer. 
-No buffering between operators means minimal storage resources. 
-
-## Single-Rate Pipelines
-We first focus on **single-rate pipelines**, those in which all operators have the same input and output throughputs. 
-These pipelines always satisfy the producer-consumer rate matching requirement.
+If rates didn't match, the result would be over-provisioned hardware, e.g. a consumer with higher throughput than its producer. 
+The mismatch would also require buffering between the two stages.
+If the producer had a higher throughput, a buffer would be required to store the producer's output while waiting for the consumer. 
 
 ### Space-Time Types
-Aetherling expresses schedules using the type system.
-Operators' input and output sequences are scheduled as space-sequences (`SSeq`) and time-sequences (`TSeq`). 
-`SSeq`s and `TSeq`s define the number of clock cycles over which an operator accepts output or emits input. 
-They also define the atom data type accepted or emitted by the operator. 
+The space-time IR encodes schedules using types.
+The input and output sequence types of an operator define the schedule in which elements of the sequence are consumed and produced by the operator.
+These schedules are encoded as two sequence types: space-sequences (`SSeq`) and time-sequences (`TSeq`). 
 
+We define the behavior of corresponding to `SSeq`s and `TSeq`s in terms of a period.
 A period for a `SSeq n t` or `TSeq n t` is the number of clock cycles required for an operator to accept or emit one `t`.
 If `t` is an atomic type, then the period is 1.
 `SSeq` and `TSeq` are defined in terms of periods rather than clock cycles in order to support nested sequence types.
@@ -156,9 +136,13 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 They are all ordered sequences of the same length. 
 
 Since they are isomorphic, any `f :: Seq n t -> Seq m t'` function must have contextually equivalent versions `f_t :: TSeq n v t -> TSeq m u t'` and `f_s :: SSeq n t -> SSeq m t'`.
-This is proven in the same way as shown in [the `Seq` isomorphism section.](#sequence-isomorphisms)
+This is proven in the same way as shown in [the `Seq` isomorphism section.](#sequence-isomorphisms**
 
 We will use these isomorphisms to produce the rewrite rules that lower programs from the sequence language to the space-time IR.
+
+## Single-Rate Pipelines
+We first focus on **single-rate pipelines**, those in which all operators have the same input and output throughputs. 
+These pipelines always satisfy the producer-consumer rate matching requirement.
 
 ### Operators
 1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
@@ -167,54 +151,46 @@ We will use these isomorphisms to produce the rewrite rules that lower programs 
 2. `Map2_t n f :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
 
 ## Operator Properties
+We can compute the following properties for all programs in the space-time IR: 
+1. time
+1. input and output length
+1. input and output throughput
+1. area
+
 In order to guarantee time and throughput matching, we must model the time, parallelism, and throughput of operators.
 We also model the resources of operators to prove that our schedules produce efficient hardware accelerators. (We use the terms area and resources interchangeably.)
 
 ### Time
+As stated in [the space-time types section](#space-time-types), the input and output types of an operator fully specify the number of clock cycles it requires to process all inputs and emit all outputs.
+`time(f :: t -> t') = type_time(t)`.
 `type_time(t)` is the number of clock cycles needed for an operator to accept or emit one `t`.
 `type_time` formalizes the [above definitions](#space-time-types) of `TSeq` and `SSeq`.
 
 1. `type_time(Int) = 1`
 1. `type_time(t x t') = 1`
-1. `type_time(SSeq n t) = n * type_time(t)`
+1. `type_time(SSeq n t) = type_time(t)`
 1. `type_time(TSeq n v t) = (n+v) * type_time(t)`
 
-`time(f :: t -> t') = type_time(t)` provides the syntax for applying `type_time` to an operator.
-
-**Axiom** - `type_time(t) == type_time(t')` forall operators `f :: t -> t'`
+**Theorem** - `type_time(t) == type_time(t')` forall operators `f :: t -> t'`
 
 ### Length
-This property is the same as `length` for sequence operators.
-`type_length` is the number of atoms accepted or emitted by an operator. 
+`input_length` and `output_length` are the number of atoms accepted and emitted by an operator. 
+This property is the same as `length` for sequence operators. 
+1. `input_length(f :: t -> t') = type_length(t)`
+1. `output_length(f :: t -> t') = type_length(t')`
+
 
 1. `type_length(Int) = 1`
 1. `type_length(t x t') = 1`
 1. `type_length(SSeq n t) = n * type_length(t)`
 1. `type_length(TSeq n v t) = n * type_length(t)`
 
-`input_length(f)` and `output_length(f)` provide the syntax for applying `type_length` to an operator.
-
-1. `input_length(f :: t -> t') = type_length(t)`
-1. `output_length(f :: t -> t') = type_length(t')`
 
 ### Throughput
 An operator's throughput is the number of atoms produced or consumed per clock.
 
 1. `input_throughput(f) = input_length(f) / time(f)`
 1. `output_throughput(f) = output_length(f) / time(f)`
-
-### Type Atoms
-`type_atom` is the atom type used in a potentially nested `TSeq` or `SSeq`.
-
-1. `type_atom(Int) = Int`
-1. `type_atom(t x t') = t x t'`
-1. `type_atom(SSeq n t) = type_atom(t)`
-1. `type_atom(TSeq n t) = type_atom(t)`
-
-`input_atom(f)` and `output_atom(f)` provide the syntax for applying `type_atom` to an operator.
-
-1. `input_atom(f :: t -> t') = type_atom(t)`
-1. `output_atom(f :: t -> t') = type_atom(t')`
 
 ### Area
 `area(f)` is the amount of area on the hardware accelerator required for a space-time operator `f`.
@@ -238,7 +214,8 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 1. `area(Id) = {0, 0, 0}`
 1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
 1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
-5. `Zip`, `Fst`, `Snd`, and `Add_Unit` don't have area. They are just used for connecting other operators.
+5. `area(Zip) = area(Fst) = area(Snd) = area(Add_Unit) = {0, 0, 0}`
+1. `area(g.f) = area(g) + area(f)`
 
 ## Multi-Rate Pipelines
 A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
@@ -246,7 +223,7 @@ These pipelines are the simplest ones that demonstrate the type system's ability
 Single-rate pipelines are not sufficiently complicated. If all operators have the same rate, then obviously all pairs of operators have the same rate.
 
 ### Types
-Multi-rate modules are expressed in the type system using the `v` parameter of `TSeq n v t`. 
+Multi-rate operators are expressed in the type system using the `v` parameter of `TSeq n v t`. 
 As a reminder:
 - `n` is number of utilized periods.
 - `v` is number of empty periods. 
@@ -279,6 +256,10 @@ An operator with input and output `TSeq`s that have non-zero `v`s may be unused 
 5. `Unpartition_ts no ni :: TSeq no v (SSeq ni t) -> TSeq 1 (no + v - 1) (SSeq (no*ni) t)`
 5. `Partition_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
 5. `Unpartition_ss no ni :: SSeq no (SSeq ni t) -> SSeq 1 (SSeq (no*ni) t)`
+
+### Time, Length, and Throughput
+These properties do not need to be redefined for multi-rate pipelines. 
+The definitions above are based on the operator signatures.
 
 ### Area
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
@@ -321,39 +302,43 @@ Then, this operator is converted to a less parallel one in order to trade off ar
 Note: I dropped the underutilization computation from `TSeq` where it became onerous.
 
 ### Upsample
-1. Sequence To Space - `Up_1d n -> Map_t 1 (Up_1d_s n)`
+1. Sequence To Space - `Up_1d n === Map_t 1 (Up_1d_s n)`
     1. `Up_1d n :: Seq 1 t -> Seq n t`
     1. `Map_t 1 (Up_1d_s n) :: TSeq 1 0 (SSeq 1 t) -> TSeq 1 0 (SSeq n t)`
-1. Slowdown - `Map_t 1 (Up_1d_s (no*ni)) -> Unpartition_ts no ni . Map_t no (Up_1d_s ni) . Up_1d_t no . Partition_ts 1 1`
+1. Slowdown by no - `Map_t 1 (Up_1d_s (no*ni)) === Unpartition_ts no ni . Map_t no (Up_1d_s ni) . Up_1d_t no . Partition_ts 1 1`
     1. `Map_t 1 (Up_1d_s (no*ni)) :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (no*ni) t)`
     1. `Map_t no (Up_1d_s ni) :: TSeq no (SSeq 1 t) -> TSeq no (SSeq ni t)`
     1. `Up_1d_t no :: (TSeq 1 (SSeq 1 t)) -> (TSeq no (SSeq 1 t))`
     1. `Unpartition_ts no ni . Map_t no (Up_1d_s ni) . Up_1d_t no . Partition_ts 1 1 :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (no*ni) t)`
 
 ### Downsample
-1. Sequence To Space - `Down_1d n -> Map_t 1 (Down_1d_s n)`
+1. Sequence To Space - `Down_1d n === Map_t 1 (Down_1d_s n)`
     1. `Down_1d n :: Seq n t -> Seq 1 t`
     1. `Map_t 1 (Down_1d_s n) :: TSeq 1 0 (SSeq n t) -> TSeq 1 0 (SSeq 1 t)`
-1. Slowdown - `Map_t 1 (Down_1d_s (no*ni)) -> Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s ni)) . Down_1d_t no . Partition_ts no ni`
+1. Slowdown by no - `Map_t 1 (Down_1d_s (no*ni)) === Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s ni)) . Down_1d_t no . Partition_ts no ni`
     1. `Map_t 1 (Down_1d_s (no*ni)) :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq 1 t)`
     1. `Map_t 1 (Down_1d_s ni) :: TSeq 1 (SSeq ni t) -> TSeq 1 (SSeq 1 t)`
     1. `Down_1d_t no :: (TSeq no (SSeq ni t)) -> (TSeq 1 (SSeq ni t))`
     1. `Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s ni)) . Down_1d_t no . Partition_ts no ni :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq 1 t)`
 
 ### Unpartition/Partition Removal
-1. `Partition_ts no ni . Unpartition_ts no ni = Id`
+1. `Partition_ts no ni . Unpartition_ts no ni === Id`
 **Danger: `Partition_ts . Unpartition_ts` is not really Id in Space-Time. There will be underutilized clocks here. The partition_tsing and unpartition_tsing takes n clocks. However, the interface to both of these functions is just an `SSeq`. The `SSeq` doesn't account for time.**
-2. `Unpartition_ts no ni . Partition_ts no ni = Id`
+2. `Unpartition_ts no ni . Partition_ts no ni === Id`
 
 The same removal rule can be used for `Partition_tt`/`Unpartition_tt` and `Partition_ss`/`Unpartition_ss**.
 
-## Auto-Scheduler
-We use the following technique for applying the rewrite rules. 
-We will prove below that this technique chooses the schedule with the maximum throughput given resource constraints.
+## Auto-Scheduler Algorithm
+The following algorithm finds the schedule with the maximum throughput given a specified resource constraints.
+1. Inputs: 
+    1. `P_seq`: a program in the sequence language. 
+    1. `area_max`: a resource constraint in area.
+1. Outputs
+    1. `P_st_optimal`: a program in the space-time IR with maximum throughput given resource constraints.
 
-1. Let `P_seq` be the program in the sequence language.
-1. Apply the Sequence To Space rewrite rule to all operators. Let `P_space` be the result.
-1. If `area(P_space)` is less than the resources on the target chip, stop.
+Algorithm:
+1. Apply the Sequence To Space rewrite rule to all operators in `P_seq`. Let `P_space` be the result.
+1. If `area(P_space)` is less than `area_max`, stop. `P_space` is `P_st_optimal`
 1. Let `N` be the set of all input and output sequence lengths, `n`, of all operators.
 1. Let `N_factors` be the set of the common factors of all numbers in `N`. 
 1. Sort `N_factors` from smallest to largest.
@@ -362,22 +347,16 @@ We will prove below that this technique chooses the schedule with the maximum th
     1. Apply Slowdown rewrite rule to all operators in `P_space`. 
         1. Let `prod_factor_i` = product of `factor_j` for all j from 0 to i (inclusive).
         1. Let `P_i` be `P_space` after applying the slowdown rewrite rule with factor `prod_factor_i` rule to each operator in `P_space`.
-    1. If `area(P_i)` is less than the resources on the target chip, stop.
+    1. If `area(P_i)` is less than `area_max`, stop. `P_i` is `P_st_optimal`
 1. If reached this point, fail as not able to fit program on chip even when fully slowed.
 
-**Note:** I think the auto-scheduler has to be added here. 
-You cannot prove the time matching and throuhgput matching properties on just the rewrite rules.
-You must prove those properties on how the rules are applied.
-The rules could be applied in a way that breaks the properties. 
-For example, slowing down only `f` in `g.f` is a valid application of the rewrite rules.
-However, this application breaks time and throughput matching.
+## Auto-Scheduler Correctness
+We must prove that the auto-scheduling algorithm:
 
-## Rewrite Rule Correctness
-We prove that the auto-scheduler's approach for applying the rewrite rules:
-
-1. preserves time matching
+1. preserves time matching - **Pat: do we need to show this?**
 2. preserves producer-consumer rate matching
 3. trades-off time and area. Applying the slowdown rewrite rules decrease time without decreasing area. **Note: this can't be proven, see below.**
+4. fins the maximum throughput schedule given resources constraints
 
 ### Slowdown Impact On Time And Area
 Before proving the properties, we must formalize the impact of the slowdown rewrite rule on length, time, throughput.
@@ -448,5 +427,19 @@ Show for each operator that time value goes up, resources go down by evaluating 
 
 **Positive** - We still can have a linear search (following the common factors). The auto-scheduler provided above does this. It finds the most parallel implementation that fits on the target chip.
 
-## Auto-Scheduler Optimality
+### Maximum Throughput Given Resource Constraints
 This is the same proof as in the paper. I'm not going to reproduce here as it is not good. We already agreed it was too wordy.
+
+# Miscellaneous Notes
+### Type Atoms
+`type_atom` is the atom type used in a potentially nested `TSeq` or `SSeq`.
+
+1. `type_atom(Int) = Int`
+1. `type_atom(t x t') = t x t'`
+1. `type_atom(SSeq n t) = type_atom(t)`
+1. `type_atom(TSeq n t) = type_atom(t)`
+
+`input_atom(f)` and `output_atom(f)` provide the syntax for applying `type_atom` to an operator.
+
+1. `input_atom(f :: t -> t') = type_atom(t)`
+1. `output_atom(f :: t -> t') = type_atom(t')`
