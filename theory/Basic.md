@@ -1,9 +1,10 @@
 # Basic Sequence Language Theory
 Aetherling is a system for compiling data flow pipelines to efficient implementations in hardware accelerators.
-Aetherling uses category theory and dependent types to ensure all expressible programs compile to efficient hardware.
-
-This document's version of Aetherling has the most simple types and operators necessary to get multi-rate pipelines. 
-Section [Multi-Rate Pipelines](#multi-rate-pipelines) explains why these pipelines are the simplest demonstration of the advantages of Aetherling's approach.
+Aetherling programs are written in a **sequence language**, a standard functional programming language.
+These programs cannot be interpreted as hardware accelerators.
+Aetherling transforms these programs into a **space-time IR** that models the throughput and resource requirements of the corresponding hardware implementations.
+An auto-scheduler uses semantics-preserving transformations in the IR to find the maximally implementation given hardware constraints.
+**From Paper** - were going to have a sequence language, goinkog to lower it to a spcae time ir so all programs in space-tiem ir are compilable to hardware. We will then provide an algorithm for finding amximal scheudle for hardware given reosurce constraints.
 
 # Sequence Language
 Programmers use Aetherling by writing code in the sequence language.
@@ -119,7 +120,7 @@ If `t` is an atomic type, then the period is 1.
 1. `SSeq n t` - homogeneous, fixed-length sequence in space. This sequence is parallel.
     1. An operator that produces a `SSeq` emits `n` values of type `t` over one period. 
 3. `TSeq n v t` - homogeneous, fixed-length sequence in time. This sequence is sequential.
-    1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more in the [multi-rate pipelines section](#multi-rate-pipelines).
+    1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more in the [empty periods section](#empty-periods).
     1. An operator that produces a `TSeq` emits `n` values of type `t` over `(n+v)` periods.
      
 #### Period Example
@@ -140,15 +141,28 @@ This is proven in the same way as shown in [the `Seq` isomorphism section.](#seq
 
 We will use these isomorphisms to produce the rewrite rules that lower programs from the sequence language to the space-time IR.
 
-## Single-Rate Pipelines
-We first focus on **single-rate pipelines**, those in which all operators have the same input and output throughputs. 
-These pipelines always satisfy the producer-consumer rate matching requirement.
+## Operators
 
-### Operators
+1. `Id :: t -> t`
+1. `Const_Gen :: t -> () -> t`
+1. `Add :: (Int x Int) -> Int`
+1. `Fst :: (t x t') -> t`
+1. `Snd :: (t x t') -> t'`
+5. `Zip :: t1 -> t2 -> t1 x t2`
 1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 2. `Map2_s n f :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
 2. `Map2_t n f :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
+1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
+3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
+4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
+4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
+5. `Partition_tt no ni :: TSeq (no*ni) (vo*vi) t -> TSeq no vo (TSeq ni vi t)`
+5. `Unpartition_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) (vo*vi) t`
+5. `Partition_ts no ni :: TSeq 1 (no + v - 1) (SSeq (no*ni) t) -> TSeq no v (SSeq ni t)`
+5. `Unpartition_ts no ni :: TSeq no v (SSeq ni t) -> TSeq 1 (no + v - 1) (SSeq (no*ni) t)`
+5. `Partition_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
+5. `Unpartition_ss no ni :: SSeq no (SSeq ni t) -> SSeq 1 (SSeq (no*ni) t)`
 
 ## Operator Properties
 We can compute the following properties for all programs in the space-time IR: 
@@ -215,23 +229,23 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
 1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
 5. `area(Zip) = area(Fst) = area(Snd) = area(Add_Unit) = {0, 0, 0}`
+1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
+1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
+1. `area(Down_1d_s n) = {0, 0, num_bits(t)}`
+1. `area(Down_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
+1. `area(Partition_ts no ni) = {0, ((no-1) * ni) * num_bits(t), ni * num_bits(t)} + area(counter)`
+1. `area(Unpartition_ts no ni) = {0, ((no-1) * ni) * num_bits(t), (no * ni) * num_bits(t)} + area(counter)`
+1. `area(Partition_ss no ni) = {0, 0, 0}`
+1. `area(Unpartition_ss no ni) = {0, 0, 0}`
 1. `area(g.f) = area(g) + area(f)`
 
-## Multi-Rate Pipelines
-A **multi-rate pipeline** is a pipeline of operators in which all input and output throughputs are not equal. 
-These pipelines are the simplest ones that demonstrate the type system's ability to ensure producer-consumer rates match. 
-Single-rate pipelines are not sufficiently complicated. If all operators have the same rate, then obviously all pairs of operators have the same rate.
+Many of the sequential operators require a counter to track clock cycles.
+1. `area(counter) = {num_bits(Int), num_bits(Int), num_bits(Int)}`
 
-### Types
-Multi-rate operators are expressed in the type system using the `v` parameter of `TSeq n v t`. 
-As a reminder:
-- `n` is number of utilized periods.
-- `v` is number of empty periods. 
-- An operator with a `TSeq` output type emits `n` values of type `t` over `n+v` periods.
-
-Operators does not accept or emit data during empty periods. 
-Empty periods enable Aetherling to (1) match input and output time lengths and (2) express schedules with underutilization.
-1. The time matching property requires operators' input and output `TSeq`s to take the same amount of time. Empty clocks equalize time lengths for `TSeq`s with different `n` parameters. 
+### Empty Periods
+Empty periods enable Aetherling to express (1) operators with different input and output throughputs and (2) schedules with underutilization.
+**david - figure out how to say this with different throuhgputs**
+1. Empty clocks enable `TSeq`s with different `n` parameters to express different throughputs.
     1. For example, `Up_1d_t` takes in one input on one clock cycle and then repeatedly outputs it for multiple clock cycles. 
     While `Up_1d_t` is busy emitting data, it cannot accept new input. 
     The empty periods indicate the lack of input so that the input and output `TSeq`s take the same amount of time.
@@ -245,35 +259,13 @@ An operator with input and output `TSeq`s that have non-zero `v`s may be unused 
     `Map_t` must accept input and emit output every fourth clock so that its output throughput matches `Up_1d_t`'s input throughput.
     To accomplish this rate matching, `Map_t` must be underutilized.
     
-### Operators
-1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
-3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
-4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
-4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
-5. `Partition_tt no ni :: TSeq (no*ni) (vo*vi) t -> TSeq no vo (TSeq ni vi t)`
-5. `Unpartition_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) (vo*vi) t`
-5. `Partition_ts no ni :: TSeq 1 (no + v - 1) (SSeq (no*ni) t) -> TSeq no v (SSeq ni t)`
-5. `Unpartition_ts no ni :: TSeq no v (SSeq ni t) -> TSeq 1 (no + v - 1) (SSeq (no*ni) t)`
-5. `Partition_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
-5. `Unpartition_ss no ni :: SSeq no (SSeq ni t) -> SSeq 1 (SSeq (no*ni) t)`
+Operators that have different inputwith empty periods are expressed in the type system using the `v` parameter of `TSeq n v t`. 
+As a reminder:
+- `n` is number of utilized periods.
+- `v` is number of empty periods. 
+- An operator with a `TSeq` output type emits `n` values of type `t` over `n+v` periods.
 
-### Time, Length, and Throughput
-These properties do not need to be redefined for multi-rate pipelines. 
-The definitions above are based on the operator signatures.
-
-### Area
-1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
-1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
-1. `area(Down_1d_s n) = {0, 0, num_bits(t)}`
-1. `area(Down_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
-1. `area(Partition_ts no ni) = {0, ((no-1) * ni) * num_bits(t), ni * num_bits(t)} + area(counter)`
-1. `area(Unpartition_ts no ni) = {0, ((no-1) * ni) * num_bits(t), (no * ni) * num_bits(t)} + area(counter)`
-1. `area(Partition_ss no ni) = {0, 0, 0}`
-1. `area(Unpartition_ss no ni) = {0, 0, 0}`
-
-Many of the sequential operators require a counter to track clock cycles.
-1. `area(counter) = {num_bits(Int), num_bits(Int), num_bits(Int)}`
-
+Operators does not accept or emit data during empty periods. 
 ### Space-Time Isomorphisms
 Just like [`Partition` and `Unpartition` for `Seq`](#sequence-isomorphisms), the partitions and unpartitions in the space-time IR form isomorphisms between nested combinations of `TSeq` and `SSeq`.
 
