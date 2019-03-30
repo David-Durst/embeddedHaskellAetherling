@@ -2,9 +2,10 @@
 Aetherling is a system for compiling data flow pipelines to efficient implementations in hardware accelerators.
 Aetherling programs are written in a **sequence language**, a standard functional programming language.
 These programs cannot be interpreted as hardware accelerators.
-Aetherling transforms these programs into a **space-time IR** that models the throughput and resource requirements of the corresponding hardware implementations.
-An auto-scheduler uses semantics-preserving transformations in the IR to find the maximally implementation given hardware constraints.
-**From Paper** - were going to have a sequence language, goinkog to lower it to a spcae time ir so all programs in space-tiem ir are compilable to hardware. We will then provide an algorithm for finding amximal scheudle for hardware given reosurce constraints.
+Aetherling transforms these programs into a **space-time IR**. 
+Programs in the IR can be interpreted as hardware accelerators.
+The IR also models the throughput and resource requirements of the corresponding hardware implementations.
+An auto-scheduler uses semantics-preserving transformations in the IR to find the maximally parallel hardware implementation given resource constraints.
 
 # Sequence Language
 Programmers use Aetherling by writing code in the sequence language.
@@ -142,7 +143,6 @@ This is proven in the same way as shown in [the `Seq` isomorphism section.](#seq
 We will use these isomorphisms to produce the rewrite rules that lower programs from the sequence language to the space-time IR.
 
 ## Operators
-
 1. `Id :: t -> t`
 1. `Const_Gen :: t -> () -> t`
 1. `Add :: (Int x Int) -> Int`
@@ -221,14 +221,14 @@ We represent area as the vector `{compute_area, storage_area, wire_area}`.
 The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 `num_bits` returns the number of bits in an `Int` or tuple type.
 
+1. `area(Id) = {0, 0, 0}`
+1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
+1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
+5. `area(Fst) = area(Snd) = area(Zip) = {0, 0, 0}`
 1. `area(Map_s n f) = n * area(f)`
 2. `area(Map_t n f) = area(f)`
 1. `area(Map2_s n f) = n * area(f)`
 2. `area(Map2_t n f) = area(f)`
-1. `area(Id) = {0, 0, 0}`
-1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
-1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
-5. `area(Zip) = area(Fst) = area(Snd) = area(Add_Unit) = {0, 0, 0}`
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
 1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Down_1d_s n) = {0, 0, num_bits(t)}`
@@ -243,8 +243,8 @@ Many of the sequential operators require a counter to track clock cycles.
 1. `area(counter) = {num_bits(Int), num_bits(Int), num_bits(Int)}`
 
 ### Empty Periods
+Operators does not accept or emit data during empty periods. 
 Empty periods enable Aetherling to express (1) operators with different input and output throughputs and (2) schedules with underutilization.
-**david - figure out how to say this with different throuhgputs**
 1. Empty clocks enable `TSeq`s with different `n` parameters to express different throughputs.
     1. For example, `Up_1d_t` takes in one input on one clock cycle and then repeatedly outputs it for multiple clock cycles. 
     While `Up_1d_t` is busy emitting data, it cannot accept new input. 
@@ -259,13 +259,8 @@ An operator with input and output `TSeq`s that have non-zero `v`s may be unused 
     `Map_t` must accept input and emit output every fourth clock so that its output throughput matches `Up_1d_t`'s input throughput.
     To accomplish this rate matching, `Map_t` must be underutilized.
     
-Operators that have different inputwith empty periods are expressed in the type system using the `v` parameter of `TSeq n v t`. 
-As a reminder:
-- `n` is number of utilized periods.
-- `v` is number of empty periods. 
-- An operator with a `TSeq` output type emits `n` values of type `t` over `n+v` periods.
+**not sure if this section is clear**
 
-Operators does not accept or emit data during empty periods. 
 ### Space-Time Isomorphisms
 Just like [`Partition` and `Unpartition` for `Seq`](#sequence-isomorphisms), the partitions and unpartitions in the space-time IR form isomorphisms between nested combinations of `TSeq` and `SSeq`.
 
