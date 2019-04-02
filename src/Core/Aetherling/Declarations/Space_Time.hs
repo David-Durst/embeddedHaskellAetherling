@@ -1,4 +1,4 @@
-module Aetherling.Declarations.SpaceTime where 
+module Aetherling.Declarations.Space_Time where 
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
 import Data.Bits

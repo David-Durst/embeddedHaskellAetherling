@@ -1,5 +1,5 @@
 module Aetherling.Interpretations.Resource_Estimator where
-import Aetherling.Declarations.SpaceTime
+import Aetherling.Declarations.Space_Time
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
 import Aetherling.Types.Isomorphisms
