@@ -3,11 +3,14 @@ import Aetherling.Declarations.SpaceTime
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
 import Aetherling.Types.Isomorphisms
+import Aetherling.Interpretations.Monad_Helpers
 import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Identity
 import Data.Typeable
 import Unsafe.Coerce
+import GHC.TypeLits
+import GHC.TypeLits.Extra
 import qualified Data.Vector.Sized as V
   
 
@@ -34,86 +37,166 @@ increase_resources new_resources result = do
         (wireResources new_resources + wireResources prior_resources)
   return result
 
+-- Int is for the size to count to
+add_counter_to_resources :: Resources_Data -> Int -> Resources_Data
+add_counter_to_resources (Resources_Data orig_comp orig_mem orig_wire) n =
+  -- a counter is a memory into an adder, with adder back into memory
+  -- bits_for_int extra compute for the adder incrementing by 1 each clock
+  -- bits_for_int extra memory to store counter value
+  -- add 1 extra memory bit to store the 1 for incrementing the counter
+  -- 2 * bits_for_int extra wires as both adder and counter have wires out
+  Resources_Data (orig_comp + bits_for_int) (orig_mem + bits_for_int)
+  (orig_wire + 2 * bits_for_int)
+  where
+    bits_for_int = fromInteger $ ceiling $ logBase 2 (fromInteger $ toInteger n)
+
 instance Space_Time_Language Resources_Env where
   -- unary operators
-  idC x = return x
+  idC x = return $ x
   absC x = increase_resources (Resources_Data int_size 0 int_size) x
     where int_size = size (Proxy :: Proxy Atom_Int)
-    
-  {-
-  idC x = return x
 
-  absC (Atom_Int x) = return $ Atom_Int $ abs x
-  absC _ = fail $ fail_message "absC" "Atom_Int"
-  
-  notC (Atom_Bit x) = return $ Atom_Bit $ not x
-  notC _ = fail $ fail_message "absC" "Atom_Bit"
+  notC x = increase_resources (Resources_Data bit_size 0 bit_size) x
+    where bit_size = size (Proxy :: Proxy Atom_Bit)
 
   -- binary operators
-  addC (Atom_Int x) (Atom_Int y) = return $ Atom_Int $ x+y
-  addC _ _ = fail $ fail_message "addC" "Atom_Int's"
+  addC x = increase_resources (Resources_Data int_size 0 int_size)
+    Atom_Int_Resources
+    where int_size = size (Proxy :: Proxy Atom_Bit)
 
-  eqC x y = return $ Atom_Bit $ x == y 
+  eqC x = increase_resources (Resources_Data bit_size 0 bit_size)
+    Atom_Bit_Resources
+    where bit_size = size (Proxy :: Proxy Atom_Bit)
 
-  -- generators
-  lut_genC xs (Atom_Int i) | i < length xs = return $ xs !! i 
-  lut_genC xs (Atom_Int i) = fail "lut lookup index out of bounds"
-  lut_genC _ _ = fail $ fail_message "lut_genC" "Atom_Int"
+  lut_genC :: forall a . (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
+              [a] -> Atom_Int -> Resources_Env a
+  lut_genC x _ = increase_resources (Resources_Data t_size t_size t_size)
+    (head x)
+    where t_size = size (Proxy :: Proxy a)
 
-  const_genC x = return x
+  const_genC :: forall a . (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
+                a -> Atom_Unit -> Resources_Env a
+  const_genC x _ = increase_resources (Resources_Data 0 t_size t_size) x
+    where t_size = size (Proxy :: Proxy a)
 
   -- sequence operators
-  up_1dC proxyN (Seq elem) = return $ Seq $
-    V.replicate' proxyN $ V.head elem
-  up_1dC _ _ = fail $ fail_message "up_1dC" "Seq"
+  up_1d_sC :: forall a n . (KnownNat n, 1 <= n, KnownNat (Type_Size a),
+                            Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
+    Proxy n -> SSeq 1 a -> Resources_Env (SSeq n a)
+  up_1d_sC _ (SSeq_Resources x) =
+    increase_resources (Resources_Data 0 0 (n_val*t_size))
+    (SSeq_Resources x)
+    where
+      t_size = size (Proxy :: Proxy a)
+      n_val = fromInteger $ natVal (Proxy :: Proxy n)
+  up_1d_sC _ _ = throwError $ fail_message "up_1d_sC" "SSeq_Resources"
 
-  down_1dC proxyN (Seq vec) = return $ Seq $
-    V.replicate' (Proxy @1) $ V.head vec
-  down_1dC _ _ = fail $ fail_message "down_1dC" "Seq"
+  up_1d_tC :: forall a n . (KnownNat n, 1 <= n, KnownNat (Type_Size a),
+               Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
+    Proxy n -> TSeq 1 (n-1) a -> Resources_Env (TSeq n 0 a)
+  up_1d_tC _ (TSeq_Resources x) =
+    increase_resources with_counter_resources (TSeq_Resources x)
+    where
+      t_size = size (Proxy :: Proxy a)
+      n_val = fromInteger $ natVal (Proxy :: Proxy n)
+      pre_counter_resources = Resources_Data 0 t_size t_size
+      with_counter_resources = add_counter_to_resources pre_counter_resources
+        n_val
+  up_1d_tC _ _ = throwError $ fail_message "up_1d_tC" "TSeq_Resources"
 
-  partitionC _ proxy_ni unnested_seq =
-    return $ seqToSeqOfSeq proxy_ni unnested_seq 
+  down_1d_sC :: forall a n . (KnownNat n, KnownNat (Type_Size a),
+                  Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
+     Proxy n -> SSeq (1+n) a -> Resources_Env (SSeq 1 a)
+  down_1d_sC _ (SSeq_Resources x) =
+    increase_resources (Resources_Data 0 0 t_size) (SSeq_Resources x)
+    where
+      t_size = size (Proxy :: Proxy a)
+  down_1d_sC _ _ = throwError $ fail_message "down_1d_sC" "SSeq_Resources"
 
-  unpartitionC _ _ unflattened_seq =
-    return $ seqOfSeqToSeq unflattened_seq
+  down_1d_tC :: forall a n . (KnownNat n, KnownNat (Type_Size a),
+                 Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
+    Proxy n -> TSeq (1+n) 0 a -> Resources_Env (TSeq 1 n a)
+  down_1d_tC _ (TSeq_Resources x) =
+    increase_resources with_counter_resources (TSeq_Resources x)
+    where
+      t_size = size (Proxy :: Proxy a)
+      n_val = fromInteger $ natVal (Proxy :: Proxy n)
+      pre_counter_resources = Resources_Data 0 0 t_size
+      with_counter_resources = add_counter_to_resources pre_counter_resources
+        n_val
+  down_1d_tC _ _ = throwError $ fail_message "down_1d_tC" "TSeq_Resources"
+  
+  partition_tsC :: forall a no ni . (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                                     KnownNat (Type_Size a),
+                                     Check_Type_Is_Atom_Or_Nested a,
+                                     Typeable (Proxy a)) =>
+                   Proxy no -> Proxy ni ->
+                   TSeq 1 (no-1) (SSeq (no GHC.TypeLits.* ni) a) ->
+                   Resources_Env (TSeq no 0 (SSeq ni a))
+  partition_tsC _ _ (TSeq_Resources (SSeq_Resources x)) =
+    increase_resources with_counter_resources (TSeq_Resources (SSeq_Resources x))
+    where
+      t_size = size (Proxy :: Proxy a)
+      no_val = fromInteger $ natVal (Proxy :: Proxy no)
+      ni_val = fromInteger $ natVal (Proxy :: Proxy ni)
+      pre_counter_resources = Resources_Data 0 ((no_val-1)*ni_val*t_size)
+        (ni_val*t_size)
+      with_counter_resources = add_counter_to_resources pre_counter_resources
+        no_val
+  partition_tsC _ _ _ = throwError $
+    fail_message "partition_tsC" "TSeq_Resources (SSeq_Resources)"
 
- {-
-  -- higher order operators
-  mapC :: (KnownNat n) =>
+  unpartition_tsC :: forall a no ni . (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                                       KnownNat (Type_Size a),
+                                       Check_Type_Is_Atom_Or_Nested a,
+                                       Typeable (Proxy a)) =>
+                     Proxy no -> Proxy ni ->
+                     TSeq no 0 (SSeq ni a) ->
+                     Resources_Env (TSeq 1 (no-1) (SSeq (no GHC.TypeLits.* ni) a))
+  unpartition_tsC _ _ (TSeq_Resources (SSeq_Resources x)) =
+    increase_resources with_counter_resources (TSeq_Resources (SSeq_Resources x))
+    where
+      t_size = size (Proxy :: Proxy a)
+      no_val = fromInteger $ natVal (Proxy :: Proxy no)
+      ni_val = fromInteger $ natVal (Proxy :: Proxy ni)
+      pre_counter_resources = Resources_Data 0 ((no_val-1)*ni_val*t_size)
+        (no_val*ni_val*t_size)
+      with_counter_resources = add_counter_to_resources pre_counter_resources
+        no_val
+  unpartition_tsC _ _ _ = throwError $
+    fail_message "partition_tsC" "TSeq_Resources (SSeq_Resources)"
+
+  partition_ssC _ _ (SSeq_Resources x) = return (SSeq_Resources (SSeq_Resources x))
+  partition_ssC _ _ _ = throwError $
+    fail_message "partition_ssC" "SSeq_Resources"
+
+  unpartition_ssC _ _ (SSeq_Resources (SSeq_Resources x)) =
+    return (SSeq_Resources x)
+  unpartition_ssC _ _ _ = throwError $
+    fail_message "partition_ssC" "SSeq_Resources (SSeq_Resources)"
+  
+{-
+  map_sC :: forall a b n . (KnownNat n) =>
+    Proxy n -> (a -> Resources_Env b) -> (Seq n a -> Resources_Env (Seq n b))
+  map_sC _ f = do
+    let f_resources_either = estimate_resources f 
+    increase_resources
+    where
+  {-
+  map_tC :: (KnownNat n) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
- -} 
-  mapC proxyN f |
-    typeOf f == typeOf Atom_Unit || 
-    typeOf f == typeOf (Atom_Bit True) ||
-    typeOf f == typeOf (Atom_Int 1) =
-    -- I need to say that Seq n a is the same as
-    -- Type_Lifted_To_Seq n a. I know this as I'm only
-    -- allowing things that are not functions in here.
-    return $ unsafeCoerce $ Seq $ V.replicate' proxyN f
-  -- only do following on functions
-  {-
-  mapC proxyN f |
-    is_function f =
-    return $ unsafeCoerce $ seq_all_args vector_of_fs
-    where
-      f_as_function :: 
-      vector_of_fs = V.replicate' proxyN f
-      is_function f = L.isInfixOf "->" $ show $ typeOf f
-      seq_all_args f | is_function f =
-                       V.zipWith ($)
+  map2_sC :: (KnownNat n) =>
+    Proxy n -> (a -> b -> m c) -> (Seq n a -> Seq n b -> m (Seq n c))
 -}
-
   -- composition operators
   (>>>) f g x = f x >>= g
--}
+--}
 
 instance Symbolic_Space_Time_Language Resources_Env where
   input_unit = return $ Atom_Unit_Resources
   input_int = return $ Atom_Int_Resources
   input_bit = return $ Atom_Bit_Resources
-  input_sseq = return $ SSeq_Resources
-  input_tseq = return $ TSeq_Resources
-
-fail_message fName tName = fName ++ " must receive " ++ tName ++
-  "not " ++ tName ++ "_Wires or " ++ tName ++ "_Resources_Env."
+  input_tuple = return $ Atom_Tuple_Resources
+  input_sseq x = return $ SSeq_Resources x
+  input_tseq x = return $ TSeq_Resources x

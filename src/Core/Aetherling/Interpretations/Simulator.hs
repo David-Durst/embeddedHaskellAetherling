@@ -3,11 +3,11 @@ import Aetherling.Declarations.Sequence
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
 import Aetherling.Types.Isomorphisms
+import Aetherling.Interpretations.Monad_Helpers
 import Data.Typeable
 import Unsafe.Coerce
 import qualified Data.Vector.Sized as V
 import Util
-  
 
 simulate :: Simulation_Env a -> a
 simulate (Simulation_Env a) = a
@@ -65,9 +65,6 @@ instance Sequence_Language Simulation_Env where
 
   -- composition operators
   (>>>) f g x = f x >>= g
-
-fail_message fName tName = fName ++ " must receive " ++ tName ++
-  "not " ++ tName ++ "_Wires or " ++ tName ++ "_Resources."
 
 data Simulation_Env a = Simulation_Env a
   deriving (Show, Eq, Functor)

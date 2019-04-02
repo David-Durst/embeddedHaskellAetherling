@@ -232,7 +232,7 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
 1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Down_1d_s n) = {0, 0, num_bits(t)}`
-1. `area(Down_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
+1. `area(Down_1d_t n) = {0, 0, num_bits(t)} + area(counter)`
 1. `area(Partition_ts no ni) = {0, ((no-1) * ni) * num_bits(t), ni * num_bits(t)} + area(counter)`
 1. `area(Unpartition_ts no ni) = {0, ((no-1) * ni) * num_bits(t), (no * ni) * num_bits(t)} + area(counter)`
 1. `area(Partition_ss no ni) = {0, 0, 0}`

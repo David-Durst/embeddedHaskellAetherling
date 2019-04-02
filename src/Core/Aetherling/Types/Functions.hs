@@ -35,6 +35,17 @@ type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom x =
     TypeError (ShowType x :<>: Text " is not an atom.")
 
+type family Check_Type_Is_Atom_Or_Nested (x :: *) :: Constraint where
+  Check_Type_Is_Atom_Or_Nested Atom_Unit = True ~ True
+  Check_Type_Is_Atom_Or_Nested (Atom_Int) = True ~ True
+  Check_Type_Is_Atom_Or_Nested (Atom_Bit) = True ~ True
+  Check_Type_Is_Atom_Or_Nested (Atom_Tuple a b) = True ~ True
+  Check_Type_Is_Atom_Or_Nested (Seq _ a) = Check_Type_Is_Atom_Or_Nested a
+  Check_Type_Is_Atom_Or_Nested (SSeq _ a) = Check_Type_Is_Atom_Or_Nested a
+  Check_Type_Is_Atom_Or_Nested (TSeq _ _ a) = Check_Type_Is_Atom_Or_Nested a
+  Check_Type_Is_Atom_Or_Nested x =
+    TypeError (ShowType x :<>: Text " is not an atom, a Seq containing atoms,"
+              :<>: Text " an SSeq containing atoms, or a TSeq containing atoms.")
 {-
 Below functions are for converting a type representation to a string
 for compilation to Magma

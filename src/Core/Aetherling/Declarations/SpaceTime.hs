@@ -16,7 +16,7 @@ class Monad m => Space_Time_Language m where
   notC :: Atom_Bit -> m Atom_Bit
 
   -- binary operators
-  addC :: Atom_Int -> Atom_Int -> m Atom_Int
+  addC :: Atom_Tuple Atom_Int Atom_Int -> m Atom_Int
   eqC :: (Check_Type_Is_Atom a, Eq a) => Atom_Tuple a a -> m Atom_Bit
 
   -- generators
@@ -28,34 +28,42 @@ class Monad m => Space_Time_Language m where
 
   -- sequence operators
   up_1d_sC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
-               Check_Type_Is_Atom a, Typeable (Proxy a)) =>
+               Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
     Proxy n -> SSeq 1 a -> m (SSeq n a)
   up_1d_tC :: (KnownNat n, 1 <= n, KnownNat (Type_Size a),
-               Check_Type_Is_Atom a, Typeable (Proxy a)) =>
+               Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
     Proxy n -> TSeq 1 (n-1) a -> m (TSeq n 0 a)
 
   down_1d_sC :: (KnownNat n, KnownNat (Type_Size a),
-                 Check_Type_Is_Atom a, Typeable (Proxy a)) =>
+                 Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
     Proxy n -> SSeq (1+n) a -> m (SSeq 1 a)
   down_1d_tC :: (KnownNat n, KnownNat (Type_Size a),
-                 Check_Type_Is_Atom a, Typeable (Proxy a)) =>
+                 Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
     Proxy n -> TSeq (1+n) 0 a -> m (TSeq 1 n a)
 
-  partition_tsC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni) =>
+  partition_tsC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                    KnownNat (Type_Size a), Check_Type_Is_Atom_Or_Nested a,
+                    Typeable (Proxy a)) =>
     Proxy no -> Proxy ni ->
-    TSeq 1 (no-1) (SSeq (no GHC.TypeLits.* ni) a) -> m (TSeq no 0 (Seq ni a))
+    TSeq 1 (no-1) (SSeq (no GHC.TypeLits.* ni) a) -> m (TSeq no 0 (SSeq ni a))
 
-  unpartition_tsC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni) =>
+  unpartition_tsC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                      KnownNat (Type_Size a), Check_Type_Is_Atom_Or_Nested a,
+                      Typeable (Proxy a)) =>
     Proxy no -> Proxy ni ->
-    TSeq no 0 (Seq ni a) -> m (TSeq 1 (no-1) (SSeq (no GHC.TypeLits.* ni) a))
+    TSeq no 0 (SSeq ni a) -> m (TSeq 1 (no-1) (SSeq (no GHC.TypeLits.* ni) a))
 
-  partition_ssC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni) =>
+  partition_ssC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                    KnownNat (Type_Size a), Check_Type_Is_Atom_Or_Nested a,
+                    Typeable (Proxy a)) =>
     Proxy no -> Proxy ni ->
-    SSeq (no GHC.TypeLits.* ni) a -> m (SSeq no (Seq ni a))
+    SSeq (no GHC.TypeLits.* ni) a -> m (SSeq no (SSeq ni a))
 
-  unpartition_ssC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni) =>
+  unpartition_ssC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                      KnownNat (Type_Size a), Check_Type_Is_Atom_Or_Nested a,
+                      Typeable (Proxy a)) =>
     Proxy no -> Proxy ni ->
-    SSeq no (Seq ni a) -> m (SSeq (no GHC.TypeLits.* ni) a)
+    SSeq no (SSeq ni a) -> m (SSeq (no GHC.TypeLits.* ni) a)
 
   -- higher order operators
   map_sC :: (KnownNat n) =>
@@ -85,5 +93,5 @@ class Space_Time_Language m => Symbolic_Space_Time_Language m where
   input_int :: m Atom_Int
   input_bit :: m Atom_Bit
   input_tuple :: m (Atom_Tuple a b)
-  input_sseq :: m (SSeq n a)
-  input_tseq :: m (TSeq n v a)
+  input_sseq :: a -> m (SSeq n a)
+  input_tseq :: a -> m (TSeq n v a)

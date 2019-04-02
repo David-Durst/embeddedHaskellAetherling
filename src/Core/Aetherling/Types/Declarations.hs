@@ -55,7 +55,7 @@ data Atom_NTuple n a =
 data Seq n a =
   Seq {sVec :: Vector n a}
   | Seq_Wires Wires
-  | Seq_Resources
+  | Seq_Resources a
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
 instance (KnownNat n) => Applicative (Seq n) where
@@ -66,7 +66,7 @@ instance (KnownNat n) => Applicative (Seq n) where
 data SSeq n a =
   SSeq {ssVec :: Vector n a}
   | SSeq_Wires Wires
-  | SSeq_Resources
+  | SSeq_Resources a
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
 instance (KnownNat n) => Applicative (SSeq n) where
@@ -79,7 +79,7 @@ instance (KnownNat n) => Applicative (SSeq n) where
 data TSeq n v a =
   TSeq {tsVec :: Vector n a}
   | TSeq_Wires Wires
-  | TSeq_Resources
+  | TSeq_Resources a
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
 instance (KnownNat n) => Applicative (TSeq n v) where
