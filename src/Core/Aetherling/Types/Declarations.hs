@@ -37,7 +37,7 @@ data Atom_Int =
 data Atom_Tuple a b =
   Atom_Tuple (a, b)
   | Atom_Tuple_Wires Wires
-  | Atom_Tuple_Resources 
+  | Atom_Tuple_Resources (a, b)
   deriving (Show, Eq)
 
   {-

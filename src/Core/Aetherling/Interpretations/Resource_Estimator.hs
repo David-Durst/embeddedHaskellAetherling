@@ -125,7 +125,7 @@ instance Space_Time_Language Resources_Env where
       with_counter_resources = add_counter_to_resources pre_counter_resources
         n_val
   down_1d_tC _ _ = throwError $ fail_message "down_1d_tC" "TSeq_Resources"
-  
+
   partition_tsC :: forall a no ni . (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
                                      KnownNat (Type_Size a),
                                      Check_Type_Is_Atom_Or_Nested a,
@@ -174,29 +174,72 @@ instance Space_Time_Language Resources_Env where
     return (SSeq_Resources x)
   unpartition_ssC _ _ _ = throwError $
     fail_message "partition_ssC" "SSeq_Resources (SSeq_Resources)"
-  
-{-
-  map_sC :: forall a b n . (KnownNat n) =>
-    Proxy n -> (a -> Resources_Env b) -> (Seq n a -> Resources_Env (Seq n b))
-  map_sC _ f = do
-    let f_resources_either = estimate_resources f 
-    increase_resources
-    where
-  {-
-  map_tC :: (KnownNat n) =>
-    Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
-  map2_sC :: (KnownNat n) =>
-    Proxy n -> (a -> b -> m c) -> (Seq n a -> Seq n b -> m (Seq n c))
--}
+  map_sC :: forall a b n . (KnownNat n) =>
+    Proxy n -> (a -> Resources_Env b) -> (SSeq n a -> Resources_Env (SSeq n b))
+  map_sC _ f (SSeq_Resources x) = do
+    -- save the current state, get the resources of the inner state
+    -- multiply all them by n, and then add them to current state
+    current_resources <- get
+    put empty_resources
+    f_output <- f x
+    Resources_Data f_compute f_memory f_wiring <- get
+    put current_resources
+    let n_val = fromInteger $ natVal $ (Proxy :: Proxy n)
+    increase_resources
+      (Resources_Data (n_val*f_compute) (n_val*f_memory) (n_val*f_wiring))
+      (SSeq_Resources f_output)
+  map_sC _ _ _ = throwError $
+    fail_message "map_sC" "SSeq_Resources"
+
+  map_tC _ f (TSeq_Resources x) = do
+    -- let f add resources to current amount of resources
+    f_output <- f x
+    return $ TSeq_Resources f_output
+  map_tC _ _ _ = throwError $
+    fail_message "map_tC" "TSeq_Resources"
+
+  map2_sC :: forall a b c n . (KnownNat n) =>
+    Proxy n -> (a -> b -> Resources_Env c) ->
+    (SSeq n a -> SSeq n b -> Resources_Env (SSeq n c))
+  map2_sC _ f (SSeq_Resources x) (SSeq_Resources y) = do
+    -- save the current state, get the resources of the inner state
+    -- multiply all them by n, and then add them to current state
+    current_resources <- get
+    put empty_resources
+    f_output <- f x y
+    Resources_Data f_compute f_memory f_wiring <- get
+    put current_resources
+    let n_val = fromInteger $ natVal $ (Proxy :: Proxy n)
+    increase_resources
+      (Resources_Data (n_val*f_compute) (n_val*f_memory) (n_val*f_wiring))
+      (SSeq_Resources f_output)
+  map2_sC _ _ _ _ = throwError $
+    fail_message "map2_sC" "SSeq_Resources, SSeq_Resources"
+
+  map2_tC _ f (TSeq_Resources x) (TSeq_Resources y) = do
+    -- let f add resources to current amount of resources
+    f_output <- f x y
+    return $ TSeq_Resources f_output
+  map2_tC _ _ _ _ = throwError $
+    fail_message "map2_tC" "TSeq_Resources, TSeq_Resources"
+
+  -- tuple operations
+  fstC (Atom_Tuple_Resources (x, _)) = return x
+  fstC _ = throwError $ fail_message "fstC" "Atom_Tuple_Resources"
+
+  sndC (Atom_Tuple_Resources (_, y)) = return y
+  sndC _ = throwError $ fail_message "sndC" "Atom_Tuple_Resources"
+
+  zipC x y = return $ Atom_Tuple_Resources (x, y)
+
   -- composition operators
   (>>>) f g x = f x >>= g
---}
 
 instance Symbolic_Space_Time_Language Resources_Env where
   input_unit = return $ Atom_Unit_Resources
   input_int = return $ Atom_Int_Resources
   input_bit = return $ Atom_Bit_Resources
-  input_tuple = return $ Atom_Tuple_Resources
+  input_tuple x y = return $ Atom_Tuple_Resources (x, y)
   input_sseq x = return $ SSeq_Resources x
   input_tseq x = return $ TSeq_Resources x

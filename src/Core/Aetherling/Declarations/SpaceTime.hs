@@ -67,14 +67,14 @@ class Monad m => Space_Time_Language m where
 
   -- higher order operators
   map_sC :: (KnownNat n) =>
-    Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
+    Proxy n -> (a -> m b) -> (SSeq n a -> m (SSeq n b))
   map_tC :: (KnownNat n) =>
-    Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
+    Proxy n -> (a -> m b) -> (TSeq n v a -> m (TSeq n v b))
 
   map2_sC :: (KnownNat n) =>
-    Proxy n -> (a -> b -> m c) -> (Seq n a -> Seq n b -> m (Seq n c))
+    Proxy n -> (a -> b -> m c) -> (SSeq n a -> SSeq n b -> m (SSeq n c))
   map2_tC :: (KnownNat n) =>
-    Proxy n -> (a -> b -> m c) -> (Seq n a -> Seq n b -> m (Seq n c))
+    Proxy n -> (a -> b -> m c) -> (TSeq n v a -> TSeq n v b -> m (TSeq n v c))
 
   -- tuple operations
   fstC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
@@ -92,6 +92,6 @@ class Space_Time_Language m => Symbolic_Space_Time_Language m where
   input_unit :: m Atom_Unit
   input_int :: m Atom_Int
   input_bit :: m Atom_Bit
-  input_tuple :: m (Atom_Tuple a b)
+  input_tuple :: a -> b -> m (Atom_Tuple a b)
   input_sseq :: a -> m (SSeq n a)
   input_tseq :: a -> m (TSeq n v a)
