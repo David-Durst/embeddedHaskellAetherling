@@ -63,10 +63,23 @@ library:
     - AllowAmbiguousTypes
     - PartialTypeSignatures
     - ExistentialQuantification
-    - DatatypeContexts
     - DeriveFoldable
     - DeriveTraversable
     - GADTs
     - ConstraintKinds
     - Rank2Types
     - InstanceSigs
+
+tests:
+  Aetherling-Tests:
+    main:                Test_Main.hs
+    source-dirs:
+    - test/ 
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - Aetherling
+    - tasty 
+    - tasty-hunit 

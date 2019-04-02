@@ -1,0 +1,21 @@
+module Test_Composition where
+import Test.Tasty
+import Test.Tasty.HUnit
+import Aetherling.Declarations.Sequence
+import Aetherling.Interpretations.Simulator
+import Aetherling.Types.Declarations
+
+two_abs = absC >>> absC $ Atom_Int (-3)
+
+add_of_two_abs x y = do
+  x_abs <- absC x
+  y_abs <- absC y
+  x_y_abs_zipped <- zipC x_abs y_abs 
+  addC x_y_abs_zipped
+
+sequence_composition_tests = testGroup "Verifying Composition Of Sequence Operators"
+  [
+    testCase "compose two unary functions" $ simulate two_abs @?= (Atom_Int 3),
+    testCase "zip two unary functions into binary function" (
+      simulate (add_of_two_abs (Atom_Int (-3)) (Atom_Int (-9))) @?= (Atom_Int 12))
+  ]
