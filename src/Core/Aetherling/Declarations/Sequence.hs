@@ -71,23 +71,53 @@ data Sequence_Language_AST =
   | EqN {input :: AST_Index, output :: AST_Index}
 
   -- generators
-  | Lut_GenN [AST_Value]
-  | Const_GenN AST_Value
-  
+  | LUT_GenN {
+      input :: AST_Index,
+      output :: AST_Index,
+      lookup_table :: [AST_Value]
+      }
+  | Const_GenN {
+      input :: AST_Index,
+      output :: AST_Index,
+      constant :: AST_Value
+      }
+
   -- sequence operators
-  | Up_1dN {n :: Int, t :: AST_Type}
-  | Down_1dN {n :: Int, t :: AST_Type}
-  | PartitionN {no :: Int, ni :: Int, t :: AST_Type} 
-  | UnpartitionN {no :: Int, ni :: Int, t :: AST_Type} 
+  | Up_1dN {
+      input :: AST_Index,
+      output :: AST_Index,
+      n :: Int,
+      t :: AST_Type
+      }
+  | Down_1dN {
+      input :: AST_Index,
+      output :: AST_Index,
+      n :: Int,
+      t :: AST_Type
+      }
+  | PartitionN {
+      input :: AST_Index,
+      output :: AST_Index,
+      no :: Int,
+      ni :: Int,
+      t :: AST_Type
+      }
+  | UnpartitionN {
+      input :: AST_Index,
+      output :: AST_Index,
+      no :: Int,
+      ni :: Int,
+      t :: AST_Type
+      }
   | MapN {n :: Int, f :: Sequence_Language_AST}
   | Map2N {n :: Int, f :: Sequence_Language_AST}
   | FstN {t :: AST_Type}
   | SndN {t :: AST_Type}
   | ZipN {t :: AST_Type}
   {-
- 
+
   -- higher order operators
-  
+
   -- tuple operations
   fstC :: (Typeable (Proxy a)Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
     Atom_Tuple a b -> m a
