@@ -61,6 +61,41 @@ class Monad m => Sequence_Language m where
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
 
+data Sequence_Language_AST =
+  IdN
+  | AbsN
+  | AddN
+  | EqN
+
+  -- generators
+  | Lut_GenN [AST_Value]
+  | Const_GenN AST_Value
+  
+  -- sequence operators
+  | Up_1dN {n :: Int, t :: AST_Type}
+  | Down_1dN {n :: Int, t :: AST_Type}
+  | PartitionN {no :: Int, ni :: Int, t :: AST_Type} 
+  | PartitionN {no :: Int, ni :: Int, t :: AST_Type} 
+  {-
+  -- first Int is no, second is ni
+  Unpartition_1dN :: forall a . (Typeable (Proxy a)) =>
+                     Proxy a -> Int -> Int -> Sequence_Language_AST
+ 
+  -- higher order operators
+  MapN :: Int -> Sequence_Language_AST
+
+  Map2N :: Int -> Sequence_Language_AST
+  
+  -- tuple operations
+  fstC :: (Typeable (Proxy a)Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
+    Atom_Tuple a b -> m a
+  sndC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
+    Atom_Tuple a b -> m b
+
+  zipC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b) =>
+    a -> b -> m (Atom_Tuple a b)
+
+-}
 class Sequence_Language m => Symbolic_Sequence_Language m where
   input_unit :: m Atom_Unit
   input_int :: m Atom_Int

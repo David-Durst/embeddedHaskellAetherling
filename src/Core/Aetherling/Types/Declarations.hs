@@ -87,6 +87,21 @@ instance (KnownNat n) => Applicative (TSeq n v) where
   (TSeq f) <*> (TSeq a) = TSeq (f <*> a)
   _ <*> _ = undefined
 
+data AST_Type =
+  UnitN
+  | BitN
+  | IntN
+  | TupleN AST_Type AST_Type
+  | SeqN Int AST_Type
+  | SSeqN Int AST_Type
+  | TSeqN Int AST_Type
+
+data AST_Value =
+  UnitV
+  | BitV Bool
+  | IntV Int
+  | TupleV AST_Value AST_Value
+
 sSSeq0_2 :: SSeq 2 Int
 sSSeq0_2 = SSeq $ fromTuple (2, 2)
 sSSeq0_3 :: SSeq 3 Int
