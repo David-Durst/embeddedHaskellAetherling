@@ -35,6 +35,7 @@ increase_resources new_resources result = do
         (computeResources new_resources + computeResources prior_resources)
         (memoryResources new_resources + memoryResources prior_resources)
         (wireResources new_resources + wireResources prior_resources)
+  put new_resources
   return result
 
 -- Int is for the size to count to

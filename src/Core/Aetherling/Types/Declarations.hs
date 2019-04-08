@@ -7,43 +7,38 @@ import GHC.Exts (Constraint)
 import qualified Data.List as L
 
 {-
-Each atomic type has versions for:
-1. simulation - no postfix, this is just the value to pass on
-2. compilation - Wire postfix, these are the wires coming out
-to wire to the next operator
-3. resources - all the resources used so far, used to compute
-resources of a pipeline
+Each atomic type has version for simulation.
+Also have version for wiring up connected nodes in a graph
+when doing shallow to deep embedding.
 -}
-type Wires = [String]
+type DAG_Index = Int
+data DAG_Edge = DAG_Edge {source :: DAG_Index, sink :: DAG_Index}
+  deriving (Show, Eq)
 
 data Atom_Unit =
   Atom_Unit
-  | Atom_Unit_Wires Wires
-  | Atom_Unit_Resources
+  | Atom_Unit_Edge DAG_Index
   deriving (Show, Eq)
 
 data Atom_Bit =
   Atom_Bit Bool
-  | Atom_Bit_Wires Wires
-  | Atom_Bit_Resources
+  | Atom_Bit_Edge DAG_Index
   deriving (Show, Eq)
 
 data Atom_Int =
   Atom_Int Int
-  | Atom_Int_Wires Wires
-  | Atom_Int_Resources
+  | Atom_Int_Edge DAG_Index
   deriving (Show, Eq)
 
 data Atom_Tuple a b =
-  Atom_Tuple (a, b)
-  | Atom_Tuple_Wires Wires
-  | Atom_Tuple_Resources (a, b)
+  Atom_Tuple a b
+  | Atom_Tuple_Edge DAG_Index
   deriving (Show, Eq)
 
   {-
 data Atom_NTuple n a =
   Atom_NTuple (V.Vector n a)
-  | Atom_NTuple_Wires Wires
+  | Atom_NTuple_Graph Wires
   | Atom_NTuple_Resources
   Int :: Int -> Atom Int
   Bit :: Bool -> Atom Bool
@@ -54,8 +49,7 @@ data Atom_NTuple n a =
 
 data Seq n a =
   Seq {sVec :: Vector n a}
-  | Seq_Wires Wires
-  | Seq_Resources a
+  | Seq_Edge DAG_Index
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
 instance (KnownNat n) => Applicative (Seq n) where
@@ -65,8 +59,7 @@ instance (KnownNat n) => Applicative (Seq n) where
 
 data SSeq n a =
   SSeq {ssVec :: Vector n a}
-  | SSeq_Wires Wires
-  | SSeq_Resources a
+  | SSeq_Edge DAG_Index
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
 instance (KnownNat n) => Applicative (SSeq n) where
@@ -78,8 +71,7 @@ instance (KnownNat n) => Applicative (SSeq n) where
 -- v is always 0 for now. Please ignore it for the time being
 data TSeq n v a =
   TSeq {tsVec :: Vector n a}
-  | TSeq_Wires Wires
-  | TSeq_Resources a
+  | TSeq_Edge DAG_Index
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
 instance (KnownNat n) => Applicative (TSeq n v) where
@@ -94,13 +86,15 @@ data AST_Type =
   | TupleN AST_Type AST_Type
   | SeqN Int AST_Type
   | SSeqN Int AST_Type
-  | TSeqN Int AST_Type
+  | TSeqN Int Int AST_Type
+  deriving (Show, Eq)
 
 data AST_Value =
   UnitV
   | BitV Bool
   | IntV Int
   | TupleV AST_Value AST_Value
+  deriving (Show, Eq)
 
 sSSeq0_2 :: SSeq 2 Int
 sSSeq0_2 = SSeq $ fromTuple (2, 2)

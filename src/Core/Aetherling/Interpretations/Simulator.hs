@@ -3,11 +3,11 @@ import Aetherling.Declarations.Sequence
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
 import Aetherling.Types.Isomorphisms
-import Aetherling.Interpretations.Monad_Helpers
 import Data.Typeable
 import Unsafe.Coerce
 import qualified Data.Vector.Sized as V
 import Util
+  
 
 simulate :: Simulation_Env a -> a
 simulate (Simulation_Env a) = a
@@ -23,10 +23,10 @@ instance Sequence_Language Simulation_Env where
   notC _ = fail $ fail_message "absC" "Atom_Bit"
 
   -- binary operators
-  addC (Atom_Tuple (Atom_Int x, Atom_Int y)) = return $ Atom_Int $ x+y
+  addC (Atom_Tuple (Atom_Int x) (Atom_Int y)) = return $ Atom_Int $ x+y
   addC _ = fail $ fail_message "addC" "Atom_Int's"
 
-  eqC (Atom_Tuple (x,y)) = return $ Atom_Bit $ x == y 
+  eqC (Atom_Tuple x y) = return $ Atom_Bit $ x == y 
   eqC _ = fail $ fail_message "eqC" "Atom_Tuple"
 
   -- generators
@@ -55,16 +55,19 @@ instance Sequence_Language Simulation_Env where
   map2C _ f input = traverse2 f input
 
   -- tuple operations
-  fstC (Atom_Tuple (x, _)) = return x
+  fstC (Atom_Tuple x _) = return x
   fstC _ = fail $ fail_message "fstC" "Atom_Tuple"
 
-  sndC (Atom_Tuple (_, y)) = return y
+  sndC (Atom_Tuple _ y) = return y
   sndC _ = fail $ fail_message "sndC" "Atom_Tuple"
 
-  zipC x y = return $ Atom_Tuple (x,y) 
+  zipC x y = return $ Atom_Tuple x y 
 
   -- composition operators
   (>>>) f g x = f x >>= g
+
+fail_message fName tName = fName ++ " must receive " ++ tName ++
+  "not " ++ tName ++ "_Wires or " ++ tName ++ "_Resources."
 
 data Simulation_Env a = Simulation_Env a
   deriving (Show, Eq, Functor)
