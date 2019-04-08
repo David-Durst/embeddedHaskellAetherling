@@ -56,12 +56,11 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
   idC x = add_to_DAG IdN (input_to_maybe_indices [x]) "idC" "any_input_edge"
   absC x = add_to_DAG AbsN (input_to_maybe_indices [x]) "absC" "Atom_Int_Edge"
   notC x = add_to_DAG NotN (input_to_maybe_indices [x]) "absC" "Atom_Bit_Edge"
-  
+
   -- binary operators
   addC x = add_to_DAG AddN (input_to_maybe_indices [x]) "addC" "Atom_Tuple_Edge"
   eqC x = add_to_DAG EqN (input_to_maybe_indices [x]) "eqC" "Atom_Tuple_Edge"
-  
-  
+
   -- generators
   lut_genC table x = do
     let lut_table_maybe = traverse convert_atom_to_AST_Value table
@@ -82,21 +81,44 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       fail $ fail_message "const_genC" "a_Edge"
 
   -- sequence operators
-  up_1dC proxyN x = add_to_DAG (Up_1dN valN (get_AST_type get_proxy))
+  up_1dC :: forall n a . (KnownNat n, KnownNat (Type_Size a),
+                          Check_Type_Is_Atom a, Typeable (Proxy a),
+                          Convertible_To_DAG_Data a) =>
+            Proxy n -> Seq 1 a -> Seq_Shallow_To_Deep_Env (Seq n a)
+  up_1dC proxyN x = add_to_DAG
+    (Up_1dN valN (get_AST_type (Proxy :: Proxy a)))
     (input_to_maybe_indices [x]) "up_1dC" "Seq_Edge"
     where
       valN = fromInteger $ natVal proxyN
+      
+  down_1dC :: forall n a . (KnownNat n, KnownNat (Type_Size a),
+                Check_Type_Is_Atom a, Typeable (Proxy a),
+                Convertible_To_DAG_Data a) =>
+              Proxy (1+n) -> Seq (1+n) a -> Seq_Shallow_To_Deep_Env (Seq 1 a)
+  down_1dC proxyN x = add_to_DAG
+    (Down_1dN valN (get_AST_type (Proxy :: Proxy a)))
+    (input_to_maybe_indices [x]) "down_1dC" "Seq_Edge"
+    where
+      valN = fromInteger $ natVal proxyN
+
+
+  partitionC :: forall no ni a . (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                                  Convertible_To_DAG_Data a) =>
+                Proxy no -> Proxy ni ->
+                Seq (no GHC.TypeLits.* ni) a ->
+                Seq_Shallow_To_Deep_Env (Seq no (Seq ni a))
+  partitionC proxyNO proxyNI x = add_to_DAG
+    (PartitionN valNO valNI (get_AST_type (Proxy :: Proxy a)))
+    (input_to_maybe_indices [x]) "partition_1dC" "Seq_Edge"
+    where
+      valNO = fromInteger $ natVal proxyNO
+      valNI = fromInteger $ natVal proxyNI
+      
 {-
-  lut_genC xs (Atom_Int i) | i < length xs = return $ xs !! i 
-  lut_genC xs (Atom_Int i) = fail "lut lookup index out of bounds"
-  lut_genC _ _ = fail $ fail_message "lut_genC" "Atom_Int"
-
-  const_genC x _ = return x
-
-  -- sequence operators
-  up_1dC proxyN (Seq elem) = return $ Seq $
-    V.replicate' proxyN $ V.head elem
-  up_1dC _ _ = fail $ fail_message "up_1dC" "Seq"
+  unpartitionC :: forall no ni a . (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                                    Convertible_To_DAG_Data a) =>
+    Proxy no -> Proxy ni ->
+    Seq no (Seq ni a) -> m (Seq (no GHC.TypeLits.* ni) a)
 
   down_1dC proxyN (Seq vec) = return $ Seq $
     V.replicate' (Proxy @1) $ V.head vec
@@ -120,6 +142,6 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
 
   zipC x y = return $ Atom_Tuple (x,y) 
 
+-}
   -- composition operators
   (>>>) f g x = f x >>= g
--}

@@ -77,28 +77,24 @@ instance (Convertible_To_AST_Value a, Convertible_To_AST_Value b) =>
 class Convertible_To_DAG_Data a where
   convert_to_index :: a -> Maybe DAG_Index
   convert_index_to_value :: DAG_Index -> a
-  get_proxy :: Proxy a
   get_AST_type :: Proxy a -> AST_Type
 
 instance Convertible_To_DAG_Data Atom_Unit where
   convert_to_index (Atom_Unit_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = Atom_Unit_Edge idx
-  get_proxy = Proxy :: Proxy Atom_Unit
   get_AST_type _ = UnitN
 
 instance Convertible_To_DAG_Data Atom_Bit where
   convert_to_index (Atom_Bit_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = Atom_Bit_Edge idx
-  get_proxy = Proxy :: Proxy Atom_Bit
   get_AST_type _ = BitN
 
 instance Convertible_To_DAG_Data Atom_Int where
   convert_to_index (Atom_Int_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = Atom_Int_Edge idx
-  get_proxy = Proxy :: Proxy Atom_Int
   get_AST_type _ = IntN
 
 instance (Convertible_To_DAG_Data a, Convertible_To_DAG_Data b) =>
@@ -106,7 +102,6 @@ instance (Convertible_To_DAG_Data a, Convertible_To_DAG_Data b) =>
   convert_to_index (Atom_Tuple_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = Atom_Tuple_Edge idx
-  get_proxy = Proxy :: Proxy (Atom_Tuple a b)
   get_AST_type _ =
     TupleN (get_AST_type (Proxy :: Proxy a)) (get_AST_type (Proxy :: Proxy b))
 
@@ -115,7 +110,6 @@ instance (KnownNat n, Convertible_To_DAG_Data a) =>
   convert_to_index (Seq_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = Seq_Edge idx
-  get_proxy = Proxy :: Proxy (Seq n a)
   get_AST_type _ = SeqN nVal (get_AST_type (Proxy :: Proxy a))
     where nVal = fromInteger $ natVal (Proxy :: Proxy n)
 
@@ -124,7 +118,6 @@ instance (KnownNat n, Convertible_To_DAG_Data a) =>
   convert_to_index (SSeq_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = SSeq_Edge idx
-  get_proxy = Proxy :: Proxy (SSeq n a)
   get_AST_type _ = SSeqN nVal (get_AST_type (Proxy :: Proxy a))
     where nVal = fromInteger $ natVal (Proxy :: Proxy n)
 
@@ -133,7 +126,6 @@ instance (KnownNat n, KnownNat v, Convertible_To_DAG_Data a) =>
   convert_to_index (TSeq_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = TSeq_Edge idx
-  get_proxy = Proxy :: Proxy (TSeq n v a)
   get_AST_type _ = TSeqN nVal vVal (get_AST_type (Proxy :: Proxy a))
     where
       nVal = fromInteger $ natVal (Proxy :: Proxy n)
