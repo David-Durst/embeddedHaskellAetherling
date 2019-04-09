@@ -15,15 +15,16 @@ The transformations on programs are implemented using rewrite rules.
 One set of rewrite rules convert programs in the sequence language to ones in the space-time IR.
 Another set of the rewrite rules used by the auto-scheduler convert between programs in the space-time IR.
 
-We prove properties of the rewrite rules and auto-scheduler using isomorphisms.
+We use isomorphisms to prove that the rewrite rules and auto-scheduler preserve program semantics.
 The data types in the sequence language and space-time IR are isomorphic.
 These isomorphisms mean that, for any function the sequence language, there are contextually equivalent functions using the space-time IR.
 The rewrite rules are the conversions between contextually equivalent functions.
+The auto-scheduler only transforms code using the rewrite rules.
 Thus, the rewrite rules and auto-scheduler preserve semantics even while changing parallelism and resource requirements.
 
 We also prove properties of the auto-scheduler by defining properties of the operators in the space-time IR.
 We axiomatize the properties for time, throughput, and resource requirements of the IR's operators.
-Using these, we prove that the auto-scheduler always produces efficient, maximally parallel code.
+The properties enable us to prove that the auto-scheduler always produces programs in the space-time IR that are efficient and maximally parallel.
 
 # Sequence Language
 Programmers use Aetherling by writing code in the sequence language.
@@ -63,8 +64,6 @@ The `Map` operator in the [Sequence Operators](#sequence-operators) section is `
 
 We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples of sequences, such as `(Seq n Int) x (Seq n Int)`.
 
-**Pat** - Is this enough of a callout to the fact that `Seq` is a functor? I really dislike making it its own section. Making a whole section about `Seq` due to it being a functor overplays its differences from the other types. Both `t x t'` and `t -> t'` are also functors when one type is applied.
-
 ## Sequence Operators
 1. `Map n :: (t -> t') -> Seq n t -> Seq n t'`
 1. `Map2 n :: (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
@@ -92,8 +91,8 @@ Since types incorporate length, two operators `f` and `g` in the sequence langua
 `Partition no ni` and `Unpartition no ni` form an isomorphism between the types `Seq (no*ni) t` and `Seq no (Seq ni t)` for all choices of `no` and `ni`. 
 `Partition` and `Unpartition` convert between the types in a way that preserves the identity function. 
 ```
-Unpartition no ni . Partition no ni == Id
-Partition no ni . Unpartition no ni == Id
+Unpartition no ni . Partition no ni === Id
+Partition no ni . Unpartition no ni === Id
 ```
 
 The following commutativity diagram shows the relationship between functions on isomorphic types. 
@@ -106,15 +105,12 @@ Specializing this diagram for `Seq` proves:
 
 We can repeatedly apply this isomorphism to convert between a flat `Seq` and any arbitrarily nested `Seq`
 
-We will use these isomorphisms to prove the existence of Aetherling's [rewrite rules](#rewrite-rules) that:
-1. lower from the sequence language into the space-time IR.
-1. schedule programs in the space-time IR.
-
 # Space-Time IR
 Aetherling lowers the sequence language to a space-time IR. 
 Programs in the IR are **scheduled**: the parallelism of each operators is specified. 
 An operator can be parallel (scheduled in space) or sequential (scheduled in time).
-All programs in the space-time IR can be interpreted as efficient hardware accelerators with the following properties: all operators correspond to hardware components that run in parallel with minimal buffering between components.
+All programs in the space-time IR can be interpreted hardware accelerators.
+We say that the interpretations are efficient because they have the following properties: all operators correspond to hardware components that run in parallel with minimal buffering between components.
 
 In order to ensure minimal buffering, the space-time IR must guarantee that producers and consumers match throughputs.
 A **throughput** (or **rate**) is the average number of atoms accepted or emitted per clock.
@@ -288,60 +284,79 @@ The different nestings are different schedules.
 `f :: TSeq no (SSeq ni t) -> TSeq no (SSeq ni t)` is a schedule that trades off parallelism and area.
 It is more parallel than the pure `TSeq` schedule, but uses fewer resources than the `SSeq` schedule.
 
+#### Isomorphism Operators
+
+The following operators provide the isomorphisms between `Seq`, `SSeq`, and `TSeq`.
+These operators are not in either the sequence language nor the space-time IR.
+They do not have interpretations in hardware. 
+
+1. `Seq_To_SSeq :: Seq n a -> SSeq n a`
+1. `SSeq_To_Seq :: SSeq n a -> Seq n a`
+1. `Seq_To_TSeq :: Seq n a -> TSeq n v a`
+1. `TSeq_To_Seq :: TSeq n v a -> Seq n a`
+
+The `Partition` and `Unpartition` operators also provide the functionality of the isomorphisms.
+
 # Rewrite Rules
 The rewrite rules show how to use the above isomorphisms to schedule Aetherling operators. 
 Each operator in the sequence language is rewritten as a contextually equivalent, fully parallel operator in the space-time IR.
 Then, this operator is converted to a less parallel one in order to trade off area and throughput.
 
 ### Map
-1. Sequence To Space - `Map n f -> Map_t 1 (Map_s n f)`
-    1. `Map n f :: Seq n t -> Seq n t'`
-    1. `Map_t 1 (Map_s n f) :: TSeq 1 0 (SSeq n t) -> TSeq 1 0 (SSeq n t')'`
-1. Slowdown - `Map_t 1 (Map_s (no*ni) f) -> Unpartition_ts no ni . Map_t no (Map_s ni f) . Partition_ts no ni`
-    1. `Map_t 1 (Map_s (no*ni) f) :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq (no*ni) t)'`
-    1. `Map_t no (Map_s ni f) :: TSeq no v (SSeq ni t) -> TSeq no v (SSeq ni t')`
-    1. `Unpartition_ts no ni . Map_t no (Map_s ni f) . Partition_ts no ni :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq (no*ni) t)'`
+1. Sequence To Space - `Map n f === SSeq_To_Seq . Map_s n f . Seq_To_SSeq`
+1. Slowdown by `no` - 
+```
+SSeq_To_Seq . Map_s (no*ni) f . Seq_To_SSeq === 
+Unpartition no ni . TSeq_To_Seq . Map_t SSeq_to_Seq . Map_t no (Map_s ni f) . Map_t Seq_To_SSeq . Seq_To_TSeq . Partition no ni
+```
     
 `Map2` has the same rewrite rules as `Map`.
 
-Note: I dropped the underutilization computation from `TSeq` where it became onerous.
-
 ### Upsample
-1. Sequence To Space - `Up_1d n === Map_t 1 (Up_1d_s n)`
-    1. `Up_1d n :: Seq 1 t -> Seq n t`
-    1. `Map_t 1 (Up_1d_s n) :: TSeq 1 0 (SSeq 1 t) -> TSeq 1 0 (SSeq n t)`
-1. Slowdown by no - `Map_t 1 (Up_1d_s (no*ni)) === Unpartition_ts no ni . Map_t no (Up_1d_s ni) . Up_1d_t no . Partition_ts 1 1`
-    1. `Map_t 1 (Up_1d_s (no*ni)) :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (no*ni) t)`
-    1. `Map_t no (Up_1d_s ni) :: TSeq no (SSeq 1 t) -> TSeq no (SSeq ni t)`
-    1. `Up_1d_t no :: (TSeq 1 (SSeq 1 t)) -> (TSeq no (SSeq 1 t))`
-    1. `Unpartition_ts no ni . Map_t no (Up_1d_s ni) . Up_1d_t no . Partition_ts 1 1 :: TSeq 1 _ (SSeq 1 t) -> TSeq 1 _ (SSeq (no*ni) t)`
+1. Sequence To Space - `Up_1d n === SSeq_To_Seq . Up_1d_s n . Seq_To_SSeq`
+1. Slowdown by `no` - 
+```
+SSeq_To_Seq . Up_1d_s n . Seq_To_SSeq ===
+Unpartition no ni . TSeq_To_Seq . Map_t SSeq_to_Seq . Map_t no (Up_1d_s ni) . Up_1d_t no . Map_t Seq_To_SSeq . Seq_To_TSeq . Partition no 1
+```
 
 ### Downsample
-1. Sequence To Space - `Down_1d n === Map_t 1 (Down_1d_s n)`
-    1. `Down_1d n :: Seq n t -> Seq 1 t`
-    1. `Map_t 1 (Down_1d_s n) :: TSeq 1 0 (SSeq n t) -> TSeq 1 0 (SSeq 1 t)`
-1. Slowdown by no - `Map_t 1 (Down_1d_s (no*ni)) === Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s ni)) . Down_1d_t no . Partition_ts no ni`
-    1. `Map_t 1 (Down_1d_s (no*ni)) :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq 1 t)`
-    1. `Map_t 1 (Down_1d_s ni) :: TSeq 1 (SSeq ni t) -> TSeq 1 (SSeq 1 t)`
-    1. `Down_1d_t no :: (TSeq no (SSeq ni t)) -> (TSeq 1 (SSeq ni t))`
-    1. `Unpartition_ts 1 1 . (Map_t 1 (Down_1d_s ni)) . Down_1d_t no . Partition_ts no ni :: TSeq 1 _ (SSeq (no*ni) t) -> TSeq 1 _ (SSeq 1 t)`
+1. Sequence To Space - `Down_1d n === SSeq_To_Seq . Down_1d_s n . Seq_To_SSeq`
+1. Slowdown by `no` - 
+```
+SSeq_To_Seq . Down_1d_s n . Seq_To_SSeq ===
+Unpartition no 1 . TSeq_To_Seq . Map_t SSeq_to_Seq . Map_t 1 (Down_1d_s ni) . Down_1d_t no . Map_t Seq_To_SSeq . Seq_To_TSeq . Partition no ni
+```
 
-### Unpartition/Partition Removal
+### Isomorphism Operators Removal
+1. `Seq_To_SSeq . SSeq_To_Seq === Id`
+1. `SSeq_To_Seq . Seq_To_SSeq === Id`
+1. `Seq_To_TSeq . TSeq_To_Seq === Id`
+1. `TSeq_To_Seq . Seq_To_TSeq === Id`
+1. `Unpartition . Partition === Id`
+1. `Partition_ss no ni . Unpartition_ss no ni === Id`
+2. `Unpartition_ss no ni . Partition_ss no ni === Id`
+1. `Partition_tt no ni . Unpartition_tt no ni === Id`
+2. `Unpartition_tt no ni . Partition_tt no ni === Id`
 1. `Partition_ts no ni . Unpartition_ts no ni === Id`
-**Danger: `Partition_ts . Unpartition_ts` is not really Id in Space-Time. There will be underutilized clocks here. The partition_tsing and unpartition_tsing takes n clocks. However, the interface to both of these functions is just an `SSeq`. The `SSeq` doesn't account for time.**
 2. `Unpartition_ts no ni . Partition_ts no ni === Id`
 
-The same removal rule can be used for `Partition_tt`/`Unpartition_tt` and `Partition_ss`/`Unpartition_ss**.
+## Functor Rules
+In addition to rules provided by the isomorphisms, we also have the following rewrite rules due to the fact that `Seq`, `TSeq`, and `SSeq` are functors.
+We provide only the `Seq` rule, the same rules exist for `TSeq` and `SSeq`.
 
-## Auto-Scheduler Algorithm
-The following algorithm finds the schedule with the maximum throughput given a specified resource constraints.
+1. `Map g . Map f === Map (g . f)`
+1. `Map id === id`
+
+# Auto-Scheduler 
+The auto-scheduler finds the schedule with the maximum throughput given a specified resource constraints.
 1. Inputs: 
     1. `P_seq`: a program in the sequence language. 
     1. `area_max`: a resource constraint in area.
 1. Outputs
     1. `P_st_optimal`: a program in the space-time IR with maximum throughput given resource constraints.
 
-Algorithm:
+## Auto-Scheduler Algorithm
 1. Apply the Sequence To Space rewrite rule to all operators in `P_seq`. Let `P_space` be the result.
 1. If `area(P_space)` is less than `area_max`, stop. `P_space` is `P_st_optimal`
 1. Let `N` be the set of all input and output sequence lengths, `n`, of all operators.
