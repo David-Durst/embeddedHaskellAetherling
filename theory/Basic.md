@@ -1,11 +1,32 @@
-# Basic Sequence Language Theory
+# Basic Aetherling Language Theory
 Aetherling is a system for compiling data flow pipelines to efficient implementations in hardware accelerators.
 Aetherling programs are written in a **sequence language**, a standard functional programming language.
-These programs cannot be interpreted as hardware accelerators.
+The sequence language is a high-level language that does not address parallelism. 
+The absence of parallelism makes the language simpler for developers.
+This abstraction also means programs cannot be interpreted as hardware accelerators.
+
 Aetherling transforms these programs into a **space-time IR**. 
-Programs in the IR can be interpreted as hardware accelerators.
+The IR specifies the parallelism of all operators.
+This information enables programs in the IR to be interpreted as hardware accelerators.
 The IR also models the throughput and resource requirements of the corresponding hardware implementations.
 An auto-scheduler uses semantics-preserving transformations in the IR to find the maximally parallel hardware implementation given resource constraints.
+
+The transformations on programs are implemented using rewrite rules.
+One set of rewrite rules convert programs in the sequence language to ones in the space-time IR.
+Another set of the rewrite rules used by the auto-scheduler convert between programs in the space-time IR.
+
+We prove properties of the rewrite rules and auto-scheduler using isomorphisms.
+The data types in the sequence language and space-time IR are isomorphic.
+These isomorphisms mean that, for any function the sequence language, there are contextually equivalent functions using the space-time IR.
+The rewrite rules are the conversions between contextually equivalent functions.
+Thus, the rewrite rules and auto-scheduler preserve semantics even while changing parallelism and resource requirements.
+
+Even though functions in the space-time IR have different amounts of parallelism, the contextual equivalence means the rewrite rules and the auto-scheduler preserve semantics.
+
+The functions in the space-time IR have different amounts of parallelism.
+The different amounts of parallelism are how the auto-scheduler converts a program in the sequence language to different schedules in hardware.
+Since all the rewrite rules produce contextually equivalent functions, the auto-scheduler preserve semantics.
+
 
 # Sequence Language
 Programmers use Aetherling by writing code in the sequence language.
