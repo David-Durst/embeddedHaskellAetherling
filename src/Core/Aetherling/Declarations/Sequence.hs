@@ -20,22 +20,20 @@ class Monad m => Sequence_Language m where
     Atom_Tuple a a -> m Atom_Bit
 
   -- generators
-  lut_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a,
+  lut_genC :: (KnownNat (Type_Size a),
                Convertible_To_AST_Value a, Convertible_To_DAG_Data a) =>
     [a] -> Atom_Int -> m a
 
-  const_genC :: (KnownNat (Type_Size a), Check_Type_Is_Atom a,
+  const_genC :: (KnownNat (Type_Size a),
                 Convertible_To_AST_Value a, Convertible_To_DAG_Data a) =>
     a -> Atom_Unit -> m a
 
   -- sequence operators
-  up_1dC :: (KnownNat n, KnownNat (Type_Size a),
-             Check_Type_Is_Atom a, Typeable (Proxy a),
+  up_1dC :: (KnownNat n, KnownNat (Type_Size a), Typeable (Proxy a),
              Convertible_To_DAG_Data a) =>
     Proxy n -> Seq 1 a -> m (Seq n a)
 
-  down_1dC :: (KnownNat n, KnownNat (Type_Size a),
-                Check_Type_Is_Atom a, Typeable (Proxy a),
+  down_1dC :: (KnownNat n, KnownNat (Type_Size a), Typeable (Proxy a),
                 Convertible_To_DAG_Data a) =>
     Proxy (1+n) -> Seq (1+n) a -> m (Seq 1 a)
 

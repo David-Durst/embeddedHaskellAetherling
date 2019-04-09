@@ -82,8 +82,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       fail $ fail_message "const_genC" "a_Edge"
 
   -- sequence operators
-  up_1dC :: forall n a . (KnownNat n, KnownNat (Type_Size a),
-                          Check_Type_Is_Atom a, Typeable (Proxy a),
+  up_1dC :: forall n a . (KnownNat n, KnownNat (Type_Size a), Typeable (Proxy a),
                           Convertible_To_DAG_Data a) =>
             Proxy n -> Seq 1 a -> Seq_Shallow_To_Deep_Env (Seq n a)
   up_1dC proxyN x = add_to_DAG
@@ -92,8 +91,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
     where
       n_val = fromInteger $ natVal proxyN
 
-  down_1dC :: forall n a . (KnownNat n, KnownNat (Type_Size a),
-                Check_Type_Is_Atom a, Typeable (Proxy a),
+  down_1dC :: forall n a . (KnownNat n, KnownNat (Type_Size a), Typeable (Proxy a),
                 Convertible_To_DAG_Data a) =>
               Proxy (1+n) -> Seq (1+n) a -> Seq_Shallow_To_Deep_Env (Seq 1 a)
   down_1dC proxyN x = add_to_DAG
