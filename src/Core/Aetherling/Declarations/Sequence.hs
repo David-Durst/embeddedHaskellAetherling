@@ -31,57 +31,49 @@ class Monad m => Sequence_Language m where
   -- sequence operators
   up_1dC :: (KnownNat n, KnownNat (Type_Size a),
              Check_Type_Is_Atom a, Typeable (Proxy a),
-             Convertible_To_DAG_Data a,
-             Convertible_To_DAG_Data (Seq 1 a)) =>
+             Convertible_To_DAG_Data a) =>
     Proxy n -> Seq 1 a -> m (Seq n a)
 
   down_1dC :: (KnownNat n, KnownNat (Type_Size a),
                 Check_Type_Is_Atom a, Typeable (Proxy a),
-                Convertible_To_DAG_Data a,
-                Convertible_To_DAG_Data (Seq (1+n) a)) =>
+                Convertible_To_DAG_Data a) =>
     Proxy (1+n) -> Seq (1+n) a -> m (Seq 1 a)
 
   partitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-                 Convertible_To_DAG_Data a,
-                 Convertible_To_DAG_Data (Seq (no GHC.TypeLits.* ni) a)) =>
+                 Convertible_To_DAG_Data a) =>
     Proxy no -> Proxy ni ->
     Seq (no GHC.TypeLits.* ni) a -> m (Seq no (Seq ni a))
 
   unpartitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-                   Convertible_To_DAG_Data a,
-                   Convertible_To_DAG_Data (Seq no (Seq ni a))) =>
+                   Convertible_To_DAG_Data a) =>
     Proxy no -> Proxy ni ->
     Seq no (Seq ni a) -> m (Seq (no GHC.TypeLits.* ni) a)
 
   -- higher order operators
-  mapC :: (KnownNat n, Convertible_To_DAG_Data (Seq n a),
-          Convertible_To_DAG_Data a) =>
+  mapC :: (KnownNat n, Convertible_To_DAG_Data a,
+          Convertible_To_DAG_Data b) =>
     Proxy n -> (a -> m b) -> (Seq n a -> m (Seq n b))
 
   map2C :: (KnownNat n,
             Convertible_To_DAG_Data a,
             Convertible_To_DAG_Data b,
-            Convertible_To_DAG_Data (Seq n a),
-            Convertible_To_DAG_Data (Seq n b)) =>
+            Convertible_To_DAG_Data c) =>
     Proxy n -> (a -> b -> m c) -> (Seq n a -> Seq n b -> m (Seq n c))
 
   -- tuple operations
   fstC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
            Convertible_To_DAG_Data a,
-           Convertible_To_DAG_Data b,
-           Convertible_To_DAG_Data (Atom_Tuple a b)) =>
+           Convertible_To_DAG_Data b) =>
     Atom_Tuple a b -> m a
 
   sndC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
            Convertible_To_DAG_Data a,
-           Convertible_To_DAG_Data b,
-           Convertible_To_DAG_Data (Atom_Tuple a b)) =>
+           Convertible_To_DAG_Data b) =>
     Atom_Tuple a b -> m b
 
   zipC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
            Convertible_To_DAG_Data a,
-           Convertible_To_DAG_Data b,
-           Convertible_To_DAG_Data (Atom_Tuple a b)) =>
+           Convertible_To_DAG_Data b) =>
     a -> b -> m (Atom_Tuple a b)
 
   -- composition operators
@@ -98,8 +90,14 @@ class Sequence_Language m => Symbolic_Sequence_Language m where
   sym_input_unit :: m Atom_Unit
   sym_input_int :: m Atom_Int
   sym_input_bit :: m Atom_Bit
-  sym_input_tuple :: m (Atom_Tuple a b)
-  sym_input_seq :: m (Seq n a)
+  sym_input_tuple :: (Convertible_To_DAG_Data a, Convertible_To_DAG_Data b) =>
+                     m (Atom_Tuple a b)
+  sym_input_seq :: (KnownNat n, Convertible_To_DAG_Data a) => Proxy n -> m (Seq n a)
+
+data Seq_DAG = Seq_DAG {
+  nodes :: [Sequence_Language_AST],
+  edges :: [DAG_Edge]
+  } deriving (Show, Eq)
 
 data Sequence_Language_AST =
   IdN
@@ -117,10 +115,10 @@ data Sequence_Language_AST =
   | Down_1dN {n :: Int, t :: AST_Type}
   | PartitionN {no :: Int, ni :: Int, t :: AST_Type} 
   | UnpartitionN {no :: Int, ni :: Int, t :: AST_Type} 
-  | MapN {n :: Int, f :: Sequence_Language_AST}
-  | Map2N {n :: Int, f :: Sequence_Language_AST}
-  | FstN {t :: AST_Type}
-  | SndN {t :: AST_Type}
-  | ZipN {t :: AST_Type}
-  | InputN {v :: AST_Value}
+  | MapN {n :: Int, f :: Seq_DAG}
+  | Map2N {n :: Int, f :: Seq_DAG}
+  | FstN {t_0 :: AST_Type, t_1 :: AST_Type}
+  | SndN {t_0 :: AST_Type, t_1 :: AST_Type}
+  | ZipN {t_0 :: AST_Type, t_1 :: AST_Type}
+  | InputN {t :: AST_Type}
   deriving (Show, Eq)

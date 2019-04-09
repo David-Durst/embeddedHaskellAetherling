@@ -80,13 +80,13 @@ instance (KnownNat n) => Applicative (TSeq n v) where
   _ <*> _ = undefined
 
 data AST_Type =
-  UnitN
-  | BitN
-  | IntN
-  | TupleN AST_Type AST_Type
-  | SeqN Int AST_Type
-  | SSeqN Int AST_Type
-  | TSeqN Int Int AST_Type
+  UnitT
+  | BitT
+  | IntT
+  | TupleT AST_Type AST_Type
+  | SeqT Int AST_Type
+  | SSeqT Int AST_Type
+  | TSeqT Int Int AST_Type
   deriving (Show, Eq)
 
 data AST_Value =
