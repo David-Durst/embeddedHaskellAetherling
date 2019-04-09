@@ -21,12 +21,9 @@ These isomorphisms mean that, for any function the sequence language, there are 
 The rewrite rules are the conversions between contextually equivalent functions.
 Thus, the rewrite rules and auto-scheduler preserve semantics even while changing parallelism and resource requirements.
 
-Even though functions in the space-time IR have different amounts of parallelism, the contextual equivalence means the rewrite rules and the auto-scheduler preserve semantics.
-
-The functions in the space-time IR have different amounts of parallelism.
-The different amounts of parallelism are how the auto-scheduler converts a program in the sequence language to different schedules in hardware.
-Since all the rewrite rules produce contextually equivalent functions, the auto-scheduler preserve semantics.
-
+We also prove properties of the auto-scheduler by defining properties of the operators in the space-time IR.
+We axiomatize the properties for time, throughput, and resource requirements of the IR's operators.
+Using these, we prove that the auto-scheduler always produces efficient, maximally parallel code.
 
 # Sequence Language
 Programmers use Aetherling by writing code in the sequence language.
