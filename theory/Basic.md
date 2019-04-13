@@ -22,6 +22,8 @@ The rewrite rules are the conversions between contextually equivalent functions.
 The auto-scheduler only transforms code using the rewrite rules.
 Thus, the rewrite rules and auto-scheduler preserve semantics even while changing parallelism and resource requirements.
 
+*The rerwite rules do not depend on semantics to be contextaully equivalent. Since our rewrites are the same as the isomoprhisms, they have to be contextually equivalent*
+
 We also prove properties of the auto-scheduler by defining properties of the operators in the space-time IR.
 We axiomatize the properties for time, throughput, and resource requirements of the IR's operators.
 The properties enable us to prove that the auto-scheduler always produces programs in the space-time IR that are efficient and maximally parallel.
