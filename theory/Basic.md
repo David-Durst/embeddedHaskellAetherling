@@ -104,7 +104,13 @@ Specializing this diagram for `Seq` proves:
 1. For any function `f :: Seq (no*ni) t -> Seq (no*ni) t` there is a function `f' :: Seq no (Seq ni t) -> Seq no (Seq ni t')`. 
 1. The inputs and outputs of `f` and `f'` are equivalent up to isomorphism: `f === Unpartition no ni . f' . Partition no ni`
 
-**This is the first of the three rewrite rules that make up our minimal set.**
+**The rewrite rules based on this isomorphism are the first part of our minimal set of rewrite rules.** 
+The following are the rules for each operator on sequences in the sequence language
+
+1. **`Map` Nesting** - `Map (no*ni) f === Unpartition no ni . Map no (Map ni f) . Partition no ni`
+1. **`Map2` Nesting**  - the same as `Map`. We elide it's definition as it requires a different syntax that has not yet been introduced.
+1. **`Up_1d` Nesting** - `Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
+1. **`Down_1d` Nesting** - `Up_1d (no*ni) ===  Unparition 1 1 . Map 1 (Down_1d ni) . Down_1d no . Partition no ni`
 
 # Space-Time IR
 Aetherling lowers the sequence language to a space-time IR. 
@@ -152,10 +158,23 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 `Seq n t` is isomorphic to `SSeq n t` and `TSeq n t` by construction. 
 They are all ordered sequences of the same length. 
 
-Since they are isomorphic, any `f :: Seq n t -> Seq m t'` function must have contextually equivalent versions `f_t :: TSeq n v t -> TSeq m u t'` and `f_s :: SSeq n t -> SSeq m t'`.
-This is proven in the same way as shown in [the `Seq` isomorphism section.](#sequence-isomorphisms)
+Just as [`Partition` and `Unpartition` form an isomorphism between `Seq` and `Seq (Seq)`](#sequence-isomorphisms), the following operators form isomorphisms between `Seq` and `Tseq` and `Seq` and `SSeq`.
 
-We will use these isomorphisms to produce the rewrite rules that lower programs from the sequence language to the space-time IR.
+1. `Seq_To_SSeq :: Seq n a -> SSeq n a`
+1. `SSeq_To_Seq :: SSeq n a -> Seq n a`
+1. `Seq_To_TSeq :: Seq n a -> TSeq n v a`
+1. `TSeq_To_Seq :: TSeq n v a -> Seq n a`
+
+The isomorphisms mean that any `f :: Seq n t -> Seq m t'` function must have semantically equivalent `TSeq` and `SSeq` versions. 
+1. `f === TSeq_To_Seq . f_t . Seq_To_TSeq`
+1. `f === SSeq_To_Seq . f_s . Seq_To_SSeq`
+
+This is proven in the same way as shown in [the `Seq` isomorphism section.](#sequence-isomorphisms)
+Two examples of operator-specific rewrite rules are:
+1. **`Map` Seq To TSeq** - `Map === TSeq_To_Seq . Map_t . Seq_To_TSeq`
+1. **`Map` Seq To SSeq** - `Map === SSeq_To_Seq . Map_s . Seq_To_SSeq`
+All other operator-specific rewrite rules take the same form, so we do not enumerate them.
+**These rewrite rules make up the rest of our minimal set of rewrite rules.**
 
 ## Operators
 1. `Id :: t -> t`
@@ -274,56 +293,55 @@ An operator with input and output `TSeq`s that have non-zero `v`s may be unused 
     `Map_t` must accept input and emit output every fourth clock so that its output throughput matches `Up_1d_t`'s input throughput.
     To accomplish this rate matching, `Map_t` must be underutilized.
     
-### Space-Time Isomorphisms
-Just as [`Partition` and `Unpartition` form an isomorphism between `Seq` and `Seq (Seq)`](#sequence-isomorphisms), the following operators form isomorphisms between `Seq` and `Tseq` and `Seq` and `SSeq`.
-
-1. `Seq_To_SSeq :: Seq n a -> SSeq n a`
-1. `SSeq_To_Seq :: SSeq n a -> Seq n a`
-1. `Seq_To_TSeq :: Seq n a -> TSeq n v a`
-1. `TSeq_To_Seq :: TSeq n v a -> Seq n a`
-
-These isomorphisms mean that any `f :: Seq n t -> Seq m t'` function must have contextually equivalent `TSeq` and `SSeq` versions. 
-1. `f === TSeq_To_Seq . f_tseq . Seq_To_TSeq`
-1. `f === SSeq_To_Seq . f_sseq . Seq_To_SSeq`
-
-**These are the second and third rewrite rules that make up our minimal set of rewrite rules.**
-
 # Rewrites
 The rewrite rules show how to use the above isomorphisms to schedule Aetherling operators. 
-As stated previously, there are three core rewrite rules:
+As stated previously, there are core rewrite rules that take the following forms:
 1. Nesting Seqs - `f === Unpartition no ni . f' . Partition no ni`
 1. Seq To TSeq - `f === TSeq_To_Seq . f_tseq . Seq_To_TSeq`
 1. Seq To SSeq - `f === SSeq_To_Seq . f_sseq . Seq_To_SSeq`
 
 Using these core rewrite rules, we now show how to convert between operators in the sequence language and those in the space-time IR.
-Each operator in the sequence language is rewritten as a contextually equivalent, fully parallel operator in the space-time IR.
+Each operator in the sequence language is rewritten as a semantically equivalent, fully parallel operator in the space-time IR. 
+This is a repeat of the Seq To SSeq rewrite rules.
 Then, this operator is converted to a less parallel one in order to trade off area and throughput.
 
 ### Map
 1. Sequence To Space - `Map n f === SSeq_To_Seq . Map_s n f . Seq_To_SSeq`
 1. Slowdown by `no` - 
 ```
-SSeq_To_Seq . Map_s (no*ni) f . Seq_To_SSeq === 
-Unpartition no ni . TSeq_To_Seq . Map_t SSeq_to_Seq . Map_t no (Map_s ni f) . Map_t Seq_To_SSeq . Seq_To_TSeq . Partition no ni
+Map (no*ni) f === (Nesting)
+Unpartition no ni . Map (no) (Map ni f) . Partition no ni === (Seq To SSeq)
+Unpartition no ni . Map no (SSeq_To_Seq . Map_s ni f . Seq_To_SSeq) . Partition no ni (Seq To TSeq)
+Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Map_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni
 ```
     
-`Map2` has the same rewrite rules as `Map`.
-
 ### Upsample
 1. Sequence To Space - `Up_1d n === SSeq_To_Seq . Up_1d_s n . Seq_To_SSeq`
 1. Slowdown by `no` - 
 ```
-SSeq_To_Seq . Up_1d_s n . Seq_To_SSeq ===
-Unpartition no ni . TSeq_To_Seq . Map_t SSeq_to_Seq . Map_t no (Up_1d_s ni) . Up_1d_t no . Map_t Seq_To_SSeq . Seq_To_TSeq . Partition no 1
+Up_1d (no*ni) === (Nesting)
+Unpartition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1 === (Seq To SSeq)
+Unpartition no ni . Map no (SSeq_To_Seq . Up_1d_s ni . Seq_To_SSeq) . Up_1d no . Partition 1 1 === (Seq To TSeq)
+Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Up_1d_s ni . Seq_To_SSeq) . Seq_To_TSeq . TSeq_To_Seq . Up_1d_t no . Seq_To_TSeq . Partition 1 1 === (Isomorphism Operator Removal)
+Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Up_1d_s ni . Seq_To_SSeq) . Up_1d_t no . Seq_To_TSeq . Partition 1 1 === (Functor Map Fusion)
+Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) . Map_t no Seq_To_SSeq . Up_1d_t no . Seq_To_TSeq . Partition 1 1 ===
+Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) . Up_1d_t no . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition 1 1 
 ```
+
+The final step is semantically equivalent because I'm not changing the operation of the `Up_1d_t`, I'm just changing each element of the `TSeq` that its upsampling from `Seq` to `SSeq`.
+By isomorphism, those two element types have the same semantics.
+
+See [the Functor Rules section](#functor-rules) for a description of Map Fusion.
 
 ### Downsample
 1. Sequence To Space - `Down_1d n === SSeq_To_Seq . Down_1d_s n . Seq_To_SSeq`
 1. Slowdown by `no` - 
 ```
-SSeq_To_Seq . Down_1d_s n . Seq_To_SSeq ===
-Unpartition no 1 . TSeq_To_Seq . Map_t SSeq_to_Seq . Map_t 1 (Down_1d_s ni) . Down_1d_t no . Map_t Seq_To_SSeq . Seq_To_TSeq . Partition no ni
+Down_1d (no*ni) ===
+Unpartition 1 1 . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t 1 (Down_1d_s ni) . Down_1d_t no . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
 ```
+
+The proof of this rewrite is the same as the Upsample proof.
 
 ### Isomorphism Operators Removal
 When multiple slowed operators are composed, we will need to remove the wrapping, isomorphism operators. 
@@ -332,6 +350,7 @@ These rewrites show how to remove the operators.
 1. `SSeq_To_Seq . Seq_To_SSeq === Id`
 1. `Seq_To_TSeq . TSeq_To_Seq === Id`
 1. `TSeq_To_Seq . Seq_To_TSeq === Id`
+1. `Seq_To_TSeq . SSeq_To_Seq === Id`
 1. `Unpartition . Partition === Id`
 1. `Partition_ss no ni . Unpartition_ss no ni === Id`
 2. `Unpartition_ss no ni . Partition_ss no ni === Id`
@@ -340,12 +359,12 @@ These rewrites show how to remove the operators.
 1. `Partition_ts no ni . Unpartition_ts no ni === Id`
 2. `Unpartition_ts no ni . Partition_ts no ni === Id`
 
-## Functor Rules
+# Functor Rules
 In addition to rules provided by the isomorphisms, we also have the following rewrite rules due to the fact that `Seq`, `TSeq`, and `SSeq` are functors.
 We provide only the `Seq` rule, the same rules exist for `TSeq` and `SSeq`.
 
-1. `Map g . Map f === Map (g . f)`
-1. `Map id === id`
+1. Map Fusion - `Map g . Map f === Map (g . f)`
+1. Identity Preservation - `Map id === id`
 
 # Auto-Scheduler 
 The auto-scheduler finds the schedule with the maximum throughput given a specified resource constraints.
