@@ -15,14 +15,13 @@ The transformations on programs are implemented using rewrite rules.
 One set of rewrite rules convert programs in the sequence language to ones in the space-time IR.
 Another set of the rewrite rules used by the auto-scheduler convert between programs in the space-time IR.
 
-We use isomorphisms to prove that the rewrite rules and auto-scheduler preserve program semantics.
-The data types in the sequence language and space-time IR are isomorphic.
-These isomorphisms mean that, for any function the sequence language, there are contextually equivalent functions using the space-time IR.
-The rewrite rules are the conversions between contextually equivalent functions.
-The auto-scheduler only transforms code using the rewrite rules.
+We define a minimal set of rewrite rules using isomorphisms to show that they preserve program semantics.
+There are isomorphisms between data types in the sequence language.
+There are also isomorphisms between sequence data types and ones in the space-time IR.
+These isomorphisms mean that, for any function the sequence language, there are many semantically equivalent functions using the space-time IR.
+The different functions in the space-time IR are different schedules with different amounts of parallelism.
+The minimal set of rewrite rules, along with other derived ones, are the conversions between semantically equivalent functions.
 Thus, the rewrite rules and auto-scheduler preserve semantics even while changing parallelism and resource requirements.
-
-*The rerwite rules do not depend on semantics to be contextaully equivalent. Since our rewrites are the same as the isomoprhisms, they have to be contextually equivalent*
 
 We also prove properties of the auto-scheduler by defining properties of the operators in the space-time IR.
 We axiomatize the properties for time, throughput, and resource requirements of the IR's operators.
@@ -103,9 +102,9 @@ The following commutativity diagram shows the relationship between functions on 
 
 Specializing this diagram for `Seq` proves:
 1. For any function `f :: Seq (no*ni) t -> Seq (no*ni) t` there is a function `f' :: Seq no (Seq ni t) -> Seq no (Seq ni t')`. 
-1. The inputs and outputs of `f` and `f'`  are equivalent up to isomorphism. 
+1. The inputs and outputs of `f` and `f'` are equivalent up to isomorphism: `f === Unpartition no ni . f' . Partition no ni`
 
-We can repeatedly apply this isomorphism to convert between a flat `Seq` and any arbitrarily nested `Seq`
+**This is the first of the three rewrite rules that make up our minimal set.**
 
 # Space-Time IR
 Aetherling lowers the sequence language to a space-time IR. 
@@ -154,7 +153,7 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 They are all ordered sequences of the same length. 
 
 Since they are isomorphic, any `f :: Seq n t -> Seq m t'` function must have contextually equivalent versions `f_t :: TSeq n v t -> TSeq m u t'` and `f_s :: SSeq n t -> SSeq m t'`.
-This is proven in the same way as shown in [the `Seq` isomorphism section.](#sequence-isomorphisms**
+This is proven in the same way as shown in [the `Seq` isomorphism section.](#sequence-isomorphisms)
 
 We will use these isomorphisms to produce the rewrite rules that lower programs from the sequence language to the space-time IR.
 
@@ -259,7 +258,7 @@ Many of the sequential operators require a counter to track clock cycles.
 1. `area(counter) = {num_bits(Int), num_bits(Int), num_bits(Int)}`
 
 ### Empty Periods
-Operators does not accept or emit data during empty periods. 
+Operators do not accept or emit data during empty periods. 
 Empty periods enable Aetherling to express (1) operators with different input and output throughputs and (2) schedules with underutilization.
 1. Empty clocks enable `TSeq`s with different `n` parameters to express different throughputs.
     1. For example, `Up_1d_t` takes in one input on one clock cycle and then repeatedly outputs it for multiple clock cycles. 
@@ -275,32 +274,28 @@ An operator with input and output `TSeq`s that have non-zero `v`s may be unused 
     `Map_t` must accept input and emit output every fourth clock so that its output throughput matches `Up_1d_t`'s input throughput.
     To accomplish this rate matching, `Map_t` must be underutilized.
     
-**not sure if this section is clear**
-
 ### Space-Time Isomorphisms
-Just like [`Partition` and `Unpartition` for `Seq`](#sequence-isomorphisms), the partitions and unpartitions in the space-time IR form isomorphisms between nested combinations of `TSeq` and `SSeq`.
-
-These isomorphisms, along with those between `Seq` and `SSeq` and between different `Seq` nestings, mean that any `f :: Seq n t -> Seq m t'` function must have contextually equivalent versions with any nesting of `TSeq`s and `SSeq`s. 
-The different nestings are different schedules. 
-`f :: SSeq (no*ni) t -> SSeq (no*ni) t` is more parallel than `f :: TSeq (no*ni) 0 t -> TSeq (no*ni) 0 t`.
-`f :: TSeq no (SSeq ni t) -> TSeq no (SSeq ni t)` is a schedule that trades off parallelism and area.
-It is more parallel than the pure `TSeq` schedule, but uses fewer resources than the `SSeq` schedule.
-
-#### Isomorphism Operators
-
-The following operators provide the isomorphisms between `Seq`, `SSeq`, and `TSeq`.
-These operators are not in either the sequence language nor the space-time IR.
-They do not have interpretations in hardware. 
+Just as [`Partition` and `Unpartition` form an isomorphism between `Seq` and `Seq (Seq)`](#sequence-isomorphisms), the following operators form isomorphisms between `Seq` and `Tseq` and `Seq` and `SSeq`.
 
 1. `Seq_To_SSeq :: Seq n a -> SSeq n a`
 1. `SSeq_To_Seq :: SSeq n a -> Seq n a`
 1. `Seq_To_TSeq :: Seq n a -> TSeq n v a`
 1. `TSeq_To_Seq :: TSeq n v a -> Seq n a`
 
-The `Partition` and `Unpartition` operators also provide the functionality of the isomorphisms.
+These isomorphisms mean that any `f :: Seq n t -> Seq m t'` function must have contextually equivalent `TSeq` and `SSeq` versions. 
+1. `f === TSeq_To_Seq . f_tseq . Seq_To_TSeq`
+1. `f === SSeq_To_Seq . f_sseq . Seq_To_SSeq`
 
-# Rewrite Rules
+**These are the second and third rewrite rules that make up our minimal set of rewrite rules.**
+
+# Rewrites
 The rewrite rules show how to use the above isomorphisms to schedule Aetherling operators. 
+As stated previously, there are three core rewrite rules:
+1. Nesting Seqs - `f === Unpartition no ni . f' . Partition no ni`
+1. Seq To TSeq - `f === TSeq_To_Seq . f_tseq . Seq_To_TSeq`
+1. Seq To SSeq - `f === SSeq_To_Seq . f_sseq . Seq_To_SSeq`
+
+Using these core rewrite rules, we now show how to convert between operators in the sequence language and those in the space-time IR.
 Each operator in the sequence language is rewritten as a contextually equivalent, fully parallel operator in the space-time IR.
 Then, this operator is converted to a less parallel one in order to trade off area and throughput.
 
@@ -331,6 +326,8 @@ Unpartition no 1 . TSeq_To_Seq . Map_t SSeq_to_Seq . Map_t 1 (Down_1d_s ni) . Do
 ```
 
 ### Isomorphism Operators Removal
+When multiple slowed operators are composed, we will need to remove the wrapping, isomorphism operators. 
+These rewrites show how to remove the operators.
 1. `Seq_To_SSeq . SSeq_To_Seq === Id`
 1. `SSeq_To_Seq . Seq_To_SSeq === Id`
 1. `Seq_To_TSeq . TSeq_To_Seq === Id`
