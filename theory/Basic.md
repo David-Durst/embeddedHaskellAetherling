@@ -173,6 +173,7 @@ This is proven in the same way as shown in [the `Seq` isomorphism section.](#seq
 Two examples of operator-specific rewrite rules are:
 1. **`Map` Seq To TSeq** - `Map === TSeq_To_Seq . Map_t . Seq_To_TSeq`
 1. **`Map` Seq To SSeq** - `Map === SSeq_To_Seq . Map_s . Seq_To_SSeq`
+
 All other operator-specific rewrite rules take the same form, so we do not enumerate them.
 **These rewrite rules make up the rest of our minimal set of rewrite rules.**
 
