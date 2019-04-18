@@ -47,7 +47,7 @@ convolution_s img_size_outer img_size_inner in =
   return blurred_pixels
 ```
 
-# 1D Convolution Examples
+# Simpler Example
 ## Sequence Not Nested
 ```
 map 6 add1 . map 6 add2
