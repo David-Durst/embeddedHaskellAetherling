@@ -46,3 +46,25 @@ convolution_s img_size_outer img_size_inner in =
   blurred_pixels = map_t img_size_outer (map_s img_size_inner (map_s 3 add >>> reduce_s 3 add)) blur_element_pairs
   return blurred_pixels
 ```
+
+# 1D Convolution Examples
+## Sequence Not Nested
+```
+map 6 add1 . map 6 add2
+```
+
+## Fully Parallel 
+```
+map_s 6 add1 . map_s 6 add2
+```
+
+## Sequence nested
+```
+map 3 (map 2 add1) . map 3 (map 2 add2)
+```
+
+
+## Partially Parallel nested
+```
+map_t 3 (map_s 2 add1) . map_t 3 (map_s 2 add2)
+```
