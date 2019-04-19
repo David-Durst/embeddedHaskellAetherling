@@ -19,7 +19,7 @@ get_deep_dag :: Seq_Shallow_To_Deep_Env a -> Either String DAG_Builder
 get_deep_dag shallow_embedding =
   runIdentity $ runExceptT $ execStateT shallow_embedding empty_dag
 
-empty_dag = DAG_Builder (Seq_DAG [] []) 0
+empty_dag = DAG_Builder (DAG [] []) 0
 
 data DAG_Builder = DAG_Builder {
   get_builder_dag :: Seq_DAG,
@@ -41,7 +41,7 @@ add_to_DAG new_node input_indices_maybe node_name args_name = do
     let old_edges = edges $ get_builder_dag prior_DAG
     let old_nodes = nodes $ get_builder_dag prior_DAG
     let new_DAG = DAG_Builder
-          (Seq_DAG (old_nodes ++ [new_node]) (old_edges ++ new_edges))
+          (DAG (old_nodes ++ [new_node]) (old_edges ++ new_edges))
           (next_DAG_index prior_DAG + 1)
     put new_DAG
     return (convert_index_to_value cur_node_index)
@@ -60,7 +60,13 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
 
   -- binary operators
   addC x = add_to_DAG AddN (input_to_maybe_indices x) "addC" "Atom_Tuple_Edge"
-  eqC x = add_to_DAG EqN (input_to_maybe_indices x) "eqC" "Atom_Tuple_Edge"
+
+  eqC :: forall a . (Convertible_To_DAG_Data a, Check_Type_Is_Atom a, Eq a) =>
+    Atom_Tuple a a -> Seq_Shallow_To_Deep_Env Atom_Bit
+  eqC x = add_to_DAG eq_node (input_to_maybe_indices x) "eqC" "Atom_Tuple_Edge"
+    where
+      input_type_proxy = Proxy :: Proxy a
+      eq_node = EqN (get_AST_type input_type_proxy)
 
   -- generators
   lut_genC table x = do

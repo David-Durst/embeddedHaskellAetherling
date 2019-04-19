@@ -13,19 +13,33 @@ import qualified Data.List as L
 Below are type families for computing types depending on other types
 These are mainly used in function declarations
 -}
-intSizeInBits :: Int
-intSizeInBits = 8
-bitSizeInBits :: Int
-bitSizeInBits = 1
+size_int :: Int
+size_int = 8
+size_bit :: Int
+size_bit = 1
 type family Type_Size (x :: *) :: Nat where
   Type_Size (Atom_Unit) = 0
   Type_Size (Atom_Int) = 8
   Type_Size (Atom_Bit) = 1
   Type_Size (Atom_Tuple a b) = (Type_Size a) + (Type_Size b)
 
-size :: forall a . (KnownNat (Type_Size a)) => Proxy a -> Int
-size _ = fromInteger $ natVal $ (Proxy :: Proxy (Type_Size a) )
+size_p :: forall a . (KnownNat (Type_Size a)) => Proxy a -> Int
+size_p _ = fromInteger $ natVal $ (Proxy :: Proxy (Type_Size a) )
 
+size_t :: AST_Type -> Int
+size_t UnitT = 0
+size_t BitT = size_bit
+size_t IntT = size_int
+size_t (TupleT t0 t1) = size_t t0 + size_t t1
+size_t (SeqT _ _) = 0
+size_t (SSeqT n t) = n * size_t t
+size_t (TSeqT n _ t) = size_t t
+
+size_v :: AST_Value -> Int
+size_v UnitV = 0
+size_v (BitV _) = size_bit
+size_v (IntV _) = size_int
+size_v (TupleV t0 t1) = size_v t0 + size_v t1
 
 type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom Atom_Unit = True ~ True
@@ -83,19 +97,19 @@ instance Convertible_To_DAG_Data Atom_Unit where
   convert_to_index (Atom_Unit_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = Atom_Unit_Edge idx
-  get_AST_type _ = UnitN
+  get_AST_type _ = UnitT
 
 instance Convertible_To_DAG_Data Atom_Bit where
   convert_to_index (Atom_Bit_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = Atom_Bit_Edge idx
-  get_AST_type _ = BitN
+  get_AST_type _ = BitT
 
 instance Convertible_To_DAG_Data Atom_Int where
   convert_to_index (Atom_Int_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = Atom_Int_Edge idx
-  get_AST_type _ = IntN
+  get_AST_type _ = IntT
 
 instance (Convertible_To_DAG_Data a, Convertible_To_DAG_Data b) =>
   Convertible_To_DAG_Data (Atom_Tuple a b) where
@@ -103,14 +117,14 @@ instance (Convertible_To_DAG_Data a, Convertible_To_DAG_Data b) =>
   convert_to_index _ = Nothing
   convert_index_to_value idx = Atom_Tuple_Edge idx
   get_AST_type _ =
-    TupleN (get_AST_type (Proxy :: Proxy a)) (get_AST_type (Proxy :: Proxy b))
+    TupleT (get_AST_type (Proxy :: Proxy a)) (get_AST_type (Proxy :: Proxy b))
 
 instance (KnownNat n, Convertible_To_DAG_Data a) =>
   Convertible_To_DAG_Data (Seq n a) where
   convert_to_index (Seq_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = Seq_Edge idx
-  get_AST_type _ = SeqN nVal (get_AST_type (Proxy :: Proxy a))
+  get_AST_type _ = SeqT nVal (get_AST_type (Proxy :: Proxy a))
     where nVal = fromInteger $ natVal (Proxy :: Proxy n)
 
 instance (KnownNat n, Convertible_To_DAG_Data a) =>
@@ -118,7 +132,7 @@ instance (KnownNat n, Convertible_To_DAG_Data a) =>
   convert_to_index (SSeq_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = SSeq_Edge idx
-  get_AST_type _ = SSeqN nVal (get_AST_type (Proxy :: Proxy a))
+  get_AST_type _ = SSeqT nVal (get_AST_type (Proxy :: Proxy a))
     where nVal = fromInteger $ natVal (Proxy :: Proxy n)
 
 instance (KnownNat n, KnownNat v, Convertible_To_DAG_Data a) =>
@@ -126,7 +140,7 @@ instance (KnownNat n, KnownNat v, Convertible_To_DAG_Data a) =>
   convert_to_index (TSeq_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = TSeq_Edge idx
-  get_AST_type _ = TSeqN nVal vVal (get_AST_type (Proxy :: Proxy a))
+  get_AST_type _ = TSeqT nVal vVal (get_AST_type (Proxy :: Proxy a))
     where
       nVal = fromInteger $ natVal (Proxy :: Proxy n)
       vVal = fromInteger $ natVal (Proxy :: Proxy v)

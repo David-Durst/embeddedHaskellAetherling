@@ -92,17 +92,14 @@ class Sequence_Language m => Symbolic_Sequence_Language m where
                      m (Atom_Tuple a b)
   sym_input_seq :: (KnownNat n, Convertible_To_DAG_Data a) => Proxy n -> m (Seq n a)
 
-data Seq_DAG = Seq_DAG {
-  nodes :: [Sequence_Language_AST],
-  edges :: [DAG_Edge]
-  } deriving (Show, Eq)
+type Seq_DAG = DAG Sequence_Language_AST
 
 data Sequence_Language_AST =
   IdN
   | AbsN
   | NotN
   | AddN
-  | EqN
+  | EqN {t :: AST_Type}
 
   -- generators
   | Lut_GenN {lookup_table :: [AST_Value]}

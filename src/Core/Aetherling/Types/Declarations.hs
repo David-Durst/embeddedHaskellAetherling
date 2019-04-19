@@ -15,6 +15,11 @@ type DAG_Index = Int
 data DAG_Edge = DAG_Edge {source :: DAG_Index, sink :: DAG_Index}
   deriving (Show, Eq)
 
+data DAG a = DAG {
+  nodes :: [a],
+  edges :: [DAG_Edge]
+  } deriving (Show, Eq)
+
 data Atom_Unit =
   Atom_Unit
   | Atom_Unit_Edge DAG_Index

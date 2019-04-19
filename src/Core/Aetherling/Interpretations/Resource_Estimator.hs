@@ -14,9 +14,9 @@ import GHC.TypeLits.Extra
 import qualified Data.Vector.Sized as V
   
 
-estimate_resources :: Resources_Env a -> Either String Resources_Data
-estimate_resources resources_monad =
-  runIdentity $ runExceptT $ execStateT resources_monad empty_resources
+estimate_resources :: ST_DAG -> Either String Resources_Data
+estimate_resources dag =
+  runIdentity $ runExceptT $ foldM estimate_resourcesM empty_resources (nodes dag)
 
 data Resources_Data = Resources_Data {
   computeResources :: Int,
@@ -26,18 +26,16 @@ data Resources_Data = Resources_Data {
 
 empty_resources = Resources_Data 0 0 0
 
-type Resources_Env = StateT Resources_Data (ExceptT String Identity)
+type Resources_Env = Except String Resources_Data
 
-increase_resources :: Resources_Data -> a -> Resources_Env a
-increase_resources new_resources result = do
-  prior_resources <- get
-  let new_resources = Resources_Data
-        (computeResources new_resources + computeResources prior_resources)
-        (memoryResources new_resources + memoryResources prior_resources)
-        (wireResources new_resources + wireResources prior_resources)
-  put new_resources
-  return result
-
+increase_resources :: Resources_Data -> Resources_Data -> Resources_Env
+increase_resources prior_resources new_resources = return result_resources
+  where result_resources =
+          Resources_Data
+          (computeResources new_resources + computeResources prior_resources)
+          (memoryResources new_resources + memoryResources prior_resources)
+          (wireResources new_resources + wireResources prior_resources)
+  
 -- Int is for the size to count to
 add_counter_to_resources :: Resources_Data -> Int -> Resources_Data
 add_counter_to_resources (Resources_Data orig_comp orig_mem orig_wire) n =
@@ -51,82 +49,71 @@ add_counter_to_resources (Resources_Data orig_comp orig_mem orig_wire) n =
   where
     bits_for_int = fromInteger $ ceiling $ logBase 2 (fromInteger $ toInteger n)
 
-instance Space_Time_Language Resources_Env where
+estimate_resourcesM :: Resources_Data -> Space_Time_Language_AST -> Resources_Env
   -- unary operators
-  idC x = return $ x
-  absC x = increase_resources (Resources_Data int_size 0 int_size) x
-    where int_size = size (Proxy :: Proxy Atom_Int)
+estimate_resourcesM r IdN = return r
 
-  notC x = increase_resources (Resources_Data bit_size 0 bit_size) x
-    where bit_size = size (Proxy :: Proxy Atom_Bit)
+estimate_resourcesM r AbsN =
+  increase_resources r (Resources_Data size_int 0 size_int)
 
-  -- binary operators
-  addC x = increase_resources (Resources_Data int_size 0 int_size)
-    Atom_Int_Resources
-    where int_size = size (Proxy :: Proxy Atom_Bit)
+estimate_resourcesM r NotN =
+  increase_resources r (Resources_Data size_bit 0 size_bit)
 
-  eqC x = increase_resources (Resources_Data bit_size 0 bit_size)
-    Atom_Bit_Resources
-    where bit_size = size (Proxy :: Proxy Atom_Bit)
+-- binary operators
+estimate_resourcesM r AddN =
+  increase_resources r (Resources_Data size_int 0 size_int) 
 
-  lut_genC :: forall a . (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
-              [a] -> Atom_Int -> Resources_Env a
-  lut_genC x _ = increase_resources (Resources_Data t_size t_size t_size)
-    (head x)
-    where t_size = size (Proxy :: Proxy a)
+estimate_resourcesM r (EqN t) =
+  increase_resources r (Resources_Data (size_t t) 0 size_bit) 
 
-  const_genC :: forall a . (KnownNat (Type_Size a), Check_Type_Is_Atom a) =>
-                a -> Atom_Unit -> Resources_Env a
-  const_genC x _ = increase_resources (Resources_Data 0 t_size t_size) x
-    where t_size = size (Proxy :: Proxy a)
-
-  -- sequence operators
-  up_1d_sC :: forall a n . (KnownNat n, 1 <= n, KnownNat (Type_Size a),
-                            Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
-    Proxy n -> SSeq 1 a -> Resources_Env (SSeq n a)
-  up_1d_sC _ (SSeq_Resources x) =
-    increase_resources (Resources_Data 0 0 (n_val*t_size))
-    (SSeq_Resources x)
+-- generators
+estimate_resourcesM r (Lut_GenN tbl@(tbl_hd : _)) =
+  increase_resources r (Resources_Data size_int size_tbl size_el)
     where
-      t_size = size (Proxy :: Proxy a)
-      n_val = fromInteger $ natVal (Proxy :: Proxy n)
-  up_1d_sC _ _ = throwError $ fail_message "up_1d_sC" "SSeq_Resources"
+      size_el = size_v tbl_hd
+      size_tbl = length tbl * size_el
 
-  up_1d_tC :: forall a n . (KnownNat n, 1 <= n, KnownNat (Type_Size a),
-               Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
-    Proxy n -> TSeq 1 (n-1) a -> Resources_Env (TSeq n 0 a)
-  up_1d_tC _ (TSeq_Resources x) =
-    increase_resources with_counter_resources (TSeq_Resources x)
+estimate_resourcesM r (Lut_GenN _) = throwError $
+  "LUT can't have empty lookup table"
+
+estimate_resourcesM r (Const_GenN v) =
+  increase_resources r (Resources_Data 0 size_const size_const)
     where
-      t_size = size (Proxy :: Proxy a)
-      n_val = fromInteger $ natVal (Proxy :: Proxy n)
-      pre_counter_resources = Resources_Data 0 t_size t_size
-      with_counter_resources = add_counter_to_resources pre_counter_resources
-        n_val
-  up_1d_tC _ _ = throwError $ fail_message "up_1d_tC" "TSeq_Resources"
+      size_const = size_v v
 
-  down_1d_sC :: forall a n . (KnownNat n, KnownNat (Type_Size a),
-                  Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
-     Proxy n -> SSeq (1+n) a -> Resources_Env (SSeq 1 a)
-  down_1d_sC _ (SSeq_Resources x) =
-    increase_resources (Resources_Data 0 0 t_size) (SSeq_Resources x)
+-- sequence operator
+estimate_resourcesM r (Up_1d_sN n t) =
+  increase_resources r (Resources_Data 0 0 (n * size_t t)) 
+
+estimate_resourcesM r (Up_1d_tN n v t) =
+  increase_resources r resources_with_counter
     where
-      t_size = size (Proxy :: Proxy a)
-  down_1d_sC _ _ = throwError $ fail_message "down_1d_sC" "SSeq_Resources"
+      size_el = size_t t
+      resources_pre_counter = Resources_Data 0 size_el size_el
+      resources_with_counter = add_counter_to_resources resources_pre_counter (n+v)
 
-  down_1d_tC :: forall a n . (KnownNat n, KnownNat (Type_Size a),
-                 Check_Type_Is_Atom_Or_Nested a, Typeable (Proxy a)) =>
-    Proxy n -> TSeq (1+n) 0 a -> Resources_Env (TSeq 1 n a)
-  down_1d_tC _ (TSeq_Resources x) =
-    increase_resources with_counter_resources (TSeq_Resources x)
+estimate_resourcesM r (Down_1d_sN n t) =
+  increase_resources r (Resources_Data 0 0 (size_t t))
+
+estimate_resourcesM r (Down_1d_tN n v t) =
+  increase_resources r resources_with_counter
     where
-      t_size = size (Proxy :: Proxy a)
-      n_val = fromInteger $ natVal (Proxy :: Proxy n)
-      pre_counter_resources = Resources_Data 0 0 t_size
-      with_counter_resources = add_counter_to_resources pre_counter_resources
-        n_val
-  down_1d_tC _ _ = throwError $ fail_message "down_1d_tC" "TSeq_Resources"
+      size_el = size_t t
+      resources_pre_counter = Resources_Data 0 size_el size_el
+      resources_with_counter = add_counter_to_resources resources_pre_counter (n+v)
 
+estimate_resourcesM r (Partition_ssN _ _ _) = return r
+
+estimate_resourcesM r (Unpartition_ssN _ _ _) = return r
+
+estimate_resourcesM r (Partition_ttN no vo_in ni vi_in t) =
+  increase_resources r resources_with_counter
+    where
+      size_el = size_t t
+      resources_pre_counter = Resources_Data 0 ((no-1)*ni*size_el) (ni*size_el)
+      resources_with_counter = add_counter_to_resources resources_pre_counter
+        (no + vo_in * (ni + vi_in))
+{-
   partition_tsC :: forall a no ni . (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
                                      KnownNat (Type_Size a),
                                      Check_Type_Is_Atom_Or_Nested a,
@@ -224,16 +211,21 @@ instance Space_Time_Language Resources_Env where
     return $ TSeq_Resources f_output
   map2_tC _ _ _ _ = throwError $
     fail_message "map2_tC" "TSeq_Resources, TSeq_Resources"
+-}
+{-
+estimate_resourcesM (DAG (Map2_tN n v inner_dag :: tail)) = do
 
-  -- tuple operations
-  fstC (Atom_Tuple_Resources (x, _)) = return x
-  fstC _ = throwError $ fail_message "fstC" "Atom_Tuple_Resources"
+-}
 
-  sndC (Atom_Tuple_Resources (_, y)) = return y
-  sndC _ = throwError $ fail_message "sndC" "Atom_Tuple_Resources"
+-- tuple operations
+-- these require no size as they are just for connecting other nodes
+estimate_resourcesM r (FstN _ _) = return r
 
-  zipC x y = return $ Atom_Tuple_Resources (x, y)
+estimate_resourcesM r (SndN _ _) = return r
 
+estimate_resourcesM r (ZipN _ _) = return r
+
+{-
   -- composition operators
   (>>>) f g x = f x >>= g
 
@@ -244,3 +236,4 @@ instance Symbolic_Space_Time_Language Resources_Env where
   input_tuple x y = return $ Atom_Tuple_Resources (x, y)
   input_sseq x = return $ SSeq_Resources x
   input_tseq x = return $ TSeq_Resources x
+-}
