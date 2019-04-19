@@ -155,9 +155,9 @@ directionalString :: Bool -> String
 directionalString True = "In"
 directionalString False = "Out"
   
-intTypeString isInput = "Array(" L.++ show intSizeInBits L.++ ", " L.++
+intTypeString isInput = "Array(" L.++ show size_int L.++ ", " L.++
   directionalString isInput L.++ "(Bit))"
-bitTypeString isInput = "Array(" L.++ show bitSizeInBits L.++ ", " L.++
+bitTypeString isInput = "Array(" L.++ show size_bit L.++ ", " L.++
   directionalString isInput L.++ "(Bit))"
 
 -- first one is string to replace

@@ -106,14 +106,28 @@ estimate_resourcesM r (Partition_ssN _ _ _) = return r
 
 estimate_resourcesM r (Unpartition_ssN _ _ _) = return r
 
-estimate_resourcesM r (Partition_ttN no vo_in ni vi_in t) =
+estimate_resourcesM r (Partition_ttN _ _ _ _ _) = return r
+
+estimate_resourcesM r (Unpartition_ttN _ _ _ _ _) = return r
+
+estimate_resourcesM r (Partition_tsN no ni v_in t) =
   increase_resources r resources_with_counter
     where
       size_el = size_t t
       resources_pre_counter = Resources_Data 0 ((no-1)*ni*size_el) (ni*size_el)
       resources_with_counter = add_counter_to_resources resources_pre_counter
-        (no + vo_in * (ni + vi_in))
+        (ni + v_in)
+
+estimate_resourcesM r (Unpartition_tsN no ni v_out t) =
+  increase_resources r resources_with_counter
+    where
+      size_el = size_t t
+      resources_pre_counter = Resources_Data 0 ((no-1)*ni*size_el) (ni*size_el)
+      resources_with_counter = add_counter_to_resources resources_pre_counter
+        (no * ni + v_out)
 {-
+estimate_resourcesM r (Unpartition_ttN no vo_in ni vi_in t) =
+  increase_resources r resources_with_counter
   partition_tsC :: forall a no ni . (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
                                      KnownNat (Type_Size a),
                                      Check_Type_Is_Atom_Or_Nested a,
@@ -153,77 +167,49 @@ estimate_resourcesM r (Partition_ttN no vo_in ni vi_in t) =
         no_val
   unpartition_tsC _ _ _ = throwError $
     fail_message "partition_tsC" "TSeq_Resources (SSeq_Resources)"
-
-  partition_ssC _ _ (SSeq_Resources x) = return (SSeq_Resources (SSeq_Resources x))
-  partition_ssC _ _ _ = throwError $
-    fail_message "partition_ssC" "SSeq_Resources"
-
-  unpartition_ssC _ _ (SSeq_Resources (SSeq_Resources x)) =
-    return (SSeq_Resources x)
-  unpartition_ssC _ _ _ = throwError $
-    fail_message "partition_ssC" "SSeq_Resources (SSeq_Resources)"
-
-  map_sC :: forall a b n . (KnownNat n) =>
-    Proxy n -> (a -> Resources_Env b) -> (SSeq n a -> Resources_Env (SSeq n b))
-  map_sC _ f (SSeq_Resources x) = do
-    -- save the current state, get the resources of the inner state
-    -- multiply all them by n, and then add them to current state
-    current_resources <- get
-    put empty_resources
-    f_output <- f x
-    Resources_Data f_compute f_memory f_wiring <- get
-    put current_resources
-    let n_val = fromInteger $ natVal $ (Proxy :: Proxy n)
-    increase_resources
-      (Resources_Data (n_val*f_compute) (n_val*f_memory) (n_val*f_wiring))
-      (SSeq_Resources f_output)
-  map_sC _ _ _ = throwError $
-    fail_message "map_sC" "SSeq_Resources"
-
-  map_tC _ f (TSeq_Resources x) = do
-    -- let f add resources to current amount of resources
-    f_output <- f x
-    return $ TSeq_Resources f_output
-  map_tC _ _ _ = throwError $
-    fail_message "map_tC" "TSeq_Resources"
-
-  map2_sC :: forall a b c n . (KnownNat n) =>
-    Proxy n -> (a -> b -> Resources_Env c) ->
-    (SSeq n a -> SSeq n b -> Resources_Env (SSeq n c))
-  map2_sC _ f (SSeq_Resources x) (SSeq_Resources y) = do
-    -- save the current state, get the resources of the inner state
-    -- multiply all them by n, and then add them to current state
-    current_resources <- get
-    put empty_resources
-    f_output <- f x y
-    Resources_Data f_compute f_memory f_wiring <- get
-    put current_resources
-    let n_val = fromInteger $ natVal $ (Proxy :: Proxy n)
-    increase_resources
-      (Resources_Data (n_val*f_compute) (n_val*f_memory) (n_val*f_wiring))
-      (SSeq_Resources f_output)
-  map2_sC _ _ _ _ = throwError $
-    fail_message "map2_sC" "SSeq_Resources, SSeq_Resources"
-
-  map2_tC _ f (TSeq_Resources x) (TSeq_Resources y) = do
-    -- let f add resources to current amount of resources
-    f_output <- f x y
-    return $ TSeq_Resources f_output
-  map2_tC _ _ _ _ = throwError $
-    fail_message "map2_tC" "TSeq_Resources, TSeq_Resources"
 -}
-{-
-estimate_resourcesM (DAG (Map2_tN n v inner_dag :: tail)) = do
 
--}
+estimate_resourcesM r node@(Map_sN n inner_dag) =
+  case estimate_resources inner_dag of
+    Left fail_string -> throwError ("Fail inside " ++ show node ++ ": " ++ fail_string)
+    Right (Resources_Data inner_compute inner_memory inner_wiring) ->
+      return $ Resources_Data (n*inner_compute) (n*inner_memory) (n*inner_wiring)
+
+estimate_resourcesM r node@(Map_tN n v inner_dag) =
+  case estimate_resources inner_dag of
+    Left fail_string -> throwError ("Fail inside " ++ show node ++ ": " ++ fail_string)
+    Right inner_resources ->
+      increase_resources r resources_with_counter
+      where
+        resources_with_counter =
+          if v > 0
+          then add_counter_to_resources inner_resources (n+v)
+          else inner_resources
+
+estimate_resourcesM r node@(Map2_sN n inner_dag) =
+  case estimate_resources inner_dag of
+    Left fail_string -> throwError ("Fail inside " ++ show node ++ ": " ++ fail_string)
+    Right (Resources_Data inner_compute inner_memory inner_wiring) ->
+      return $ Resources_Data (n*inner_compute) (n*inner_memory) (n*inner_wiring)
+
+estimate_resourcesM r node@(Map2_tN n v inner_dag) =
+  case estimate_resources inner_dag of
+    Left fail_string -> throwError ("Fail inside " ++ show node ++ ": " ++ fail_string)
+    Right inner_resources ->
+      increase_resources r resources_with_counter
+      where
+        resources_with_counter =
+          if v > 0
+          then add_counter_to_resources inner_resources (n+v)
+          else inner_resources
 
 -- tuple operations
 -- these require no size as they are just for connecting other nodes
 estimate_resourcesM r (FstN _ _) = return r
-
 estimate_resourcesM r (SndN _ _) = return r
-
 estimate_resourcesM r (ZipN _ _) = return r
+
+estimate_resourcesM r (InputN _) = return r
 
 {-
   -- composition operators
