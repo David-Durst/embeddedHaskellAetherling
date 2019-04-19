@@ -2,17 +2,9 @@ module Aetherling.Interpretations.Resource_Estimator where
 import Aetherling.Declarations.Space_Time
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
-import Aetherling.Types.Isomorphisms
 import Aetherling.Interpretations.Monad_Helpers
-import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Identity
-import Data.Typeable
-import Unsafe.Coerce
-import GHC.TypeLits
-import GHC.TypeLits.Extra
-import qualified Data.Vector.Sized as V
-  
 
 estimate_resources :: ST_DAG -> Either String Resources_Data
 estimate_resources dag =
