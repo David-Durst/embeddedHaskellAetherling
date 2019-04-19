@@ -125,49 +125,6 @@ estimate_resourcesM r (Unpartition_tsN no ni v_out t) =
       resources_pre_counter = Resources_Data 0 ((no-1)*ni*size_el) (ni*size_el)
       resources_with_counter = add_counter_to_resources resources_pre_counter
         (no * ni + v_out)
-{-
-estimate_resourcesM r (Unpartition_ttN no vo_in ni vi_in t) =
-  increase_resources r resources_with_counter
-  partition_tsC :: forall a no ni . (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-                                     KnownNat (Type_Size a),
-                                     Check_Type_Is_Atom_Or_Nested a,
-                                     Typeable (Proxy a)) =>
-                   Proxy no -> Proxy ni ->
-                   TSeq 1 (no-1) (SSeq (no GHC.TypeLits.* ni) a) ->
-                   Resources_Env (TSeq no 0 (SSeq ni a))
-  partition_tsC _ _ (TSeq_Resources (SSeq_Resources x)) =
-    increase_resources with_counter_resources (TSeq_Resources (SSeq_Resources x))
-    where
-      t_size = size (Proxy :: Proxy a)
-      no_val = fromInteger $ natVal (Proxy :: Proxy no)
-      ni_val = fromInteger $ natVal (Proxy :: Proxy ni)
-      pre_counter_resources = Resources_Data 0 ((no_val-1)*ni_val*t_size)
-        (ni_val*t_size)
-      with_counter_resources = add_counter_to_resources pre_counter_resources
-        no_val
-  partition_tsC _ _ _ = throwError $
-    fail_message "partition_tsC" "TSeq_Resources (SSeq_Resources)"
-
-  unpartition_tsC :: forall a no ni . (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-                                       KnownNat (Type_Size a),
-                                       Check_Type_Is_Atom_Or_Nested a,
-                                       Typeable (Proxy a)) =>
-                     Proxy no -> Proxy ni ->
-                     TSeq no 0 (SSeq ni a) ->
-                     Resources_Env (TSeq 1 (no-1) (SSeq (no GHC.TypeLits.* ni) a))
-  unpartition_tsC _ _ (TSeq_Resources (SSeq_Resources x)) =
-    increase_resources with_counter_resources (TSeq_Resources (SSeq_Resources x))
-    where
-      t_size = size (Proxy :: Proxy a)
-      no_val = fromInteger $ natVal (Proxy :: Proxy no)
-      ni_val = fromInteger $ natVal (Proxy :: Proxy ni)
-      pre_counter_resources = Resources_Data 0 ((no_val-1)*ni_val*t_size)
-        (no_val*ni_val*t_size)
-      with_counter_resources = add_counter_to_resources pre_counter_resources
-        no_val
-  unpartition_tsC _ _ _ = throwError $
-    fail_message "partition_tsC" "TSeq_Resources (SSeq_Resources)"
--}
 
 estimate_resourcesM r node@(Map_sN n inner_dag) =
   case estimate_resources inner_dag of
@@ -210,16 +167,3 @@ estimate_resourcesM r (SndN _ _) = return r
 estimate_resourcesM r (ZipN _ _) = return r
 
 estimate_resourcesM r (InputN _) = return r
-
-{-
-  -- composition operators
-  (>>>) f g x = f x >>= g
-
-instance Symbolic_Space_Time_Language Resources_Env where
-  input_unit = return $ Atom_Unit_Resources
-  input_int = return $ Atom_Int_Resources
-  input_bit = return $ Atom_Bit_Resources
-  input_tuple x y = return $ Atom_Tuple_Resources (x, y)
-  input_sseq x = return $ SSeq_Resources x
-  input_tseq x = return $ TSeq_Resources x
--}
