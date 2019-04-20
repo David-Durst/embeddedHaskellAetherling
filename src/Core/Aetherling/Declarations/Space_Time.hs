@@ -1,8 +1,5 @@
 module Aetherling.Declarations.Space_Time where 
 import Aetherling.Types.Declarations
-import Aetherling.Types.Functions
-import qualified Data.Vector.Sized as V
-
 
 type ST_DAG = DAG Space_Time_Language_AST
 

@@ -112,8 +112,8 @@ data Sequence_Language_AST =
   | UnpartitionN {no :: Int, ni :: Int, t :: AST_Type} 
   | MapN {n :: Int, f :: Seq_DAG}
   | Map2N {n :: Int, f :: Seq_DAG}
-  | FstN {t_0 :: AST_Type, t_1 :: AST_Type}
-  | SndN {t_0 :: AST_Type, t_1 :: AST_Type}
-  | ZipN {t_0 :: AST_Type, t_1 :: AST_Type}
+  | FstN {t0 :: AST_Type, t1 :: AST_Type}
+  | SndN {t0 :: AST_Type, t1 :: AST_Type}
+  | ZipN {t0 :: AST_Type, t1 :: AST_Type}
   | InputN {t :: AST_Type}
   deriving (Show, Eq)
