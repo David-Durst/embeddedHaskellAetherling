@@ -36,6 +36,7 @@ dependencies:
 - containers
 - reflection
 - util
+- arithmoi
 
 ghc-options:
 - -fwarn-incomplete-patterns 
