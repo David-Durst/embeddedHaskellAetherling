@@ -1,4 +1,4 @@
-module Aetherling.Declarations.Space_Time where 
+module Aetherling.ASTs.Space_Time where 
 import Aetherling.Types.Declarations
 
 type ST_DAG = DAG Space_Time_Language_AST

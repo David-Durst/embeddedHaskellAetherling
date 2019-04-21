@@ -1,6 +1,6 @@
 module Aetherling.Interpretations.Sequence_To_Space_Time where
-import qualified Aetherling.Declarations.Space_Time as ST
-import qualified Aetherling.Declarations.Sequence as S
+import qualified Aetherling.ASTs.Space_Time as ST
+import qualified Aetherling.ASTs.Sequence as S
 import Aetherling.Types.Declarations
 
 sequence_to_space_time :: S.Seq_DAG -> ST.ST_DAG

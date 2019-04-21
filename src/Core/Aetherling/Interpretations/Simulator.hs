@@ -1,5 +1,5 @@
 module Aetherling.Interpretations.Simulator where
-import Aetherling.Declarations.Sequence
+import Aetherling.ASTs.Sequence
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
 import Aetherling.Types.Isomorphisms

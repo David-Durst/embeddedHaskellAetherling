@@ -1,4 +1,4 @@
-module Aetherling.Declarations.Sequence where 
+module Aetherling.ASTs.Sequence where 
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
 import Data.Proxy

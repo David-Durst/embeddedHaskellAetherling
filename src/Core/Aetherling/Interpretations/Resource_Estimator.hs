@@ -1,5 +1,5 @@
 module Aetherling.Interpretations.Resource_Estimator where
-import Aetherling.Declarations.Space_Time
+import Aetherling.ASTs.Space_Time
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
 import Aetherling.Interpretations.Monad_Helpers
