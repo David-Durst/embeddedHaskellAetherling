@@ -27,10 +27,10 @@ data Space_Time_Language_AST =
                      ni :: Int, vi_out :: Int, t :: AST_Type}
   | Partition_tsN {no :: Int, ni :: Int, v_in :: Int, t :: AST_Type}
   | Unpartition_tsN {no :: Int, ni :: Int, v_out :: Int, t :: AST_Type}
-  | Map_sN {n :: Int, f :: DAG Space_Time_Language_AST}
-  | Map_tN {n :: Int,  v :: Int, f :: DAG Space_Time_Language_AST}
-  | Map2_sN {n :: Int, f :: DAG Space_Time_Language_AST}
-  | Map2_tN {n :: Int, v :: Int, f :: DAG Space_Time_Language_AST}
+  | Map_sN {n :: Int, f :: ST_DAG}
+  | Map_tN {n :: Int,  v :: Int, f :: ST_DAG}
+  | Map2_sN {n :: Int, f :: ST_DAG}
+  | Map2_tN {n :: Int, v :: Int, f :: ST_DAG}
   | FstN {t0 :: AST_Type, t1 :: AST_Type}
   | SndN {t0 :: AST_Type, t1 :: AST_Type}
   | ZipN {t0 :: AST_Type, t1 :: AST_Type}

@@ -3,56 +3,54 @@ import Aetherling.ASTs.Space_Time
 import Aetherling.Types.Declarations
 import Data.Map
 import Data.Maybe
-import Math.NumberTheory.Primes.Factorisation
 
-get_valid_slowdowns :: ST_DAG -> [Int]
-get_valid_slowdowns (DAG nodes _) = do
-  let prime_factors = fmap get_valid_slowdowns_for_node nodes
-  let shared_prime_factors = Prelude.foldl (unionWith max) empty prime_factors
-  -- expand each prime factor, num occurrences pair to a list of the prime
-  -- factor copies
-  concat $ fmap (\(prime_factor,n) -> replicate n prime_factor) $
-    toList shared_prime_factors
+get_next_valid_slowdown :: ST_DAG -> Int -> Int
+get_next_valid_slowdown dag@(DAG nodes _) factor = do
+  let is_cur_factor_valid = and $ fmap (is_slowdown_valid factor) nodes
+  if is_cur_factor_valid
+    then factor
+    else get_next_valid_slowdown dag (factor+1)
 
--- empty list represents that this is not a node on SSeqs and TSeqs, so
--- slowing it down is meaningless
-get_valid_slowdowns_for_node :: Space_Time_Language_AST -> Map Int Int
-get_valid_slowdowns_for_node IdN = empty
-get_valid_slowdowns_for_node AbsN = empty
-get_valid_slowdowns_for_node NotN = empty
-get_valid_slowdowns_for_node AddN = empty
-get_valid_slowdowns_for_node (EqN _) = empty
+-- check if this slowdown amount is valid
+-- always slowing down parallel _s operators, so don't worry about _t
+is_slowdown_valid :: Int -> Space_Time_Language_AST -> Bool
+-- these don't impact ability to slow down
+is_slowdown_valid _ IdN = True
+is_slowdown_valid _ AbsN = True
+is_slowdown_valid _ NotN = True
+is_slowdown_valid _ AddN = True
+is_slowdown_valid _ (EqN _) = True
 
-  -- generators
-get_valid_slowdowns_for_node (Lut_GenN _) = empty
-get_valid_slowdowns_for_node (Const_GenN _) = empty
+-- generators
+is_slowdown_valid _ (Lut_GenN _) = True
+is_slowdown_valid _ (Const_GenN _) = True
 
-  -- sequence operators
-get_valid_slowdowns_for_node (Up_1d_sN n _) = factor n 
-get_valid_slowdowns_for_node (Up_1d_tN n _ ) {n :: Int, v :: Int, t :: AST_Type}
-get_valid_slowdowns_for_node Down_1d_sN {n :: Int, t :: AST_Type}
-get_valid_slowdowns_for_node Down_1d_tN {n :: Int, v :: Int, t :: AST_Type}
-get_valid_slowdowns_for_node Partition_ssN {no :: Int, ni :: Int, t :: AST_Type}
-get_valid_slowdowns_for_node Unpartition_ssN {no :: Int, ni :: Int, t :: AST_Type}
-{-
-get_valid_slowdowns_for_node Partition_ttN {no :: Int, vo_in :: Int,
-                   ni :: Int, vi_in :: Int, t :: AST_Type}
-get_valid_slowdowns_for_node Unpartition_ttN {no :: Int, vo_out :: Int,
-                     ni :: Int, vi_out :: Int, t :: AST_Type}
-get_valid_slowdowns_for_node Partition_tsN {no :: Int, ni :: Int, v_in :: Int, t :: AST_Type}
-get_valid_slowdowns_for_node Unpartition_tsN {no :: Int, ni :: Int, v_out :: Int, t :: AST_Type}
-get_valid_slowdowns_for_node Map_sN {n :: Int, f :: DAG Space_Time_Language_AST}
-get_valid_slowdowns_for_node Map_tN {n :: Int,  v :: Int, f :: DAG Space_Time_Language_AST}
-get_valid_slowdowns_for_node Map2_sN {n :: Int, f :: DAG Space_Time_Language_AST}
-get_valid_slowdowns_for_node Map2_tN {n :: Int, v :: Int, f :: DAG Space_Time_Language_AST}
-get_valid_slowdowns_for_node FstN {t0 :: AST_Type, t1 :: AST_Type}
-get_valid_slowdowns_for_node SndN {t0 :: AST_Type, t1 :: AST_Type}
-get_valid_slowdowns_for_node ZipN {t0 :: AST_Type, t1 :: AST_Type}
-get_valid_slowdowns_for_node InputN {t :: AST_Type}
--}
+-- sequence operators
+is_slowdown_valid factor (Up_1d_sN n _) = factor_valid n factor
+is_slowdown_valid _ (Up_1d_tN n _ _) = undefined 
+is_slowdown_valid factor (Down_1d_sN n _) = factor_valid n factor
+is_slowdown_valid _ (Down_1d_tN _ _ _) = undefined
+is_slowdown_valid factor (Partition_ssN no ni _) =
+  factor_valid no factor || factor_valid (no*ni) factor
+is_slowdown_valid factor (Unpartition_ssN no ni _) =
+  factor_valid no factor || factor_valid (no*ni) factor
+is_slowdown_valid _ (Partition_ttN _ _ _ _ _) = undefined
+is_slowdown_valid _ (Unpartition_ttN _ _ _ _ _) = undefined
+is_slowdown_valid _ (Partition_tsN _ _ _ _) = undefined
+is_slowdown_valid _ (Unpartition_tsN _ _ _ _) = undefined 
+is_slowdown_valid factor (Map_sN n f) =
+  factor_valid n factor || (get_next_valid_slowdown f factor == factor)
+is_slowdown_valid _ (Map_tN _ _ _) = undefined
+is_slowdown_valid factor (Map2_sN n f) =
+  factor_valid n factor || (get_next_valid_slowdown f factor == factor)
+is_slowdown_valid _ (Map2_tN _ _ _) = undefined
 
--- Get the prime factorization of an Int.
--- Returns a map where key is the prime factor and value is the number of times
--- the prime appears in the factorization
-factor :: Int -> Map Int Int
-factor n = fromDistinctAscList $ fmap (\(k,v) -> (fromInteger k, v)) $ factorise (toInteger n)
+is_slowdown_valid _ (FstN _ _) = True
+is_slowdown_valid _ (SndN _ _) = True
+is_slowdown_valid _ (ZipN _ _) = True
+is_slowdown_valid _ (InputN _) = True
+
+-- true if factor divides into n, slow down, or if n divides into factr,
+-- underutilizing
+factor_valid :: Int -> Int -> Bool
+factor_valid n factor = (n `mod` factor == 0) || (factor `mod` n == 0)
