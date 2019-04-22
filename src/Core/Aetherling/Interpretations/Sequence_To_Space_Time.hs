@@ -112,16 +112,14 @@ seq_node_to_st_node slowdown builder (seq_index, S.Up_1dN n t) |
       -- this new edge connects the up_1d_t and the map
       [DAG_Edge starting_st_index (starting_st_index + 1)]
 
--- if slowdown is less than n, then no underutilization
-seq_node_to_st_node slowdown builder (seq_index, S.Up_1dN n t) | slowdown > n =
+-- if slowdown is >= n, underutilization and only temporal upsample
+seq_node_to_st_node slowdown builder (seq_index, S.Up_1dN n t) | slowdown >= n =
   return $ add_to_DAG builder [ST.Up_1d_sN n t] new_edges seq_index
   where
-    new_nodes = [ST.Up_1d_tN n (slowdown `div` n) (SSeqT 1 t), parallel_up]
+    new_nodes = [ST.Up_1d_tN n (slowdown `div` n) (SSeqT 1 t)]
     input_edges_from_seq = get_input_indices builder seq_index
     starting_st_index = next_dag_index builder
-    new_edges = input_edges_from_seq ++
-      -- this new edge connects the up_1d_t and the map
-      [DAG_Edge starting_st_index (starting_st_index + 1)]
+    new_edges = input_edges_from_seq
 
 
 seq_node_to_st_node slowdown builder (index, n@(S.Up_1dN _ _)) = throwError $
@@ -138,20 +136,19 @@ seq_node_to_st_node slowdown builder (seq_index, S.Down_1dN n t) |
   where
     ni = n `div` slowdown
     no = slowdown
-    parallel_up = ST.Map_tN 1 (no-1) (DAG [ST.Down_1d_sN ni t] [])
-    new_nodes = [ST.Down_1d_tN no 0 (SSeqT ni t), parallel_up]
+    parallel_down = ST.Map_tN 1 (no-1) (DAG [ST.Down_1d_sN ni t] [])
+    new_nodes = [ST.Down_1d_tN no 0 (SSeqT ni t), parallel_down]
     input_edges_from_seq = get_input_indices builder seq_index
     starting_st_index = next_dag_index builder
     new_edges = input_edges_from_seq ++
       -- this new edge connects the up_1d_t and the map
       [DAG_Edge starting_st_index (starting_st_index + 1)]
 
--- if slowdown is less than n, then no underutilization
-seq_node_to_st_node slowdown builder (seq_index, S.Down_1dN n t) | slowdown > n =
+-- if slowdown is >= n, underutilization and only temporal downsample
+seq_node_to_st_node slowdown builder (seq_index, S.Down_1dN n t) | slowdown >= n =
   return $ add_to_DAG builder [ST.Down_1d_sN n t] new_edges seq_index
   where
-    parallel_up = ST.Map_tN n (slowdown `div` n) (DAG [ST.Down_1d_sN 1 t] [])
-    new_nodes = [ST.Down_1d_tN n (slowdown `div` n) (SSeqT 1 t), parallel_up]
+    new_nodes = [ST.Down_1d_tN n (slowdown `div` n) (SSeqT 1 t)]
     input_edges_from_seq = get_input_indices builder seq_index
     starting_st_index = next_dag_index builder
     new_edges = input_edges_from_seq ++
@@ -162,8 +159,6 @@ seq_node_to_st_node slowdown builder (seq_index, S.Down_1dN n t) | slowdown > n 
 seq_node_to_st_node slowdown builder (index, n@(S.Down_1dN _ _)) = throwError $
   show n ++ " can't be slowed down with slowdown " ++ show slowdown ++ ". The"++
   "builder is " ++ show builder ++ " and index in sequence DAG is "++ show index
---seq_node_to_st_node n (S.Up_1dN n t) = ST.Up_1d_sN n t
---seq_node_to_st_node 1 (S.Down_1dN n t) = ST.Down_1d_sN n t
 {-
 
 seq_node_to_st_node (S.PartitionN no ni t) = ST.Partition_ssN no ni t
