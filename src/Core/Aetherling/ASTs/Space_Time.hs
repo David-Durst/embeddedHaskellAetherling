@@ -21,12 +21,12 @@ data Space_Time_Language_AST =
   | Down_1d_tN {n :: Int, v :: Int, t :: AST_Type}
   | Partition_ssN {no :: Int, ni :: Int, t :: AST_Type}
   | Unpartition_ssN {no :: Int, ni :: Int, t :: AST_Type}
-  | Partition_ttN {no :: Int, vo_in :: Int,
-                   ni :: Int, vi_in :: Int, t :: AST_Type}
-  | Unpartition_ttN {no :: Int, vo_out :: Int,
-                     ni :: Int, vi_out :: Int, t :: AST_Type}
-  | Partition_tsN {no :: Int, ni :: Int, v_in :: Int, t :: AST_Type}
-  | Unpartition_tsN {no :: Int, ni :: Int, v_out :: Int, t :: AST_Type}
+  | Partition_ttN {no :: Int, vo :: Int,
+                   ni :: Int, vi :: Int, t :: AST_Type}
+  | Unpartition_ttN {no :: Int, vo :: Int,
+                     ni :: Int, vi :: Int, t :: AST_Type}
+  | Partition_tsN {no :: Int, ni :: Int, v :: Int, t :: AST_Type}
+  | Unpartition_tsN {no :: Int, ni :: Int, v :: Int, t :: AST_Type}
   | Map_sN {n :: Int, f :: ST_DAG}
   | Map_tN {n :: Int,  v :: Int, f :: ST_DAG}
   | Map2_sN {n :: Int, f :: ST_DAG}
