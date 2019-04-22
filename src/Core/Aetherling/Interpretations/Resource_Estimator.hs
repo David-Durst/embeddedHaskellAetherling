@@ -114,9 +114,9 @@ estimate_resourcesM r (Unpartition_tsN no ni v_out t) =
   increase_resources r resources_with_counter
     where
       size_el = size_t t
-      resources_pre_counter = Resources_Data 0 ((no-1)*ni*size_el) (ni*size_el)
+      resources_pre_counter = Resources_Data 0 ((no-1)*ni*size_el) (no*ni*size_el)
       resources_with_counter = add_counter_to_resources resources_pre_counter
-        (no * ni + v_out)
+        (no + v_out)
 
 estimate_resourcesM r node@(Map_sN n inner_dag) =
   case estimate_resources inner_dag of
