@@ -2,17 +2,20 @@ module Aetherling.Interpretations.Sequence_To_Space_Time where
 import qualified Aetherling.ASTs.Space_Time as ST
 import qualified Aetherling.ASTs.Sequence as S
 import Aetherling.Types.Declarations
+import Aetherling.Interpretations.Latency
 import qualified Data.Map as M
 import Data.Maybe
 import Control.Monad.Except
 import Data.Foldable
 
 sequence_to_space_time :: Int -> S.Seq_DAG -> Except String ST.ST_DAG
-sequence_to_space_time slowdown_factor seq_dag@(DAG nodes edges) = do
+sequence_to_space_time slowdown _ | slowdown < 1 = throwError $ "slowdown of " ++
+                                    show slowdown ++ " is less than min of 1."
+sequence_to_space_time slowdown seq_dag@(DAG nodes edges) = do
   let nodes_with_index = zip [0..] nodes
   let starting_builder = empty_builder seq_dag
   let st_builder_result =
-        foldlM (seq_node_to_st_node slowdown_factor) starting_builder nodes_with_index
+        foldlM (seq_node_to_st_node slowdown) starting_builder nodes_with_index
   fmap st_dag st_builder_result
 
 -- stores the information needed during the Seq To ST convertion
@@ -100,7 +103,7 @@ seq_node_to_st_node 1 builder (seq_index, S.Up_1dN n t) = return $
 -- if slowdown is less than n, then no underutilization
 seq_node_to_st_node slowdown builder (seq_index, S.Up_1dN n t) |
   slowdown > 1 && slowdown < n =
-  return $ add_to_DAG builder [ST.Up_1d_sN n t] new_edges seq_index
+  return $ add_to_DAG builder new_nodes new_edges seq_index
   where
     ni = n `div` slowdown
     no = slowdown
@@ -114,17 +117,10 @@ seq_node_to_st_node slowdown builder (seq_index, S.Up_1dN n t) |
 
 -- if slowdown is >= n, underutilization and only temporal upsample
 seq_node_to_st_node slowdown builder (seq_index, S.Up_1dN n t) | slowdown >= n =
-  return $ add_to_DAG builder [ST.Up_1d_sN n t] new_edges seq_index
+  return $ add_to_DAG builder new_nodes input_edges_from_seq seq_index
   where
     new_nodes = [ST.Up_1d_tN n (slowdown `div` n) (SSeqT 1 t)]
     input_edges_from_seq = get_input_indices builder seq_index
-    starting_st_index = next_dag_index builder
-    new_edges = input_edges_from_seq
-
-
-seq_node_to_st_node slowdown builder (index, n@(S.Up_1dN _ _)) = throwError $
-  show n ++ " can't be slowed down with slowdown " ++ show slowdown ++ ". The"++
-  "builder is " ++ show builder ++ " and index in sequence DAG is "++ show index
 
 seq_node_to_st_node 1 builder (seq_index, S.Down_1dN n t) = return $
   add_to_DAG builder [ST.Down_1d_sN n t] (get_input_indices builder seq_index) seq_index
@@ -132,7 +128,7 @@ seq_node_to_st_node 1 builder (seq_index, S.Down_1dN n t) = return $
 -- if slowdown is less than n, then no underutilization
 seq_node_to_st_node slowdown builder (seq_index, S.Down_1dN n t) |
   slowdown > 1 && slowdown < n =
-  return $ add_to_DAG builder [ST.Down_1d_sN n t] new_edges seq_index
+  return $ add_to_DAG builder new_nodes new_edges seq_index
   where
     ni = n `div` slowdown
     no = slowdown
@@ -141,34 +137,103 @@ seq_node_to_st_node slowdown builder (seq_index, S.Down_1dN n t) |
     input_edges_from_seq = get_input_indices builder seq_index
     starting_st_index = next_dag_index builder
     new_edges = input_edges_from_seq ++
-      -- this new edge connects the up_1d_t and the map
+      -- this new edge connects the down_1d_t and the map
       [DAG_Edge starting_st_index (starting_st_index + 1)]
 
 -- if slowdown is >= n, underutilization and only temporal downsample
 seq_node_to_st_node slowdown builder (seq_index, S.Down_1dN n t) | slowdown >= n =
-  return $ add_to_DAG builder [ST.Down_1d_sN n t] new_edges seq_index
+  return $ add_to_DAG builder new_nodes input_edges_from_seq seq_index
   where
     new_nodes = [ST.Down_1d_tN n (slowdown `div` n) (SSeqT 1 t)]
     input_edges_from_seq = get_input_indices builder seq_index
-    starting_st_index = next_dag_index builder
-    new_edges = input_edges_from_seq ++
-      -- this new edge connects the up_1d_t and the map
-      [DAG_Edge starting_st_index (starting_st_index + 1)]
 
-
-seq_node_to_st_node slowdown builder (index, n@(S.Down_1dN _ _)) = throwError $
-  show n ++ " can't be slowed down with slowdown " ++ show slowdown ++ ". The"++
-  "builder is " ++ show builder ++ " and index in sequence DAG is "++ show index
 {-
+-- partition and unpartition can't be slowed at this point
+seq_node_to_st_node 1 builder (seq_index, S.PartitionN no ni t) = return $
+  add_to_DAG builder [ST.Partition_ssN no ni t]
+  (get_input_indices builder seq_index) seq_index
+  
+seq_node_to_st_node slowdown builder (seq_index, S.PartitionN no ni t) |
+  slowdown > 1 && slowdown <= no = return $
+  add_to_DAG builder [ST.Partition_tsN  ni t]
+  (get_input_indices builder seq_index) seq_index
+-- seq_node_to_st_node 1 (S.PartitionN no ni t) = ST.Partition_ssN no ni t
 
-seq_node_to_st_node (S.PartitionN no ni t) = ST.Partition_ssN no ni t
 seq_node_to_st_node (S.UnpartitionN no ni t) = ST.Unpartition_ssN no ni t
-
-seq_node_to_st_node (S.MapN n inner_dag) =
-  ST.Map_sN n (sequence_to_space_time inner_dag)
-seq_node_to_st_node (S.Map2N n inner_dag) =
-  ST.Map2_sN n (sequence_to_space_time inner_dag)
 -}
+
+seq_node_to_st_node 1 builder (seq_index, S.MapN n f) = do
+  inner_dag <- sequence_to_space_time 1 f
+  return $ add_to_DAG builder [ST.Map_sN n inner_dag]
+    (get_input_indices builder seq_index) seq_index
+
+-- if slowdown is less than n, then no underutilization
+seq_node_to_st_node slowdown builder (seq_index, S.MapN n f) |
+  slowdown > 1 && slowdown < n = do
+  let ni = n `div` slowdown
+  let no = slowdown
+  inner_dag <- sequence_to_space_time 1 f
+  let inner_map = DAG [ST.Map_sN ni inner_dag] []
+  let new_nodes = [ST.Map_tN no 0 inner_map]
+  let input_edges_from_seq = get_input_indices builder seq_index
+  return $ add_to_DAG builder new_nodes input_edges_from_seq seq_index
+  
+-- if slowdown is >= n, map_t with no parallelism. if map contains an operator
+-- on seq, allow that to underutilize itself. otherwise, only combinational
+-- operators, latency 0. Add underutilization where inner pipeline latency is
+-- less than slowdown latency, as inner nodes that aren't on seqs will only have
+-- latency 1. This means only inner most map will get latency with nested maps
+seq_node_to_st_node slowdown builder (seq_index, node@(S.MapN n f)) |
+  slowdown >= n = do
+  let input_edges_from_seq = get_input_indices builder seq_index
+  let slowdown_inner = slowdown `div` n
+  inner_dag <- sequence_to_space_time 1 f
+  let inner_latency = get_latency inner_dag
+  slowdown_map <- if inner_latency < slowdown_inner
+        -- this is equivalent to 
+    then do
+    if inner_latency /= 1
+      then throwError $ show f ++ " in " ++ show node ++ " latency not " ++
+           "1 when slowed by " ++ show slowdown_inner ++ " with builder " ++
+           show slowdown_inner
+      else return slowdown_inner
+    else return 0
+  return $ add_to_DAG builder [ST.Map_tN n slowdown_map inner_dag]
+    input_edges_from_seq seq_index
+
+-- These are same as Map, but with Map2
+seq_node_to_st_node 1 builder (seq_index, S.Map2N n f) = do
+  inner_dag <- sequence_to_space_time 1 f
+  return $ add_to_DAG builder [ST.Map2_sN n inner_dag]
+    (get_input_indices builder seq_index) seq_index
+
+seq_node_to_st_node slowdown builder (seq_index, S.Map2N n f) |
+  slowdown > 1 && slowdown < n = do
+  let ni = n `div` slowdown
+  let no = slowdown
+  inner_dag <- sequence_to_space_time 1 f
+  let inner_map = DAG [ST.Map2_sN ni inner_dag] []
+  let new_nodes = [ST.Map2_tN no 0 inner_map]
+  let input_edges_from_seq = get_input_indices builder seq_index
+  return $ add_to_DAG builder new_nodes input_edges_from_seq seq_index
+
+seq_node_to_st_node slowdown builder (seq_index, node@(S.Map2N n f)) |
+  slowdown >= n = do
+  let input_edges_from_seq = get_input_indices builder seq_index
+  let slowdown_inner = slowdown `div` n
+  inner_dag <- sequence_to_space_time 1 f
+  let inner_latency = get_latency inner_dag
+  slowdown_map <- if inner_latency < slowdown_inner
+        -- this is equivalent to 
+    then do
+    if inner_latency /= 1
+      then throwError $ show f ++ " in " ++ show node ++ " latency not " ++
+           "1 when slowed by " ++ show slowdown_inner ++ " with builder " ++
+           show slowdown_inner
+      else return slowdown_inner
+    else return 0
+  return $ add_to_DAG builder [ST.Map2_tN n slowdown_map inner_dag]
+    input_edges_from_seq seq_index
 
 -- tuple operations
 seq_node_to_st_node _ builder (seq_index, S.FstN t0 t1) = return $
@@ -180,3 +245,7 @@ seq_node_to_st_node _ builder (seq_index, S.ZipN t0 t1) = return $
 
 seq_node_to_st_node _ builder (seq_index, S.InputN t) = return $
   add_to_DAG builder [ST.InputN t] (get_input_indices builder seq_index) seq_index
+
+seq_node_to_st_node slowdown builder (index, n) = throwError $
+  show n ++ " can't be slowed down with slowdown " ++ show slowdown ++ ". The"++
+  "builder is " ++ show builder ++ " and index in sequence DAG is "++ show index
