@@ -28,14 +28,20 @@ is_slowdown_valid _ (Const_GenN _) = True
 -- sequence operators
 is_slowdown_valid factor (Up_1dN n _) = factor_valid n factor
 is_slowdown_valid factor (Down_1dN n _) = factor_valid n factor
+-- not using factor valid for no as can't underutilize just outside of
+--unpartition
 is_slowdown_valid factor (PartitionN no ni _) =
-  factor_valid no factor || factor_valid (no*ni) factor
+  (no `mod` factor == 0) || factor_valid (no*ni) factor
 is_slowdown_valid factor (UnpartitionN no ni _) =
-  factor_valid no factor || factor_valid (no*ni) factor
+  (no `mod` factor == 0) || factor_valid (no*ni) factor
+-- either factor slows down map partially,
+-- or it completely slows it down and the remainder is a valid factor
+-- for the inner pipeline
 is_slowdown_valid factor (MapN n f) =
-  factor_valid n factor || (get_next_valid_slowdown f factor == factor)
-is_slowdown_valid factor (Map2N n f) =
-  factor_valid n factor || (get_next_valid_slowdown f factor == factor)
+  (n `mod` factor == 0) || (factor `mod` n == 0 && (
+                               get_next_valid_slowdown f (factor `div` n) ==
+                               (factor `div` n)))
+is_slowdown_valid factor (Map2N n f) = is_slowdown_valid factor (MapN n f)
 
 is_slowdown_valid _ (FstN _ _) = True
 is_slowdown_valid _ (SndN _ _) = True
