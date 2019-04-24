@@ -112,6 +112,14 @@ The following are the rules for each operator on sequences in the sequence langu
 1. **`Up_1d` Nesting** - `Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
 1. **`Down_1d` Nesting** - `Up_1d (no*ni) ===  Unparition 1 1 . Map 1 (Down_1d ni) . Down_1d no . Partition no ni`
 
+## Commutativity
+The following operators commute with each others. It is obvious that the two forms are semantically equivalent.
+
+```
+Map 1 f . Down_1d n === Down_1d n . Map n f
+Map n f . Up_1d n === Up_1d n . Map 1 f
+```
+
 # Space-Time IR
 Aetherling lowers the sequence language to a space-time IR. 
 Programs in the IR are **scheduled**: the parallelism of each operators is specified. 
@@ -325,12 +333,9 @@ Unpartition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1 === (Seq To SSe
 Unpartition no ni . Map no (SSeq_To_Seq . Up_1d_s ni . Seq_To_SSeq) . Up_1d no . Partition 1 1 === (Seq To TSeq)
 Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Up_1d_s ni . Seq_To_SSeq) . Seq_To_TSeq . TSeq_To_Seq . Up_1d_t no . Seq_To_TSeq . Partition 1 1 === (Isomorphism Operator Removal)
 Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Up_1d_s ni . Seq_To_SSeq) . Up_1d_t no . Seq_To_TSeq . Partition 1 1 === (Functor Map Fusion)
-Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) . Map_t no Seq_To_SSeq . Up_1d_t no . Seq_To_TSeq . Partition 1 1 ===
+Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) . Map_t no Seq_To_SSeq . Up_1d_t no . Seq_To_TSeq . Partition 1 1 === (Commutativity)
 Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) . Up_1d_t no . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition 1 1 
 ```
-
-The final step is semantically equivalent because I'm not changing the operation of the `Up_1d_t`, I'm just changing each element of the `TSeq` that its upsampling from `Seq` to `SSeq`.
-By isomorphism, those two element types have the same semantics.
 
 See [the Functor Rules section](#functor-rules) for a description of Map Fusion.
 
@@ -359,6 +364,19 @@ These rewrites show how to remove the operators.
 2. `Unpartition_tt no ni . Partition_tt no ni === Id`
 1. `Partition_ts no ni . Unpartition_ts no ni === Id`
 2. `Unpartition_ts no ni . Partition_ts no ni === Id`
+
+### Space-Time Commutativity
+Since the sequence operators commute, their semantically equivalent operators in space-time also commute.
+
+For example:
+```
+Map_t 1 f . Down_1d_t n === (Isomorphism Operator Addition)
+Seq_To_TSeq . TSeq_To_Seq . Map_t 1 f . Seq_To_TSeq . TSeq_To_Seq . Down_1d_t n . Seq_To_TSeq . TSeq_To_Seq === (TSeq To Seq)
+Seq_To_TSeq . Map 1 f . Down_1d n . TSeq_To_Seq === (Commutativity)
+Seq_To_TSeq . Down_1d n . Map 1 f . TSeq_To_Seq === (Seq To TSeq)
+Seq_To_TSeq . TSeq_To_Seq . Down_1d_t . Seq_To_TSeq . TSeq_To_Seq . Map_t 1 f . Seq_To_TSeq . TSeq_To_Seq === (TSeq To Seq)
+Down_1d_t n . Map_t 1 f
+```
 
 # Functor Rules
 In addition to rules provided by the isomorphisms, we also have the following rewrite rules due to the fact that `Seq`, `TSeq`, and `SSeq` are functors.
