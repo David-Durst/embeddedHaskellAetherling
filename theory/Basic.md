@@ -120,6 +120,11 @@ Map 1 f . Down_1d n === Down_1d n . Map n f
 Map n f . Up_1d n === Up_1d n . Map 1 f
 ```
 
+The following commute if `f` and `g` commute
+```
+Map n f . Map n g === Map n g . Map n f
+```
+
 # Space-Time IR
 Aetherling lowers the sequence language to a space-time IR. 
 Programs in the IR are **scheduled**: the parallelism of each operators is specified. 
