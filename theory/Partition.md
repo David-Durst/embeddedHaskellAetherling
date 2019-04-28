@@ -31,16 +31,16 @@ Slowdown by a factor s does one of three things:
 
 For partition, will receive input from a Seq and emit to an Seq (Seq).
 Since at most only one of the Seqs in a nesting gets split during scheduling, the needed types for scheduled partition are: 
-1. SSeq -> SSeq (SSeq) - `Partition\_s\_ss`
-1. TSeq -> TSeq (TSeq) - `Partition\_t\_tt`
+1. SSeq -> SSeq (SSeq) - `Partition_s_ss`
+1. TSeq -> TSeq (TSeq) - `Partition_t_tt`
 1. TSeq (SSeq) -> TSeq (SSeq (SSeq))
   1. This type signature can be produced by either
-    1. splitting the outer TSeq into a TSeq (SSeq) - `Partition\_ts\_tss\_split_t`
-    1. splitting the inner SSeq into a SSeq (SSeq) - `Map_t (Partition\_s\_ss)`
+    1. splitting the outer TSeq into a TSeq (SSeq) - `Partition_ts_tss_split_t`
+    1. splitting the inner SSeq into a SSeq (SSeq) - `Map_t (Partition_s_ss)`
 1. TSeq (SSeq) -> TSeq (TSeq (SSeq))
   1. This type signature can be produced by either
-    1. splitting the outer TSeq into a TSeq (TSeq) - `Partition\_ts\_tts\_split_t`
-    1. splitting the inner SSeq into a TSeq (SSeq) - `Partition\_ts\_tts\_split_s`
+    1. splitting the outer TSeq into a TSeq (TSeq) - `Partition_ts_tts_split_t`
+    1. splitting the inner SSeq into a TSeq (SSeq) - `Partition_ts_tts_split_s`
 
 The third type must be produced by splitting the inner SSeq into two SSeqs. Therefore, it i
 There are two ways to produce the last two. Either, the outer TSeq is split into
@@ -54,7 +54,7 @@ a TSeq (SSeq) or the inner SSeq is split into a SSeq (SSeq).
 1. `Unpartition_t_tt no ni :: TSeq no 0 (TSeq ni 0 t) -> TSeq no 0 (TSeq ni 0 t)`
 1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
 1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t)`
-1. `Partition_ts_tts ni nj nk r: TSeq (ni*nj) (vi) (SSeq nk t) -> TSeq ni vi (TSeq nj vj (SSeq nk 0))`
+1. `Partition_ts_tss_split_t ni nj nk r: TSeq (ni*nj) (vi) (SSeq nk t) -> TSeq ni vi (TSeq nj vj (SSeq nk 0))`
 1. `Unpartition_ts_tts ni nj nk :: TSeq ni 0 (TSeq nj 0 (SSeq nk 0)) -> TSeq (ni*nj) 0 (SSeq nk t)`
 -- the next two aren't necessary. Since splitting up the inner SSeq, just accomplish this with map_t over Partition_s_ss 
 1. `Partition_ts_tss ni nj nk r: TSeq ni 0 (SSeq (nj*nk)nk t) -> TSeq ni 0 (TSeq nj 0 (SSeq nk 0))`
