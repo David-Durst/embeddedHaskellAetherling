@@ -31,9 +31,9 @@ is_slowdown_valid factor (Down_1dN n _) = factor_valid n factor
 -- not using factor valid for no as can't underutilize just outside of
 --unpartition
 is_slowdown_valid factor (PartitionN no ni _) =
-  (no `mod` factor == 0) || factor_valid (no*ni) factor
+  (no `mod` factor == 0) || factor_valid ni (factor `div` no)
 is_slowdown_valid factor (UnpartitionN no ni _) =
-  (no `mod` factor == 0) || factor_valid (no*ni) factor
+  (no `mod` factor == 0) || factor_valid ni (factor `div` no)
 -- either factor slows down map partially,
 -- or it completely slows it down and the remainder is a valid factor
 -- for the inner pipeline
