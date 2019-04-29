@@ -68,6 +68,7 @@ We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples 
 ## Sequence Operators
 1. `Map n :: (t -> t') -> Seq n t -> Seq n t'`
 1. `Map2 n :: (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
+1. `Reduce n :: (t -> t -> t) -> Seq n t -> Seq 1 t`
 3. `Up_1d n :: Seq 1 t -> Seq n t`
 4. `Down_1d n :: Seq n t -> Seq 1 t`
 7. `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)`
@@ -109,6 +110,7 @@ The following are the rules for each operator on sequences in the sequence langu
 
 1. **`Map` Nesting** - `Map (no*ni) f === Unpartition no ni . Map no (Map ni f) . Partition no ni`
 1. **`Map2` Nesting**  - the same as `Map`. We elide it's definition as it requires a different syntax that has not yet been introduced.
+1. **`Reduce` Nesting** - `Reduce (no*ni) f === Reduce no f . Unpartition no 1 . Map no (Reduce ni f) . Partition no ni` 
 1. **`Up_1d` Nesting** - `Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
 1. **`Down_1d` Nesting** - `Up_1d (no*ni) ===  Unparition 1 1 . Map 1 (Down_1d ni) . Down_1d no . Partition no ni`
 
@@ -205,6 +207,8 @@ Please see [the partition document](Partition.md) for details on that operator**
 2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 2. `Map2_s n f :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
 2. `Map2_t n f :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
+1. `Reduce_s n f :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
+2. `Reduce_t n f :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`

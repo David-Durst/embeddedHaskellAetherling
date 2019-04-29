@@ -71,9 +71,26 @@ and a nesting rewrite rule. Some of the cases require custom operators because:
 1. `Partition_ts_tts_split_t ni nj nk :: TSeq (ni*nj) v (SSeq nk t) -> TSeq ni v (TSeq nj 0 (SSeq nk t))`
     1. Only having one TSeq on the output with empty clocks should be ok. Whatever
       empty clocks the TSeq has, I'll put them all on the outer output TSeq.
-1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq (ni*nj) (vi + ni*vj) (SSeq nk t)`
+1. `Unpartition_ts_tts_split_t ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq (ni*nj) (vi + ni*vj) (SSeq nk t)`
 1. `Partition_ts_tts_split_s ni nj nk :: TSeq ni v (SSeq (nj*nk) t) -> TSeq ni v (TSeq nj 0 (SSeq nk t))`
 1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq (ni) (vi + ni*vj) (SSeq (nj*nk) t)`
+
+### Area
+1. `area(Partition_t_tt no ni) = {0, 0, 0}`
+1. `area(Unpartition_t_tt no ni) = {0, 0, 0}`
+1. `area(Partition_s_ss no ni) = {0, 0, 0}`
+1. `area(Unpartition_s_ss no ni) = {0, 0, 0}`
+1. `area(Partition_ts_tss_split_t ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), (nj * nk) * num_bits(t)} + area(counter)`
+1. `area(Unpartition_ts_tss_split_t ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), nk * num_bits(t)} + area(counter)`
+1. `area(Partition_ts_tts_split_t ni nj nk) = {0, 0, 0}`
+1. `area(Unpartition_ts_tts_split_t ni nj nk) = {0, 0, 0}`
+1. `area(Partition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), nk * num_bits(t)} + area(counter)`
+1. `area(Unpartition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), (nj * nk) * num_bits(t)} + area(counter)`
+
+Most of them require no resources as splitting just in time or just in space, or
+just in time where each element is an `SSeq` like `Partition_ts_tts_split_t`, is
+just reshaping types. The partitioning in those cases doesn't affect how the
+atomic elements are distributed in time and space.
 
 ## Partition Sequence To Space-Time Semantic Equivalence
 In the [basic theory document](Basic.md) we used isomorphisms created with the `Partition`, `Unpartition`, and Seq/TSeq/SSeq converters to show semantic equivalence between the sequence and space-time operators other than `Partition` and `Unparition`.
