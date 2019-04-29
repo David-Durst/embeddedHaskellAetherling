@@ -131,7 +131,7 @@ The following are the rules for each operator on sequences in the sequence langu
 
 1. **`Map` Nesting** - `Map (no*ni) f === Unpartition no ni . Map no (Map ni f) . Partition no ni`
 1. **`Map2` Nesting**  - the same as `Map`. We elide it's definition as it requires a different syntax that has not yet been introduced.
-1. **`Reduce` Nesting** - `Reduce (no*ni) f === Reduce no f . Unpartition no 1 . Map no (Reduce ni f) . Partition no ni` 
+1. **`Reduce` Nesting** - `Reduce (no*ni) f === Unpartition no 1 . Reduce no (Map2 1 f) . Map no (Reduce ni f) . Partition no ni` 
 1. **`Up_1d` Nesting** - `Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
 1. **`Down_1d` Nesting** - `Up_1d (no*ni) ===  Unparition 1 1 . Map 1 (Down_1d ni) . Down_1d no . Partition no ni`
 
@@ -321,6 +321,7 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 2. `area(Map2_t n f) = area(f)`
 1. `area(Reduce_s n f) = ceil(log_2(n)) * area(f)`
 1. `area(Reduce_t n f) = area(f) + {0, num_bits(t), num_bits(t)} + area(counter)`
+1. `area(Reduce_st no ni f) = ceil(log_2(ni))*area(f) + {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
 1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Down_1d_s n) = {0, 0, num_bits(t)}`
@@ -418,7 +419,6 @@ These rewrites show how to remove the operators.
 1. `TSeq_To_Seq . Seq_To_TSeq === Id`
 1. `Seq_To_TSeq . SSeq_To_Seq === Id`
 1. `Unpartition . Partition === Id`
-1. `Head_s === (Id :: SSeq 1 t -> t)`
 1. `Partition_ss no ni . Unpartition_ss no ni === Id`
 2. `Unpartition_ss no ni . Partition_ss no ni === Id`
 1. `Partition_tt no ni . Unpartition_tt no ni === Id`
