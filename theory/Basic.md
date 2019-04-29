@@ -183,12 +183,16 @@ The isomorphisms mean that any `f :: Seq n t -> Seq m t'` function must have sem
 1. `f === SSeq_To_Seq . f_s . Seq_To_SSeq`
 
 This is proven in the same way as shown in [the `Seq` isomorphism section.](#sequence-isomorphisms)
-Two examples of operator-specific rewrite rules are:
+Two examples of semantics-preserving rewrite rules are:
 1. **`Map` Seq To TSeq** - `Map === TSeq_To_Seq . Map_t . Seq_To_TSeq`
 1. **`Map` Seq To SSeq** - `Map === SSeq_To_Seq . Map_s . Seq_To_SSeq`
 
-All other operator-specific rewrite rules take the same form, so we do not enumerate them.
+All other operator-specific, semantics-preserving rewrite rules take the same form, so we do not enumerate them. 
 **These rewrite rules make up the rest of our minimal set of rewrite rules.**
+The next section contains the space-time operators used in these rewrite rules.
+
+**Note: we do not have a rewrite for Partition since its type is not `f :: Seq n t -> Seq m t`.
+Please see [the partition document][Partition.md] for details on that operator***
 
 ## Operators
 1. `Id :: t -> t`
@@ -315,13 +319,14 @@ As stated previously, there are core rewrite rules that take the following forms
 1. Seq To SSeq - `f === SSeq_To_Seq . f_sseq . Seq_To_SSeq`
 
 Using these core rewrite rules, we now show how to convert between operators in the sequence language and those in the space-time IR.
-Each operator in the sequence language is rewritten as a semantically equivalent, fully parallel operator in the space-time IR. 
+We define **scheduling** to be converting from sequence operators to space-time ones with a slowdown factor.
+When scheduling, an operator in the sequence language is rewritten as a semantically equivalent, fully parallel operator in the space-time IR. 
 This is a repeat of the Seq To SSeq rewrite rules.
 Then, this operator is converted to a less parallel one in order to trade off area and throughput.
 
 ### Map
-1. Sequence To Space - `Map n f === SSeq_To_Seq . Map_s n f . Seq_To_SSeq`
-1. Slowdown by `no` - 
+1. Fully Parallel Scheduling - `Map n f === SSeq_To_Seq . Map_s n f . Seq_To_SSeq`
+1. Scheduling With Slowdown By `no` - 
 ```
 Map (no*ni) f === (Nesting)
 Unpartition no ni . Map (no) (Map ni f) . Partition no ni === (Seq To SSeq)
@@ -331,7 +336,7 @@ Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Map_s ni f . Seq_To_SS
     
 ### Upsample
 1. Sequence To Space - `Up_1d n === SSeq_To_Seq . Up_1d_s n . Seq_To_SSeq`
-1. Slowdown by `no` - 
+1. Scheduling With Slowdown By `no` - 
 ```
 Up_1d (no*ni) === (Nesting)
 Unpartition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1 === (Seq To SSeq)
@@ -346,7 +351,7 @@ See [the Functor Rules section](#functor-rules) for a description of Map Fusion.
 
 ### Downsample
 1. Sequence To Space - `Down_1d n === SSeq_To_Seq . Down_1d_s n . Seq_To_SSeq`
-1. Slowdown by `no` - 
+1. Scheduling With Slowdown by `no` - 
 ```
 Down_1d (no*ni) ===
 Unpartition 1 1 . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t 1 (Down_1d_s ni) . Down_1d_t no . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
