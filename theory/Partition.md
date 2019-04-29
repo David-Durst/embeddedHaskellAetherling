@@ -9,18 +9,18 @@ The goal is to allow the user to write `Partition` and `Unparitiion` in the
 sequence language and schedule it with a slowdown in the space-time IR. 
 For all the prior operators, this required operators and rewrite rules:
 1. Define space-time operators:
-  1. a fully parallel, space operator 
-  1. a fully sequential, time operator 
+    1. a fully parallel, space operator 
+    1. a fully sequential, time operator 
 1. Define isomorphisms-based semantics-preserving rewrites
-  1. rewrite from seq operator to space operator
-  1. rewrite from seq operator to time operator
-  1. rewrite from the seq operator to the nested seq operator
+    1. rewrite from seq operator to space operator
+    1. rewrite from seq operator to time operator
+    1. rewrite from the seq operator to the nested seq operator
 1. Define scheduling rewrite rules
-  1. To schedule fully parallel, convert each seq operator to the space one
-  1. To schedule fully sequential, convert each seq operator to the time one
-  1. To schedule partially parallel, nest each one with the slowdown factor as the outer SSeq length. 
-    1. The outer operator becomes the time operator
-    1. The inner operator becomes the sequence operator
+    1. To schedule fully parallel, convert each seq operator to the space one
+    1. To schedule fully sequential, convert each seq operator to the time one
+    1. To schedule partially parallel, nest each one with the slowdown factor as the outer SSeq length. 
+        1. The outer operator becomes the time operator
+        1. The inner operator becomes the sequence operator
 
 Scheduling is then performed by converting Seqs to TSeqs and SSeqs with a certain slowdown.
 Slowdown by a factor s does one of three things:
@@ -36,13 +36,13 @@ For each case, we provide a sketch of the space-time operators that handle it:
 1. `SSeq -> SSeq (SSeq)` - `Partition_s_ss`
 1. `TSeq -> TSeq (TSeq)` - `Partition_t_tt`
 1. `TSeq (SSeq) -> TSeq (SSeq (SSeq))`
-  1. This type signature can be produced by either
-    1. splitting the outer TSeq into a TSeq (SSeq) - `Partition_ts_tss_split_t`
-    1. splitting the inner SSeq into a SSeq (SSeq) - `Map_t (Partition_s_ss)`
+    1. This type signature can be produced by either
+        1. splitting the outer TSeq into a TSeq (SSeq) - `Partition_ts_tss_split_t`
+        1. splitting the inner SSeq into a SSeq (SSeq) - `Map_t (Partition_s_ss)`
 1. `TSeq (SSeq) -> TSeq (TSeq (SSeq))`
-  1. This type signature can be produced by either
-    1. splitting the outer TSeq into a TSeq (TSeq) - `Partition_ts_tts_split_t`
-    1. splitting the inner SSeq into a TSeq (SSeq) - `Partition_ts_tts_split_s`
+    1. This type signature can be produced by either
+        1. splitting the outer TSeq into a TSeq (TSeq) - `Partition_ts_tts_split_t`
+        1. splitting the inner SSeq into a TSeq (SSeq) - `Partition_ts_tts_split_s`
 
 Some of the cases require custom operators because:
 1. Any Space-Time `Partition` must have `TSeq`s on both input and output.
@@ -66,8 +66,8 @@ Some of the cases require custom operators because:
 1. `Partition_ts_tss_split_t ni nj nk :: TSeq (ni*nj) v (SSeq nk t) -> TSeq ni ((ni-1)*nj + v) (SSeq nj (SSeq nk t))`
 1. `Unpartition_ts_tss_split_t ni nj nk :: TSeq ni ((ni-1)*nj + v) (SSeq nj (SSeq nk t)) -> TSeq (ni*nj) v (SSeq nk t)`
 1. `Partition_ts_tts_split_t ni nj nk :: TSeq (ni*nj) v (SSeq nk t) -> TSeq ni v (TSeq nj 0 (SSeq nk t))`
-  1. Only having one TSeq on the output with empty clocks should be ok. Whatever
-     empty clocks the TSeq has, I'll put them all on the outer output TSeq.
+    1. Only having one TSeq on the output with empty clocks should be ok. Whatever
+      empty clocks the TSeq has, I'll put them all on the outer output TSeq.
 1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq (ni*nj) (vi + ni*vj) (SSeq nk t)`
 1. `Partition_ts_tts_split_s ni nj nk :: TSeq ni v (SSeq (nj*nk) t) -> TSeq ni v (TSeq nj 0 (SSeq nk t))`
 1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq (ni) (vi + ni*vj) (SSeq (nj*nk) t)`
