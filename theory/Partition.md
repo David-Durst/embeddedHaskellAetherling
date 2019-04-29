@@ -66,8 +66,8 @@ and a nesting rewrite rule. Some of the cases require custom operators because:
 1. `Unpartition_t_tt no ni :: TSeq no 0 (TSeq ni 0 t) -> TSeq no 0 (TSeq ni 0 t)`
 1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
 1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t)`
-1. `Partition_ts_tss_split_t ni nj nk :: TSeq (ni*nj) v (SSeq nk t) -> TSeq ni ((ni-1)*nj + v) (SSeq nj (SSeq nk t))`
-1. `Unpartition_ts_tss_split_t ni nj nk :: TSeq ni ((ni-1)*nj + v) (SSeq nj (SSeq nk t)) -> TSeq (ni*nj) v (SSeq nk t)`
+1. `Partition_ts_tss_split_t ni nj nk :: TSeq (ni*nj) v (SSeq nk t) -> TSeq ni (v + (ni-1)*nj) (SSeq nj (SSeq nk t))`
+1. `Unpartition_ts_tss_split_t ni nj nk :: TSeq ni (v + (ni-1)*nj) (SSeq nj (SSeq nk t)) -> TSeq (ni*nj) v (SSeq nk t)`
 1. `Partition_ts_tts_split_t ni nj nk :: TSeq (ni*nj) v (SSeq nk t) -> TSeq ni v (TSeq nj 0 (SSeq nk t))`
     1. Only having one TSeq on the output with empty clocks should be ok. Whatever
       empty clocks the TSeq has, I'll put them all on the outer output TSeq.
