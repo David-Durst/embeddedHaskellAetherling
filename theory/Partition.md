@@ -1,5 +1,5 @@
 # Partition Aetherling Language Theory
-This document extends [the basic Aetherling language theory][Basic.md] to support partitions.
+This document extends [the basic Aetherling language theory/](Basic.md) to support partitions.
 It adds:
 1. sequence language primitives for partition
 1. isomorphisms for nesting the partitions and converting between the sequence and space-time primitives
@@ -73,7 +73,7 @@ Some of the cases require custom operators because:
 1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq (ni) (vi + ni*vj) (SSeq (nj*nk) t)`
 
 ## Partition Sequence To Space-Time Semantic Equivalence
-In the [basic theory document][Basic.md] we used isomorphisms created with the `Partition`, `Unpartition`, and Seq/TSeq/SSeq converters to show semantic equivalence between the sequence and space-time operators other than `Partition` and `Unparition`.
+In the [basic theory document](Basic.md) we used isomorphisms created with the `Partition`, `Unpartition`, and Seq/TSeq/SSeq converters to show semantic equivalence between the sequence and space-time operators other than `Partition` and `Unparition`.
 In this document, we use the isomorphisms to do the same for `Partition` and `Unparitition`'s sequence and space-time operators.
 
 As shown in the prior section, there are many ways to partition and unpartition while preserving semantics.

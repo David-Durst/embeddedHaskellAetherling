@@ -192,7 +192,7 @@ All other operator-specific, semantics-preserving rewrite rules take the same fo
 The next section contains the space-time operators used in these rewrite rules.
 
 **Note: we do not have a rewrite for Partition since its type is not `f :: Seq n t -> Seq m t`.
-Please see [the partition document][Partition.md] for details on that operator***
+Please see [the partition document](Partition.md) for details on that operator***
 
 ## Operators
 1. `Id :: t -> t`
