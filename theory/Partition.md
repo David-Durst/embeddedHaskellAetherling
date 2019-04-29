@@ -44,7 +44,10 @@ For each case, we provide a sketch of the space-time operators that handle it:
         1. splitting the outer TSeq into a TSeq (TSeq) - `Partition_ts_tts_split_t`
         1. splitting the inner SSeq into a TSeq (SSeq) - `Partition_ts_tts_split_s`
 
-Some of the cases require custom operators because:
+`Partition` and `Unpartition` cannot be scheduled by just defining fully
+parallel and sequential operators, fully parallel and sequential rewrite rules,
+and a nesting rewrite rule. Some of the cases require custom operators because:
+
 1. Any Space-Time `Partition` must have `TSeq`s on both input and output.
    Otherwise, it's number of input and output clocks will not be equal.
    Therefore, in cases like 4.1.2, `Map_t (Partition_s_st)` would be insufficient.
