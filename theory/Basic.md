@@ -66,15 +66,36 @@ The `Map` operator in the [Sequence Operators](#sequence-operators) section is `
 We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples of sequences, such as `(Seq n Int) x (Seq n Int)`.
 
 ## Sequence Operators
-1. `Map n :: (t -> t') -> Seq n t -> Seq n t'`
-1. `Map2 n :: (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
-1. `Reduce n :: (t -> t -> t) -> Seq n t -> Seq 1 t`
-3. `Up_1d n :: Seq 1 t -> Seq n t`
-4. `Down_1d n :: Seq n t -> Seq 1 t`
-7. `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)`
-7. `Unpartition no ni :: Seq no (Seq ni t) -> Seq (no*ni) t`
+1. `Map (Meta n) :: (t -> t') -> Seq n t -> Seq n t'`
+1. `Map2 (Meta n) :: (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
+1. `Reduce (Meta n) :: (t -> t -> t) -> Seq n t -> Seq 1 t`
+3. `Up_1d (Meta n) :: Seq 1 t -> Seq n t`
+4. `Down_1d (Meta n) :: Seq n t -> Seq 1 t`
+7. `Partition (Meta no) (Meta ni) :: Seq (no*ni) t -> Seq no (Seq ni t)`
+7. `Unpartition (Meta no) (Meta ni) :: Seq no (Seq ni t) -> Seq (no*ni) t`
 
 Note: Seq is also an applicative functor. Aetherling's `Map2` is equivalent to Haskell's `liftA2` for applicative functors. I will not put this note in final paper. This note is here to justify to Pat and Kayvon why `Map2` is a standard Haskell function.
+
+### Meta Language Atom Types
+In addition to Aetherling's operators and values that form a language, there is a
+**meta-language** for configuring the operators.
+For example, `Map` requires a **configuration parameter** in the meta-language 
+to set the length of sequences it operates on.
+The configuration parameters are values whose types determine the types of the
+configured operators.
+In addition to using atomic data elements like `1` and `2` as values in the sequence 
+language, we also use them as types in the meta-language to create the 
+configuration parameters.
+Above, we labeled the types-as-values in the meta language with `Meta`.
+Examples are:
+1. `Meta 2 :: Meta 2`
+1. The actual type of `Map` is `Map :: Meta Int -> (t -> t') -> Seq n t -> Seq n t'`.
+   When `Meta n` is applied, `Map (Meta n) :: (t -> t') -> Seq n t -> Seq n t'`
+   
+For shorthand throughout the rest of the document, we drop the `Meta` label.
+It obfuscates the meaning of the code.
+Additionally, it is unambiguous whether an argument to an operator is a value
+or a type.
 
 ## Length Property
 The following operator tracks the total number of atoms accepted and emitted by a sequence operator.
