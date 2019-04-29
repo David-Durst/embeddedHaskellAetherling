@@ -136,11 +136,19 @@ The following are the rules for each operator on sequences in the sequence langu
 1. **`Down_1d` Nesting** - `Up_1d (no*ni) ===  Unparition 1 1 . Map 1 (Down_1d ni) . Down_1d no . Partition no ni`
 
 ## Commutativity
-The following operators commute with each others. It is obvious that the two forms are semantically equivalent.
+The following operators commute with each others. It is obvious that the two
+forms are semantically equivalent.
 
 ```
 Map 1 f . Down_1d n === Down_1d n . Map n f
 Map n f . Up_1d n === Up_1d n . Map 1 f
+```
+
+The following operators commute when combined with the nesting rewrite rule.
+
+```
+Map (no*ni) f . Unpartition no ni f === Unpartition no ni f . Map no (Map ni f)
+Partition no ni f . Map (no*ni) f ===  Map no (Map ni f) . Partition no ni f
 ```
 
 The following commute if `f` and `g` commute
@@ -215,7 +223,14 @@ All other operator-specific, semantics-preserving rewrite rules take the same fo
 The next section contains the space-time operators used in these rewrite rules.
 
 **Note: we do not have a rewrite for Partition since its type is not `f :: Seq n t -> Seq m t`.
-Please see [the partition document](Partition.md) for details on that operator***
+Please see [the partition document](Partition.md) for details on that operator**
+
+#### `Reduce_ts` special case
+
+Since `Reduce_ts` is on nested types, it must have its own rewrite rule.
+The proof of the rewrite rules is the same as the others as it's a nesting of isomorphisms.
+
+2. `Reduce (no*ni) f === TSeq_To_Seq . Map_t no (SSeq_To_Seq) . Reduce_ts no ni . Map_t no (Seq_To_SSeq) . Seq_To_TSeq`
 
 ## Operators
 1. `Id :: t -> t`
@@ -230,16 +245,14 @@ Please see [the partition document](Partition.md) for details on that operator**
 2. `Map2_t n f :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
 1. `Reduce_s n f :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
 2. `Reduce_t n f :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
+2. `Reduce_ts no ni f :: (t -> t -> t) -> TSeq no v (SSeq ni t) -> TSeq 1 (v + no - 1) (SSeq 1 t)`
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
-5. `Partition_tt no ni :: TSeq (no*ni) (vo*vi) t -> TSeq no vo (TSeq ni vi t)`
-5. `Unpartition_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) (vo*vi) t`
-5. `Partition_ts no ni :: TSeq 1 (no + v - 1) (SSeq (no*ni) t) -> TSeq no v (SSeq ni t)`
-5. `Unpartition_ts no ni :: TSeq no v (SSeq ni t) -> TSeq 1 (no + v - 1) (SSeq (no*ni) t)`
-5. `Partition_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
-5. `Unpartition_ss no ni :: SSeq no (SSeq ni t) -> SSeq 1 (SSeq (no*ni) t)`
+1. `Head_s n :: SSeq n t -> t`
+
+Note: `Head` is a helper function we use in `Reduce` scheduling.
 
 ## Operator Properties
 We can compute the following properties for all programs in the space-time IR: 
@@ -306,14 +319,13 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 2. `area(Map_t n f) = area(f)`
 1. `area(Map2_s n f) = n * area(f)`
 2. `area(Map2_t n f) = area(f)`
+1. `area(Reduce_s n f) = ceil(log_2(n)) * area(f)`
+1. `area(Reduce_t n f) = area(f) + {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
 1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Down_1d_s n) = {0, 0, num_bits(t)}`
 1. `area(Down_1d_t n) = {0, 0, num_bits(t)} + area(counter)`
-1. `area(Partition_ts no ni) = {0, ((no-1) * ni) * num_bits(t), ni * num_bits(t)} + area(counter)`
-1. `area(Unpartition_ts no ni) = {0, ((no-1) * ni) * num_bits(t), (no * ni) * num_bits(t)} + area(counter)`
-1. `area(Partition_ss no ni) = {0, 0, 0}`
-1. `area(Unpartition_ss no ni) = {0, 0, 0}`
+1. `area(Head_s n) = {0, 0, 0}`
 1. `area(g.f) = area(g) + area(f)`
 
 Many of the sequential operators require a counter to track clock cycles.
@@ -376,13 +388,26 @@ See [the Functor Rules section](#functor-rules) for a description of Map Fusion.
 
 ### Downsample
 1. Sequence To Space - `Down_1d n === SSeq_To_Seq . Down_1d_s n . Seq_To_SSeq`
-1. Scheduling With Slowdown by `no` - 
+1. Scheduling With Slowdown By `no` - 
 ```
 Down_1d (no*ni) ===
 Unpartition 1 1 . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t 1 (Down_1d_s ni) . Down_1d_t no . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
 ```
 
 The proof of this rewrite is the same as the Upsample proof.
+
+### Reduce
+1. Sequence To Space - `Reduce n f === SSeq_To_Seq . Reduce_s n f . Seq_To_SSeq`
+1. Scheduling With Slowdown By `no` - 
+```
+Reduce (no*ni) === (Nesting)
+Reduce no f . Unpartition no 1 . Map no (Reduce ni f) . Partition no ni` === (Seq To SSeq)
+Reduce no f . Unpartition no 1 . Map no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Partition no ni` === (Seq To TSeq)
+TSeq_To_Seq . Reduce_t no f . Seq_To_TSeq . Unpartition no 1 . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Unpartition-Head Rewrite)
+TSeq_To_Seq . Reduce_t no f . Seq_To_TSeq . TSeq_To_Seq . Map_t no (Head_s . Seq_To_SSeq) . Seq_To_TSeq . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Isomorphism Removal)
+TSeq_To_Seq . Reduce_t no f . Map_t no (Head_s . Seq_To_SSeq) . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Functor Map Fusion and Isomorphism Removal)
+TSeq_To_Seq . Reduce_t no f . Map_t no (Head_s) . Map_t no (Reduce_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni` 
+```
 
 ### Isomorphism Operators Removal
 When multiple slowed operators are composed, we will need to remove the wrapping, isomorphism operators. 
@@ -393,6 +418,7 @@ These rewrites show how to remove the operators.
 1. `TSeq_To_Seq . Seq_To_TSeq === Id`
 1. `Seq_To_TSeq . SSeq_To_Seq === Id`
 1. `Unpartition . Partition === Id`
+1. `Head_s === (Id :: SSeq 1 t -> t)`
 1. `Partition_ss no ni . Unpartition_ss no ni === Id`
 2. `Unpartition_ss no ni . Partition_ss no ni === Id`
 1. `Partition_tt no ni . Unpartition_tt no ni === Id`
@@ -408,9 +434,9 @@ For example:
 Map_t 1 f . Down_1d_t n === (Isomorphism Operator Addition)
 Seq_To_TSeq . TSeq_To_Seq . Map_t 1 f . Seq_To_TSeq . TSeq_To_Seq . Down_1d_t n . Seq_To_TSeq . TSeq_To_Seq === (TSeq To Seq)
 Seq_To_TSeq . Map 1 f . Down_1d n . TSeq_To_Seq === (Commutativity)
-Seq_To_TSeq . Down_1d n . Map 1 f . TSeq_To_Seq === (Seq To TSeq)
-Seq_To_TSeq . TSeq_To_Seq . Down_1d_t . Seq_To_TSeq . TSeq_To_Seq . Map_t 1 f . Seq_To_TSeq . TSeq_To_Seq === (TSeq To Seq)
-Down_1d_t n . Map_t 1 f
+Seq_To_TSeq . Down_1d n . Map n f . TSeq_To_Seq === (Seq To TSeq)
+Seq_To_TSeq . TSeq_To_Seq . Down_1d_t . Seq_To_TSeq . TSeq_To_Seq . Map_t n f . Seq_To_TSeq . TSeq_To_Seq === (Isomorphism Removal)
+Down_1d_t n . Map_t n f
 ```
 
 # Functor Rules
