@@ -22,7 +22,7 @@ For all the prior operators, this required operators and rewrite rules:
         1. The outer operator becomes the time operator
         1. The inner operator becomes the sequence operator
 
-Scheduling is then performed by converting (Seq n t)s to TSeqs and SSeqs with a certain slowdown.
+Scheduling is then performed by converting (Seq n t) to TSeqs and SSeqs with a certain slowdown.
 Slowdown by a factor s does one of three things:
 1. s == 1 - make all nested Seqs into SSeqs
 1. s > 1, s < n of top Seq - split top nested Seq into TSeq (s) (SSeq (n /
