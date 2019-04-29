@@ -1,5 +1,5 @@
 # Partition Aetherling Language Theory
-This document extends [the basic Aetherling language theory/](Basic.md) to support partitions.
+This document extends [the basic Aetherling language theory](Basic.md) to support partitions.
 It adds:
 1. sequence language primitives for partition
 1. isomorphisms for nesting the partitions and converting between the sequence and space-time primitives
