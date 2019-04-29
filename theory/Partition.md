@@ -54,11 +54,14 @@ a TSeq (SSeq) or the inner SSeq is split into a SSeq (SSeq).
 1. `Unpartition_t_tt no ni :: TSeq no 0 (TSeq ni 0 t) -> TSeq no 0 (TSeq ni 0 t)`
 1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
 1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t)`
-1. `Partition_ts_tss_split_t ni nj nk r: TSeq (ni*nj) (vi) (SSeq nk t) -> TSeq ni vi (TSeq nj vj (SSeq nk 0))`
-1. `Unpartition_ts_tts ni nj nk :: TSeq ni 0 (TSeq nj 0 (SSeq nk 0)) -> TSeq (ni*nj) 0 (SSeq nk t)`
--- the next two aren't necessary. Since splitting up the inner SSeq, just accomplish this with map_t over Partition_s_ss 
-1. `Partition_ts_tss ni nj nk r: TSeq ni 0 (SSeq (nj*nk)nk t) -> TSeq ni 0 (TSeq nj 0 (SSeq nk 0))`
-1. `Unpartition_ts_tss ni nj nk :: TSeq ni 0 (TSeq nj 0 (SSeq nk 0)) -> TSeq (ni*nj) 0 (SSeq nk t)`
+1. `Partition_ts_tss_split_t ni nj nk :: TSeq (ni*nj) v (SSeq nk t) -> TSeq ni ((ni-1)*nj + v) (SSeq nj (SSeq nk t))`
+1. `Unpartition_ts_tss_split_t ni nj nk :: TSeq ni ((ni-1)*nj + v) (SSeq nj (SSeq nk t)) -> TSeq (ni*nj) v (SSeq nk t)`
+1. `Partition_ts_tts_split_t ni nj nk :: TSeq (ni*nj) v (SSeq nk t) -> TSeq ni v (TSeq nj 0 (SSeq nk t))`
+  1. Only having one TSeq on the output with empty clocks should be ok. Whatever
+     empty clocks the TSeq has, I'll put them all on the outer output TSeq.
+1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq (ni*nj) (vi + ni*vj) (SSeq nk t)`
+1. `Partition_ts_tts_split_s ni nj nk :: TSeq ni v (SSeq (nj*nk) t) -> TSeq ni v (TSeq nj 0 (SSeq nk t))`
+1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq (ni) (vi + ni*vj) (SSeq (nj*nk) t)`
 
 ## Partition Examples:
 1. 
