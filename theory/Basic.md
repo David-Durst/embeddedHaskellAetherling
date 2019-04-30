@@ -399,24 +399,6 @@ Unpartition 1 1 . TSeq_To_Seq . Reduce_t no (Map2 1 f) . Map_t no (Reduce ni f) 
 Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Reduce_t no (Map2_s 1 f) . Map_t no Seq_To_SSeq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni === (Map Fusion)
 Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Reduce_t no (Map2_s 1 f) . Map_t no Seq_To_SSeq . Map_t no SSeq_To_Seq . Map_t no Reduce_s ni f . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni === (Isomorphism Removal / Map Fusion / Identity Removal)
 Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Reduce_t no (Map2_s 1 f) . Map_t no Reduce_s ni f . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
-
-
-Reduce no f . Unpartition no 1 . Map no (Reduce ni f) . Partition no ni` === (Seq To SSeq)
-Reduce no f . Unpartition no 1 . Map no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Partition no ni` === (Seq To TSeq)
-TSeq_To_Seq . Reduce_t no f . Seq_To_TSeq . Unpartition no 1 . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Unpartition-Head Rewrite)
-TSeq_To_Seq . Reduce_t no f . Seq_To_TSeq . TSeq_To_Seq . Map_t no (Head_s . Seq_To_SSeq) . Seq_To_TSeq . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Isomorphism Removal)
-TSeq_To_Seq . Reduce_t no f . Map_t no (Head_s . Seq_To_SSeq) . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Functor Map Fusion and Isomorphism Removal)
-TSeq_To_Seq . Reduce_t no f . Map_t no (Head_s) . Map_t no (Reduce_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni` 
-```
-
-```
-Reduce (no*ni) === (Nesting)
-Reduce no f . Unpartition no 1 . Map no (Reduce ni f) . Partition no ni` === (Seq To SSeq)
-Reduce no f . Unpartition no 1 . Map no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Partition no ni` === (Seq To TSeq)
-TSeq_To_Seq . Reduce_t no f . Seq_To_TSeq . Unpartition no 1 . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Unpartition-Head Rewrite)
-TSeq_To_Seq . Reduce_t no f . Seq_To_TSeq . TSeq_To_Seq . Map_t no (Head_s . Seq_To_SSeq) . Seq_To_TSeq . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Isomorphism Removal)
-TSeq_To_Seq . Reduce_t no f . Map_t no (Head_s . Seq_To_SSeq) . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Functor Map Fusion and Isomorphism Removal)
-TSeq_To_Seq . Reduce_t no f . Map_t no (Head_s) . Map_t no (Reduce_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni` 
 ```
 
 ### Isomorphism Operators Removal
