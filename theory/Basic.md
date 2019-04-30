@@ -43,6 +43,14 @@ Atoms also include the minimal derived types necessary to express arithmetic and
 2. `t x t'` - tuple
 4. `t -> t'` - function
 
+### Atomic Values
+Developers can directly create values of atomic types. 
+Examples are:
+
+1. `() :: ()`
+1. `1 :: Int`
+1. `1 x () :: Int x ()`
+
 ## Atom Operators
 `t` must be an atomic type for the following operators.
 
@@ -64,6 +72,13 @@ The `Map` operator in the [Sequence Operators](#sequence-operators) section is `
 `Map` lifts a function `t -> t'` to a function `Seq n t -> Seq n t'`. 
 
 We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples of sequences, such as `(Seq n Int) x (Seq n Int)`.
+
+### Atomic Values
+Developers can directly create values of atomic types. 
+Examples are:
+
+1. `[1, 2, 3] :: Seq 3 Int`
+1. `[[1 x 2], [3 x 4]] :: Seq 2 (Seq 1 (Int x Int))`
 
 ## Sequence Operators
 1. `Map (Meta n) :: (t -> t') -> Seq n t -> Seq n t'`
@@ -234,12 +249,12 @@ Please see [the partition document](Partition.md) for details on that operator**
 1. `Fst :: (t x t') -> t`
 1. `Snd :: (t x t') -> t'`
 5. `Zip :: t1 -> t2 -> t1 x t2`
-1. `Map_s n f :: (t -> t') -> SSeq n t -> SSeq n t'`
-2. `Map_t n f :: (t -> t') -> TSeq n v t -> TSeq n v t'`
-2. `Map2_s n f :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
-2. `Map2_t n f :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
-1. `Reduce_s n f :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
-2. `Reduce_t n f :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
+1. `Map_s n :: (t -> t') -> SSeq n t -> SSeq n t'`
+2. `Map_t n :: (t -> t') -> TSeq n v t -> TSeq n v t'`
+2. `Map2_s n :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
+2. `Map2_t n :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
+1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
+2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
