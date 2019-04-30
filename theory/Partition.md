@@ -104,14 +104,6 @@ Partition (ni*nj) nk === Unpartition . TSeq_To_SSeq . Map_t ni (SSeq_To_Seq) . M
 
 All other semantic equivalence proofs follow the same pattern.
 
-### Unpartition-Head Rewrite Rule Special Case
-In limited cases, it may be necessary to convert a `TSeq n v (SSeq 1 t)` to `TSeq n v t`.
-The following semantic equivalence provides this
-
-```
-Unpartition n 1 === TSeq_To_Seq . Map_t n (Head_s . Seq_To_SSeq) . Seq_To_TSeq
-```
-
 ## Partition Examples:
 Here we show how the rewrite rules are used in example applications.
 We elide the intermediate steps. Since the types of the operators match, their `Seq`/`TSeq`/`SSeq` and `Partition`/`Unpartition` operators must all cancel out.

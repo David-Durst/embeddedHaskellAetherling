@@ -245,8 +245,6 @@ Please see [the partition document](Partition.md) for details on that operator**
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
 
-Note: `Head` is a helper function we use in `Reduce` scheduling.
-
 ## Operator Properties
 We can compute the following properties for all programs in the space-time IR: 
 1. time
