@@ -74,6 +74,8 @@ We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples 
 7. `Partition (Meta no) (Meta ni) :: Seq (no*ni) t -> Seq no (Seq ni t)`
 7. `Unpartition (Meta no) (Meta ni) :: Seq no (Seq ni t) -> Seq (no*ni) t`
 
+Note: Reduce's inner operator must be on atoms or sequences of length one. This ensures that resulting space-time reduce's f only takes one clock. I'm not sure how to handle partially parallel reduces at this time where the operator is pipelined over multiple clocks.
+
 Note: Seq is also an applicative functor. Aetherling's `Map2` is equivalent to Haskell's `liftA2` for applicative functors. I will not put this note in final paper. This note is here to justify to Pat and Kayvon why `Map2` is a standard Haskell function.
 
 ### Meta Language Atom Types
@@ -131,9 +133,9 @@ The following are the rules for each operator on sequences in the sequence langu
 
 1. **`Map` Nesting** - `Map (no*ni) f === Unpartition no ni . Map no (Map ni f) . Partition no ni`
 1. **`Map2` Nesting**  - the same as `Map`. We elide it's definition as it requires a different syntax that has not yet been introduced.
-1. **`Reduce` Nesting** - `Reduce (no*ni) f === Unpartition no 1 . Reduce no (Map2 1 f) . Map no (Reduce ni f) . Partition no ni` 
+1. **`Reduce` Nesting** - `Reduce (no*ni) f === Unpartition 1 1 . Reduce no (Map2 1 f) . Map no (Reduce ni f) . Partition no ni` 
 1. **`Up_1d` Nesting** - `Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
-1. **`Down_1d` Nesting** - `Up_1d (no*ni) ===  Unparition 1 1 . Map 1 (Down_1d ni) . Down_1d no . Partition no ni`
+1. **`Down_1d` Nesting** - `Up_1d (no*ni) ===  Unpartition 1 1 . Map 1 (Down_1d ni) . Down_1d no . Partition no ni`
 
 ## Commutativity
 The following operators commute with each others. It is obvious that the two
@@ -225,13 +227,6 @@ The next section contains the space-time operators used in these rewrite rules.
 **Note: we do not have a rewrite for Partition since its type is not `f :: Seq n t -> Seq m t`.
 Please see [the partition document](Partition.md) for details on that operator**
 
-#### `Reduce_ts` special case
-
-Since `Reduce_ts` is on nested types, it must have its own rewrite rule.
-The proof of the rewrite rules is the same as the others as it's a nesting of isomorphisms.
-
-2. `Reduce (no*ni) f === TSeq_To_Seq . Map_t no (SSeq_To_Seq) . Reduce_ts no ni . Map_t no (Seq_To_SSeq) . Seq_To_TSeq`
-
 ## Operators
 1. `Id :: t -> t`
 1. `Const_Gen :: t -> () -> t`
@@ -245,12 +240,10 @@ The proof of the rewrite rules is the same as the others as it's a nesting of is
 2. `Map2_t n f :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
 1. `Reduce_s n f :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
 2. `Reduce_t n f :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
-2. `Reduce_ts no ni f :: (t -> t -> t) -> TSeq no v (SSeq ni t) -> TSeq 1 (v + no - 1) (SSeq 1 t)`
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
-1. `Head_s n :: SSeq n t -> t`
 
 Note: `Head` is a helper function we use in `Reduce` scheduling.
 
@@ -321,12 +314,10 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 2. `area(Map2_t n f) = area(f)`
 1. `area(Reduce_s n f) = ceil(log_2(n)) * area(f)`
 1. `area(Reduce_t n f) = area(f) + {0, num_bits(t), num_bits(t)} + area(counter)`
-1. `area(Reduce_st no ni f) = ceil(log_2(ni))*area(f) + {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
 1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Down_1d_s n) = {0, 0, num_bits(t)}`
 1. `area(Down_1d_t n) = {0, 0, num_bits(t)} + area(counter)`
-1. `area(Head_s n) = {0, 0, 0}`
 1. `area(g.f) = area(g) + area(f)`
 
 Many of the sequential operators require a counter to track clock cycles.
@@ -401,6 +392,24 @@ The proof of this rewrite is the same as the Upsample proof.
 1. Sequence To Space - `Reduce n f === SSeq_To_Seq . Reduce_s n f . Seq_To_SSeq`
 1. Scheduling With Slowdown By `no` - 
 ```
+Reduce (no*ni) f === (Nesting)
+Unpartition 1 1 . Reduce no (Map2 1 f) . Map no (Reduce ni f) . Partition no ni === (Seq To TSeq)
+Unpartition 1 1 . TSeq_To_Seq . Reduce_t no (Map2 1 f) . Seq_To_TSeq . TSeq_To_Seq . Map_t no (Reduce ni f) . Seq_To_TSeq . Partition no ni === (Isomorphism Removal)
+Unpartition 1 1 . TSeq_To_Seq . Reduce_t no (Map2 1 f) . Map_t no (Reduce ni f) . Seq_To_TSeq . Partition no ni === (Seq To SSeq / Reduce Fusion)
+Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Reduce_t no (Map2_s 1 f) . Map_t no Seq_To_SSeq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni === (Map Fusion)
+Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Reduce_t no (Map2_s 1 f) . Map_t no Seq_To_SSeq . Map_t no SSeq_To_Seq . Map_t no Reduce_s ni f . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni === (Isomorphism Removal / Map Fusion / Identity Removal)
+Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Reduce_t no (Map2_s 1 f) . Map_t no Reduce_s ni f . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
+
+
+Reduce no f . Unpartition no 1 . Map no (Reduce ni f) . Partition no ni` === (Seq To SSeq)
+Reduce no f . Unpartition no 1 . Map no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Partition no ni` === (Seq To TSeq)
+TSeq_To_Seq . Reduce_t no f . Seq_To_TSeq . Unpartition no 1 . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Unpartition-Head Rewrite)
+TSeq_To_Seq . Reduce_t no f . Seq_To_TSeq . TSeq_To_Seq . Map_t no (Head_s . Seq_To_SSeq) . Seq_To_TSeq . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Isomorphism Removal)
+TSeq_To_Seq . Reduce_t no f . Map_t no (Head_s . Seq_To_SSeq) . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni` === (Functor Map Fusion and Isomorphism Removal)
+TSeq_To_Seq . Reduce_t no f . Map_t no (Head_s) . Map_t no (Reduce_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni` 
+```
+
+```
 Reduce (no*ni) === (Nesting)
 Reduce no f . Unpartition no 1 . Map no (Reduce ni f) . Partition no ni` === (Seq To SSeq)
 Reduce no f . Unpartition no 1 . Map no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Partition no ni` === (Seq To TSeq)
@@ -446,8 +455,25 @@ We provide only the `Seq` rule, the same rules exist for `TSeq` and `SSeq`.
 1. Map Fusion - `Map g . Map f === Map (g . f)`
 1. Identity Preservation - `Map id === id`
 
+## Reduce Fusion
+If `g . h === Id`, then applying the g before and h fter each step in a
+reduce tree is equivalent to applying g to each input to the reduce
+and h to the output of the reduce:
+We provide only the `Seq` rule, the same rules exist for `TSeq` and `SSeq`.
+
+```
+reduce_function f g h x y =
+  intermediate_result <- f (g x) (g y)
+  return (h intermediate_result)
+
+Reduce n (reduce_function g h) === Map 1 h . Reduce n f . Map n g
+```
+
+**Do I need to prove the Reduce Fusion?**
+
 # Auto-Scheduler 
-The auto-scheduler finds the schedule with the maximum throughput given a specified resource constraints.
+The auto-scheduler finds the schedule with the maximum throughput given a
+specified resource constraints.
 1. Inputs: 
     1. `P_seq`: a program in the sequence language. 
     1. `area_max`: a resource constraint in area.
