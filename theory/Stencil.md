@@ -21,11 +21,12 @@ It adds:
 Not sure if I want this
 
 ## Space-Time Operators
-1. `Shift_s_ss w :: SSeq n k -> SSeq n (SSeq w t)`
-1. `Shift_t_tt w :: TSeq n (v+(n-1)*w*) k -> TSeq n v (TSeq w 0 t)`
-1. `Shift_t_ts w :: TSeq n v k -> TSeq n v (SSeq w t)`
-1. `Select_s (Array w Int) :: SSeq n t -> SSeq w t`
-1. `Select_t (Array w Int) :: TSeq n v t -> TSeq w (n-w+v) t`
+1. `Shift_s_ss n w :: SSeq n k -> SSeq n (SSeq w t)`
+1. `Shift_t_tt n w :: TSeq n (v+(n-1)*w*) k -> TSeq n v (TSeq w 0 t)`
+1. `Shift_t_ts n w :: TSeq n v k -> TSeq n v (SSeq w t)`
+1. `Select_s n (Seq w Int) :: SSeq n t -> SSeq w t`
+1. `Select_t n (Seq w Int) :: TSeq n v t -> TSeq w (n-w+v) t`
+1. `Select_sts ni nj nk (Seq w (Int x Int)) :: SSeq ni (TSeq nj v (SSeq nk t)) -> TSeq nj v (SSeq w t)`
 
 ## Space-Time Rewrite Rules
 Not sure if I want this
@@ -49,7 +50,15 @@ Stencil_1d_t_ts w :: TSeq n v t -> TSeq n v (SSeq w t)
 Stencil_1d_t_ts w = Shift_t_ts n w
 
 Stencil_1d_ts_tss_split_t ni nj wk :: TSeq ni v (SSeq nj t) -> TSeq ni v (SSeq nj (SSeq wk t))
-
+Stencil_1d_ts_tss_split_t ni nj wk xss =
+    buffers <- Map_s nj (Shift_t_ts ni out_pixels_per_shift_register)
+    unseparated_pixels <- Select_sts nj ni out_pixels_per_shift_register window_index_range
+    return (Map_t ni (Partition_s_ss nj wk) unseparated_pixels)
+    where
+        total_out_pixels = nj + w - 1
+        out_pixels_per_shift_register = total_out_pixels / nj
+        window_index_range = [(idx // out_pixels_per_shift_register)x(idx `mod` w) | idx <- (nj*wk - 1)..0]
+    
 Stencil_1d_ts_tts_split_t ni nj wk :: TSeq ni (vo + ni*(nj + vi - 1)) (SSeq nj t) -> TSeq ni vo (TSeq nj vj (SSeq wk t))
 
 Stencil_1d_ts_tts_split_s ni wj wk :: TSeq ni (vo + ni*(wj + vi - 1)) (SSeq wj t) -> TSeq ni vo (TSeq wj vj (SSeq wk t))
