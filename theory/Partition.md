@@ -19,8 +19,89 @@ The proof is slightly different. The operators that form the isomorphisms are co
 1. **`Partition` Nesting Inner** - `Partition ni (nj*nk) nk t === Map ni (Unpartition nj nk t) .  Map ni (Partition nj nk t) . Partition ni (nj*nk) t`
 
 ### Unpartition
-1. **`Unpartition` Nesting Outer** - `Unartition (ni*nj) nk t === Unpartition (ni*nj) nk . Unpartition ni nj (Seq nk t) . Partition (ni*nj) nk t`
-1. **`Unoartition` Nesting Inner** - `Partition ni (nj*nk) nk t === Map ni (Unpartition nj nk t) .  Map ni (Partition nj nk t) . Partition ni (nj*nk) t`
+1. **`Unpartition` Nesting Outer** - `Unpartition (ni*nj) nk t === Unpartition (ni*nj) nk t . Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t)`
+1. **`Unpartition` Nesting Inner** - `Unpartition ni (nj*nk) nk t === Unpartition ni (nj*nk) t .  Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t)`
+
+# Space-Time IR
+## Operators
+1. `Partition_t_tt no ni :: TSeq (no*ni) (vo*vi) t -> TSeq no vo (TSeq ni vi t)`
+1. `Unpartition_t_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) (vo*vi) t`
+1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
+1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t)`
+1. `Partition_t_ts no ni :: TSeq (no*ni) v -> TSeq no (v + no*(ni-1)) (SSeq ni no)`
+1. `Unpartition_t_ts no ni :: TSeq no (v + no*(ni-1)) (SSeq ni no) -> TSeq (no*ni) v`
+1. `Partition_ts_tts_split_s ni nj nk :: TSeq ni (vi + ni*(nj + vj - 1)) (SSeq (nj*nk) t) -> TSeq ni vi (TSeq nj vj (SSeq nk t))`
+1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq ni (vi + ni*(nj + vj - 1)) (SSeq (nj*nk) t)`
+
+## Area Property
+1. `area(Partition_t_tt no ni) = {0, 0, 0}`
+1. `area(Unpartition_t_tt no ni) = {0, 0, 0}`
+1. `area(Partition_s_ss no ni) = {0, 0, 0}`
+1. `area(Unpartition_s_ss no ni) = {0, 0, 0}`
+1. `area(Partition_t_ts no ni) = {0, (ni-1) * num_bits(t), ni * num_bits(t)} + area(counter)`
+1. `area(Unpartition_t_ts ni nj nk) = {0, (ni-1) * num_bits(t), ni * num_bits(t)} + area(counter)`
+1. `area(Partition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), nk * num_bits(t)} + area(counter)`
+1. `area(Unpartition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), (nj * nk) * num_bits(t)} + area(counter)`
+
+## Sequence To Space-Time Rewrite Rules
+These rewrite rules preserve semantics due to the [sequence to space-time isomorphisms in the basic language document](Basic.md#sequence-to-space-time-isomorphisms).
+The proof is slightly different. The operators that form the isomorphisms are compositions of `Partition`, `Unpartition`, and `Map`.
+
+### Partition
+1. Sequence To Space - `Partition no ni === SSeq_To_Seq . Map_s no (SSeq_To_Seq) . Partition_s_ss . Seq_To_SSeq`
+1. Sequence To Time - `Partition no ni === TSeq_To_Seq . Map_t no (TSeq_To_Seq) . Partition_t_tt . Seq_To_TSeq`
+1. Sequence To Space-Time - `Partition no ni === TSeq_To_Seq . Map_t no (SSeq_To_Seq) . Partition_t_ts . Seq_To_TSeq`
+1. Outer Sequence To Space-Time With Throughput `nj` less than Fully Parallel -
+```
+Partition (ni*nj) nk === (Nesting Outer)
+Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t === (Seq To Space-Time)
+Unpartition ni nj (Seq nk t) . TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Partition_t_ts ni nj (Seq nk t) . Seq_To_TSeq . Partition (ni*nj) nk t === (Seq To Space)
+```
+
+**PROBLEM: Need a Partition other than `Partition_s_ss` and `Partition_t_tt` to split the `Seq` into the `TSeq (SSeq)`**
+**SOLUTION: Add `Partition_t_ts`**
+
+1. Inner Sequence To Space-Time With Throughput `ni*nj` less than Fully Parallel -
+```
+Partition ni (nj*nk) ===
+TSeq_To_Seq . Map_t ni (Unpartition nj nk) . Map_t ni (TSeq_To_Seq) . Map_t ni (Map_t nj (SSeq_To_Seq)) . Partition_ts_tts_split_s ni nj nk . Map_t ni (Seq_To_SSeq) . Seq_To_TSeq . Partition ni (nj*nk)`
+```
+
+**PROBLEM: `Partition_s_ts no ni :: SSeq (no*ni) t -> TSeq no v (SSeq ni t)` can't exist. It breaks that assumption that `type_time(t) == type_time(t')` for all `f :: t -> t'`. Thus, the following approach using more standard operators doesn't work:** 
+```
+Partition ni (nj*nk) === (Nesting Inner)
+Map ni (Unpartition nj nk t) .  Map ni (Partition nj nk t) . Partition ni (nj*nk) t === (Seq To Space)
+Map ni (Unpartition nj nk t) . SSeq_To_Seq . Map_s ni (Partition_s_ts nj nk t) . Seq_To_SSeq . Partition ni (nj*nk) t === (Seq To Space)
+```
+**SOLUTION: Add `Partition_ts_tts_split_s`**
+
+### Unpartition
+1. Sequence To Space - `Unpartition no ni === SSeq_To_Seq . Partition_s_ss . Map_t no (SSeq_To_Seq) . SSeq_To_Seq`
+1. Sequence To Time - `Unpartition no ni === TSeq_To_Seq . Partition_t_tt . Map_t no (TSeq_To_Seq) . TSeq_To_Seq`
+
+# Why Partition Needs Custom Operators
+During scheduling, at most one of the Seqs in the input and output types may be split. 
+When scheduling other operators that are of the form `Seq n t -> Seq n t'`, there is only
+one possible way to split the `Seq`s. Both the input and output `Seq` must be split in the same way. 
+However, `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)` can be split in multiple ways.
+For each case, we provide a sketch of the space-time operators that handle it.
+Also, we denote that some of these splits cannot occur in the scheduling algorithm so we don't need
+to handle them. 
+A split only occurs in the scheduling algorithm if splitting a `Seq` into a `TSeq (SSeq)`
+1. `TSeq (SSeq) -> TSeq (SSeq (SSeq))`
+    1. This type signature can be produced by either
+        1. splitting the outer Seq into a TSeq (SSeq) - `Partition_t_ts` with `t' = SSeq`
+        1. splitting the inner Seq into a SSeq (SSeq) - `Map_t (Partition_s_ss)`
+            1. This can never happen, not splitting into a TSeq (SSeq)
+1. `TSeq (SSeq) -> TSeq (TSeq (SSeq))`
+    1. This type signature can be produced by either
+        1. splitting the outer Seq into a TSeq (TSeq) - `Partition_t_tt` with `t' = SSeq`
+            1. This can never happen, not splitting into a TSeq (SSeq)
+        1. splitting the inner Seq into a TSeq (SSeq) - `Partition_ts_tts_split_s`
+
+1. Any Space-Time `Partition` must have `TSeq`s on both input and output.
+   Otherwise, it's number of input and output clocks will not be equal.
+   Therefore, in cases like 4.1.2, `Map_t (Partition_s_st)` would be insufficient.
 
 # Space-Time IR
 ## Operators
@@ -37,17 +118,6 @@ The proof is slightly different. The operators that form the isomorphisms are co
 1. `Partition_ts_tts_split_s ni nj nk :: TSeq ni (vi + ni*(nj + vj - 1)) (SSeq (nj*nk) t) -> TSeq ni vi (TSeq nj vj (SSeq nk t))`
 1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq ni (vi + ni*(nj + vj - 1)) (SSeq (nj*nk) t)`
 
-## Area Property
-1. `area(Partition_t_tt no ni) = {0, 0, 0}`
-1. `area(Unpartition_t_tt no ni) = {0, 0, 0}`
-1. `area(Partition_s_ss no ni) = {0, 0, 0}`
-1. `area(Unpartition_s_ss no ni) = {0, 0, 0}`
-1. `area(Partition_ts_tss_split_t ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), (nj * nk) * num_bits(t)} + area(counter)`
-1. `area(Unpartition_ts_tss_split_t ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), nk * num_bits(t)} + area(counter)`
-1. `area(Partition_ts_tts_split_t ni nj nk) = {0, 0, 0}`
-1. `area(Unpartition_ts_tts_split_t ni nj nk) = {0, 0, 0}`
-1. `area(Partition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), nk * num_bits(t)} + area(counter)`
-1. `area(Unpartition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), (nj * nk) * num_bits(t)} + area(counter)`
 
 ## Sequence Language To Space-Time IR Rewrite Rules
 These rewrite rules preserve semantics due to the [sequence to space-time isomorphisms in the basic language document](Basic.md#sequence-to-space-time-isomorphisms)
@@ -90,33 +160,11 @@ Scheduling a program P with a target throughput t is done by:
       s) inner) and make all inner Seqs into SSeqs
     1. S > 1, s > n of top Seq - make top `Seq` into `TSeq n` inner, schedule the inner `Seq` with s'=(n / s)
 
-`Partition` receives input from a Seq and emit to an Seq (Seq).
-Since at most only one of the Seqs in a nesting gets split during scheduling, 
-the following cases must be handled when scheduling. 
-For each case, we provide a sketch of the space-time operators that handle it: 
-1. `SSeq -> SSeq (SSeq)` - `Partition_s_ss`
-1. `TSeq -> TSeq (TSeq)` - `Partition_t_tt`
-1. `TSeq (SSeq) -> TSeq (SSeq (SSeq))`
-    1. This type signature can be produced by either
-        1. splitting the outer TSeq into a TSeq (SSeq) - `Partition_ts_tss_split_t`
-        1. splitting the inner SSeq into a SSeq (SSeq) - `Map_t (Partition_s_ss)`
-1. `TSeq (SSeq) -> TSeq (TSeq (SSeq))`
-    1. This type signature can be produced by either
-        1. splitting the outer TSeq into a TSeq (TSeq) - `Partition_ts_tts_split_t`
-        1. splitting the inner SSeq into a TSeq (SSeq) - `Partition_ts_tts_split_s`
 
 `Partition` and `Unpartition` cannot be scheduled by just defining fully
 parallel and sequential operators, fully parallel and sequential rewrite rules,
 and a nesting rewrite rule. Some of the cases require custom operators because:
 
-1. Any Space-Time `Partition` must have `TSeq`s on both input and output.
-   Otherwise, it's number of input and output clocks will not be equal.
-   Therefore, in cases like 4.1.2, `Map_t (Partition_s_st)` would be insufficient.
-1. Implementing `Partition` to only operate on atom types is much simpler than
-   allowing it to operate also on `SSeq`s. Since we're already adding
-   another `Partition` operator to handle case 4.1.2, we might as well add the
-   other two custom operators `Partition_ts_tss_split_t` and
-   `Partition_ts_tts_split_t` and make the implementation easier.
 
 
 
