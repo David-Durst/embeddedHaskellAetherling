@@ -46,13 +46,13 @@ The `Map` operator in the [Sequence Operators](#sequence-operators) section is `
 We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples of sequences, such as `(Seq n Int) x (Seq n Int)`.
 
 ## Sequence Operators
-1. `Map (Meta n) :: (t -> t') -> Seq n t -> Seq n t'`
-1. `Map2 (Meta n) :: (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
-1. `Reduce (Meta n) :: (t -> t -> t) -> Seq n t -> Seq 1 t`
-3. `Up_1d (Meta n) :: Seq 1 t -> Seq n t`
-4. `Down_1d (Meta n) :: Seq n t -> Seq 1 t`
-7. `Partition (Meta no) (Meta ni) :: Seq (no*ni) t -> Seq no (Seq ni t)`
-7. `Unpartition (Meta no) (Meta ni) :: Seq no (Seq ni t) -> Seq (no*ni) t`
+1. `Map (Config n) :: (t -> t') -> Seq n t -> Seq n t'`
+1. `Map2 (Config n) :: (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
+1. `Reduce (Config n) :: (t -> t -> t) -> Seq n t -> Seq 1 t`
+3. `Up_1d (Config n) :: Seq 1 t -> Seq n t`
+4. `Down_1d (Config n) :: Seq n t -> Seq 1 t`
+7. `Partition (Config no) (Config ni) :: Seq (no*ni) t -> Seq no (Seq ni t)`
+7. `Unpartition (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq (no*ni) t`
 
 Note: Reduce's inner operator must be on atoms or sequences of length one. This ensures that resulting space-time reduce's f only takes one clock. I'm not sure how to handle partially parallel reduces at this time where the operator is pipelined over multiple clocks.
 
@@ -63,10 +63,10 @@ In addition to Aetherling's operators and types that form the sequence language,
 need a way to pass values that configure the types of the operators.
 **Configuration parameters** are values whose types determine the types of the
 configured operators.
-Above, we labeled the types-as-values in the meta language with `Meta`.
+Above, we labeled the types-as-values with `Config`.
 For example, `Map` requires a configuration parameter to set the length of sequences it operates on.
-1. `Meta 2 :: Meta 2`
-1. `Map (Meta 2) :: (t -> t') -> Seq 2 t -> Seq 2 t'`
+1. `Config 2 :: Config 2`
+1. `Map (Config 2) :: (t -> t') -> Seq 2 t -> Seq 2 t'`
    
 For shorthand throughout the rest of the document, we drop the `Meta` label.
 It obfuscates the meaning of the code.
