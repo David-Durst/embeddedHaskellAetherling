@@ -346,7 +346,7 @@ Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) .
 Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) . Up_1d_t no . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition 1 1 
 ```
 
-See [the Functor Rules section](#functor-rules) for a description of Map Fusion.
+See [the Functor Properties section](#functor-properties) for a description of Map Fusion.
 
 ## Downsample
 1. Sequence To Space - `Down_1d n === SSeq_To_Seq . Down_1d_s n . Seq_To_SSeq`
