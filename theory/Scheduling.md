@@ -48,11 +48,7 @@ The algorithm for scheduling a program P with a throughput factor s is:
         1. Else if `(no > s) && (no % s == 0)` - Apply the **NEED TO FIGURE OUT RULE HERE**
         1. Else if `(ni <= s) && (s % no == 0) && (ni > s) && (ni % s == 0)` - Apply the **NEED TO FIGURE OUT RULE HERE**
         1. Else - fail
-    1. If o is `Reduce`:
-        1. Apply rewrite rules to `Reduce` as if it were a non-higher-order operator
-        1. Let `f` be function or composition of functions that the reducer.
-        1. Schedule `f` with `s == 1`.
-    1. If o is `Map`:
+    1. If o is a higher-order operator:
         1. Let `n` be the configuration parameter passed to o
         1. Let `f` be function or composition of functions that is being mapped over.
         1. If `s == 1` -
@@ -92,29 +88,34 @@ The scheduling algorithm impacts the `Seq`s in the types of each sequence operat
 1. Converts the `Seq` to an `TSeq` if the Sequence To Time rewrite rule is applied
 1. Splits the `Seq` into an outer `TSeq` and an inner `SSeq` if the Sequence to Space-Time rewrite rule is applied
 
-### Proof The Only One `Seq` Is Split
-The scheduling algorithm splits at most 1 `Seq`. We prove this by structural induction on
-the nesting of a program. We show that the Sequence To Space-Time rewrite rule
-is applied only once per operator in P. Therefore, at most 1 `Seq` in each
-operator's type may be split. 
-1. Base Case: For all non-higher-order operators, the Sequence To Space-Time rewrite rule is applied at most once.
-    1. This is true for all relevant cases in the scheduling algorithm
-1. Inductive Case: For `Reduce`
-    1. The `Reduce` is scheduled like a non-higher-order operator, so Sequence
-       To Space-Time is called on it at most once.
-    1. The Sequence To Space-Time operator is never called on f as it is scheduled with `s==1`
-1. Inductive Case: For `Map`, the Sequence To Space-Time rewrite rule is applied at most once
-    1. If the higher order operator has the Sequence To Space-Time rewrite rule
-    applied to it, f is scheduled with `s == 1`. When `s == 1`, all nested operators
-    will be scheduled using the Sequence To Space rewrite rule.
-    Therefore, Sequence To Space-Time is applied only once.
-    1. If the higher order operator doesn't have the Sequence To Space-Time
-    rewrite rule applied to it, the rule may be applied to f. By the inductive
-    hypothesis, the Sequence To Space-Time operator may be applied at most once
-    to f.
+### Scheduling An Operator Splits At Most One Of The `Seq` in its Input And Output Types
+The scheduling algorithm splits at most one `Seq` on an operator's input and output types.
+We prove this by structural induction on the operators.
+1. Base Case: o is an atomic operator
+    1. o is not modified, so none of its types are split.
+1. Base Case: Non-higher-order operators other than `Partition` and `Unpartition`
+    1. Subcase: `(n > s) && (n % s == 0)` - 
+        1. The Sequence To Space-Time rewrite rule is applied to o, splitting it's outermost `Seq` into a `TSeq` and `SSeq`
+        1. By Lemma No\_Splits\_Types, since `t'` is converted with `s == 1`, none of the `Seq`s in `t'` are split.
+        1. Thus, one `Seq` on the input and output types are split
+    1. Subcase: `s` has any other value.
+        1. The Sequence To Space-Time rewrite rule not is applied to o, so it's outermost `Seq` is not split.
+        1. By Lemma One\_Split\_Types, since the `t'` has at most one of its `Seq`s split
+        1. Thus, at most one of the `Seq` on the input and output types are split
+1. Base Case: `Partition` and `Unpartition`
+    1. **Need to finish algorithm in this case before proving any properties**
+1. Inductive Case: Higher-order operators
+    1. Subcase: `(n > s) && (n % s == 0)` - 
+        1. The Sequence To Space-Time rewrite rule is applied to o, splitting it's outermost `Seq` into a `TSeq` and `SSeq`
+        1. By Lemma No\_Splits\_Operators, since `f` is scheduled with `s == 1`, none of the nested `Seq`s are split.
+        1. Thus, one `Seq` on the input and output types are split
+    1. Subcase: `s` has any other value.
+        1. The Sequence To Space-Time rewrite rule not is applied to o, so it's outermost `Seq` is not split.
+        1. By the inductive hypothesis, at most one of the nested `Seq`s in `f`'s input and output are split.
+        1. Thus, at most one of the `Seq` on the input and output types are split
 
 ### Lemma No\_Splits\_Operators: An Operator Scheduled With `s == 1` Has None Of It's Input And Output `Seq** Split
-The scheduled algorithm does not split any input nor output `Seq`s. 
+The scheduling algorithm does not split any input or output `Seq`s if `s == 1`.
 We can prove this by structural induction on the operators, and then by invoking Lemma No\_Splits\_Types.
 This proof follows the same structure as the one for No\_Splits\_Types.
 It is left as an exercise to the reader.
