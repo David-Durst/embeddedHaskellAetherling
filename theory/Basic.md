@@ -1,3 +1,12 @@
+# Basic Definitions
+The goal of this language is to define for both the sequence language and space-time IR:
+1. Types
+1. Basic Operators
+1. Operators' Properties
+1. Isomorphisms Between Types
+
+Also, this document will explain the rewrite rules between operators.
+
 # Sequence Language
 Programmers write code in the sequence language.
 The sequence language uses standard functional programming operators to express data flow programs. 
@@ -90,7 +99,7 @@ The following commutativity diagram shows the relationship between functions on 
 ![General Isomorphism Diagram](isomorphism_general.png "General Isomorphism Diagram")
 
 Specializing this diagram for `Seq` proves:
-1. For any function `f :: Seq (no*ni) t -> Seq (no*ni) t` there is a function `f' :: Seq no (Seq ni t) -> Seq no (Seq ni t')`. 
+1. For any function `f :: Seq (no*ni) t -> Seq (no*ni) t'` there is a function `f' :: Seq no (Seq ni t) -> Seq no (Seq ni t')`. 
 1. The inputs and outputs of `f` and `f'` are equivalent up to isomorphism: `f === Unpartition no ni . f' . Partition no ni`
 
 **The rewrite rules based on this isomorphism are the first part of our minimal set of rewrite rules.** 
@@ -102,6 +111,8 @@ The following are the rules for each operator on sequences in the sequence langu
 1. **`Up_1d` Nesting** - `Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
 1. **`Down_1d` Nesting** - `Up_1d (no*ni) ===  Unpartition 1 1 . Map 1 (Down_1d ni) . Down_1d no . Partition no ni`
 
+**Note: we do not have a rewrite for Partition since its type is not `f :: Seq n t -> Seq m t`.
+Please see [the partition document](Partition.md) for details on that operator**
 
 # Space-Time IR
 Aetherling lowers the sequence language to a space-time IR. 
@@ -297,7 +308,8 @@ This is a repeat of the Seq To SSeq rewrite rules.
 Then, this operator is converted to a less parallel one in order to trade off area and throughput.
 
 ## Map
-1. Fully Parallel Scheduling - `Map n f === SSeq_To_Seq . Map_s n f . Seq_To_SSeq`
+1. Sequence To Space - `Map n f === SSeq_To_Seq . Map_s n f . Seq_To_SSeq`
+1. Sequence To Time - `Map n f === TSeq_To_Seq . Map_t n f . Seq_To_TSeq`
 1. Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
 ```
 Map (no*ni) f === (Nesting)
@@ -308,6 +320,7 @@ Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Map_s ni f . Seq_To_SS
     
 ## Upsample
 1. Sequence To Space - `Up_1d n === SSeq_To_Seq . Up_1d_s n . Seq_To_SSeq`
+1. Sequence To Time - `Up_1d n === TSeq_To_Seq . Up_1d_t n . Seq_To_TSeq`
 1. Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
 ```
 Up_1d (no*ni) === (Nesting)
@@ -323,6 +336,7 @@ See [the Functor Rules section](#functor-rules) for a description of Map Fusion.
 
 ## Downsample
 1. Sequence To Space - `Down_1d n === SSeq_To_Seq . Down_1d_s n . Seq_To_SSeq`
+1. Sequence To Time - `Down_1d n === TSeq_To_Seq . Down_1d_t n . Seq_To_TSeq`
 1. Scheduling With Throughput `no` Less Than Fully Parallel - 
 ```
 Down_1d (no*ni) ===
@@ -333,6 +347,7 @@ The proof of this rewrite is the same as the Upsample proof.
 
 ## Reduce
 1. Sequence To Space - `Reduce n f === SSeq_To_Seq . Reduce_s n f . Seq_To_SSeq`
+1. Sequence To Time - `Reduce n f === TSeq_To_Seq . Reduce_t n f . Seq_To_TSeq`
 1. Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
 ```
 Reduce (no*ni) f === (Nesting)
