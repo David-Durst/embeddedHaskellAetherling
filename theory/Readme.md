@@ -9,7 +9,7 @@ Aetherling transforms these programs into a **space-time IR**.
 The IR specifies the parallelism of all operators.
 This information enables programs in the IR to be interpreted as hardware accelerators.
 The IR also models the throughput and resource requirements of the corresponding hardware implementations.
-An auto-scheduler uses semantics-preserving transformations in the IR to find the maximally parallel hardware implementation given resource constraints.
+An auto-scheduler uses semantics-preserving transformations in the IR to find the highest throughput hardware implementation given resource constraints.
 
 The transformations on programs are implemented using rewrite rules.
 One set of rewrite rules convert programs in the sequence language to ones in the space-time IR.
@@ -28,12 +28,14 @@ We axiomatize the properties for time, throughput, and resource requirements of 
 The properties enable us to prove that the auto-scheduler always produces programs in the space-time IR that are efficient and maximally parallel.
 
 ## Files To Read
-### [Languages.md](Basic\_Operators.md)
+### [Basic.md](Basic.md)
 This document covers the basic parts of the sequence language and the space-time IR
-1. Basic Functional Programming and 1D Image Manipulation Operators 
+1. Types
+1. Standard Functional Programming and 1D Image Processing Operators
+1. Operators' Properties
 1. Isomorphisms
-1. Rewrite Rules
-1. Program Properties
+
+The document also shows the rewrite rules between operators.
 
 ### [Scheduling.md](Scheduling.md)
 This document explains how to schedule sequence language programs. **Scheduling**
