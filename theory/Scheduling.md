@@ -143,6 +143,19 @@ We prove this by structural induction on the types.
     1. By the inductive hypothesis, `t'` is converted to `t''` without any splits occurring.
     1. The result is `SSeq n t''`, no splits have occurred.
 
+## Scheduling Preserves Well-Typeness
+Applying the scheduling algorithm to a well-typed program in the sequence language produces a well-typed program in the space-time IR.
+Sketch of proof:
+1. Input is a well-typed program in the sequence language. A program is well typed if:
+    1. For each composed operators `g . f`, `input_type(g) == output_type(f)`
+1. `Seq`s are converted to `TSeq`s and `SSeq`s the same way for each operator
+    1. Shown by structural induction on the types of operators with throughput factor `s`
+    1. If `s != 1` and `n > s`, top `Seq` are converted to `TSeq` or fail, then inner `Seq`s are converted with `s' = 1` 
+    1. If `s != 1` and `s > n`, top `Seq` are converted to `TSeq` or fail, then inner `Seq`s are converted with `s' = s / n` 
+    1. If `s = 1`, all `Seq` are converted to `SSeq`
+
+**In order to prove this property, I need to define rewrite rules for `Partition` and `Unpartition` that can support the scheduling algorithm working in this way**
+
 # Auto-Scheduler 
 **Please IGNORE THE REST FOR NOW. I NEED TO FIGURE OUT SCHEDULING BEFORE I DO THE AUTO-SCHEDULER***
 The auto-scheduler finds the schedule with the maximum throughput given a

@@ -73,7 +73,13 @@ It obfuscates the meaning of the code.
 We provide the configuration parameters with the operator name. 
 Operators' type signatures assume that the configuration parameter has already been provided.
 
-## Length Property
+## Properties
+### Input and Output Types
+Let `f :: t -> t'`
+1. `input_type(f) = t`
+1. `output_type(f) = t'`
+
+### Length
 The following operator tracks the total number of atoms accepted and emitted by a sequence operator.
 
 1. `type_length(Int) = 1`
@@ -175,8 +181,10 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
 
 **Note: reduce's type signature will need to be modified to handle pipelined operators.**
+
 ## Operator Properties
 We can compute the following properties for all programs in the space-time IR: 
+1. input and output types
 1. time
 1. input and output length
 1. input and output throughput
@@ -184,6 +192,11 @@ We can compute the following properties for all programs in the space-time IR:
 
 In order to guarantee time and throughput matching, we must model the time, parallelism, and throughput of operators.
 We also model the resources of operators to prove that our schedules produce efficient hardware accelerators. (We use the terms area and resources interchangeably.)
+
+### Input and Output Types
+Let `f :: t -> t'`
+1. `input_type(f) = t`
+1. `output_type(f) = t'`
 
 ### Time
 As stated in [the space-time types section](#space-time-types), the input and output types of an operator fully specify the number of clock cycles it requires to process all inputs and emit all outputs.
