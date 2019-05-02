@@ -6,7 +6,7 @@ It adds:
 
 ## Goals
 The goal is to allow the user to write `Partition` and `Unparitiion` in the
-sequence language and schedule it with a slowdown in the space-time IR. 
+sequence language and schedule in the space-time IR with a target throughput.
 For all the prior operators, this required operators and rewrite rules:
 1. Define space-time operators:
     1. a fully parallel, space operator 
@@ -22,12 +22,16 @@ For all the prior operators, this required operators and rewrite rules:
         1. The outer operator becomes the time operator
         1. The inner operator becomes the sequence operator
 
-Scheduling is then performed by converting (Seq n t) to TSeqs and SSeqs with a certain slowdown.
-Slowdown by a factor s does one of three things:
-1. s == 1 - make all nested Seqs into SSeqs
-1. s > 1, s < n of top Seq - split top nested Seq into TSeq (s) (SSeq (n /
-   s) inner) and make all inner Seqs into SSeqs
-1. S > 1, s > n of top Seq - make top Seq into TSeq (n) inner, and slowdown inner by (n / s)
+Scheduling is then performed by converting `Seq`s to `TSeq`s and `SSeq`s.
+Different throughput schedules are expressed by different computations of `TSeq`s and `SSeq`s.
+Scheduling a program P with a target throughput t is done by:
+1. Let t_full be the throughput by of P when fully parallelized
+1. Let t = t_full / s
+1. Each `Seq n` is converted to `TSeq` and `SSeq` by:
+    1. s == 1 - make all nested Seqs into SSeqs
+    1. s > 1, s < n of top Seq - split top nested Seq into TSeq (s) (SSeq (n /
+      s) inner) and make all inner Seqs into SSeqs
+    1. S > 1, s > n of top Seq - make top `Seq` into `TSeq n` inner, schedule the inner `Seq` with s'=(n / s)
 
 `Partition` receives input from a Seq and emit to an Seq (Seq).
 Since at most only one of the Seqs in a nesting gets split during scheduling, 
@@ -60,6 +64,10 @@ and a nesting rewrite rule. Some of the cases require custom operators because:
 ## Partition Sequence Operators
 1. `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)`
 1. `Unpartition no ni :: Seq no (Seq ni t) -> Seq (no*ni) t`
+
+## Partition Nesting Rewrite Rules
+1. `Partition (ni*nj) nk t === Unpartition ni nj (Seq nk t).  Partition ni nj (Seq nk t) . Partition (ni*nj) nk t`
+1. `Partition ni (nj*nk) nk t === Map ni (Unpartition nj nk t) .  Map ni (Partition nj nk t) . Partition ni (nj*nk) t`
 
 ## Partition Space-Time Operators
 1. `Partition_t_tt no ni :: TSeq (no*ni) 0 t -> TSeq no 0 (TSeq ni 0 t)`
