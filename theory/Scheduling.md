@@ -2,9 +2,12 @@
 The goal of this document is:
 1. Define scheduling
 1. Define how scheduling occurs
-1. Define the relationship between scheduling and the auto-scheduler
+1. Define properties of the scheduler
 1. Enumerate the rewrite rules that each operator in the sequence language must
    support in order to enable scheduling
+1. Define the relationship between scheduling and the auto-scheduler
+1. Explain the auto-scheduling algorithm
+1. Prove optimality of the algorithm
    
 # Scheduling Definition
 Scheduling is converting all the operators in a program from sequence language
@@ -13,23 +16,66 @@ Scheduling is performed to target a specific `input_throughput` and `output_thro
 as defined in [the basic theory document's throughput section.](Basic.md#throughput).
 The target is specified using a **throughput factor s**.
 Scheduling with factor **s** means produce a pipeline with `input_throughput` and
-`output_throughput` that are **s** times smaller than the fully parallel pipelines
+`output_throughput` that are **s** times smaller than the fully parallel pipeline's
 `input_throughput` and `output_throughput`.
 
+The algorithm for scheduling a program P with a throughput factor s is:
+1. Let O be the set of sequence operators in P.
+1. For each o in O:
+    1. If o is not a higher-order operator like `Map` or `Reduce` and not `Partition` or `Unpartition`:
+        1. Let `n` be the configuration parameter passed to o
+        1. If `s == 1` - Apply the Sequence To Space rewrite rule
+        1. Else if `s == n` - Apply the Sequence to Time rewrite rule
+        1. Else if `(n > s) && (n % s == 0)` - Apply the Sequence To Space-Time With Throughput `s` Less Than Fully Parallel rewrite rule
+        1. Else - fail
+    1. If o is either `Partition` or `Unpartition`
+        1. Let `no` and `ni` be the configuration parameters passed to o
+        1. If `s == 1` - Apply the Sequence To Space rewrite rule
+        1. Else if `s == no*ni` - Apply the Sequence to Time rewrite rule
+        1. Else if `(no > s) && (no % s == 0)` - Apply the **NEED TO FIGURE OUT RULE HERE**
+        1. Else if `(ni <= s) && (s % no == 0) && (ni > s) && (ni % s == 0)` - Apply the **NEED TO FIGURE OUT RULE HERE**
+        1. Else - fail
+    1. If o is a higher-order operator:
+        1. Let `n` be the configuration parameter passed to o
+        1. Let `f` be function or composition of functions that is being mapped over.
+        1. If `s == 1` -
+            1. Apply the Sequence To Space rewrite rule to the higher-order operator. 
+            1. Schedule `f` with throughput factor 1.
+        1. Else if `(n > s) && (n % s == 0)` -
+            1. Apply the Sequence To Space-Time With Throughput `s` Less Than Fully Parallel rewrite rule to the higher-order operator
+            1. Schedule `f` with throughput factor 1.
+        1. Else if `(s > n) && (s % n == 0)` -
+            1. Apply the Sequence To Time rewrite operator
+            1. Schedule `f` with throughput factor `s / n`.
+        1. Else - fail
 
-Scheduling is then performed by converting `Seq`s to `TSeq`s
-and `SSeq`s. Different throughput schedules are expressed by different
-computations of `TSeq`s and `SSeq`s. Scheduling a program P with a target
-throughput t is done by:
-1. Let t_full be the throughput by of P when fully parallelized
-1. Let t = t_full / s
-1. Each `Seq n` is converted to `TSeq` and `SSeq` by:
-    1. s == 1 - make all nested Seqs into SSeqs
-    1. s > 1, s < n of top Seq - split top nested Seq into TSeq (s) (SSeq (n /
-      s) inner) and make all inner Seqs into SSeqs
-    1. S > 1, s > n of top Seq - make top `Seq` into `TSeq n` inner, schedule the inner `Seq` with s'=(n / s)
+# Properties Of Scheduler
+## Types Produced By Scheduling
+The scheduling algorithm impacts the `Seq`s in the types of each sequence operator o in one of three ways:
+1. Converts the `Seq` to an `SSeq` if the Sequence To Space rewrite rule is applied
+1. Converts the `Seq` to an `TSeq` if the Sequence To Time rewrite rule is applied
+1. Splits the `Seq` into an outer `TSeq` and an inner `SSeq` if the Sequence to Space-Time rewrite rule is applied
+
+### Proof The Only One `Seq` Is Split
+The scheduling algorithm splits at most 1 `Seq`. We prove this by induction on
+the nesting of operators. We show that the Sequence To Space-Time rewrite rule
+is applied only once per operator in P. Therefore, at most 1 `Seq` in each
+operator's type may be split.
+1. Base Case: For all non-higher-order operators, the Sequence To Space-Time rewrite rule is applied at most once.
+    1. This is true for all relevant cases in the scheduling algorithm
+1. Inductive Case: For the nested higher order operators, the Sequence To Space-Time rewrite rule is applied at most once
+    1. If the higher order operator has the Sequence To Space-Time rewrite rule
+    applied to it, f is scheduled with `s == 1`. When `s == 1**, all nested operators
+    will be scheduled using the Sequence To Space rewrite rule.
+    Therefore, Sequence To Space-Time is applied only once.
+    1. If the higher order operator doesn't have the Sequence To Space-Time
+    rewrite rule applied to it, the rule may be applied to f. By the inductive
+    hypothesis, the Sequence To Space-Time operator may be applied at most once
+    to f.
+    
 
 # Auto-Scheduler 
+**Please IGNORE THE REST FOR NOW. I NEED TO FIGURE OUT SCHEDULING BEFORE I DO THE AUTO-SCHEDULER***
 The auto-scheduler finds the schedule with the maximum throughput given a
 specified resource constraints.
 1. Inputs: 
