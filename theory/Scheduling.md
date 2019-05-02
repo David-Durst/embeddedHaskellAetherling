@@ -43,10 +43,21 @@ The algorithm for scheduling a program P with a throughput factor s is:
         1. Else - fail
     1. If o is either `Partition` or `Unpartition`
         1. Let `no` and `ni` be the configuration parameters passed to o
-        1. If `s == 1` - Apply the Sequence To Space rewrite rule to o
-        1. Else if `s == no*ni` - Apply the Sequence to Time rewrite rule to o
-        1. Else if `(no > s) && (no % s == 0)` - Apply the **NEED TO FIGURE OUT RULE HERE**
-        1. Else if `(ni <= s) && (s % no == 0) && (ni > s) && (ni % s == 0)` - Apply the **NEED TO FIGURE OUT RULE HERE**
+        1. If `s == 1` - 
+            1. Apply the Sequence To Space rewrite rule to o
+            1. Convert `t` from the sequence language the space-time IR with `s' = 1`
+        1. Else if `s == no*ni` - 
+            1. Apply the Sequence to Time rewrite rule to o
+            1. Convert `t` from the sequence language the space-time IR with `s' = 1`
+        1. Else if `(no > s) && (no % s == 0)` - 
+            1. Apply the Outer Sequence To Space-Time With Throughput `s` Less than Fully Parallel rewrite rule to o
+            1. Convert `t` from the sequence language the space-time IR with `s' = 1`
+        1. Else if `(s >= no) && (s % no == 0) && (ni > s) && (ni % s == 0)` - 
+            1. Apply the Inner Sequence To Space-Time With Throughput `s` Less than Fully Parallel rewrite rule
+            1. Convert `t` from the sequence language the space-time IR with `s' = 1`
+        1. Else if `(s > (no*ni)) && (s % (no*ni) == 0)` - 
+            1. Apply the Sequence to Time rewrite rule to o
+            1. Convert `t` from the sequence language the space-time IR with `s' = s / (no*ni)`
         1. Else - fail
     1. If o is a higher-order operator:
         1. Let `n` be the configuration parameter passed to o
@@ -103,7 +114,7 @@ We prove this by structural induction on the operators.
         1. By Lemma One\_Split\_Types, since the `t'` has at most one of its `Seq`s split
         1. Thus, at most one of the `Seq` on the input and output types are split
 1. Base Case: `Partition` and `Unpartition`
-    1. **Need to finish algorithm in this case before proving any properties**
+   1. Proof is same as for other non-higher-order operators, with 2 subcases where a rewrite rule can be applied that splits `Seq`s
 1. Inductive Case: Higher-order operators
     1. Subcase: `(n > s) && (n % s == 0)` - 
         1. The Sequence To Space-Time rewrite rule is applied to o, splitting it's outermost `Seq` into a `TSeq` and `SSeq`
@@ -150,9 +161,10 @@ Sketch of proof:
     1. For each composed operators `g . f`, `input_type(g) == output_type(f)`
 1. `Seq`s are converted to `TSeq`s and `SSeq`s the same way for each operator
     1. Shown by structural induction on the types of operators with throughput factor `s`
-    1. If `s != 1` and `n > s`, top `Seq` are converted to `TSeq` or fail, then inner `Seq`s are converted with `s' = 1` 
-    1. If `s != 1` and `s > n`, top `Seq` are converted to `TSeq` or fail, then inner `Seq`s are converted with `s' = s / n` 
-    1. If `s = 1`, all `Seq` are converted to `SSeq`
+    1. Subcases per structural induction case are:
+        1. If `s != 1` and `n > s`, top `Seq` are converted to `TSeq` or fail, then inner `Seq`s are converted with `s' = 1` 
+        1. If `s != 1` and `s > n`, top `Seq` are converted to `TSeq` or fail, then inner `Seq`s are converted with `s' = s / n` 
+        1. If `s = 1`, all `Seq` are converted to `SSeq`
 
 **In order to prove this property, I need to define rewrite rules for `Partition` and `Unpartition` that can support the scheduling algorithm working in this way**
 

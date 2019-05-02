@@ -51,7 +51,7 @@ The proof is slightly different. The operators that form the isomorphisms are co
 1. Sequence To Space - `Partition no ni === SSeq_To_Seq . Map_s no (SSeq_To_Seq) . Partition_s_ss . Seq_To_SSeq`
 1. Sequence To Time - `Partition no ni === TSeq_To_Seq . Map_t no (TSeq_To_Seq) . Partition_t_tt . Seq_To_TSeq`
 1. Sequence To Space-Time - `Partition no ni === TSeq_To_Seq . Map_t no (SSeq_To_Seq) . Partition_t_ts . Seq_To_TSeq`
-1. Outer Sequence To Space-Time With Throughput `nj` less than Fully Parallel -
+1. Outer Sequence To Space-Time With Throughput `nj` Less than Fully Parallel -
 ```
 Partition (ni*nj) nk === (Nesting Outer)
 Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t === (Seq To Space-Time)
@@ -61,7 +61,7 @@ Unpartition ni nj (Seq nk t) . TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Partition_
 **PROBLEM: Need a Partition other than `Partition_s_ss` and `Partition_t_tt` to split the `Seq` into the `TSeq (SSeq)`**
 **SOLUTION: Add `Partition_t_ts`**
 
-1. Inner Sequence To Space-Time With Throughput `ni*nj` less than Fully Parallel -
+1. Inner Sequence To Space-Time With Throughput `ni*nj` Less than Fully Parallel -
 ```
 Partition ni (nj*nk) ===
 TSeq_To_Seq . Map_t ni (Unpartition nj nk) . Map_t ni (TSeq_To_Seq) . Map_t ni (Map_t nj (SSeq_To_Seq)) . Partition_ts_tts_split_s ni nj nk . Map_t ni (Seq_To_SSeq) . Seq_To_TSeq . Partition ni (nj*nk)`
