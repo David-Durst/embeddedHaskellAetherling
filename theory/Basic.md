@@ -174,6 +174,7 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
 4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
 
+**Note: reduce's type signature will need to be modified to handle pipelined operators.**
 ## Operator Properties
 We can compute the following properties for all programs in the space-time IR: 
 1. time
