@@ -120,7 +120,7 @@ We can prove this by structural induction on the operators, and then by invoking
 This proof follows the same structure as the one for No\_Splits\_Types.
 It is left as an exercise to the reader.
 
-### Lemma One\_Split\_Types_: A Converted Type Has At Most One Of Its Nested `Seq`s Split
+### Lemma One\_Split\_Types: A Converted Type Has At Most One Of Its Nested `Seq`s Split
 The type conversion algorithm splits at most one of the `Seq`s in a type `t`
 We prove this by structural induction on the types.
 1. Base Case: `t` is an atomic type - Either the algorithm fails or returns `t`. `t` is never split.
