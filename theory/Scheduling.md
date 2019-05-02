@@ -114,7 +114,7 @@ We prove this by structural induction on the operators.
         1. By the inductive hypothesis, at most one of the nested `Seq`s in `f`'s input and output are split.
         1. Thus, at most one of the `Seq` on the input and output types are split
 
-### Lemma No\_Splits\_Operators: An Operator Scheduled With `s == 1` Has None Of It's Input And Output `Seq** Split
+### Lemma No\_Splits\_Operators: An Operator Scheduled With `s == 1` Has None Of It's Input And Output `Seq` Split
 The scheduling algorithm does not split any input or output `Seq`s if `s == 1`.
 We can prove this by structural induction on the operators, and then by invoking Lemma No\_Splits\_Types.
 This proof follows the same structure as the one for No\_Splits\_Types.
