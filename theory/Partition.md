@@ -1,8 +1,65 @@
 # Partition Aetherling Language Theory
-This document extends [the basic Aetherling language theory](Basic.md) to support partitions.
+This document extends [the basic sequence language and space-time IR](Basic.md) to support partitions.
 It adds:
-1. sequence language primitives for partition
-1. isomorphisms for nesting the partitions and converting between the sequence and space-time primitives
+1. `Partition` and `Unpartition` sequence language operators
+1. Semantically equivalent space-time IR operators
+1. Nesting, Sequence to Space, Sequence to Time, and Sequence to Space-Time rewrite rules
+
+# Sequence Language
+## Operators
+1. `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)`
+1. `Unpartition no ni :: Seq no (Seq ni t) -> Seq (no*ni) t`
+
+## Nesting Rewrite Rules
+These rewrite rules preserve semantics due to the [sequence isomorphisms in the basic language document](Basic.md#sequence-isomorphisms).
+The proof is slightly different. The operators that form the isomorphisms are compositions of `Partition` and `Unpartition`.
+
+### Partition
+1. **`Partition` Nesting Outer** - `Partition (ni*nj) nk t === Unpartition ni nj (Seq nk t) .  Partition ni nj (Seq nk t) . Partition (ni*nj) nk t`
+1. **`Partition` Nesting Inner** - `Partition ni (nj*nk) nk t === Map ni (Unpartition nj nk t) .  Map ni (Partition nj nk t) . Partition ni (nj*nk) t`
+
+### Unpartition
+1. **`Unpartition` Nesting Outer** - `Unartition (ni*nj) nk t === Unpartition (ni*nj) nk . Unpartition ni nj (Seq nk t) . Partition (ni*nj) nk t`
+1. **`Unoartition` Nesting Inner** - `Partition ni (nj*nk) nk t === Map ni (Unpartition nj nk t) .  Map ni (Partition nj nk t) . Partition ni (nj*nk) t`
+
+# Space-Time IR
+## Operators
+1. `Partition_t_tt no ni :: TSeq (no*ni) 0 t -> TSeq no 0 (TSeq ni 0 t)`
+1. `Unpartition_t_tt no ni :: TSeq no 0 (TSeq ni 0 t) -> TSeq no 0 (TSeq ni 0 t)`
+1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
+1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t)`
+1. `Partition_ts_tss_split_t ni nj nk :: TSeq (ni*nj) v (SSeq nk t) -> TSeq ni (v + ni*(nj - 1)) (SSeq nj (SSeq nk t))`
+1. `Unpartition_ts_tss_split_t ni nj nk :: TSeq ni (v + ni*(nj - 1)) (SSeq nj (SSeq nk t)) -> TSeq (ni*nj) v (SSeq nk t)`
+1. `Partition_ts_tts_split_t ni nj nk :: TSeq (ni*nj) (vi + ni*vj) (SSeq nk t) -> TSeq ni vi (TSeq nj vj (SSeq nk t))`
+    1. Only having one TSeq on the output with empty clocks should be ok. Whatever
+      empty clocks the TSeq has, I'll put them all on the outer output TSeq.
+1. `Unpartition_ts_tts_split_t ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq (ni*nj) (vi + ni*vj) (SSeq nk t)`
+1. `Partition_ts_tts_split_s ni nj nk :: TSeq ni (vi + ni*(nj + vj - 1)) (SSeq (nj*nk) t) -> TSeq ni vi (TSeq nj vj (SSeq nk t))`
+1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq ni (vi + ni*(nj + vj - 1)) (SSeq (nj*nk) t)`
+
+## Area Property
+1. `area(Partition_t_tt no ni) = {0, 0, 0}`
+1. `area(Unpartition_t_tt no ni) = {0, 0, 0}`
+1. `area(Partition_s_ss no ni) = {0, 0, 0}`
+1. `area(Unpartition_s_ss no ni) = {0, 0, 0}`
+1. `area(Partition_ts_tss_split_t ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), (nj * nk) * num_bits(t)} + area(counter)`
+1. `area(Unpartition_ts_tss_split_t ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), nk * num_bits(t)} + area(counter)`
+1. `area(Partition_ts_tts_split_t ni nj nk) = {0, 0, 0}`
+1. `area(Unpartition_ts_tts_split_t ni nj nk) = {0, 0, 0}`
+1. `area(Partition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), nk * num_bits(t)} + area(counter)`
+1. `area(Unpartition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), (nj * nk) * num_bits(t)} + area(counter)`
+
+## Sequence Language To Space-Time IR Rewrite Rules
+These rewrite rules preserve semantics due to the [sequence to space-time isomorphisms in the basic language document](Basic.md#sequence-to-space-time-isomorphisms)
+
+### Partition
+1. Sequence To Space - 
+
+
+Most of them require no resources as splitting just in time or just in space, or
+just in time where each element is an `SSeq` like `Partition_ts_tts_split_t`, is
+just reshaping types. The partitioning in those cases doesn't affect how the
+atomic elements are distributed in time and space.
 
 ## Goals
 The goal is to allow the user to write `Partition` and `Unparitiion` in the
@@ -61,44 +118,8 @@ and a nesting rewrite rule. Some of the cases require custom operators because:
    other two custom operators `Partition_ts_tss_split_t` and
    `Partition_ts_tts_split_t` and make the implementation easier.
 
-## Partition Sequence Operators
-1. `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)`
-1. `Unpartition no ni :: Seq no (Seq ni t) -> Seq (no*ni) t`
 
-## Partition Nesting Rewrite Rules
-1. `Partition (ni*nj) nk t === Unpartition ni nj (Seq nk t).  Partition ni nj (Seq nk t) . Partition (ni*nj) nk t`
-1. `Partition ni (nj*nk) nk t === Map ni (Unpartition nj nk t) .  Map ni (Partition nj nk t) . Partition ni (nj*nk) t`
 
-## Partition Space-Time Operators
-1. `Partition_t_tt no ni :: TSeq (no*ni) 0 t -> TSeq no 0 (TSeq ni 0 t)`
-1. `Unpartition_t_tt no ni :: TSeq no 0 (TSeq ni 0 t) -> TSeq no 0 (TSeq ni 0 t)`
-1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
-1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t)`
-1. `Partition_ts_tss_split_t ni nj nk :: TSeq (ni*nj) v (SSeq nk t) -> TSeq ni (v + ni*(nj - 1)) (SSeq nj (SSeq nk t))`
-1. `Unpartition_ts_tss_split_t ni nj nk :: TSeq ni (v + ni*(nj - 1)) (SSeq nj (SSeq nk t)) -> TSeq (ni*nj) v (SSeq nk t)`
-1. `Partition_ts_tts_split_t ni nj nk :: TSeq (ni*nj) (vi + ni*vj) (SSeq nk t) -> TSeq ni vi (TSeq nj vj (SSeq nk t))`
-    1. Only having one TSeq on the output with empty clocks should be ok. Whatever
-      empty clocks the TSeq has, I'll put them all on the outer output TSeq.
-1. `Unpartition_ts_tts_split_t ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq (ni*nj) (vi + ni*vj) (SSeq nk t)`
-1. `Partition_ts_tts_split_s ni nj nk :: TSeq ni (vi + ni*(nj + vj - 1)) (SSeq (nj*nk) t) -> TSeq ni vi (TSeq nj vj (SSeq nk t))`
-1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq ni (vi + ni*(nj + vj - 1)) (SSeq (nj*nk) t)`
-
-### Area
-1. `area(Partition_t_tt no ni) = {0, 0, 0}`
-1. `area(Unpartition_t_tt no ni) = {0, 0, 0}`
-1. `area(Partition_s_ss no ni) = {0, 0, 0}`
-1. `area(Unpartition_s_ss no ni) = {0, 0, 0}`
-1. `area(Partition_ts_tss_split_t ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), (nj * nk) * num_bits(t)} + area(counter)`
-1. `area(Unpartition_ts_tss_split_t ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), nk * num_bits(t)} + area(counter)`
-1. `area(Partition_ts_tts_split_t ni nj nk) = {0, 0, 0}`
-1. `area(Unpartition_ts_tts_split_t ni nj nk) = {0, 0, 0}`
-1. `area(Partition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), nk * num_bits(t)} + area(counter)`
-1. `area(Unpartition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), (nj * nk) * num_bits(t)} + area(counter)`
-
-Most of them require no resources as splitting just in time or just in space, or
-just in time where each element is an `SSeq` like `Partition_ts_tts_split_t`, is
-just reshaping types. The partitioning in those cases doesn't affect how the
-atomic elements are distributed in time and space.
 
 ## Partition Sequence To Space-Time Semantic Equivalence
 In the [basic theory document](Basic.md) we used isomorphisms created with the `Partition`, `Unpartition`, and Seq/TSeq/SSeq converters to show semantic equivalence between the sequence and space-time operators other than `Partition` and `Unparition`.
