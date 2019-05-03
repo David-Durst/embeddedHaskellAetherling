@@ -10,7 +10,7 @@ It adds:
 1. rewrites between the stencil primitives
 
 # Sequence Language
-## Operators
+## Sequence Operators
 1. `Shift n w :: Seq n t -> Seq n t`
     1. `Shift` translates a sequence. 
     For `y <- Shift n w x`, the item at index `(n+w)` in `y` is equal to the item at index `n` in `x`.
@@ -23,7 +23,8 @@ It adds:
 
 # Space-Time IR
 ## Space-Time Operators
-1. `Shift_ss n w :: SSeq n k -> SSeq n (SSeq w t)`
+1. `Shift_s n w :: SSeq n t -> SSeq n t`
+1. `Shift_t n w :: TSeq n v t -> TSeq n v t`
 1. `Shift_t_tt n w :: TSeq n (v+(n-1)*w*) k -> TSeq n v (TSeq w 0 t)`
 1. `Shift_t_ts n w :: TSeq n v k -> TSeq n v (SSeq w t)`
 1. `Select_s n (Seq w Int) :: SSeq n t -> SSeq w t`
