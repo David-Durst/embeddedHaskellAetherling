@@ -18,27 +18,8 @@ It adds:
     1. `Chain` creates a chain of `w` operators. 
     The output of the ith operator is the input to the (i+1)th operator.
     1. The output of `Chain` is a sequence where index i is a `Seq` of the ith outputs of each operator in the chain.
-1. `MapWithIndex n i :: (Config j -> Seq n t -> Seq n t) -> Seq  `
-1. `Select n w :: (Seq w (Int x Int)) -> (Config w' -> Seq n t -> Seq n t) -> Seq n t -> Seq n (Seq w t)`
-    1. We name the rest of Select's inputs:
-        1. `indices :: Seq w (Int x Int)`
-        1. `f :: Seq n t -> Seq n t 
-        1. `xs :: Seq n t`
-    1. `Select` creates `w` copies of `f` and calls each with `xs` as the input. 
-    1. `Select` returns, for each `i` from `0` to `n-1`, a `Seq w t`.
-    1. The `i`th index in the result 
-
-    1. `f` is the function that processes `xs`. `w` copies are made of `f`
-    1. `indices` are the 
-    `(Seq w (Int x Int))` are the indexes
 1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
-
-```
-Stencil_1d n w xs = Chain n w (Shift n w) xs
-```
-
-
-**Note: [0..w] is a standard list comprehension notation. It is repurposed for `Seq` comprehensions.**
+    1. `Stencil_1d n w xs = Chain n w (Shift n w) xs`
 
 # Space-Time IR
 ## Space-Time Operators
