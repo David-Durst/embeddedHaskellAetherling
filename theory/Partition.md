@@ -1,9 +1,10 @@
-# Partition Aetherling Language Theory
+# Partition and Unpartition Operators
 This document extends [the basic sequence language and space-time IR](Basic.md) to support partitions.
 It adds:
 1. `Partition` and `Unpartition` sequence language operators
 1. Semantically equivalent space-time IR operators
-1. Nesting, Sequence to Space, Sequence to Time, and Sequence to Space-Time rewrite rules
+1. Rewrite rules between the sequence language and space-time IR operators
+1. An explanation of why the `Partition` and `Unpartition` operators need custom operators and rewrite rules
 
 # Sequence Language
 ## Operators
