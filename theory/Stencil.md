@@ -1,5 +1,5 @@
-# Stencil Aetherling Language Theory
-This document extends [the basic Aetherling language theory][Basic.md] to support stencils.
+# Stencil Operator
+This document extends [the basic sequence language and space-time IR](Basic.md) to support stencils.
 It adds:
 1. sequence language primitives for shift registers and selecting from a sequence
 1. space-time primitives for the shift registers and selects
@@ -9,19 +9,40 @@ It adds:
    space-time IR built from the registers and selects
 1. rewrites between the stencil primitives
 
+# Sequence Language
+## Operators
+1. `Shift n w :: Seq n t -> Seq n t`
+    1. `Shift` translates a sequence. 
+    For `y <- Shift n w x`, the item at index `(n+w)` in `y` is equal to the item at index `n` in `x`.
+1. `Chain n w :: (Seq n t -> Seq n t) -> Seq n t -> Seq n (Seq w t')`
+    1. `Chain` creates a chain of `w` operators. 
+    The output of the ith operator is the input to the (i+1)th operator.
+    1. The output of `Chain` is a sequence where index i is a `Seq` of the ith outputs of each operator in the chain.
+1. `MapWithIndex n i :: (Config j -> Seq n t -> Seq n t) -> Seq  `
+1. `Select n w :: (Seq w (Int x Int)) -> (Config w' -> Seq n t -> Seq n t) -> Seq n t -> Seq n (Seq w t)`
+    1. We name the rest of Select's inputs:
+        1. `indices :: Seq w (Int x Int)`
+        1. `f :: Seq n t -> Seq n t 
+        1. `xs :: Seq n t`
+    1. `Select` creates `w` copies of `f` and calls each with `xs` as the input. 
+    1. `Select` returns, for each `i` from `0` to `n-1`, a `Seq w t`.
+    1. The `i`th index in the result 
 
-# Shifts and Selects
-## Sequence Operators
-1. `Shift n w :: Seq n t -> Seq n (Seq w t)`
-1. `Select n (Array w Int) :: Seq n t -> Seq w t`
-    1. Note - `Array w Int` is an argument written in a meta-language. It is an
-       array of length w where the entries are ints. The ints are which values from the sequence to select
+    1. `f` is the function that processes `xs`. `w` copies are made of `f`
+    1. `indices` are the 
+    `(Seq w (Int x Int))` are the indexes
+1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
 
-## Nesting Rewrite Rule
-Not sure if I want this
+```
+Stencil_1d n w xs = Chain n w (Shift n w) xs
+```
 
+
+**Note: [0..w] is a standard list comprehension notation. It is repurposed for `Seq` comprehensions.**
+
+# Space-Time IR
 ## Space-Time Operators
-1. `Shift_s_ss n w :: SSeq n k -> SSeq n (SSeq w t)`
+1. `Shift_ss n w :: SSeq n k -> SSeq n (SSeq w t)`
 1. `Shift_t_tt n w :: TSeq n (v+(n-1)*w*) k -> TSeq n v (TSeq w 0 t)`
 1. `Shift_t_ts n w :: TSeq n v k -> TSeq n v (SSeq w t)`
 1. `Select_s n (Seq w Int) :: SSeq n t -> SSeq w t`
