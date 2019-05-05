@@ -11,17 +11,52 @@ It adds:
 1. `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)`
 1. `Unpartition no ni :: Seq no (Seq ni t) -> Seq (no*ni) t`
 
+**Note:** `Partition` and `Unpartition` are inverses.
+
 ## Nesting Rewrite Rules
-These rewrite rules preserve semantics due to the [sequence isomorphisms in the basic language document](Basic.md#sequence-isomorphisms).
-The proof is slightly different. The operators that form the isomorphisms are compositions of `Partition` and `Unpartition`.
+These rewrite rules preserve semantics when nesting `Partition` and `Unpartition`.
+They can be proven directly from the [sequence isomorphisms in the basic language document](Basic.md#sequence-isomorphisms).
+However, we proven them from the other rewrite rules because it is easier to understand. 
 
 ### Partition
-1. **`Partition` Nesting Outer** - `Partition (ni*nj) nk t === Unpartition ni nj (Seq nk t) .  Partition ni nj (Seq nk t) . Partition (ni*nj) nk t`
-1. **`Partition` Nesting Inner** - `Partition ni (nj*nk) nk t === Map ni (Unpartition nj nk t) .  Map ni (Partition nj nk t) . Partition ni (nj*nk) t`
+Unlike the [sequence operators in the basic document](Basic.md#sequence-isomorphisms), 
+`Partition` and `Unpartition` each require two nesting rewrite rules.
+The rules are part of the [Inner and Outer Sequence To Space-Time rewrite rules below.](#sequence-to-space-time-rewrite-rules).
+The scheduling algorithm requires these Sequence To Space-Time rewrite rules.
+See the [scheduling algorithm](Scheduling.md) for why and how the rules are used.
+
+#### `Partition` Nesting Outer
+```
+Partition (ni*nj) nk t === (Identity Addition)
+Id . Partition (ni*nj) nk t === (Isomorphism Addition)
+Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t
+```
+
+#### `Partition` Nesting Inner
+```
+Partition ni (nj*nk) nk t === (Identity Addition)
+Id . Partition ni (nj*nk) t === (Map-Identity)
+Map ni id . Partition ni (nj*nk) t === (Isomorphism Addition)
+Map ni (Unpartition nj nk t . Partition nj nk t) . Partition (ni*nj) nk t === (Functor Fusion)
+Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition (ni*nj) nk t
+```
 
 ### Unpartition
-1. **`Unpartition` Nesting Outer** - `Unpartition (ni*nj) nk t === Unpartition (ni*nj) nk t . Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t)`
-1. **`Unpartition` Nesting Inner** - `Unpartition ni (nj*nk) nk t === Unpartition ni (nj*nk) t .  Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t)`
+#### `Unpartition` Nesting Outer
+```
+Unpartition (ni*nj) nk t === (Identity Addition)
+Unpartition (ni*nj) nk t . Id === (Isomorphism Addition)
+Unpartition (ni*nj) nk t . Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) 
+```
+
+#### `Unpartition` Nesting Inner
+```
+Unpartition ni (nj*nk) nk t === (Identity Addition)
+Unpartition ni (nj*nk) t . Id === (Map-Identity)
+Unpartition ni (nj*nk) t . Map ni id === (Isomorphism Addition)
+Partition (ni*nj) nk t . Map ni (Unpartition nj nk t . Partition nj nk t) === (Functor Fusion)
+Partition (ni*nj) nk t . Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t)
+```
 
 # Space-Time IR
 ## Operators

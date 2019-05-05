@@ -33,6 +33,9 @@ Atoms also include the minimal derived types necessary to express arithmetic and
 1. `Snd :: (t x t') -> t'`
 5. `Zip :: t1 -> t2 -> t1 x t2`
 
+### Identity Addition Rewrite Rule
+For any function `f`, `f === Id . f === f . Id`
+
 ## Sequence Types
 The second part of the language lifts types to fixed-length collections containing those types.
 
@@ -119,6 +122,9 @@ The following are the rules for each operator on sequences in the sequence langu
 
 **Note: we do not have a rewrite for Partition since its type is not `f :: Seq n t -> Seq m t`.
 Please see [the partition document](Partition.md) for details on that operator**
+
+## Map-Identity Rewrite Rule
+`Map n Id === Id`
 
 # Space-Time IR
 Aetherling lowers the sequence language to a space-time IR. 
