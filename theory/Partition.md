@@ -51,11 +51,11 @@ Unpartition (ni*nj) nk t . Unpartition ni nj (Seq nk t) . Partition ni nj (Seq n
 
 #### `Unpartition` Nesting Inner
 ```
-Unpartition ni (nj*nk) nk t === (Identity Addition)
+Unpartition ni (nj*nk) t === (Identity Addition)
 Unpartition ni (nj*nk) t . Id === (Map-Identity)
 Unpartition ni (nj*nk) t . Map ni id === (Isomorphism Addition)
-Partition (ni*nj) nk t . Map ni (Unpartition nj nk t . Partition nj nk t) === (Functor Fusion)
-Partition (ni*nj) nk t . Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t)
+Unpartition ni (nj*nk) t . Map ni (Unpartition nj nk t . Partition nj nk t) === (Functor Fusion)
+Unpartition ni (nj*nk) t . Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t)
 ```
 
 # Space-Time IR
