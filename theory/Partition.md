@@ -14,17 +14,17 @@ It adds:
 **Note:** `Partition` and `Unpartition` are inverses.
 
 ## Nesting Rewrite Rules
-These rewrite rules preserve semantics when nesting `Partition` and `Unpartition`.
+These rewrite rules preserve semantics when the input to `Partition` and output from `Unpartition` is nested, meaning it's `Seq no (Seq ni t)`.
 They can be proven directly from the [sequence isomorphisms in the basic language document](Basic.md#sequence-isomorphisms).
 However, we proven them from the other rewrite rules because it is easier to understand. 
 
-### Partition
 Unlike the [sequence operators in the basic document](Basic.md#sequence-isomorphisms), 
 `Partition` and `Unpartition` each require two nesting rewrite rules.
 The rules are part of the [Inner and Outer Sequence To Space-Time rewrite rules below.](#sequence-to-space-time-rewrite-rules).
 The scheduling algorithm requires these Sequence To Space-Time rewrite rules.
 See the [scheduling algorithm](Scheduling.md) for why and how the rules are used.
 
+### Partition
 #### `Partition` Nesting Outer
 ```
 Partition (ni*nj) nk t === (Identity Addition)
