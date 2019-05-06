@@ -11,15 +11,53 @@ It adds:
 
 # Sequence Language
 ## Sequence Operators
-1. `Shift n w :: Seq n t -> Seq n t`
-    1. `Shift` translates a sequence. 
+1. `Shift n :: Seq n t -> Seq n t`
+    1. `Shift` translates a sequence by 1 element.
     For `y <- Shift n w x`, the item at index `(n+w)` in `y` is equal to the item at index `n` in `x`.
 1. `Chain n w :: (Seq n t -> Seq n t) -> Seq n t -> Seq n (Seq w t')`
     1. `Chain` creates a chain of `w` operators. 
     The output of the ith operator is the input to the (i+1)th operator.
     1. The output of `Chain` is a sequence where index i is a `Seq` of the ith outputs of each operator in the chain.
+1. `Select no ni i :: Seq no (Seq ni t) -> Seq no t`
+    1. For each inner Seq, take the ith element
 1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
     1. `Stencil_1d n w xs = Chain n w (Shift n w) xs`
+
+## Nesting Rewrite Rules
+
+Shift and Chain cannot be nested like the [sequence operators in the basic document](Basic.md#sequence-isomorphisms).
+There are dependencies between inputs and outputs `w` elements away. If  `Shift n w` is not run over a number of partitions `p` 
+such that `p % w == 0`, there will be dependencies between sequences.
+This would require sequence reordering, which is complicated to do in time.
+
+
+Shift cannot be nested like the [sequence operators in the basic document](Basic.md#sequence-isomorphisms).
+Each output in `Shift n w` is dependent on an input `w` elements earlier. 
+Partitioning a `Seq` and operating on the `Seq`s independently will always produce a different output than the unnested operator.
+Take any partitioning amount `p`, take the input element `w-1` elements from the end of the first partition.
+In the nested `Shift`, this element won't be used as it will be shifted off the end of the partition. 
+In the unnested `Shift`, this element will be used as it will corresopnding to an output `w` away. That output will exist as the removal of the partitioning will make the `Seq` longer
+
+The way you nest `Shift` is below, which is just the Stencil.
+Stencil is the nested `Shift` when you have loop-carry dependencies.
+```
+Shift (no*ni) w === Unpartition no ni . Unpartition no 1 . Map no (Down_1d w) . Chain no w (Map ni (Shift no 1)) . Partition no ni
+```
+
+```
+Shift (no*ni) w === Unpartition no ni . Partition no ni . Chain (no*ni) w (Shift (no*ni) w) . Unpartition no ni . Partition no ni
+```
+
+```
+Shift (no*ni) w === Unpartition no ni . Transpose ni no . Map ni (Shift no w) . Transpose no ni . Partition no ni
+```
+
+### Stencil
+```
+Stencil_1d (no*ni) w ===
+Chain (no*ni) w (Shift n w) xs ===
+Unpartition no ni (Seq w t) . Chain no (Map ni (Shift no w)) . Partition no ni t
+```
 
 # Space-Time IR
 ## Space-Time Operators
