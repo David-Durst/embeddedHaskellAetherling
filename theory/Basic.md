@@ -71,7 +71,11 @@ For example, `Map` requires a configuration parameter to set the length of seque
 1. `Config 2 :: Config 2`
 1. `Map (Config 2) :: (t -> t') -> Seq 2 t -> Seq 2 t'`
    
-For shorthand throughout the rest of the document, we drop the `Meta` label.
+All of the types and values can be used as type parameters for `Config`. 
+As shown above `Config 2` uses the integer `2` in a configuration parameter's type. 
+`Config (Seq 2 Int)` uses `Seq 2 Int` in a configuration parameter's type.
+
+For shorthand throughout the rest of the document, we drop the `Config` label.
 It obfuscates the meaning of the code.
 We provide the configuration parameters with the operator name. 
 Operators' type signatures assume that the configuration parameter has already been provided.
