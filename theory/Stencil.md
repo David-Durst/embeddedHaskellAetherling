@@ -19,11 +19,11 @@ It adds:
     1. The output of `Chain` is a sequence where index i is a `Seq` of the ith index of the input and the output of each operator in the chain.
         1. The output of the ith operator is the input to the (w-i)th operator.
         1. The output at index w-1 is the input.
-1. `MapWithIndex n i :: (Int -> t -> t') -> Seq n t -> Seq n t'`
 1. `Select n i :: Seq n t -> Seq 1 t`
     1. For each inner Seq, take the ith element
-1. `Concat no n1 :: Seq n0 t -> Seq n1 t -> Seq (n0+n1) t`
 1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
+1. `Merge no ni :: [Seq 1 (Seq ni t)] -> Seq no (Seq ni t)`
+    1. The list must be of length no
 1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
     1. `Stencil_1d n w xs = Chain n w (Shift n w) xs`
 
@@ -32,13 +32,15 @@ It adds:
 ```
 nested_shift ni input_partitions =
    tranposed_inputs = Transpose no ni input_partitions
-   non_shifted_results = [Unpartition ni 1 . Select ni i tranposed_inputs | i <- [0..(ni-2)]
-   shifted_result = [Shift no . Unpartition 1 ni . Select ni (ni-1) transposed_inputs]
-   combined_results = Seq (shifted_results ++ non_shifted_results)
+   non_shifted_results = [Select ni i tranposed_inputs | i <- [0..(ni-2)]
+   shifted_result = [Map 1 (Shift no) . Select ni (ni-1) transposed_inputs]
+   combined_results = Merge no ni (shifted_results ++ non_shifted_results)
    return (Transpose ni no combined_results)
 
 Shift (no*ni) === Unpartition no ni . nested_shift no ni . Partition no ni
 ```
+
+![Nesting Shift](stencil_1d/nesting_shift.png "Nesting Shift")
 
 Issues with converting this to space-time:
 1. How to merge shifted_results and non\_shifted\_results if combined\_results is a `TSeq`? Will need to keep track of empty cycles in two inputs to combined\_results to combine shifted_results and non\_shifted\_results into one stream.
