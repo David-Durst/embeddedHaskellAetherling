@@ -15,11 +15,15 @@ It adds:
     1. `Shift` translates a sequence by 1 element.
     For `y <- Shift n w x`, the item at index `(n+w)` in `y` is equal to the item at index `n` in `x`.
 1. `Chain n w :: (Seq n t -> Seq n t) -> Seq n t -> Seq n (Seq w t')`
-    1. `Chain` creates a chain of `w` operators. 
-    The output of the ith operator is the input to the (i+1)th operator.
-    1. The output of `Chain` is a sequence where index i is a `Seq` of the ith outputs of each operator in the chain.
-1. `Select no ni i :: Seq no (Seq ni t) -> Seq no t`
+    1. `Chain` creates a chain of `w-1` operators. 
+    1. The output of `Chain` is a sequence where index i is a `Seq` of the ith index of the input and the output of each operator in the chain.
+        1. The output of the ith operator is the input to the (w-i)th operator.
+        1. The output at index w-1 is the input.
+1. `MapWithIndex n i :: (Int -> t -> t') -> Seq n t -> Seq n t'`
+1. `Select n i :: Seq n t -> Seq 1 t`
     1. For each inner Seq, take the ith element
+1. `Concat no n1 :: Seq n0 t -> Seq n1 t -> Seq (n0+n1) t`
+1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
 1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
     1. `Stencil_1d n w xs = Chain n w (Shift n w) xs`
 
@@ -40,6 +44,27 @@ In the unnested `Shift`, this element will be used as it will corresopnding to a
 
 The way you nest `Shift` is below, which is just the Stencil.
 Stencil is the nested `Shift` when you have loop-carry dependencies.
+```
+nested_shift ni input_partitions =
+   tranposed_inputs = Transpose no ni input_partitions
+   non_shifted_results = [Unpartition ni 1 . Select ni i tranposed_inputs| i <- [0..(ni-2)]
+   shifted_result = [Shift no . Unpartition 1 ni . Select ni (ni-1) transposed_inputs]
+   combined_results = Seq (shifted_results ++ non_shifted_results)
+   return (Transpose ni no combined_results)
+
+Shift (no*ni) === Unpartition no ni . nested_shift no ni . Partition no ni
+```
+
+```
+nested_shift ni input_partition =
+   non_shift_results = [Select no i input_partition| i <- [0..(no-2)]
+   shifted_result = [Shift ni (Select no (no-1) input_partitions)]
+   combined_results = map (Unpartition 1 ni) (non_shifted_results ++ shifted_results)
+   return (Seq combined_results)
+
+Shift (no*ni) === Unpartition no ni . nested_shift no ni . Partition no ni
+```
+
 ```
 Shift (no*ni) w === Unpartition no ni . Unpartition no 1 . Map no (Down_1d w) . Chain no w (Map ni (Shift no 1)) . Partition no ni
 ```
