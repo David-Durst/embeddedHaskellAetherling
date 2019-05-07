@@ -29,25 +29,10 @@ It adds:
 
 ## Nesting Rewrite Rules
 
-Shift and Chain cannot be nested like the [sequence operators in the basic document](Basic.md#sequence-isomorphisms).
-There are dependencies between inputs and outputs `w` elements away. If  `Shift n w` is not run over a number of partitions `p` 
-such that `p % w == 0`, there will be dependencies between sequences.
-This would require sequence reordering, which is complicated to do in time.
-
-
-Shift cannot be nested like the [sequence operators in the basic document](Basic.md#sequence-isomorphisms).
-Each output in `Shift n w` is dependent on an input `w` elements earlier. 
-Partitioning a `Seq` and operating on the `Seq`s independently will always produce a different output than the unnested operator.
-Take any partitioning amount `p`, take the input element `w-1` elements from the end of the first partition.
-In the nested `Shift`, this element won't be used as it will be shifted off the end of the partition. 
-In the unnested `Shift`, this element will be used as it will corresopnding to an output `w` away. That output will exist as the removal of the partitioning will make the `Seq` longer
-
-The way you nest `Shift` is below, which is just the Stencil.
-Stencil is the nested `Shift` when you have loop-carry dependencies.
 ```
 nested_shift ni input_partitions =
    tranposed_inputs = Transpose no ni input_partitions
-   non_shifted_results = [Unpartition ni 1 . Select ni i tranposed_inputs| i <- [0..(ni-2)]
+   non_shifted_results = [Unpartition ni 1 . Select ni i tranposed_inputs | i <- [0..(ni-2)]
    shifted_result = [Shift no . Unpartition 1 ni . Select ni (ni-1) transposed_inputs]
    combined_results = Seq (shifted_results ++ non_shifted_results)
    return (Transpose ni no combined_results)
@@ -55,27 +40,9 @@ nested_shift ni input_partitions =
 Shift (no*ni) === Unpartition no ni . nested_shift no ni . Partition no ni
 ```
 
-```
-nested_shift ni input_partition =
-   non_shift_results = [Select no i input_partition| i <- [0..(no-2)]
-   shifted_result = [Shift ni (Select no (no-1) input_partitions)]
-   combined_results = map (Unpartition 1 ni) (non_shifted_results ++ shifted_results)
-   return (Seq combined_results)
+Issues with converting this to space-time:
+1. How to merge shifted_results and non\_shifted\_results if combined\_results is a `TSeq`? Will need to keep track of empty cycles in two inputs to combined\_results to combine shifted_results and non\_shifted\_results into one stream.
 
-Shift (no*ni) === Unpartition no ni . nested_shift no ni . Partition no ni
-```
-
-```
-Shift (no*ni) w === Unpartition no ni . Unpartition no 1 . Map no (Down_1d w) . Chain no w (Map ni (Shift no 1)) . Partition no ni
-```
-
-```
-Shift (no*ni) w === Unpartition no ni . Partition no ni . Chain (no*ni) w (Shift (no*ni) w) . Unpartition no ni . Partition no ni
-```
-
-```
-Shift (no*ni) w === Unpartition no ni . Transpose ni no . Map ni (Shift no w) . Transpose no ni . Partition no ni
-```
 
 ### Stencil
 ```
@@ -167,4 +134,43 @@ blur n xs =
     kernel <- Map n (Const_Gen [1, 3, 1]) [(), (), ()]
     summed_window_kernel = Map2 n (Map2 3 (Add . Zip)) window kernel
     return (Unpartition n 1 . Map n (Map 1 div5 . Reduce 3 Add) summed_window_kernel)
+```
+
+# garbage - ignore
+
+Shift and Chain cannot be nested like the [sequence operators in the basic document](Basic.md#sequence-isomorphisms).
+There are dependencies between inputs and outputs `w` elements away. If  `Shift n w` is not run over a number of partitions `p` 
+such that `p % w == 0`, there will be dependencies between sequences.
+This would require sequence reordering, which is complicated to do in time.
+
+
+Shift cannot be nested like the [sequence operators in the basic document](Basic.md#sequence-isomorphisms).
+Each output in `Shift n w` is dependent on an input `w` elements earlier. 
+Partitioning a `Seq` and operating on the `Seq`s independently will always produce a different output than the unnested operator.
+Take any partitioning amount `p`, take the input element `w-1` elements from the end of the first partition.
+In the nested `Shift`, this element won't be used as it will be shifted off the end of the partition. 
+In the unnested `Shift`, this element will be used as it will corresopnding to an output `w` away. That output will exist as the removal of the partitioning will make the `Seq` longer
+
+The way you nest `Shift` is below, which is just the Stencil.
+Stencil is the nested `Shift` when you have loop-carry dependencies.
+```
+nested_shift ni input_partition =
+   non_shift_results = [Select no i input_partition| i <- [0..(no-2)]
+   shifted_result = [Shift ni (Select no (no-1) input_partitions)]
+   combined_results = map (Unpartition 1 ni) (non_shifted_results ++ shifted_results)
+   return (Seq combined_results)
+
+Shift (no*ni) === Unpartition no ni . nested_shift no ni . Partition no ni
+```
+
+```
+Shift (no*ni) w === Unpartition no ni . Unpartition no 1 . Map no (Down_1d w) . Chain no w (Map ni (Shift no 1)) . Partition no ni
+```
+
+```
+Shift (no*ni) w === Unpartition no ni . Partition no ni . Chain (no*ni) w (Shift (no*ni) w) . Unpartition no ni . Partition no ni
+```
+
+```
+Shift (no*ni) w === Unpartition no ni . Transpose ni no . Map ni (Shift no w) . Transpose no ni . Partition no ni
 ```
