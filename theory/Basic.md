@@ -53,7 +53,8 @@ We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples 
 1. `Map2 (Config n) :: (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
 1. `Reduce (Config n) :: (t -> t -> t) -> Seq n t -> Seq 1 t`
 3. `Up_1d (Config n) :: Seq 1 t -> Seq n t`
-4. `Down_1d (Config n) :: Seq n t -> Seq 1 t`
+4. `Select_1d (Config n) (Config idx) :: Seq n t -> Seq 1 t`
+    1. The output `Seq` contains the `idx`th entry of the input `Seq`.
 7. `Partition (Config no) (Config ni) :: Seq (no*ni) t -> Seq no (Seq ni t)`
 7. `Unpartition (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq (no*ni) t`
 
@@ -122,7 +123,7 @@ The following are the rules for each operator on sequences in the sequence langu
 1. **`Map2` Nesting**  - the same as `Map`. We elide it's definition as it requires a different syntax that has not yet been introduced.
 1. **`Reduce` Nesting** - `Reduce (no*ni) f === Unpartition 1 1 . Reduce no (Map2 1 f) . Map no (Reduce ni f) . Partition no ni` 
 1. **`Up_1d` Nesting** - `Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
-1. **`Down_1d` Nesting** - `Up_1d (no*ni) ===  Unpartition 1 1 . Map 1 (Down_1d ni) . Down_1d no . Partition no ni`
+1. **`Select_1d` Nesting** - `Select_1d (no*ni) idx ===  Unpartition 1 1 . Map 1 (Select_1d ni (idx % no)) . Select_1d no (idx // no) . Partition no ni`
 
 **Note: we do not have a rewrite for Partition since its type is not `f :: Seq n t -> Seq m t`.
 Please see [the partition document](Partition.md) for details on that operator**
@@ -187,8 +188,8 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
-4. `Down_1d_s n :: SSeq n t -> SSeq 1 t`
-4. `Down_1d_t n :: TSeq n v t -> TSeq 1 (n+v-1) t`
+4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t`
+4. `Select_1d_t n idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
 
 **Note: reduce's type signature will need to be modified to handle pipelined operators.**
 
@@ -267,8 +268,8 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 1. `area(Reduce_t n f) = area(f) + {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
 1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
-1. `area(Down_1d_s n) = {0, 0, num_bits(t)}`
-1. `area(Down_1d_t n) = {0, 0, num_bits(t)} + area(counter)`
+1. `area(Select_1d_s n idx) = {0, 0, num_bits(t)}`
+1. `area(Select_1d_t n idx) = {0, 0, num_bits(t)} + area(counter)`
 1. `area(g.f) = area(g) + area(f)`
 
 Many of the sequential operators require a counter to track clock cycles.
@@ -358,13 +359,13 @@ Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) .
 
 See [the Functor Properties section](#functor-properties) for a description of Map Fusion.
 
-## Downsample
-1. Sequence To Space - `Down_1d n === SSeq_To_Seq . Down_1d_s n . Seq_To_SSeq`
-1. Sequence To Time - `Down_1d n === TSeq_To_Seq . Down_1d_t n . Seq_To_TSeq`
+## Select
+1. Sequence To Space - `Select_1d n idx === SSeq_To_Seq . Select_1d_s n . Seq_To_SSeq`
+1. Sequence To Time - `Select_1d n === TSeq_To_Seq . Select_1d_t n . Seq_To_TSeq`
 1. Scheduling With Throughput `no` Less Than Fully Parallel - 
 ```
-Down_1d (no*ni) ===
-Unpartition 1 1 . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t 1 (Down_1d_s ni) . Down_1d_t no . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
+Select_1d (no*ni) idx ===
+Unpartition 1 1 . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t 1 (Select_1d_s ni (idx % no)) . Select_1d_t no (idx // no) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
 ```
 
 The proof of this rewrite is the same as the Upsample proof.
@@ -407,7 +408,7 @@ The following operators commute with each others. It is obvious that the two
 forms are semantically equivalent.
 
 ```
-Map 1 f . Down_1d n === Down_1d n . Map n f
+Map 1 f . Select_1d n idx === Select_1d n idx . Map n f
 Map n f . Up_1d n === Up_1d n . Map 1 f
 ```
 
@@ -428,12 +429,12 @@ Since the sequence operators commute, their semantically equivalent operators in
 
 For example:
 ```
-Map_t 1 f . Down_1d_t n === (Isomorphism Operator Addition)
-Seq_To_TSeq . TSeq_To_Seq . Map_t 1 f . Seq_To_TSeq . TSeq_To_Seq . Down_1d_t n . Seq_To_TSeq . TSeq_To_Seq === (TSeq To Seq)
-Seq_To_TSeq . Map 1 f . Down_1d n . TSeq_To_Seq === (Commutativity)
-Seq_To_TSeq . Down_1d n . Map n f . TSeq_To_Seq === (Seq To TSeq)
-Seq_To_TSeq . TSeq_To_Seq . Down_1d_t . Seq_To_TSeq . TSeq_To_Seq . Map_t n f . Seq_To_TSeq . TSeq_To_Seq === (Isomorphism Removal)
-Down_1d_t n . Map_t n f
+Map_t 1 f . Select_1d_t n idx === (Isomorphism Operator Addition)
+Seq_To_TSeq . TSeq_To_Seq . Map_t 1 f . Seq_To_TSeq . TSeq_To_Seq . Select_1d_t n idx . Seq_To_TSeq . TSeq_To_Seq === (TSeq To Seq)
+Seq_To_TSeq . Map 1 f . Select_1d n idx . TSeq_To_Seq === (Commutativity)
+Seq_To_TSeq . Select_1d n idx . Map n f . TSeq_To_Seq === (Seq To TSeq)
+Seq_To_TSeq . TSeq_To_Seq . Select_1d_t n idx . Seq_To_TSeq . TSeq_To_Seq . Map_t n f . Seq_To_TSeq . TSeq_To_Seq === (Isomorphism Removal)
+Select_1d_t n idx . Map_t n f
 ```
 
 ### Functor Properties
