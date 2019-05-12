@@ -31,7 +31,7 @@ Atoms also include the minimal derived types necessary to express arithmetic and
 1. `Add :: (Int x Int) -> Int`
 1. `Fst :: (t x t') -> t`
 1. `Snd :: (t x t') -> t'`
-5. `Zip :: t1 -> t2 -> t1 x t2`
+5. `Tuple :: t1 -> t2 -> t1 x t2`
 
 ### Identity Addition Rewrite Rule
 For any function `f`, `f === Id . f === f . Id`
@@ -57,6 +57,7 @@ We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples 
     1. The output `Seq` contains the `idx`th entry of the input `Seq`.
 7. `Partition (Config no) (Config ni) :: Seq (no*ni) t -> Seq no (Seq ni t)`
 7. `Unpartition (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq (no*ni) t`
+1. `Concat (Config n) (Config m) :: Seq n t -> Seq m t -> Seq (n+m)`
 
 Note: Reduce's inner operator must be on atoms or sequences of length one. This ensures that resulting space-time reduce's f only takes one clock. I'm not sure how to handle partially parallel reduces at this time where the operator is pipelined over multiple clocks.
 
@@ -120,10 +121,16 @@ Specializing this diagram for `Seq` proves:
 The following are the rules for each operator on sequences in the sequence language
 
 1. **`Map` Nesting** - `Map (no*ni) f === Unpartition no ni . Map no (Map ni f) . Partition no ni`
-1. **`Map2` Nesting**  - the same as `Map`. We elide it's definition as it requires a different syntax that has not yet been introduced.
+1. **`Map2` Nesting**  - `Map2 (no*ni) f left_seq right_seq === Unpartition no ni . Map2 no (Map2 ni f) (Unpartition left_seq) (Unpartition right_seq)`
+    1. Note - unlike the other nesting rules, this one is not written in pointfree style. The arguments are necessary because `Map2` is a binary function rather than a unary one.
 1. **`Reduce` Nesting** - `Reduce (no*ni) f === Unpartition 1 1 . Reduce no (Map2 1 f) . Map no (Reduce ni f) . Partition no ni` 
 1. **`Up_1d` Nesting** - `Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
 1. **`Select_1d` Nesting** - `Select_1d (no*ni) idx ===  Unpartition 1 1 . Map 1 (Select_1d ni (idx % no)) . Select_1d no (idx // no) . Partition no ni`
+1. **`Concat` Nesting** - `Concat (no*i) (mo*i) left_seq right_seq === Unpartition no ni . Concat no mo (Unpartition left_seq) (Unpartition right_seq)`
+    1. Note - unlike the other nesting rules, this one is not written in pointfree style. The arguments are necessary because `Concat` is a binary function rather than a unary one.
+    1. Note - Concat splitting is not same as partition splitting. Since two parameters are not inner and outer, ok not to be able to split inside and outside. The parameters have to split same part inner as have to keep inner part of sequence the same.
+    1. probelm - need outer part to be same for slowdown. It's slowdown by no, so need no and mo to be equal, not speed up where get to keep inner equal.
+    1. problem - this can be extroadinarily inefficient. Could have to buffer entire one of sequences if occur at same time
 
 **Note: we do not have a rewrite for Partition since its type is not `f :: Seq n t -> Seq m t`.
 Please see [the partition document](Partition.md) for details on that operator**
@@ -179,7 +186,7 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 1. `Add :: (Int x Int) -> Int`
 1. `Fst :: (t x t') -> t`
 1. `Snd :: (t x t') -> t'`
-5. `Zip :: t1 -> t2 -> t1 x t2`
+5. `Tuple :: t1 -> t2 -> t1 x t2`
 1. `Map_s n :: (t -> t') -> SSeq n t -> SSeq n t'`
 2. `Map_t n :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 2. `Map2_s n :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
@@ -190,6 +197,8 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t`
 4. `Select_1d_t n idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
+1. `Concat_s n m :: SSeq n t -> SSeq m t -> SSeq (n+m) t`
+1. `Concat_t n m :: TSeq n (v+m) t -> TSeq m (v+n) t -> TSeq (n+m) v t`
 
 **Note: reduce's type signature will need to be modified to handle pipelined operators.**
 
@@ -257,9 +266,9 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 `num_bits` returns the number of bits in an `Int` or tuple type.
 
 1. `area(Id) = {0, 0, 0}`
-1. `area(Const_Gen n) = {0, num_bits(Int), num_bits(Int)}`
+1. `area(Const_Gen n) = {0, num_bits(t), num_bits(t)}`
 1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
-5. `area(Fst) = area(Snd) = area(Zip) = {0, 0, 0}`
+5. `area(Fst) = area(Snd) = area(Tuple) = {0, 0, 0}`
 1. `area(Map_s n f) = n * area(f)`
 2. `area(Map_t n f) = area(f)`
 1. `area(Map2_s n f) = n * area(f)`
@@ -270,6 +279,9 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Select_1d_s n idx) = {0, 0, num_bits(t)}`
 1. `area(Select_1d_t n idx) = {0, 0, num_bits(t)} + area(counter)`
+1. `area(Merge_s n m) = {0, 0, 0}`
+1. `area(Merge_t n m) = {0, (n+m) * area(t), num_bits(t)}`
+    1. Note: this is a conservative area computation. The actual storage area is only the amount of periods where the two input `TSeq`s both have input. We will revise this number as we develop more properties to compute the actual area more accurately.
 1. `area(g.f) = area(g) + area(f)`
 
 Many of the sequential operators require a counter to track clock cycles.

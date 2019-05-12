@@ -26,14 +26,14 @@ It adds:
     1. The list must be of length no
 1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
     1. `Stencil_1d n w xs = Chain n w (Shift n w) xs`
+1. `Window n :: (t -> t' -> t') -> (t -> t' -> t'') -> t' -> Seq n t -> Seq n t'''`
 
 ## Nesting Rewrite Rules
 
 ```
-nested_shift ni input_partitions =
-   tranposed_inputs = Transpose no ni input_partitions
-   non_shifted_results = [Select ni i tranposed_inputs | i <- [0..(ni-2)]
-   shifted_result = [Map 1 (Shift no) . Select ni (ni-1) transposed_inputs]
+nested_shift no ni input_partitions =
+   non_shifted_results = [Map no (Select ni i) input_partitions | i <- [0..(ni-2)]
+   shifted_result = [Map 1 (Shift (ni-1)) input_partitions]
    combined_results = Merge no ni (shifted_results ++ non_shifted_results)
    return (Transpose ni no combined_results)
 
