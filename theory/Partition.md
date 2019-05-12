@@ -25,6 +25,7 @@ The scheduling algorithm requires these Sequence To Space-Time rewrite rules.
 See the [scheduling algorithm](Scheduling.md) for why and how the rules are used.
 
 ### Partition
+Note: the type parameters are not actually part of the `Partition`, but are included in the following proofs for interpretability.
 #### `Partition` Nesting Outer
 ```
 Partition (ni*nj) nk t === (Identity Addition)
@@ -37,11 +38,12 @@ Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk
 Partition ni (nj*nk) nk t === (Identity Addition)
 Id . Partition ni (nj*nk) t === (Map-Identity)
 Map ni id . Partition ni (nj*nk) t === (Isomorphism Addition)
-Map ni (Unpartition nj nk t . Partition nj nk t) . Partition (ni*nj) nk t === (Functor Fusion)
-Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition (ni*nj) nk t
+Map ni (Unpartition nj nk t . Partition nj nk t) . Partition ni (nj*nk) t === (Functor Fusion)
+Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t
 ```
 
 ### Unpartition
+Note: the type parameters are not actually part of the `Unpartition`, but are included in the following proofs for interpretability.
 #### `Unpartition` Nesting Outer
 ```
 Unpartition (ni*nj) nk t === (Identity Addition)
