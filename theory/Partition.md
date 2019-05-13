@@ -38,7 +38,7 @@ Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk
 
 #### `Partition` Nesting Inner
 ```
-Partition ni (nj*nk) nk t === (Identity Addition)
+Partition ni (nj*nk) t === (Identity Addition)
 Id . Partition ni (nj*nk) t === (Map-Identity)
 Map ni id . Partition ni (nj*nk) t === (Isomorphism Addition)
 Map ni (Unpartition nj nk t . Partition nj nk t) . Partition ni (nj*nk) t === (Functor Fusion)

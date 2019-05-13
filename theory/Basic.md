@@ -131,7 +131,7 @@ The following are the rules for each operator on sequences in the sequence langu
 1. **`Reduce` Nesting** - `Reduce (no*ni) f === Unpartition 1 1 . Reduce no (Map2 1 f) . Map no (Reduce ni f) . Partition no ni` 
 1. **`Up_1d` Nesting** - `Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
 1. **`Select_1d` Nesting** - `Select_1d (no*ni) idx ===  Unpartition 1 1 . Map 1 (Select_1d ni (idx % no)) . Select_1d no (idx // no) . Partition no ni`
-1. **`Concat` Nesting** - `Concat (no*i) (mo*i) left_seq right_seq === Unpartition no ni . Concat no mo (Unpartition left_seq) (Unpartition right_seq)`
+1. **`Concat` Nesting** - `Concat (no*ni) (no*mi) left_seq right_seq === Unpartition no (ni+mi) . Map2 no (Concat ni mi) (Unpartition no ni left_seq) (Unpartition no mi right_seq)`
     1. Note - unlike the other nesting rules, this one is not written in pointfree style. The arguments are necessary because `Concat` is a binary function rather than a unary one.
     1. Note - Concat splitting is not same as partition splitting. Since two parameters are not inner and outer, ok not to be able to split inside and outside. The parameters have to split same part inner as have to keep inner part of sequence the same.
     1. probelm - need outer part to be same for slowdown. It's slowdown by no, so need no and mo to be equal, not speed up where get to keep inner equal.
