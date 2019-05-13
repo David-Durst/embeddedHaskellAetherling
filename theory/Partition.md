@@ -24,6 +24,9 @@ The rules are part of the [Inner and Outer Sequence To Space-Time rewrite rules 
 The scheduling algorithm requires these Sequence To Space-Time rewrite rules.
 See the [scheduling algorithm](Scheduling.md) for why and how the rules are used.
 
+Nesting Outer means nesting so that the partition will be applied to the outer `Seq`.
+Nesting Inner means nesting so that the partition will be applied to the inner `Seq`.
+
 ### Partition
 Note: the type parameters are not actually part of the `Partition`, but are included in the following proofs for interpretability.
 #### `Partition` Nesting Outer
@@ -82,40 +85,80 @@ Unpartition ni (nj*nk) t . Map ni (Unpartition nj nk t) . Map ni (Partition nj n
 1. `area(Unpartition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), (nj * nk) * num_bits(t)} + area(counter)`
 
 ## Sequence To Space-Time Rewrite Rules
-These rewrite rules preserve semantics due to the [sequence to space-time isomorphisms in the basic language document](Basic.md#sequence-to-space-time-isomorphisms).
-The proof is slightly different. The operators that form the isomorphisms are compositions of `Partition`, `Unpartition`, and `Map`.
+The Sequence To Space, Sequence To Time, Sequence To Space-Time, and Mapped Sequence To Space-Time rewrite rules preserve semantics due to the [sequence to space-time isomorphisms in the basic language document](Basic.md#sequence-to-space-time-isomorphisms).
+The proof is slightly different. These isomorphisms involve `Map` of the normal isomorphism-forming operators like `Seq_To_SSeq`.
+
+The Outer and Inner rewrite rules are derived from the other ones in this section.
 
 ### Partition
-1. Sequence To Space - `Partition no ni === SSeq_To_Seq . Map_s no (SSeq_To_Seq) . Partition_s_ss . Seq_To_SSeq`
-1. Sequence To Time - `Partition no ni === TSeq_To_Seq . Map_t no (TSeq_To_Seq) . Partition_t_tt . Seq_To_TSeq`
-1. Sequence To Space-Time - `Partition no ni === TSeq_To_Seq . Map_t no (SSeq_To_Seq) . Partition_t_ts . Seq_To_TSeq`
-1. Outer Sequence To Space-Time With Throughput `nj` Less than Fully Parallel -
+
+#### Sequence To Space 
+`Partition no ni === SSeq_To_Seq . Map_s no (SSeq_To_Seq) . Partition_s_ss . Seq_To_SSeq`
+
+#### Sequence To Time 
+`Partition no ni === TSeq_To_Seq . Map_t no (TSeq_To_Seq) . Partition_t_tt . Seq_To_TSeq`
+
+#### Sequence To Space-Time 
+`Partition no ni === TSeq_To_Seq . Map_t no (SSeq_To_Seq) . Partition_t_ts . Seq_To_TSeq`
+
+#### Mapped Sequence To Space-Time
+```
+Map ni (Partition nj nk) === 
+TSeq_To_Seq . Map_t ni (TSeq_To_Seq) . Map_t ni (Map_t nj (SSeq_To_Seq)) . Partition_ts_tts_split_s ni nj nk . Map_t ni (Seq_To_SSeq) . Seq_To_TSeq
+```
+
+#### Outer Sequence To Space-Time With Throughput `nj` Less than Fully Parallel
 ```
 Partition (ni*nj) nk === (Nesting Outer)
 Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t === (Seq To Space-Time)
-Unpartition ni nj (Seq nk t) . TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Partition_t_ts ni nj (Seq nk t) . Seq_To_TSeq . Partition (ni*nj) nk t === (Seq To Space)
+Unpartition ni nj (Seq nk t) . TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Partition_t_ts ni nj (Seq nk t) . Seq_To_TSeq . Partition (ni*nj) nk t
 ```
 
-**PROBLEM: Need a Partition other than `Partition_s_ss` and `Partition_t_tt` to split the `Seq` into the `TSeq (SSeq)`**
+**Note:** The scheduling algorithm will handle converting the `Seq` in `Partition_t_ts ni nj (Seq nk t)` to a `TSeq`.
+
+**WE HAD A PROBLEM: Need a Partition other than `Partition_s_ss` and `Partition_t_tt` to split the `Seq` into the `TSeq (SSeq)`**
 **SOLUTION: Add `Partition_t_ts`**
 
-1. Inner Sequence To Space-Time With Throughput `ni*nj` Less than Fully Parallel -
-```
-Partition ni (nj*nk) ===
-TSeq_To_Seq . Map_t ni (Unpartition nj nk) . Map_t ni (TSeq_To_Seq) . Map_t ni (Map_t nj (SSeq_To_Seq)) . Partition_ts_tts_split_s ni nj nk . Map_t ni (Seq_To_SSeq) . Seq_To_TSeq . Partition ni (nj*nk)`
-```
-
-**PROBLEM: `Partition_s_ts no ni :: SSeq (no*ni) t -> TSeq no v (SSeq ni t)` can't exist. It breaks that assumption that `type_time(t) == type_time(t')` for all `f :: t -> t'`. Thus, the following approach using more standard operators doesn't work:** 
+#### Inner Sequence To Space-Time With Throughput `ni*nj` Less than Fully Parallel
 ```
 Partition ni (nj*nk) === (Nesting Inner)
-Map ni (Unpartition nj nk t) .  Map ni (Partition nj nk t) . Partition ni (nj*nk) t === (Seq To Space)
-Map ni (Unpartition nj nk t) . SSeq_To_Seq . Map_s ni (Partition_s_ts nj nk t) . Seq_To_SSeq . Partition ni (nj*nk) t === (Seq To Space)
+Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t === (Mapped Sequence To Space-Time)
+Map ni (Unpartition nj nk t) . TSeq_To_Seq . Map_t ni (TSeq_To_Seq) . Map_t ni (Map_t nj (SSeq_To_Seq)) . Partition_ts_tts_split_s ni nj nk . Map_t ni (Seq_To_SSeq) . Seq_To_TSeq . Partition ni (nj*nk) t
 ```
+
+**WE HAD A PROBLEM**: `Partition_s_ts no ni :: SSeq (no*ni) t -> TSeq no v (SSeq ni t)` can't exist. It breaks that assumption that `type_time(t) == type_time(t')` for all `f :: t -> t'`. Thus, the following approach using more standard operators doesn't work:** 
 **SOLUTION: Add `Partition_ts_tts_split_s`**
 
 ### Unpartition
-1. Sequence To Space - `Unpartition no ni === SSeq_To_Seq . Partition_s_ss . Map_t no (SSeq_To_Seq) . SSeq_To_Seq`
-1. Sequence To Time - `Unpartition no ni === TSeq_To_Seq . Partition_t_tt . Map_t no (TSeq_To_Seq) . TSeq_To_Seq`
+
+#### Sequence To Space
+`Unpartition no ni === SSeq_To_Seq . Partition_s_ss . Map_t no (SSeq_To_Seq) . SSeq_To_Seq`
+
+#### Sequence To Time 
+`Unpartition no ni === TSeq_To_Seq . Partition_t_tt . Map_t no (TSeq_To_Seq) . TSeq_To_Seq`
+
+#### Sequence To Space-Time
+`Unpartition no ni === TSeq_To_Seq . Unpartition_t_ts no ni . Map_t no (SSeq_To_Seq) . Seq_To_TSeq`
+
+#### Mapped Sequence To Space-Time
+```
+Map ni (Unpartition nj nk) === 
+TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Unpartition_ts_tts_split_s ni nj nk . Map_t ni (Map_t nj (SSeq_To_Seq)) . Map_t ni (Seq_To_TSeq) . Seq_To_TSeq
+```
+
+#### Outer Sequence To Space-Time With Throughput `nj` Less than Fully Parallel
+```
+Unpartition (ni*nj) nk === (Nesting Outer)
+Unpartition (ni*nj) nk t . Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) === (Seq To Space-Time)
+Unpartition (ni*nj) nk t . TSeq_To_Seq . Unpartition_t_ts ni nj (Seq nk t) . Map_t ni (SSeq_To_Seq) . Seq_To_TSeq . Partition ni nj (Seq nk t) 
+```
+
+#### Inner Sequence To Space-Time With Throughput `nj` Less than Fully Parallel
+```
+Unpartition (ni*nj) nk === (Nesting Inner)
+Unpartition ni (nj*nk) t . Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) === (Mapped Sequence To Space-Time)
+Unpartition ni (nj*nk) t . TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Unpartition_ts_tts_split_s ni nj nk . Map_t ni (Map_t nj (SSeq_To_Seq)) . Map_t ni (Seq_To_TSeq) . Seq_To_TSeq . Map ni (Partition nj nk t)
+```
 
 # Why Partition Needs Custom Operators
 During scheduling, at most one of the Seqs in the input and output types may be split. 
