@@ -58,6 +58,11 @@ We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples 
 7. `Partition (Config no) (Config ni) :: Seq (no*ni) t -> Seq no (Seq ni t)`
 7. `Unpartition (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq (no*ni) t`
 1. `Concat (Config n) (Config m) :: Seq n t -> Seq m t -> Seq (n+m)`
+    1. Why no `Concat` - if going to do same thing to all elements of a `Seq`,
+       use a `Map`. If going to do different things to them and then merge them
+       back, use a `Map2 (Tuple)`. The `Seq`s have had different operations
+       applied to them, so are different types either actually or logically
+       (same type but represent different domains).
 
 Note: Reduce's inner operator must be on atoms or sequences of length one. This ensures that resulting space-time reduce's f only takes one clock. I'm not sure how to handle partially parallel reduces at this time where the operator is pipelined over multiple clocks.
 
