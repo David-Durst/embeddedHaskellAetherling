@@ -10,15 +10,27 @@ It adds:
 1. rewrites between the stencil primitives
 
 # Sequence Language
+## Type Constraints
+### Type Containment
+1. `t Contains t' = True`
+1. `(Seq n t) Contains t' = t Contains t'`
+1. `_ Contains t'' = False`
+
+### Type Nesting
+1. `t Nesting t' = 1`
+1. `(Seq n t) Nesting t' = n * (t Nesting t')`
+
 ## Sequence Operators
-1. `Shift n :: Seq n t -> Seq n t`
+1. `Shift n init :: Seq n t -> Seq n t`
     1. `Shift` translates a sequence by 1 element.
-    For `y <- Shift n w x`, the item at index `(n+w)` in `y` is equal to the item at index `n` in `x`.
-1. `Chain n w :: (Seq n t -> Seq n t) -> Seq n t -> Seq n (Seq w t')`
+    For `y <- Shift n w x`, the item at index `n+1` in `y` is equal to the item at index `n` in `x`.
+    1. Element replaces the first element of the input `Seq` with `init`.
+1. `Chain n w t' :: (t Contains t', nst = t Nesting t') => (Seq n t -> Seq n t) -> Seq n t -> Seq n (Seq nst (Seq w t'))`
     1. `Chain` creates a chain of `w-1` operators. 
     1. The output of `Chain` is a sequence where index i is a `Seq` of the ith index of the input and the output of each operator in the chain.
         1. The output of the ith operator is the input to the (w-i)th operator.
         1. The output at index w-1 is the input.
+    1. The amount of nesting in per clock is used to compute the number of windows emitted every clock
 1. `Select n i :: Seq n t -> Seq 1 t`
     1. For each inner Seq, take the ith element
 1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
@@ -26,31 +38,67 @@ It adds:
     1. The list must be of length no
 1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
     1. `Stencil_1d n w xs = Chain n w (Shift n w) xs`
-1. `Window n :: (t -> t' -> t') -> (t -> t' -> t'') -> t' -> Seq n t -> Seq n t'''`
+1. `Window no ni init :: Seq no (Seq ni t) -> Seq no (Seq (ni+1) t)`
+    1. For each `Seq ni` after the first one, prepends 1 element of the prior `Seq`
+    1. For the first `Seq ni`,  preprends 1 instance of `init`
+    1. Only the beginning is modified to preserve causality. The inputs to each
+       `Seq` have already arrived as they were used by the prior `Seq`. The
+       elements for the next `Seq` cannot be included in the current `Seq`
+       because they may not have been materialized yet.
+1. `Collapse no ni :: Seq no (Seq (ni+1) t) -> Seq no (Seq ni t)`
+    1. Drops the first `w` of each `Seq ni`
+1. `Filter n m i :: Seq n t -> Seq (n-m) t`
+    1. Marks the element at position i for deletion when copying back to the CPU
 
 ## Nesting Rewrite Rules
 
+### Window
+#### `Window` Nesting Outer
 ```
-nested_shift no ni input_partitions =
-   non_shifted_results = [Map no (Select ni i) input_partitions | i <- [0..(ni-2)]
-   shifted_result = [Map 1 (Shift (ni-1)) input_partitions]
-   combined_results = Merge no ni (shifted_results ++ non_shifted_results)
-   return (Transpose ni no combined_results)
+Window (ni*nj) nk init === Unpartition ni nj . Collapse ni nj . Map ni (Window nj nk init) . Window ni nj (Seq nk init) . Partition ni nj
+```
+
+#### `Window` Nesting Inner - NOT SURE THIS ONE WORKS
+```
+Window ni (nj*nk) init === Unpartition ni nj . Collapse ni nj . Map ni (Window nj nk init) . Window ni nj (Seq nk init) . Map ni (Partition nj nk)
+```
+
+### Shift
+```
+nested_shift no ni init input_partitions =
+    windowed_inputs = Window no ni init input_partitions
+    shifted_outputs = Map no (Shift ni init)
+    return (Collapse no ni init shifted_outputs)
 
 Shift (no*ni) === Unpartition no ni . nested_shift no ni . Partition no ni
+
+Shift (no*ni) === Unpartition no ni . Collapse no ni init . Map no (Shift ni init) . Window no ni init . Partition no ni
 ```
 
-![Nesting Shift](stencil_1d/nesting_shift.png "Nesting Shift")
+### Chain
 
-Issues with converting this to space-time:
-1. How to merge shifted_results and non\_shifted\_results if combined\_results is a `TSeq`? Will need to keep track of empty cycles in two inputs to combined\_results to combine shifted_results and non\_shifted\_results into one stream.
+#### Chain `Partition` Removal
+```
+Chain no (Unpartition no ni . f . Partition no ni) === (Isomorphism Operator Removal)
+Unpartition no ni . Chain no f . Partition no ni
+```
 
+All of the `f`'s `Unpartition`s and `Partition`s cancel each other out. 
+The only impact is on the input and output.
 
 ### Stencil
 ```
+wi = ceil((ni+w-1)/ni) -- how long each inner shift register needs to be to produce all the windows
+Stencil_1d (no*ni) w ===
+Chain (no*ni) w (Shift (no*ni) w init) ===
+Unpartition no ni . Map no (Chain_Select_Only ni w . UNKNOWN_DROP? . Unpartition wi ni . Transpose ni wi) . Transpose ni no . Map ni (Chain no wi (Shift no init)) . Transpose no ni . Partition no ni ===
+```
+
+```
 Stencil_1d (no*ni) w ===
 Chain (no*ni) w (Shift n w) xs ===
-Unpartition no ni (Seq w t) . Chain no (Map ni (Shift no w)) . Partition no ni t
+Chain (no*ni) w (Unpartition no ni . Collapse no ni init . Map no (Shift ni init) . Window no ni init . Partition no ni) xs ===
+Unpartition no ni (Seq w t) . Chain no (Collapse no ni init . Map no (Shift ni init) . Window no ni init) . Partition no ni t
 ```
 
 # Space-Time IR
