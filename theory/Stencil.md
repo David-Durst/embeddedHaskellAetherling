@@ -15,11 +15,10 @@ It adds:
     1. `Shift` translates a sequence by 1 element.
     For `y <- Shift n x`, the item at index `n+1` in `y` is equal to the item at index `n` in `x`.
     1. `Shift` replaces the first element of the input `Seq` with `init`.
-1. `fold_seq n :: (Seq m t' -> t -> Seq (m+1) t') -> Seq 1 [t'] -> Seq (n-1) t -> Seq n t'`
-1. `Tuple_To_Seq n_seq n_tuple :: Seq n_seq (Homogenous_Tuple n_tuple t) -> Seq n_seq (Seq n_tuple t)`
-1. `Seq_To_Tuple n_tuple n_seq :: Seq n_seq (Seq n_tuple t) Seq n_seq (Homogenous_Tuple n_tuple t)`
 1. `Chain n w :: (Seq n t -> Seq n t') -> Seq n t -> Seq n (Seq w t')`
+    1. See the basic chain diagram for a visual representation.
     1. `Chain` creates a chain of `w-1` operators. 
+    1. The input to the `ith` operator is the output of the `(i-1)`th operator.
     1. The output of `Chain` is a nested sequence:
         1. The outer `Seq`'s ith index is the ith outputs of all chained operators
         1. The inner `Seq`'s' jth index is the output of the (w-j)th operator.
@@ -30,12 +29,8 @@ It adds:
 1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
     1. `Stencil_1d n w = Chain n w (Shift n)`
     
-```
-Chain n w (in_hd:in_tl) =
-    chained_ops <- foldl (\shifted_seqs _ -> Shift n (head shifted_seqs) : shifted_seqs) [in_hd] in_tl
-    zipped_out <- Map2 n Tuple
-```
 
+![Basic Chain](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/chain_basic.png "Basic Chain")
 
 # Space-Time IR
 ## Space-Time Operators
@@ -159,7 +154,8 @@ Unpartition no ni .
 ```
 blur :: Int -> Seq n Int -> Seq n Int
 blur n xs = 
-    window <- Stencil_1d n 3 xs
+    windowed_seq <- Stencil_1d n 3 xs
+    zipped_window_kernel = Map n (Map2 n (List_To_Seq [1, 2, 1]) windowed_seq)
     return (Map n (Reduce 3 Add) zipped_window_kernel)
 ```
 
