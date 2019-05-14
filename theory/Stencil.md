@@ -104,15 +104,15 @@ output_window_indices = []
 Select_2d_s no ni idx_o idx_i :: (SSeq no (SSeq ni t)) -> SSeq 1 (SSeq 1 t)
 Select_2d_s no ni idx_o idx_i = Map_s 1 (Select_1d_s ni idx_i) . Select_1d_s no idx_o
 
-Select_Window_s n wi wo w_start :: (SSeq n (SSeq wi t)) -> SSeq wo t
-Select_Window_s n wi wo w_start = 
-    Unpartition wo 1 .
-    Map_s wo (Unpartition_s_ss 1 1) .
+Select_Window_s no ni w w_start :: (SSeq no (SSeq ni t)) -> SSeq w t
+Select_Window_s no ni w w_start = 
+    Unpartition w 1 .
+    Map_s w (Unpartition_s_ss 1 1) .
     MapApply ( List_To_Seq [
-        Select_2d_s n wi ((w_start + w_elem) // wi) ((w_start + w_elem) % wi) | w_elem <- [0..wo-1]
+        Select_2d_s no ni ((w_start + w_elem) // ni) ((w_start + w_elem) % ni) | w_elem <- [0..w-1]
         ]) .
-    Up_1d_s wo .
-    Partition_s_ss 1 n
+    Up_1d_s w .
+    Partition_s_ss 1 no
 
 Stencil_1d n w ===
 Unpartition no ni . 
@@ -126,6 +126,15 @@ Unpartition no ni .
     Transpose_ts no ni . 
     Partition no ni
 ```
+
+`Stencil_1d` has two main parts:
+1. `Map_s ni (Chain_t no wi (Shift_t no init))` creates all the shift registers that store data in parallel
+1. The function in the `Map_t no` selects the windows out of the shift registers
+    1. `Select_Window_s` selects the windows from 2D nested `Seq`s. 
+        1. `no` and `ni` form the 2D coordinate space to remove windows from
+        1. `w` is the size of the window to emit
+        1. `w_start` is the 1D index of the window. 
+        Since this is a stride one linebuffer, each call to `Select_Window_s` increments `w_start` by 1.
 
 # Examples
 
