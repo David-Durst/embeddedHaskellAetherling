@@ -81,7 +81,7 @@ It takes the last element of the inner `Seq` and shifts it by 1.
 The other functions in the argument list to `MapApply_s` is equivalent to `non_shifted_results` in Partially Parallel Shift diagram.
 It takes all the other elements of the inner `Seq` and does nothing to them.
 
-![Partially Parallel Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/partially_parallel_shift_shift.png?sanitize=true "Partially Parallel Shift")
+![Partially Parallel Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/partially_parallel_shift.png "Partially Parallel Shift")
 
 ### `Stencil_1d`
 
