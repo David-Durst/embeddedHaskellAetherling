@@ -15,90 +15,17 @@ It adds:
     1. `Shift` translates a sequence by 1 element.
     For `y <- Shift n w x`, the item at index `n+1` in `y` is equal to the item at index `n` in `x`.
     1. Element replaces the first element of the input `Seq` with `init`.
-1. `Chain n w t :: (Seq n t -> Seq n t') -> Seq n t -> Seq n ((Seq w t'))`
+1. `Chain n w t :: (Seq n t -> Seq n t') -> Seq n t -> Seq n (Seq w t')`
     1. `Chain` creates a chain of `w-1` operators. 
-    1. The output of `Chain` is a sequence where index i is a `Seq` of the ith index of the input and the output of each operator in the chain.
-        1. The output of the ith operator is the input to the (w-i)th operator.
-        1. The output at index w-1 is the input.
-    1. The amount of nesting in per clock is used to compute the number of windows emitted every clock
-1. `Select n i :: Seq n t -> Seq 1 t`
-    1. For each inner Seq, take the ith element
-1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
-1. `Merge no ni :: [Seq 1 (Seq ni t)] -> Seq no (Seq ni t)`
-    1. The list must be of length no
-1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
-    1. `Stencil_1d n w = Chain n w (Shift n w)`
-1. `Window no ni init :: Seq no (Seq ni t) -> Seq no (Seq (ni+1) t)`
-    1. For each `Seq ni` after the first one, prepends 1 element of the prior `Seq`
-    1. For the first `Seq ni`,  preprends 1 instance of `init`
-    1. Only the beginning is modified to preserve causality. The inputs to each
-       `Seq` have already arrived as they were used by the prior `Seq`. The
-       elements for the next `Seq` cannot be included in the current `Seq`
-       because they may not have been materialized yet.
-1. `Collapse no ni :: Seq no (Seq (ni+1) t) -> Seq no (Seq ni t)`
-    1. Drops the first `w` of each `Seq ni`
-1. `Filter n m i :: Seq n t -> Seq (n-m) t`
-    1. Marks the element at position i for deletion when copying back to the CPU
-1. `Map_Chain n w :: (Seq n t -> Seq n t) -> Seq n t -> Seq w (Seq n t)`
-    1. Create w copies of the input operator, output each sequence.
-    1. The output of the ith operator is the input to the (i-1)th operator.
-    1. The jth output is the output of the (w-j)th operator.
-1. `Stencil_Wire n wi wo :: Seq wi (Seq n t) -> Seq wo (Seq n t)`
-    1. Decrease window sizes by walking down windows and then across them
+    1. The output of `Chain` is a nested sequence:
+        1. The outer `Seq`'s ith index is the ith outputs of all chained operators
+        1. The inner `Seq`'s' jth index is the output of the (w-j)th operator.
 1. `MapApply n :: Seq n (t -> t') -> Seq n t -> Seq n t'`
     1. This is equivalent to the [ZipList applictive functor in Haskell](https://en.wikibooks.org/wiki/Haskell/Applicative_functors#ZipList)
+1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
+1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
+    1. `Stencil_1d n w = Chain n w (Shift n w)`
 
-## Nesting Rewrite Rules
-
-### Window
-#### `Window` Nesting Outer
-```
-Window (ni*nj) nk init === Unpartition ni nj . Collapse ni nj . Map ni (Window nj nk init) . Window ni nj (Seq nk init) . Partition ni nj
-```
-
-#### `Window` Nesting Inner - NOT SURE THIS ONE WORKS
-```
-Window ni (nj*nk) init === Unpartition ni nj . Collapse ni nj . Map ni (Window nj nk init) . Window ni nj (Seq nk init) . Map ni (Partition nj nk)
-```
-
-### Shift
-```
-nested_shift no ni init input_partitions =
-    windowed_inputs = Window no ni init input_partitions
-    shifted_outputs = Map no (Shift ni init)
-    return (Collapse no ni init shifted_outputs)
-
-Shift (no*ni) === Unpartition no ni . nested_shift no ni . Partition no ni
-
-Shift (no*ni) === Unpartition no ni . Collapse no ni init . Map no (Shift ni init) . Window no ni init . Partition no ni
-```
-
-### Chain
-
-#### Chain `Partition` Removal
-```
-Chain no (Unpartition no ni . f . Partition no ni) === (Isomorphism Operator Removal)
-Unpartition no ni . Chain no f . Partition no ni
-```
-
-All of the `f`'s `Unpartition`s and `Partition`s cancel each other out. 
-The only impact is on the input and output.
-
-### Stencil\_1d
-#### Sequence To Space
-```
-wi = ceil((ni+w-1)/ni) -- how long each inner shift register needs to be to produce all the windows
-Stencil_1d (no*ni) w ===
-Chain (no*ni) w (Shift (no*ni) w init) ===
-Unpartition no ni . Map no (Transpose ni w . Stencil_Wire ni wi w . Transpose ni wi) . Transpose ni no . Map ni (Chain no wi (Shift no init)) . Transpose no ni . Partition no ni ===
-```
-
-```
-Stencil_1d (no*ni) w ===
-Chain (no*ni) w (Shift n w) xs ===
-Chain (no*ni) w (Unpartition no ni . Collapse no ni init . Map no (Shift ni init) . Window no ni init . Partition no ni) xs ===
-Unpartition no ni (Seq w t) . Chain no (Collapse no ni init . Map no (Shift ni init) . Window no ni init) . Partition no ni t
-```
 
 # Space-Time IR
 ## Space-Time Operators
@@ -109,12 +36,6 @@ Unpartition no ni (Seq w t) . Chain no (Collapse no ni init . Map no (Shift ni i
     1. The output has an `SSeq` on the inside as all the chained operators execute in parallel.
 1. `MapApply_s n :: Seq n (t -> t') -> SSeq n t -> SSeq n t'`
 1. `MapApply_t n :: Seq n (t -> t') -> TSeq n v t -> TSeq n v t'`
-1. `Window_ss no ni init :: SSeq no (SSeq ni t) -> SSeq no (SSeq (ni+1) t)`
-1. `Window_tt no ni init :: TSeq no vo (TSeq ni (vi+1) t) -> TSeq no vo (TSeq (ni+1) vi t)`
-1. `Window_ts no ni init :: TSeq no vo (SSeq ni t) -> TSeq no vo (SSeq (ni+1) t)`
-1. `Collapse_ss no ni :: SSeq no (SSeq (ni+1) t) -> SSeq no (SSeq ni t)`
-1. `Collapse_tt no ni :: TSeq no vo (TSeq (ni+1) vi t) -> TSeq no vo (TSeq ni (vi+1) t)`
-1. `Collapse_ts no ni :: TSeq no vo (SSeq (ni+1) t) -> TSeq no vo (SSeq ni t)`
 1. `Transpose_ts no ni :: TSeq no vo (SSeq ni t) -> SSeq ni (TSeq no vo t)`
 1. `Transpose_st no ni :: SSeq no (TSeq ni vi t) -> TSeq ni vi (SSeq no t)`
 1. `Stencil_1d_s n w :: SSeq n t -> SSeq n (Seq w t)`
@@ -123,11 +44,11 @@ Unpartition no ni (Seq w t) . Chain no (Collapse no ni init . Map no (Shift ni i
 ## Sequence To Space-Time Rewrite Rules
 
 ### All Operators Other Than `Shift` and `Stencil_1d`
-All the operators have the same two rewrite rules with the same form.
-We provide `Chain` as an example
+All the operators other than `Shift` and `Stencil_1d` have the same two rewrite rules with the same form.
+We provide `Chain` as an example.
 
 I haven't been able to think of ways to partially parallelize the other operators. 
-I may not allow them to be used as top-level primitives in auto-scheduled programs
+Due to this limitation, I may not allow them to be used as top-level primitives in auto-scheduled programs.
 
 #### Sequence To Space
 `Chain n w f === SSeq_To_Seq . Map (SSeq_To_Seq) . Chain_s n w f . Seq_To_SSeq`
@@ -144,14 +65,19 @@ I may not allow them to be used as top-level primitives in auto-scheduled progra
 `Shift n init === TSeq_To_Seq . Shift_t n . Seq_To_TSeq`
 
 #### Sequence To Space-Time With Throughput `no` Less Than Fully Parallel
+The first function in the argument list to `MapApply_s` is equivalent to `shifted_results` in the diagram.
+It takes the last element of the inner `Seq` and shifts it by 1. 
+The other functions in the argument list to `MapApply_s` is equivalent to `non_shifted_results` in the diagram.
+It takes all the other elements of the inner `Seq` and does nothing to them.
+
 ```
 Shift (no*ni) init ===
 Unpartition no ni . TSeq_To_Seq . Map_t no Seq_To_SSeq . 
     Transpose_st ni no
     Unpartition_s_ss ni 1 .
     MapApply_s (List_To_Seq 
-        (Map_s 1 (Shift_t no init) . [Select_1d_s ni (ni-1)] ++ 
-        [Select_1d_s ni i | i <- [0..n-2]) -- this collection of lists is created using Haskell's list comprehensions
+        [Map_s 1 (Shift_t no init) . Select_1d_s ni (ni-1)] ++ 
+        [Select_1d_s ni i | i <- [0..n-2]] -- this collection of lists is created using Haskell's list comprehensions
         ) .
     Up_1d_s ni .
     Partition_s_ss 1 ni .
