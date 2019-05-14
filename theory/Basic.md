@@ -135,6 +135,7 @@ The following are the rules for each operator on sequences in the sequence langu
     1. Note - unlike the other nesting rules, this one is not written in pointfree style. The arguments are necessary because `Concat` is a binary function rather than a unary one.
     1. Note - Concat splitting is not same as partition splitting. Since two parameters are not inner and outer, ok not to be able to split inside and outside. The parameters have to split same part inner as have to keep inner part of sequence the same.
     1. probelm - need outer part to be same for slowdown. It's slowdown by no, so need no and mo to be equal, not speed up where get to keep inner equal.
+        1. This new solution doesn't work. it's merging the sequences rather than concatting them. If want to keep concatting them, need ni == mi, need different no and mo
     1. problem - this can be extroadinarily inefficient. Could have to buffer entire one of sequences if occur at same time
 
 **Note: we do not have a rewrite for Partition since its type is not `f :: Seq n t -> Seq m t`.
@@ -377,8 +378,8 @@ Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) .
 See [the Functor Properties section](#functor-properties) for a description of Map Fusion.
 
 ## Select
-1. Sequence To Space - `Select_1d n idx === SSeq_To_Seq . Select_1d_s n . Seq_To_SSeq`
-1. Sequence To Time - `Select_1d n === TSeq_To_Seq . Select_1d_t n . Seq_To_TSeq`
+1. Sequence To Space - `Select_1d n idx === SSeq_To_Seq . Select_1d_s n idx . Seq_To_SSeq`
+1. Sequence To Time - `Select_1d n idx === TSeq_To_Seq . Select_1d_t n idx . Seq_To_TSeq`
 1. Scheduling With Throughput `no` Less Than Fully Parallel - 
 ```
 Select_1d (no*ni) idx ===
