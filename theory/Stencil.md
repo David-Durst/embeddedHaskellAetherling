@@ -17,7 +17,8 @@ It adds:
         1. The outer `Seq`'s ith index is the ith outputs of all chained operators
         1. The inner `Seq`'s' jth index is the output of the (w-j)th operator.
 1. `MapApply n :: Seq n (t -> t') -> Seq n t -> Seq n t'`
-    1. This is equivalent to the [ZipList applicative functor in Haskell](https://en.wikibooks.org/wiki/Haskell/Applicative_functors#ZipList)
+    1. `MapApply` applies a different operator to each element of the sequence.
+    1. `MapApply` is equivalent to the [ZipList applicative functor in Haskell](https://en.wikibooks.org/wiki/Haskell/Applicative_functors#ZipList)
 1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
 1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
     1. `Stencil_1d n w = Chain n w (Shift n)`
