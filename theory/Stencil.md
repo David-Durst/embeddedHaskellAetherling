@@ -78,7 +78,8 @@ Unpartition no ni . TSeq_To_Seq . Map_t no Seq_To_SSeq .
 
 The first function in the argument list to `MapApply_s` is equivalent to `shifted_results` in the Partially Parallel Shift diagram.
 It takes the last element of the inner `Seq` and shifts it by 1. 
-The other functions in the argument list to `MapApply_s` is equivalent to `non_shifted_results` in Partially Parallel Shift diagram.
+
+The other functions in the argument list to `MapApply_s` are equivalent to `non_shifted_results` in Partially Parallel Shift diagram.
 It takes all the other elements of the inner `Seq` and does nothing to them.
 
 ![Partially Parallel Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/partially_parallel_shift.png "Partially Parallel Shift")
@@ -134,7 +135,7 @@ Unpartition no ni .
         1. `no` and `ni` form the 2D coordinate space to remove windows from
         1. `w` is the size of the window to emit
         1. `w_start` is the 1D index of the window. 
-        Since this is a stride one linebuffer, each call to `Select_Window_s` increments `w_start` by 1.
+        Since this is a stride one stencil, each call to `Select_Window_s` increments `w_start` by 1.
 
 # Examples
 
