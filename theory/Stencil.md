@@ -28,9 +28,39 @@ It adds:
 1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
 1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
     1. `Stencil_1d n w = Chain n w (Shift n)`
+
+I can express `Stencil_1d` using just `MapApply`, `Transpose`, and `Shift`. I don't need `Chain`.
+```
+Stencil_1d n w xs = 
+    Transpose w n .
+    MapApply w (List_To_Seq . foldl (\in_seqs _ -> shift n (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    Up_1d w .
+    Parition 1 n
+
+```
     
 
 ![Basic Chain](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/chain_basic.png "Basic Chain")
+
+## Why `MapApply` is different from `Concat`
+`MapApply n fs` compiles either to applying fs to an `SSeq` or a `TSeq`. Either way, joining the outputs is well defined. 
+If it's a `SSeq`, all the outputs join on the same clock.
+If it's a `TSeq`, all the outputs are on separate clocks.
+No delaying is necessary to smooth out the merged streams into an `SSeq` or `TSeq`
+
+With `Concat`, can have the below operation. In it, one `x` will need to be delayed by a cycle in the Concat.
+This means the Aetherling compiler will need to track which cycles `x` is empty, store `x`, and repeat it's output.
+```
+x :: TSeq 1 1 Int
+Concat x x
+```
+Another problematic example. Y and Z could both have a non-empty cycle, empty cycle, non-empty cycle, empty cycle. 
+`Concat` will need to figure this out and stall `z`
+```
+y :: TSeq 2 2 Int
+z :: TSeq 2 2 Int
+Concat y z
+```
 
 # Space-Time IR
 ## Space-Time Operators
