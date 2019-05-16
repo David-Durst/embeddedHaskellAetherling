@@ -143,7 +143,7 @@ Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (
 ```
 
 ### `Reduce` Nesting
-`Reduce (no*ni) f === Unpartition 1 1 . Reduce no (Map2 1 f) . Map no (Reduce ni f) . Partition no ni` 
+`Reduce (no*ni) f === Unpartition 1 1 . Partition 1 1 . Reduce no f . Unpartition no 1 . Map no (Reduce ni f) . Partition no ni` 
 
 ### `Up_1d` Nesting
 `Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
@@ -427,12 +427,13 @@ The proof of this rewrite is the same as the Upsample proof.
 1. Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
 ```
 Reduce (no*ni) f === (Nesting)
-Unpartition 1 1 . Reduce no (Map2 1 f) . Map no (Reduce ni f) . Partition no ni === (Seq To TSeq)
-Unpartition 1 1 . TSeq_To_Seq . Reduce_t no (Map2 1 f) . Seq_To_TSeq . TSeq_To_Seq . Map_t no (Reduce ni f) . Seq_To_TSeq . Partition no ni === (Isomorphism Removal)
-Unpartition 1 1 . TSeq_To_Seq . Reduce_t no (Map2 1 f) . Map_t no (Reduce ni f) . Seq_To_TSeq . Partition no ni === (Seq To SSeq / Reduce Fusion)
-Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Reduce_t no (Map2_s 1 f) . Map_t no Seq_To_SSeq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni === (Map Fusion)
-Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Reduce_t no (Map2_s 1 f) . Map_t no Seq_To_SSeq . Map_t no SSeq_To_Seq . Map_t no Reduce_s ni f . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni === (Isomorphism Removal / Map Fusion / Identity Removal)
-Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Reduce_t no (Map2_s 1 f) . Map_t no Reduce_s ni f . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
+Unpartition 1 1 . Partition 1 1 . Reduce no f . Unpartition no 1 . Map no (Reduce ni f) . Partition no ni === (Seq To TSeq)
+Unpartition 1 1 . Partition 1 1 . TSeq_To_Seq . Reduce_t no f . Seq_To_TSeq . Unpartition no 1 . TSeq_To_Seq . Map_t no (Reduce ni f) . Seq_To_TSeq . Partition no ni === (Seq To SSeq)
+Unpartition 1 1 . Partition 1 1 . TSeq_To_Seq . Reduce_t no f . Seq_To_TSeq . Unpartition no 1 . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni === (Partition and Unpartition Sequence To Space-Time)
+Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Seq_To_TSeq . TSeq_To_Seq . Reduce_t no f . Seq_To_TSeq . TSeq_To_Seq . Unpartition_t_ts no 1 . Map_t no Seq_To_SSeq . Seq_To_TSeq . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni === (Isomorphism Removal)
+Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduce_t no f .  Unpartition_t_ts no 1 . Map_t no Seq_To_SSeq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni === (Functor Map Fusion)
+Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduce_t no f . Unpartition_t_ts no 1 . Map_t no Seq_To_SSeq . Map_t no SSeq_To_Seq . Map_t no (Reduce_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni === (Isomorphism Removal)
+Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduce_t no f . Unpartition_t_ts no 1 . Map_t no (Reduce_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
 ```
 
 ## Rewrite Rules Lemmas
@@ -503,19 +504,3 @@ We provide only the `Seq` rule, the same rules exist for `TSeq` and `SSeq`.
 ```
 HMap no (List_To_Seq [f . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . SSeq_To_Seq | i <- [0..no-1]]) . Seq_To_TSeq . Partition no ni === (Seq To SSeq)
 ```
-
-### `Reduce` Fusion
-If `g . h === Id`, then applying the `g` before and `h` after each step in a
-reduce tree is equivalent to applying `g` to each input to the reduce
-and `h` to the output of the reduce:
-We provide only the `Seq` rule, the same rules exist for `TSeq` and `SSeq`.
-
-```
-reduce_function f g h x y =
-  intermediate_result <- f (g x) (g y)
-  return (h intermediate_result)
-
-Reduce n (reduce_function g h) === Map 1 h . Reduce n f . Map n g
-```
-
-**Do I need to prove the Reduce Fusion?**
