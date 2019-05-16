@@ -388,10 +388,9 @@ Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Map_s ni f) .
 ```
 Map (no*ni) f === (Nesting)
 Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]) . Partition no ni === (Seq To SSeq)
-Unpartition no ni . HMap no (List_To_Seq [Seq_To_SSeq . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . SSeq_To_Seq | i <- [0..no-1]]) . Partition no ni === (Seq To SSeq)
-Unpartition no ni . Seq_To_TSeq . HMap_t no (List_To_Seq [Seq_To_SSeq . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . SSeq_To_Seq | i <- [0..no-1]]) . Seq_To_TSeq . Partition no ni === (Seq To SSeq)
-Unpartition no ni . Map no (SSeq_To_Seq . Map_s ni f . Seq_To_SSeq) . Partition no ni (Seq To TSeq)
-Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Map_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni
+Unpartition no ni . HMap no (List_To_Seq [SSeq_To_Seq . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . Seq_To_SSeq | i <- [0..no-1]]) . Partition no ni === (Seq To SSeq)
+Unpartition no ni . TSeq_To_Seq . HMap_t no (List_To_Seq [SSeq_To_Seq . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . Seq_To_SSeq | i <- [0..no-1]]) . Seq_To_TSeq . Partition no ni === (HMap Fusion and HMap and Map Equivalence)
+Unpartition no ni . Seq_To_TSeq . Map_t no SSeq_To_Seq . HMap_t no (List_To_Seq [HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]) . HMap_t Seq_To_SSeq . Seq_To_TSeq . Partition no ni
 ```
 
 ## Upsample
@@ -499,8 +498,10 @@ We provide only the `Seq` rule, the same rules exist for `TSeq` and `SSeq`.
 ### `HMap` Properties
 1. `HMap` and `Map` Equivalence - If all `f`s in `HMap n fs` are the same, it's the same as `Map n f`. Both just apply `f` `n` times
     1. `HMap n (List_To_Seq [f | i <- [0..n-1]]) === Map n f`
-1. When applying the same operator
+1. `HMap` fusion - 
+```
+HMap n (List_To_Seq [f(i) . g(i) | i <- [0 .. n-1]]) === 
+HMap n (List_To_Seq [f(i) | i <- [0 .. n-1]]) . HMap n (List_To_Seq [g(i) | i <- [0 .. n-1]])
+```
 
-```
-HMap no (List_To_Seq [f . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . SSeq_To_Seq | i <- [0..no-1]]) . Seq_To_TSeq . Partition no ni === (Seq To SSeq)
-```
+**HOW TO PROVE THESE?**
