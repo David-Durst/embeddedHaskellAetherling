@@ -138,26 +138,26 @@ Map ni (Unpartition nj nk t) . TSeq_To_Seq . Map_t ni (TSeq_To_Seq) . Map_t ni (
 `Unpartition no ni === TSeq_To_Seq . Partition_t_tt . Map_t no (TSeq_To_Seq) . TSeq_To_Seq`
 
 #### Sequence To Space-Time
-`Unpartition no ni === TSeq_To_Seq . Unpartition_t_ts no ni . Map_t no (SSeq_To_Seq) . Seq_To_TSeq`
+`Unpartition no ni === TSeq_To_Seq . Unpartition_t_ts no ni . Map_t no (Seq_To_SSeq) . Seq_To_TSeq`
 
 #### Mapped Sequence To Space-Time
 ```
 Map ni (Unpartition nj nk) === 
-TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Unpartition_ts_tts_split_s ni nj nk . Map_t ni (Map_t nj (SSeq_To_Seq)) . Map_t ni (Seq_To_TSeq) . Seq_To_TSeq
+TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Unpartition_ts_tts_split_s ni nj nk . Map_t ni (Map_t nj (Seq_To_SSeq)) . Map_t ni (Seq_To_TSeq) . Seq_To_TSeq
 ```
 
 #### Outer Sequence To Space-Time With Throughput `nj` Less than Fully Parallel
 ```
 Unpartition (ni*nj) nk === (Nesting Outer)
 Unpartition (ni*nj) nk t . Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) === (Seq To Space-Time)
-Unpartition (ni*nj) nk t . TSeq_To_Seq . Unpartition_t_ts ni nj (Seq nk t) . Map_t ni (SSeq_To_Seq) . Seq_To_TSeq . Partition ni nj (Seq nk t) 
+Unpartition (ni*nj) nk t . TSeq_To_Seq . Unpartition_t_ts ni nj (Seq nk t) . Map_t ni (Seq_To_SSeq) . Seq_To_TSeq . Partition ni nj (Seq nk t) 
 ```
 
 #### Inner Sequence To Space-Time With Throughput `nj` Less than Fully Parallel
 ```
 Unpartition (ni*nj) nk === (Nesting Inner)
 Unpartition ni (nj*nk) t . Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) === (Mapped Sequence To Space-Time)
-Unpartition ni (nj*nk) t . TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Unpartition_ts_tts_split_s ni nj nk . Map_t ni (Map_t nj (SSeq_To_Seq)) . Map_t ni (Seq_To_TSeq) . Seq_To_TSeq . Map ni (Partition nj nk t)
+Unpartition ni (nj*nk) t . TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Unpartition_ts_tts_split_s ni nj nk . Map_t ni (Map_t nj (Seq_To_SSeq)) . Map_t ni (Seq_To_TSeq) . Seq_To_TSeq . Map ni (Partition nj nk t)
 ```
 
 # Why Partition Needs Custom Operators
