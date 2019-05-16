@@ -15,35 +15,38 @@ It adds:
     1. `Shift` translates a sequence by 1 element.
     For `y <- Shift n x`, the item at index `n+1` in `y` is equal to the item at index `n` in `x`.
     1. `Shift` replaces the first element of the input `Seq` with `init`.
-1. `Chain n w :: (Seq n t -> Seq n t') -> Seq n t -> Seq n (Seq w t')`
-    1. See the basic chain diagram for a visual representation.
-    1. `Chain` creates a chain of `w-1` operators. 
-    1. The input to the `ith` operator is the output of the `(i-1)`th operator.
-    1. The output of `Chain` is a nested sequence:
-        1. The outer `Seq`'s ith index is the ith outputs of all chained operators
-        1. The inner `Seq`'s' jth index is the output of the (w-j)th operator.
-1. `MapApply n :: Seq n (t -> t') -> Seq n t -> Seq n t'`
-    1. `MapApply` applies a different operator to each element of the sequence.
-    1. `MapApply` is equivalent to the [ZipList applicative functor in Haskell](https://en.wikibooks.org/wiki/Haskell/Applicative_functors#ZipList)
+1. `HMap n :: Seq n (t -> t') -> Seq n t -> Seq n t'`
+    1. `HMap` applies a different operator to each element of the sequence.
+    1. `HMap` is equivalent to the [ZipList applicative functor in Haskell](https://en.wikibooks.org/wiki/Haskell/Applicative_functors#ZipList)
 1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
 1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
-    1. `Stencil_1d n w = Chain n w (Shift n)`
-
-I can express `Stencil_1d` using just `MapApply`, `Transpose`, and `Shift`. I don't need `Chain`.
 ```
 Stencil_1d n w xs = 
     Transpose w n .
-    MapApply w (List_To_Seq . foldl (\in_seqs _ -> shift n (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> shift n (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
     Up_1d w .
     Parition 1 n
 
 ```
-    
 
-![Basic Chain](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/chain_basic.png "Basic Chain")
+## Nesting Rewrite Rules
+### Shift
+```
+Shift (no*ni) init ===
+    Transpose ni no
+    Unpartition n 1 .
+    HMap (List_To_Seq 
+        [Map_s 1 (Shift_t no init) . Select_1d_s ni (ni-1)] ++ 
+        [Select_1d_s ni i | i <- [0..n-2]] -- this collection of lists is created using Haskell's list comprehensions
+        ) .
+    Up_1d ni .
+    Partition 1 ni .
+    Transpose no ni .
+    Partition no ni
+```
 
-## Why `MapApply` is different from `Concat`
-`MapApply n fs` compiles either to applying fs to an `SSeq` or a `TSeq`. Either way, joining the outputs is well defined. 
+## Why `HMap` is different from `Concat`
+`HMap n fs` compiles either to applying fs to an `SSeq` or a `TSeq`. Either way, joining the outputs is well defined. 
 If it's a `SSeq`, all the outputs join on the same clock.
 If it's a `TSeq`, all the outputs are on separate clocks.
 No delaying is necessary to smooth out the merged streams into an `SSeq` or `TSeq`
@@ -69,8 +72,8 @@ Concat y z
 1. `Chain_s n w :: (SSeq n t -> SSeq n t') -> SSeq n t -> SSeq n (SSeq w t')`
 1. `Chain_t n w :: (TSeq n v t -> TSeq n v t') -> TSeq n v t -> TSeq n v (SSeq w t')`
     1. The output has an `SSeq` on the inside as all the chained operators execute in parallel.
-1. `MapApply_s n :: Seq n (t -> t') -> SSeq n t -> SSeq n t'`
-1. `MapApply_t n :: Seq n (t -> t') -> TSeq n v t -> TSeq n v t'`
+1. `HMap_s n :: Seq n (t -> t') -> SSeq n t -> SSeq n t'`
+1. `HMap_t n :: Seq n (t -> t') -> TSeq n v t -> TSeq n v t'`
 1. `Transpose_ts no ni :: TSeq no vo (SSeq ni t) -> SSeq ni (TSeq no vo t)`
 1. `Transpose_st no ni :: SSeq no (TSeq ni vi t) -> TSeq ni vi (SSeq no t)`
 1. `Stencil_1d_s n w :: SSeq n t -> SSeq n (Seq w t)`
@@ -105,7 +108,7 @@ Shift (no*ni) init ===
 Unpartition no ni . TSeq_To_Seq . Map_t no Seq_To_SSeq . 
     Transpose_st ni no
     Unpartition_s_ss ni 1 .
-    MapApply_s (List_To_Seq 
+    HMap_s (List_To_Seq 
         [Map_s 1 (Shift_t no init) . Select_1d_s ni (ni-1)] ++ 
         [Select_1d_s ni i | i <- [0..n-2]] -- this collection of lists is created using Haskell's list comprehensions
         ) .
@@ -115,10 +118,10 @@ Unpartition no ni . TSeq_To_Seq . Map_t no Seq_To_SSeq .
     Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
 ```
 
-The first function in the argument list to `MapApply_s` is equivalent to `shifted_results` in the Partially Parallel Shift diagram.
+The first function in the argument list to `HMap_s` is equivalent to `shifted_results` in the Partially Parallel Shift diagram.
 It takes the last element of the inner `Seq` and shifts it by 1. 
 
-The other functions in the argument list to `MapApply_s` are equivalent to `non_shifted_results` in Partially Parallel Shift diagram.
+The other functions in the argument list to `HMap_s` are equivalent to `non_shifted_results` in Partially Parallel Shift diagram.
 It takes all the other elements of the inner `Seq` and does nothing to them.
 
 ![Partially Parallel Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/partially_parallel_shift.png "Partially Parallel Shift")
@@ -148,7 +151,7 @@ Select_Window_s no ni w w_start :: (SSeq no (SSeq ni t)) -> SSeq w t
 Select_Window_s no ni w w_start = 
     Unpartition w 1 .
     Map_s w (Unpartition_s_ss 1 1) .
-    MapApply ( List_To_Seq [
+    HMap ( List_To_Seq [
         Select_2d_s no ni ((w_start + w_elem) // ni) ((w_start + w_elem) % ni) | w_elem <- [0..w-1]
         ]) .
     Up_1d_s w .
@@ -157,7 +160,7 @@ Select_Window_s no ni w w_start =
 Stencil_1d n w ===
 Unpartition no ni . 
     Map_t no (
-        MapApply ( List_To_Seq [Select_Window_s ni wi w w_idx | w_idx <- [0..ni]]) .
+        HMap ( List_To_Seq [Select_Window_s ni wi w w_idx | w_idx <- [0..ni]]) .
         Up_1d_s ni .
         Partition_s_ss 1 ni
         ) . 
