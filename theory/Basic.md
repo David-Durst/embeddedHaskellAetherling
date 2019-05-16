@@ -51,6 +51,9 @@ We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples 
 ## Sequence Operators
 1. `Map (Config n) :: (t -> t') -> Seq n t -> Seq n t'`
 1. `Map2 (Config n) :: (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
+1. `HMap (Config n) :: Seq n (t -> t') -> Seq n t -> Seq n t'`
+    1. `HMap` applies a different operator to each element of the sequence.
+    1. `HMap` is equivalent `<*>` for the [ZipList applicative functor in Haskell](https://en.wikibooks.org/wiki/Haskell/Applicative_functors#ZipList)
 1. `Reduce (Config n) :: (t -> t -> t) -> Seq n t -> Seq 1 t`
 3. `Up_1d (Config n) :: Seq 1 t -> Seq n t`
 4. `Select_1d (Config n) (Config idx) :: Seq n t -> Seq 1 t`
@@ -125,18 +128,29 @@ Specializing this diagram for `Seq` proves:
 **The rewrite rules based on this isomorphism are the first part of our minimal set of rewrite rules.** 
 The following are the rules for each operator on sequences in the sequence language
 
-1. **`Map` Nesting** - `Map (no*ni) f === Unpartition no ni . Map no (Map ni f) . Partition no ni`
-1. **`Map2` Nesting**  - `Map2 (no*ni) f left_seq right_seq === Unpartition no ni . Map2 no (Map2 ni f) (Unpartition left_seq) (Unpartition right_seq)`
-    1. Note - unlike the other nesting rules, this one is not written in pointfree style. The arguments are necessary because `Map2` is a binary function rather than a unary one.
-1. **`Reduce` Nesting** - `Reduce (no*ni) f === Unpartition 1 1 . Reduce no (Map2 1 f) . Map no (Reduce ni f) . Partition no ni` 
-1. **`Up_1d` Nesting** - `Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
-1. **`Select_1d` Nesting** - `Select_1d (no*ni) idx ===  Unpartition 1 1 . Map 1 (Select_1d ni (idx % no)) . Select_1d no (idx // no) . Partition no ni`
-1. **`Concat` Nesting** - `Concat (no*ni) (no*mi) left_seq right_seq === Unpartition no (ni+mi) . Map2 no (Concat ni mi) (Unpartition no ni left_seq) (Unpartition no mi right_seq)`
-    1. Note - unlike the other nesting rules, this one is not written in pointfree style. The arguments are necessary because `Concat` is a binary function rather than a unary one.
-    1. Note - Concat splitting is not same as partition splitting. Since two parameters are not inner and outer, ok not to be able to split inside and outside. The parameters have to split same part inner as have to keep inner part of sequence the same.
-    1. probelm - need outer part to be same for slowdown. It's slowdown by no, so need no and mo to be equal, not speed up where get to keep inner equal.
-        1. This new solution doesn't work. it's merging the sequences rather than concatting them. If want to keep concatting them, need ni == mi, need different no and mo
-    1. problem - this can be extroadinarily inefficient. Could have to buffer entire one of sequences if occur at same time
+### `Map` Nesting
+`Map (no*ni) f === Unpartition no ni . Map no (Map ni f) . Partition no ni`
+
+### `Map2` Nesting 
+`Map2 (no*ni) f left_seq right_seq === Unpartition no ni . Map2 no (Map2 ni f) (Unpartition left_seq) (Unpartition right_seq)**
+
+**Note** - unlike the other nesting rules, this one is not written in pointfree style. The arguments are necessary because `Map2` is a binary function rather than a unary one.
+
+### `HMap` Nesting
+```
+HMap (no*ni) fs ===
+Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]). Partition no ni
+```
+
+### `Reduce` Nesting
+`Reduce (no*ni) f === Unpartition 1 1 . Reduce no (Map2 1 f) . Map no (Reduce ni f) . Partition no ni` 
+
+### `Up_1d` Nesting
+`Up_1d (no*ni) ===  Unparition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1`
+
+### `Select_1d` Nesting
+`Select_1d (no*ni) idx ===  Unpartition 1 1 . Map 1 (Select_1d ni (idx % no)) . Select_1d no (idx // no) . Partition no ni`
+
 
 **Note: we do not have a rewrite for Partition since its type is not `f :: Seq n t -> Seq m t`.
 Please see [the partition document](Partition.md) for details on that operator**
@@ -197,6 +211,8 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 2. `Map_t n :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 2. `Map2_s n :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
 2. `Map2_t n :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
+1. `HMap_s n :: SSeq n (t -> t') -> SSeq n t -> SSeq n t'`
+1. `HMap_t n :: TSeq n (t -> t') -> TSeq n t -> TSeq n t'`
 1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
 2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
@@ -279,6 +295,8 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 2. `area(Map_t n f) = area(f)`
 1. `area(Map2_s n f) = n * area(f)`
 2. `area(Map2_t n f) = area(f)`
+1. `area(HMap_s n fs) = sum([area f | f <- SSeq_To_List(fs)])`
+1. `area(HMap_t n fs) = sum([area f | f <- TSeq_To_List(fs)]) + area(counter) + area(mux(n, output_type(head fs)))`
 1. `area(Reduce_s n f) = ceil(log_2(n)) * area(f)`
 1. `area(Reduce_t n f) = area(f) + {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
@@ -290,8 +308,9 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
     1. Note: this is a conservative area computation. The actual storage area is only the amount of periods where the two input `TSeq`s both have input. We will revise this number as we develop more properties to compute the actual area more accurately.
 1. `area(g.f) = area(g) + area(f)`
 
-Many of the sequential operators require a counter to track clock cycles.
+Many of the sequential operators require a counter to track clock cycles and muxes to select outputs.
 1. `area(counter) = {num_bits(Int), num_bits(Int), num_bits(Int)}`
+1. `area(mux(n, t)) = {log_2(n), 0, n*num_bits(t)}`
 
 ### Empty Periods
 Operators do not accept or emit data during empty periods. 
@@ -357,10 +376,24 @@ Then, this operator is converted to a less parallel one in order to trade off ar
 ```
 Map (no*ni) f === (Nesting)
 Unpartition no ni . Map (no) (Map ni f) . Partition no ni === (Seq To SSeq)
+Unpartition no ni . Map no (SSeq_To_Seq . Map_s ni f . Seq_To_SSeq) . Partition no ni === (Seq To TSeq)
+Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Map_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni === (Functor Map Fusion)
+Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Map_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
+```
+    
+## HMap
+1. Sequence To Space - `HMap n f === SSeq_To_Seq . HMap_s n f . Seq_To_SSeq`
+1. Sequence To Time - `HMap n f === TSeq_To_Seq . Map_t n f . Seq_To_TSeq`
+1. Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
+```
+Map (no*ni) f === (Nesting)
+Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]) . Partition no ni === (Seq To SSeq)
+Unpartition no ni . HMap no (List_To_Seq [Seq_To_SSeq . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . SSeq_To_Seq | i <- [0..no-1]]) . Partition no ni === (Seq To SSeq)
+Unpartition no ni . Seq_To_TSeq . HMap_t no (List_To_Seq [Seq_To_SSeq . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . SSeq_To_Seq | i <- [0..no-1]]) . Seq_To_TSeq . Partition no ni === (Seq To SSeq)
 Unpartition no ni . Map no (SSeq_To_Seq . Map_s ni f . Seq_To_SSeq) . Partition no ni (Seq To TSeq)
 Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Map_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni
 ```
-    
+
 ## Upsample
 1. Sequence To Space - `Up_1d n === SSeq_To_Seq . Up_1d_s n . Seq_To_SSeq`
 1. Sequence To Time - `Up_1d n === TSeq_To_Seq . Up_1d_t n . Seq_To_TSeq`
@@ -462,10 +495,19 @@ We provide only the `Seq` rule, the same rules exist for `TSeq` and `SSeq`.
 1. Map Fusion - `Map g . Map f === Map (g . f)`
 1. Identity Preservation - `Map id === id`
 
-### Reduce Fusion
-If `g . h === Id`, then applying the g before and h fter each step in a
-reduce tree is equivalent to applying g to each input to the reduce
-and h to the output of the reduce:
+### `HMap` Properties
+1. `HMap` and `Map` Equivalence - If all `f`s in `HMap n fs` are the same, it's the same as `Map n f`. Both just apply `f` `n` times
+    1. `HMap n (List_To_Seq [f | i <- [0..n-1]]) === Map n f`
+1. When applying the same operator
+
+```
+HMap no (List_To_Seq [f . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . SSeq_To_Seq | i <- [0..no-1]]) . Seq_To_TSeq . Partition no ni === (Seq To SSeq)
+```
+
+### `Reduce` Fusion
+If `g . h === Id`, then applying the `g` before and `h` after each step in a
+reduce tree is equivalent to applying `g` to each input to the reduce
+and `h` to the output of the reduce:
 We provide only the `Seq` rule, the same rules exist for `TSeq` and `SSeq`.
 
 ```
