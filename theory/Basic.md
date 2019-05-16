@@ -380,6 +380,9 @@ Unpartition no ni . Map no (SSeq_To_Seq . Map_s ni f . Seq_To_SSeq) . Partition 
 Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Map_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni === (Functor Map Fusion)
 Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Map_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
 ```
+
+## Map2
+The rewrite rules and proofs are the same as `Map`.
     
 ## HMap
 1. Sequence To Space - `HMap n f === SSeq_To_Seq . HMap_s n f . Seq_To_SSeq`
