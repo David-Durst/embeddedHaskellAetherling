@@ -377,9 +377,13 @@ This is a repeat of the Seq To SSeq rewrite rules.
 Then, this operator is converted to a less parallel one in order to trade off area and throughput.
 
 ## Map
-1. Sequence To Space - `Map n f === SSeq_To_Seq . Map_s n f . Seq_To_SSeq`
-1. Sequence To Time - `Map n f === TSeq_To_Seq . Map_t n f . Seq_To_TSeq`
-1. Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
+### Sequence To Space
+`Map n f === SSeq_To_Seq . Map_s n f . Seq_To_SSeq`
+
+### Sequence To Time
+`Map n f === TSeq_To_Seq . Map_t n f . Seq_To_TSeq`
+
+### Sequence To Space-Time With Throughput `no` Less Than Fully Parallel
 ```
 Map (no*ni) f === (Nesting)
 Unpartition no ni . Map (no) (Map ni f) . Partition no ni === (Seq To SSeq)
@@ -392,9 +396,13 @@ Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Map_s ni f) .
 The rewrite rules and proofs are the same as `Map`.
     
 ## HMap
-1. Sequence To Space - `HMap n f === SSeq_To_Seq . HMap_s n f . Seq_To_SSeq`
-1. Sequence To Time - `HMap n f === TSeq_To_Seq . HMap_t n f . Seq_To_TSeq`
-1. Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
+### Sequence To Space
+`HMap n f === SSeq_To_Seq . HMap_s n f . Seq_To_SSeq`
+
+### Sequence To Time
+`HMap n f === TSeq_To_Seq . HMap_t n f . Seq_To_TSeq`
+
+### Sequence To Space-Time With Throughput `no` Less Than Fully Parallel
 ```
 Map (no*ni) f === (Nesting)
 Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]) . Partition no ni === (Seq To SSeq)
@@ -404,9 +412,13 @@ Unpartition no ni . Seq_To_TSeq . Map_t no SSeq_To_Seq . HMap_t no (List_To_Seq 
 ```
 
 ## Upsample
-1. Sequence To Space - `Up_1d n === SSeq_To_Seq . Up_1d_s n . Seq_To_SSeq`
-1. Sequence To Time - `Up_1d n === TSeq_To_Seq . Up_1d_t n . Seq_To_TSeq`
-1. Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
+### Sequence To Space
+`Up_1d n === SSeq_To_Seq . Up_1d_s n . Seq_To_SSeq`
+
+### Sequence To Time
+`Up_1d n === TSeq_To_Seq . Up_1d_t n . Seq_To_TSeq`
+
+### Sequence To Space-Time With Throughput `no` Less Than Fully Parallel
 ```
 Up_1d (no*ni) === (Nesting)
 Unpartition no ni . Map no (Up_1d ni) . Up_1d no . Partition 1 1 === (Seq To SSeq)
@@ -420,9 +432,13 @@ Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) .
 See [the Functor Properties section](#functor-properties) for a description of Map Fusion.
 
 ## Select
-1. Sequence To Space - `Select_1d n idx === SSeq_To_Seq . Select_1d_s n idx . Seq_To_SSeq`
-1. Sequence To Time - `Select_1d n idx === TSeq_To_Seq . Select_1d_t n idx . Seq_To_TSeq`
-1. Scheduling With Throughput `no` Less Than Fully Parallel - 
+### Sequence To Space
+`Select_1d n idx === SSeq_To_Seq . Select_1d_s n idx . Seq_To_SSeq`
+
+### Sequence To Time
+`Select_1d n idx === TSeq_To_Seq . Select_1d_t n idx . Seq_To_TSeq`
+
+### Scheduling With Throughput `no` Less Than Fully Parallel
 ```
 Select_1d (no*ni) idx ===
 Unpartition 1 1 . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t 1 (Select_1d_s ni (idx % no)) . Select_1d_t no (idx // no) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
@@ -431,9 +447,13 @@ Unpartition 1 1 . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t 1 (Select_1d_s ni (
 The proof of this rewrite is the same as the Upsample proof.
 
 ## Reduce
-1. Sequence To Space - `Reduce n f === SSeq_To_Seq . Reduce_s n f . Seq_To_SSeq`
-1. Sequence To Time - `Reduce n f === TSeq_To_Seq . Reduce_t n f . Seq_To_TSeq`
-1. Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
+### Sequence To Space
+`Reduce n f === SSeq_To_Seq . Reduce_s n f . Seq_To_SSeq`
+
+### Sequence To Time
+`Reduce n f === TSeq_To_Seq . Reduce_t n f . Seq_To_TSeq`
+
+### Sequence To Space-Time With Throughput `no` Less Than Fully Parallel
 ```
 Reduce (no*ni) f === (Nesting)
 Unpartition 1 1 . Partition 1 1 . Reduce no f . Unpartition no 1 . Map no (Reduce ni f) . Partition no ni === (Seq To TSeq)
@@ -446,11 +466,20 @@ Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduc
 ```
 
 ## Transpose
-1. Sequence To Space - `Transpose no ni === SSeq_To_Seq . Map_s ni (SSeq_To_Seq) . Transpose_ss no ni . Map_s no (Seq_To_SSeq) . Seq_To_SSeq`
-1. Sequence To Time - `Transpose no ni === TSeq_To_Seq . Map_t ni (TSeq_To_Seq) . Transpose_tt no ni . Map_t no (Seq_To_TSeq) . Seq_To_TSeq`
-1. Sequence To Time-Space - `Transpose no ni === SSeq_To_Seq . Map_s ni (TSeq_To_Seq) . Transpose_ts no ni . Map_t no (Seq_To_SSeq) . Seq_To_TSeq`
-1. Sequence To Space-Time - `Transpose no ni === TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Transpose_st no ni . Map_s no (Seq_To_TSeq) . Seq_To_SSeq`
-1. Outer Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
+### Sequence To Space
+`Transpose no ni === SSeq_To_Seq . Map_s ni (SSeq_To_Seq) . Transpose_ss no ni . Map_s no (Seq_To_SSeq) . Seq_To_SSeq`
+
+### Sequence To Time
+`Transpose no ni === TSeq_To_Seq . Map_t ni (TSeq_To_Seq) . Transpose_tt no ni . Map_t no (Seq_To_TSeq) . Seq_To_TSeq`
+
+### Sequence To Time-Space
+`Transpose no ni === SSeq_To_Seq . Map_s ni (TSeq_To_Seq) . Transpose_ts no ni . Map_t no (Seq_To_SSeq) . Seq_To_TSeq`
+
+### Sequence To Space-Time
+`Transpose no ni === TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Transpose_st no ni . Map_s no (Seq_To_TSeq) . Seq_To_SSeq`
+
+### Outer Sequence To Space-Time With Throughput `no` Less Than Fully Parallel
+
 ```
 Transpose ()
 ```
