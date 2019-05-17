@@ -15,7 +15,6 @@ It adds:
     1. `Shift` translates a sequence by 1 element.
     For `y <- Shift n x`, the item at index `n+1` in `y` is equal to the item at index `n` in `x`.
     1. `Shift` replaces the first element of the input `Seq` with `init`.
-1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
 1. `Select_m n m idxs :: Seq n t -> Seq m t = Unpartition n 1 . [ Select_1d n idx | idx <- idxs] . Up_1d n`
     1. `idxs` is a list of `Int` in the meta-language.
     1. This macro requires that `m == length(idxs)`

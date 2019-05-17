@@ -60,12 +60,7 @@ We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples 
     1. The output `Seq` contains the `idx`th entry of the input `Seq`.
 7. `Partition (Config no) (Config ni) :: Seq (no*ni) t -> Seq no (Seq ni t)`
 7. `Unpartition (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq (no*ni) t`
-1. `Concat (Config n) (Config m) :: Seq n t -> Seq m t -> Seq (n+m)`
-    1. Why no `Concat` - if going to do same thing to all elements of a `Seq`,
-       use a `Map`. If going to do different things to them and then merge them
-       back, use a `Map2 (Tuple)`. The `Seq`s have had different operations
-       applied to them, so are different types either actually or logically
-       (same type but represent different domains).
+1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
 
 Note: Reduce's inner operator must be on atoms or sequences of length one. This ensures that resulting space-time reduce's f only takes one clock. I'm not sure how to handle partially parallel reduces at this time where the operator is pipelined over multiple clocks.
 
@@ -139,7 +134,7 @@ The following are the rules for each operator on sequences in the sequence langu
 ### `HMap` Nesting
 ```
 HMap (no*ni) fs ===
-Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]). Partition no ni
+Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]) . Partition no ni
 ```
 
 ### `Reduce` Nesting
@@ -151,9 +146,15 @@ Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (
 ### `Select_1d` Nesting
 `Select_1d (no*ni) idx ===  Unpartition 1 1 . Map 1 (Select_1d ni (idx % no)) . Select_1d no (idx // no) . Partition no ni`
 
+### `Partition` and `Unpartition` Nesting
+Please see [the partition document](Partition.md).
 
-**Note: we do not have a rewrite for Partition since its type is not `f :: Seq n t -> Seq m t`.
-Please see [the partition document](Partition.md) for details on that operator**
+### `Transpose` Nesting
+#### `Transpose` Nesting Outer
+`Transpose (ni*nj) nk === Map nk (Unpartition ni nj) . Transpose ni nk . Map ni (Transpose nj nk) . Partition ni nj`
+
+#### `Transpose` Nesting Inner
+`Transpose ni (nj*nk) === Unpartition nj nk . Map nj (Transpose ni nk) . Transpose ni nj . Map ni (Partition nj nk)`
 
 ## Map-Identity Rewrite Rule
 `Map n Id === Id`
@@ -211,8 +212,8 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 2. `Map_t n :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 2. `Map2_s n :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
 2. `Map2_t n :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
-1. `HMap_s n :: SSeq n (t -> t') -> SSeq n t -> SSeq n t'`
-1. `HMap_t n :: TSeq n (t -> t') -> TSeq n t -> TSeq n t'`
+1. `HMap_s n :: Seq n (t -> t') -> SSeq n t -> SSeq n t'`
+1. `HMap_t n :: Seq n (t -> t') -> TSeq n t -> TSeq n t'`
 1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
 2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
@@ -386,12 +387,12 @@ The rewrite rules and proofs are the same as `Map`.
     
 ## HMap
 1. Sequence To Space - `HMap n f === SSeq_To_Seq . HMap_s n f . Seq_To_SSeq`
-1. Sequence To Time - `HMap n f === TSeq_To_Seq . Map_t n f . Seq_To_TSeq`
+1. Sequence To Time - `HMap n f === TSeq_To_Seq . HMap_t n f . Seq_To_TSeq`
 1. Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
 ```
 Map (no*ni) f === (Nesting)
 Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]) . Partition no ni === (Seq To SSeq)
-Unpartition no ni . HMap no (List_To_Seq [SSeq_To_Seq . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . Seq_To_SSeq | i <- [0..no-1]]) . Partition no ni === (Seq To SSeq)
+Unpartition no ni . HMap no (List_To_Seq [SSeq_To_Seq . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . Seq_To_SSeq | i <- [0..no-1]]) . Partition no ni === (Seq To TSeq)
 Unpartition no ni . TSeq_To_Seq . HMap_t no (List_To_Seq [SSeq_To_Seq . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . Seq_To_SSeq | i <- [0..no-1]]) . Seq_To_TSeq . Partition no ni === (HMap Fusion and HMap and Map Equivalence)
 Unpartition no ni . Seq_To_TSeq . Map_t no SSeq_To_Seq . HMap_t no (List_To_Seq [HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]) . HMap_t Seq_To_SSeq . Seq_To_TSeq . Partition no ni
 ```
@@ -449,7 +450,8 @@ These rewrites show how to remove the operators.
 1. `Seq_To_TSeq . TSeq_To_Seq === Id`
 1. `TSeq_To_Seq . Seq_To_TSeq === Id`
 1. `Seq_To_TSeq . SSeq_To_Seq === Id`
-1. `Unpartition . Partition === Id`
+1. `Unpartition no ni . Partition no ni === Id`
+1. `Tranpose no ni . Transpose ni no === Id`
 1. `Partition_ss no ni . Unpartition_ss no ni === Id`
 2. `Unpartition_ss no ni . Partition_ss no ni === Id`
 1. `Partition_tt no ni . Unpartition_tt no ni === Id`
