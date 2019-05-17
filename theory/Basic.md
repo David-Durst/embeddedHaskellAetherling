@@ -220,8 +220,14 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t`
 4. `Select_1d_t n idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
-1. `Concat_s n m :: SSeq n t -> SSeq m t -> SSeq (n+m) t`
-1. `Concat_t n m :: TSeq n (v+m) t -> TSeq m (v+n) t -> TSeq (n+m) v t`
+1. `Transpose_ss no ni :: SSeq no (SSeq ni t) -> SSeq ni (SSeq no t)`
+1. `Transpose_tt no ni :: TSeq no 0 (TSeq ni (ni*vi) t) -> TSeq ni 0 (TSeq no (no*vi) t)`
+    1. We restrict the freedom in selecting number of empty clocks to simplify the math.
+    If the input was `TSeq no vo (TSeq ni vi t)`, then the output would need to divide up (no*vi + vo) 
+    clocks evenly between the inner and outer `TSeq`s.
+    Enforcing this divisibility would make the math complicated for cases that won't happen frequently.
+1. `Transpose_ts no ni :: TSeq no vo (SSeq ni t) -> SSeq ni (TSeq no vo t)`
+1. `Transpose_st no ni :: SSeq no (TSeq ni vi t) -> TSeq ni vi (SSeq no t)`
 
 **Note: reduce's type signature will need to be modified to handle pipelined operators.**
 
@@ -438,6 +444,21 @@ Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduc
 Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduce_t no f . Unpartition_t_ts no 1 . Map_t no Seq_To_SSeq . Map_t no SSeq_To_Seq . Map_t no (Reduce_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni === (Isomorphism Removal)
 Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduce_t no f . Unpartition_t_ts no 1 . Map_t no (Reduce_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
 ```
+
+## Transpose
+1. Sequence To Space - `Transpose no ni === SSeq_To_Seq . Map_s ni (SSeq_To_Seq) . Transpose_ss no ni . Map_s no (Seq_To_SSeq) . Seq_To_SSeq`
+1. Sequence To Time - `Transpose no ni === TSeq_To_Seq . Map_t ni (TSeq_To_Seq) . Transpose_tt no ni . Map_t no (Seq_To_TSeq) . Seq_To_TSeq`
+1. Sequence To Time-Space - `Transpose no ni === SSeq_To_Seq . Map_s ni (TSeq_To_Seq) . Transpose_ts no ni . Map_t no (Seq_To_SSeq) . Seq_To_TSeq`
+1. Sequence To Space-Time - `Transpose no ni === TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Transpose_st no ni . Map_s no (Seq_To_TSeq) . Seq_To_SSeq`
+1. Outer Sequence To Space-Time With Throughput `no` Less Than Fully Parallel - 
+```
+Transpose ()
+```
+#### `Transpose` Nesting Outer
+`Transpose (ni*nj) nk === Map nk (Unpartition ni nj) . Transpose ni nk . Map ni (Transpose nj nk) . Partition ni nj`
+
+#### `Transpose` Nesting Inner
+`Transpose ni (nj*nk) === Unpartition nj nk . Map nj (Transpose ni nk) . Transpose ni nj . Map ni (Partition nj nk)`
 
 ## Rewrite Rules Lemmas
 The following rewrite rules are used as lemmas in the above rewrite rules.
