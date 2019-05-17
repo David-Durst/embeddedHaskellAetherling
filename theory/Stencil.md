@@ -15,35 +15,119 @@ It adds:
     1. `Shift` translates a sequence by 1 element.
     For `y <- Shift n x`, the item at index `n+1` in `y` is equal to the item at index `n` in `x`.
     1. `Shift` replaces the first element of the input `Seq` with `init`.
-1. `HMap n :: Seq n (t -> t') -> Seq n t -> Seq n t'`
-    1. `HMap` applies a different operator to each element of the sequence.
-    1. `HMap` is equivalent to the [ZipList applicative functor in Haskell](https://en.wikibooks.org/wiki/Haskell/Applicative_functors#ZipList)
 1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
-1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
+1. `Select_m n m idxs :: Seq n t -> Seq m t = Unpartition n 1 . [ Select_1d n idx | idx <- idxs] . Up_1d n`
+    1. `idxs` is a list of `Int` in the meta-language.
+    1. This macro requires that `m == length(idxs)`
+1. `Stencil_1d n w init :: Seq n t -> Seq n (Seq w t)`
 ```
-Stencil_1d n w xs = 
-    Transpose w n .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> shift n (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+Stencil_1d n w init = 
+Transpose w n .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift n init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
     Up_1d w .
-    Parition 1 n
+    Partition 1 n
 
 ```
 
 ## Nesting Rewrite Rules
-### Shift
+### `Shift`
 ```
 Shift (no*ni) init ===
+Unpartition no ni .
     Transpose ni no
-    Unpartition n 1 .
+    Unpartition ni 1 .
     HMap (List_To_Seq 
-        [Map_s 1 (Shift_t no init) . Select_1d_s ni (ni-1)] ++ 
-        [Select_1d_s ni i | i <- [0..n-2]] -- this collection of lists is created using Haskell's list comprehensions
+        [Map 1 (Shift_t no init) . Select_1d ni (ni-1)] ++ 
+        [Select_1d ni i | i <- [0..n-2]] 
         ) .
     Up_1d ni .
     Partition 1 ni .
     Transpose no ni .
     Partition no ni
 ```
+
+Let `Shift_Nested no ni init` the above nested composition of operators without the `Unpartition` and `Partition`
+
+### `Select_m`
+```
+Select_m (no*ni) =
+Unpartition (no*ni) 1 . [Select_1d (no*ni) idx | idx <- idxs] . Up_1d (no*ni) ===
+Unpartition no ni
+
+```
+
+### `Stencil_1d`
+```
+Stencil_1d (no*ni) w xs = 
+
+Transpose w (no*ni) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift (no*ni) init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    Up_1d w .
+    Partition 1 (no*ni) === (Partition Nesting Inner)
+
+Transpose w (no*ni) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift (no*ni) init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    Up_1d w . 
+    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . Partition 1 (no*ni) === (Shift Nesting)
+
+Transpose w (no*ni) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init (Partition no ni . head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    Up_1d w . 
+    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
+    Partition 1 (no*ni) === (Isomorphism Operator Introduction)
+
+Transpose w (no*ni) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init (Partition no ni . head in_seqs) : in_seqs) (Unpartition no ni . Partition no ni) (reverse [0..w-2])) .
+    Up_1d w . 
+    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
+    Partition 1 (no*ni) === (Identity Addition)
+
+Transpose w (no*ni) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init (Partition no ni . head in_seqs) : in_seqs) (Unpartition no ni . id . Partition no ni) (reverse [0..w-2])) .
+    Up_1d w . 
+    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
+    Partition 1 (no*ni) === (HMap Equivalence and HMap and Map Equivalence)
+
+Transpose w (no*ni) .
+    Map w (Unpartition no ni) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ ->  Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    Map w (Partition no ni) . 
+    Up_1d w . 
+    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
+    Partition 1 (no*ni) === (Sequence Commutativity)
+
+Transpose w (no*ni) .
+    Map w (Unpartition no ni) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ ->  Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    Up_1d w . 
+    Map 1 (Partition no ni) . 
+    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
+    Partition 1 (no*ni) === (Map Fusion and Isomorphism Removal)
+
+Transpose w (no*ni) .
+    Map w (Unpartition no ni) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ ->  Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    Up_1d w . 
+    Map 1 (Partition no ni) . Partition 1 (no*ni) === (Map Fusion and Isomorphism Removal)
+```
+
+**DANGER** - IS MY USE OF `HMap Fusion and HMap and Map Equivalence** ok?
+
+**NEED** - 
+1. transpose operator nesting
+1. select operator that when split get's every nth
+    1. Idea - instead of an extra select operator at end, just do a transpose. If get `Seq no (Seq ni (Seq w))`, I think ordering for each output window will be correct
+
+**Key Insight** - You only ever need `w-1` registers for a `Stencil_1d` with
+stride 1 no matter how parallel it is. If your input parallelism is `p`, you can
+emit `p` output windows as have `p` pixels of new information and, since stride
+is 1, each window only has 1 new pixel. This means, need `p+w-1` pixels to fill
+all your windows. But, getting `p` pixels in per clock, so only need to remember
+`w-1` pixels from the last clock to fill out the windows. This means need `w-1`
+registers.
+
+The stencil only makes `w-1` registers (with repeat register elimination). 
+The nested shifts handle accessing data from those registers and from the current clock
 
 # Space-Time IR
 ## Space-Time Operators
