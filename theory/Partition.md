@@ -107,7 +107,7 @@ Map ni (Partition nj nk) ===
 TSeq_To_Seq . Map_t ni (TSeq_To_Seq) . Map_t ni (Map_t nj (SSeq_To_Seq)) . Partition_ts_tts_split_s ni nj nk . Map_t ni (Seq_To_SSeq) . Seq_To_TSeq
 ```
 
-#### Outer Sequence To Space-Time With Throughput `nj` Less than Fully Parallel
+#### Outer Sequence To Space-Time With Throughput `ni` Less than Fully Parallel
 ```
 Partition (ni*nj) nk === (Nesting Outer)
 Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t === (Seq To Space-Time)
@@ -146,16 +146,16 @@ Map ni (Unpartition nj nk) ===
 TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Unpartition_ts_tts_split_s ni nj nk . Map_t ni (Map_t nj (Seq_To_SSeq)) . Map_t ni (Seq_To_TSeq) . Seq_To_TSeq
 ```
 
-#### Outer Sequence To Space-Time With Throughput `nj` Less than Fully Parallel
+#### Outer Sequence To Space-Time With Throughput `ni` Less than Fully Parallel
 ```
 Unpartition (ni*nj) nk === (Nesting Outer)
 Unpartition (ni*nj) nk t . Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) === (Seq To Space-Time)
 Unpartition (ni*nj) nk t . TSeq_To_Seq . Unpartition_t_ts ni nj (Seq nk t) . Map_t ni (Seq_To_SSeq) . Seq_To_TSeq . Partition ni nj (Seq nk t) 
 ```
 
-#### Inner Sequence To Space-Time With Throughput `nj` Less than Fully Parallel
+#### Inner Sequence To Space-Time With Throughput `ni*nj` Less than Fully Parallel
 ```
-Unpartition (ni*nj) nk === (Nesting Inner)
+Unpartition ni (nj*nk) === (Nesting Inner)
 Unpartition ni (nj*nk) t . Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) === (Mapped Sequence To Space-Time)
 Unpartition ni (nj*nk) t . TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Unpartition_ts_tts_split_s ni nj nk . Map_t ni (Map_t nj (Seq_To_SSeq)) . Map_t ni (Seq_To_TSeq) . Seq_To_TSeq . Map ni (Partition nj nk t)
 ```
