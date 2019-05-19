@@ -64,7 +64,7 @@ We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples 
 
 Note: Reduce's inner operator must be on atoms or sequences of length one. This ensures that resulting space-time reduce's f only takes one clock. I'm not sure how to handle partially parallel reduces at this time where the operator is pipelined over multiple clocks.
 
-Note: Seq is also an applicative functor. Aetherling's `Map2` is equivalent to Haskell's `liftA2` for applicative functors. I will not put this note in final paper. This note is here to justify to Pat and Kayvon why `Map2` is a standard Haskell function.
+Note: Seq is also an applicative functor. Aetherling's `Map2` is equivalent to Haskell's `\f x -> f <*> x` for applicative functors. I will not put this note in final paper. This note is here to justify to Pat and Kayvon why `Map2` is a standard Haskell function.
 
 ### Configuration Parameters
 In addition to Aetherling's operators and types that form the sequence language, developers 
@@ -479,12 +479,11 @@ Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduc
 `Transpose no ni === TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Transpose_st no ni . Map_s no (Seq_To_TSeq) . Seq_To_SSeq`
 
 ### Outer Sequence To Space-Time With Throughput `no` Less Than Fully Parallel
-
 ```
-Transpose ()
+Transpose (ni*nj) nk === (Nesting)
+Map nk (Unpartition ni nj) . Transpose ni nk . Map ni (Transpose nj nk) . Partition ni nj === ()
 ```
 #### `Transpose` Nesting Outer
-`Transpose (ni*nj) nk === Map nk (Unpartition ni nj) . Transpose ni nk . Map ni (Transpose nj nk) . Partition ni nj`
 
 #### `Transpose` Nesting Inner
 `Transpose ni (nj*nk) === Unpartition nj nk . Map nj (Transpose ni nk) . Transpose ni nj . Map ni (Partition nj nk)`
