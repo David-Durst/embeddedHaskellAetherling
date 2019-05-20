@@ -6,18 +6,11 @@ It adds:
 1. rewrite rules for converting the shift registers and stencils between sequence and space-time versions
 
 # Sequence Language
-## Type Functions
-1. `Homogenous_Tuple 1 t = t`
-1. `Homogenous_Tuple n t = t x (Homogenous_Tuple (n-1) t)`
-
 ## Sequence Operators
 1. `Shift n init :: Seq n t -> Seq n t`
     1. `Shift` translates a sequence by 1 element.
     For `y <- Shift n x`, the item at index `n+1` in `y` is equal to the item at index `n` in `x`.
     1. `Shift` replaces the first element of the input `Seq` with `init`.
-1. `Select_m n m idxs :: Seq n t -> Seq m t = Unpartition n 1 . [ Select_1d n idx | idx <- idxs] . Up_1d n`
-    1. `idxs` is a list of `Int` in the meta-language.
-    1. This macro requires that `m == length(idxs)`
 1. `Stencil_1d n w init :: Seq n t -> Seq n (Seq w t)`
 ```
 Stencil_1d n w init = 
@@ -45,17 +38,23 @@ Unpartition no ni .
     Partition no ni
 ```
 
-Let `Shift_Nested no ni init` the above nested composition of operators without the `Unpartition` and `Partition`
+Let `Shift_Nested no ni init` be the above nested composition of operators without the outer `Unpartition no ni` and `Partition no ni`
 
-### `Select_m`
-```
-Select_m (no*ni) =
-Unpartition (no*ni) 1 . [Select_1d (no*ni) idx | idx <- idxs] . Up_1d (no*ni) ===
-Unpartition no ni
-
-```
+![Partially Parallel Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/partially_parallel_shift_few_primitives.png "Partially Parallel Shift")
 
 ### `Stencil_1d`
+
+**Key Insight** - You only ever need `w-1` registers for a `Stencil_1d` with
+stride 1 no matter how parallel it is. If your input parallelism is `p`, you can
+emit `p` output windows as have `p` pixels of new information and, since stride
+is 1, each window only has 1 new pixel. This means, need `p+w-1` pixels to fill
+all your windows. But, getting `p` pixels in per clock, so only need to remember
+`w-1` pixels from the last clock to fill out the windows. This means need `w-1`
+registers.
+
+The stencil only makes `w-1` registers (with repeat register elimination). 
+The nested shifts handle accessing data from those registers and from the current clock
+
 ```
 Stencil_1d (no*ni) w xs = 
 
@@ -125,24 +124,6 @@ Unpartition no ni . Map no (Transpose w ni) . Transpose w no .
     Up_1d w . 
     Partition 1 (no*ni) . Partition no ni
 ```
-
-**DANGER** - IS MY USE OF `HMap Fusion and HMap and Map Equivalence** ok?
-
-**NEED** - 
-1. transpose operator nesting
-1. select operator that when split get's every nth
-    1. Idea - instead of an extra select operator at end, just do a transpose. If get `Seq no (Seq ni (Seq w))`, I think ordering for each output window will be correct
-
-**Key Insight** - You only ever need `w-1` registers for a `Stencil_1d` with
-stride 1 no matter how parallel it is. If your input parallelism is `p`, you can
-emit `p` output windows as have `p` pixels of new information and, since stride
-is 1, each window only has 1 new pixel. This means, need `p+w-1` pixels to fill
-all your windows. But, getting `p` pixels in per clock, so only need to remember
-`w-1` pixels from the last clock to fill out the windows. This means need `w-1`
-registers.
-
-The stencil only makes `w-1` registers (with repeat register elimination). 
-The nested shifts handle accessing data from those registers and from the current clock
 
 # Space-Time IR
 ## Space-Time Operators
