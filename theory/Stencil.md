@@ -107,7 +107,23 @@ Transpose w (no*ni) .
     Map w (Unpartition no ni) .
     HMap w (List_To_Seq . foldl (\in_seqs _ ->  Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
     Up_1d w . 
-    Map 1 (Partition no ni) . Partition 1 (no*ni) === (Map Fusion and Isomorphism Removal)
+    Map 1 (Partition no ni) . Partition 1 (no*ni) === (Transpose Nesting Inner)
+
+Unpartition no ni . Map no (Transpose w ni) . Transpose w no . Map w (Partition no ni) .
+    Map w (Unpartition no ni) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ ->  Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    Up_1d w . 
+    Map 1 (Partition no ni) . Partition 1 (no*ni) === (Isomorphism Removal)
+
+Unpartition no ni . Map no (Transpose w ni) . Transpose w no .
+    HMap w (List_To_Seq . foldl (\in_seqs _ ->  Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    Up_1d w . 
+    Map 1 (Partition no ni) . Partition 1 (no*ni) === (Commutativity)
+
+Unpartition no ni . Map no (Transpose w ni) . Transpose w no .
+    HMap w (List_To_Seq . foldl (\in_seqs _ ->  Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    Up_1d w . 
+    Partition 1 (no*ni) . Partition no ni
 ```
 
 **DANGER** - IS MY USE OF `HMap Fusion and HMap and Map Equivalence** ok?

@@ -486,6 +486,7 @@ for any t that is appropriately nested `SSeq`s and `TSeq`s
 ```
 Transpose_tt no ni === Map_t ni (Map_t no SSeq_To_Seq) . Transpose_tt no ni . Map_t no (Map_t ni Seq_To_SSeq)
 Transpose_ts_to_st no ni === Map_s ni (Map_t no SSeq_To_Seq) . Transpose_ts_to_st no ni . Map_t no (Map_s ni Seq_To_SSeq)
+Transpose_st_to_ts no ni === Map_t ni (Map_s no SSeq_To_Seq) . Transpose_ts_to_st no ni . Map_s no (Map_t ni Seq_To_SSeq)
 ```
 
 ### Outer Sequence To Space-Time With Throughput `ni` Less Than Fully Parallel
@@ -542,6 +543,62 @@ Map nk (Unpartition ni nj) .
     Transpose_ts_to_st ni nk . Map_t ni (Transpose_ss nj nk) .
     Map_t ni (Map_s nj Seq_To_SSeq) . Map_t ni Seq_To_SSeq . Seq_To_TSeq .
     Partition ni nj
+```
+
+### Inner Sequence To Space-Time With Throughput `nj` Less Than Fully Parallel
+``` 
+Transpose ni (nj*nk) === (Nesting)
+
+Unpartition nj nk . 
+    Map nj (Transpose ni nk) . 
+    Transpose ni nj . 
+    Map ni (Partition nj nk) === (Seq To Time)
+
+Unpartition nj nk . 
+    TSeq_To_Seq . Map_t nj (Transpose ni nk) . Seq_To_TSeq .
+    Transpose ni nj . 
+    Map ni (Partition nj nk) === (Seq To Space-Time-To-Time-Space)
+
+Unpartition nj nk . 
+    TSeq_To_Seq . Map_t nj (Transpose ni nk) . Seq_To_TSeq .
+    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Transpose_st_to_ts ni nj . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
+    Map ni (Partition nj nk) === (Isomorphism Removal)
+
+Unpartition nj nk . 
+    TSeq_To_Seq . Map_t nj (Transpose ni nk) .
+    Map_t nj SSeq_To_Seq . Transpose_st_to_ts ni nj . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
+    Map ni (Partition nj nk) === (Seq To Space)
+
+Unpartition nj nk . 
+    TSeq_To_Seq . Map_t nj (SSeq_To_Seq . Map_s nk SSeq_To_Seq . Transpose_ss ni nk . Map_s ni Seq_To_SSeq . Seq_To_SSeq) .
+    Map_t nj SSeq_To_Seq . Transpose_st_to_ts ni nj . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
+    Map ni (Partition nj nk) === (Map Functor Fusion)
+
+Unpartition nj nk . 
+    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk SSeq_To_Seq) . Map_t nj (Transpose_ss ni nk) . Map_t nj (Map_s ni Seq_To_SSeq) . Map_t nj Seq_To_SSeq .
+    Map_t nj SSeq_To_Seq . Transpose_st_to_ts ni nj . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
+    Map ni (Partition nj nk) === (Isomorphism Removal)
+
+Unpartition nj nk . 
+    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk SSeq_To_Seq) . Map_t nj (Transpose_ss ni nk) . Map_t nj (Map_s ni Seq_To_SSeq) .
+    Transpose_st_to_ts ni nj . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
+    Map ni (Partition nj nk) === (Space-Time Unit Changes)
+    
+Unpartition nj nk . 
+    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk SSeq_To_Seq) . Map_t nj (Transpose_ss ni nk) . Map_t nj (Map_s ni Seq_To_SSeq) .
+    Map_t nj (Map_s ni SSeq_To_Seq) . Transpose_ts_to_st ni nj . Map_s ni (Map_t nj Seq_To_SSeq) . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
+    Map ni (Partition nj nk) === (Isomorphism Removal)
+
+Unpartition nj nk . 
+    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk SSeq_To_Seq) . Map_t nj (Transpose_ss ni nk) . 
+    Transpose_ts_to_st ni nj . Map_s ni (Map_t nj Seq_To_SSeq) . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
+    Map ni (Partition nj nk) =
+
+Unpartition nj nk . 
+    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk SSeq_To_Seq) . 
+    Map_t nj (Transpose_ss ni nk) . Transpose_ts_to_st ni nj . 
+    Map_s ni (Map_t nj Seq_To_SSeq) . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
+    Map ni (Partition nj nk)
 ```
 
 ### Inner Sequence To Space-Time With Throughput `ni*nj` Less Than Fully Parallel
@@ -622,6 +679,7 @@ forms are semantically equivalent.
 ```
 Map 1 f . Select_1d n idx === Select_1d n idx . Map n f
 Map n f . Up_1d n === Up_1d n . Map 1 f
+Map 1 f . Partition 1 n === Partition 1 n . f
 ```
 
 The following operators commute when combined with the nesting rewrite rule.
