@@ -40,7 +40,7 @@ Unpartition no ni .
 
 Let `Shift_Nested no ni init` be the above nested composition of operators without the outer `Unpartition no ni` and `Partition no ni`
 
-![Partially Parallel Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/partially_parallel_shift_few_primitives.png "Partially Parallel Shift")
+![Nested Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/nested_shift.png "Nested Shift")
 
 ### `Stencil_1d`
 
@@ -126,6 +126,8 @@ Unpartition no ni . Map no (Transpose w ni) . Transpose w no .
 ```
 
 Let `Stencil_1d_Nested no ni init` be the above nested composition of operators without the outer `Unpartition no ni` and `Partition no ni`
+
+![Nested Stencil\_1d](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/nested_stencil_1d.png "Nested Stencil\_1d")
 
 # Space-Time IR
 ## Space-Time Operators
