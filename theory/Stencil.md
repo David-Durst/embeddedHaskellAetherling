@@ -125,7 +125,11 @@ Unpartition no ni . Map no (Transpose w ni) . Transpose w no .
     Partition 1 no . Partition no ni
 ```
 
-Let `Stencil_1d_Nested no ni init` be the above nested composition of operators without the outer `Unpartition no ni` and `Partition no ni`
+Let `Stencil_1d_Nested no ni init` be the above nested composition of operators without the outer `Unpartition no ni` and `Partition no ni**.
+
+**Note:** This derivation is not an actual rewrite rule in the system. 
+Since `Stencil_1d` is not a primitive in the language, it doesn't have rewrite rules. 
+This derivation is only here to prove that standard application of the rewrite rules produces the nested stencil shown in the picture below.
 
 ![Nested Stencil\_1d](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/nested_stencil_1d.png "Nested Stencil\_1d")
 
@@ -352,80 +356,11 @@ Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq .
     Partition_s_ss 1 ni . 
     Transpose_ts_to_st no ni . 
     Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
-
-Unpartition no ni . TSeq_To_Seq . Map_t no Seq_To_SSeq . 
-    Transpose_st ni no
-    Unpartition_s_ss ni 1 .
-    HMap_s (List_To_Seq 
-        [Map_s 1 (Shift_t no init) . Select_1d_s ni (ni-1)] ++ 
-        [Select_1d_s ni i | i <- [0..n-2]] -- this collection of lists is created using Haskell's list comprehensions
-        ) .
-    Up_1d_s ni .
-    Partition_s_ss 1 ni .
-    Transpose_ts no ni .
-    Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
 ```
-
-The first function in the argument list to `HMap_s` is equivalent to `shifted_results` in the Partially Parallel Shift diagram.
-It takes the last element of the inner `Seq` and shifts it by 1. 
-
-The other functions in the argument list to `HMap_s` are equivalent to `non_shifted_results` in Partially Parallel Shift diagram.
-It takes all the other elements of the inner `Seq` and does nothing to them.
-
-![Partially Parallel Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/partially_parallel_shift.png "Partially Parallel Shift")
 
 ### `Stencil_1d`
-
-#### Sequence To Space
-```
-Stencil_1d n w === SSeq_To_Seq . Map_s n SSeq_To_Seq . Chain_s n w (Shift_s n w) . Seq_To_SSeq
-```
-
-#### Sequence To Time 
-```
-Stencil_1d n w === TSeq_To_Seq . Map_t n SSeq_To_Seq . Chain_t n w (Shift_t n w) . Seq_To_TSeq
-```
-
-#### Sequence To Space-Time With Throughput `no` Less Than Fully Parallel
-```
-wi = ceil( (ni+w-1) / ni ) -- how long each inner shift register needs to be to produce all the windows
-
-output_window_indices = []
-
-Select_2d_s no ni idx_o idx_i :: (SSeq no (SSeq ni t)) -> SSeq 1 (SSeq 1 t)
-Select_2d_s no ni idx_o idx_i = Map_s 1 (Select_1d_s ni idx_i) . Select_1d_s no idx_o
-
-Select_Window_s no ni w w_start :: (SSeq no (SSeq ni t)) -> SSeq w t
-Select_Window_s no ni w w_start = 
-    Unpartition w 1 .
-    Map_s w (Unpartition_s_ss 1 1) .
-    HMap ( List_To_Seq [
-        Select_2d_s no ni ((w_start + w_elem) // ni) ((w_start + w_elem) % ni) | w_elem <- [0..w-1]
-        ]) .
-    Up_1d_s w .
-    Partition_s_ss 1 no
-
-Stencil_1d n w ===
-Unpartition no ni . 
-    Map_t no (
-        HMap ( List_To_Seq [Select_Window_s ni wi w w_idx | w_idx <- [0..ni]]) .
-        Up_1d_s ni .
-        Partition_s_ss 1 ni
-        ) . 
-    Transpose_st ni no . 
-    Map_s ni (Chain_t no wi (Shift_t no init)) . 
-    Transpose_ts no ni . 
-    Partition no ni
-```
-
-`Stencil_1d` has two main parts:
-1. `Map_s ni (Chain_t no wi (Shift_t no init))` creates all the shift registers that store data in parallel
-1. The function in the `Map_t no` selects the windows out of the shift registers
-    1. `Select_Window_s` selects the windows from 2D nested `Seq`s. 
-        1. `no` and `ni` form the 2D coordinate space to remove windows from
-        1. `w` is the size of the window to emit
-        1. `w_start` is the 1D index of the window. 
-        Since this is a stride one stencil, each call to `Select_Window_s` increments `w_start` by 1.
+`Stencil_1d`  doesn't have it's own rewrite rules. It is not a primitive in the language.
+To schedule it in space-time, just apply the rewrite rules to the operators that compose it.
 
 # Examples
 
