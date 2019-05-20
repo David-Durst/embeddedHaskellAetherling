@@ -679,7 +679,7 @@ forms are semantically equivalent.
 ```
 Map 1 f . Select_1d n idx === Select_1d n idx . Map n f
 Map n f . Up_1d n === Up_1d n . Map 1 f
-Map 1 f . Partition 1 n === Partition 1 n . f
+Map ni (Partition nj nk) . Partition ni (nj*nk) === Partition ni nj . Partition (ni*nj) nk
 ```
 
 The following operators commute when combined with the nesting rewrite rule.

@@ -122,8 +122,10 @@ Unpartition no ni . Map no (Transpose w ni) . Transpose w no .
 Unpartition no ni . Map no (Transpose w ni) . Transpose w no .
     HMap w (List_To_Seq . foldl (\in_seqs _ ->  Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
     Up_1d w . 
-    Partition 1 (no*ni) . Partition no ni
+    Partition 1 no . Partition no ni
 ```
+
+Let `Stencil_1d_Nested no ni init` be the above nested composition of operators without the outer `Unpartition no ni` and `Partition no ni`
 
 # Space-Time IR
 ## Space-Time Operators
