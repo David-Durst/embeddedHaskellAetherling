@@ -1,8 +1,8 @@
 # Stencil Operator
 This document extends [the basic sequence language and space-time IR](Basic.md) to support stencils.
 It adds:
-1. sequence language primitives for shift registers, stencils, and other supporting operators
-1. space-time primitives for shift registers, stencils, and other supporting operators
+1. sequence language primitives for shift registers and stencils,
+1. space-time primitives for shift registers and stencils.
 1. rewrite rules for converting the shift registers and stencils between sequence and space-time versions
 
 # Sequence Language
@@ -15,10 +15,25 @@ It adds:
 ```
 Stencil_1d n w init = 
 Transpose w n .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift n init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\accum _ -> Shift n init (head accum) : accum) [Id] [1..w-1]) .
     Up_1d w .
     Partition 1 n
+```
 
+1. `Repeated_Shift n m init :: Seq n t -> Seq n t`
+```
+Repeated_Shift n m init = foldl (\accum _ -> Shift n init accum) (Shift n Init) [1..m-1] 
+
+```
+
+1. `Stencil_2d n_row n_col w_row w_col init :: Seq (n_row*n_col) t -> Seq (n_row*n_col) (Seq w_row (Seq w_col t))`
+```
+Stencil_2d n_row n_col w_row w_col init = 
+Transpose w_row (n_row*n_col) .
+    Map w_row (Stencil_1d (n_row*n_col) w_col init) .
+    HMap w_row (List_To_Seq . foldl (\accum _ -> Repeated_Shift (n_row*n_col) n_col init (head accum) : accum) [Id] [1..w-1]) .
+    Up_1d w_row .
+    Partition 1 (n_row*c_col)
 ```
 
 ## Nesting Rewrite Rules
@@ -59,36 +74,36 @@ The nested shifts handle accessing data from those registers and from the curren
 Stencil_1d (no*ni) w xs = 
 
 Transpose w (no*ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift (no*ni) init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift (no*ni) init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
     Up_1d w .
     Partition 1 (no*ni) === (Partition Nesting Inner)
 
 Transpose w (no*ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift (no*ni) init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift (no*ni) init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
     Up_1d w . 
     Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . Partition 1 (no*ni) === (Shift Nesting)
 
 Transpose w (no*ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init . Partition no ni (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init . Partition no ni (head in_seqs) : in_seqs) [Id] [1..w-1]) .
     Up_1d w . 
     Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
     Partition 1 (no*ni) === (Isomorphism Operator Introduction)
 
 Transpose w (no*ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init . Partition no ni (head in_seqs) : in_seqs) (Unpartition no ni . Partition no ni) (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init . Partition no ni (head in_seqs) : in_seqs) (Unpartition no ni . Partition no ni) [1..w-1]) .
     Up_1d w . 
     Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
     Partition 1 (no*ni) === (Identity Addition)
 
 Transpose w (no*ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init . Partition no ni (head in_seqs) : in_seqs) (Unpartition no ni . id . Partition no ni) (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init . Partition no ni (head in_seqs) : in_seqs) (Unpartition no ni . [Id] . Partition no ni) [1..w-1]) .
     Up_1d w . 
     Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
     Partition 1 (no*ni) === (HMap Equivalence and HMap and Map Equivalence)
 
 Transpose w (no*ni) .
     Map w (Unpartition no ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
     Map w (Partition no ni) . 
     Up_1d w . 
     Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
@@ -96,7 +111,7 @@ Transpose w (no*ni) .
 
 Transpose w (no*ni) .
     Map w (Unpartition no ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
     Up_1d w . 
     Map 1 (Partition no ni) . 
     Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
@@ -104,23 +119,23 @@ Transpose w (no*ni) .
 
 Transpose w (no*ni) .
     Map w (Unpartition no ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
     Up_1d w . 
     Map 1 (Partition no ni) . Partition 1 (no*ni) === (Transpose Nesting Inner)
 
 Unpartition no ni . Map no (Transpose w ni) . Transpose w no . Map w (Partition no ni) .
     Map w (Unpartition no ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
     Up_1d w . 
     Map 1 (Partition no ni) . Partition 1 (no*ni) === (Isomorphism Removal)
 
 Unpartition no ni . Map no (Transpose w ni) . Transpose w no .
-    HMap w (List_To_Seq . foldl (\in_seqs _ ->  Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ ->  Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
     Up_1d w . 
     Map 1 (Partition no ni) . Partition 1 (no*ni) === (Commutativity)
 
 Unpartition no ni . Map no (Transpose w ni) . Transpose w no .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) id (reverse [0..w-2])) .
+    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
     Up_1d w . 
     Partition 1 no . Partition no ni
 ```
