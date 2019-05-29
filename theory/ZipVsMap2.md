@@ -48,5 +48,5 @@ output = Map2_t (Map2_t Tuple) input
 
 `Map2_t` and `Zip2_t` both must handle phase alignment in the line `Map2_t Zip2_t input`.
 `Map2_t` aligns the outer `TSeq`and `Zip2_t` aligns the inner `TSeq`.
-Therefore, it would be better just to have `Map2_t` and created `Zip2_t` out of `Map2_t Tuple`.
+Since `Map2_t` must handle all the semantics of `Zip2_t`, it would be better just to have `Map2_t` and create `Zip2_t` out of `Map2_t Tuple`.
 
