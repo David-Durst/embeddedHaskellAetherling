@@ -1,8 +1,9 @@
 # Stencil Operator
 This document extends [the basic sequence language and space-time IR](Basic.md) to support stencils.
 It adds:
-1. sequence language primitives for shift registers and stencils,
-1. space-time primitives for shift registers and stencils.
+1. a sequence language primitive for shift registers 
+1. definitions of sequence language stencils using other primitives
+1. space-time primitives for shift registers
 1. rewrite rules for converting the shift registers and stencils between sequence and space-time versions
 
 # Sequence Language

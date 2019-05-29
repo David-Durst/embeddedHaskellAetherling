@@ -42,8 +42,12 @@ Partition ni (nj*nk) t === (Identity Addition)
 Id . Partition ni (nj*nk) t === (Map-Identity)
 Map ni id . Partition ni (nj*nk) t === (Isomorphism Addition)
 Map ni (Unpartition nj nk t . Partition nj nk t) . Partition ni (nj*nk) t === (Functor Fusion)
-Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t
+Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t ===? (Commutativity)
+Map ni (Unpartition nj nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t (Commutativity)
 ```
+
+**Should the middle resulting term be `Partition ni nj`? Should I apply the partition commutativity rule here?**
+**Do I need the Unit Changes rules as well?**
 
 ### Unpartition
 Note: the type parameters are not actually part of the `Unpartition`, but are included in the following proofs for interpretability.
