@@ -46,7 +46,11 @@ The `Map` operator in the [Sequence Operators](#sequence-operators) section is `
 `Map` lifts a function `t -> t'` to a function `Seq n t -> Seq n t'`. 
 
 We do not allow sequences of operators, such as `Seq n (Int -> Int)`. 
-Tuples of sequences are only allowed if the sequences have the same type, such as `(Seq n Int) x (Seq n Int)`.
+Tuples of sequences are only allowed if the sequences have the same type, such as `(Seq n Int) x (Seq n Int)`. 
+We require this so that, when computing the time of tupled `TSeq`s, each part of the tuple takes equal amounts of time.
+An operator that emits `(TSeq (2*n) v t) x (TSeq n v t)` is ill-defined. 
+What do the output wires for the `TSeq n v t` do for the extra `n` clocks needed for the `TSeq (2*n) v t`?
+We avoid this issue by removing such tuples from the type system.
 
 ## Sequence Operators
 1. `Map (Config n) :: (t -> t') -> Seq n t -> Seq n t'`
@@ -228,7 +232,7 @@ As stated in [the space-time types section](#space-time-types), the input and ou
 `type_time` formalizes the [above definitions](#space-time-types) of `TSeq` and `SSeq`.
 
 1. `type_time(Int) = 1`
-1. `type_time(t x t') = 1`
+1. `type_time(t x t') = type_time(t)`
 1. `type_time(SSeq n t) = type_time(t)`
 1. `type_time(TSeq n v t) = (n+v) * type_time(t)`
 
