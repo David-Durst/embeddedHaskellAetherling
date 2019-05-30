@@ -45,7 +45,6 @@ The second part of the language lifts types to fixed-length collections containi
 The `Map` operator in the [Sequence Operators](#sequence-operators) section is `Seq`'s `fmap`. 
 `Map` lifts a function `t -> t'` to a function `Seq n t -> Seq n t'`. 
 
-We do not allow sequences of operators, such as `Seq n (Int -> Int)`. 
 Tuples of sequences are only allowed if the sequences have the same type, such as `(Seq n Int) x (Seq n Int)`. 
 We require this so that, when computing the time of tupled `TSeq`s, each part of the tuple takes equal amounts of time.
 An operator that emits `(TSeq (2*n) v t) x (TSeq n v t)` is ill-defined. 
