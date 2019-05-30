@@ -4,6 +4,9 @@ This document shows that Aetherling requires `Map2` and `Tuple` even if the
 1. defines the type signatures of all operators
 1. provides example that require `Map2`
 
+The main issue is that `Map2` is required to zip nested sequences, even if `Zip` is part of the language.
+This problem would be avoidable if there was a `ZipInner` that handled every amount of nesting.
+However, having one `Map2` function that can be nested is a cleaner solution.
 ## Type Signatures
 
 ### Sequence Language
