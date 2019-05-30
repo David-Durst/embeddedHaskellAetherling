@@ -18,20 +18,19 @@ The sequence language has two parts. The first part of the sequence language is 
 Atoms are standard primitives, such as integers and units.
 Atoms also include the minimal derived types necessary to express arithmetic and boolean operators on the primitives. 
 
-1. `()` - Unit
-1. `Int` - integer
+1. `Bit` - bit
 2. `t x t'` - tuple
-4. `t -> t'` - function
+4. `t -> t'` - operators 
+1. `Int === Bit x Bit x Bit x Bit x Bit x Bit x Bit x Bit` - integer
 
 ## Atom Operators
 `t` must be an atomic type for the following operators.
 
 1. `Id :: t -> t`
-1. `Const_Gen :: t -> () -> t`
 1. `Add :: (Int x Int) -> Int`
 1. `Fst :: (t x t') -> t`
 1. `Snd :: (t x t') -> t'`
-5. `Tuple :: t1 -> t2 -> t1 x t2`
+5. `Tuple :: t -> t' -> t x t'`
 
 ### Identity Addition Rewrite Rule
 For any function `f`, `f === Id . f === f . Id`
@@ -46,21 +45,19 @@ The second part of the language lifts types to fixed-length collections containi
 The `Map` operator in the [Sequence Operators](#sequence-operators) section is `Seq`'s `fmap`. 
 `Map` lifts a function `t -> t'` to a function `Seq n t -> Seq n t'`. 
 
-We do not allow sequences of functions, such as `Seq n (Int -> Int)`, or tuples of sequences, such as `(Seq n Int) x (Seq n Int)`.
+We do not allow sequences of operators, such as `Seq n (Int -> Int)`. 
+Tuples of sequences are only allowed if the sequences have the same type, such as `(Seq n Int) x (Seq n Int)`.
 
 ## Sequence Operators
 1. `Map (Config n) :: (t -> t') -> Seq n t -> Seq n t'`
 1. `Map2 (Config n) :: (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
-1. `HMap (Config n) :: Seq n (t -> t') -> Seq n t -> Seq n t'`
-    1. `HMap` applies a different operator to each element of the sequence.
-    1. `HMap` is equivalent `<*>` for the [ZipList applicative functor in Haskell](https://en.wikibooks.org/wiki/Haskell/Applicative_functors#ZipList)
 1. `Reduce (Config n) :: (t -> t -> t) -> Seq n t -> Seq 1 t`
 3. `Up_1d (Config n) :: Seq 1 t -> Seq n t`
 4. `Select_1d (Config n) (Config idx) :: Seq n t -> Seq 1 t`
     1. The output `Seq` contains the `idx`th entry of the input `Seq`.
 7. `Partition (Config no) (Config ni) :: Seq (no*ni) t -> Seq no (Seq ni t)`
 7. `Unpartition (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq (no*ni) t`
-1. `Transpose no ni :: Seq no (Seq ni t) -> Seq ni (Seq no t) `
+
 
 Note: Reduce's inner operator must be on atoms or sequences of length one. This ensures that resulting space-time reduce's f only takes one clock. I'm not sure how to handle partially parallel reduces at this time where the operator is pipelined over multiple clocks.
 
@@ -92,10 +89,10 @@ Let `f :: t -> t'`
 1. `output_type(f) = t'`
 
 ### Length
-The following operator tracks the total number of atoms accepted and emitted by a sequence operator.
+The following operator tracks the total number of bits accepted and emitted by a sequence operator.
 
-1. `type_length(Int) = 1`
-1. `type_length(t x t') = 1`
+1. `type_length(Bit) = 1`
+1. `type_length(t x t') = type_length(t) + type_length(t)`
 1. `type_length(Seq n t) = n * type_length(t)`
 
 `input_length(f)` and `output_length(f)` provide the syntax for applying `type_length` to an operator.
@@ -131,12 +128,6 @@ The following are the rules for each operator on sequences in the sequence langu
 
 **Note** - unlike the other nesting rules, this one is not written in pointfree style. The arguments are necessary because `Map2` is a binary function rather than a unary one.
 
-### `HMap` Nesting
-```
-HMap (no*ni) fs ===
-Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]) . Partition no ni
-```
-
 ### `Reduce` Nesting
 `Reduce (no*ni) f === Unpartition 1 1 . Partition 1 1 . Reduce no f . Unpartition no 1 . Map no (Reduce ni f) . Partition no ni` 
 
@@ -149,13 +140,6 @@ Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (
 ### `Partition` and `Unpartition` Nesting
 Please see [the partition document](Partition.md).
 
-### `Transpose` Nesting
-#### `Transpose` Nesting Outer
-`Transpose (ni*nj) nk === Map nk (Unpartition ni nj) . Transpose ni nk . Map ni (Transpose nj nk) . Partition ni nj`
-
-#### `Transpose` Nesting Inner
-`Transpose ni (nj*nk) === Unpartition nj nk . Map nj (Transpose ni nk) . Transpose ni nj . Map ni (Partition nj nk)`
-
 ## Map-Identity Rewrite Rule
 `Map n Id === Id`
 
@@ -167,7 +151,7 @@ All programs in the space-time IR can be interpreted hardware accelerators.
 We say that the interpretations are efficient because they have the following properties: all operators correspond to hardware components that run in parallel with minimal buffering between components.
 
 In order to ensure minimal buffering, the space-time IR must guarantee that producers and consumers match throughputs.
-A **throughput** (or **rate**) is the average number of atoms accepted or emitted per clock.
+A **throughput** (or **rate**) is the average number of bits accepted or emitted per clock.
 Each operator has both an input and output throughput, which may be different.
 In a pipeline, the output throughput of each producer function must equal the input throughput of its consumer function.
 In `g . f`, `f`'s output throughput must equal `g`'s input throughput.
@@ -212,22 +196,12 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 2. `Map_t n :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 2. `Map2_s n :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
 2. `Map2_t n :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
-1. `HMap_s n :: Seq n (t -> t') -> SSeq n t -> SSeq n t'`
-1. `HMap_t n :: Seq n (t -> t') -> TSeq n t -> TSeq n t'`
 1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
 2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t`
 4. `Select_1d_t n idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
-1. `Transpose_ss no ni :: SSeq no (SSeq ni t) -> SSeq ni (SSeq no t)`
-1. `Transpose_tt no ni :: TSeq no 0 (TSeq ni (ni*vi) t) -> TSeq ni 0 (TSeq no (no*vi) t)`
-    1. We restrict the freedom in selecting number of empty clocks to simplify the math.
-    If the input was `TSeq no vo (TSeq ni vi t)`, then the output would need to divide up (no*vi + vo) 
-    clocks evenly between the inner and outer `TSeq`s.
-    Enforcing this divisibility would make the math complicated for cases that won't happen frequently.
-1. `Transpose_ts_to_st no ni :: TSeq no vo (SSeq ni t) -> SSeq ni (TSeq no vo t)`
-1. `Transpose_st_to_ts no ni :: SSeq no (TSeq ni vi t) -> TSeq ni vi (SSeq no t)`
 
 **Note: reduce's type signature will need to be modified to handle pipelined operators.**
 
@@ -261,20 +235,20 @@ As stated in [the space-time types section](#space-time-types), the input and ou
 **Theorem** - `type_time(t) == type_time(t')` forall operators `f :: t -> t'`
 
 ### Length
-`input_length` and `output_length` are the number of atoms accepted and emitted by an operator. 
+`input_length` and `output_length` are the number of bits accepted and emitted by an operator. 
 This property is the same as `length` for sequence operators. 
 1. `input_length(f :: t -> t') = type_length(t)`
 1. `output_length(f :: t -> t') = type_length(t')`
 
 
-1. `type_length(Int) = 1`
-1. `type_length(t x t') = 1`
+1. `type_length(Bit) = 1`
+1. `type_length(t x t') = type_length(t) + type_length(t')`
 1. `type_length(SSeq n t) = n * type_length(t)`
 1. `type_length(TSeq n v t) = n * type_length(t)`
 
 
 ### Throughput
-An operator's throughput is the number of atoms produced or consumed per clock.
+An operator's throughput is the number of bits produced or consumed per clock.
 
 1. `input_throughput(f) = input_length(f) / time(f)`
 1. `output_throughput(f) = output_length(f) / time(f)`
@@ -302,18 +276,12 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 2. `area(Map_t n f) = area(f)`
 1. `area(Map2_s n f) = n * area(f)`
 2. `area(Map2_t n f) = area(f)`
-1. `area(HMap_s n fs) = sum([area f | f <- SSeq_To_List(fs)])`
-1. `area(HMap_t n fs) = sum([area f | f <- TSeq_To_List(fs)]) + area(counter) + area(mux(n, output_type(head fs)))`
 1. `area(Reduce_s n f) = ceil(log_2(n)) * area(f)`
 1. `area(Reduce_t n f) = area(f) + {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
 1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
 1. `area(Select_1d_s n idx) = {0, 0, num_bits(t)}`
 1. `area(Select_1d_t n idx) = {0, 0, num_bits(t)} + area(counter)`
-1. `area(Transpose_ss no ni) = {0, 0, 0}`
-1. `area(Transpose_tt no ni) = {0, no*ni*num_bits(t), num_bits(t)} + area(counter)`
-1. `area(Transpose_ts_to_st no ni) = {0, 0, 0}`
-1. `area(Transpose_st_to_ts no ni) = {0, 0, 0}`
 1. `area(g.f) = area(g) + area(f)`
 
 Many of the sequential operators require a counter to track clock cycles and muxes to select outputs.
@@ -396,22 +364,6 @@ Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Map_s ni f) .
 ## Map2
 The rewrite rules and proofs are the same as `Map`.
     
-## HMap
-### Sequence To Space
-`HMap n f === SSeq_To_Seq . HMap_s n f . Seq_To_SSeq`
-
-### Sequence To Time
-`HMap n f === TSeq_To_Seq . HMap_t n f . Seq_To_TSeq`
-
-### Sequence To Space-Time With Throughput `no` Less Than Fully Parallel
-```
-Map (no*ni) f === (Nesting)
-Unpartition no ni . HMap no (List_To_Seq [HMap ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]) . Partition no ni === (Seq To SSeq)
-Unpartition no ni . HMap no (List_To_Seq [SSeq_To_Seq . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . Seq_To_SSeq | i <- [0..no-1]]) . Partition no ni === (Seq To TSeq)
-Unpartition no ni . TSeq_To_Seq . HMap_t no (List_To_Seq [SSeq_To_Seq . HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) . Seq_To_SSeq | i <- [0..no-1]]) . Seq_To_TSeq . Partition no ni === (HMap Fusion and HMap and Map Equivalence)
-Unpartition no ni . Seq_To_TSeq . Map_t no SSeq_To_Seq . HMap_t no (List_To_Seq [HMap_s ni (Unpartition 1 ni . Select i (Partition no ni fs)) | i <- [0..no-1]]) . HMap_t Seq_To_SSeq . Seq_To_TSeq . Partition no ni
-```
-
 ## Upsample
 ### Sequence To Space
 `Up_1d n === SSeq_To_Seq . Up_1d_s n . Seq_To_SSeq`
@@ -466,192 +418,6 @@ Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduc
 Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduce_t no f . Unpartition_t_ts no 1 . Map_t no (Reduce_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
 ```
 
-## Transpose
-### Sequence To Space
-`Transpose no ni === SSeq_To_Seq . Map_s ni SSeq_To_Seq . Transpose_ss no ni . Map_s no Seq_To_SSeq . Seq_To_SSeq`
-
-### Sequence To Time
-`Transpose no ni === TSeq_To_Seq . Map_t ni TSeq_To_Seq . Transpose_tt no ni . Map_t no Seq_To_TSeq . Seq_To_TSeq`
-
-### Sequence To Time-Space-To-Space-Time
-`Transpose no ni === SSeq_To_Seq . Map_s ni TSeq_To_Seq . Transpose_ts_to_st no ni . Map_t no Seq_To_SSeq . Seq_To_TSeq`
-
-### Sequence To Space-Time-To-Time-Space
-`Transpose no ni === TSeq_To_Seq . Map_t ni SSeq_To_Seq . Transpose_st_to_ts no ni . Map_s no Seq_To_TSeq . Seq_To_SSeq`
-
-### Space-Time Unit Changes
-We explicitly list the two rewrite rules used in the Inner and Outer Sequence To Space-Time rewrite rules below.
-The same rules apply for `Transpose_ss`, `Transpose_tt`, `Transpose_ts_to_st`, and `Transpose_st_to_ts` 
-for any t that is appropriately nested `SSeq`s and `TSeq`s
-```
-Transpose_tt no ni === Map_t ni (Map_t no SSeq_To_Seq) . Transpose_tt no ni . Map_t no (Map_t ni Seq_To_SSeq)
-Transpose_ts_to_st no ni === Map_s ni (Map_t no SSeq_To_Seq) . Transpose_ts_to_st no ni . Map_t no (Map_s ni Seq_To_SSeq)
-Transpose_st_to_ts no ni === Map_t ni (Map_s no SSeq_To_Seq) . Transpose_ts_to_st no ni . Map_s no (Map_t ni Seq_To_SSeq)
-```
-
-### Outer Sequence To Space-Time With Throughput `ni` Less Than Fully Parallel
-```
-Transpose (ni*nj) nk === (Nesting)
-
-Map nk (Unpartition ni nj) . 
-    Transpose ni nk . 
-    Map ni (Transpose nj nk) . 
-    Partition ni nj === (Seq To Time-Space-To-Space-Time)
-
-Map nk (Unpartition ni nj) . 
-    SSeq_To_Seq . Map_s nk TSeq_To_Seq . Transpose_ts_to_st ni nk . Map_t ni Seq_To_SSeq . Seq_To_TSeq . 
-    Map ni (Transpose nj nk) . 
-    Partition ni nj === (Seq To Time)
-
-Map nk (Unpartition ni nj) . 
-    SSeq_To_Seq . Map_s nk (TSeq_To_Seq) . Transpose_ts_to_st ni nk . Map_t ni Seq_To_SSeq . Seq_To_TSeq . 
-    TSeq_To_Seq . Map_t ni (Transpose nj nk) . Seq_To_TSeq .
-    Partition ni nj === (Isomorphism Removal)
-
-Map nk (Unpartition ni nj) . 
-    SSeq_To_Seq . Map_s nk TSeq_To_Seq . Transpose_ts_to_st ni nk . Map_t ni Seq_To_SSeq . 
-    Map_t ni (Transpose nj nk) . Seq_To_TSeq .
-    Partition ni nj === (Seq To Space)
-
-Map nk (Unpartition ni nj) . 
-    SSeq_To_Seq . Map_s nk TSeq_To_Seq . Transpose_ts_to_st ni nk . Map_t ni Seq_To_SSeq . 
-    Map_t ni (SSeq_To_Seq . Map_s nk SSeq_To_Seq . Transpose_ss nj nk . Map_s nj (Seq_To_SSeq) . Seq_To_SSeq) . Seq_To_TSeq .
-    Partition ni nj === (Functor Map Fusion)
-
-Map nk (Unpartition ni nj) . 
-    SSeq_To_Seq . Map_s nk TSeq_To_Seq . Transpose_ts_to_st ni nk . Map_t ni Seq_To_SSeq . 
-    Map_t ni SSeq_To_Seq . Map_t ni (Map_s nk SSeq_To_Seq) . Map_t ni (Transpose_ss nj nk) . Map_t ni (Map_s nj Seq_To_SSeq) . Map_t ni Seq_To_SSeq . Seq_To_TSeq .
-    Partition ni nj === (Isomorphism Removal)
-
-Map nk (Unpartition ni nj) . 
-    SSeq_To_Seq . Map_s nk TSeq_To_Seq . Transpose_ts_to_st ni nk . 
-    Map_t ni (Map_s nk SSeq_To_Seq) . Map_t ni (Transpose_ss nj nk) . Map_t ni (Map_s nj Seq_To_SSeq) . Map_t ni Seq_To_SSeq . Seq_To_TSeq .
-    Partition ni nj === (Space-Time Unit Changes)
-
-Map nk (Unpartition ni nj) . 
-    SSeq_To_Seq . Map_s nk (TSeq_To_Seq) . Map_s nk (Map_t ni SSeq_To_Seq) . Transpose_ts_to_st ni nk . Map_t ni (Map_s nk Seq_To_SSeq) .
-    Map_t ni (Map_s nk SSeq_To_Seq) . Map_t ni (Transpose_ss nj nk) . Map_t ni (Map_s nj Seq_To_SSeq) . Map_t ni Seq_To_SSeq . Seq_To_TSeq .
-    Partition ni nj === (Isomorphism Removal)
-
-Map nk (Unpartition ni nj) . 
-    SSeq_To_Seq . Map_s nk (TSeq_To_Seq) . Map_s nk (Map_t ni SSeq_To_Seq) . Transpose_ts_to_st ni nk .
-    Map_t ni (Transpose_ss nj nk) . Map_t ni (Map_s nj Seq_To_SSeq) . Map_t ni Seq_To_SSeq . Seq_To_TSeq .
-    Partition ni nj =
-
-Map nk (Unpartition ni nj) . 
-    SSeq_To_Seq . Map_s nk (TSeq_To_Seq) . Map_s nk (Map_t ni SSeq_To_Seq) . 
-    Transpose_ts_to_st ni nk . Map_t ni (Transpose_ss nj nk) .
-    Map_t ni (Map_s nj Seq_To_SSeq) . Map_t ni Seq_To_SSeq . Seq_To_TSeq .
-    Partition ni nj
-```
-
-### Inner Sequence To Space-Time With Throughput `nj` Less Than Fully Parallel
-``` 
-Transpose ni (nj*nk) === (Nesting)
-
-Unpartition nj nk . 
-    Map nj (Transpose ni nk) . 
-    Transpose ni nj . 
-    Map ni (Partition nj nk) === (Seq To Time)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj (Transpose ni nk) . Seq_To_TSeq .
-    Transpose ni nj . 
-    Map ni (Partition nj nk) === (Seq To Space-Time-To-Time-Space)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj (Transpose ni nk) . Seq_To_TSeq .
-    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Transpose_st_to_ts ni nj . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
-    Map ni (Partition nj nk) === (Isomorphism Removal)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj (Transpose ni nk) .
-    Map_t nj SSeq_To_Seq . Transpose_st_to_ts ni nj . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
-    Map ni (Partition nj nk) === (Seq To Space)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj (SSeq_To_Seq . Map_s nk SSeq_To_Seq . Transpose_ss ni nk . Map_s ni Seq_To_SSeq . Seq_To_SSeq) .
-    Map_t nj SSeq_To_Seq . Transpose_st_to_ts ni nj . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
-    Map ni (Partition nj nk) === (Map Functor Fusion)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk SSeq_To_Seq) . Map_t nj (Transpose_ss ni nk) . Map_t nj (Map_s ni Seq_To_SSeq) . Map_t nj Seq_To_SSeq .
-    Map_t nj SSeq_To_Seq . Transpose_st_to_ts ni nj . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
-    Map ni (Partition nj nk) === (Isomorphism Removal)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk SSeq_To_Seq) . Map_t nj (Transpose_ss ni nk) . Map_t nj (Map_s ni Seq_To_SSeq) .
-    Transpose_st_to_ts ni nj . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
-    Map ni (Partition nj nk) === (Space-Time Unit Changes)
-    
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk SSeq_To_Seq) . Map_t nj (Transpose_ss ni nk) . Map_t nj (Map_s ni Seq_To_SSeq) .
-    Map_t nj (Map_s ni SSeq_To_Seq) . Transpose_ts_to_st ni nj . Map_s ni (Map_t nj Seq_To_SSeq) . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
-    Map ni (Partition nj nk) === (Isomorphism Removal)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk SSeq_To_Seq) . Map_t nj (Transpose_ss ni nk) . 
-    Transpose_ts_to_st ni nj . Map_s ni (Map_t nj Seq_To_SSeq) . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
-    Map ni (Partition nj nk) =
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk SSeq_To_Seq) . 
-    Map_t nj (Transpose_ss ni nk) . Transpose_ts_to_st ni nj . 
-    Map_s ni (Map_t nj Seq_To_SSeq) . Map_s ni Seq_To_TSeq . Seq_To_SSeq .
-    Map ni (Partition nj nk)
-```
-
-### Inner Sequence To Space-Time With Throughput `ni*nj` Less Than Fully Parallel
-``` 
-Transpose ni (nj*nk) === (Nesting)
-
-Unpartition nj nk . 
-    Map nj (Transpose ni nk) . 
-    Transpose ni nj . 
-    Map ni (Partition nj nk) === (Seq To Time)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj (Transpose ni nk) . Seq_To_TSeq .
-    TSeq_To_Seq . Map_t nj TSeq_To_Seq . Transpose_tt ni nj . Map_t ni Seq_To_TSeq . Seq_To_TSeq .
-    Map ni (Partition nj nk) === (Isomorphism Removal)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj (Transpose ni nk) .
-    Map_t nj TSeq_To_Seq . Transpose_tt ni nj . Map_t ni Seq_To_TSeq . Seq_To_TSeq .
-    Map ni (Partition nj nk) === (Seq To Time-Space-To-Space-Time)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj (SSeq_To_Seq . Map_s nk TSeq_To_Seq . Transpose_ts_to_st ni nk . Map_t ni Seq_To_SSeq . Seq_To_TSeq) .
-    Map_t nj TSeq_To_Seq . Transpose_tt ni nj . Map_t ni Seq_To_TSeq . Seq_To_TSeq .
-    Map ni (Partition nj nk) === (Map Functor Fusion)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk TSeq_To_Seq) . Map_t nj (Transpose_ts_to_st ni nk) . Map_t nj (Map_t ni Seq_To_SSeq) . Map_t nj Seq_To_TSeq .
-    Map_t nj TSeq_To_Seq . Transpose_tt ni nj . Map_t ni Seq_To_TSeq . Seq_To_TSeq .
-    Map ni (Partition nj nk) === (Isomorphism Removal)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk TSeq_To_Seq) . Map_t nj (Transpose_ts_to_st ni nk) . Map_t nj (Map_t ni Seq_To_SSeq) .
-    Transpose_tt ni nj . Map_t ni Seq_To_TSeq . Seq_To_TSeq .
-    Map ni (Partition nj nk) === (Space-Time Unit Changes)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk TSeq_To_Seq) . Map_t nj (Transpose_ts_to_st ni nk) . Map_t nj (Map_t ni Seq_To_SSeq) .
-    Map_t nj (Map_t ni SSeq_To_Seq) . Transpose_tt ni nj . Map_t ni (Map_t nj Seq_To_SSeq) . Map_t ni Seq_To_TSeq . Seq_To_TSeq .
-    Map ni (Partition nj nk) === (Isomorphism Removal)
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk TSeq_To_Seq) . Map_t nj (Transpose_ts_to_st ni nk) .
-    Transpose_tt ni nj . Map_t ni (Map_t nj Seq_To_SSeq) . Map_t ni Seq_To_TSeq . Seq_To_TSeq .
-    Map ni (Partition nj nk) =
-
-Unpartition nj nk . 
-    TSeq_To_Seq . Map_t nj SSeq_To_Seq . Map_t nj (Map_s nk TSeq_To_Seq) . 
-    Map_t nj (Transpose_ts_to_st ni nk) . Transpose_tt ni nj . 
-    Map_t ni (Map_t nj Seq_To_SSeq) . Map_t ni Seq_To_TSeq . Seq_To_TSeq .
-    Map ni (Partition nj nk)
-```
-
 ## Rewrite Rules Lemmas
 The following rewrite rules are used as lemmas in the above rewrite rules.
 
@@ -664,7 +430,6 @@ These rewrites show how to remove the operators.
 1. `TSeq_To_Seq . Seq_To_TSeq === Id`
 1. `Seq_To_TSeq . SSeq_To_Seq === Id`
 1. `Unpartition no ni . Partition no ni === Id`
-1. `Tranpose no ni . Transpose ni no === Id`
 1. `Partition_ss no ni . Unpartition_ss no ni === Id`
 2. `Unpartition_ss no ni . Partition_ss no ni === Id`
 1. `Partition_tt no ni . Unpartition_tt no ni === Id`
