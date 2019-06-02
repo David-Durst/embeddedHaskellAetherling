@@ -27,6 +27,13 @@ See the [scheduling algorithm](Scheduling.md) for why and how the rules are used
 Nesting Outer means nesting so that the partition will be applied to the outer `Seq`.
 Nesting Inner means nesting so that the partition will be applied to the inner `Seq`.
 
+Nesting is used in order to schedule into space and time. 
+In order to make an operator paratially parallel, it's input and output types must be a `TSeq` containing an `SSeq` or vice-versa.
+Nesting splits one sequence operator into a sequence of multiple operators.
+Some operators in the sequence will be fully parallel. Some will be fully sequential. 
+Together, they will be partially parallel
+
+
 ### Partition
 Note: the type parameters are not actually part of the `Partition`, but are included in the following proofs for interpretability.
 #### `Partition` Nesting Outer
@@ -44,6 +51,67 @@ Map ni id . Partition ni (nj*nk) t === (Isomorphism Addition)
 Map ni (Unpartition nj nk t . Partition nj nk t) . Partition ni (nj*nk) t === (Functor Fusion)
 Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t ===? (Commutativity)
 Map ni (Unpartition nj nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t (Commutativity)
+```
+
+
+
+
+#### `Partition` Nesting Outer
+```
+Partition (ni*nj) nk t === 
+Unpartition ni nj . Map ni (Partition nj nk) . Partition ni (nj*nk)
+```
+
+#### `Partition` Nesting Inner
+```
+Partition ni (nj*nk) t === 
+Id . Partition ni (nj*nk) t === (Map-Identity)
+Map ni id . Partition ni (nj*nk) t === (Isomorphism Addition)
+Map ni (Unpartition nj nk t . Partition nj nk t) . Partition ni (nj*nk) t === (Functor Fusion)
+Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t ===? (Commutativity)
+Map ni (Unpartition nj nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t (Commutativity)
+```
+
+
+
+
+#### Examples Of Partition And Unpartition Nesting In Applications
+##### Nesting Outer 
+The goal here is to have an outer `Map ni` on each application so, when map to space-time, can slow down by `ni`.
+```
+Map (ni*nj) (Map nk Abs) . Partition (ni*nj) nk . Map (ni*nj*nk) Abs === (Nesting Outer)
+
+Unpartition ni nj . Map ni (Map nj (Map nk Abs)) . Partition ni nj .
+    Unpartition ni nj . Partition ni nj . Partition (ni*nj) nk .
+    Unpartition (ni*nj) nk . Map (ni*nj) (Map nk Abs) . Partition (ni*nj) nk === (Isomorphism Removal)
+
+Unpartition ni nj . Map ni (Map nj (Map nk Abs)) .
+    Partition ni nj .
+    Map (ni*nj) (Map nk Abs) . Partition (ni*nj) nk === (Isomorphism Removal)
+
+```
+
+##### Nesting Inner
+The goal here is to have an outer `Map (ni*nj)` on each application so, when map to space-time, can slow down by `ni*nj`.
+
+```
+Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk) . Map (ni*nj*nk) Abs === (Nesting Inner)
+
+Map ni (Unpartition nj nk . Map nj (Map nk Abs) . Partition nj nk) .
+    Map ni (Unpartition nj nk) . Map ni (Partition nj nk) . Partition ni (nj*nk) .
+    Unpartition ni (nj*nk) . Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Isomorphism Removal)
+
+Map ni (Unpartition nj nk . Map nj (Map nk Abs) . Partition nj nk) .
+    Map ni (Unpartition nj nk) . Map ni (Partition nj nk) .
+    Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Map Functor Fusion)
+
+Map ni (Unpartition nj nk) . Map ni (Map nj (Map nk Abs)) . Map ni (Partition nj nk) .
+    Map ni (Unpartition nj nk) . Map ni (Partition nj nk) .
+    Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Isomorphism Removal)
+
+Map ni (Unpartition nj nk) . Map ni (Map nj (Map nk Abs)) .
+    Map ni (Partition nj nk) .
+    Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Isomorphism Removal)
 ```
 
 **Should the middle resulting term be `Partition ni nj`? Should I apply the partition commutativity rule here?**
@@ -66,6 +134,8 @@ Unpartition ni (nj*nk) t . Map ni id === (Isomorphism Addition)
 Unpartition ni (nj*nk) t . Map ni (Unpartition nj nk t . Partition nj nk t) === (Functor Fusion)
 Unpartition ni (nj*nk) t . Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t)
 ```
+
+#### 
 
 # Space-Time IR
 ## Operators

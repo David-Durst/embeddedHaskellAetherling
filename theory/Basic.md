@@ -23,6 +23,10 @@ Atoms also include the minimal derived types necessary to express arithmetic and
 4. `t -> t'` - operators 
 1. `Int === Bit x Bit x Bit x Bit x Bit x Bit x Bit x Bit` - integer
 
+### Type Constructor
+`NTuple (Config 0) t = t`
+`NTuple (Config n) t = t x (NTuple (n-1) t)`
+
 ## Atom Operators
 `t` must be an atomic type for the following operators.
 
@@ -46,6 +50,7 @@ The `Map` operator in the [Sequence Operators](#sequence-operators) section is `
 `Map` lifts a function `t -> t'` to a function `Seq n t -> Seq n t'`. 
 
 Tuples of sequences are only allowed if the sequences have the same type, such as `(Seq n Int) x (Seq n Int)`. 
+For triples and larger n-tuples, we require that the non-tuple elements have the same type, such as `(Seq n Int) x ((Seq n Int) x (Seq n Int))`
 We require this so that, when computing the time of tupled `TSeq`s, each part of the tuple takes equal amounts of time.
 An operator that emits `(TSeq (2*n) v t) x (TSeq n v t)` is ill-defined. 
 What do the output wires for the `TSeq n v t` do for the extra `n` clocks needed for the `TSeq (2*n) v t`?
@@ -60,6 +65,8 @@ We avoid this issue by removing such tuples from the type system.
     1. The output `Seq` contains the `idx`th entry of the input `Seq`.
 7. `Partition (Config no) (Config ni) :: Seq (no*ni) t -> Seq no (Seq ni t)`
 7. `Unpartition (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq (no*ni) t`
+1. `Tuple_To_Seq (Config no) (Config ni) :: Seq no (NTuple ni t) -> Seq no (Seq ni t)`
+1. `Seq_To_Tuple (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq no (NTuple ni t)`
 
 
 Note: Reduce's inner operator must be on atoms or sequences of length one. This ensures that resulting space-time reduce's f only takes one clock. I'm not sure how to handle partially parallel reduces at this time where the operator is pipelined over multiple clocks.
@@ -143,6 +150,10 @@ The following are the rules for each operator on sequences in the sequence langu
 ### `Partition` and `Unpartition` Nesting
 Please see [the partition document](Partition.md).
 
+### `Tuple_To_Seq` Nesting
+`Tuple_To_Seq no ni === `
+1. `Tuple_To_Seq (Config no) (Config ni) :: Seq no (NTuple ni t) -> Seq no (Seq ni t)`
+1. `Seq_To_Tuple (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq no (NTuple ni t)`
 ## Map-Identity Rewrite Rule
 `Map n Id === Id`
 

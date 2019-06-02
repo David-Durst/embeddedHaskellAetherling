@@ -15,10 +15,9 @@ It adds:
 1. `Stencil_1d n w init :: Seq n t -> Seq n (Seq w t)`
 ```
 Stencil_1d n w init = 
-Transpose w n .
-    HMap w (List_To_Seq . foldl (\accum _ -> Shift n init (head accum) : accum) [Id] [1..w-1]) .
-    Up_1d w .
-    Partition 1 n
+Tuple_To_Seq .
+    foldl1 (\accum _ -> Map2 n Tuple) .
+    scanl (\accum _ -> Shift n init (head accum) : accum) [Id] [1..w-1]
 ```
 
 1. `Repeated_Shift n m init :: Seq n t -> Seq n t`
