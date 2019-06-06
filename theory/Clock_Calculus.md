@@ -21,15 +21,20 @@ The clock calculus provides a language that enables Aetherling to
 1. compute the size of the retiming buffer necessary between two operators so that their clock cycles match.
 
 # Why The `n` and `v` Parameters Are The Correct Amount of Detail For Type Checking
-The goal of the type `TSeq n v` is to ensure that operators can only be composed if they can be compiled to synchronous, streaming implementations.
+The goal of the type `TSeq n v` is to ensure that operators can only be composed if they can compiled to synchronous, streaming implementations.
+The `TSeq`'s `n` and `v` parameters specify that an operator accepts or emits data on `n` valid clock cycles out of `n+v` total clock cycles.
+If two operators with matching `TSeq` and `SSeq` types are composed, their throughputs and total number of clock cycles match. 
+But, they may accept and emit data on different clocks as `TSeq n v` does not specify the order of valid and invalid cycles.
+This ambiguity would seem to prevent `TSeq n v` from accomplishing its goal.
 Synchronous, streaming hardware requires producer and consumer operators to accept and emit data on the same clock cycle.
 However, as noted by the NKN paper, there are producer-consumer pairs which do not emit or accept data on the same clock cycle, but can be made to do so using a finite sized buffer.
 These operators are known as **synchronizable**. 
+
 The definition of **synchronizable** operators is: when placing an appropriately sized buffer between them, the result is valid in synchronous hardware as:
 1. On every clock cycle where the producer emits data, the buffer is ready to accept input.
 1. On every clock cycle where the consumer accepts data, the buffer has data to emit.
 
-This section will show that the `n` and `v` parameters are enough to ensure that only synchronizable operators are composed.
+This section will show that the `n` and `v` parameters are sufficiently specific so that, if two operators with matching `TSeq` and `SSeq` types are composed, they are synchronizable.
 
 ## Proof Of Synchronizability
 **Theorem:** Any pair of producer-consumer operators are synchronizable if the corresponding output and input sequences contain the same number of valid and invalid clocks. This is similar to Propositions 6 and 7 from NKN, except for finite sequences.
@@ -88,7 +93,6 @@ for i in len(os):
 `TSeq`'s `n` and `v` parameters ensure that the sequences contain the same number of valid and invalid clocks. 
 Therefore, by the synchronizability theorem, the `n` and `v` parameters are enough to ensure that Aetherling only allows operators to be composed if the inputs and outputs are synchronizable.
 
-
 ## Why Not Replace `n` and `v` With A Complete Clock Calculus
 Using the types from the [clock notation section](#clock_notation), let `f` and `g` have the following types:
 ```
@@ -111,68 +115,76 @@ The NKN paper gives one example of how to do this with its relaxed clock calculu
 However, in order to use that rule in a type system, they needed to do significant theory work.
 I find it much simpler to only use `n` and `v` in my types and do the synchronization below the type system.
 
-
-
-
-When synchronized, the producer emits into a buffer that can is always ready to accept input and the consumer accepts from a buffer that always has output.
-Therefore, the synchronized operators are a synchronous implementation.
-
-I would need to define a more complicated definition of type equality in Aetherling to use clock calculus types in Aetherling while preserving the ability to compose synchronizable operators.
-
-
-
-The buffer will always be large enough because, by inspection of the code, it is large enough to contain all emitted values from `os` that have not yet been accepted by `is`.
-
 # Clock Notation 
-Aetherling's clock notation specifies the distribution of empty and non-empty clocks in a `TSeq`'s period. 
+Aetherling's clock notation specifies the distribution of valid and invalid clocks in a `TSeq n v`'s period. 
 A [period](Basic.md#Time) of 1 in the space-time IR corresponds to 1 clock cycle.
-For `TSeq n v Int`, there are `n+v` total clocks with `n` valid and `v` empty.
-However, the `TSeq` notation does not specify the ordering of the empty and non-empty clocks.
-The [below section](#why_the_n_and_v_parameters_are_sufficient_for_tseq) explains why these parameters are sufficient from a programmers perspective.
-Nonetheless, the compiler must know the exact distribution of clocks in order to create the synchronizing buffers described below.
 
 The clocks in Aetherling are a finite version of the infinite, periodic binary words in NKN. 
 The clocks must be finite as each `TSeq` in Aetherling is a finite number of clocks.
 If `TSeq`'s were infinite, nesting them would not have a clear meaning.
 For example, `TSeq infinite (TSeq infinite Int)` is nonsensical. 
-How can one repeat an infinite length sequence an infinite number of times.
+One cannot repeat an infinite length sequence an infinite number of times.
 
 The grammar for the notation is
 ```
-w = (u)d s.t. d is a natural number | w w
-u = 1 | 0 | u u
+ct ::= w | ct x ct | ct -> ct | x
+w ::= 1 | 0 | w w | (w)[d] s.t. d is a natural number
 ```
-As in NKN, a word `w` has a pattern `u` that repeats. 
-Unlike in NKN, the pattern repeats only a finite number of times `n`.
 
-`|w|` is the number of 1's and 0's in `w`.
-`|w|1` is the number of 1's in `w`.
-`|w|0` is the number of 0's in `w`.
+`1` indicates a valid clock cycle. 
+`0` indicates an invalid clock cycle. 
+`(w)[d]` repeats the clock pattern `w` for `d` times.
+`w w'` is a sequence of clock patterns.
 
-Since the pattern is finite, repeat and append are necessary:
-`repeat (u)d d' = (u)(d*d')`
-`append w w' = w w'`
+`ct x ct` represents a tuple of two clocks.
+I allow tuples with different clocks.
+`ct -> ct` represents an operator.
+`x` represents a free variable.
+I will motivate the need for free variables below.
 
-We also use the `on` and `when` operators from NKN.
-
-
+## Comparisons With NKN
+As in NKN, a word `w` has a pattern `v` that repeats. 
+Unlike in NKN, the pattern repeats only a finite number of times `d`.
+Unlike in the `TSeq n v` type signatures, there are no nested sequences.
 
 # Operator Clock Patterns
-Each operator in the space-time IR has a second type that specifies it's valid clock cycles.
-Note that unlike in the `TSeq n v` type signatures, there are no nested sequences.
+Aetherling must assign a clock calculus signature to each operator. 
+The type signature is of the form `op :: t -> t' :c: ct -> ct'` where `t` and `t'` are the space-time IR types and `ct` and `ct'` are of clock types.
 
-1. `Id :: (1)1 -> (1)1`
-1. `Add :: (1)1 -> (1)1`
-1. `Fst :: (1)1 -> (1)1`
-1. `Snd :: (1)1 -> (1)1`
-5. `Tuple :: (1)1 -> (1)1`
-1. `Map_s n (f :: (u)d -> (u')d') :: (u)d -> (u')d'`
-1. `Map_t n v (f :: (u)d -> (u')d') :: (u)(d*n) + vv -> (u')(d'*n) + v`
-2. `Map2_s n :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
-2. `Map2_t n :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
+
+## Space-Time IR Valid And Invalid Clock Count
+Before giving the clock calculus signature of the space-time operators, I need to introduce `default_clock_pattern` function.
+They are an extension of the [`type_time` function](Basic.md#time).
+These are necessary because functions like `Up_1d_t` must know the total number of valid and invalid clocks when operating on a nested sequence.
+For example, `Up_1d_t :: TSeq 5 5 (TSeq 2 1 Int) -> TSeq 5 5 (TSeq 2 1 Int)` needs to know the total number of valid and invalid clock cycles, not just 5 valid and 5 invalid periods.
+`type_time_valid(t)` is the number of valid clock cycles needed for an operator to accept or emit one `t`.
+`type_time_invalid(t)` is the number of invalid clock cycles needed for an operator to accept or emit one `t`.
+
+1. `type_time_valid(Int) = 1`
+1. `type_time_valid(t x t') = type_time_valid(t)`
+1. `type_time_valid(SSeq n t) = type_time_valid(t)`
+1. `type_time_valid(TSeq n v t) = n * type_time_valid(t)`
+
+1. `type_time_invalid(Int) = 1`
+1. `type_time_invalid(t x t') = type_time_invalid(t)`
+1. `type_time_invalid(SSeq n t) = type_time_invalid(t)`
+1. `type_time_invalid(TSeq n v t) = v * type_time_invalid(t)`
+
+## Closed Form
+The simplest approach is to assign a type signature to every operator that fully specifies each's input and output clock pattern.
+
+1. `Id :: 1 -> 1`
+1. `Add :: 1 -> 1`
+1. `Fst :: 1 -> 1`
+1. `Snd :: 1 -> 1`
+5. `Tuple :: 1 -> 1`
+1. `Map_s n (f :: t -> t' :c: w -> w') :: SSeq n t -> SSeq n t :c: w -> w'`
+2. `Map_t n (f :: t -> t' :c: w -> w') :: TSeq n v t -> TSeq n v t' :c: (w)[n] (0)[v] -> (w)[n] (0)[v] `
+2. `Map2_s n (f :: t -> t' -> t'' :c: w -> w' -> w'') :: SSeq n t -> SSeq n t' -> SSeq n t'' :c: w -> w' -> w''`
+2. `Map2_t n (f :: t -> t' -> t'' :c: w -> w' -> w'') :: TSeq n v t -> SSeq n v t' -> SSeq n v t'' :c: (w)[n] (0)[v] -> (w')[n] (0)[v] -> (w'')[n] (0)[v]`
 1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
 2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
-1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
+1. `Up_1d_s n :: SSeq 1 t -> SSeq n t :c: (1)[type_time_valid(t)] (1)[type_time_valid(t)]` 
 3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t`
 1. `Select_1d_t n idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
@@ -181,4 +193,4 @@ Note that unlike in the `TSeq n v` type signatures, there are no nested sequence
 1. `SSeq_To_Tuple n :: SSeq n t -> NTuple n t`
 1. `Deserialize no ni :: TSeq no vo (TSeq ni vi t) -> TSeq no (vo+no*vi) (SSeq ni t)`
 
-
+### Why The Closed Form Signatures Produce Suboptimal Hardware
