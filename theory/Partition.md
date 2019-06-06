@@ -38,9 +38,10 @@ Together, they will be partially parallel
 Note: the type parameters are not actually part of the `Partition`, but are included in the following proofs for interpretability.
 #### `Partition` Nesting Outer
 ```
-Partition (ni*nj) nk t === (Identity Addition)
-Id . Partition (ni*nj) nk t === (Isomorphism Addition)
-Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t
+Partition (ni*nj) nk === (Identity Addition)
+Id . Partition (ni*nj) nk === (Isomorphism Addition)
+Unpartition ni nj . Partition ni nj . Partition (ni*nj) nk ===? (Commutativity)
+Unpartition ni nj . Map ni (Partition ni nk) . Partition (ni*nj) nk
 ```
 
 #### `Partition` Nesting Inner
