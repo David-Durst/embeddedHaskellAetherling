@@ -208,19 +208,19 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 1. `Snd :: (t x t') -> t'`
 5. `Tuple :: t1 -> t2 -> t1 x t2`
 1. `Map_s n :: (t -> t') -> SSeq n t -> SSeq n t'`
-2. `Map_t n v :: (t -> t') -> TSeq n v t -> TSeq n v t'`
+2. `Map_t n :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 2. `Map2_s n :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
-2. `Map2_t n v :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
+2. `Map2_t n :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
 1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
-2. `Reduce_t n v :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
+2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
-3. `Up_1d_t n v :: TSeq 1 (n+v-1) t -> TSeq n v t`
+3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t`
-1. `Select_1d_t n v idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
+1. `Select_1d_t n idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
 1. `Tuple_To_SSeq n :: NTuple n t -> SSeq n t`
-1. `Serialize no vo ni vi :: TSeq no (vo+no*vi) (SSeq ni t) -> TSeq no vo (TSeq ni vi t)`
+1. `Serialize no ni :: TSeq no (vo+no*vi) (SSeq ni t) -> TSeq no vo (TSeq ni vi t)`
 1. `SSeq_To_Tuple n :: SSeq n t -> NTuple n t`
-1. `Deserialize no vo ni vi :: TSeq no vo (TSeq ni vi t) -> TSeq no (vo+no*vi) (SSeq ni t)`
+1. `Deserialize no ni :: TSeq no vo (TSeq ni vi t) -> TSeq no (vo+no*vi) (SSeq ni t)`
 
 **Note: reduce's type signature will need to be modified to handle pipelined operators.**
 **Note: typically, the `v` parameters are implicit**
