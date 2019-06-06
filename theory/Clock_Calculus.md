@@ -142,6 +142,8 @@ I allow tuples with different clocks.
 `x` represents a free variable.
 I will motivate the need for free variables below.
 
+`|ct|` is the number of clock types in `ct`.
+
 ## Comparisons With NKN
 As in NKN, a word `w` has a pattern `v` that repeats. 
 Unlike in NKN, the pattern repeats only a finite number of times `d`.
@@ -153,25 +155,24 @@ The type signature is of the form `op :: t -> t' :c: ct -> ct'` where `t` and `t
 
 
 ## Space-Time IR Valid And Invalid Clock Count
-Before giving the clock calculus signature of the space-time operators, I need to introduce `default_clock_pattern` function.
-They are an extension of the [`type_time` function](Basic.md#time).
-These are necessary because functions like `Up_1d_t` must know the total number of valid and invalid clocks when operating on a nested sequence.
-For example, `Up_1d_t :: TSeq 5 5 (TSeq 2 1 Int) -> TSeq 5 5 (TSeq 2 1 Int)` needs to know the total number of valid and invalid clock cycles, not just 5 valid and 5 invalid periods.
-`type_time_valid(t)` is the number of valid clock cycles needed for an operator to accept or emit one `t`.
-`type_time_invalid(t)` is the number of invalid clock cycles needed for an operator to accept or emit one `t`.
+Before giving the clock calculus signature of the space-time operators, I'm to introduce `default_clock_pattern` function.
+It provides a default clock pattern for a space-time IR type.
+This is a simple way to determine the flattened clock cycle pattern for operators such as `Up_1d_t` with potentially nested types.
+The functions already defined in [the basic document](Basic.md) are insufficient to describe the clock pattern for operators such as `Up_1d_t :: TSeq 1 (n+v-1) t -> TSeq n v t` when `t` is a nested type.
+For example, `Up_1d_t :: TSeq 5 5 (TSeq 2 1 Int) -> TSeq 5 5 (TSeq 2 1 Int)` needs to have a clock cycle pattern that accounts for all 30 clocks.
+However, the only function I have previously defined to determine the number of clocks in a space-time type is [`type_time`](Basic.md#time).
+A clock pattern of `(1)[type_time(t)]` would be incorrect because `t` may have invalid clocks.
 
-1. `type_time_valid(Int) = 1`
-1. `type_time_valid(t x t') = type_time_valid(t)`
-1. `type_time_valid(SSeq n t) = type_time_valid(t)`
-1. `type_time_valid(TSeq n v t) = n * type_time_valid(t)`
+1. `default_clock_pattern(Int) = 1`
+1. `default_clock_pattern(t x t') = default_clock_pattern(t)`
+    1. Note: the [sequence types section](Basic.md#sequence_types) specifies that tuples of sequences must have the same type. 
+    This ensures that a tuple's time and clock patterns are equivalent to the pattern of each element in the tuple.
+1. `default_clock_pattern(SSeq n t) = default_clock_pattern(t)`
+1. `default_clock_pattern(TSeq n v t) = (default_clock_pattern(t))[n] (0)[|default_clock_pattern(t)| * v]`
 
-1. `type_time_invalid(Int) = 1`
-1. `type_time_invalid(t x t') = type_time_invalid(t)`
-1. `type_time_invalid(SSeq n t) = type_time_invalid(t)`
-1. `type_time_invalid(TSeq n v t) = v * type_time_invalid(t)`
-
-## Closed Form
-The simplest approach is to assign a type signature to every operator that fully specifies each's input and output clock pattern.
+## Closed Clock Type Signatures
+A aimple approach is to assign a type signature to every operator that fully specifies each's input and output clock pattern.
+These are the **closed** clock type signatures.
 
 1. `Id :: 1 -> 1`
 1. `Add :: 1 -> 1`
@@ -184,13 +185,13 @@ The simplest approach is to assign a type signature to every operator that fully
 2. `Map2_t n (f :: t -> t' -> t'' :c: w -> w' -> w'') :: TSeq n v t -> SSeq n v t' -> SSeq n v t'' :c: (w)[n] (0)[v] -> (w')[n] (0)[v] -> (w'')[n] (0)[v]`
 1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
 2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
-1. `Up_1d_s n :: SSeq 1 t -> SSeq n t :c: (1)[type_time_valid(t)] (1)[type_time_valid(t)]` 
-3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
-4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t`
-1. `Select_1d_t n idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
-1. `Tuple_To_SSeq n :: NTuple n t -> SSeq n t`
-1. `Serialize no ni :: TSeq no (vo+no*vi) (SSeq ni t) -> TSeq no vo (TSeq ni vi t)`
-1. `SSeq_To_Tuple n :: SSeq n t -> NTuple n t`
+1. `Up_1d_s n :: SSeq 1 t -> SSeq n t :c: default_clock_pattern(t) -> default_clock_pattern(t)` 
+3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t :c: default_clock_pattern(TSeq 1 (n+v-1) t) -> default_clock_pattern(TSeq n v t)`
+4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t :c: default_clock_pattern(t) -> default_clock_pattern(t)`
+1. `Select_1d_t n idx :: TSeq n v t -> TSeq 1 (n+v-1) t :c: default_clock_pattern(TSeq n v t) -> default_clock_pattern(TSeq 1 (n+v-1) t)`
+1. `Tuple_To_SSeq n :: NTuple n t -> SSeq n t :c: default_clock_pattern(t) -> default_clock_pattern(t)`
+1. `Serialize no ni :: TSeq no (vo+no*vi) (SSeq ni t) -> TSeq no vo (TSeq ni vi t) :c: default_clock_pattern`
+1. `SSeq_To_Tuple n :: SSeq n t -> NTuple n t :c: default_clock_pattern(t) -> default_clock_pattern(t)`
 1. `Deserialize no ni :: TSeq no vo (TSeq ni vi t) -> TSeq no (vo+no*vi) (SSeq ni t)`
 
 ### Why The Closed Form Signatures Produce Suboptimal Hardware
