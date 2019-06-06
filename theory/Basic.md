@@ -151,9 +151,11 @@ The following are the rules for each operator on sequences in the sequence langu
 Please see [the partition document](Partition.md).
 
 ### `Tuple_To_Seq` Nesting
-`Tuple_To_Seq no ni === `
-1. `Tuple_To_Seq (Config no) (Config ni) :: Seq no (NTuple ni t) -> Seq no (Seq ni t)`
-1. `Seq_To_Tuple (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq no (NTuple ni t)`
+`Tuple_To_Seq (ni*nj) nk === Unpartition ni nj . Map ni (Tuple_To_Seq nj nk) . Partition ni nj`
+
+### `Seq_To_Tuple` Nesting
+`Seq_To_Tuple (ni*nj) nk === Unpartition ni nj . Map ni (Seq_To_Tuple nj nk) . Partition ni nj`
+
 ## Map-Identity Rewrite Rule
 `Map n Id === Id`
 
@@ -180,14 +182,14 @@ The input and output sequence types of an operator define the schedule in which 
 These schedules are encoded as two sequence types: space-sequences (`SSeq`) and time-sequences (`TSeq`). 
 
 We define the behavior of corresponding to `SSeq`s and `TSeq`s in terms of a period.
-A period for a `SSeq n t` or `TSeq n t` is the number of clock cycles required for an operator to accept or emit one `t`.
+A period for a `SSeq n t` or `TSeq n v t` is the number of clock cycles required for an operator to accept or emit one `t`.
 If `t` is an atomic type, then the period is 1.
 `SSeq` and `TSeq` are defined in terms of periods rather than clock cycles in order to support nested sequence types.
 
 1. `SSeq n t` - homogeneous, fixed-length sequence in space. This sequence is parallel.
     1. An operator that produces a `SSeq` emits `n` values of type `t` over one period. 
 3. `TSeq n v t` - homogeneous, fixed-length sequence in time. This sequence is sequential.
-    1. `n` is number of utilized periods. `v` is number of empty periods. We will explain the `v` parameter more in the [empty periods section](#empty-periods).
+    1. `n` is number of valid periods. `v` is number of empty periods. We will explain the `v` parameter more in the [empty periods section](#empty-periods).
     1. An operator that produces a `TSeq` emits `n` values of type `t` over `(n+v)` periods.
      
 ### Period Example
@@ -201,23 +203,27 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 
 ## Operators
 1. `Id :: t -> t`
-1. `Const_Gen :: t -> () -> t`
 1. `Add :: (Int x Int) -> Int`
 1. `Fst :: (t x t') -> t`
 1. `Snd :: (t x t') -> t'`
 5. `Tuple :: t1 -> t2 -> t1 x t2`
 1. `Map_s n :: (t -> t') -> SSeq n t -> SSeq n t'`
-2. `Map_t n :: (t -> t') -> TSeq n v t -> TSeq n v t'`
+2. `Map_t n v :: (t -> t') -> TSeq n v t -> TSeq n v t'`
 2. `Map2_s n :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
-2. `Map2_t n :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
+2. `Map2_t n v :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
 1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
-2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
+2. `Reduce_t n v :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
-3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t`
+3. `Up_1d_t n v :: TSeq 1 (n+v-1) t -> TSeq n v t`
 4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t`
-4. `Select_1d_t n idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
+1. `Select_1d_t n v idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
+1. `Tuple_To_SSeq n :: NTuple n t -> SSeq n t`
+1. `Serialize no vo ni vi :: TSeq no (vo+no*vi) (SSeq ni t) -> TSeq no vo (TSeq ni vi t)`
+1. `SSeq_To_Tuple n :: SSeq n t -> NTuple n t`
+1. `Deserialize no vo ni vi :: TSeq no vo (TSeq ni vi t) -> TSeq no (vo+no*vi) (SSeq ni t)`
 
 **Note: reduce's type signature will need to be modified to handle pipelined operators.**
+**Note: typically, the `v` parameters are implicit**
 
 ## Operator Properties
 We can compute the following properties for all programs in the space-time IR: 
@@ -276,26 +282,30 @@ For example, `Add` for an eight bit integer has eight compute units of area as i
 1. **Storage Area** is relative to a one-bit register. 
 1. **Wire Area** is relative to one-bit wire connecting two components. 
 The wiring is for connecting composed operators.
-To avoid double counting wiring area, we only consider an operator's output wires.
+To avoid double counting wiring area, we only consider an operator's input wires. 
+We choose to count input rather than output wires as an output can be used multiple times in a fork-join pattern but an input can only be wired into once.
 
 We represent area as the vector `{compute_area, storage_area, wire_area}`. 
 The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 `num_bits` returns the number of bits in an `Int` or tuple type.
 
-1. `area(Id) = {0, 0, 0}`
-1. `area(Const_Gen n) = {0, num_bits(t), num_bits(t)}`
-1. `area(Add) = {num_bits(Int), 0, num_bits(Int)}`
+1. `area(Id) = {0, 0, num_bits(t)}`
+1. `area(Add) = {num_bits(Int), 0, 2*num_bits(Int)}`
 5. `area(Fst) = area(Snd) = area(Tuple) = {0, 0, 0}`
 1. `area(Map_s n f) = n * area(f)`
 2. `area(Map_t n f) = area(f)`
 1. `area(Map2_s n f) = n * area(f)`
 2. `area(Map2_t n f) = area(f)`
-1. `area(Reduce_s n f) = ceil(log_2(n)) * area(f)`
+1. `area(Reduce_s n f) = (n-1) * area(f)`
 1. `area(Reduce_t n f) = area(f) + {0, num_bits(t), num_bits(t)} + area(counter)`
-1. `area(Up_1d_s n) = {0, 0, n * num_bits(t)}`
+1. `area(Up_1d_s n) = {0, 0, num_bits(t)}`
 1. `area(Up_1d_t n) = {0, num_bits(t), num_bits(t)} + area(counter)`
-1. `area(Select_1d_s n idx) = {0, 0, num_bits(t)}`
+1. `area(Select_1d_s n idx) = {0, 0, n * num_bits(t)}`
 1. `area(Select_1d_t n idx) = {0, 0, num_bits(t)} + area(counter)`
+1. `area(Tuple_To_SSeq n) = {0, 0, 0}`
+1. `area(Serialize no ni) = {0, (ni-1)*num_bits(t), ni*num_bits(t)} + area(counter)`
+1. `area(SSeq_To_Tuple n) = {0, 0, 0}`
+1. `area(Deserialize no ni) = {0, (ni-1)*num_bits(t), num_bits(t)} + area(counter)`
 1. `area(g.f) = area(g) + area(f)`
 
 Many of the sequential operators require a counter to track clock cycles and muxes to select outputs.
@@ -430,6 +440,97 @@ Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Seq_T
 Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduce_t no f .  Unpartition_t_ts no 1 . Map_t no Seq_To_SSeq . Map_t no (SSeq_To_Seq . Reduce_s ni f . Seq_To_SSeq) . Seq_To_TSeq . Partition no ni === (Functor Map Fusion)
 Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduce_t no f . Unpartition_t_ts no 1 . Map_t no Seq_To_SSeq . Map_t no SSeq_To_Seq . Map_t no (Reduce_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni === (Isomorphism Removal)
 Unpartition 1 1 . TSeq_To_Seq . Map_t 1 SSeq_To_Seq . Partition_t_ts 1 1 . Reduce_t no f . Unpartition_t_ts no 1 . Map_t no (Reduce_s ni f) . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
+```
+
+## Tuple\_To\_Seq
+### Sequence To Space
+```
+Tuple_To_Seq no ni === 
+SSeq_To_Seq . Map_s no SSeq_To_Seq . 
+    Map_s no (Tuple_To_SSeq ni) . 
+    Seq_To_SSeq
+```
+
+### Sequence To Time
+```
+Tuple_To_Seq no ni === 
+TSeq_To_Seq . Map_t no (TSeq_To_Seq) . 
+    Serialize no ni . Map_t no (Tuple_To_SSeq ni) . 
+    Seq_To_TSeq
+```
+
+### Sequence To Space-Time With Throughput `ni` Less Than Fully Parallel
+This transformation allows for the outer `Seq` to be partially or fully in time, but forces the inner `Seq` to be fully parallel.
+I can add a later transformation that allows both to be partially parallel if necessary.
+I will need to further flesh out the scheduling algorithm to determine if that is necessary.
+```
+Tuple_To_Seq (ni*nj) nk === (Nesting)
+
+Unpartition ni nj . 
+    Map ni (Tuple_To_Seq nj nk) . 
+    Partition ni nj === (Seq To TSeq)
+
+Unpartition ni nj . 
+    TSeq_To_Seq . Map_t ni (Tuple_To_Seq nj nk) . Seq_to_TSeq . 
+    Partition ni nj === (Seq To SSeq)
+
+Unpartition ni nj . TSeq_To_Seq .
+    Map_t ni (
+        SSeq_To_Seq . Map_s nj SSeq_To_Seq . 
+            Map_s nj (Tuple_To_SSeq nk) . 
+            Seq_To_SSeq
+        ) . 
+    Seq_To_TSeq . Partition ni nj === (Map Functor Fusion)
+
+Unpartition ni nj . TSeq_To_Seq .
+    Map_t ni SSeq_To_Seq . Map_t ni (Map_s nj SSeq_To_Seq) . 
+    Map_t ni (Map_s nj (Tuple_To_SSeq nk)) . 
+    Map_t ni Seq_To_SSeq .
+    Seq_To_TSeq . Partition ni nj 
+```
+
+## Seq\_To\_Tuple
+### Sequence To Space
+```
+Seq_To_Tuple no ni === 
+SSeq_To_Seq . Map_s no SSeq_To_Seq . 
+    Map_s no (SSeq_To_Tuple ni) . 
+    Seq_To_SSeq
+```
+
+### Sequence To Time
+```
+Seq_To_Tuple no ni === 
+TSeq_To_Seq .
+    Map_t no (SSeq_To_Tuple ni) . Deserialize no ni .
+    Map_t no (TSeq_To_Seq) . Seq_To_TSeq
+```
+
+### Sequence To Space-Time With Throughput `ni` Less Than Fully Parallel
+```
+Seq_To_Tuple (ni*nj) nk === (Nesting)
+
+Unpartition ni nj . 
+    Map ni (Seq_To_Tuple nj nk) . 
+    Partition ni nj === (Seq To TSeq)
+
+Unpartition ni nj . 
+    TSeq_To_Seq . Map_t ni (Seq_To_Tuple nj nk) . Seq_to_TSeq . 
+    Partition ni nj === (Seq To SSeq)
+
+Unpartition ni nj . TSeq_To_Seq .
+    Map_t ni (
+        SSeq_To_Seq . 
+            Map_s nj (SSeq_To_Tuple nk) . 
+            Map_s nj Seq_To_SSeq . Seq_To_SSeq
+        ) . 
+    Seq_To_TSeq . Partition ni nj === (Map Functor Fusion)
+
+Unpartition ni nj . TSeq_To_Seq .
+    Map_t ni SSeq_To_Seq . 
+    Map_t ni (Map_s nj (SSeq_To_Tuple nk))
+    Map_t ni (Map_s nj Seq_To_SSeq) . Map_t ni Seq_To_SSeq
+    Seq_To_TSeq . Partition ni nj
 ```
 
 ## Rewrite Rules Lemmas
