@@ -257,15 +257,3 @@ If an operator appears multiple times in the list, the first signature is a spec
 1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t) :c: default_clock_pattern(t) -> default_clock_pattern(t)`
 1. `Shift_s n init :: SSeq n t -> SSeq n t :c: default_clock_pattern(t) -> default_clock_pattern(t)`
 1. `Shift_t n init :: TSeq n v t -> TSeq n v t :c: default_clock_pattern(TSeq n v t) -> default_clock_pattern(TSeq n v t)`
-
-However, the different combinational operators produce different hardware when composed with operators that produce sequential hardware, such as `Map_t 2 (Select_1d_t 5 0)`.
-The over-specification of the closed clock signatures 
-The hardware implementations are different, however, when `Map_t 2 Abs` is composed with `Map_t 2 (Select_1d_t 4 0) :: TSeq 4 0 Int -> TSeq 1 3 Int :c: 1111 -> `
-
-because they are overly specific. for operators that produce combinational hardware, such as `Map_t 1 Abs`.
-The over-specification leads to the addition of synchronization buffers that are unnecessary when the combinational operators are composed with operators that produce sequential hardware, such as `Select_1d_t 5 0`.
-In the example `Map_t 2 Abs . Unpartition_tt 2 1 . Map_t 2 (Select_1d_t 5 0)` there is a buffer of size 
-
-If `Map_t 1 Add :: TSeq 1 3  `
- higher-order operators lifting combinational operators, 
-
