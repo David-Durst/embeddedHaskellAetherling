@@ -36,6 +36,7 @@ dependencies:
 - containers
 - reflection
 - util
+- template-haskell
 
 ghc-options:
 - -fwarn-incomplete-patterns 
@@ -69,6 +70,8 @@ library:
     - ConstraintKinds
     - Rank2Types
     - InstanceSigs
+    - TemplateHaskell
+    - DeriveLift
 
 tests:
   Aetherling-Tests:
