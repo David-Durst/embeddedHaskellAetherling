@@ -153,23 +153,6 @@ Unlike in the `TSeq n v` type signatures, there are no nested sequences.
 Aetherling must assign a **clock signature** to each operator that specifies the order of valid and invalid clocks.
 The clock signature is of the form `op :: t -> t' :c: ct -> ct'` where `t` and `t'` are the space-time IR types and `ct` and `ct'` are of clock types.
 
-
-## Space-Time IR Valid And Invalid Clock Count
-Before giving the clock signatures of the space-time operators, I'm going to introduce `default_clock_pattern` function.
-It provides a default clock pattern for a space-time IR type.
-This is a simple way to determine the flattened clock cycle pattern for operators such as `Up_1d_t` with potentially nested types.
-The functions already defined in [the basic document](Basic.md) are insufficient to describe the clock pattern for operators such as `Up_1d_t :: TSeq 1 (n+v-1) t -> TSeq n v t` when `t` is a nested type.
-For example, `Up_1d_t :: TSeq 5 5 (TSeq 2 1 Int) -> TSeq 5 5 (TSeq 2 1 Int)` needs to have a clock cycle pattern that accounts for all 30 clocks.
-However, the only function I have previously defined to determine the number of clocks in a space-time type is [`type_time`](Basic.md#time).
-A clock pattern of `(1)[type_time(t)]` would be incorrect because `t` may have invalid clocks.
-
-1. `default_clock_pattern(Int) = 1`
-1. `default_clock_pattern(t x t') = default_clock_pattern(t)`
-    1. Note: the [sequence types section](Basic.md#sequence_types) specifies that tuples of sequences must have the same type. 
-    This ensures that a tuple's time and clock patterns are equivalent to the pattern of each element in the tuple.
-1. `default_clock_pattern(SSeq n t) = default_clock_pattern(t)`
-1. `default_clock_pattern(TSeq n v t) = (default_clock_pattern(t))[n] (0)[|default_clock_pattern(t)| * v]`
-
 ## Closed Clock Type Signatures Attempt
 A simple approach is to assign a default clock cycle pattern to each space-time IR type signature. 
 An operator's clock calculus type signature is then derived from it's space-time IR types.
