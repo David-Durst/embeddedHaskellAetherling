@@ -40,6 +40,11 @@ data Atom_Tuple a b =
   | Atom_Tuple_Edge DAG_Index
   deriving (Show, Eq)
 
+data Seq_Tuple n a =
+  Seq_Tuple {sTuple :: Vector n a}
+  | Seq_Tuple_Edge DAG_Index
+  deriving (Show, Eq)
+
   {-
 data Atom_NTuple n a =
   Atom_NTuple (V.Vector n a)
@@ -52,12 +57,12 @@ data Atom_NTuple n a =
   NTuple :: V.Vector n a -> Atom (V.Vector n (Atom a))
 -}
 
-data Seq n a =
+data Seq n i a =
   Seq {sVec :: Vector n a}
   | Seq_Edge DAG_Index
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
-instance (KnownNat n) => Applicative (Seq n) where
+instance (KnownNat n, KnownNat i) => Applicative (Seq n i) where
   pure a = (Seq ((pure :: a -> Vector n a) a))
   (Seq f) <*> (Seq a) = Seq (f <*> a)
   _ <*> _ = undefined
@@ -88,8 +93,9 @@ data AST_Type =
   UnitT
   | BitT
   | IntT
-  | TupleT AST_Type AST_Type
-  | SeqT Int AST_Type
+  | ATupleT AST_Type AST_Type
+  | STupleT Int AST_Type
+  | SeqT Int Int AST_Type
   | SSeqT Int AST_Type
   | TSeqT Int Int AST_Type
   deriving (Show, Eq)

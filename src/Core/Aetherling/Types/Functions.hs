@@ -30,8 +30,9 @@ size_t :: AST_Type -> Int
 size_t UnitT = 0
 size_t BitT = size_bit
 size_t IntT = size_int
-size_t (TupleT t0 t1) = size_t t0 + size_t t1
-size_t (SeqT _ _) = 0
+size_t (ATupleT t0 t1) = size_t t0 + size_t t1
+size_t (STupleT n t) = n * size_t t
+size_t (SeqT _ _ _) = 0
 size_t (SSeqT n t) = n * size_t t
 size_t (TSeqT n _ t) = size_t t
 
@@ -54,7 +55,7 @@ type family Check_Type_Is_Atom_Or_Nested (x :: *) :: Constraint where
   Check_Type_Is_Atom_Or_Nested (Atom_Int) = True ~ True
   Check_Type_Is_Atom_Or_Nested (Atom_Bit) = True ~ True
   Check_Type_Is_Atom_Or_Nested (Atom_Tuple a b) = True ~ True
-  Check_Type_Is_Atom_Or_Nested (Seq _ a) = Check_Type_Is_Atom_Or_Nested a
+  Check_Type_Is_Atom_Or_Nested (Seq _ _ a) = Check_Type_Is_Atom_Or_Nested a
   Check_Type_Is_Atom_Or_Nested (SSeq _ a) = Check_Type_Is_Atom_Or_Nested a
   Check_Type_Is_Atom_Or_Nested (TSeq _ _ a) = Check_Type_Is_Atom_Or_Nested a
   Check_Type_Is_Atom_Or_Nested x =
@@ -117,15 +118,25 @@ instance (Convertible_To_DAG_Data a, Convertible_To_DAG_Data b) =>
   convert_to_index _ = Nothing
   convert_index_to_value idx = Atom_Tuple_Edge idx
   get_AST_type _ =
-    TupleT (get_AST_type (Proxy :: Proxy a)) (get_AST_type (Proxy :: Proxy b))
+    ATupleT (get_AST_type (Proxy :: Proxy a)) (get_AST_type (Proxy :: Proxy b))
 
 instance (KnownNat n, Convertible_To_DAG_Data a) =>
-  Convertible_To_DAG_Data (Seq n a) where
+  Convertible_To_DAG_Data (Seq_Tuple n a) where
+  convert_to_index (Seq_Tuple_Edge idx) = Just idx
+  convert_to_index _ = Nothing
+  convert_index_to_value idx = Seq_Tuple_Edge idx
+  get_AST_type _ = STupleT nVal (get_AST_type (Proxy :: Proxy a))
+    where nVal = fromInteger $ natVal (Proxy :: Proxy n)
+
+instance (KnownNat n, KnownNat i, Convertible_To_DAG_Data a) =>
+  Convertible_To_DAG_Data (Seq n i a) where
   convert_to_index (Seq_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = Seq_Edge idx
-  get_AST_type _ = SeqT nVal (get_AST_type (Proxy :: Proxy a))
-    where nVal = fromInteger $ natVal (Proxy :: Proxy n)
+  get_AST_type _ = SeqT nVal iVal (get_AST_type (Proxy :: Proxy a))
+    where
+      nVal = fromInteger $ natVal (Proxy :: Proxy n)
+      iVal = fromInteger $ natVal (Proxy :: Proxy i)
 
 instance (KnownNat n, Convertible_To_DAG_Data a) =>
   Convertible_To_DAG_Data (SSeq n a) where
