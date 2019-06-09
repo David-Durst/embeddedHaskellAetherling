@@ -1,7 +1,8 @@
 # Clock Signatures 
 This document explains the **clock signature**, the per-clock-cycle timing, of each operator in Aetherling's space-time IR.
 It adds:
-1. a justification for why the space-time IR types must be supplemented with clock signatures 
+1. a justification for why the space-time IR types must be supplemented with clock signatures when producing hardware
+1. a justification for why the space-time IR types are sufficiently powerful for type checking
 1. a justification for why the space-time IR types shouldn't be the same as the clock signatures
 1. an explanation of the clock calculus notation used to define each clock signature
 1. a definition of the clock timing information for each operator.
@@ -9,23 +10,30 @@ It adds:
 Aetherling's clock calculus is based on the clock calculus type system in [N-Synchronous Kahn Networks](https://dl.acm.org/citation.cfm?id=1111054).
 I will refer to the N-Synchronous Kahn Networks as NKN.
 
-# Why Clock Signatures
-The Aetherling space-time IR specifies the throughput and the total number of clock cycles in an operator's output.
-This is shown in the [throughput](Basic.md#thoughput) and [time](Basic.md#time) sections in the basic document.
-However, matching throughputs is insufficient to connect consumer and producer operators in synchronous hardware.
-The producer may be valid and emit output on a clock cycle where the consumer is invalid and not expecting data.
+# Why Clock Signatures Are Necessary To Produce Hardware
+One of Aetherling's goals is to produce efficient hardware with minimal buffering.
+Aetherling accomplishes this goal by compiling to synchronous, streaming hardware.
+Synchronous, streaming hardware ensures that adjacent producer and consumer operators communicate on the same clock cycle to minimize buffering between operators.
+
+The constraints imposed by the space-time IR types are insufficient to produce synchronous hardware.
+The Aetherling space-time IR types specifies the [throughput](Basic.md#thoughput) and [total number of clock cycles](Basic.md#time) for each operator's input and output.
+If two operators are composed, the producer's output throughput and consumer's input throughput must match along with their total numbers of clock cycles.
+Synchronous hardware also requires that producer and consumer operators communicate on the same clock cycle.
+Under the space-time IR types, the producer may be valid and emit output on a clock cycle where the consumer is invalid and not expecting data.
 The emitted data on this clock cycle would be lost without a buffer between the producer and consumer to match clock cycles.
-The buffer would store the data until the consumer was ready to accept it.
+
+Adding a clock signature to each space-time IR operator enables Aetherling to determine the offset between valid clocks in composed operators.
+With this information, Aetherling can insert minimally sized buffers necessary to store data from the producer until the consumer was ready to accept it.
 The clock calculus provides a language that enables Aetherling to 
 1. specify the clock cycles that operators accept and emit data on
-1. compute the size of the retiming buffer necessary between two operators so that their clock cycles match.
+1. compute the size of the retiming buffer necessary between two operators so that their clock cycles match
 
-# Why The `n` and `v` Parameters Are The Correct Amount of Detail For Type Checking
-The goal of the type `TSeq n v` is to ensure that operators can only be composed if they can compiled to synchronous, streaming implementations.
+# Why The Space-Time IR Types Are Sufficiently Detailed For Type Checking
+The goal of the space-time IR types is to ensure that operators can only be composed if they can be compiled to synchronous, streaming implementations.
 The `TSeq`'s `n` and `v` parameters specify that an operator accepts or emits data on `n` valid clock cycles out of `n+v` total clock cycles.
 If two operators with matching `TSeq` and `SSeq` types are composed, their throughputs and total number of clock cycles match. 
 But, they may accept and emit data on different clocks as `TSeq n v` does not specify the order of valid and invalid cycles.
-This ambiguity would seem to prevent `TSeq n v` from accomplishing its goal.
+This ambiguity would seem to prevent the types from accomplishing its goal.
 Synchronous, streaming hardware requires producer and consumer operators to accept and emit data on the same clock cycle.
 However, as noted by the NKN paper, there are producer-consumer pairs which do not emit or accept data on the same clock cycle, but can be made to do so using a finite sized buffer.
 These operators are known as **synchronizable**. 
@@ -34,7 +42,7 @@ The definition of **synchronizable** operators is: when placing an appropriately
 1. On every clock cycle where the producer emits data, the buffer is ready to accept input.
 1. On every clock cycle where the consumer accepts data, the buffer has data to emit.
 
-This section will show that the `n` and `v` parameters are sufficiently specific so that, if two operators with matching `TSeq` and `SSeq` types are composed, they are synchronizable.
+This section will show that `TSeq`'s `n` and `v` parameters are sufficiently specific so that, if two operators with matching `TSeq` and `SSeq` types are composed, they are synchronizable.
 
 ## Proof Of Synchronizability
 **Theorem:** Any pair of producer-consumer operators are synchronizable if the corresponding output and input sequences contain the same number of valid and invalid clocks. This is similar to Propositions 6 and 7 from NKN, except for finite sequences.
@@ -86,20 +94,27 @@ for i in len(os):
       max_elements_os_ahead = valid_clocks_os - valid_clocks_is
 ```
 1. Starting `is` `max_clocks_is_ahead` clocks after `os` and putting a buffer of size `max_elements_os_ahead` between them will synchronize the two sequences.
-    1. `max_clocks_is_ahead` ensures `is` will never expect an input before `os` has emitted it
-    1. `max_elements_os_ahead` ensures that if `os` has emitted an element before `is` is ready for it, there will be room in the buffer to store it until `is` is ready.
+    1. A delay of `max_clocks_is_ahead` clocks ensures `is` will never expect an input before `os` has emitted it
+    1. A buffer of size `max_elements_os_ahead` ensures that if `os` has emitted an element before `is` is ready for it, there will be room in the buffer to store it until `is` is ready.
 
 ## Why `n` and `v` Ensure Synchronizability Of Composed Operators
 `TSeq`'s `n` and `v` parameters ensure that the sequences contain the same number of valid and invalid clocks. 
 Therefore, by the synchronizability theorem, the `n` and `v` parameters are enough to ensure that Aetherling only allows operators to be composed if the inputs and outputs are synchronizable.
 
-## Why Not Replace `n` and `v` With A Complete Clock Calculus
-Using the types from the [clock notation section](#clock_notation), let `f` and `g` have the following types:
+# Why Not Replace The Space-Time IR's `TSeq`s and `SSeq`s With Clock Signatures
+Type systems should only include the detail necessary to prove the desired properties.
+Adding additional information complicates type checking.
+Clock signatures provide unnecessary detail in the type system that complicates type checking when composing synchronizable operators.
+The `TSeq` and `SSeq` types are provide the correct level of detail so that synchronizable operators are composable using standard type checking rules.
+
+For example, let `f` and `g` be two operators. Each operator's input and output is valid for two out of four clocks.
+`f` and `g` should be composable because they are synchronizable.
+Using the types from the [clock notation section](#clock_notation), let `f` and `g` have the following clock signatures:
 ```
 f :: (1010)[1] -> (1010)[1]
-g :: (0101)[1] -> (0101)[1]
+g :: (0110)[1] -> (0110)[1]
 ```
-`f . g` cannot be composed with standard, syntactic type equality rules as `(1010)[5]` and `(0101)[5]`. 
+`f . g` doesn't type check with standard, syntactic type equality rules as `(1010)[1]` and `(0110)[1]` are not equal. 
 
 With the space-time IR types, `f` and `g` can be composed because they have the following type signatures
 ```
@@ -107,56 +122,56 @@ f :: TSeq 2 2 -> TSeq 2 2
 g :: TSeq 2 2 -> TSeq 2 2
 ```
 
-`f` and `g` should be composable because they are synchronizable.
-Thus, I prefer using `n` and `v` for my types rather than a complete clock calculus as it enables composing synchronizable functions using normal type equality.
+For the space-time IR's type system, the imprecision of the `TSeq`s and `SSeq`s make them preferable compared to clock signatures. 
+The imprecision enables composing synchronizable functions using normal type equality.
 
 It may be possible to extend the definition of type equality in Aetherling so that `(1010)[5]` and `(0101)[5]` are of equivalent types.
 The NKN paper gives one example of how to do this with its relaxed clock calculus, subtyping rule, and type unification system.
 However, in order to use that rule in a type system, they needed to do significant theory work.
-I find it much simpler to only use `n` and `v` in my types and do the synchronization below the type system.
+It is much simpler to only use the `TSeq` and `SSeq` types and perform synchronization below the type system.
 
-# Clock Notation 
-Aetherling's clock notation specifies the distribution of valid and invalid clocks in a `TSeq n v`'s period. 
-A [period](Basic.md#Time) of 1 in the space-time IR corresponds to 1 clock cycle.
+Replacing the `TSeq`s and `SSeq`s with clock signatures while preserving the property of composing synchronizable operators would require unnecessary type theory.
+In this section, I will show by example that the clock signatures are too specific to show the desired property of compilability to synchronous, streaming hardware.
 
-The clocks in Aetherling are a finite version of the infinite, periodic binary words in NKN. 
-The clocks must be finite as each `TSeq` in Aetherling is a finite number of clocks.
+# Clock Signature Notation 
+Aetherling's clock notation specifies the **clock signature**, the distribution of valid and invalid clocks, in an operator's input and output sequences. 
+Clock signatures in Aetherling are a finite version of the infinite, periodic binary words in NKN. 
+The signatures must be finite as each `TSeq` and `SSeq` in Aetherling describes a finite number of clocks.
 If `TSeq`'s were infinite, nesting them would not have a clear meaning.
 For example, `TSeq infinite (TSeq infinite Int)` is nonsensical. 
-One cannot repeat an infinite length sequence an infinite number of times.
+One cannot repeat an infinite length sequence.
 
 The grammar for the notation is
 ```
 ct ::= w | ct x ct | ct -> ct | x
-w ::= 1 | 0 | w w | (w)[d] s.t. d is a natural number
+w ::= 1 | 0 | w w' | (w)[d] s.t. d is a natural number
 ```
 
 `1` indicates a valid clock cycle. 
 `0` indicates an invalid clock cycle. 
-`(w)[d]` repeats the clock pattern `w` for `d` times.
-`w w'` is a sequence of clock patterns.
+`(w)[d]` repeats the clock signature `w` for `d` times.
+`w w'` is a sequence of two different clock signatures where first `w` occurs and then `w'`.
 
-`ct x ct` represents a tuple of two clocks.
-I allow tuples with different clocks.
-`ct -> ct` represents an operator.
+`ct x ct` represents a tuple of two clock sigantures.
+I allow tuples with different patterns.
+`ct -> ct` represents an operator with input and output clock signatures.
 `x` represents a free variable.
 I will motivate the need for free variables below.
 
-`|ct|` is the number of clock types in `ct`.
+`|ct|` is the number of clock cycles in clock signature `ct`.
 
 ## Comparisons With NKN
-As in NKN, a word `w` has a pattern `v` that repeats. 
+As in NKN, a word `w` has a pattern of clock cycles. 
 Unlike in NKN, the pattern repeats only a finite number of times `d`.
-Unlike in the `TSeq n v` type signatures, there are no nested sequences.
 
 # Operator Clock Patterns
 Aetherling must assign a **clock signature** to each operator that specifies the order of valid and invalid clocks.
-The clock signature is of the form `op :: t -> t' :c: ct -> ct'` where `t` and `t'` are the space-time IR types and `ct` and `ct'` are of clock types.
+The judgement for an operator's clock signature is `op :: t -> t' :c: ct -> ct'` where `t` and `t'` are the space-time IR types and `ct` and `ct'` are of clock signatures.
 
 ## Closed Clock Type Signatures Attempt
-A simple approach is to assign a default clock cycle pattern to each space-time IR type signature. 
-An operator's clock calculus type signature is then derived from it's space-time IR types.
-These clock calculus type signatures are **closed** as no variables appear in them.
+A simple approach is to assign a default clock signature to each space-time IR type. 
+An operator's clock signature is then derived from it's space-time IR types.
+These clock calculus type signatures are **closed** as no free variables appear in them.
 Later, more efficient signatures will use variables.
 
 `default_clock_pattern(t)` gives a clock cycle pattern for a space-time IR type `t`.
@@ -187,7 +202,7 @@ These performance problems are addressed with the special case, closed clock sig
 
 ### Why The Closed Signatures Produce Suboptimal Hardware
 The closed clock signatures produce suboptimal hardware because they are overly specific and thus introduce unnecessary synchronizing buffers.
-The closed clock signatures are overly specific because they force an operator to have one clock signature when its hardware implementation supports multiple clock signatures.
+The closed clock signatures are overly specific because they force an operator to have one clock signature when its hardware implementation supports multiple.
 Operators that produce combinational hardware, such as `Map_t 2 Abs :: TSeq 2 2 Int -> TSeq 2 2 Int`, can have multiple clock signatures with the same implementation.
 The hardware implementation of `Map_t 2 Abs` supports both of the following are clock signatures:
 1. `Map_t 2 Abs :: TSeq 2 2 Int -> TSeq 2 2 Int :c: 1100 -> 1100`
