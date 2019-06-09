@@ -2,10 +2,10 @@
 This document explains the **clock signature**, the per-clock-cycle timing, of each operator in Aetherling's space-time IR.
 It adds:
 1. a justification for why the space-time IR types must be supplemented with clock signatures when producing hardware
-1. a justification for why the space-time IR types are sufficiently powerful for type checking
+1. a justification for why the space-time IR types are sufficient for type checking
 1. a justification for why the space-time IR types shouldn't be the same as the clock signatures
 1. an explanation of the clock calculus notation used to define each clock signature
-1. a definition of the clock timing information for each operator.
+1. a definition of the clock signatures for each operator.
 
 Aetherling's clock calculus is based on the clock calculus type system in [N-Synchronous Kahn Networks](https://dl.acm.org/citation.cfm?id=1111054).
 I will refer to the N-Synchronous Kahn Networks as NKN.
@@ -28,7 +28,7 @@ The clock calculus provides a language that enables Aetherling to
 1. specify the clock cycles that operators accept and emit data on
 1. compute the size of the retiming buffer necessary between two operators so that their clock cycles match
 
-# Why The Space-Time IR Types Are Sufficiently Detailed For Type Checking
+# Why The Space-Time IR Types Are Sufficient For Type Checking
 The goal of the space-time IR types is to ensure that operators can only be composed if they can be compiled to synchronous, streaming implementations.
 The `TSeq`'s `n` and `v` parameters specify that an operator accepts or emits data on `n` valid clock cycles out of `n+v` total clock cycles.
 If two operators with matching `TSeq` and `SSeq` types are composed, their throughputs and total number of clock cycles match. 
@@ -161,7 +161,7 @@ I will motivate the need for free variables below.
 As in NKN, a word `w` has a pattern of clock cycles. 
 Unlike in NKN, the pattern repeats only a finite number of times `d`.
 
-# Operator Clock Patterns
+# Operator Clock Signatures 
 Aetherling must assign a **clock signature** to each operator that specifies the order of valid and invalid clocks.
 The judgement for an operator's clock signature is `op :: t -> t' :c: ct -> ct'` where `t` and `t'` are the space-time IR types and `ct` and `ct'` are of clock signatures.
 
@@ -200,20 +200,18 @@ These performance problems are addressed with the special case, closed clock sig
 ### Why The Closed Signatures Produce Suboptimal Hardware
 The closed clock signatures produce suboptimal hardware because they are overly specific and thus introduce unnecessary synchronizing buffers.
 The closed clock signatures are overly specific because they force an operator to have one clock signature when its hardware implementation supports multiple.
-Operators that produce combinational hardware, such as `Map_t 2 Abs :: TSeq 2 2 Int -> TSeq 2 2 Int`, can have multiple clock signatures with the same implementation.
+Some operators that produce combinational hardware, such as `Map_t 2 Abs :: TSeq 2 2 Int -> TSeq 2 2 Int`, can have multiple clock signatures with the same implementation.
 The hardware implementation of `Map_t 2 Abs` supports both of the following are clock signatures:
 1. `Map_t 2 Abs :: TSeq 2 2 Int -> TSeq 2 2 Int :c: 1100 -> 1100`
 1. `Map_t 2 Abs :: TSeq 2 2 Int -> TSeq 2 2 Int :c: 1010 -> 1010`
 
-While the same hardware supports both clock signatures of `Map_t 2 Abs`, the different signatures produce different hardware when composed with operators that produce sequential hardware, such as `Unpartition_tt 2 1 . Map_t 2 (Select_1d_t 5 0)`.
-`Map_t 2 Abs . Unpartition_t_tt 2 1 . Map_t 2 (Select_1d_t 5 0)` requires a synchronizing buffer between `Map_t 2 Abs :c: 1100 -> 1100` and `Unpartition_t_tt 2 1 :c: 1010 -> 1010`. Conversely, no buffer is needed between`Map_t 2 Abs :c: 1010 -> 1010` and `Unpartition_t_tt 2 1 :c: 1010 -> 1010`.
+While the same hardware supports both clock signatures of `Map_t 2 Abs`, the different signatures produce different hardware when composed with other operators, such as `Unpartition_tt 2 1`.
+`Map_t 2 Abs . Unpartition_t_tt 2 1` requires a synchronizing buffer between `Map_t 2 Abs :c: 1100 -> 1100` and `Unpartition_t_tt 2 1 :c: 1010 -> 1010`. Conversely, no buffer is needed between`Map_t 2 Abs :c: 1010 -> 1010` and `Unpartition_t_tt 2 1 :c: 1010 -> 1010`.
 Using the closed clock signatures crated using `default_clock_pattern`, the compiler must add the synchronizing buffer.
 
 **Open** clock signatures using free variables provide the flexibility necessary to produce efficient hardware.
-I give all operators that compile to combinational hardware the clock signature `x -> x`.
-When an operator with signature `x -> x` is composed with one with a closed clock signatures, the `x`'s change to match the closed clock signature.
-This ensures that operators like `Map_t` can have the more efficient clock signature when they are composed with operators that compile to sequential hardware.
-
+I give operators the open clock signature `x -> x` if they can have multiple closed clock signatures.
+When an operator with signature `x -> x` is composed with one with a closed clock signature, the `x`'s change to match the closed clock signature.
 
 ## Final Clock Signatures
 The clock signatures with the above two optimizations are below. 
@@ -247,6 +245,7 @@ If an operator appears multiple times in the list, the first signature is a spec
     1. Output clock pattern is same as input pattern to `Serialize`. 
     Can do this by delaying the output of `Deserialize` relative to its input by `default_clock_pattern(TSeq 1 (ni+vi-1) t) - 1` clocks.
 1. `Partition_t_tt no ni :: TSeq (no*ni) (vo + no*vi) t -> TSeq no vo (TSeq ni vi t) :c: default_clock_pattern(TSeq no vo (TSeq ni vi t)) -> default_clock_pattern(TSeq no vo (TSeq ni vi t))`
+    1. This clock signature enables `Partition_t_tt` to become a nop.
 1. `Unpartition_t_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) (vo + no*vi) t :c: default_clock_pattern(TSeq no vo (TSeq ni vi t)) -> default_clock_pattern(TSeq no vo (TSeq ni vi t))`
 1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t) :c: default_clock_pattern(t) -> default_clock_pattern(t)`
 1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t) :c: default_clock_pattern(t) -> default_clock_pattern(t)`
