@@ -97,7 +97,7 @@ for i in len(os):
     1. A delay of `max_clocks_is_ahead` clocks ensures `is` will never expect an input before `os` has emitted it
     1. A buffer of size `max_elements_os_ahead` ensures that if `os` has emitted an element before `is` is ready for it, there will be room in the buffer to store it until `is` is ready.
 
-## Why `n` and `v` Ensure Synchronizability Of Composed Operators
+## Why `TSq`'s '`n` and `v` Parameters Ensure Synchronizability Of Composed Operators
 `TSeq`'s `n` and `v` parameters ensure that the sequences contain the same number of valid and invalid clocks. 
 Therefore, by the synchronizability theorem, the `n` and `v` parameters are enough to ensure that Aetherling only allows operators to be composed if the inputs and outputs are synchronizable.
 
