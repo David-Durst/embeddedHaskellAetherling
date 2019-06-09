@@ -1,15 +1,15 @@
-# Clock Calculus For Aetherling
-The document explains the clock-level timing information for Aetherling's space-time IR.
+# Clock Signatures 
+This document explains the **clock signature**, the per-clock-cycle timing, of each operator in Aetherling's space-time IR.
 It adds:
-1. a justification for why Aetherling needs the clock calculus in addition to the standard space-time IR types
-1. a justification for why Aetherling's space-time IR types shouldn't be the same as the clock calculus
-1. an explanation of the clock notation
+1. a justification for why the space-time IR types must be supplemented with clock signatures 
+1. a justification for why the space-time IR types shouldn't be the same as the clock signatures
+1. an explanation of the clock calculus notation used to define each clock signature
 1. a definition of the clock timing information for each operator.
 
 Aetherling's clock calculus is based on the clock calculus type system in [N-Synchronous Kahn Networks](https://dl.acm.org/citation.cfm?id=1111054).
 I will refer to the N-Synchronous Kahn Networks as NKN.
 
-# Why Clock Calculus
+# Why Clock Signatures
 The Aetherling space-time IR specifies the throughput and the total number of clock cycles in an operator's output.
 This is shown in the [throughput](Basic.md#thoughput) and [time](Basic.md#time) sections in the basic document.
 However, matching throughputs is insufficient to connect consumer and producer operators in synchronous hardware.
