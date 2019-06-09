@@ -130,9 +130,6 @@ The NKN paper gives one example of how to do this with its relaxed clock calculu
 However, in order to use that rule in a type system, they needed to do significant theory work.
 It is much simpler to only use the `TSeq` and `SSeq` types and perform synchronization below the type system.
 
-Replacing the `TSeq`s and `SSeq`s with clock signatures while preserving the property of composing synchronizable operators would require unnecessary type theory.
-In this section, I will show by example that the clock signatures are too specific to show the desired property of compilability to synchronous, streaming hardware.
-
 # Clock Signature Notation 
 Aetherling's clock notation specifies the **clock signature**, the distribution of valid and invalid clocks, in an operator's input and output sequences. 
 Clock signatures in Aetherling are a finite version of the infinite, periodic binary words in NKN. 
