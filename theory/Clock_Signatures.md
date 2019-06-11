@@ -28,7 +28,7 @@ The clock calculus provides a language that enables Aetherling to
 1. specify the clock cycles that operators accept and emit data on
 1. compute the size of the retiming buffer necessary between two operators so that their clock cycles match
 
-# Why The Space-Time IR Types Are Sufficient For Type Checking
+# Why The Space-Time IR Types Are Sufficient to Guarantee Efficient Hardware Can Be Generated
 The goal of the space-time IR types is to ensure that operators can only be composed if they can be compiled to synchronous, streaming implementations.
 The `TSeq`'s `n` and `v` parameters specify that an operator accepts or emits data on `n` valid clock cycles out of `n+v` total clock cycles.
 If two operators with matching `TSeq` and `SSeq` types are composed, their throughputs and total number of clock cycles match. 
@@ -169,27 +169,27 @@ The judgement for an operator's clock signature is `op :: t -> t' :c: ct -> ct'`
 A simple approach is to assign a default clock signature to each space-time IR type. 
 An operator's clock signature is then derived from it's space-time IR types.
 These clock calculus type signatures are **closed** as no free variables appear in them.
-Later, more efficient signatures will use variables.
+Later, I will change an operator's clock signature from `default_clock_signature` to perform optimizations.
 
-`default_clock_pattern(t)` gives a clock cycle pattern for a space-time IR type `t`.
+`default_clock_signature(t)` gives a clock cycle pattern for a space-time IR type `t`.
 
-1. `default_clock_pattern(Int) = 1`
-1. `default_clock_pattern(t x t') = default_clock_pattern(t)`
+1. `default_clock_signature(Int) = 1`
+1. `default_clock_signature(t x t') = default_clock_signature(t)`
     1. Note: the [sequence types section](Basic.md#sequence_types) specifies that tuples of sequences must have the same type. 
     This ensures that a tuple's time and clock patterns are equivalent to the pattern of each element in the tuple.
-1. `default_clock_pattern(SSeq n t) = default_clock_pattern(t)`
-1. `default_clock_pattern(TSeq n v t) = (default_clock_pattern(t))[n] (0)[|default_clock_pattern(t)| * v]`
+1. `default_clock_signature(SSeq n t) = default_clock_signature(t)`
+1. `default_clock_signature(TSeq n v t) = (default_clock_signature(t))[n] (0)[|default_clock_signature(t)| * v]`
 
-The clock cycle pattern of each operator is derived from `default_clock_pattern`.
+The clock cycle pattern of each operator is derived from `default_clock_signature`.
 For example, 
-1. `Id :: t -> t :c: default_clock_pattern(t) -> default_clock_pattern(t)`
-1. `Add :: (Int x Int) :c: default_clock_pattern(Int x Int) -> default_clock_pattern(Int)`
-1. `Map_s n f :: SSeq n t -> SSeq n t' :c: default_clock_pattern(SSeq n t) -> default_clock_pattern(SSeq n t')`
-2. `Map_t n f :: TSeq n v t -> TSeq n v t' :c: default_clock_pattern(TSeq n v t) -> default_clock_pattern(TSeq n v t')`
+1. `Id :: t -> t :c: default_clock_signature(t) -> default_clock_signature(t)`
+1. `Add :: (Int x Int) :c: default_clock_signature(Int x Int) -> default_clock_signature(Int)`
+1. `Map_s n f :: SSeq n t -> SSeq n t' :c: default_clock_signature(SSeq n t) -> default_clock_signature(SSeq n t')`
+2. `Map_t n f :: TSeq n v t -> TSeq n v t' :c: default_clock_signature(TSeq n v t) -> default_clock_signature(TSeq n v t')`
 
 
-### Why `default_clock_pattern` For All Clock Signatures Produces Suboptimal Hardware
-The signatures using only `default_clock_pattern` produce suboptimal hardware because they require operators to have inefficient implementations.
+### Why `default_clock_signature` For All Clock Signatures Produces Suboptimal Hardware
+The signatures using only `default_clock_signature` produce suboptimal hardware because they require operators to have inefficient implementations.
 Consider `Unpartition_t_tt 2 1 :: TSeq 2 0 (TSeq 1 1 Int) -> TSeq 2 2 t :c: 1010 -> 1100`.
 Implementing `Unpartition_t_tt` with this type signature would require it to buffer data unnecessarily.
 It would need to delay the output by 1 clock cycle relative to the input. 
@@ -207,7 +207,7 @@ The hardware implementation of `Map_t 2 Abs` supports both of the following are 
 
 While the same hardware supports both clock signatures of `Map_t 2 Abs`, the different signatures produce different hardware when composed with other operators, such as `Unpartition_tt 2 1`.
 `Map_t 2 Abs . Unpartition_t_tt 2 1` requires a synchronizing buffer between `Map_t 2 Abs :c: 1100 -> 1100` and `Unpartition_t_tt 2 1 :c: 1010 -> 1010`. Conversely, no buffer is needed between`Map_t 2 Abs :c: 1010 -> 1010` and `Unpartition_t_tt 2 1 :c: 1010 -> 1010`.
-Using the closed clock signatures crated using `default_clock_pattern`, the compiler must add the synchronizing buffer.
+Using the closed clock signatures crated using `default_clock_signature`, the compiler must add the synchronizing buffer.
 
 **Open** clock signatures using free variables provide the flexibility necessary to produce efficient hardware.
 I give operators the open clock signature `x -> x` if they can have multiple closed clock signatures.
@@ -223,31 +223,31 @@ If an operator appears multiple times in the list, the first signature is a spec
 1. `Snd :: x -> x`
 5. `Tuple :: x -> x`
 1. `Map_s n (f :: t -> t' :c: x -> x) :: SSeq n t -> SSeq n t :c: x -> x`
-1. `Map_s n f :: SSeq n t -> SSeq n t' :c: default_clock_pattern(t) -> default_clock_pattern(t')`
-    1. We don't need to use `default_clock_pattern(SSeq n t)` because nesting `t` in an `SSeq` doesn't change the pattern.
+1. `Map_s n f :: SSeq n t -> SSeq n t' :c: default_clock_signature(t) -> default_clock_signature(t')`
+    1. We don't need to use `default_clock_signature(SSeq n t)` because nesting `t` in an `SSeq` doesn't change the pattern.
 2. `Map_t n (f :: t -> t' :c: x -> x) :: TSeq n v t -> TSeq n v t' :c: x -> x`
-2. `Map_t n f :: TSeq n v t -> TSeq n v t' :c: default_clock_pattern(TSeq n v t) -> default_clock_pattern(TSeq n v t')`
+2. `Map_t n f :: TSeq n v t -> TSeq n v t' :c: default_clock_signature(TSeq n v t) -> default_clock_signature(TSeq n v t')`
 2. `Map2_s n (f :: t -> t' -> t'' :c: x -> x -> x) :: SSeq n t -> SSeq n t' -> SSeq n t'' :c: x -> x -> x`
 2. `Map2_s n (f :: t -> t' -> t'' :c: w -> w' -> w'') :: SSeq n t -> SSeq n t' -> SSeq n t'' :c: w -> w' -> w''`
 2. `Map2_t n (f :: t -> t' -> t'' :c: x -> x -> x) :: TSeq n v t -> SSeq n v t' -> SSeq n v t'' :c: x -> x -> x`
 2. `Map2_t n (f :: t -> t' -> t'' :c: w -> w' -> w'') :: TSeq n v t -> SSeq n v t' -> SSeq n v t'' :c: (w)[n] (0)[v] -> (w')[n] (0)[v] -> (w'')[n] (0)[v]`
-1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t :c: default_clock_pattern(t) -> default_clock_pattern(t)`
-2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1 :c: default_clock_pattern(TSeq n v t) -> default_clock_pattern(TSeq 1 (n+v-1) t)`
-1. `Up_1d_s n :: SSeq 1 t -> SSeq n t :c: default_clock_pattern(t) -> default_clock_pattern(t)` 
-3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t :c: default_clock_pattern(TSeq 1 (n+v-1) t) -> default_clock_pattern(TSeq n v t)`
-4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t :c: default_clock_pattern(t) -> default_clock_pattern(t)`
-1. `Select_1d_t n idx :: TSeq n v t -> TSeq 1 (n+v-1) t :c: default_clock_pattern(TSeq n v t) -> default_clock_pattern(TSeq 1 (n+v-1) t)`
-1. `Tuple_To_SSeq n :: NTuple n t -> SSeq n t :c: default_clock_pattern(t) -> default_clock_pattern(t)`
-1. `Serialize no ni :: TSeq no (vo+no*vi) (SSeq ni t) -> TSeq no vo (TSeq ni vi t) :c: default_clock_pattern(TSeq no vo (TSeq 1 (ni+vi-1) t)) -> default_clock_pattern(TSeq no vo (TSeq ni vi t))`
+1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t :c: default_clock_signature(t) -> default_clock_signature(t)`
+2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1 :c: default_clock_signature(TSeq n v t) -> default_clock_signature(TSeq 1 (n+v-1) t)`
+1. `Up_1d_s n :: SSeq 1 t -> SSeq n t :c: default_clock_signature(t) -> default_clock_signature(t)` 
+3. `Up_1d_t n :: TSeq 1 (n+v-1) t -> TSeq n v t :c: default_clock_signature(TSeq 1 (n+v-1) t) -> default_clock_signature(TSeq n v t)`
+4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t :c: default_clock_signature(t) -> default_clock_signature(t)`
+1. `Select_1d_t n idx :: TSeq n v t -> TSeq 1 (n+v-1) t :c: default_clock_signature(TSeq n v t) -> default_clock_signature(TSeq 1 (n+v-1) t)`
+1. `Tuple_To_SSeq n :: NTuple n t -> SSeq n t :c: default_clock_signature(t) -> default_clock_signature(t)`
+1. `Serialize no ni :: TSeq no (vo+no*vi) (SSeq ni t) -> TSeq no vo (TSeq ni vi t) :c: default_clock_signature(TSeq no vo (TSeq 1 (ni+vi-1) t)) -> default_clock_signature(TSeq no vo (TSeq ni vi t))`
     1. Input clock pattern is get `SSeq ni t` on first clock, emit it over `ni` clocks, wait `vi`, then repeat.
-1. `SSeq_To_Tuple n :: SSeq n t -> NTuple n t :c: default_clock_pattern(t) -> default_clock_pattern(t)`
-1. `Deserialize no ni :: TSeq no vo (TSeq ni vi t) -> TSeq no (vo+no*vi) (SSeq ni t) :c: default_clock_pattern(TSeq no vo (TSeq ni vi t)) -> default_clock_pattern(TSeq no vo (TSeq 1 (ni+vi-1) t))`
+1. `SSeq_To_Tuple n :: SSeq n t -> NTuple n t :c: default_clock_signature(t) -> default_clock_signature(t)`
+1. `Deserialize no ni :: TSeq no vo (TSeq ni vi t) -> TSeq no (vo+no*vi) (SSeq ni t) :c: default_clock_signature(TSeq no vo (TSeq ni vi t)) -> default_clock_signature(TSeq no vo (TSeq 1 (ni+vi-1) t))`
     1. Output clock pattern is same as input pattern to `Serialize`. 
-    Can do this by delaying the output of `Deserialize` relative to its input by `default_clock_pattern(TSeq 1 (ni+vi-1) t) - 1` clocks.
-1. `Partition_t_tt no ni :: TSeq (no*ni) (vo + no*vi) t -> TSeq no vo (TSeq ni vi t) :c: default_clock_pattern(TSeq no vo (TSeq ni vi t)) -> default_clock_pattern(TSeq no vo (TSeq ni vi t))`
+    Can do this by delaying the output of `Deserialize` relative to its input by `default_clock_signature(TSeq 1 (ni+vi-1) t) - 1` clocks.
+1. `Partition_t_tt no ni :: TSeq (no*ni) (vo + no*vi) t -> TSeq no vo (TSeq ni vi t) :c: default_clock_signature(TSeq no vo (TSeq ni vi t)) -> default_clock_signature(TSeq no vo (TSeq ni vi t))`
     1. This clock signature enables `Partition_t_tt` to become a nop.
-1. `Unpartition_t_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) (vo + no*vi) t :c: default_clock_pattern(TSeq no vo (TSeq ni vi t)) -> default_clock_pattern(TSeq no vo (TSeq ni vi t))`
-1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t) :c: default_clock_pattern(t) -> default_clock_pattern(t)`
-1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t) :c: default_clock_pattern(t) -> default_clock_pattern(t)`
-1. `Shift_s n init :: SSeq n t -> SSeq n t :c: default_clock_pattern(t) -> default_clock_pattern(t)`
-1. `Shift_t n init :: TSeq n v t -> TSeq n v t :c: default_clock_pattern(TSeq n v t) -> default_clock_pattern(TSeq n v t)`
+1. `Unpartition_t_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) (vo + no*vi) t :c: default_clock_signature(TSeq no vo (TSeq ni vi t)) -> default_clock_signature(TSeq no vo (TSeq ni vi t))`
+1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t) :c: default_clock_signature(t) -> default_clock_signature(t)`
+1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t) :c: default_clock_signature(t) -> default_clock_signature(t)`
+1. `Shift_s n init :: SSeq n t -> SSeq n t :c: default_clock_signature(t) -> default_clock_signature(t)`
+1. `Shift_t n init :: TSeq n v t -> TSeq n v t :c: default_clock_signature(TSeq n v t) -> default_clock_signature(TSeq n v t)`
