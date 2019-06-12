@@ -140,7 +140,8 @@ One cannot repeat an infinite length sequence.
 
 The grammar for the notation is
 ```
-ct ::= w | ct x ct | ct -> ct | x
+cf :: ct -> ct
+ct ::= w | ct x ct | y
 w ::= 1 | 0 | w w' | (w)[d] s.t. d is a natural number
 ```
 
@@ -152,7 +153,7 @@ w ::= 1 | 0 | w w' | (w)[d] s.t. d is a natural number
 `ct x ct` represents a tuple of two clock sigantures.
 I allow tuples with different patterns.
 `ct -> ct` represents an operator with input and output clock signatures.
-`x` represents a free variable.
+`y` represents a free variable.
 I will motivate the need for free variables below.
 
 `|ct|` is the number of clock cycles in clock signature `ct`.
@@ -215,20 +216,20 @@ When an operator with signature `x -> x` is composed with one with a closed cloc
 The clock signatures with the above two optimizations are below. 
 If an operator appears multiple times in the list, the first signature is a special case optimization. The later signature is a more general case that applies when the first is not applicable.
 
-1. `Id :: x -> x`
-1. `Add :: x -> x`
-1. `Fst :: x -> x`
-1. `Snd :: x -> x`
-5. `Tuple :: x -> x`
-1. `Map_s n (f :: t -> t' :c: x -> x) :: SSeq n t -> SSeq n t :c: x -> x`
+1. `Id :: y -> y`
+1. `Add :: y -> y`
+1. `Fst :: y -> y`
+1. `Snd :: y -> y`
+5. `Tuple :: y -> y`
+1. `Map_s n (f :: t -> t' :c: y -> y) :: SSeq n t -> SSeq n t :c: y -> y`
 1. `Map_s n f :: SSeq n t -> SSeq n t' :c: type_clock_signature(t) -> type_clock_signature(t')`
     1. We don't need to use `type_clock_signature(SSeq n t)` because nesting `t` in an `SSeq` doesn't change the pattern.
-2. `Map_t n (f :: t -> t' :c: x -> x) :: TSeq n v t -> TSeq n v t' :c: x -> x`
+2. `Map_t n (f :: t -> t' :c: y -> y) :: TSeq n v t -> TSeq n v t' :c: y' -> y'`
 2. `Map_t n f :: TSeq n v t -> TSeq n v t' :c: type_clock_signature(TSeq n v t) -> type_clock_signature(TSeq n v t')`
-2. `Map2_s n (f :: t -> t' -> t'' :c: x -> x -> x) :: SSeq n t -> SSeq n t' -> SSeq n t'' :c: x -> x -> x`
-2. `Map2_s n (f :: t -> t' -> t'' :c: w -> w' -> w'') :: SSeq n t -> SSeq n t' -> SSeq n t'' :c: w -> w' -> w''`
-2. `Map2_t n (f :: t -> t' -> t'' :c: x -> x -> x) :: TSeq n v t -> SSeq n v t' -> SSeq n v t'' :c: x -> x -> x`
-2. `Map2_t n (f :: t -> t' -> t'' :c: w -> w' -> w'') :: TSeq n v t -> SSeq n v t' -> SSeq n v t'' :c: (w)[n] (0)[v] -> (w')[n] (0)[v] -> (w'')[n] (0)[v]`
+2. `Map2_s n (f :: t -> t' -> t'' :c: y -> y -> y) :: SSeq n t -> SSeq n t' -> SSeq n t'' :c: y -> y -> y`
+2. `Map2_s n f :: SSeq n t -> SSeq n t' -> SSeq n t'' :c: type_clock_signature(t) -> type_clock_signature(t') -> type_clock_signature(t'')`
+2. `Map2_t n (f :: t -> t' -> t'' :c: y -> y -> y) :: TSeq n v t -> SSeq n v t' -> SSeq n v t'' :c: y' -> y' -> y'`
+2. `Map2_t n f :: TSeq n v t -> SSeq n v t' -> SSeq n v t'' :c: type_clock_signature(TSeq n v t) -> type_clock_signature(TSeq n v t') -> type_clock_signature(TSeq n v t')`
 1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t :c: type_clock_signature(t) -> type_clock_signature(t)`
 2. `Reduce_t n :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1 :c: type_clock_signature(TSeq n v t) -> type_clock_signature(TSeq 1 (n+v-1) t)`
 1. `Up_1d_s n :: SSeq 1 t -> SSeq n t :c: type_clock_signature(t) -> type_clock_signature(t)` 
