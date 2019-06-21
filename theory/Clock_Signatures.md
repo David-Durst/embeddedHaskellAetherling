@@ -2,7 +2,7 @@
 This document explains the **clock signature**, the per-clock-cycle timing, of each operator in Aetherling's space-time IR.
 It adds:
 1. a justification for why the space-time IR types must be supplemented with clock signatures when producing hardware
-1. a justification for why the space-time IR types are sufficient for type checking
+1. a justification for why the space-time IR types are sufficient to guarantee efficient hardware can be generated
 1. a justification for why the space-time IR types shouldn't be the same as the clock signatures
 1. an explanation of the clock calculus notation used to define each clock signature
 1. a definition of the clock signatures for each operator.
@@ -21,6 +21,19 @@ If two operators are composed, the producer's output throughput and consumer's i
 Synchronous hardware also requires that producer and consumer operators communicate on the same clock cycle.
 Under the space-time IR types, the producer may be valid and emit output on a clock cycle where the consumer is invalid and not expecting data.
 The emitted data on this clock cycle would be lost without a buffer between the producer and consumer to match clock cycles.
+As an example of the space-time IR types insufficiency, let `f` and `g` be two operators. 
+Each operator's input and output is valid for two out of four clocks.
+The output throughput of `f` matches the input throughput of `g`, so the space-time IR types allow `g . f`. 
+However, `g . f` may drop data due to a mismatch of valid and invalid clocks.
+Using the types from the [clock notation section](#clock_notation), let `f` and `g` have the following clock signatures:
+```
+f :: (1010) -> (1010)
+g :: (0110) -> (0110)
+```
+`f`'s signature shows that it accepts and emits data on the first and third clock cycles as those the locations of the `1`s.
+`g`'s signature shows that it accepts and emits data on the second and third clock cycles.
+`g . f` will produce synchronous hardware that drops data on the first clock cycle even though the space-time IR types allow the composition.
+
 
 Adding a clock signature to each space-time IR operator enables Aetherling to determine the offset between valid clocks in composed operators.
 With this information, Aetherling can insert minimally sized buffers necessary to store data from the producer until the consumer was ready to accept it.
@@ -44,10 +57,10 @@ The definition of **synchronizable** operators is: when placing an appropriately
 
 This section will show that `TSeq`'s `n` and `v` parameters are sufficiently specific so that, if two operators with matching `TSeq` and `SSeq` types are composed, they are synchronizable.
 
-## Proof Of Synchronizability
-**Theorem:** Any pair of producer-consumer operators are synchronizable if the corresponding output and input sequences contain the same number of valid and invalid clocks. This is similar to Propositions 6 and 7 from NKN, except for finite sequences.
+## How To Synchronize
+**Goal:** Any pair of producer-consumer operators are synchronizable if the corresponding output and input sequences contain the same number of valid and invalid clocks. This is similar to Propositions 6 and 7 from NKN, except for finite sequences.
 
-**Proof:** 
+**Algorithm:** 
 1. Let the output sequence be `os :: TSeq n v t`
 1. Let the input sequence be `is :: TSeq n v t` 
 1. Let `is_valid` return `True` if the sequence is valid on this clock. Let it return `False` otherwise.
@@ -111,10 +124,10 @@ For example, let `f` and `g` be two operators. Each operator's input and output 
 `f` and `g` should be composable because they are synchronizable.
 Using the types from the [clock notation section](#clock_notation), let `f` and `g` have the following clock signatures:
 ```
-f :: (1010)[1] -> (1010)[1]
-g :: (0110)[1] -> (0110)[1]
+f :: (1010) -> (1010)
+g :: (0110) -> (0110)
 ```
-`f . g` doesn't type check with standard, syntactic type equality rules as `(1010)[1]` and `(0110)[1]` are not equal. 
+`f . g` doesn't type check with standard, syntactic type equality rules as `(1010)` and `(0110)` are not equal. 
 
 With the space-time IR types, `f` and `g` can be composed because they have the following type signatures
 ```
