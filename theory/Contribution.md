@@ -80,19 +80,7 @@ iv.
 
 # Analogies Between Aetherling And Other Systems
 ## Summary 
-| | Sequence Language | Space-Time IR | Rewrite Rules | Auto-Scheduler | Clock Calculus |
-| | ----------------- | ------------- | ------------- | -------------- | -------------- |
-| Darkroom | Darkroom programming model | None | Delay operator | None | integer linear programming for solving minimal delay |
-
-
-
-
-| Rigel | Rigel operators with input and output rates but not firing rates | Rigel operators once firing rates have been assigned | None | None | Variable-Latency SDF Using FIFOs between stages|
-| RIPL | Skeletons | SDF and CSDF Dataflow actors specified with state transitions | Each skeleton maps to a data flow actor | CAL compiler solves for firing rates and FIFO sizes between stages | Use FIFOs between stages, not solving for exact clock cycles|
-| HLS | C | FSMs?  | Annotations for loop unrolling and other operations | "1. Scheduling - assigning clock cycles to operations|
-| 2. Binding - determiing which adders, multipliers, and other gates to create" | Vivado's scheduling determines assigns clock cycles to each operator from C source|
-| Clash | Haskell/System FC | Fully parallel and sequential functional operators like FoldS and FoldT. These operators have LstTime and LstSpace types that denote if parallel or sequential but not dependent types that track throughput and time | Convert Haskell functional operators to fully parallel, fully sequential, and partially parallel implementations using  | None - user must manually select rules | Use FIFOs between stages, not solving for exact clock cycles|
-| Lift | Same operators as Aetherling without throughput specified | Fully parallel and sequential functional operators. These operators have dependent types for the sizes of inputs and outputs. However, the the dependent types don’t appear to track throughput and time | Rewrite from resource agnostic to fully parallel and sequential operators. Particularly interesting example is rewrite rule for 2D stencil using more basic functional primitives | Search for best way to rewrite a circuit by Monte-Carlo with simulations to evaluate cost at each step | None|
+[Summary is in this Excel document.](Contribution_Summary.xlsx)
 
 ## Detailed Analogies
 1. Darkroom
