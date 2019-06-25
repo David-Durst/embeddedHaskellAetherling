@@ -14,12 +14,12 @@ iv.
 
 # Analogies Between Aetherling And Other Systems
 1. Darkroom
-    1. "Unfortunately, Darkroom only supports pipelines that operate on one pixel per cycle, which limits it to single-scale image processing algorithms, and couples chip area to algorithm complexity." – Rigel paper
-        1. **Question 1** - since on p. 2 of Darkroom it says that Leiserson and Saxe show how to pipeline and parallelize these circuits to an arbitrary amount, why does darkroom only support pipelines that operator on one pixel per cycle?
-        1. **Question 2** - Darkroom's novel technique is that it specifies the delays in each producer-consumer relationship as an integer linear program
     1. Somewhat analogous to sequence language - p. 3 of **Darkroom: Compiling High-Level Image Processing Code into Hardware Pipelines** - the darkroom programming model of image functions that are acessed like 2d arrays to produce new image functions. This is somewhat similar to sequence language as darkroom doesn't consider time here. However, it seems more natural to write in Darkroom's style as stencil operations are expressed as matrix coordinates rather than using a stencil operator to convert a 1D stream of pixels into a 2D stream
     1. No analogy to space-time IR - instead of an IR between the two, there is a direct mapping from programming model to hardware.
         1. p. 3 - "[the] pipeline processes input in time steps, one pixel at a time. During each time step, it consumes one pixel of input and produces on pixel of output" - since no parallelism, no space-time tradeoffs
+            1. **Question 1** - since on p. 2 of Darkroom it says that Leiserson and Saxe show how to pipeline and parallelize these circuits to an arbitrary amount, why does darkroom only support pipelines that operator on one pixel per cycle?
+            1. **Question 2** - Is Darkroom's novel technique is that it specifies the delays in each producer-consumer relationship as an integer linear program?
+                1. **Answer** - Yes.
         1. p. 5-6 - Not worth having a space-time IR to make tradeoffs in between few choices for tradeoffs in memory sizes. This difficulty is due to Darkroom's FPGA target having "SRAMs and BRAMs that are only available in discrete sizes, each with different costs"
     1. Analogous to rewrite rules - p. 5 - Assign a delay between stages and change delay by solving linear equations. The global equation solving is instead of rewriting operators to trade off area. The solutions two goals are:
         1. preserve causality - ensure producer always emits before consumer requires it
@@ -54,18 +54,24 @@ iv.
         1. Rigel then uses SDF to ensure that a relative firing rate assignment makes the throughputs of producers and consumers match
         1. However, it is possible to compose graphs where matching throughputs for one producer-consumer pair prevents matching throughputs for another pair, see p.2 for an example of this
         1. Aetherling only allows operators in the Sequence language to be composed if total amount of data match. Then since all the operators must take the same amount of time when lowered to space-time IR, their throughputs must also match.
-1. RIPL
+1. RIPL - 2018 - RIPL: A Parallel Image Processing Language For FPGAs
     1. Analogous to sequence language - p. 5 - skeletons are resource unaware image processing operations with dependent types that specify the sizes of the arguments
     1. Analogous to space-time IR - 
         1. p. 7 - dataflow actor with finite state machine that specifies how the actor behaves
-        1. p. 6 - the actors are compiled to cyclostatic dataflow actors where the CAL dataflow language compiles it to verilog
+        1. p. 6 - FSMs specified as cyclostatic dataflow actors 
+        1. p. 10 - compiler actors to CAL dataflow language that compiles it to verilog
         1. p. 7 - different from space-time IR as no spatial parallelism by duplicating operators. Only spatial parallelism is by duplicating users code within an operator.
+            1. p. 11 - unclear what it means that "code generation strategy maximizes spatial parallelism". P. 7 said only spatial parallelism inside operators. Stencils like their fold aren't parallelizable since it uses the foldl type signature with an initial value and no requirements that accumulator function is associative and commutative.
+    1. Analogous to rewrite rules - p. 7 - compile each skeleton to a correspodning dataflow actor
+        1. p. 22 - no space-time rewrite rules proposed in this paper
     1. Analogous to scheduling - instead of finding parallelism, mapping to CAL compiler that solves for firing rates and using FIFOs to match variable latency
     1. Analogous to clock calculus - p. 10 - the actors communicate asynchronously through FIFOs that are sized using the CAL compilre
         1. Not specified in paper, but very likely - CAL compiler looks at CSDF patterns and determines the right FIFO sizes
-1. Spatial
-    1. 2016 – Generating Configurable Hardware from Parallel Patterns
-    1. **Side Question** – when I do everything I need to support Halide, why wont’ i just end up with their architecture?
+1. Spatial - 2016 – Generating Configurable Hardware from Parallel Patterns - Spatial has a very different focus. It doesn't have a basis in SDF. Its about creating a series of FSMs that communicate dynamically and allowing the user to explicitly size the memory buffers between the FSMs and the between the FPGA and the host's memory.
+    1. No analogy to sequence language - operators are throughput aware as they have a counter parameter that specifies parallelism
+    1. Analogous to space-time - operators like mapreduce that compile to hardware
+    1. Spatial has a large focus on memories and the chip interface that Aetherling doesn't have.
+    1. **Side Question** – when I do everything I need to support Halide, why won't I need some of their operators that do not fit in my system?
 1. HLS
 1. Clash
     1. Analogous to mapping sequence language to hardware - p. 89 of **Digital Circuits in ClaSH** -  Map haskell to circuits using system FC normal form to netlist conversion
@@ -91,3 +97,7 @@ iv.
             1. Check all valid rewrite rules
             1. Randomly walk down search tree
             1. Try different generated expressions, whichever one is fastest, use that for next step in random walk.
+
+# Other Applications
+1. FIR - an example in Spatial
+1. Particle Filter - in Clash transformations thesis
