@@ -21,6 +21,7 @@
     1. Output: Either
         1. Maximally parallel program that fits in available resources
         1. Failure if cannot produce such a program
+1. Clock Calculus: Compute exact invalid and valid clock cycles in order to produce synchronous circuits with FIFOs between operators sized by compiler rather than developer.
 
 # Philosophies Behind Properties
 1. **Mechanical** - All transformations should be "mechanical"
