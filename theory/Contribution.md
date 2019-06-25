@@ -80,7 +80,7 @@ iv.
 
 # Analogies Between Aetherling And Other Systems
 ## Summary 
-[Summary is in this Excel document.](Contribution_Summary.xlsx)
+[Summary is in this Excel document.](Analogy_Summary.xlsx)
 
 ## Detailed Analogies
 1. Darkroom
