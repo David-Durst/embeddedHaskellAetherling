@@ -82,7 +82,11 @@ iv.
 ## Summary 
 | | Sequence Language | Space-Time IR | Rewrite Rules | Auto-Scheduler | Clock Calculus |
 | | ----------------- | ------------- | ------------- | -------------- | -------------- |
-| Darkroom | Darkroom programming model | None | Delay operator | None | integer linear programming for solving minimal delay|
+| Darkroom | Darkroom programming model | None | Delay operator | None | integer linear programming for solving minimal delay |
+
+
+
+
 | Rigel | Rigel operators with input and output rates but not firing rates | Rigel operators once firing rates have been assigned | None | None | Variable-Latency SDF Using FIFOs between stages|
 | RIPL | Skeletons | SDF and CSDF Dataflow actors specified with state transitions | Each skeleton maps to a data flow actor | CAL compiler solves for firing rates and FIFO sizes between stages | Use FIFOs between stages, not solving for exact clock cycles|
 | HLS | C | FSMs?  | Annotations for loop unrolling and other operations | "1. Scheduling - assigning clock cycles to operations|
