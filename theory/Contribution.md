@@ -1,17 +1,18 @@
 # Aetherling: Predictable Space-Time Scheduling of Data Flow Pipelines To Synchronous, Streaming Hardware Accelerators 
 ## Contribution
-Prior work has shown how to compile large subsets of C, C++, and Haskell to hardware description language (HDL) like Verilog. (HLS and Clash) 
-As part of the compilation process, these systems have scheduling algorithms that tradeoff between resource utilization and throuhgput. 
-HLS has optimizations that explore how much to unroll loops for parallelizing C to hardware. 
-Clash has a set of rewrite rules for parallelizing folds and other functional programming operations in hardware.
+Existing systems like Clash and Vivado HLS compile large subsets of C, C++, and Haskell to hardware description languages (HDL) like Verilog. 
+As part of the compilation process, these systems have scheduling algorithms that tradeoff between resource utilization and throughput. 
+HLS has optimizations that parallelize for loops by unrolling them. 
+Clash has similar rewrite rules for parallelizing folds and other functional programming operations.
 However, these optimizations are challenging to use. 
-The Vivado HLS compiler is unpredictable: it is free to ignore the optimizations in one part of the program, even against the developers specifications, if it deems that the program as a whole will be more efficient without them. (**Need to confirm this.**)
-Clash does not have an auto-scheduler that applies them automatically.
+The Vivado HLS compiler is unpredictable: it is free to ignore the optimizations in one part of the program, even against the developers specifications, if its analysis show that the program as a whole will be more efficient without them. (**Need to confirm developers specifications claim.**)
+Clash does not have an auto-scheduler to automatically apply its rewrite rules.
 
 Aetherling focuses on a limited set of applications and hardware design space so that it is predictable: it produces the same result for each operator in a pipeline regardless of the other operators in the pipeline.
-Aetherling's DSL and IR are small languages that 
-Aetherling applies a rewrite rules-based scheduling approach similar to Clash's to a small DSLs similar to those presented by image processing languages RIPL and Rigel. 
+Aetherling's developer-facing DSL and IR are small, standard, functional dataflow languages based on prior image processing languages like RIPL and Rigel.
 Aetherling only produces synchronous, streaming hardware that doesn't require dynamic communication between operators in the dataflow pipeline. 
+Aetherling automatically applies a rewrite rules-based scheduling to compile from the developer-facing DSL to hardware that trades-off resource utilization and throughput. 
+Since the hardware design space is smaller than even the limited systems like RIPL and Rigel, it's rewrite rules can be formally specified and automatically applied in a predictable manner
 
 Through this limited focus, Aetherling makes the following contributions:
 1. A resource-unaware language whose type system ensures that all expressible programs compile to synchronous, streaming hardware.
