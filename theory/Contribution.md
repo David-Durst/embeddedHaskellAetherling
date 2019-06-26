@@ -5,26 +5,35 @@ As part of the compilation process, these systems have scheduling algorithms tha
 HLS has optimizations that parallelize for loops by unrolling them. 
 Clash has similar rewrite rules for parallelizing folds and other functional programming operations.
 However, these optimizations are challenging to use. 
-The Vivado HLS compiler is unpredictable: it is free to ignore the optimizations in one part of the program, even against the developers specifications, if its analysis show that the program as a whole will be more efficient without them. (**Need to confirm developers specifications claim.**)
+The Vivado HLS compiler is unpredictable: it is free to ignore the optimizations in one part of the program, even against the developers specifications, if its analysis of the developer's C code show that the program as a whole will be more efficient without them. (**Need to confirm developers specifications claim.**)
 Clash does not have an auto-scheduler to automatically apply its rewrite rules.
 
-Aetherling focuses on a limited set of applications and hardware design space so that it is predictable: it produces the same result for each operator in a pipeline regardless of the other operators in the pipeline.
-Aetherling's developer-facing DSL and IR are small, standard, functional dataflow languages based on prior image processing languages like RIPL and Rigel.
-Aetherling only produces synchronous, streaming hardware that doesn't require dynamic communication between operators in the dataflow pipeline. 
-Aetherling automatically applies a rewrite rules-based scheduling to compile from the developer-facing DSL to hardware that trades-off resource utilization and throughput. 
-Since the hardware design space is smaller than even the limited systems like RIPL and Rigel, it's rewrite rules can be formally specified and automatically applied in a predictable manner
+Other systems', such as RIPL, have scheduling algorithms that produce more performant hardware by limiting their input languages to DSLs that only support specific application domains, such as data flow pipelines for image processing. 
+However, these schedulers optimizations are also unpredictable. 
+Changing one part of a pipeline may cause the optimizations for other parts deactivate, yielding a large circuit with lower throughput.
+Unpredictability makes efficient software development challenging because it requires the developer to not only understand their current module, but how it interfaces with the rest of the program and the compiler's global optimizations.
 
+The challenge is how to balance between expressibility of the developer-facing languages, optimizations that transform the code into performant hardware, and a predictable system that enables the developer to actually use the languages to create performant hardware. 
+Aetherling focuses on a limited set of applications and hardware design space so that it is predictable: it produces the same hardware for each operator in a pipeline regardless of the other operators in the pipeline.
+Aetherling restricts it's supported applications through a developer-facing language that is a small, standard, functional dataflow languages based on prior image processing systems like RIPL and Rigel.
+Aetherling restricts the hardware design space even more than RIPL and Rigel by only producing synchronous, streaming hardware that doesn't require dynamic communication between operators. 
 Through this limited focus, Aetherling makes the following contributions:
-1. A resource-unaware language whose type system ensures that all expressible programs compile to synchronous, streaming hardware.
-1. A resource-aware IR whose operators have three properties:
+1. A developer-facing language that is similar to standard dependently typed, functional programming language that runs on CPUs, but whose type system ensures that all expressible programs compile to synchronous, streaming hardware.
+1. A hardware resource-aware IR whose operators have three properties:
     1. they are complete enough to represent tradeoffs in area and throughput
     1. they are simple enough so that resource utilization can be approximated at compile time with XX% accuracy using a predictable analytical model
     1. their types specify the throughput of the resulting hardware
-1. A predictable auto-scheduler from the resource-unaware language to the resource-aware IR that explores the design space to increase throughput within resource constraints
+1. A predictable, rewrite rule-based auto-scheduler from the resource-unaware language to the resource-aware IR that explores the design space to increase throughput within resource constraints
 
+Aetherling automatically applies a rewrite rules-based scheduling to compile from the developer-facing DSL to hardware that trades-off resource utilization and throughput. 
+Since the hardware design space is smaller than even the limited systems like RIPL and Rigel, it's rewrite rules can be formally specified and automatically applied in a predictable manner
 
 Aetherling's DSLs are limited to dataflow applications including image processing.
 
+'s cognitive load: they must understand their entire program and how it fits
+anoto the developer and only succeed if 
+ uses a set of functional operators us
+tried to restrict the set of 
 ## Analogies Between Aetherling And Other Systems
 These analogies are between [Aetherling's properties](https://github.com/David-Durst/embeddedHaskellAetherling/blob/rewrites/theory/Properties.md) and those of other systems.
 
@@ -83,6 +92,12 @@ These analogies are between [Aetherling's properties](https://github.com/David-D
             1. p. 11 - unclear what it means that "code generation strategy maximizes spatial parallelism". P. 7 said only spatial parallelism inside operators. Stencils like their fold aren't parallelizable since it uses the foldl type signature with an initial value and no requirements that accumulator function is associative and commutative.
     1. Analogous to rewrite rules - p. 7 - compile each skeleton to a correspodning dataflow actor
         1. p. 22 - no space-time rewrite rules proposed in this paper
+        1. p. 10 - they do have optimizations in the dataflow IR however
+        1. **Profile Guided Dataflow Transformation for FPGAs and CPUs** - p. 7-8 - Perform rewrite rules on dataflow actors including 
+            1. actor fusion - merge actors to save on communication costs as actors communicate through FIFOs and inside actors can have shared memory
+            1. Actor fission - split actors and run them in parallel
+            1. loop fission - requires analyzing code to make sure no loop-carry dependencies
+            1. task parallelism - building parallel reduce trees
     1. Analogous to scheduling - instead of finding parallelism, mapping to CAL compiler that solves for firing rates and using FIFOs to match variable latency
     1. Analogous to clock calculus - p. 10 - the actors communicate asynchronously through FIFOs that are sized using the CAL compilre
         1. Not specified in paper, but very likely - CAL compiler looks at CSDF patterns and determines the right FIFO sizes
