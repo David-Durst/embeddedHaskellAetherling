@@ -1,4 +1,3 @@
-1. What do I have - https://github.com/David-Durst/embeddedHaskellAetherling/blob/rewrites/theory/Properties.md
 
 # Contribution
 Prior work has shown how to compile large subsets of C, C++, and Haskell to hardware description language (HDL) like Verilog. (See Vivado HLS and Clash) 
@@ -18,6 +17,8 @@ By focusing on a more limited set of operations and a more limited design space 
 
 
 # Analogies Between Aetherling And Other Systems
+These analogies are between [Aetherling's properties](https://github.com/David-Durst/embeddedHaskellAetherling/blob/rewrites/theory/Properties.md) and those of other systems.
+
 ## Summary 
 [Summary is in this Excel document.](Analogy_Summary.xlsx)
 
