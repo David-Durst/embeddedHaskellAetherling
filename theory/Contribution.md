@@ -25,15 +25,6 @@ Through this limited focus, Aetherling makes the following contributions:
     1. their types specify the throughput of the resulting hardware
 1. A predictable, rewrite rule-based auto-scheduler from the resource-unaware language to the resource-aware IR that explores the design space to increase throughput within resource constraints
 
-Aetherling automatically applies a rewrite rules-based scheduling to compile from the developer-facing DSL to hardware that trades-off resource utilization and throughput. 
-Since the hardware design space is smaller than even the limited systems like RIPL and Rigel, it's rewrite rules can be formally specified and automatically applied in a predictable manner
-
-Aetherling's DSLs are limited to dataflow applications including image processing.
-
-'s cognitive load: they must understand their entire program and how it fits
-anoto the developer and only succeed if 
- uses a set of functional operators us
-tried to restrict the set of 
 ## Analogies Between Aetherling And Other Systems
 These analogies are between [Aetherling's properties](https://github.com/David-Durst/embeddedHaskellAetherling/blob/rewrites/theory/Properties.md) and those of other systems.
 
@@ -150,6 +141,20 @@ These analogies are between [Aetherling's properties](https://github.com/David-D
 
 
 # Remains From Old Versions, May Use In Revision Process
+Aetherling automatically applies a rewrite rules-based scheduling to compile from the developer-facing DSL to hardware that trades-off resource utilization and throughput. 
+Since the hardware design space is smaller than even the limited systems like RIPL and Rigel, it's rewrite rules can be formally specified and automatically applied in a predictable manner
+
+Aetherling's DSLs are limited to dataflow applications including image processing.
+
+'s cognitive load: they must understand their entire program and how it fits
+anoto the developer and only succeed if 
+ uses a set of functional operators us
+tried to restrict the set of 
+
+
+
+
+
 
 What is my contribution:
 I simplified the space-time IR, so it was easier to understand how each operator compiles to hardware.
