@@ -1,28 +1,36 @@
-
-# Contribution
-Prior work has shown how to compile large subsets of C, C++, and Haskell to hardware description language (HDL) like Verilog. (See Vivado HLS and Clash) 
-Additionally, the prior work has shown how to make tradeoffs between resource utilization and throuhgput. 
-Vivado HLS has optimizations that explore how much to unroll loops for parallelizing C to hardware. 
+# Aetherling: Predictable Space-Time Scheduling of Data Flow Pipelines To Synchronous, Streaming Hardware Accelerators 
+## Contribution
+Prior work has shown how to compile large subsets of C, C++, and Haskell to hardware description language (HDL) like Verilog. (HLS and Clash) 
+As part of the compilation process, these systems have scheduling algorithms that tradeoff between resource utilization and throuhgput. 
+HLS has optimizations that explore how much to unroll loops for parallelizing C to hardware. 
 Clash has a set of rewrite rules for parallelizing folds and other functional programming operations in hardware.
+However, these optimizations are challenging to use. 
+The Vivado HLS compiler is unpredictable: it is free to ignore the optimizations in one part of the program, even against the developers specifications, if it deems that the program as a whole will be more efficient without them. (**Need to confirm this.**)
+Clash does not have an auto-scheduler that applies them automatically.
 
-Aetherling takes the space-time rewrite rules of prior systems like HLS and Clash and applies it to the more restricted DSLs of RIPL and Rigel that focus on the domains of image processing and other dataflow applications.
-Additionally, Aetherling restricts itself to producing a more limited set of hardware than the previously mentioned systems: only those can be produced using synchronously timed hardware without dynamic communication between stages. 
+Aetherling focuses on a limited set of applications and hardware design space so that it is predictable: it produces the same result for each operator in a pipeline regardless of the other operators in the pipeline.
+Aetherling's DSL and IR are small languages that 
+Aetherling applies a rewrite rules-based scheduling approach similar to Clash's to a small DSLs similar to those presented by image processing languages RIPL and Rigel. 
+Aetherling only produces synchronous, streaming hardware that doesn't require dynamic communication between operators in the dataflow pipeline. 
 
-By focusing on a more limited set of operations and a more limited design space of hardware, Aetherling makes the following contributions:
-1. A resource-agnostic language whose type system that ensures all expressible programs compile to synchronous hardware
-1. A space-time IR that is sufficiently powerful to represent tradeoffs in area and throughput while being simple enough that the resource utilization of all programs can be approximated with an analytical model
-1. An auto-scheduler that explores the design space to increase throughput within resource constraints.
+Through this limited focus, Aetherling makes the following contributions:
+1. A resource-unaware language whose type system ensures that all expressible programs compile to synchronous, streaming hardware.
+1. A resource-aware IR whose operators have three properties:
+    1. they are complete enough to represent tradeoffs in area and throughput
+    1. they are simple enough so that resource utilization can be approximated at compile time with XX% accuracy using a predictable analytical model
+    1. their types specify the throughput of the resulting hardware
+1. A predictable auto-scheduler from the resource-unaware language to the resource-aware IR that explores the design space to increase throughput within resource constraints
 
 
+Aetherling's DSLs are limited to dataflow applications including image processing.
 
-
-# Analogies Between Aetherling And Other Systems
+## Analogies Between Aetherling And Other Systems
 These analogies are between [Aetherling's properties](https://github.com/David-Durst/embeddedHaskellAetherling/blob/rewrites/theory/Properties.md) and those of other systems.
 
-## Summary 
+### Summary 
 [Summary is in this Excel document.](Analogy_Summary.xlsx)
 
-## Detailed Analogies
+### Detailed Analogies
 1. Darkroom
     1. Somewhat analogous to sequence language - p. 3 of **Darkroom: Compiling High-Level Image Processing Code into Hardware Pipelines** - the darkroom programming model of image functions that are acessed like 2d arrays to produce new image functions. This is somewhat similar to sequence language as darkroom doesn't consider time here. However, it seems more natural to write in Darkroom's style as stencil operations are expressed as matrix coordinates rather than using a stencil operator to convert a 1D stream of pixels into a 2D stream
     1. No analogy to space-time IR - instead of an IR between the two, there is a direct mapping from programming model to hardware.
@@ -105,7 +113,7 @@ These analogies are between [Aetherling's properties](https://github.com/David-D
     1. Analogous to rewrite rules - p. 223 of **Design Space Exploration of a Particle Filter using Higher-Order Functions** - rewrite fold to fold in space and time to achieve partially parallel implementation
         1. Note: p. 225 - this paper states that compiler doesn't implement rewrite rules, must be done by hand
     1. Not analogous to auto-scheduler - p. 225 of **Design Space Exploration of a Particle Filter using Higher-Order Functions** - must manually select rewrite rules.
-        1. Analogous to clocks calculus - p. 223 of **Design Space Exploration** and p. 63 of **Transformation-Based** - use FIFOs between stages to match clock cycles, but don't discuss how to size FIFOs
+    1. Analogous to clocks calculus - p. 223 of **Design Space Exploration** and p. 63 of **Transformation-Based** - use FIFOs between stages to match clock cycles, but don't discuss how to size FIFOs
 1. Lift
     1. Analogous to sequence language - p. 207 of **Generating Performance Portable Code using Rewrite Rules** - map/zip/reduce, and other operators that don't consider parallelism, just dependently typed to know total size of input and output
     1. Analogous to space-time IR - p. 76 of **Lift: A Functional Data-Parallel IR for High-Performance GPU Code Generation** - implement map/reduce primitives that are fully parallel and sequential in OpenCL
