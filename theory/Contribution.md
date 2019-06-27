@@ -1,29 +1,30 @@
 # Aetherling: Predictable Space-Time Scheduling of Data Flow Pipelines To Synchronous, Streaming Hardware Accelerators 
 ## Contribution
-Existing systems like Clash and Vivado HLS compile large subsets of C, C++, and Haskell to hardware description languages (HDL) like Verilog. 
+Existing systems for creating hardware accelerators from high-level code, like Clash and Vivado HLS, compile large subsets of C and Haskell to hardware description languages (HDL) like Verilog. 
 As part of the compilation process, these systems have scheduling algorithms that tradeoff between resource utilization and throughput. 
 HLS has optimizations that parallelize for loops by unrolling them. 
 Clash has similar rewrite rules for parallelizing folds and other functional programming operations.
 However, these optimizations are challenging to use. 
-The Vivado HLS compiler is unpredictable: it is free to ignore the optimizations in one part of the program, even against the developers specifications, if its analysis of the developer's C code show that the program as a whole will be more efficient without them. (**Need to confirm developers specifications claim.**)
+The Vivado HLS compiler is unpredictable: it is free to ignore the optimizations in one part of the program depending on its analysis of the rest of the program.
 Clash does not have an auto-scheduler to automatically apply its rewrite rules.
 
-Other systems', such as RIPL, have scheduling algorithms that produce more performant hardware by limiting their input languages to DSLs that only support specific application domains, such as data flow pipelines for image processing. 
-However, these schedulers optimizations are also unpredictable. 
+Other systems', such as RIPL, have scheduling algorithms that produce more performant hardware than HLS and other more general systems.
+RIPL does so by limiting its input languages to specific application domains, such as data flow pipelines for image processing. 
+However, these schedulers' optimizations are also unpredictable. 
 Changing one part of a pipeline may cause the optimizations for other parts deactivate, yielding a large circuit with lower throughput.
-Unpredictability makes efficient software development challenging because it requires the developer to not only understand their current module, but how it interfaces with the rest of the program and the compiler's global optimizations.
+Unpredictability makes efficient software development challenging because it requires the developer to understand not only their current module, but how it interfaces with the rest of the program and the compiler's global optimizations.
 
-The challenge is how to balance between expressibility of the developer-facing languages, optimizations that transform the code into performant hardware, and a predictable system that enables the developer to actually use the languages to create performant hardware. 
+The challenge is how to balance supporting a wide array of applications, optimizations that transform the code into performant hardware, and a predictable system that enables the developer to actually use the languages to create performant hardware. 
 Aetherling focuses on a limited set of applications and hardware design space so that it is predictable: it produces the same hardware for each operator in a pipeline regardless of the other operators in the pipeline.
 Aetherling restricts it's supported applications through a developer-facing language that is a small, standard, functional dataflow languages based on prior image processing systems like RIPL and Rigel.
 Aetherling restricts the hardware design space even more than RIPL and Rigel by only producing synchronous, streaming hardware that doesn't require dynamic communication between operators. 
 Through this limited focus, Aetherling makes the following contributions:
 1. A developer-facing language that is similar to standard dependently typed, functional programming language that runs on CPUs, but whose type system ensures that all expressible programs compile to synchronous, streaming hardware.
-1. A hardware resource-aware IR whose operators have three properties:
-    1. they are complete enough to represent tradeoffs in area and throughput
-    1. they are simple enough so that resource utilization can be approximated at compile time with XX% accuracy using a predictable analytical model
-    1. their types specify the throughput of the resulting hardware
-1. A predictable, rewrite rule-based auto-scheduler from the resource-unaware language to the resource-aware IR that explores the design space to increase throughput within resource constraints
+1. An IR for producing hardware whose operators have three properties:
+    1. They are complete enough to represent tradeoffs in area and throughput.
+    1. They are simple enough so that resource utilization can be approximated at compile time with XX% accuracy using a predictable analytical model.
+    1. Their types specify the throughput of the resulting hardware.
+1. A predictable, rewrite rule-based auto-scheduler from the developer-facing language to the hardware IR that explores the design space to increase throughput within resource constraints.
 
 ## Analogies Between Aetherling And Other Systems
 These analogies are between [Aetherling's properties](https://github.com/David-Durst/embeddedHaskellAetherling/blob/rewrites/theory/Properties.md) and those of other systems.
@@ -138,81 +139,3 @@ These analogies are between [Aetherling's properties](https://github.com/David-D
 # Other Applications
 1. FIR - an example in Spatial
 1. Particle Filter - in Clash transformations thesis
-
-
-# Remains From Old Versions, May Use In Revision Process
-Aetherling automatically applies a rewrite rules-based scheduling to compile from the developer-facing DSL to hardware that trades-off resource utilization and throughput. 
-Since the hardware design space is smaller than even the limited systems like RIPL and Rigel, it's rewrite rules can be formally specified and automatically applied in a predictable manner
-
-Aetherling's DSLs are limited to dataflow applications including image processing.
-
-'s cognitive load: they must understand their entire program and how it fits
-anoto the developer and only succeed if 
- uses a set of functional operators us
-tried to restrict the set of 
-
-
-
-
-
-
-What is my contribution:
-I simplified the space-time IR, so it was easier to understand how each operator compiles to hardware.
-Since a human can understand the produced hardware, I could create heuristics predicting the resource utilization and throughput.
-Also, by focusing only on synchronous circuits in which all throughputs must match, I was able to create a type system that only allowed users to write circuits that compile to hardware.
-By decreasing the space allowed circuits to only those that can be synchronously timed and decreasing the expressibility of the IR, I limited myself to a space of accelerators that can be explored using an auto-scheduler that trades resource utilization for throughput within constraints of the heuristics.
-
-These are what I did:
-
-Aetherling combines the space-time type system of Clash with the simpler, functional DSL of Rigel and RIPL to create an space-time IR in which each operator's throughput and resource requirements can be understood by the developer and predicted using heuristics. 
-Building on these space-time IR, Aetherling provides a resource-agnostic, sequence language that uses a simplification of the space-time types to reduce developer's congitive load by removing timing concerns but ensuring all programs can be compiled to the space-time IR.
-Finally, Aetherling provides an auto-scheduler that compiles programs from the sequence language to the space-time IR that tradeoffs performance and throughput as predicted by the heuristics.
-
-
-tradeoffs of 
-Aetherling expands upon prior systems that compile functional DSLs to hardware, like Clash and Rigel, by combining their contributions in order to create a sufficiently powerful IR to represent space-time tradeoffs while simple enough to explore the IR's design space with an auto-schedule that has a linear number of choices. 
-1. Aetherling uses the simpler resource aware 
-1. Provides a simpler resource aware IR.
-    1. The Clash IR is more complicated as it supports all of System FC.
-    1. The Rigel IR is more complicated because each operator can compile to multiple hardware implementations depending on 
-Aetherling is a system for compiling a constrained functional, data flow DSL to a hardware description language (HDL) like Verilog with different space-time tradeoffs.
-c.	How to figure out slant
-i.	Figure out what i want to say that is valid
-ii.	From system side – what we have to say
-1.	“same but simpler”
-2.	Have constrainted domain of applicatinons
-a.	We belive domain is interesting
-3.	For this constrainted domain of applications, there is a simpler set of represetations and transfomrations that get you to excellent hardware
-4.	Make simple and excellet terms more precise
-
-My goals:
-1. I want to tradeoff resource utilization and throughput. 
-1. I wanted to have an IR where I could represent those tradeoffs
-    1. Since my IR is sufficiently powerful to represent tradeoffs, it accounts for the throuhgput of all operators
-    1. I use this throughput and a subset of the clock calculus to find the appropriate size buffers between 
-1. I wanted to be able to make the tradeoffs using rewrite rules
-1. I wanted every operator in IR to have a clear mapping to hardware
-1. I want an auto-scheduler to find the best tradeoff of space and time given my model of each operator's resource requirements
-
-I recognize two facts:
-1. Each producer-consumer pair must operate on the same amount of data
-1. All elements in the circuit must operate on the same total number of clock cycles.
-1. Each producer-consumer pair must have matching input and output rates. This fact results from the first two as throughput = data / time.
-
-These facts simplify the problem so that SDF rate solving is not necessary. If I take the existing approaches for forcing users to write programs with producers and consumers that operator on matching amounts of data, like in Lift and RIPL, then I can compile them to hardware with matching rates by picking a desired throuhgput.
-
-Since I don't need to solve for SDF, I can focus on a simple algorithm for trading off space and time.
-
-I start with the knowledge that all rates must match in hardware. This simplifies the scheduling as it means I don't have to worry about matching firing rates. I only allow users to compose things that will match rates.
-
-
-Simplicity – 
-I have a collection of standard functional programming operators in resource unaware language
-ii.	I rewrite them using mechanical rewrite rules and mechanical auto-scheduler to space-time IR
-1.	What does mechanical mean?
-2.	What properties of auto-scheduler?
-a.	Trade-off space and time
-b.	Not maximize, not optimal, not minimize
-iii.	For every node in space-time IR, can describe exactly what hardware going to produce
-1.	What does exactly mean?
-iv.	
