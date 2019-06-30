@@ -182,6 +182,21 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
           (input_to_maybe_indices x) (input_to_maybe_indices y)
     add_to_DAG (Map2N n_val i_val (get_builder_dag f_dag)) maybe_indices "mapC" "Seq_Edge"
 
+  reduceC :: forall n i a . (KnownNat n, KnownNat i, Convertible_To_DAG_Data a) =>
+    Proxy (1+n) -> (a -> a -> Seq_Shallow_To_Deep_Env a) -> Seq (1+n) i a ->
+    Seq_Shallow_To_Deep_Env (Seq 1 (n + i) a)
+  reduceC proxyN f x = do
+    let n_val = fromInteger $ natVal proxyN
+    let i_val = fromInteger $ natVal (Proxy :: Proxy i)
+    outer_dag <- get
+    put empty_dag
+    put $ empty_dag {next_DAG_index = 2}
+    f (convert_index_to_value 0) (convert_index_to_value 1)
+    f_dag <- get
+    put outer_dag
+    add_to_DAG (MapN n_val i_val (get_builder_dag f_dag)) (input_to_maybe_indices x)
+      "mapC" "Seq_Edge"
+
   fstC :: forall a b . (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
                         Convertible_To_DAG_Data a,
                         Convertible_To_DAG_Data b) =>
@@ -203,12 +218,62 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
                         Convertible_To_DAG_Data b) =>
     a -> b -> Seq_Shallow_To_Deep_Env (Atom_Tuple a b)
   atom_tupleC x y = add_to_DAG (ATupleN (get_AST_type (Proxy :: Proxy a))
-                         (get_AST_type (Proxy :: Proxy b)))
-             maybe_indices "zipC" "Atom_Tuple_Edge"
+                                (get_AST_type (Proxy :: Proxy b)))
+                    maybe_indices "zipC" "Atom_Tuple_Edge"
     where
       maybe_indices = liftA2 (++) (input_to_maybe_indices x)
         (input_to_maybe_indices y)
 
+  seq_tupleC :: forall n i a . (Convertible_To_DAG_Data (Seq n i a)) =>
+    Seq n i a -> Seq n i a -> Seq_Shallow_To_Deep_Env (Seq_Tuple 2 (Seq n i a))
+  seq_tupleC x y = add_to_DAG (STupleN (get_AST_type (Proxy :: Proxy (Seq n i a))))
+                   maybe_indices "seq_tupleC" "Seq_Tuple_Edge"
+    where 
+      maybe_indices = liftA2 (++) (input_to_maybe_indices x)
+        (input_to_maybe_indices y)
+
+
+  seq_tuple_appendC :: forall n a .
+    (KnownNat n, Convertible_To_DAG_Data (Seq_Tuple n a),
+     Convertible_To_DAG_Data a,
+     Convertible_To_DAG_Data (Seq_Tuple (n+1) a)) =>
+    Seq_Tuple n a -> a -> Seq_Shallow_To_Deep_Env (Seq_Tuple (n+1) a)
+  seq_tuple_appendC input_seq input_el =
+    add_to_DAG (STupleAppendN (get_AST_type (Proxy :: Proxy (Seq_Tuple (n+1) a)))) 
+    maybe_indices "seq_tuple_appendC" "Seq_Tuple_Edge"
+    where 
+      maybe_indices = liftA2 (++) (input_to_maybe_indices input_seq)
+        (input_to_maybe_indices input_el)
+
+    
+  seq_tuple_to_seqC :: forall n i a . (KnownNat n, KnownNat i,
+                        Convertible_To_DAG_Data a,
+                        Convertible_To_DAG_Data (Seq n i a)) =>
+    Seq_Tuple n a -> Seq_Shallow_To_Deep_Env (Seq n i a)
+  seq_tuple_to_seqC input_tuple =
+    add_to_DAG (STupleToSeqN (get_AST_type (Proxy :: Proxy (Seq n i a))))
+    (input_to_maybe_indices input_tuple) "seq_tuple_appendC" "Seq_Tuple_Edge"
+
+  seq_to_seq_tupleC :: forall n i a . (KnownNat n,
+                        Convertible_To_DAG_Data (Seq n i a),
+                        Convertible_To_DAG_Data (Seq_Tuple n a)) =>
+    Seq n i a -> Seq_Shallow_To_Deep_Env (Seq_Tuple n a)
+  seq_to_seq_tupleC input_tuple =
+    add_to_DAG (SeqToSTupleN (get_AST_type (Proxy :: Proxy (Seq_Tuple n a))))
+    (input_to_maybe_indices input_tuple) "seq_tuple_appendC" "Seq_Tuple_Edge"
+
+  shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
+                             Convertible_To_DAG_Data (Seq (n+r) i a)) =>
+    Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> Seq_Shallow_To_Deep_Env (Seq (n+r) i a)
+  shiftC proxyLen proxyShiftAmount input_seq =
+    add_to_DAG (ShiftN len_val i_val shift_amount_val ast_type)
+    (input_to_maybe_indices input_seq) "shiftC" "Seq_Tuple_Edge"
+    where
+      len_val = fromInteger $ natVal proxyLen
+      shift_amount_val = fromInteger $ natVal proxyShiftAmount
+      i_val = fromInteger $ natVal (Proxy :: Proxy i)
+      ast_type = get_AST_type (Proxy :: Proxy (Seq (n+r) i a))
+    
   -- composition operators
   (>>>) f g x = f x >>= g
 
