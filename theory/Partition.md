@@ -24,8 +24,8 @@ The rules are part of the [Inner and Outer Sequence To Space-Time rewrite rules 
 The scheduling algorithm requires these Sequence To Space-Time rewrite rules.
 See the [scheduling algorithm](Scheduling.md) for why and how the rules are used.
 
-Nesting Outer means nesting so that the partition will be applied to the outer `Seq`.
-Nesting Inner means nesting so that the partition will be applied to the inner `Seq`.
+For a `Partition ni (nj*nk)`, Split Outer Upstream means nesting so that the operation upstream relative to the partition splits the outer `Seq ni`.
+For a `Partition (ni*nj) nk`, Split Inner Upstream means nesting so that the operation upstream relative to the partition splits the inner `Seq nk`.
 
 Nesting is used in order to schedule into space and time. 
 In order to make an operator paratially parallel, it's input and output types must be a `TSeq` containing an `SSeq` or vice-versa.
@@ -35,8 +35,29 @@ Together, they will be partially parallel
 
 
 ### Partition
+#### Example App
+```
+Partition ni (nj*nk) . Map (ni*nj*nk) Abs ==
+Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t . Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
+Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
+```
+
+If split outer upstream already, then nothing to do. If upstream rewrite to `Map (ni*nj*nk) Abs` splits off `ni` so have `Map ni (Map (nj*nk) Abs)`, then `Partition ni (nj*nk)` job is already done. It will get removed by identity isomorphism, so do nothing.
+
+No - The partition needs to focus here on `nj*nk` after nesting rewrite rule. If have `Map (ni*nj*nk) Abs` and then split off `ni` so have `Map ni (Map (nj*nk) Abs)`, then can't split `Partition (ni*nj) nk` by focusing on `ni`, as it's ni longer in the same sequence as `nj` and `nk`. Need to do the split inner now. `Partition ni`
+
+```
+Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk) . Map (ni*nj*nk) Abs ==
+
+Map ni (Map (nj*nk) Abs) .
+    Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t .
+    Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
+
+Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
+```
+
 Note: the type parameters are not actually part of the `Partition`, but are included in the following proofs for interpretability.
-#### `Partition` Nesting Outer
+#### `Partition` Split Inner Upstream Nesting
 ```
 Partition (ni*nj) nk === (Identity Addition)
 Id . Partition (ni*nj) nk === (Isomorphism Addition)
@@ -44,7 +65,12 @@ Unpartition ni nj . Partition ni nj . Partition (ni*nj) nk ===? (Commutativity)
 Unpartition ni nj . Map ni (Partition ni nk) . Partition (ni*nj) nk
 ```
 
-#### `Partition` Nesting Inner
+Wanted inner:
+```
+Partition ni (nj*nk) . Map ni (Partition nj nk)
+```
+
+#### `Partition` Split Outer Upstream Nesting
 ```
 Partition ni (nj*nk) t === (Identity Addition)
 Id . Partition ni (nj*nk) t === (Map-Identity)
