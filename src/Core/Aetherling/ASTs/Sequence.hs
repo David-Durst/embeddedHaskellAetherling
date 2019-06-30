@@ -29,49 +29,45 @@ class Monad m => Sequence_Language m where
     a -> Atom_Unit -> m a
 
   -- sequence operators
-  up_1dC :: (KnownNat n, KnownNat i,
-             KnownNat (Type_Size a), Typeable (Proxy a),
+  up_1dC :: (KnownNat n, KnownNat i, KnownNat (Type_Size a), Typeable (Proxy a),
              Convertible_To_DAG_Data a) =>
-    Proxy n -> Proxy i -> Seq 1 (n + i - 1) a -> m (Seq n i a)
+    Proxy (1+n) -> Seq 1 (n + i) a -> m (Seq (1+n) i a)
 
-  select_1dC :: (KnownNat n, KnownNat i,
+  down_1dC :: (KnownNat n, KnownNat i,
                  KnownNat (Type_Size a), Typeable (Proxy a),
                 Convertible_To_DAG_Data a) =>
-    Proxy (1+n) -> Proxy i -> Seq (1+n) i a -> m (Seq 1 (1 + n + i - 1) a)
+    Proxy (1+n) -> Seq (1+n) i a -> m (Seq 1 (n + i) a)
 
--- Partition_t_tt no ni :: TSeq (no*ni) (vo + no*vi) t -> TSeq no vo (TSeq ni vi t)
   partitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
                  KnownNat io, KnownNat ii,
                  Convertible_To_DAG_Data a) =>
     Proxy no -> Proxy ni ->
-    Proxy io -> Proxy ii ->
-    Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* vi)) a ->
-    m (Seq no vo (Seq ni vi a))
+    Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a ->
+    m (Seq no io (Seq ni ii a))
 
   unpartitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-                   KnownNat vo, KnownNat vi,
+                   KnownNat io, KnownNat ii,
                    Convertible_To_DAG_Data a) =>
     Proxy no -> Proxy ni ->
-    Proxy io -> Proxy ii ->
-    Seq no vo (Seq ni vi a) ->
-    m (Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* vi)) a)
+    Seq no io (Seq ni ii a) ->
+    m (Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a)
 
 
   -- higher order operators
   mapC :: (KnownNat n, KnownNat i,
            Convertible_To_DAG_Data a,
            Convertible_To_DAG_Data b) =>
-    Proxy n -> Proxy i -> (a -> m b) -> (Seq n i a -> m (Seq n i b))
+    Proxy n -> (a -> m b) -> (Seq n i a -> m (Seq n i b))
 
   map2C :: (KnownNat n, KnownNat i,
             Convertible_To_DAG_Data a,
             Convertible_To_DAG_Data b,
             Convertible_To_DAG_Data c) =>
-    Proxy n -> Proxy i -> (a -> b -> m c) -> (Seq n i a -> Seq n i b -> m (Seq n i c))
+    Proxy n -> (a -> b -> m c) -> (Seq n i a -> Seq n i b -> m (Seq n i c))
 
   reduceC :: (KnownNat n, KnownNat i,
               Convertible_To_DAG_Data a) =>
-    Proxy n -> Proxy i -> (a -> a -> m a) -> Seq n i a -> m (Seq 1 (n + i - 1) a)
+    Proxy (1+n) -> (a -> a -> m a) -> Seq (1+n) i a -> m (Seq 1 (n + i) a)
 
   -- tuple operations
   fstC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
@@ -89,31 +85,24 @@ class Monad m => Sequence_Language m where
                   Convertible_To_DAG_Data b) =>
     a -> b -> m (Atom_Tuple a b)
 
-  seq_tupleC :: (Convertible_To_DAG_Data a) =>
+  seq_tupleC :: (Convertible_To_DAG_Data a, KnownNat i) =>
     Seq n i a -> Seq n i a -> m (Seq_Tuple 2 (Seq n i a))
 
   seq_tuple_appendC :: (KnownNat n, Convertible_To_DAG_Data a) =>
     Seq_Tuple n a -> a -> m (Seq_Tuple (n+1) a)
 
-  seq_tuple_to_seqC :: Convertible_To_DAG_Data a =>
+  seq_tuple_to_seqC :: (Convertible_To_DAG_Data a, KnownNat i) =>
     Seq_Tuple n a -> m (Seq n i a)
 
-  seq_to_seq_tupleC :: Convertible_To_DAG_Data a =>
+  seq_to_seq_tupleC :: (Convertible_To_DAG_Data a, KnownNat i) =>
     Seq n i a -> m (Seq_Tuple n a)
 
-  shiftC :: KnownNat n =>
-    Proxy n -> Proxy i -> Int -> Seq n i a -> Seq n i a
+  shiftC :: (KnownNat n, KnownNat r, KnownNat i) =>
+    Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> m (Seq (n+r) i a)
 
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
 
-class Sequence_Language m => Simulation_Sequence_Language m where
-  sim_input_unit :: () -> m Atom_Unit
-  sim_input_int :: Int -> m Atom_Int
-  sim_input_bit :: Bool -> m Atom_Bit
-  sim_input_tuple :: (a,b) -> m (Atom_Tuple a b)
-  sim_input_seq :: Seq n i a -> m (Seq n i a)
-  
 class Sequence_Language m => Symbolic_Sequence_Language m where
   sym_input_unit :: m Atom_Unit
   sym_input_int :: m Atom_Int
@@ -155,6 +144,7 @@ data Sequence_Language_AST =
       }
   | MapN {n :: Int, i :: Int, f :: Seq_DAG}
   | Map2N {n :: Int, i :: Int, f :: Seq_DAG}
+  | ReduceN {n :: Int, i :: Int, f :: Seq_DAG}
   | FstN {t0 :: AST_Type, t1 :: AST_Type}
   | SndN {t0 :: AST_Type, t1 :: AST_Type}
   | ATupleN {t0 :: AST_Type, t1 :: AST_Type}
