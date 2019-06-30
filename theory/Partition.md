@@ -35,26 +35,6 @@ Together, they will be partially parallel
 
 
 ### Partition
-#### Example App
-```
-Partition ni (nj*nk) . Map (ni*nj*nk) Abs ==
-Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t . Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
-Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
-```
-
-If split outer upstream already, then nothing to do. If upstream rewrite to `Map (ni*nj*nk) Abs` splits off `ni` so have `Map ni (Map (nj*nk) Abs)`, then `Partition ni (nj*nk)` job is already done. It will get removed by identity isomorphism, so do nothing.
-
-No - The partition needs to focus here on `nj*nk` after nesting rewrite rule. If have `Map (ni*nj*nk) Abs` and then split off `ni` so have `Map ni (Map (nj*nk) Abs)`, then can't split `Partition (ni*nj) nk` by focusing on `ni`, as it's ni longer in the same sequence as `nj` and `nk`. Need to do the split inner now. `Partition ni`
-
-```
-Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk) . Map (ni*nj*nk) Abs ==
-
-Map ni (Map (nj*nk) Abs) .
-    Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t .
-    Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
-
-Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
-```
 
 Note: the type parameters are not actually part of the `Partition`, but are included in the following proofs for interpretability.
 #### `Partition` Split Inner Upstream Nesting
@@ -63,6 +43,24 @@ Partition (ni*nj) nk === (Identity Addition)
 Id . Partition (ni*nj) nk === (Isomorphism Addition)
 Unpartition ni nj . Partition ni nj . Partition (ni*nj) nk ===? (Commutativity)
 Unpartition ni nj . Map ni (Partition ni nk) . Partition (ni*nj) nk
+```
+
+##### Example Apps For Split Inner Upstream
+```
+Partition ni (nj*nk) nk . Map (ni*nj*nk) Abs ==
+Partition (ni*nj) nk . Unpartition (ni*nj) nk . Map (ni*nj) (Map nk f) . Partition (ni*nj) nk ===
+```
+
+If split outer upstream already, then nothing to do. If upstream rewrite to `Map (ni*nj*nk) Abs` splits off `ni` so have `Map ni (Map (nj*nk) Abs)`, then `Partition ni (nj*nk)` job is already done. It will get removed by identity isomorphism, so do nothing.
+
+```
+Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk) . Map (ni*nj*nk) Abs ==
+
+Map ni (Map (nj*nk) Abs) .
+    Partition ni (nj*nk) .
+    Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
+
+Map ni (Map (nj*nk) Abs) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
 ```
 
 Wanted inner:
@@ -80,8 +78,46 @@ Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk)
 Map ni (Unpartition nj nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t (Commutativity)
 ```
 
+##### Example Apps For Split Outer Upstream
+These two are where the split matches:
+```
+Partition ni (nj*nk) . Map (ni*nj*nk) Abs ===
+Partition ni (nj*nk) . Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk)
+```
+
+If split outer upstream already, then nothing to do. If upstream rewrite to `Map (ni*nj*nk) Abs` splits off `ni` so have `Map ni (Map (nj*nk) Abs)`, then `Partition ni (nj*nk)` job is already done. It will get removed by identity isomorphism, so do nothing.
+
+```
+Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk) . Map (ni*nj*nk) Abs ===
+
+Map ni (Map (nj*nk) Abs) .
+    Partition ni (nj*nk) .
+    Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
+
+Map ni (Map (nj*nk) Abs) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
+```
 
 
+These two are where the split doesn't match.
+
+In this one, the `Partition` creates a larger outer partition than the rewrite rule split of the upstream operator.
+
+```
+Partition (ni*nj) nk . Map (ni*nj*nk) Abs ===
+
+Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk)
+    . Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk)
+```
+
+
+In this one, the `Partition` creates a smaller outer partition than the rewrite rule split of the upstream operator.
+
+```
+Partition ni (nj*nk) . Map (ni*nj*nk) Abs ===
+
+Unpartition ni nj . Partition ni nj . Partition (ni*nj) nk .
+    Unpartition (ni*nj) nk . Map (ni*nj) (Map nk f) . Partition (ni*nj) nk
+```
 
 #### `Partition` Nesting Outer
 ```
