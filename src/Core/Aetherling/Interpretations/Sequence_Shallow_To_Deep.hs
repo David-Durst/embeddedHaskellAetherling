@@ -228,7 +228,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
     Seq n i a -> Seq n i a -> Seq_Shallow_To_Deep_Env (Seq_Tuple 2 (Seq n i a))
   seq_tupleC x y = add_to_DAG (STupleN (get_AST_type (Proxy :: Proxy (Seq n i a))))
                    maybe_indices "seq_tupleC" "Seq_Tuple_Edge"
-    where 
+    where
       maybe_indices = liftA2 (++) (input_to_maybe_indices x)
         (input_to_maybe_indices y)
 
@@ -241,11 +241,11 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
   seq_tuple_appendC input_seq input_el =
     add_to_DAG (STupleAppendN (get_AST_type (Proxy :: Proxy (Seq_Tuple (n+1) a)))) 
     maybe_indices "seq_tuple_appendC" "Seq_Tuple_Edge"
-    where 
+    where
       maybe_indices = liftA2 (++) (input_to_maybe_indices input_seq)
         (input_to_maybe_indices input_el)
 
-    
+
   seq_tuple_to_seqC :: forall n i a . (KnownNat n, KnownNat i,
                         Convertible_To_DAG_Data a,
                         Convertible_To_DAG_Data (Seq n i a)) =>
@@ -273,7 +273,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       shift_amount_val = fromInteger $ natVal proxyShiftAmount
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
       ast_type = get_AST_type (Proxy :: Proxy (Seq (n+r) i a))
-    
+
   -- composition operators
   (>>>) f g x = f x >>= g
 
