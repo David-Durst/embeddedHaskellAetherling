@@ -103,15 +103,6 @@ class Monad m => Sequence_Language m where
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
 
-class Sequence_Language m => Symbolic_Sequence_Language m where
-  sym_input_unit :: m Atom_Unit
-  sym_input_int :: m Atom_Int
-  sym_input_bit :: m Atom_Bit
-  sym_input_tuple :: (Convertible_To_DAG_Data a, Convertible_To_DAG_Data b) =>
-                     m (Atom_Tuple a b)
-  sym_input_seq :: (KnownNat n, KnownNat i, Convertible_To_DAG_Data a) =>
-    Proxy n -> m (Seq n i a)
-
 type Seq_DAG = DAG Sequence_Language_AST
 
 data Sequence_Language_AST =

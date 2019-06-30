@@ -91,26 +91,26 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
   up_1dC :: forall n a i . (KnownNat n, KnownNat i,
                           KnownNat (Type_Size a), Typeable (Proxy a),
                           Convertible_To_DAG_Data a) =>
-            Proxy n -> Proxy i ->
-            Seq 1 (n + i - 1) a -> Seq_Shallow_To_Deep_Env (Seq n i a)
-  up_1dC proxyN proxyI x = add_to_DAG
+            Proxy (1+n) -> 
+            Seq 1 (n + i) a -> Seq_Shallow_To_Deep_Env (Seq (1+n) i a)
+  up_1dC proxyN x = add_to_DAG
     (Up_1dN n_val i_val (get_AST_type (Proxy :: Proxy a)))
     (input_to_maybe_indices x) "up_1dC" "Seq_Edge"
     where
       n_val = fromInteger $ natVal proxyN
-      i_val = fromInteger $ natVal proxyI
+      i_val = fromInteger $ natVal (Proxy :: Proxy i)
 
-  select_1dC :: forall n a i . (KnownNat n, KnownNat i,
+  down_1dC :: forall n a i . (KnownNat n, KnownNat i,
                               KnownNat (Type_Size a), Typeable (Proxy a),
                               Convertible_To_DAG_Data a) =>
-              Proxy (1+n) -> Proxy i ->
-              Seq (1+n) i a -> Seq_Shallow_To_Deep_Env (Seq 1 (1 + n + i - 1) a)
-  select_1dC proxyN proxyI x = add_to_DAG
-    (Select_1dN n_val i_val (get_AST_type (Proxy :: Proxy a)))
+              Proxy (1+n) -> 
+              Seq (1+n) i a -> Seq_Shallow_To_Deep_Env (Seq 1 (n + i) a)
+  down_1dC proxyN x = add_to_DAG
+    (Down_1dN n_val i_val (get_AST_type (Proxy :: Proxy a)))
     (input_to_maybe_indices x) "down_1dC" "Seq_Edge"
     where
       n_val = fromInteger $ natVal proxyN
-      i_val = fromInteger $ natVal proxyI
+      i_val = fromInteger $ natVal (Proxy :: Proxy i)
 
 
   partitionC :: forall no ni io ii a .
@@ -118,47 +118,50 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       KnownNat io, KnownNat ii,
       Convertible_To_DAG_Data a) =>
     Proxy no -> Proxy ni ->
-    Proxy io -> Proxy ii ->
     Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a ->
     Seq_Shallow_To_Deep_Env (Seq no io (Seq ni ii a))
   partitionC proxyNO proxyNI x = add_to_DAG
-    (PartitionN no_val ni_val (get_AST_type (Proxy :: Proxy a)))
+    (PartitionN no_val ni_val io_val ii_val (get_AST_type (Proxy :: Proxy a)))
     (input_to_maybe_indices x) "partition_1dC" "Seq_Edge"
     where
       no_val = fromInteger $ natVal proxyNO
       ni_val = fromInteger $ natVal proxyNI
+      io_val = fromInteger $ natVal (Proxy :: Proxy io)
+      ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
 
   unpartitionC :: forall no ni io ii a .
     (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
       KnownNat io, KnownNat ii,
       Convertible_To_DAG_Data a) =>
     Proxy no -> Proxy ni ->
-    Proxy io -> Proxy ii ->
     Seq no io (Seq ni ii a) ->
     Seq_Shallow_To_Deep_Env (Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a)
   unpartitionC proxyNO proxyNI x = add_to_DAG
-    (UnpartitionN no_val ni_val (get_AST_type (Proxy :: Proxy a)))
+    (UnpartitionN no_val ni_val io_val ii_val (get_AST_type (Proxy :: Proxy a)))
     (input_to_maybe_indices x) "partition_1dC" "Seq_Edge"
     where
       no_val = fromInteger $ natVal proxyNO
       ni_val = fromInteger $ natVal proxyNI
+      io_val = fromInteger $ natVal (Proxy :: Proxy io)
+      ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
 
 
   -- higher order operators
   mapC :: forall n i a b . (KnownNat n, KnownNat i,
                             Convertible_To_DAG_Data a,
                             Convertible_To_DAG_Data b) =>
-          Proxy n -> Proxy i -> (a -> Seq_Shallow_To_Deep_Env b) ->
+          Proxy n -> (a -> Seq_Shallow_To_Deep_Env b) ->
           (Seq n i a -> Seq_Shallow_To_Deep_Env (Seq n i b))
   mapC proxyN f x = do
     let n_val = fromInteger $ natVal proxyN
+    let i_val = fromInteger $ natVal (Proxy :: Proxy i)
     outer_dag <- get
     put empty_dag
     put $ empty_dag {next_DAG_index = 1}
     f $ convert_index_to_value 0
     f_dag <- get
     put outer_dag
-    add_to_DAG (MapN n_val (get_builder_dag f_dag)) (input_to_maybe_indices x)
+    add_to_DAG (MapN n_val i_val (get_builder_dag f_dag)) (input_to_maybe_indices x)
       "mapC" "Seq_Edge"
     
   map2C :: forall n i a b c . (KnownNat n, KnownNat i,
@@ -169,6 +172,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
     (Seq n i a -> Seq n i b -> Seq_Shallow_To_Deep_Env (Seq n i c))
   map2C proxyN f x y = do
     let n_val = fromInteger $ natVal proxyN
+    let i_val = fromInteger $ natVal (Proxy :: Proxy i)
     outer_dag <- get
     put $ empty_dag {next_DAG_index = 2}
     f (convert_index_to_value 0) (convert_index_to_value 1)
@@ -176,7 +180,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
     put outer_dag
     let maybe_indices = liftA2 (++)
           (input_to_maybe_indices x) (input_to_maybe_indices y)
-    add_to_DAG (Map2N n_val (get_builder_dag f_dag)) maybe_indices "mapC" "Seq_Edge"
+    add_to_DAG (Map2N n_val i_val (get_builder_dag f_dag)) maybe_indices "mapC" "Seq_Edge"
 
   fstC :: forall a b . (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
                         Convertible_To_DAG_Data a,
@@ -198,7 +202,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
                         Convertible_To_DAG_Data a,
                         Convertible_To_DAG_Data b) =>
     a -> b -> Seq_Shallow_To_Deep_Env (Atom_Tuple a b)
-  atom_tupleC x y = add_to_DAG (ZipN (get_AST_type (Proxy :: Proxy a))
+  atom_tupleC x y = add_to_DAG (ATupleN (get_AST_type (Proxy :: Proxy a))
                          (get_AST_type (Proxy :: Proxy b)))
              maybe_indices "zipC" "Atom_Tuple_Edge"
     where
@@ -208,25 +212,28 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
   -- composition operators
   (>>>) f g x = f x >>= g
 
-instance Symbolic_Sequence_Language Seq_Shallow_To_Deep_Env where
-  sym_input_unit = add_to_DAG (InputN UnitT) (Just []) "sym_input_unit" ""
-  sym_input_bit = add_to_DAG (InputN BitT) (Just []) "sym_input_bit" ""
-  sym_input_int = add_to_DAG (InputN IntT) (Just []) "sym_input_int" ""
+sym_input_unit :: Seq_Shallow_To_Deep_Env Atom_Unit
+sym_input_unit = add_to_DAG (InputN UnitT) (Just []) "sym_input_unit" ""
+sym_input_int :: Seq_Shallow_To_Deep_Env Atom_Int
+sym_input_int = add_to_DAG (InputN IntT) (Just []) "sym_input_int" ""
+sym_input_bit :: Seq_Shallow_To_Deep_Env Atom_Bit
+sym_input_bit = add_to_DAG (InputN BitT) (Just []) "sym_input_bit" ""
+sym_input_atom_tuple :: forall a b .
+  (Convertible_To_DAG_Data a, Convertible_To_DAG_Data b) =>
+                    Seq_Shallow_To_Deep_Env (Atom_Tuple a b)
+sym_input_atom_tuple = add_to_DAG (InputN tuple_type) (Just []) "sym_input_tuple" ""
+  where
+    a_proxy = Proxy :: Proxy a
+    b_proxy = Proxy :: Proxy b
+    tuple_type = ATupleT (get_AST_type a_proxy) (get_AST_type b_proxy)
+sym_input_seq :: forall a n i . (KnownNat n, KnownNat i,
+                                  Convertible_To_DAG_Data a) =>
+  Proxy n -> Seq_Shallow_To_Deep_Env (Seq n i a)
+sym_input_seq proxyN = add_to_DAG (InputN seq_type) (Just []) "sym_input_tuple" ""
+  where
+    a_proxy = Proxy :: Proxy a
+    n_val = fromInteger $ natVal proxyN
+    i_val = fromInteger $ natVal (Proxy :: Proxy i)
+    seq_type = SeqT n_val i_val (get_AST_type a_proxy)
 
-  sym_input_tuple :: forall a b . (Convertible_To_DAG_Data a,
-                                   Convertible_To_DAG_Data b) =>
-                     Seq_Shallow_To_Deep_Env (Atom_Tuple a b)
-  sym_input_tuple = add_to_DAG (InputN tuple_type) (Just []) "sym_input_tuple" ""
-    where
-     a_proxy = Proxy :: Proxy a
-     b_proxy = Proxy :: Proxy b
-     tuple_type = TupleT (get_AST_type a_proxy) (get_AST_type b_proxy)
 
-  sym_input_seq :: forall a n i . (KnownNat n, KnownNat i,
-                                    Convertible_To_DAG_Data a) =>
-    Proxy n -> Seq_Shallow_To_Deep_Env (Seq n i a)
-  sym_input_seq proxyN = add_to_DAG (InputN seq_type) (Just []) "sym_input_tuple" ""
-    where
-      a_proxy = Proxy :: Proxy a
-      n_val = fromInteger $ natVal $ proxyN
-      seq_type = SeqT n_val (get_AST_type a_proxy)
