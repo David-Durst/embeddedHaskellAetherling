@@ -1,8 +1,7 @@
 # Scheduling
 The goal of this document is:
-1. Define scheduling
-1. Define how scheduling occurs
-1. Define properties of the scheduler
+1. Define scheduling and its properties
+1. Define the scheduling algorithm
 1. Enumerate the rewrite rules that each operator in the sequence language must
    support in order to enable scheduling
 1. Define the relationship between scheduling and the auto-scheduler
@@ -10,14 +9,33 @@ The goal of this document is:
 1. Prove optimality of the algorithm
    
 # Scheduling Definition
-Scheduling is converting all the operators in a program from sequence language
-to space-time IR.
+Scheduling is converting a program from the sequence language to the space-time IR.
 Scheduling is performed to target a specific `input_throughput` and `output_throughput`
 as defined in [the basic theory document's throughput section.](Basic.md#throughput).
 The target is specified using a **throughput factor s**.
 Scheduling with factor **s** means produce a pipeline with `input_throughput` and
 `output_throughput` that are **s** times smaller than the fully parallel pipeline's
 `input_throughput` and `output_throughput`.
+
+## Distributive Property
+I require that `schedule(g . f, s) === schedule(g, s) . schedule(f, s)`.
+The benefit of the distributive property is that it simplifies the scheduler. 
+The scheduler only needs to consider a single operator at a time.
+
+The downside of the distribute property is that it prevents `schedule` from accepting standard sequence language programs as input.
+The `Seq` types contain too little information for `schedule` to satisfy the distributive property.
+For example:
+1. Let `f = Map 1 (Map 1 Abs) :: Seq 1 (Seq 1 Int) -> Seq 1 (Seq 1 Int)`. 
+1. Let `g = Up_1d 4 :: Seq 1 (Seq 1 Int) -> Seq 4 (Seq 1 Int)`
+1. The goal is `schedule()`
+1. `schdule(f, 4) = Up_1d_t 4`
+1. There are multiple options for `schedule(g, 4)`. 
+Both the inner and outer `Map` must become `Map_t`. 
+However, it is not obvious whether 
+
+
+
+# Scheduling Algorithm
 
 The algorithm for scheduling a program P with a throughput factor s is:
 1. Let O be the set of sequence operators in P.
