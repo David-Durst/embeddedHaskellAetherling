@@ -7,7 +7,7 @@ import qualified Data.Map as M
 import Data.Maybe
 import Control.Monad.Except
 import Data.Foldable
-
+{-
 sequence_to_space_time :: Int -> S.Seq_DAG -> Except String ST.ST_DAG
 sequence_to_space_time slowdown _ | slowdown < 1 = throwError $ "slowdown of " ++
                                     show slowdown ++ " is less than min of 1."
@@ -249,3 +249,4 @@ seq_node_to_st_node _ builder (seq_index, S.InputN t) = return $
 seq_node_to_st_node slowdown builder (index, n) = throwError $
   show n ++ " can't be slowed down with slowdown " ++ show slowdown ++ ". The"++
   "builder is " ++ show builder ++ " and index in sequence DAG is "++ show index
+-}
