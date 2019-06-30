@@ -1,4 +1,4 @@
-module Test_Composition where
+module Test_Seq_Simulator where
 import Test.Tasty
 import Test.Tasty.HUnit
 import Aetherling.ASTs.Sequence
@@ -13,7 +13,7 @@ add_of_two_abs x y = do
   x_y_abs_zipped <- atom_tupleC x_abs y_abs 
   addC x_y_abs_zipped
 
-sequence_composition_tests = testGroup "Verifying Composition Of Sequence Operators"
+sequence_simulator_tests = testGroup "Verifying Sequence Simulator"
   [
     testCase "compose two unary functions" $ simulate two_abs @?= (Atom_Int 3),
     testCase "zip two unary functions into binary function" (
