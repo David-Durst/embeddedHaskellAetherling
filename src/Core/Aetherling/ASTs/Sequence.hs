@@ -85,19 +85,26 @@ class Monad m => Sequence_Language m where
                   Convertible_To_DAG_Data b) =>
     a -> b -> m (Atom_Tuple a b)
 
-  seq_tupleC :: (Convertible_To_DAG_Data a, KnownNat i) =>
+  seq_tupleC :: (Convertible_To_DAG_Data (Seq n i a)) =>
     Seq n i a -> Seq n i a -> m (Seq_Tuple 2 (Seq n i a))
 
-  seq_tuple_appendC :: (KnownNat n, Convertible_To_DAG_Data a) =>
+  seq_tuple_appendC :: (KnownNat n, Convertible_To_DAG_Data (Seq_Tuple n a),
+                        Convertible_To_DAG_Data a,
+                        Convertible_To_DAG_Data (Seq_Tuple (n+1) a)) =>
     Seq_Tuple n a -> a -> m (Seq_Tuple (n+1) a)
 
-  seq_tuple_to_seqC :: (Convertible_To_DAG_Data a, KnownNat i) =>
+  seq_tuple_to_seqC :: (KnownNat n, KnownNat i,
+                        Convertible_To_DAG_Data a,
+                        Convertible_To_DAG_Data (Seq n i a)) =>
     Seq_Tuple n a -> m (Seq n i a)
 
-  seq_to_seq_tupleC :: (Convertible_To_DAG_Data a, KnownNat i) =>
+  seq_to_seq_tupleC :: (KnownNat n,
+                        Convertible_To_DAG_Data (Seq n i a),
+                        Convertible_To_DAG_Data (Seq_Tuple n a)) =>
     Seq n i a -> m (Seq_Tuple n a)
 
-  shiftC :: (KnownNat n, KnownNat r, KnownNat i) =>
+  shiftC :: (KnownNat n, KnownNat r, KnownNat i,
+              Convertible_To_DAG_Data (Seq (n+r) i a)) =>
     Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> m (Seq (n+r) i a)
 
   -- composition operators
@@ -143,6 +150,6 @@ data Sequence_Language_AST =
   | STupleAppendN {tuple_t :: AST_Type}
   | STupleToSeqN {seq_t :: AST_Type}
   | SeqToSTupleN {seq_t :: AST_Type}
-  | ShiftN {n :: Int, i :: Int, seq_t :: AST_Type}
+  | ShiftN {n :: Int, i :: Int, shift_amount :: Int, seq_t :: AST_Type}
   | InputN {t :: AST_Type}
   deriving (Show, Eq)
