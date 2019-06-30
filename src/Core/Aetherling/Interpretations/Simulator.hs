@@ -121,8 +121,8 @@ sim_input_int :: Int -> Simulation_Env Atom_Int
 sim_input_int x = return $ Atom_Int x
 sim_input_bit :: Bool -> Simulation_Env Atom_Bit
 sim_input_bit x = return $ Atom_Bit x
-sim_input_tuple :: (a,b) -> Simulation_Env (Atom_Tuple a b)
-sim_input_tuple (x, y) = return $ Atom_Tuple x y
+sim_input_atom_tuple :: (a,b) -> Simulation_Env (Atom_Tuple a b)
+sim_input_atom_tuple (x, y) = return $ Atom_Tuple x y
 sim_input_seq :: forall n i a . (KnownNat n, KnownNat i) => [a] -> Simulation_Env (Seq n i a)
 sim_input_seq input_list
   | length input_list == n_val = return $ Seq $ listToVector n_proxy input_list
