@@ -67,7 +67,7 @@ class Monad m => Sequence_Language m where
 
   reduceC :: (KnownNat n, KnownNat i,
               Convertible_To_DAG_Data a) =>
-    Proxy (1+n) -> (a -> a -> m a) -> Seq (1+n) i a -> m (Seq 1 (n + i) a)
+    Proxy (1+n) -> (Atom_Tuple a a -> m a) -> Seq (1+n) i a -> m (Seq 1 (n + i) a)
 
   -- tuple operations
   fstC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b,

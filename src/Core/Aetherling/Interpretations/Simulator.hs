@@ -64,7 +64,7 @@ instance Sequence_Language Simulation_Env where
   map2C _ f input = traverse2 f input
 
   reduceC _ f (Seq input_vec) =
-    fmap (\out_el -> Seq $ V.singleton out_el) $ V.fold1M f input_vec
+    fmap (\out_el -> Seq $ V.singleton out_el) $ V.fold1M (\x y -> f (Atom_Tuple x y)) input_vec
   reduceC _ _ _ = fail $ fail_message "reduceC" "Seq"
 
   -- tuple operations
@@ -123,7 +123,8 @@ sim_input_bit :: Bool -> Simulation_Env Atom_Bit
 sim_input_bit x = return $ Atom_Bit x
 sim_input_atom_tuple :: (a,b) -> Simulation_Env (Atom_Tuple a b)
 sim_input_atom_tuple (x, y) = return $ Atom_Tuple x y
-sim_input_seq :: forall n i a . (KnownNat n, KnownNat i) => [a] -> Simulation_Env (Seq n i a)
+sim_input_seq :: forall n i a . (KnownNat n, KnownNat i) =>
+  [a] -> Simulation_Env (Seq n i a)
 sim_input_seq input_list
   | length input_list == n_val = return $ Seq $ listToVector n_proxy input_list
   | otherwise = fail $ "tried to create Seq from list of incorrect size"

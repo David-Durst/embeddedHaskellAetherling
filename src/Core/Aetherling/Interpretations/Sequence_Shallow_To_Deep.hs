@@ -183,15 +183,15 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
     add_to_DAG (Map2N n_val i_val (get_builder_dag f_dag)) maybe_indices "mapC" "Seq_Edge"
 
   reduceC :: forall n i a . (KnownNat n, KnownNat i, Convertible_To_DAG_Data a) =>
-    Proxy (1+n) -> (a -> a -> Seq_Shallow_To_Deep_Env a) -> Seq (1+n) i a ->
+    Proxy (1+n) -> (Atom_Tuple a a -> Seq_Shallow_To_Deep_Env a) -> Seq (1+n) i a ->
     Seq_Shallow_To_Deep_Env (Seq 1 (n + i) a)
   reduceC proxyN f x = do
     let n_val = fromInteger $ natVal proxyN
     let i_val = fromInteger $ natVal (Proxy :: Proxy i)
     outer_dag <- get
     put empty_dag
-    put $ empty_dag {next_DAG_index = 2}
-    f (convert_index_to_value 0) (convert_index_to_value 1)
+    put $ empty_dag {next_DAG_index = 1}
+    f (convert_index_to_value 0)
     f_dag <- get
     put outer_dag
     add_to_DAG (MapN n_val i_val (get_builder_dag f_dag)) (input_to_maybe_indices x)
@@ -293,11 +293,11 @@ sym_input_atom_tuple = add_to_DAG (InputN tuple_type) (Just []) "sym_input_tuple
     tuple_type = ATupleT (get_AST_type a_proxy) (get_AST_type b_proxy)
 sym_input_seq :: forall a n i . (KnownNat n, KnownNat i,
                                   Convertible_To_DAG_Data a) =>
-  Proxy n -> Seq_Shallow_To_Deep_Env (Seq n i a)
-sym_input_seq proxyN = add_to_DAG (InputN seq_type) (Just []) "sym_input_tuple" ""
+  Seq_Shallow_To_Deep_Env (Seq n i a)
+sym_input_seq = add_to_DAG (InputN seq_type) (Just []) "sym_input_tuple" ""
   where
     a_proxy = Proxy :: Proxy a
-    n_val = fromInteger $ natVal proxyN
+    n_val = fromInteger $ natVal (Proxy :: Proxy n)
     i_val = fromInteger $ natVal (Proxy :: Proxy i)
     seq_type = SeqT n_val i_val (get_AST_type a_proxy)
 
