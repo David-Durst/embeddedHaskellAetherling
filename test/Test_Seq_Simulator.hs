@@ -12,10 +12,15 @@ import Aetherling.Types.Isomorphisms
 two_abs = absC >>> absC $ Atom_Int (-3)
 
 add_of_two_abs x y = do
-  x_abs <- absC x
-  y_abs <- absC y
+  x_val <- x
+  y_val <- y
+  x_abs <- absC x_val
+  y_abs <- absC y_val
   x_y_abs_zipped <- atom_tupleC x_abs y_abs 
   addC x_y_abs_zipped
+
+first_input_two_abs = sim_input_int (-3)
+second_input_two_abs = sim_input_int (-9)
 
 mapped_add x = do
   x_val <- x
@@ -44,7 +49,7 @@ sequence_simulator_tests = testGroup "Verifying Sequence Simulator"
   [
     testCase "compose two unary functions" $ simulate two_abs @?= (Atom_Int 3),
     testCase "zip two unary functions into binary function" (
-      simulate (add_of_two_abs (Atom_Int (-3)) (Atom_Int (-9))) @?= (Atom_Int 12)),
+      simulate (add_of_two_abs first_input_two_abs second_input_two_abs) @?= (Atom_Int 12)),
     testCase "adding two sequences of length two" (
       simulate (mapped_add mapped_add_input) @?= mapped_add_output
       ),
