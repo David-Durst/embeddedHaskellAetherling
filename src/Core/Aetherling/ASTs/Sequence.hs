@@ -29,6 +29,10 @@ class Monad m => Sequence_Language m where
     a -> Atom_Unit -> m a
 
   -- sequence operators
+  shiftC :: (KnownNat n, KnownNat r, KnownNat i,
+              Convertible_To_DAG_Data a) =>
+    Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> m (Seq (n+r) i a)
+
   up_1dC :: (KnownNat n, KnownNat i, KnownNat (Type_Size a), Typeable (Proxy a),
              Convertible_To_DAG_Data a) =>
     Proxy (1+n) -> Seq 1 (n + i) a -> m (Seq (1+n) i a)
@@ -103,10 +107,6 @@ class Monad m => Sequence_Language m where
                         Convertible_To_DAG_Data (Seq_Tuple n a)) =>
     Seq n i a -> m (Seq_Tuple n a)
 
-  shiftC :: (KnownNat n, KnownNat r, KnownNat i,
-              Convertible_To_DAG_Data a) =>
-    Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> m (Seq (n+r) i a)
-
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
 
@@ -124,6 +124,7 @@ data Sequence_Language_AST =
   | Const_GenN {constant :: AST_Value}
 
   -- sequence operators
+  | ShiftN {n :: Int, i :: Int, shift_amount :: Int, elem_t :: AST_Type}
   | Up_1dN {n :: Int, i :: Int, elem_t :: AST_Type}
   | Down_1dN {n :: Int, i :: Int, elem_t :: AST_Type}
   | PartitionN {
@@ -140,6 +141,8 @@ data Sequence_Language_AST =
       ii :: Int,
       t :: AST_Type
       }
+
+  -- higher order operators
   | MapN {n :: Int, i :: Int, f :: Seq_DAG}
   | Map2N {n :: Int, i :: Int, f :: Seq_DAG}
   | ReduceN {n :: Int, i :: Int, f :: Seq_DAG}
@@ -150,6 +153,5 @@ data Sequence_Language_AST =
   | STupleAppendN {out_len :: Int, tuple_elem_t :: AST_Type}
   | STupleToSeqN {tuple_len :: Int, tuple_elem_t :: AST_Type}
   | SeqToSTupleN {tuple_len :: Int, tuple_elem_t :: AST_Type}
-  | ShiftN {n :: Int, i :: Int, shift_amount :: Int, elem_t :: AST_Type}
   | InputN {t :: AST_Type}
   deriving (Show, Eq)

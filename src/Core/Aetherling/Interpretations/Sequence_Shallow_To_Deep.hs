@@ -88,6 +88,18 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       fail $ fail_message "const_genC" "a_Edge"
 
   -- sequence operators
+  shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
+                             Convertible_To_DAG_Data a) =>
+    Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> Seq_Shallow_To_Deep_Env (Seq (n+r) i a)
+  shiftC proxyLen proxyShiftAmount input_seq =
+    add_to_DAG (ShiftN len_val i_val shift_amount_val ast_type)
+    (input_to_maybe_indices input_seq) "shiftC" "Seq_Tuple_Edge"
+    where
+      len_val = fromInteger $ natVal proxyLen
+      shift_amount_val = fromInteger $ natVal proxyShiftAmount
+      i_val = fromInteger $ natVal (Proxy :: Proxy i)
+      ast_type = get_AST_type (Proxy :: Proxy a)
+
   up_1dC :: forall n a i . (KnownNat n, KnownNat i,
                           KnownNat (Type_Size a), Typeable (Proxy a),
                           Convertible_To_DAG_Data a) =>
@@ -265,18 +277,6 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
     (input_to_maybe_indices input_tuple) "seq_tuple_appendC" "Seq_Tuple_Edge"
     where
       tuple_length = fromInteger $ natVal (Proxy :: Proxy n)
-
-  shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
-                             Convertible_To_DAG_Data a) =>
-    Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> Seq_Shallow_To_Deep_Env (Seq (n+r) i a)
-  shiftC proxyLen proxyShiftAmount input_seq =
-    add_to_DAG (ShiftN len_val i_val shift_amount_val ast_type)
-    (input_to_maybe_indices input_seq) "shiftC" "Seq_Tuple_Edge"
-    where
-      len_val = fromInteger $ natVal proxyLen
-      shift_amount_val = fromInteger $ natVal proxyShiftAmount
-      i_val = fromInteger $ natVal (Proxy :: Proxy i)
-      ast_type = get_AST_type (Proxy :: Proxy a)
 
   -- composition operators
   (>>>) f g x = f x >>= g
