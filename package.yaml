@@ -83,3 +83,25 @@ tests:
     - Aetherling
     - tasty 
     - tasty-hunit 
+    default-extensions:
+      - DataKinds
+      - TypeOperators
+      - TypeFamilies
+      - FlexibleContexts
+      - FlexibleInstances
+      - ScopedTypeVariables
+      - TypeApplications
+      - TypeSynonymInstances
+      - PolyKinds
+      - LiberalTypeSynonyms
+      - UndecidableInstances
+      - MultiParamTypeClasses
+      - AllowAmbiguousTypes
+      - PartialTypeSignatures
+      - ExistentialQuantification
+      - DeriveFoldable
+      - DeriveTraversable
+      - GADTs
+      - ConstraintKinds
+      - Rank2Types
+      - InstanceSigs
