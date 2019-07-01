@@ -46,7 +46,7 @@ add_to_DAG new_node input_indices_maybe node_name args_name = do
     put new_DAG
     return (convert_index_to_ae_value cur_node_index)
     else do
-    fail $ fail_message node_name args_name
+    throwError $ fail_message node_name args_name
 
 input_to_maybe_indices :: (Aetherling_Value a) =>
   a -> Maybe [DAG_Index]
@@ -76,7 +76,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       add_to_DAG (Lut_GenN $ fromJust lut_table_maybe) (input_to_maybe_indices x)
         "lut_genC" "Atom_Int_edge"
       else do
-      fail $ fail_message "lut_genC" "[a_Edge]"
+      throwError $ fail_message "lut_genC" "[a_Edge]"
 
   const_genC const x = do
     let const_maybe = get_AST_value const
@@ -85,7 +85,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       add_to_DAG (Const_GenN $ fromJust const_maybe) (input_to_maybe_indices x)
         "const_genC" "Atom_Unit_Edge"
       else do
-      fail $ fail_message "const_genC" "a_Edge"
+      throwError $ fail_message "const_genC" "a_Edge"
 
   -- sequence operators
   shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
