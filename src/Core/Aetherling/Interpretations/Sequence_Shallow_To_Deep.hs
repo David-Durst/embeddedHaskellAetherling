@@ -267,7 +267,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       tuple_length = fromInteger $ natVal (Proxy :: Proxy n)
 
   shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
-                             Convertible_To_DAG_Data (Seq (n+r) i a)) =>
+                             Convertible_To_DAG_Data a) =>
     Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> Seq_Shallow_To_Deep_Env (Seq (n+r) i a)
   shiftC proxyLen proxyShiftAmount input_seq =
     add_to_DAG (ShiftN len_val i_val shift_amount_val ast_type)
@@ -276,7 +276,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       len_val = fromInteger $ natVal proxyLen
       shift_amount_val = fromInteger $ natVal proxyShiftAmount
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
-      ast_type = get_AST_type (Proxy :: Proxy (Seq (n+r) i a))
+      ast_type = get_AST_type (Proxy :: Proxy a)
 
   -- composition operators
   (>>>) f g x = f x >>= g

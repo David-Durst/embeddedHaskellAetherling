@@ -104,7 +104,7 @@ class Monad m => Sequence_Language m where
     Seq n i a -> m (Seq_Tuple n a)
 
   shiftC :: (KnownNat n, KnownNat r, KnownNat i,
-              Convertible_To_DAG_Data (Seq (n+r) i a)) =>
+              Convertible_To_DAG_Data a) =>
     Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> m (Seq (n+r) i a)
 
   -- composition operators
@@ -150,6 +150,6 @@ data Sequence_Language_AST =
   | STupleAppendN {out_len :: Int, tuple_elem_t :: AST_Type}
   | STupleToSeqN {tuple_len :: Int, tuple_elem_t :: AST_Type}
   | SeqToSTupleN {tuple_len :: Int, tuple_elem_t :: AST_Type}
-  | ShiftN {n :: Int, i :: Int, shift_amount :: Int, seq_t :: AST_Type}
+  | ShiftN {n :: Int, i :: Int, shift_amount :: Int, elem_t :: AST_Type}
   | InputN {t :: AST_Type}
   deriving (Show, Eq)

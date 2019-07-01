@@ -87,7 +87,8 @@ instance Sequence_Language Simulation_Env where
   seq_to_seq_tupleC (Seq input_vec) = return $ Seq_Tuple input_vec
   seq_to_seq_tupleC _ = fail $ fail_message "seq_to_seq_tupleC" "Seq"
 
-  shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i) =>
+  shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
+                             Convertible_To_DAG_Data a) =>
     Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> Simulation_Env (Seq (n+r) i a)
   shiftC total_length_proxy shift_amount_proxy (Seq input_vec) =
     -- put the last r elements at the start, since undefined what is there.
