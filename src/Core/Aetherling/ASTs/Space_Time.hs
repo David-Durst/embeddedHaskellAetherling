@@ -150,8 +150,8 @@ data Space_Time_Language_AST =
   | EqN {t :: AST_Type}
 
   -- generators
-  | Lut_GenN {lookup_table :: [AST_Value]}
-  | Const_GenN {constant :: AST_Value}
+  | Lut_GenN {lookup_table :: [AST_Value], lookup_types :: AST_Type}
+  | Const_GenN {constant :: AST_Value, constant_type :: AST_Type}
 
   -- sequence operators
   | FIFON {n :: Int, i :: Int, buf_size :: Int, elem_t :: AST_Type}

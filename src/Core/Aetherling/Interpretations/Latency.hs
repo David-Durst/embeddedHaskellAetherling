@@ -15,8 +15,8 @@ get_node_latency AddN = 1
 get_node_latency (EqN _) = 1
 
   -- generators
-get_node_latency (Lut_GenN _) = 1
-get_node_latency (Const_GenN v) = 1
+get_node_latency (Lut_GenN _ _) = 1
+get_node_latency (Const_GenN v _) = 1
 
   -- sequence operators
 get_node_latency (Up_1d_sN n _) = 1

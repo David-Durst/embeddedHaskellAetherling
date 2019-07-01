@@ -69,20 +69,26 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       eq_node = EqN (get_AST_type input_type_proxy)
 
   -- generators
+  lut_genC :: forall a . Aetherling_Value a => [a] -> Atom_Int -> Seq_Shallow_To_Deep_Env a
   lut_genC table x = do
+    let a_proxy = Proxy :: Proxy a
     let lut_table_maybe = traverse get_AST_value table
     if isJust lut_table_maybe
       then do
-      add_to_DAG (Lut_GenN $ fromJust lut_table_maybe) (input_to_maybe_indices x)
+      add_to_DAG (Lut_GenN (fromJust lut_table_maybe) (get_AST_type a_proxy))
+        (input_to_maybe_indices x)
         "lut_genC" "Atom_Int_edge"
       else do
       throwError $ fail_message_edge "lut_genC" "[a]"
 
+  const_genC :: forall a . Aetherling_Value a => a -> Seq_Shallow_To_Deep_Env a
   const_genC const = do
+    let a_proxy = Proxy :: Proxy a
     let const_maybe = get_AST_value const
     if isJust const_maybe
       then do
-      add_to_DAG (Const_GenN $ fromJust const_maybe) (Just [])
+      add_to_DAG (Const_GenN (fromJust const_maybe) (get_AST_type a_proxy))
+        (Just [])
         "const_genC" "Atom_Unit"
       else do
       throwError $ fail_message_edge "const_genC" "a"
