@@ -27,6 +27,9 @@ class Monad m => Space_Time_Language m where
     a -> Atom_Unit -> m a
 
   -- sequence operators
+  fifoC :: (KnownNat n, KnownNat i, Aetherling_Value a) =>
+    Proxy n -> Int -> TSeq n i a -> m (TSeq n i a)
+
   shift_sC :: (KnownNat n, KnownNat r, Aetherling_Value a) =>
     Proxy (n+r) -> Proxy r -> SSeq (n+r) a -> m (SSeq (n+r) a)
 
@@ -40,8 +43,11 @@ class Monad m => Space_Time_Language m where
   up_1d_tC :: (KnownNat n, KnownNat i, Aetherling_Value a) =>
     Proxy (1+n) -> TSeq 1 (n + i) a -> m (TSeq (1+n) i a)
 
-  down_1dC :: (KnownNat n, KnownNat i, Aetherling_Value a) =>
-    Proxy (1+n) -> Seq (1+n) i a -> m (Seq 1 (n + i) a)
+  down_1d_sC :: (KnownNat n, Aetherling_Value a) =>
+    Proxy (1+n) -> SSeq (1+n) a -> m (SSeq 1 a)
+
+  down_1d_tC :: (KnownNat n, KnownNat i, Aetherling_Value a) =>
+    Proxy (1+n) -> TSeq (1+n) i a -> m (TSeq 1 (n + i) a)
 
   partition_s_ssC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
                       Aetherling_Value a) =>
@@ -67,14 +73,14 @@ class Monad m => Space_Time_Language m where
     TSeq no io (TSeq ni ii a) ->
     m (TSeq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a)
 
-  serialize :: (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii,
-                Aetherling_Value a) =>
+  serializeC :: (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii,
+                 Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
     TSeq no (io + no GHC.TypeLits.* ii) (SSeq ni a) ->
     m (TSeq no io (TSeq ni ii a))
 
-  deserialize :: (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii,
-                Aetherling_Value a) =>
+  deserializeC :: (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii,
+                   Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
     TSeq no io (TSeq ni ii a) ->
     m (TSeq no (io + no GHC.TypeLits.* ii) (SSeq ni a))
@@ -114,7 +120,7 @@ class Monad m => Space_Time_Language m where
     a -> b -> m (Atom_Tuple a b)
 
   seq_tupleC :: (Aetherling_Value (SSeq n a)) =>
-    SSeq n a -> SSeq n a -> m (Seq_Tuple 2 (Seq n i a))
+    SSeq n a -> SSeq n a -> m (Seq_Tuple 2 (SSeq n a))
 
   seq_tuple_appendC :: (KnownNat n, Aetherling_Value (Seq_Tuple n a),
                         Aetherling_Value a,
@@ -133,7 +139,7 @@ class Monad m => Space_Time_Language m where
 
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
-  
+
 type ST_DAG = DAG Space_Time_Language_AST
 
 data Space_Time_Language_AST =
@@ -148,20 +154,21 @@ data Space_Time_Language_AST =
   | Const_GenN {constant :: AST_Value}
 
   -- sequence operators
-  | ShiftN_s {n :: Int, shift_amount :: Int, elem_t :: AST_Type}
-  | ShiftN_t {n :: Int, i :: Int, shift_amount :: Int, elem_t :: AST_Type}
+  | FIFON {n :: Int, i :: Int, buf_size :: Int, elem_t :: AST_Type}
+  | Shift_sN {n :: Int, shift_amount :: Int, elem_t :: AST_Type}
+  | Shift_tN {n :: Int, i :: Int, shift_amount :: Int, elem_t :: AST_Type}
   | Up_1d_sN {n :: Int, t :: AST_Type}
   | Up_1d_tN {n :: Int, i :: Int, t :: AST_Type}
   | Down_1d_sN {n :: Int, t :: AST_Type}
   | Down_1d_tN {n :: Int, i :: Int, t :: AST_Type}
-  | Partition_ssN {no :: Int, ni :: Int, t :: AST_Type}
-  | Unpartition_ssN {no :: Int, ni :: Int, t :: AST_Type}
-  | Partition_ttN {no :: Int, io :: Int,
+  | Partition_s_ssN {no :: Int, ni :: Int, t :: AST_Type}
+  | Unpartition_s_ssN {no :: Int, ni :: Int, t :: AST_Type}
+  | Partition_t_ttN {no :: Int, io :: Int,
                    ni :: Int, ii :: Int, t :: AST_Type}
-  | Unpartition_ttN {no :: Int, io :: Int,
+  | Unpartition_t_ttN {no :: Int, io :: Int,
                      ni :: Int, ii :: Int, t :: AST_Type}
-  | Serialize {n :: Int, i :: Int, elem_t :: AST_Type}
-  | Deserialize {n :: Int, i :: Int, elem_t :: AST_Type}
+  | SerializeN {no :: Int, ni :: Int, io :: Int, ii :: Int, elem_t :: AST_Type}
+  | DeserializeN {no :: Int, ni :: Int, io :: Int, ii :: Int, elem_t :: AST_Type}
 
   -- higher order operators
   | Map_sN {n :: Int, f :: ST_DAG}
@@ -174,6 +181,7 @@ data Space_Time_Language_AST =
   -- tuple operators
   | FstN {t0 :: AST_Type, t1 :: AST_Type}
   | SndN {t0 :: AST_Type, t1 :: AST_Type}
+  | ATupleN {t0 :: AST_Type, t1 :: AST_Type}
   | STupleN {tuple_elem_t :: AST_Type}
   | STupleAppendN {out_len :: Int, tuple_elem_t :: AST_Type}
   | STupleToSSeqN {tuple_len :: Int, tuple_elem_t :: AST_Type}
