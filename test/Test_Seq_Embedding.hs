@@ -50,7 +50,7 @@ reduce_add = do
   
 reduce_add_output = DAG_Builder {
   get_builder_dag = DAG {nodes = [InputN {t = SeqT 5 0 IntT},
-                                  MapN {n = 5, i = 0, f = DAG {nodes = [AddN],
+                                  ReduceN {n = 5, i = 0, f = DAG {nodes = [AddN],
                                                                edges = [DAG_Edge {source = 0, sink = 1}]}}],
                           edges = [DAG_Edge {source = 0, sink = 1}]},
   next_DAG_index = 2}
