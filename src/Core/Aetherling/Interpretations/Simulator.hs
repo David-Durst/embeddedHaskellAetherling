@@ -39,6 +39,18 @@ instance Sequence_Language Simulation_Env where
   const_genC x _ = return x
 
   -- sequence operators
+  shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
+                             Convertible_To_DAG_Data a) =>
+    Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> Simulation_Env (Seq (n+r) i a)
+  shiftC total_length_proxy shift_amount_proxy (Seq input_vec) =
+    -- put the last r elements at the start, since undefined what is there.
+    return $ Seq $ dropped_elements V.++ kept_elements
+    where
+      kept_length_proxy = Proxy :: Proxy n
+      kept_elements = V.take' kept_length_proxy input_vec
+      dropped_elements = V.drop' kept_length_proxy input_vec
+  shiftC _ _ _ = fail $ fail_message "shiftC" "Seq"
+  
   up_1dC proxyN (Seq elem) = return $ Seq $
     V.replicate' proxyN $ V.head elem
   up_1dC _ _ = fail $ fail_message "up_1dC" "Seq"
@@ -60,6 +72,7 @@ instance Sequence_Language Simulation_Env where
   unpartitionC _ _ unflattened_seq =
     return $ seqOfSeqToSeq unflattened_seq
 
+  -- higher order operators
   mapC _ f input = mapM f input
   map2C _ f input = traverse2 f input
 
@@ -86,18 +99,6 @@ instance Sequence_Language Simulation_Env where
   
   seq_to_seq_tupleC (Seq input_vec) = return $ Seq_Tuple input_vec
   seq_to_seq_tupleC _ = fail $ fail_message "seq_to_seq_tupleC" "Seq"
-
-  shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
-                             Convertible_To_DAG_Data a) =>
-    Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> Simulation_Env (Seq (n+r) i a)
-  shiftC total_length_proxy shift_amount_proxy (Seq input_vec) =
-    -- put the last r elements at the start, since undefined what is there.
-    return $ Seq $ dropped_elements V.++ kept_elements
-    where
-      kept_length_proxy = Proxy :: Proxy n
-      kept_elements = V.take' kept_length_proxy input_vec
-      dropped_elements = V.drop' kept_length_proxy input_vec
-  shiftC _ _ _ = fail $ fail_message "shiftC" "Seq"
 
   -- composition operators
   (>>>) f g x = f x >>= g
