@@ -43,73 +43,97 @@ class Monad m => Space_Time_Language m where
   down_1dC :: (KnownNat n, KnownNat i, Aetherling_Value a) =>
     Proxy (1+n) -> Seq (1+n) i a -> m (Seq 1 (n + i) a)
 
-  partitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-                 KnownNat io, KnownNat ii,
-                 Aetherling_Value a) =>
+  partition_s_ssC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                      Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
-    Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a ->
-    m (Seq no io (Seq ni ii a))
+    SSeq (no GHC.TypeLits.* ni) a -> m (SSeq no (SSeq ni a))
 
-  unpartitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-                   KnownNat io, KnownNat ii,
-                   Aetherling_Value a) =>
+  partition_t_ttC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                      KnownNat io, KnownNat ii,
+                      Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
-    Seq no io (Seq ni ii a) ->
-    m (Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a)
+    TSeq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a ->
+    m (TSeq no io (TSeq ni ii a))
 
+  unpartition_s_ssC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                        Aetherling_Value a) =>
+    Proxy no -> Proxy ni ->
+    SSeq no (SSeq ni a) -> m (SSeq (no GHC.TypeLits.* ni) a)
+
+  unpartition_t_ttC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                        KnownNat io, KnownNat ii,
+                         Aetherling_Value a) =>
+    Proxy no -> Proxy ni ->
+    TSeq no io (TSeq ni ii a) ->
+    m (TSeq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a)
+
+  serialize :: (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii,
+                Aetherling_Value a) =>
+    Proxy no -> Proxy ni ->
+    TSeq no (io + no GHC.TypeLits.* ii) (SSeq ni a) ->
+    m (TSeq no io (TSeq ni ii a))
+
+  deserialize :: (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii,
+                Aetherling_Value a) =>
+    Proxy no -> Proxy ni ->
+    TSeq no io (TSeq ni ii a) ->
+    m (TSeq no (io + no GHC.TypeLits.* ii) (SSeq ni a))
 
   -- higher order operators
-  mapC :: (KnownNat n, KnownNat i,
-           Aetherling_Value a,
-           Aetherling_Value b) =>
-    Proxy n -> (a -> m b) -> (Seq n i a -> m (Seq n i b))
+  map_sC :: (KnownNat n, Aetherling_Value a, Aetherling_Value b) =>
+    Proxy n -> (a -> m b) -> (SSeq n a -> m (SSeq n b))
 
-  map2C :: (KnownNat n, KnownNat i,
-            Aetherling_Value a,
-            Aetherling_Value b,
-            Aetherling_Value c) =>
-    Proxy n -> (a -> b -> m c) -> (Seq n i a -> Seq n i b -> m (Seq n i c))
+  map_tC :: (KnownNat n, KnownNat i, Aetherling_Value a, Aetherling_Value b) =>
+    Proxy n -> (a -> m b) -> (TSeq n i a -> m (TSeq n i b))
 
-  reduceC :: (KnownNat n, KnownNat i,
-              Aetherling_Value a) =>
-    Proxy (1+n) -> (Atom_Tuple a a -> m a) -> Seq (1+n) i a -> m (Seq 1 (n + i) a)
+  map2_sC :: (KnownNat n,
+              Aetherling_Value a, Aetherling_Value b, Aetherling_Value c) =>
+    Proxy n -> (a -> b -> m c) -> (SSeq n a -> SSeq n b -> m (SSeq n c))
+
+  map2_tC :: (KnownNat n, KnownNat i,
+              Aetherling_Value a, Aetherling_Value b, Aetherling_Value c) =>
+    Proxy n -> (a -> b -> m c) -> (TSeq n i a -> TSeq n i b -> m (TSeq n i c))
+
+  reduce_sC :: (KnownNat n, Aetherling_Value a) =>
+    Proxy (1+n) -> (Atom_Tuple a a -> m a) -> SSeq (1+n) a -> m (SSeq 1 a)
+
+  reduce_tC :: (KnownNat n, KnownNat i, Aetherling_Value a) =>
+    Proxy (1+n) -> (Atom_Tuple a a -> m a) -> TSeq (1+n) i a -> m (TSeq 1 (n + i) a)
 
   -- tuple operations
   fstC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
-           Aetherling_Value a,
-           Aetherling_Value b) =>
+           Aetherling_Value a, Aetherling_Value b) =>
     Atom_Tuple a b -> m a
 
   sndC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
-           Aetherling_Value a,
-           Aetherling_Value b) =>
+           Aetherling_Value a, Aetherling_Value b) =>
     Atom_Tuple a b -> m b
 
   atom_tupleC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
-                  Aetherling_Value a,
-                  Aetherling_Value b) =>
+                  Aetherling_Value a, Aetherling_Value b) =>
     a -> b -> m (Atom_Tuple a b)
 
-  seq_tupleC :: (Aetherling_Value (Seq n i a)) =>
-    Seq n i a -> Seq n i a -> m (Seq_Tuple 2 (Seq n i a))
+  seq_tupleC :: (Aetherling_Value (SSeq n a)) =>
+    SSeq n a -> SSeq n a -> m (Seq_Tuple 2 (Seq n i a))
 
   seq_tuple_appendC :: (KnownNat n, Aetherling_Value (Seq_Tuple n a),
                         Aetherling_Value a,
                         Aetherling_Value (Seq_Tuple (n+1) a)) =>
     Seq_Tuple n a -> a -> m (Seq_Tuple (n+1) a)
 
-  seq_tuple_to_seqC :: (KnownNat n,
+  seq_tuple_to_sseqC :: (KnownNat n,
                         Aetherling_Value a,
                         Aetherling_Value (Seq n i a)) =>
-    Seq_Tuple n a -> m (Seq n i a)
+    Seq_Tuple n a -> m (SSeq n a)
 
-  seq_to_seq_tupleC :: (KnownNat n, KnownNat i,
-                        Aetherling_Value a,
-                        Aetherling_Value (Seq_Tuple n a)) =>
-    Seq n i a -> m (Seq_Tuple n a)
+  sseq_to_seq_tupleC :: (KnownNat n, KnownNat i,
+                         Aetherling_Value a,
+                         Aetherling_Value (Seq_Tuple n a)) =>
+    SSeq n a -> m (Seq_Tuple n a)
 
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
+  
 type ST_DAG = DAG Space_Time_Language_AST
 
 data Space_Time_Language_AST =
