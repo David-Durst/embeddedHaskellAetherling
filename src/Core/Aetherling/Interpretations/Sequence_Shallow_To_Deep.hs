@@ -246,27 +246,25 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
         (input_to_maybe_indices input_el)
 
 
-  seq_tuple_to_seqC :: forall n i a . (KnownNat n, KnownNat i,
+  seq_tuple_to_seqC :: forall n i a . (KnownNat n,
                         Convertible_To_DAG_Data a,
                         Convertible_To_DAG_Data (Seq n i a)) =>
     Seq_Tuple n a -> Seq_Shallow_To_Deep_Env (Seq n i a)
   seq_tuple_to_seqC input_tuple =
-    add_to_DAG (STupleToSeqN tuple_length i_val (get_AST_type (Proxy :: Proxy a)))
+    add_to_DAG (STupleToSeqN tuple_length (get_AST_type (Proxy :: Proxy a)))
     (input_to_maybe_indices input_tuple) "seq_tuple_appendC" "Seq_Tuple_Edge"
     where
       tuple_length = fromInteger $ natVal (Proxy :: Proxy n)
-      i_val = fromInteger $ natVal (Proxy :: Proxy i)
 
   seq_to_seq_tupleC :: forall n i a . (KnownNat n, KnownNat i,
                         Convertible_To_DAG_Data a,
                         Convertible_To_DAG_Data (Seq_Tuple n a)) =>
     Seq n i a -> Seq_Shallow_To_Deep_Env (Seq_Tuple n a)
   seq_to_seq_tupleC input_tuple =
-    add_to_DAG (SeqToSTupleN tuple_length i_val (get_AST_type (Proxy :: Proxy a)))
+    add_to_DAG (SeqToSTupleN tuple_length (get_AST_type (Proxy :: Proxy a)))
     (input_to_maybe_indices input_tuple) "seq_tuple_appendC" "Seq_Tuple_Edge"
     where
       tuple_length = fromInteger $ natVal (Proxy :: Proxy n)
-      i_val = fromInteger $ natVal (Proxy :: Proxy i)
 
   shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
                              Convertible_To_DAG_Data (Seq (n+r) i a)) =>
