@@ -33,12 +33,12 @@ class Monad m => Sequence_Language m where
               Convertible_To_DAG_Data a) =>
     Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> m (Seq (n+r) i a)
 
-  up_1dC :: (KnownNat n, KnownNat i, KnownNat (Type_Size a), Typeable (Proxy a),
+  up_1dC :: (KnownNat n, KnownNat i, KnownNat (Type_Size a),
              Convertible_To_DAG_Data a) =>
     Proxy (1+n) -> Seq 1 (n + i) a -> m (Seq (1+n) i a)
 
   down_1dC :: (KnownNat n, KnownNat i,
-                 KnownNat (Type_Size a), Typeable (Proxy a),
+                 KnownNat (Type_Size a),
                 Convertible_To_DAG_Data a) =>
     Proxy (1+n) -> Seq (1+n) i a -> m (Seq 1 (n + i) a)
 

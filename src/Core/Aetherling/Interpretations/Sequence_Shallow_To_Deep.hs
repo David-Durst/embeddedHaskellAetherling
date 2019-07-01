@@ -7,7 +7,7 @@ import Aetherling.Interpretations.Monad_Helpers
 import Control.Monad.State
 import Control.Monad.Except
 import Control.Monad.Identity
-import Data.Typeable
+import Data.Proxy
 import Data.Maybe
 import Control.Applicative
 import GHC.TypeLits
@@ -101,7 +101,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       ast_type = get_AST_type (Proxy :: Proxy a)
 
   up_1dC :: forall n a i . (KnownNat n, KnownNat i,
-                          KnownNat (Type_Size a), Typeable (Proxy a),
+                          KnownNat (Type_Size a), 
                           Convertible_To_DAG_Data a) =>
             Proxy (1+n) -> 
             Seq 1 (n + i) a -> Seq_Shallow_To_Deep_Env (Seq (1+n) i a)
@@ -113,7 +113,7 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
 
   down_1dC :: forall n a i . (KnownNat n, KnownNat i,
-                              KnownNat (Type_Size a), Typeable (Proxy a),
+                              KnownNat (Type_Size a),
                               Convertible_To_DAG_Data a) =>
               Proxy (1+n) -> 
               Seq (1+n) i a -> Seq_Shallow_To_Deep_Env (Seq 1 (n + i) a)
