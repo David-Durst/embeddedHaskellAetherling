@@ -1,5 +1,6 @@
 module Aetherling.Types.Functions where
 import Aetherling.Types.Declarations
+import Aetherling.Types.Isomorphisms
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Vector.Sized as V
@@ -17,14 +18,6 @@ size_int :: Int
 size_int = 8
 size_bit :: Int
 size_bit = 1
-type family Type_Size (x :: *) :: Nat where
-  Type_Size (Atom_Unit) = 0
-  Type_Size (Atom_Int) = 8
-  Type_Size (Atom_Bit) = 1
-  Type_Size (Atom_Tuple a b) = (Type_Size a) + (Type_Size b)
-
-size_p :: forall a . (KnownNat (Type_Size a)) => Proxy a -> Int
-size_p _ = fromInteger $ natVal $ (Proxy :: Proxy (Type_Size a) )
 
 size_t :: AST_Type -> Int
 size_t UnitT = 0
@@ -35,12 +28,6 @@ size_t (STupleT n t) = n * size_t t
 size_t (SeqT _ _ _) = 0
 size_t (SSeqT n t) = n * size_t t
 size_t (TSeqT n _ t) = size_t t
-
-size_v :: AST_Value -> Int
-size_v UnitV = 0
-size_v (BitV _) = size_bit
-size_v (IntV _) = size_int
-size_v (TupleV t0 t1) = size_v t0 + size_v t1
 
 type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom Atom_Unit = True ~ True
@@ -62,100 +49,111 @@ type family Check_Type_Is_Atom_Or_Nested (x :: *) :: Constraint where
     TypeError (ShowType x :<>: Text " is not an atom, a Seq containing atoms,"
               :<>: Text " an SSeq containing atoms, or a TSeq containing atoms.")
 
--- Convert atoms to AST_Values for converting LUT and const_gen
--- from functions to AST nodes
-class Convertible_To_AST_Value a where
-  convert_atom_to_AST_Value :: a -> Maybe AST_Value
-
-instance Convertible_To_AST_Value Atom_Unit where
-  convert_atom_to_AST_Value _ = Just UnitV
-
-instance Convertible_To_AST_Value Atom_Bit where
-  convert_atom_to_AST_Value (Atom_Bit x) = Just $ BitV x
-  convert_atom_to_AST_Value _ = Nothing
-
-instance Convertible_To_AST_Value Atom_Int where
-  convert_atom_to_AST_Value (Atom_Int x) = Just $ IntV x
-  convert_atom_to_AST_Value _ = Nothing
-
-instance (Convertible_To_AST_Value a, Convertible_To_AST_Value b) =>
-  Convertible_To_AST_Value (Atom_Tuple a b) where
-  convert_atom_to_AST_Value (Atom_Tuple x y) = do
-    x_val <- convert_atom_to_AST_Value x
-    y_val <- convert_atom_to_AST_Value y
-    return $ TupleV x_val y_val
-  convert_atom_to_AST_Value _ = Nothing
-
-
--- Convert outputs of Seq shallow representation to index in DAG
--- for wiring up deep representation
-class Convertible_To_DAG_Data a where
-  convert_to_index :: a -> Maybe DAG_Index
-  convert_index_to_value :: DAG_Index -> a
+-- A typeclass that indicates all the valid Aetherling values
+-- For each Aetherling value, when converting from shallow to deep representation,
+-- must be able to convert between edges' types and the index of the node they
+-- are produced by
+class Aetherling_Value a where
+  convert_ae_value_to_index :: a -> Maybe DAG_Index
+  convert_index_to_ae_value :: DAG_Index -> a
   get_AST_type :: Proxy a -> AST_Type
+  get_AST_value :: a -> Maybe AST_Value
 
-instance Convertible_To_DAG_Data Atom_Unit where
-  convert_to_index (Atom_Unit_Edge idx) = Just idx
-  convert_to_index _ = Nothing
-  convert_index_to_value idx = Atom_Unit_Edge idx
+instance Aetherling_Value Atom_Unit where
+  convert_ae_value_to_index (Atom_Unit_Edge idx) = Just idx
+  convert_ae_value_to_index _ = Nothing
+  convert_index_to_ae_value idx = Atom_Unit_Edge idx
   get_AST_type _ = UnitT
+  get_AST_value Atom_Unit = Just $ UnitV
+  get_AST_value _ = Nothing
 
-instance Convertible_To_DAG_Data Atom_Bit where
-  convert_to_index (Atom_Bit_Edge idx) = Just idx
-  convert_to_index _ = Nothing
-  convert_index_to_value idx = Atom_Bit_Edge idx
+instance Aetherling_Value Atom_Bit where
+  convert_ae_value_to_index (Atom_Bit_Edge idx) = Just idx
+  convert_ae_value_to_index _ = Nothing
+  convert_index_to_ae_value idx = Atom_Bit_Edge idx
   get_AST_type _ = BitT
+  get_AST_value (Atom_Bit b) = Just $ BitV b
+  get_AST_value _ = Nothing
 
-instance Convertible_To_DAG_Data Atom_Int where
-  convert_to_index (Atom_Int_Edge idx) = Just idx
-  convert_to_index _ = Nothing
-  convert_index_to_value idx = Atom_Int_Edge idx
+instance Aetherling_Value Atom_Int where
+  convert_ae_value_to_index (Atom_Int_Edge idx) = Just idx
+  convert_ae_value_to_index _ = Nothing
+  convert_index_to_ae_value idx = Atom_Int_Edge idx
   get_AST_type _ = IntT
+  get_AST_value (Atom_Int i) = Just $ IntV i
+  get_AST_value _ = Nothing
 
-instance (Convertible_To_DAG_Data a, Convertible_To_DAG_Data b) =>
-  Convertible_To_DAG_Data (Atom_Tuple a b) where
-  convert_to_index (Atom_Tuple_Edge idx) = Just idx
-  convert_to_index _ = Nothing
-  convert_index_to_value idx = Atom_Tuple_Edge idx
+instance (Aetherling_Value a, Aetherling_Value b) =>
+  Aetherling_Value (Atom_Tuple a b) where
+  convert_ae_value_to_index (Atom_Tuple_Edge idx) = Just idx
+  convert_ae_value_to_index _ = Nothing
+  convert_index_to_ae_value idx = Atom_Tuple_Edge idx
   get_AST_type _ =
     ATupleT (get_AST_type (Proxy :: Proxy a)) (get_AST_type (Proxy :: Proxy b))
+  get_AST_value (Atom_Tuple x y) = do
+    x_val <- get_AST_value x
+    y_val <- get_AST_value y
+    Just $ ATupleV x_val y_val
+  get_AST_value _ = Nothing
 
-instance (KnownNat n, Convertible_To_DAG_Data a) =>
-  Convertible_To_DAG_Data (Seq_Tuple n a)  where
-  convert_to_index (Seq_Tuple_Edge idx) = Just idx
-  convert_to_index _ = Nothing
-  convert_index_to_value idx = Seq_Tuple_Edge idx
+instance (KnownNat n, Aetherling_Value a) =>
+  Aetherling_Value (Seq_Tuple n a)  where
+  convert_ae_value_to_index (Seq_Tuple_Edge idx) = Just idx
+  convert_ae_value_to_index _ = Nothing
+  convert_index_to_ae_value idx = Seq_Tuple_Edge idx
   get_AST_type _ = STupleT nVal (get_AST_type (Proxy :: Proxy a))
     where
       nVal = fromInteger $ natVal (Proxy :: Proxy n)
+  get_AST_value (Seq_Tuple vec) = do
+    let elements = V.toList vec
+    elements_as_AST_values <- traverse get_AST_value elements
+    Just $ STupleV elements_as_AST_values
+  get_AST_value _ = Nothing
 
-instance (KnownNat n, KnownNat i, Convertible_To_DAG_Data a) =>
-  Convertible_To_DAG_Data (Seq n i a) where
-  convert_to_index (Seq_Edge idx) = Just idx
-  convert_to_index _ = Nothing
-  convert_index_to_value idx = Seq_Edge idx
+instance (KnownNat n, KnownNat i, Aetherling_Value a) =>
+  Aetherling_Value (Seq n i a) where
+  convert_ae_value_to_index (Seq_Edge idx) = Just idx
+  convert_ae_value_to_index _ = Nothing
+  convert_index_to_ae_value idx = Seq_Edge idx
   get_AST_type _ = SeqT nVal iVal (get_AST_type (Proxy :: Proxy a))
     where
       nVal = fromInteger $ natVal (Proxy :: Proxy n)
       iVal = fromInteger $ natVal (Proxy :: Proxy i)
+  get_AST_value (Seq vec) = do
+    let elements = V.toList vec
+    elements_as_AST_values <- traverse get_AST_value elements
+    let iVal = fromInteger $ natVal (Proxy :: Proxy i)
+    Just $ SeqV elements_as_AST_values iVal
+  get_AST_value _ = Nothing
 
-instance (KnownNat n, Convertible_To_DAG_Data a) =>
-  Convertible_To_DAG_Data (SSeq n a) where
-  convert_to_index (SSeq_Edge idx) = Just idx
-  convert_to_index _ = Nothing
-  convert_index_to_value idx = SSeq_Edge idx
+instance (KnownNat n, Aetherling_Value a) =>
+  Aetherling_Value (SSeq n a) where
+  convert_ae_value_to_index (SSeq_Edge idx) = Just idx
+  convert_ae_value_to_index _ = Nothing
+  convert_index_to_ae_value idx = SSeq_Edge idx
   get_AST_type _ = SSeqT nVal (get_AST_type (Proxy :: Proxy a))
     where nVal = fromInteger $ natVal (Proxy :: Proxy n)
+  get_AST_value (SSeq vec) = do
+    let elements = V.toList vec
+    elements_as_AST_values <- traverse get_AST_value elements
+    Just $ SSeqV elements_as_AST_values
+  get_AST_value _ = Nothing
 
-instance (KnownNat n, KnownNat v, Convertible_To_DAG_Data a) =>
-  Convertible_To_DAG_Data (TSeq n v a) where
-  convert_to_index (TSeq_Edge idx) = Just idx
-  convert_to_index _ = Nothing
-  convert_index_to_value idx = TSeq_Edge idx
+instance (KnownNat n, KnownNat i, Aetherling_Value a) =>
+  Aetherling_Value (TSeq n i a) where
+  convert_ae_value_to_index (TSeq_Edge idx) = Just idx
+  convert_ae_value_to_index _ = Nothing
+  convert_index_to_ae_value idx = TSeq_Edge idx
   get_AST_type _ = TSeqT nVal vVal (get_AST_type (Proxy :: Proxy a))
     where
       nVal = fromInteger $ natVal (Proxy :: Proxy n)
-      vVal = fromInteger $ natVal (Proxy :: Proxy v)
+      vVal = fromInteger $ natVal (Proxy :: Proxy i)
+  get_AST_value (TSeq vec) = do
+    let elements = V.toList vec
+    elements_as_AST_values <- traverse get_AST_value elements
+    let iVal = fromInteger $ natVal (Proxy :: Proxy i)
+    Just $ TSeqV elements_as_AST_values iVal
+  get_AST_value _ = Nothing
 
 {-
 Below functions are for converting a type representation to a string

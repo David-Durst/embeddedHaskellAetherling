@@ -40,7 +40,7 @@ instance Sequence_Language Simulation_Env where
 
   -- sequence operators
   shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
-                             Convertible_To_DAG_Data a) =>
+                             Aetherling_Value a) =>
     Proxy (n+r) -> Proxy r -> Seq (n+r) i a -> Simulation_Env (Seq (n+r) i a)
   shiftC total_length_proxy shift_amount_proxy (Seq input_vec) =
     -- put the last r elements at the start, since undefined what is there.
@@ -62,7 +62,7 @@ instance Sequence_Language Simulation_Env where
   partitionC :: forall no ni io ii a .
     (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
       KnownNat io, KnownNat ii,
-      Convertible_To_DAG_Data a) =>
+      Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
     Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a ->
     Simulation_Env (Seq no io (Seq ni ii a))

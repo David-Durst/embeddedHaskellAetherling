@@ -59,6 +59,7 @@ estimate_resourcesM r (EqN t) =
   increase_resources r (Resources_Data (size_t t) 0 size_bit) 
 
 -- generators
+{-
 estimate_resourcesM r (Lut_GenN tbl@(tbl_hd : _)) =
   increase_resources r (Resources_Data size_int size_tbl size_el)
     where
@@ -67,11 +68,11 @@ estimate_resourcesM r (Lut_GenN tbl@(tbl_hd : _)) =
 
 estimate_resourcesM r (Lut_GenN _) = throwError $
   "LUT can't have empty lookup table"
-
 estimate_resourcesM r (Const_GenN v) =
   increase_resources r (Resources_Data 0 size_const size_const)
     where
       size_const = size_v v
+-}
 
 -- sequence operator
 estimate_resourcesM r (Up_1d_sN n t) =
@@ -101,22 +102,6 @@ estimate_resourcesM r (Unpartition_ssN _ _ _) = return r
 estimate_resourcesM r (Partition_ttN _ _ _ _ _) = return r
 
 estimate_resourcesM r (Unpartition_ttN _ _ _ _ _) = return r
-
-estimate_resourcesM r (Partition_tsN no ni v t) =
-  increase_resources r resources_with_counter
-    where
-      size_el = size_t t
-      resources_pre_counter = Resources_Data 0 ((no-1)*ni*size_el) (ni*size_el)
-      resources_with_counter = add_counter_to_resources resources_pre_counter
-        (no + v)
-
-estimate_resourcesM r (Unpartition_tsN no ni v t) =
-  increase_resources r resources_with_counter
-    where
-      size_el = size_t t
-      resources_pre_counter = Resources_Data 0 ((no-1)*ni*size_el) (no*ni*size_el)
-      resources_with_counter = add_counter_to_resources resources_pre_counter
-        (no + v)
 
 estimate_resourcesM r node@(Map_sN n inner_dag) =
   case estimate_resources inner_dag of
@@ -156,6 +141,5 @@ estimate_resourcesM r node@(Map2_tN n v inner_dag) =
 -- these require no size as they are just for connecting other nodes
 estimate_resourcesM r (FstN _ _) = return r
 estimate_resourcesM r (SndN _ _) = return r
-estimate_resourcesM r (ZipN _ _) = return r
 
 estimate_resourcesM r (InputN _) = return r
