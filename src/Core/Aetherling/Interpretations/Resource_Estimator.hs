@@ -95,13 +95,13 @@ estimate_resourcesM r (Down_1d_tN n v t) =
       resources_pre_counter = Resources_Data 0 size_el size_el
       resources_with_counter = add_counter_to_resources resources_pre_counter (n+v)
 
-estimate_resourcesM r (Partition_ssN _ _ _) = return r
+estimate_resourcesM r (Partition_s_ssN _ _ _) = return r
 
-estimate_resourcesM r (Unpartition_ssN _ _ _) = return r
+estimate_resourcesM r (Unpartition_s_ssN _ _ _) = return r
 
-estimate_resourcesM r (Partition_ttN _ _ _ _ _) = return r
+estimate_resourcesM r (Partition_t_ttN _ _ _ _ _) = return r
 
-estimate_resourcesM r (Unpartition_ttN _ _ _ _ _) = return r
+estimate_resourcesM r (Unpartition_t_ttN _ _ _ _ _) = return r
 
 estimate_resourcesM r node@(Map_sN n inner_dag) =
   case estimate_resources inner_dag of
