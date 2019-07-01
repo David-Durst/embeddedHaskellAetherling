@@ -98,8 +98,8 @@ class Monad m => Sequence_Language m where
                         Convertible_To_DAG_Data (Seq n i a)) =>
     Seq_Tuple n a -> m (Seq n i a)
 
-  seq_to_seq_tupleC :: (KnownNat n,
-                        Convertible_To_DAG_Data (Seq n i a),
+  seq_to_seq_tupleC :: (KnownNat n, KnownNat i,
+                        Convertible_To_DAG_Data a,
                         Convertible_To_DAG_Data (Seq_Tuple n a)) =>
     Seq n i a -> m (Seq_Tuple n a)
 
@@ -146,10 +146,10 @@ data Sequence_Language_AST =
   | FstN {t0 :: AST_Type, t1 :: AST_Type}
   | SndN {t0 :: AST_Type, t1 :: AST_Type}
   | ATupleN {t0 :: AST_Type, t1 :: AST_Type}
-  | STupleN {tuple_t :: AST_Type}
-  | STupleAppendN {tuple_t :: AST_Type}
-  | STupleToSeqN {seq_t :: AST_Type}
-  | SeqToSTupleN {seq_t :: AST_Type}
+  | STupleN {tuple_elem_t :: AST_Type}
+  | STupleAppendN {out_len :: Int, tuple_elem_t :: AST_Type}
+  | STupleToSeqN {tuple_len :: Int, i :: Int, tuple_elem_t :: AST_Type}
+  | SeqToSTupleN {tuple_len :: Int, i :: Int, tuple_elem_t :: AST_Type}
   | ShiftN {n :: Int, i :: Int, shift_amount :: Int, seq_t :: AST_Type}
   | InputN {t :: AST_Type}
   deriving (Show, Eq)

@@ -121,12 +121,13 @@ instance (Convertible_To_DAG_Data a, Convertible_To_DAG_Data b) =>
     ATupleT (get_AST_type (Proxy :: Proxy a)) (get_AST_type (Proxy :: Proxy b))
 
 instance (KnownNat n, Convertible_To_DAG_Data a) =>
-  Convertible_To_DAG_Data (Seq_Tuple n a) where
+  Convertible_To_DAG_Data (Seq_Tuple n a)  where
   convert_to_index (Seq_Tuple_Edge idx) = Just idx
   convert_to_index _ = Nothing
   convert_index_to_value idx = Seq_Tuple_Edge idx
   get_AST_type _ = STupleT nVal (get_AST_type (Proxy :: Proxy a))
-    where nVal = fromInteger $ natVal (Proxy :: Proxy n)
+    where
+      nVal = fromInteger $ natVal (Proxy :: Proxy n)
 
 instance (KnownNat n, KnownNat i, Convertible_To_DAG_Data a) =>
   Convertible_To_DAG_Data (Seq n i a) where
