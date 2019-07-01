@@ -78,11 +78,11 @@ instance Space_Time_Language ST_Shallow_To_Deep_Env where
       else do
       throwError $ fail_message_edge "lut_genC" "[a]"
 
-  const_genC const x = do
+  const_genC const = do
     let const_maybe = get_AST_value const
     if isJust const_maybe
       then do
-      add_to_DAG (Const_GenN $ fromJust const_maybe) (input_to_maybe_indices x)
+      add_to_DAG (Const_GenN $ fromJust const_maybe) (Just [])
         "const_genC" "Atom_Unit"
       else do
       throwError $ fail_message_edge "const_genC" "a"
@@ -253,8 +253,8 @@ instance Space_Time_Language ST_Shallow_To_Deep_Env where
     let n_val = fromInteger $ natVal proxyN
     outer_dag <- get
     put empty_dag
-    put $ empty_dag {next_DAG_index = 1}
-    f $ convert_index_to_ae_value 0
+    put $ empty_dag {next_DAG_index = 0}
+    f $ convert_index_to_ae_value (-1)
     f_dag <- get
     put outer_dag
     add_to_DAG (Map_sN n_val (get_builder_dag f_dag)) (input_to_maybe_indices x)
@@ -268,8 +268,8 @@ instance Space_Time_Language ST_Shallow_To_Deep_Env where
     let i_val = fromInteger $ natVal (Proxy :: Proxy i)
     outer_dag <- get
     put empty_dag
-    put $ empty_dag {next_DAG_index = 1}
-    f $ convert_index_to_ae_value 0
+    put $ empty_dag {next_DAG_index = 0}
+    f $ convert_index_to_ae_value (-1)
     f_dag <- get
     put outer_dag
     add_to_DAG (Map_tN n_val i_val (get_builder_dag f_dag)) (input_to_maybe_indices x)
@@ -282,8 +282,8 @@ instance Space_Time_Language ST_Shallow_To_Deep_Env where
   map2_sC proxyN f x y = do
     let n_val = fromInteger $ natVal proxyN
     outer_dag <- get
-    put $ empty_dag {next_DAG_index = 2}
-    f (convert_index_to_ae_value 0) (convert_index_to_ae_value 1)
+    put $ empty_dag {next_DAG_index = 0}
+    f (convert_index_to_ae_value (-2)) (convert_index_to_ae_value (-1))
     f_dag <- get
     put outer_dag
     let maybe_indices = liftA2 (++)
@@ -301,8 +301,8 @@ instance Space_Time_Language ST_Shallow_To_Deep_Env where
     let n_val = fromInteger $ natVal proxyN
     let i_val = fromInteger $ natVal (Proxy :: Proxy i)
     outer_dag <- get
-    put $ empty_dag {next_DAG_index = 2}
-    f (convert_index_to_ae_value 0) (convert_index_to_ae_value 1)
+    put $ empty_dag {next_DAG_index = 0}
+    f (convert_index_to_ae_value (-2)) (convert_index_to_ae_value (-1))
     f_dag <- get
     put outer_dag
     let maybe_indices = liftA2 (++)
@@ -317,8 +317,8 @@ instance Space_Time_Language ST_Shallow_To_Deep_Env where
     let n_val = fromInteger $ natVal proxyN
     outer_dag <- get
     put empty_dag
-    put $ empty_dag {next_DAG_index = 1}
-    f (convert_index_to_ae_value 0)
+    put $ empty_dag {next_DAG_index = 0}
+    f (convert_index_to_ae_value (-1))
     f_dag <- get
     put outer_dag
     add_to_DAG (Reduce_sN n_val (get_builder_dag f_dag)) (input_to_maybe_indices x)
@@ -332,8 +332,8 @@ instance Space_Time_Language ST_Shallow_To_Deep_Env where
     let i_val = fromInteger $ natVal (Proxy :: Proxy i)
     outer_dag <- get
     put empty_dag
-    put $ empty_dag {next_DAG_index = 1}
-    f (convert_index_to_ae_value 0)
+    put $ empty_dag {next_DAG_index = 0}
+    f (convert_index_to_ae_value (-1))
     f_dag <- get
     put outer_dag
     add_to_DAG (Reduce_tN n_val i_val (get_builder_dag f_dag)) (input_to_maybe_indices x)

@@ -24,7 +24,7 @@ class Monad m => Sequence_Language m where
     [a] -> Atom_Int -> m a
 
   const_genC :: Aetherling_Value a =>
-    a -> Atom_Unit -> m a
+    a -> m a
 
   -- sequence operators
   shiftC :: (KnownNat n, KnownNat r, KnownNat i,

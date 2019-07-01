@@ -40,7 +40,7 @@ mapped_add_output = DAG_Builder
   (DAG
     {nodes = [InputN {t = SeqT 2 0 (ATupleT IntT IntT)},
               MapN {n = 2, i = 0, f = DAG {nodes = [AddN],
-                                           edges = [DAG_Edge {source = 0, sink = 1}]}}],
+                                           edges = [DAG_Edge {source = -1, sink = 0}]}}],
       edges = [DAG_Edge {source = 0, sink = 1}]})
   2
   
@@ -51,7 +51,7 @@ reduce_add = do
 reduce_add_output = DAG_Builder {
   get_builder_dag = DAG {nodes = [InputN {t = SeqT 5 0 IntT},
                                   ReduceN {n = 5, i = 0, f = DAG {nodes = [AddN],
-                                                               edges = [DAG_Edge {source = 0, sink = 1}]}}],
+                                                               edges = [DAG_Edge {source = -1, sink = 0}]}}],
                           edges = [DAG_Edge {source = 0, sink = 1}]},
   next_DAG_index = 2}
 

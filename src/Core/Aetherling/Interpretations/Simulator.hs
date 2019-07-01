@@ -36,7 +36,7 @@ instance Sequence_Language Simulation_Env where
   lut_genC xs (Atom_Int i) = fail "lut lookup index out of bounds"
   lut_genC _ _ = fail $ fail_message "lut_genC" "Atom_Int"
 
-  const_genC x _ = return x
+  const_genC x = return x
 
   -- sequence operators
   shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
