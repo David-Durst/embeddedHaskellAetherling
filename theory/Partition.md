@@ -42,14 +42,14 @@ Unpartition ni nj . Map ni (Partition nj nk) . Map ni (Map (nj*nk) f) . Partitio
 ```
 Partition ni (nj*nk) . Map (ni*nj*nk) Abs ===
 Partition ni (nj*nk) . Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
-Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
+Map ni (Map (nj*nk) f) . Partition ni (nj*nk)
 ```
 
 #### Nesting by Factor Greater Than `ni`
 ```
 Partition ni (nj*nk) . Map (ni*nj*nk) Abs ===
 Map ni (Unpartition ni nj) . Partition ni nj . Partition (ni*nj) nk . Unpartition (ni*nj) nk . Map (ni*nj) (Map nk f) . Partition (ni*nj) nk ===
-Map ni (Unpartition ni nj) . Partition ni nj . Map (ni*nj) (Map nk f) . Partition (ni*nj) nk ===
+Map ni (Unpartition ni nj) . Partition ni nj . Map (ni*nj) (Map nk f) . Partition (ni*nj) nk
 ```
 
 ### Partition
@@ -76,51 +76,6 @@ Map ni (Unpartition nj nk . Partition nj nk) . Partition ni (nj*nk) === (Functor
 Map ni (Unpartition nj nk) . Map ni (Partition nj nk) . Partition ni (nj*nk) ===? (Commutativity)
 Map ni (Unpartition nj nk) . Partition ni nj . Partition (ni*nj) nk 
 ```
-
-
-
-#### Examples Of Partition And Unpartition Nesting In Applications
-I don't think these applications are necessary. The above rules handle them.
-##### Nesting Outer 
-The goal here is to have an outer `Map ni` on each application so, when map to space-time, can slow down by `ni`.
-```
-Map (ni*nj) (Map nk Abs) . Partition (ni*nj) nk . Map (ni*nj*nk) Abs === (Nesting Outer)
-
-Unpartition ni nj . Map ni (Map nj (Map nk Abs)) . Partition ni nj .
-    Unpartition ni nj . Partition ni nj . Partition (ni*nj) nk .
-    Unpartition (ni*nj) nk . Map (ni*nj) (Map nk Abs) . Partition (ni*nj) nk === (Isomorphism Removal)
-
-Unpartition ni nj . Map ni (Map nj (Map nk Abs)) .
-    Partition ni nj .
-    Map (ni*nj) (Map nk Abs) . Partition (ni*nj) nk === (Isomorphism Removal)
-
-```
-
-##### Nesting Inner
-The goal here is to have an outer `Map (ni*nj)` on each application so, when map to space-time, can slow down by `ni*nj`.
-
-```
-Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk) . Map (ni*nj*nk) Abs === (Nesting Inner)
-
-Map ni (Unpartition nj nk . Map nj (Map nk Abs) . Partition nj nk) .
-    Map ni (Unpartition nj nk) . Map ni (Partition nj nk) . Partition ni (nj*nk) .
-    Unpartition ni (nj*nk) . Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Isomorphism Removal)
-
-Map ni (Unpartition nj nk . Map nj (Map nk Abs) . Partition nj nk) .
-    Map ni (Unpartition nj nk) . Map ni (Partition nj nk) .
-    Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Map Functor Fusion)
-
-Map ni (Unpartition nj nk) . Map ni (Map nj (Map nk Abs)) . Map ni (Partition nj nk) .
-    Map ni (Unpartition nj nk) . Map ni (Partition nj nk) .
-    Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Isomorphism Removal)
-
-Map ni (Unpartition nj nk) . Map ni (Map nj (Map nk Abs)) .
-    Map ni (Partition nj nk) .
-    Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Isomorphism Removal)
-```
-
-**Should the middle resulting term be `Partition ni nj`? Should I apply the partition commutativity rule here?**
-**Do I need the Unit Changes rules as well?**
 
 ### Unpartition
 Note: the type parameters are not actually part of the `Unpartition`, but are included in the following proofs for interpretability.
@@ -252,3 +207,50 @@ Unpartition ni (nj*nk) === (Unpartition Nesting Greater Than)
 Unpartition (ni*nj) nk . Unpartition ni nj . Map ni (Partition nj nk) === (Seq To TSeq)
 Unpartition (ni*nj) nk . TSeq_To_Seq . Unpartition_t_tt ni nj . Map_t ni TSeq_To_Seq . TSeq_To_Seq . Map ni (Partition nj nk)
 ```
+
+## More Complex, Unfinished Examples Of Partition And Unpartition Nesting In Applications
+I don't think these applications are necessary. 
+They show the nesting rules when `Partition` is composed with both upstream and downstream operators. 
+I don't think they're necessary as the upstream only apps above seem sufficient.
+I'm leaving these examples here to fix up in the event that I am wrong.
+
+##### Nesting Outer 
+The goal here is to have an outer `Map ni` on each application so, when map to space-time, can slow down by `ni`.
+```
+Map (ni*nj) (Map nk Abs) . Partition (ni*nj) nk . Map (ni*nj*nk) Abs === (Nesting Outer)
+
+Unpartition ni nj . Map ni (Map nj (Map nk Abs)) . Partition ni nj .
+    Unpartition ni nj . Partition ni nj . Partition (ni*nj) nk .
+    Unpartition (ni*nj) nk . Map (ni*nj) (Map nk Abs) . Partition (ni*nj) nk === (Isomorphism Removal)
+
+Unpartition ni nj . Map ni (Map nj (Map nk Abs)) .
+    Partition ni nj .
+    Map (ni*nj) (Map nk Abs) . Partition (ni*nj) nk === (Isomorphism Removal)
+
+```
+
+##### Nesting Inner
+The goal here is to have an outer `Map (ni*nj)` on each application so, when map to space-time, can slow down by `ni*nj`.
+
+```
+Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk) . Map (ni*nj*nk) Abs === (Nesting Inner)
+
+Map ni (Unpartition nj nk . Map nj (Map nk Abs) . Partition nj nk) .
+    Map ni (Unpartition nj nk) . Map ni (Partition nj nk) . Partition ni (nj*nk) .
+    Unpartition ni (nj*nk) . Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Isomorphism Removal)
+
+Map ni (Unpartition nj nk . Map nj (Map nk Abs) . Partition nj nk) .
+    Map ni (Unpartition nj nk) . Map ni (Partition nj nk) .
+    Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Map Functor Fusion)
+
+Map ni (Unpartition nj nk) . Map ni (Map nj (Map nk Abs)) . Map ni (Partition nj nk) .
+    Map ni (Unpartition nj nk) . Map ni (Partition nj nk) .
+    Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Isomorphism Removal)
+
+Map ni (Unpartition nj nk) . Map ni (Map nj (Map nk Abs)) .
+    Map ni (Partition nj nk) .
+    Map ni (Map (nj*nk) Abs) . Partition ni (nj*nk)  === (Isomorphism Removal)
+```
+
+**Should the middle resulting term be `Partition ni nj`? Should I apply the partition commutativity rule here?**
+**Do I need the Unit Changes rules as well?**
