@@ -241,43 +241,14 @@ Unpartition ni (nj*nk) . TSeq_To_Seq .
 ```
 
 #### Nesting With Outer `Seq` Equal To `UpPartition`'s Outer `Seq`
-Do Nothing. The `Partition no ni` from applying the nesting rewrite rule to downstream will obliterate this and the upstream is already partitioned appropriately by `no` and `ni`.
+Do nothing. Same obliteration argument applies as above.
 ```
 Unpartition no ni
 ```
 
 #### Nesting With Outer `Seq` `nj` Greater Than `Unpartition`'s Outer `Seq`
 ```
-Unpartition ni (nj*nk) === (Identity Addition)
-Unpartition ni (nj*nk) . Id === (Map-Identity)
-Unpartition ni (nj*nk) . Map ni id === (Isomorphism Addition)
-Unpartition ni (nj*nk) . Map ni (Unpartition nj nk . Partition nj nk) === (Functor Fusion)
-Unpartition ni (nj*nk) . Map ni (Unpartition nj nk) . Map ni (Partition nj nk) ===? (Commutatvity)
-Unpartition (ni*nj) nk . Unpartition ni nj . Map ni (Partition nj nk)
+Unpartition ni (nj*nk) === (Unpartition Nesting Greater Than)
+Unpartition (ni*nj) nk . Unpartition ni nj . Map ni (Partition nj nk) === (Seq To TSeq)
+Unpartition (ni*nj) nk . TSeq_To_Seq . Unpartition_t_tt ni nj . Map_t ni TSeq_To_Seq . TSeq_To_Seq . Map ni (Partition nj nk)
 ```
-
-# Why Partition Doesn't Need Custom Operators
-During scheduling, at most one of the Seqs in the input and output types may be split. 
-When scheduling other operators that are of the form `Seq n t -> Seq n t'`, there is only
-one possible way to split the `Seq`s. Both the input and output `Seq` must be split in the same way. 
-However, `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)` can be split in multiple ways.
-But, note that the below cases can never happen. These would lead to different throughputs in different parts of the system. 
-The types show this as `Partition`'s input `TSeq` is greater than its output `TSeq`
-For each case, we provide a sketch of the space-time operators that handle it.
-Also, we denote that some of these splits cannot occur in the scheduling algorithm so we don't need
-to handle them. 
-A split only occurs in the scheduling algorithm if splitting a `Seq` into a `TSeq (SSeq)`
-1. `TSeq (SSeq) -> TSeq (SSeq (SSeq))`
-    1. This type signature can be produced by either
-        1. splitting the outer Seq into a TSeq (SSeq) - `Deserialze . Partition_t_tt`
-        1. splitting the inner Seq into a SSeq (SSeq) - `Map_t (Partition_s_ss)`
-            1. This can never happen, not splitting into a TSeq (SSeq)
-1. `TSeq (SSeq) -> TSeq (TSeq (SSeq))`
-    1. This type signature can be produced by either
-        1. splitting the outer Seq into a TSeq (TSeq) - `Partition_t_tt` with `t' = SSeq`
-            1. This can never happen, not splitting into a TSeq (SSeq)
-        1. splitting the inner Seq into a TSeq (SSeq) - `Deserialize . Map_t ni (Partition_t_tt nj nk)`
-
-1. Any Space-Time `Partition` must have `TSeq`s on both input and output.
-   Otherwise, it's number of input and output clocks will not be equal.
-   Therefore, in cases like 4.1.2, `Map_t (Partition_s_st)` would be insufficient.
