@@ -154,7 +154,12 @@ data Space_Time_Language_AST =
   | Const_GenN {constant :: AST_Value, constant_type :: AST_Type}
 
   -- sequence operators
-  | FIFON {n :: Int, i :: Int, buf_size :: Int, elem_t :: AST_Type}
+  -- FIFO serve three roles:
+  --   1. align clock signatures - delay clks
+  --   2. break up combinational paths - does this by default
+  --   3. match delays - delay_clks used on a per clock cycle basis
+  -- note that delay_clks is number of clks, not number of periods
+  | FIFON {n :: Int, i :: Int, delay_clks :: Int, elem_t :: AST_Type}
   | Shift_sN {n :: Int, shift_amount :: Int, elem_t :: AST_Type}
   | Shift_tN {n :: Int, i :: Int, shift_amount :: Int, elem_t :: AST_Type}
   | Up_1d_sN {n :: Int, t :: AST_Type}
