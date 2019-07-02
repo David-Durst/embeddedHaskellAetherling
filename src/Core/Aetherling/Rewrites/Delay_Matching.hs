@@ -1,4 +1,4 @@
-module Aetherling.Interpretations.Clock_Signatures where
+module Aetherling.Rewrites.Delay_Matching where
 import Aetherling.ASTs.Space_Time
 import Aetherling.Types.Declarations
 import qualified Data.Map as M
@@ -69,17 +69,18 @@ type ST_Clock_Sigs = M.Map DAG_Index Clock_Signature
 -- for nodes with non-negative indices (aka those that exist)
 get_input_delays :: ST_Clock_Sigs -> [DAG_Index] -> [Int]
 get_input_delays clock_sigs indices =
-  map (\index -> out_delay $ clock_sigs M.! index) (filter (>= 0) indices)
+  map (\index -> out_delay $ clock_sigs M.! index) (filter ((>= 0) . dag_index) indices)
   
 
--- | Given a next clok type variable index, current delay, and a space-time IR DAG,
--- return the clock signatures for each object in the graph
-get_graph_clock_sig :: Int -> Int -> ST_DAG -> ST_Clock_Sigs
-get_graph_clock_sig next_index cur_delay (DAG nodes edges) = do
-  let num_nodes = length nodes
-  let nodes_range = [0..num_nodes - 1]
+-- | Given a next clock type variable index, current delay, current DAG index,
+-- and ST_Clock_Sigs map for all indices prior to this one, 
+-- and a space-time IR DAG, return the clock signatures for each object in the
+-- graph and the new graph with FIFOs added where needed to make clock sigs work
+get_graph_clock_sig :: Int -> Int -> ST_DAG -> (ST_Clock_Sigs, ST_DAG)
+get_graph_clock_sig next_index cur_delay dag@(DAG nodes edges) = do
+  let node_indices = get_all_DAG_node_indices dag
   let edges_to_each_node =
-        map (\index -> filter (\edge -> sink edge == index) edges) nodes_range
+        map (\index -> filter (\edge -> sink edge == index) edges) node_indices
   let nodes_emitting_to_each_node =
         map (\index -> map (\edge -> source edge) (edges_to_each_node !! index))
         nodes_range
