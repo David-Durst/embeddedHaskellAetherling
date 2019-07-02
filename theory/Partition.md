@@ -31,11 +31,11 @@ When partition is composed with other operators, will be doing nesting rewrite r
 Those rewrite rules will make an outer `Seq` that is either greater than, equal to, or less than the outer `Seq` that Partition is making.
 These apps show when to use each `Partition` nesting rewrite rule to fit in the pipelines.
 
-#### Nesting by Factor Greater Than `Partition ni`
+#### Nesting By Factor Less Than `ni*nj`
 ```
-Partition ni (nj*nk) . Map (ni*nj*nk) Abs ===
-Map ni (Unpartition ni nj) . Partition ni nj . Partition (ni*nj) nk . Unpartition (ni*nj) nk . Map (ni*nj) (Map nk f) . Partition (ni*nj) nk ===
-Map ni (Unpartition ni nj) . Partition ni nj . Map (ni*nj) (Map nk f) . Partition (ni*nj) nk ===
+Partition (ni*nj) nk . Map (ni*nj*nk) Abs ===
+Unpartition ni nj . Map ni (Partition nj nk) . Partition ni (nj*nk) . Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
+Unpartition ni nj . Map ni (Partition nj nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk)
 ```
 
 #### Nesting by Factor Equal To `ni`
@@ -45,15 +45,15 @@ Partition ni (nj*nk) . Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partiti
 Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
 ```
 
-#### Nesting By Factor Less Than `ni*nj`
+#### Nesting by Factor Greater Than `ni`
 ```
-Partition (ni*nj) nk . Map (ni*nj*nk) Abs ===
-Unpartition ni nj . Map ni (Partition nj nk) . Partition ni (nj*nk) . Unpartition ni (nj*nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk) ===
-Unpartition ni nj . Map ni (Partition nj nk) . Map ni (Map (nj*nk) f) . Partition ni (nj*nk)
+Partition ni (nj*nk) . Map (ni*nj*nk) Abs ===
+Map ni (Unpartition ni nj) . Partition ni nj . Partition (ni*nj) nk . Unpartition (ni*nj) nk . Map (ni*nj) (Map nk f) . Partition (ni*nj) nk ===
+Map ni (Unpartition ni nj) . Partition ni nj . Map (ni*nj) (Map nk f) . Partition (ni*nj) nk ===
 ```
 
 ### Partition
-#### `Partition` Nesting with Outer `Seq` `nj` Less Than `Partition`'s Outer `Seq`
+#### Nesting with Outer `Seq` `nj` Less Than `Partition`'s Outer `Seq`
 ```
 Partition (ni*nj) nk === (Identity Addition)
 Id . Partition (ni*nj) nk === (Isomorphism Addition)
@@ -61,7 +61,13 @@ Unpartition ni nj . Partition ni nj . Partition (ni*nj) nk ===? (Commutativity)
 Unpartition ni nj . Map ni (Partition nj nk) . Partition ni (nj*nk)
 ```
 
-#### `Partition` Nesting with Outer `Seq` `nj` Greater Than `Partition`'s Outer `Seq`
+#### Nesting with Outer `Seq` Equal To `Partition`'s Outer `Seq`
+Do Nothing. The `Unpartition no ni` from applying the nesting rewrite rule to upstream will obliterate this and the downstream is already partitioned appropriately by `no` and `ni`.
+```
+Partition no ni
+```
+
+#### Nesting with Outer `Seq` `nj` Greater Than `Partition`'s Outer `Seq`
 ```
 Partition ni (nj*nk) === (Identity Addition)
 Id . Partition ni (nj*nk) === (Map-Identity)
@@ -70,6 +76,7 @@ Map ni (Unpartition nj nk . Partition nj nk) . Partition ni (nj*nk) === (Functor
 Map ni (Unpartition nj nk) . Map ni (Partition nj nk) . Partition ni (nj*nk) ===? (Commutativity)
 Map ni (Unpartition nj nk) . Partition ni nj . Partition (ni*nj) nk 
 ```
+
 
 
 #### Examples Of Partition And Unpartition Nesting In Applications
@@ -117,7 +124,7 @@ Map ni (Unpartition nj nk) . Map ni (Map nj (Map nk Abs)) .
 
 ### Unpartition
 Note: the type parameters are not actually part of the `Unpartition`, but are included in the following proofs for interpretability.
-#### `Unpartition` Nesting with Outer `Seq` `nj` Less Than `Partition`'s Outer `Seq`
+#### Nesting with Outer `Seq` `nj` Less Than `Unpartition`'s Outer `Seq`
 ```
 Unpartition (ni*nj) nk === (Identity Addition)
 Unpartition (ni*nj) nk . Id === (Isomorphism Addition)
@@ -125,7 +132,13 @@ Unpartition (ni*nj) nk . Unpartition ni nj . Partition ni nj ===? (Commutativity
 Unpartition ni (nj*nk) . Map ni (Unpartition nj nk) . Partition ni nj
 ```
 
-#### `Unpartition` Nesting With Outer `Seq` `nj` Greater Than `Partition`'s Outer `Seq`
+#### Nesting With Outer `Seq` Equal To `UpPartition`'s Outer `Seq`
+Do Nothing. The `Partition no ni` from applying the nesting rewrite rule to downstream will obliterate this and the upstream is already partitioned appropriately by `no` and `ni`.
+```
+Unpartition no ni
+```
+
+#### Nesting With Outer `Seq` `nj` Greater Than `Unpartition`'s Outer `Seq`
 ```
 Unpartition ni (nj*nk) === (Identity Addition)
 Unpartition ni (nj*nk) . Id === (Map-Identity)
@@ -141,20 +154,12 @@ Unpartition (ni*nj) nk . Unpartition ni nj . Map ni (Partition nj nk)
 1. `Unpartition_t_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) (vo + no*vi) t`
 1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
 1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t)`
-1. `Partition_t_ts no ni :: TSeq (no*ni) v -> TSeq no (v + no*(ni-1)) (SSeq ni no)`
-1. `Unpartition_t_ts no ni :: TSeq no (v + no*(ni-1)) (SSeq ni no) -> TSeq (no*ni) v`
-1. `Partition_ts_tts_split_s ni nj nk :: TSeq ni (vi + ni*(nj + vj - 1)) (SSeq (nj*nk) t) -> TSeq ni vi (TSeq nj vj (SSeq nk t))`
-1. `Unpartition_ts_tts_split_s ni nj nk :: TSeq ni vi (TSeq nj vj (SSeq nk t)) -> TSeq ni (vi + ni*(nj + vj - 1)) (SSeq (nj*nk) t)`
 
 ## Area Property
 1. `area(Partition_t_tt no ni) = {0, 0, 0}`
 1. `area(Unpartition_t_tt no ni) = {0, 0, 0}`
 1. `area(Partition_s_ss no ni) = {0, 0, 0}`
 1. `area(Unpartition_s_ss no ni) = {0, 0, 0}`
-1. `area(Partition_t_ts no ni) = {0, (ni-1) * num_bits(t), ni * num_bits(t)} + area(counter)`
-1. `area(Unpartition_t_ts ni nj nk) = {0, (ni-1) * num_bits(t), ni * num_bits(t)} + area(counter)`
-1. `area(Partition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), nk * num_bits(t)} + area(counter)`
-1. `area(Unpartition_ts_tts_split_s ni nj nk) = {0, ((nj-1) * nk) * num_bits(t), (nj * nk) * num_bits(t)} + area(counter)`
 
 ## Sequence To Space-Time Rewrite Rules
 The Sequence To Space, Sequence To Time, Sequence To Space-Time, and Mapped Sequence To Space-Time rewrite rules preserve semantics due to the [sequence to space-time isomorphisms in the basic language document](Basic.md#sequence-to-space-time-isomorphisms).
@@ -170,87 +175,108 @@ The Outer and Inner rewrite rules are derived from the other ones in this sectio
 #### Sequence To Time 
 `Partition no ni === TSeq_To_Seq . Map_t no (TSeq_To_Seq) . Partition_t_tt . Seq_To_TSeq`
 
-#### Sequence To Space-Time 
-`Partition no ni === TSeq_To_Seq . Map_t no (SSeq_To_Seq) . Partition_t_ts . Seq_To_TSeq`
-
-#### Mapped Sequence To Space-Time
+#### Sequence To Space-Time with Outer `Seq` `nj` Less Than `Partition`'s Outer `Seq`
 ```
-Map ni (Partition nj nk) === 
-TSeq_To_Seq . Map_t ni (TSeq_To_Seq) . Map_t ni (Map_t nj (SSeq_To_Seq)) . Partition_ts_tts_split_s ni nj nk . Map_t ni (Seq_To_SSeq) . Seq_To_TSeq
-```
+Partition (ni*nj) nk === (Partition Nesting Less Than)
+Unpartition ni nj . Map ni (Partition nj nk) . Partition ni (nj*nk) === (Seq To TSeq)
 
-#### Outer Sequence To Space-Time With Throughput `ni` Less than Fully Parallel
-```
-Partition (ni*nj) nk === (Nesting Outer)
-Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t === (Seq To Space-Time)
-Unpartition ni nj (Seq nk t) . TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Partition_t_ts ni nj (Seq nk t) . Seq_To_TSeq . Partition (ni*nj) nk t
-```
+Unpartition ni nj . 
+    TSeq_To_Seq . Map_t ni (Partition nj nk) . Seq_To_TSeq .
+    Partition ni (nj*nk) === (Seq To SSeq)
 
-**Note:** The scheduling algorithm will handle converting the `Seq` in `Partition_t_ts ni nj (Seq nk t)` to a `TSeq`.
+Unpartition ni nj . 
+    TSeq_To_Seq . Map_t ni (SSeq_To_Seq . Map_s nj SSeq_To_Seq . Partition_s_ss nj nk . Seq_To_SSeq) . Seq_To_TSeq .
+    Partition ni (nj*nk) === (Functor Map Fusion)
 
-**WE HAD A PROBLEM: Need a Partition other than `Partition_s_ss` and `Partition_t_tt` to split the `Seq` into the `TSeq (SSeq)`**
-**SOLUTION: Add `Partition_t_ts`**
+Unpartition ni nj . 
+    TSeq_To_Seq . Map_t ni SSeq_To_Seq . Map_t ni (Map_s nj SSeq_To_Seq) . Map_t ni (Partition_s_ss nj nk) . Map_t ni Seq_To_SSeq . Seq_To_TSeq .
+    Partition ni (nj*nk) ===
 
-#### Inner Sequence To Space-Time With Throughput `ni*nj` Less than Fully Parallel
-```
-Partition ni (nj*nk) === (Nesting Inner)
-Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t === (Mapped Sequence To Space-Time)
-Map ni (Unpartition nj nk t) . TSeq_To_Seq . Map_t ni (TSeq_To_Seq) . Map_t ni (Map_t nj (SSeq_To_Seq)) . Partition_ts_tts_split_s ni nj nk . Map_t ni (Seq_To_SSeq) . Seq_To_TSeq . Partition ni (nj*nk) t
+Unpartition ni nj . TSeq_To_Seq . 
+    Map_t ni SSeq_To_Seq . Map_t ni (Map_s nj SSeq_To_Seq) . Map_t ni (Partition_s_ss nj nk) . Map_t ni Seq_To_SSeq . 
+    Seq_To_TSeq . Partition ni (nj*nk)
 ```
 
-**WE HAD A PROBLEM**: `Partition_s_ts no ni :: SSeq (no*ni) t -> TSeq no v (SSeq ni t)` can't exist. It breaks that assumption that `type_time(t) == type_time(t')` for all `f :: t -> t'`. Thus, the following approach using more standard operators doesn't work:** 
-**SOLUTION: Add `Partition_ts_tts_split_s`**
+#### Sequence To Space-Time with Outer `Seq` Equal To `Partition`'s Outer `Seq`
+Do nothing. Same obliteration argument applies as above.
+```
+Partition no ni
+```
+
+#### Sequence To Space-Time with Outer `Seq` `nj` Greater Than `Partition`'s Outer `Seq`
+```
+Partition ni (nj*nk) === (Partition Nesting Greater Than)
+Map ni (Unpartition nj nk) . Partition ni nj . Partition (ni*nj) nk === (Seq To TSeq)
+Map ni (Unpartition nj nk) . TSeq_To_Seq . Map_t ni TSeq_To_Seq . Partition_t_tt ni nj . Seq_To_TSeq . Partition (ni*nj) nk
+```
 
 ### Unpartition
 
 #### Sequence To Space
-`Unpartition no ni === SSeq_To_Seq . Partition_s_ss . Map_t no (SSeq_To_Seq) . SSeq_To_Seq`
+`Unpartition no ni === SSeq_To_Seq . Unpartition_s_ss no ni . Map_s no (SSeq_To_Seq) . SSeq_To_Seq`
 
 #### Sequence To Time 
-`Unpartition no ni === TSeq_To_Seq . Partition_t_tt . Map_t no (TSeq_To_Seq) . TSeq_To_Seq`
+`Unpartition no ni === TSeq_To_Seq . Unpartition_t_tt no ni . Map_t no (TSeq_To_Seq) . TSeq_To_Seq`
 
-#### Sequence To Space-Time
-`Unpartition no ni === TSeq_To_Seq . Unpartition_t_ts no ni . Map_t no (Seq_To_SSeq) . Seq_To_TSeq`
+#### Sequence To Space-Time with Outer `Seq` `nj` Less Than `Unpartition`'s Outer `Seq`
+```
+Unpartition (ni*nj) nk === (Unpartition Nesting Less Than)
+Unpartition ni (nj*nk) . Map ni (Unpartition nj nk) . Partition ni nj === (Seq To TSeq)
 
-#### Mapped Sequence To Space-Time
-```
-Map ni (Unpartition nj nk) === 
-TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Unpartition_ts_tts_split_s ni nj nk . Map_t ni (Map_t nj (Seq_To_SSeq)) . Map_t ni (Seq_To_TSeq) . Seq_To_TSeq
+Unpartition ni (nj*nk) . 
+    TSeq_To_Seq . Map_t ni (Unpartition nj nk) . Seq_To_TSeq . 
+    Partition ni nj === (Seq To SSeq)
+
+Unpartition ni (nj*nk) . 
+    TSeq_To_Seq . Map_t ni (SSeq_To_Seq . Unpartition_s_ss nj nk . Map_s nj Seq_To_SSeq . Seq_To_SSeq) . Seq_To_TSeq . 
+    Partition ni nj === (Map Functor Fusion)
+
+Unpartition ni (nj*nk) . 
+    TSeq_To_Seq . Map_t ni SSeq_To_Seq . Map_t ni (Unpartition_s_ss nj nk) . Map_t ni (Map_s nj Seq_To_SSeq) . Map_t ni Seq_To_SSeq . Seq_To_TSeq . 
+    Partition ni nj === 
+
+Unpartition ni (nj*nk) . TSeq_To_Seq . 
+    Map_t ni SSeq_To_Seq . Map_t ni (Unpartition_s_ss nj nk) . Map_t ni (Map_s nj Seq_To_SSeq) . Map_t ni Seq_To_SSeq .
+    Seq_To_TSeq . Partition ni nj
 ```
 
-#### Outer Sequence To Space-Time With Throughput `ni` Less than Fully Parallel
+#### Nesting With Outer `Seq` Equal To `UpPartition`'s Outer `Seq`
+Do Nothing. The `Partition no ni` from applying the nesting rewrite rule to downstream will obliterate this and the upstream is already partitioned appropriately by `no` and `ni`.
 ```
-Unpartition (ni*nj) nk === (Nesting Outer)
-Unpartition (ni*nj) nk t . Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) === (Seq To Space-Time)
-Unpartition (ni*nj) nk t . TSeq_To_Seq . Unpartition_t_ts ni nj (Seq nk t) . Map_t ni (Seq_To_SSeq) . Seq_To_TSeq . Partition ni nj (Seq nk t) 
-```
-
-#### Inner Sequence To Space-Time With Throughput `ni*nj` Less than Fully Parallel
-```
-Unpartition ni (nj*nk) === (Nesting Inner)
-Unpartition ni (nj*nk) t . Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) === (Mapped Sequence To Space-Time)
-Unpartition ni (nj*nk) t . TSeq_To_Seq . Map_t ni (SSeq_To_Seq) . Unpartition_ts_tts_split_s ni nj nk . Map_t ni (Map_t nj (Seq_To_SSeq)) . Map_t ni (Seq_To_TSeq) . Seq_To_TSeq . Map ni (Partition nj nk t)
+Unpartition no ni
 ```
 
-# Why Partition Needs Custom Operators
+#### Nesting With Outer `Seq` `nj` Greater Than `Unpartition`'s Outer `Seq`
+```
+Unpartition ni (nj*nk) === (Identity Addition)
+Unpartition ni (nj*nk) . Id === (Map-Identity)
+Unpartition ni (nj*nk) . Map ni id === (Isomorphism Addition)
+Unpartition ni (nj*nk) . Map ni (Unpartition nj nk . Partition nj nk) === (Functor Fusion)
+Unpartition ni (nj*nk) . Map ni (Unpartition nj nk) . Map ni (Partition nj nk) ===? (Commutatvity)
+Unpartition (ni*nj) nk . Unpartition ni nj . Map ni (Partition nj nk)
+```
+
+# Why Partition Doesn't Need Custom Operators
 During scheduling, at most one of the Seqs in the input and output types may be split. 
 When scheduling other operators that are of the form `Seq n t -> Seq n t'`, there is only
 one possible way to split the `Seq`s. Both the input and output `Seq` must be split in the same way. 
 However, `Partition no ni :: Seq (no*ni) t -> Seq no (Seq ni t)` can be split in multiple ways.
+But, note that the below cases can never happen. These would lead to different throughputs in different parts of the system. 
+The types show this as `Partition`'s input `TSeq` is greater than its output `TSeq`
 For each case, we provide a sketch of the space-time operators that handle it.
 Also, we denote that some of these splits cannot occur in the scheduling algorithm so we don't need
 to handle them. 
 A split only occurs in the scheduling algorithm if splitting a `Seq` into a `TSeq (SSeq)`
 1. `TSeq (SSeq) -> TSeq (SSeq (SSeq))`
     1. This type signature can be produced by either
-        1. splitting the outer Seq into a TSeq (SSeq) - `Partition_t_ts` with `t' = SSeq`
+        1. splitting the outer Seq into a TSeq (SSeq) - `Deserialze . Partition_t_tt`
         1. splitting the inner Seq into a SSeq (SSeq) - `Map_t (Partition_s_ss)`
             1. This can never happen, not splitting into a TSeq (SSeq)
 1. `TSeq (SSeq) -> TSeq (TSeq (SSeq))`
     1. This type signature can be produced by either
         1. splitting the outer Seq into a TSeq (TSeq) - `Partition_t_tt` with `t' = SSeq`
             1. This can never happen, not splitting into a TSeq (SSeq)
-        1. splitting the inner Seq into a TSeq (SSeq) - `Partition_ts_tts_split_s`
+        1. splitting the inner Seq into a TSeq (SSeq) - `Deserialize . Map_t ni (Partition_t_tt nj nk)`
 
 1. Any Space-Time `Partition` must have `TSeq`s on both input and output.
    Otherwise, it's number of input and output clocks will not be equal.
