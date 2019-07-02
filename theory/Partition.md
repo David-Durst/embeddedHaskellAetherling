@@ -53,7 +53,7 @@ Unpartition ni nj . Map ni (Partition nj nk) . Map ni (Map (nj*nk) f) . Partitio
 ```
 
 ### Partition
-#### `Partition` Nesting with outer `Seq` `nj` less than `Partition`'s outer `Seq`
+#### `Partition` Nesting with Outer `Seq` `nj` Less Than `Partition`'s Outer `Seq`
 ```
 Partition (ni*nj) nk === (Identity Addition)
 Id . Partition (ni*nj) nk === (Isomorphism Addition)
@@ -61,14 +61,14 @@ Unpartition ni nj . Partition ni nj . Partition (ni*nj) nk ===? (Commutativity)
 Unpartition ni nj . Map ni (Partition nj nk) . Partition ni (nj*nk)
 ```
 
-#### `Partition` Nesting with outer `Seq` `nj` greater than `Partition`'s outer `Seq`
+#### `Partition` Nesting with Outer `Seq` `nj` Greater Than `Partition`'s Outer `Seq`
 ```
-Partition ni (nj*nk) t === (Identity Addition)
-Id . Partition ni (nj*nk) t === (Map-Identity)
-Map ni id . Partition ni (nj*nk) t === (Isomorphism Addition)
-Map ni (Unpartition nj nk t . Partition nj nk t) . Partition ni (nj*nk) t === (Functor Fusion)
-Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t) . Partition ni (nj*nk) t ===? (Commutativity)
-Map ni (Unpartition nj nk t) . Partition ni nj (Seq nk t) . Partition (ni*nj) nk t (Commutativity)
+Partition ni (nj*nk) === (Identity Addition)
+Id . Partition ni (nj*nk) === (Map-Identity)
+Map ni id . Partition ni (nj*nk) === (Isomorphism Addition)
+Map ni (Unpartition nj nk . Partition nj nk) . Partition ni (nj*nk) === (Functor Fusion)
+Map ni (Unpartition nj nk) . Map ni (Partition nj nk) . Partition ni (nj*nk) ===? (Commutativity)
+Map ni (Unpartition nj nk) . Partition ni nj . Partition (ni*nj) nk 
 ```
 
 
@@ -117,23 +117,23 @@ Map ni (Unpartition nj nk) . Map ni (Map nj (Map nk Abs)) .
 
 ### Unpartition
 Note: the type parameters are not actually part of the `Unpartition`, but are included in the following proofs for interpretability.
-#### `Unpartition` Nesting Outer
+#### `Unpartition` Nesting with Outer `Seq` `nj` Less Than `Partition`'s Outer `Seq`
 ```
-Unpartition (ni*nj) nk t === (Identity Addition)
-Unpartition (ni*nj) nk t . Id === (Isomorphism Addition)
-Unpartition (ni*nj) nk t . Unpartition ni nj (Seq nk t) . Partition ni nj (Seq nk t) 
-```
-
-#### `Unpartition` Nesting Inner
-```
-Unpartition ni (nj*nk) t === (Identity Addition)
-Unpartition ni (nj*nk) t . Id === (Map-Identity)
-Unpartition ni (nj*nk) t . Map ni id === (Isomorphism Addition)
-Unpartition ni (nj*nk) t . Map ni (Unpartition nj nk t . Partition nj nk t) === (Functor Fusion)
-Unpartition ni (nj*nk) t . Map ni (Unpartition nj nk t) . Map ni (Partition nj nk t)
+Unpartition (ni*nj) nk === (Identity Addition)
+Unpartition (ni*nj) nk . Id === (Isomorphism Addition)
+Unpartition (ni*nj) nk . Unpartition ni nj . Partition ni nj ===? (Commutativity)
+Unpartition ni (nj*nk) . Map ni (Unpartition nj nk) . Partition ni nj
 ```
 
-#### 
+#### `Unpartition` Nesting With Outer `Seq` `nj` Greater Than `Partition`'s Outer `Seq`
+```
+Unpartition ni (nj*nk) === (Identity Addition)
+Unpartition ni (nj*nk) . Id === (Map-Identity)
+Unpartition ni (nj*nk) . Map ni id === (Isomorphism Addition)
+Unpartition ni (nj*nk) . Map ni (Unpartition nj nk . Partition nj nk) === (Functor Fusion)
+Unpartition ni (nj*nk) . Map ni (Unpartition nj nk) . Map ni (Partition nj nk) ===? (Commutatvity)
+Unpartition (ni*nj) nk . Unpartition ni nj . Map ni (Partition nj nk)
+```
 
 # Space-Time IR
 ## Operators
