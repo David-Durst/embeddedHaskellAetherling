@@ -9,10 +9,10 @@ import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Either
 import Aetherling.Types.Isomorphisms
-
+{-
 two_abs = sym_input_int >>= absC >>> absC 
 two_abs_DAG = DAG {
-  nodes = [InputN {t = IntT},AbsN,AbsN],
+  nodes = [[InputN {t = IntT},AbsN,AbsN]],
   edges = [DAG_Edge {source = 0, sink = 1},DAG_Edge {source = 1, sink = 2}]}
 two_abs_DAG_builder = DAG_Builder two_abs_DAG 3
 
@@ -68,3 +68,4 @@ space_time_embedding_tests = testGroup "Verifying Space-Time Shallow To Deep Emb
     testCase "reducing a space sequence with add" (
       get_dag_no_errors reduce_add @?= reduce_add_output)
   ]
+-}

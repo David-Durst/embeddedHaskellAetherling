@@ -8,7 +8,9 @@ import Control.Monad.Identity
 
 estimate_resources :: ST_DAG -> Either String Resources_Data
 estimate_resources dag =
-  runIdentity $ runExceptT $ foldM estimate_resourcesM empty_resources (nodes dag)
+  runIdentity $ runExceptT $ foldM estimate_resourcesM empty_resources all_nodes
+  where
+    all_nodes = concat $ nodes dag
 
 data Resources_Data = Resources_Data {
   computeResources :: Int,

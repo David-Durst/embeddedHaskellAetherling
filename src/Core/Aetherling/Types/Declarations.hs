@@ -4,19 +4,26 @@ import GHC.TypeLits.Extra
 import Data.Vector.Sized as V
 import Data.Proxy
 import GHC.Exts (Constraint)
-import qualified Data.List as L
 
 {-
 Each atomic type has version for simulation.
 Also have version for wiring up connected nodes in a graph
 when doing shallow to deep embedding.
 -}
-type DAG_Index = Int
+data DAG_Index = DAG_Index {rewrite_iteration :: Int, dag_index :: Int}
+  deriving (Show, Eq, Ord)
+
+increment_DAG_index :: DAG_Index -> DAG_Index
+increment_DAG_index (DAG_Index iter idx) = DAG_Index iter (idx+1)
+
+first_DAG_index :: DAG_Index
+first_DAG_index = DAG_Index 0 0
+
 data DAG_Edge = DAG_Edge {source :: DAG_Index, sink :: DAG_Index}
   deriving (Show, Eq)
 
 data DAG a = DAG {
-  nodes :: [a],
+  nodes :: [[a]], -- each outer list is for a different rewrite iteration
   edges :: [DAG_Edge]
   } deriving (Show, Eq)
 

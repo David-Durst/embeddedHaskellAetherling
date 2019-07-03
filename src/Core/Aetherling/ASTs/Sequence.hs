@@ -37,7 +37,7 @@ class Monad m => Sequence_Language m where
 
   down_1dC :: (KnownNat n, KnownNat i,
                 Aetherling_Value a) =>
-    Proxy (1+n) -> Seq (1+n) i a -> m (Seq 1 (n + i) a)
+    Proxy (1+n) -> Int -> Seq (1+n) i a -> m (Seq 1 (n + i) a)
 
   partitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
                  KnownNat io, KnownNat ii,
@@ -58,13 +58,13 @@ class Monad m => Sequence_Language m where
   mapC :: (KnownNat n, KnownNat i,
            Aetherling_Value a,
            Aetherling_Value b) =>
-    Proxy n -> (a -> m b) -> (Seq n i a -> m (Seq n i b))
+    Proxy n -> (a -> m b) -> Seq n i a -> m (Seq n i b)
 
   map2C :: (KnownNat n, KnownNat i,
             Aetherling_Value a,
             Aetherling_Value b,
             Aetherling_Value c) =>
-    Proxy n -> (a -> b -> m c) -> (Seq n i a -> Seq n i b -> m (Seq n i c))
+    Proxy n -> (a -> b -> m c) -> Seq n i a -> Seq n i b -> m (Seq n i c)
 
   reduceC :: (KnownNat n, KnownNat i,
               Aetherling_Value a) =>
@@ -123,7 +123,7 @@ data Sequence_Language_AST =
   -- sequence operators
   | ShiftN {n :: Int, i :: Int, shift_amount :: Int, elem_t :: AST_Type}
   | Up_1dN {n :: Int, i :: Int, elem_t :: AST_Type}
-  | Down_1dN {n :: Int, i :: Int, elem_t :: AST_Type}
+  | Down_1dN {n :: Int, i :: Int, sel_idx :: Int, elem_t :: AST_Type}
   | PartitionN {
       no :: Int,
       ni :: Int,

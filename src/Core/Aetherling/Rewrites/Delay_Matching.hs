@@ -1,6 +1,7 @@
 module Aetherling.Rewrites.Delay_Matching where
 import Aetherling.ASTs.Space_Time
 import Aetherling.Types.Declarations
+import Aetherling.Helpers.DAG_Helpers
 import qualified Data.Map as M
 
 data Clock_Word = Clock_Word {clks :: [Bool]} deriving (Show, Eq)
@@ -38,30 +39,30 @@ two_ct_variables next_index cur_delay =
 -- A type from this word combined with another type becomes a clock signature.
 -- The default clock type is used when the function is not clearly more optimal
 -- (aka lower hardware utilization) with another clock type
-default_clock_word :: AST_Type -> Clock_Word
-default_clock_word UnitT = Clock_Word [True]
-default_clock_word IntT = Clock_Word [True]
-default_clock_word BitT = Clock_Word [True]
-default_clock_word (ATupleT _ _) = Clock_Word [True]
-default_clock_word (STupleT _ elem_w) = default_clock_word elem_w
+type_clock_word :: AST_Type -> Clock_Word
+type_clock_word UnitT = Clock_Word [True]
+type_clock_word IntT = Clock_Word [True]
+type_clock_word BitT = Clock_Word [True]
+type_clock_word (ATupleT _ _) = Clock_Word [True]
+type_clock_word (STupleT _ elem_w) = type_clock_word elem_w
 -- Seq's aren'word Space-Time IR, so no clock signature
-default_clock_word (SeqT _ _ _) = undefined
-default_clock_word (SSeqT _ elem_w) = default_clock_word elem_w
-default_clock_word (TSeqT n v elem_w) =
+type_clock_word (SeqT _ _ _) = undefined
+type_clock_word (SSeqT _ elem_w) = type_clock_word elem_w
+type_clock_word (TSeqT n v elem_w) =
   Clock_Word $ replicated_elem_w_clock_type ++ invalid_replicated
   where
-    elem_w_clocks = clks $ default_clock_word elem_w
+    elem_w_clocks = clks $ type_clock_word elem_w
     -- repeat elem_w's clock type n times
     replicated_elem_w_clock_type = concat $ replicate n elem_w_clocks
     -- then replicat 0 equal to len(elem_w clock_type) * v
     invalid_replicated = concat $ replicate v $ replicate (length elem_w_clocks) False
 
-default_clock_signature :: AST_Type -> AST_Type -> Int -> Int -> Clock_Signature
-default_clock_signature in_t out_t in_delay out_delay =
+type_clock_signature :: AST_Type -> AST_Type -> Int -> Int -> Clock_Signature
+type_clock_signature in_t out_t in_delay out_delay =
   Clock_Signature in_clock_type out_clock_type in_delay out_delay
   where
-    in_clock_type = CT_Word $ default_clock_word in_t
-    out_clock_type = CT_Word $ default_clock_word out_t
+    in_clock_type = CT_Word $ type_clock_word in_t
+    out_clock_type = CT_Word $ type_clock_word out_t
 
 type ST_Clock_Sigs = M.Map DAG_Index Clock_Signature
 
@@ -70,43 +71,70 @@ type ST_Clock_Sigs = M.Map DAG_Index Clock_Signature
 get_input_delays :: ST_Clock_Sigs -> [DAG_Index] -> [Int]
 get_input_delays clock_sigs indices =
   map (\index -> out_delay $ clock_sigs M.! index) (filter ((>= 0) . dag_index) indices)
-  
+
+-- | Given a source and a sink, find the maximum clocks the sink is ahead of the source
+max_clocks_sink_ahead :: Clock_Type -> Clock_Type -> Int
+max_clocks_sink_ahead (CT_Var _) _ = 0
+max_clocks_sink_ahead _ (CT_Var _) = 0
+max_clocks_sink_ahead (CT_Word source_word) (CT_Word sink_word) = do
+  let zipped_words = zip (clks source_word) (clks sink_word)
+  let update_ahead_counters (cur_ahead, max_ahead) (source_active, sink_active) =
+        (new_counter, max new_counter max_ahead)
+        where
+          sink_inc = if source_active then 1 else 0
+          source_inc = if source_active then (-1) else 0
+          new_counter = cur_ahead + sink_inc + source_inc
+  let (_, max_ahead) = foldl update_ahead_counters (0,0) zipped_words
+  max_ahead
 
 -- | Given a next clock type variable index, current delay, current DAG index,
--- and ST_Clock_Sigs map for all indices prior to this one, 
--- and a space-time IR DAG, return the clock signatures for each object in the
--- graph and the new graph with FIFOs added where needed to make clock sigs work
-get_graph_clock_sig :: Int -> Int -> ST_DAG -> (ST_Clock_Sigs, ST_DAG)
-get_graph_clock_sig next_index cur_delay dag@(DAG nodes edges) = do
-  let node_indices = get_all_DAG_node_indices dag
-  let edges_to_each_node =
-        map (\index -> filter (\edge -> sink edge == index) edges) node_indices
+-- ST_Clock_Sigs map for all indices prior to this one, 
+-- and a space-time IR DAG, return the ST_Clock_Sigs map with the current object
+-- added, along with any new FIFOs,
+-- and the new graph with FIFOs added where needed to make clock sigs work
+match_next_node_clock_sig :: Int -> Int -> DAG_Index -> ST_Clock_Sigs ->
+                             ST_DAG -> (ST_Clock_Sigs, ST_DAG)
+match_next_node_clock_sig next_var_index cur_delay cur_dag_index clk_sigs_so_far
+  dag@(DAG nodes edges) = do
+  let edges_to_current_node =
+        filter (\edge -> sink edge == cur_dag_index) edges
+  -- filter out any edges with negative numbers for inputs as aren't real
+  let real_edges_to_current_node =
+        filter (\edge -> (dag_index . source) edge >= 0)
+        
+        {-
   let nodes_emitting_to_each_node =
         map (\index -> map (\edge -> source edge) (edges_to_each_node !! index))
         nodes_range
+-}
   --foldl 
   undefined
 
+{-
 -- | Given the next clock type variable index, current delay, and a node in the
--- space-time IR, return the clock signatures for that node
-get_node_clock_sig :: Int -> Int -> Space_Time_Language_AST -> Clock_Signature
-get_node_clock_sig next_index cur_delay IdN =
-  one_ct_variable next_index cur_delay
+-- space-time IR, match delays for any subdags and
+-- return the clock signature and the node with fixed subdags
+get_fixed_node_clock_sig :: Int -> Int -> Space_Time_Language_AST ->
+                            (Clock_Signature, Space_Time_Language_AST)
+get_fixed_node_clock_sig next_index cur_delay IdN =
+  (one_ct_variable next_index cur_delay, IdN)
 get_node_clock_sig next_index cur_delay AbsN =
-  one_ct_variable next_index cur_delay
+  (one_ct_variable next_index cur_delay, AbsN)
 get_node_clock_sig next_index cur_delay NotN =
-  one_ct_variable next_index cur_delay
+  (one_ct_variable next_index cur_delay, NotN)
 get_node_clock_sig next_index cur_delay AddN =
-  one_ct_variable next_index cur_delay
-get_node_clock_sig next_index cur_delay (EqN _) =
-  one_ct_variable next_index cur_delay
+  (one_ct_variable next_index cur_delay, AddN)
+get_node_clock_sig next_index cur_delay (EqN t) =
+  (one_ct_variable next_index cur_delay, (EqN t))
 
 -- generators
+{-
 get_node_clock_sig next_index cur_delay (Lut_GenN _ t) =
-  default_clock_signature IntT t cur_delay cur_delay
+  (default_clock_signature IntT t cur_delay cur_delay
 -- constant has no input, so no input delay and 0 output delay
 get_node_clock_sig next_index cur_delay (Const_GenN _ t) =
   default_clock_signature t t 0 0
+-}
 
 -- sequence operators
 get_node_clock_sig next_index cur_delay (FIFON _ _ delay_clks _) =
@@ -125,6 +153,7 @@ get_node_clock_sig next_index cur_delay (Down_1d_sN _ t) =
 get_node_clock_sig next_index cur_delay (Down_1d_tN n v t) =
   default_clock_signature (TSeqT n v t) (TSeqT 1 (n+v-1) t) cur_delay cur_delay
 
+-}
 -- higher order operators
 --get_node_clock_sig next_index cur_delay (Map_sN )
 

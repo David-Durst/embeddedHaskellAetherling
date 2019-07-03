@@ -19,7 +19,7 @@ get_deep_dag :: Seq_Shallow_To_Deep_Env a -> Either String DAG_Builder
 get_deep_dag shallow_embedding =
   runIdentity $ runExceptT $ execStateT shallow_embedding empty_dag
 
-empty_dag = DAG_Builder (DAG [] []) 0
+empty_dag = DAG_Builder (DAG [] []) first_DAG_index
 
 data DAG_Builder = DAG_Builder {
   get_builder_dag :: Seq_DAG,
@@ -39,10 +39,12 @@ add_to_DAG new_node input_indices_maybe node_name args_name = do
     let input_indices = fromJust input_indices_maybe
     let new_edges = fmap (\idx -> DAG_Edge idx cur_node_index) input_indices
     let old_edges = edges $ get_builder_dag prior_DAG
-    let old_nodes = nodes $ get_builder_dag prior_DAG
+    -- since this is first time through, no rewrites, don't have to worry about
+    -- rewritten nodes. So just take first list in nodes
+    let old_nodes = head $ nodes $ get_builder_dag prior_DAG
     let new_DAG = DAG_Builder
-          (DAG (old_nodes ++ [new_node]) (old_edges ++ new_edges))
-          (next_DAG_index prior_DAG + 1)
+          (DAG ([old_nodes ++ [new_node]]) (old_edges ++ new_edges))
+          (increment_DAG_index $ next_DAG_index prior_DAG)
     put new_DAG
     return (convert_index_to_ae_value cur_node_index)
     else do
@@ -119,10 +121,10 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
 
   down_1dC :: forall n a i . (KnownNat n, KnownNat i,
                               Aetherling_Value a) =>
-              Proxy (1+n) -> 
+              Proxy (1+n) -> Int ->
               Seq (1+n) i a -> Seq_Shallow_To_Deep_Env (Seq 1 (n + i) a)
-  down_1dC proxyN x = add_to_DAG
-    (Down_1dN n_val i_val (get_AST_type (Proxy :: Proxy a)))
+  down_1dC proxyN sel_idx x = add_to_DAG
+    (Down_1dN n_val i_val sel_idx (get_AST_type (Proxy :: Proxy a)))
     (input_to_maybe_indices x) "down_1dC" "Seq"
     where
       n_val = fromInteger $ natVal proxyN
@@ -173,8 +175,8 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
     let i_val = fromInteger $ natVal (Proxy :: Proxy i)
     outer_dag <- get
     put empty_dag
-    put $ empty_dag {next_DAG_index = 0}
-    f $ convert_index_to_ae_value (-1)
+    put $ empty_dag {next_DAG_index = first_DAG_index}
+    f $ convert_index_to_ae_value (DAG_Index 0 (-1))
     f_dag <- get
     put outer_dag
     add_to_DAG (MapN n_val i_val (get_builder_dag f_dag)) (input_to_maybe_indices x)
@@ -190,8 +192,9 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
     let n_val = fromInteger $ natVal proxyN
     let i_val = fromInteger $ natVal (Proxy :: Proxy i)
     outer_dag <- get
-    put $ empty_dag {next_DAG_index = 0}
-    f (convert_index_to_ae_value (-2)) (convert_index_to_ae_value (-1))
+    put $ empty_dag {next_DAG_index = first_DAG_index}
+    f (convert_index_to_ae_value (DAG_Index 0 (-2)))
+      (convert_index_to_ae_value (DAG_Index 0 (-1)))
     f_dag <- get
     put outer_dag
     let maybe_indices = liftA2 (++)
@@ -206,8 +209,8 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
     let i_val = fromInteger $ natVal (Proxy :: Proxy i)
     outer_dag <- get
     put empty_dag
-    put $ empty_dag {next_DAG_index = 0}
-    f (convert_index_to_ae_value (-1))
+    put $ empty_dag {next_DAG_index = first_DAG_index}
+    f (convert_index_to_ae_value (DAG_Index 0 (-1)))
     f_dag <- get
     put outer_dag
     add_to_DAG (ReduceN n_val i_val (get_builder_dag f_dag)) (input_to_maybe_indices x)

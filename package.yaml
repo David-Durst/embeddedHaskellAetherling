@@ -38,6 +38,7 @@ dependencies:
 - util
 
 ghc-options:
+- -fconstraint-solver-iterations=0
 - -fwarn-incomplete-patterns 
 - -fplugin GHC.TypeLits.KnownNat.Solver
 - -fplugin GHC.TypeLits.Extra.Solver
@@ -69,6 +70,43 @@ library:
     - ConstraintKinds
     - Rank2Types
     - InstanceSigs
+
+executables:
+  Aetherling-Blur-exe:
+    main:                Main.hs
+    source-dirs:
+    - src/Apps/
+    - src/AppMains/Blur/
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - Aetherling
+    - stb-image-redux
+    - vector
+    default-extensions:
+      - DataKinds
+      - TypeOperators
+      - TypeFamilies
+      - FlexibleContexts
+      - FlexibleInstances
+      - ScopedTypeVariables
+      - TypeApplications
+      - TypeSynonymInstances
+      - PolyKinds
+      - LiberalTypeSynonyms
+      - UndecidableInstances
+      - MultiParamTypeClasses
+      - AllowAmbiguousTypes
+      - PartialTypeSignatures
+      - ExistentialQuantification
+      - DeriveFoldable
+      - DeriveTraversable
+      - GADTs
+      - ConstraintKinds
+      - Rank2Types
+      - InstanceSigs
 
 tests:
   Aetherling-Tests:

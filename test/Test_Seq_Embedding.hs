@@ -9,7 +9,7 @@ import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Either
 import Aetherling.Types.Isomorphisms
-
+{-
 two_abs = sym_input_int >>= absC >>> absC 
 two_abs_DAG = DAG {
   nodes = [InputN {t = IntT},AbsN,AbsN],
@@ -68,3 +68,4 @@ sequence_embedding_tests = testGroup "Verifying Sequence Shallow To Deep Embeddi
     testCase "reducing a sequence with add" (
       get_dag_no_errors reduce_add @?= reduce_add_output)
   ]
+-}

@@ -4,7 +4,7 @@ import Aetherling.Types.Declarations
 
 get_latency :: ST_DAG -> Int
 -- since each node must take same total time, just take head
-get_latency (DAG (hd_node : _) _) = get_node_latency hd_node
+get_latency (DAG (hd_node : _) _) = get_node_latency $ head hd_node
 get_latency _ = 0
 
 get_node_latency :: Space_Time_Language_AST -> Int

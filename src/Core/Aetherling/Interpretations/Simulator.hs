@@ -55,9 +55,9 @@ instance Sequence_Language Simulation_Env where
     V.replicate' proxyN $ V.head elem
   up_1dC _ _ = fail $ fail_message "up_1dC" "Seq"
 
-  down_1dC proxyN (Seq vec) = return $ Seq $
-    V.replicate' (Proxy @1) $ V.head vec
-  down_1dC _ _ = fail $ fail_message "down_1dC" "Seq"
+  down_1dC proxyN sel_idx (Seq vec) = return $ Seq $
+    V.replicate' (Proxy @1) $ (V.toList vec !! sel_idx)
+  down_1dC _ _ _ = fail $ fail_message "down_1dC" "Seq"
 
   partitionC :: forall no ni io ii a .
     (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,

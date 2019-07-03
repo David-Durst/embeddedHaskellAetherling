@@ -8,6 +8,4 @@ main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Top Level Aetherling Tests" [sequence_simulator_tests,
-                                                sequence_embedding_tests,
-                                                space_time_embedding_tests]
+tests = testGroup "Top Level Aetherling Tests" [sequence_simulator_tests]
