@@ -24,7 +24,7 @@ down_2dC down_row down_col in_col in_row idx_row idx_col =
     down_2d_one_row_repeats = in_row `div_p` down_row
 
 down_2d_one_rowC down_row down_col in_col idx_row idx_col =
-  partitionC in_col down_col >>>
+  partitionC (down_col `mul_p` in_col) down_col >>>
   (mapC (down_row `mul_p` in_col) (down_1dC down_col idx_col)) >>>
   unpartitionC (down_row `mul_p` in_col) (Proxy @1) >>>
   partitionC down_row in_col >>>
