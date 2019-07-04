@@ -8,7 +8,7 @@ import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Aetherling.Types.Isomorphisms
-
+{-
 two_abs = absC >>> absC $ Atom_Int (-3)
 
 add_of_two_abs x y = do
@@ -56,3 +56,4 @@ sequence_simulator_tests = testGroup "Verifying Sequence Simulator"
     testCase "reducing a sequence with add" (
       simulate (reduce_add reduce_add_input) @?= reduce_add_output)
   ]
+-}

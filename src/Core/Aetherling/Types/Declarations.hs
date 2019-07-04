@@ -69,6 +69,12 @@ data Seq n i a =
   | Seq_Edge DAG_Index
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
+seq_length :: Seq n i a -> Proxy n
+seq_length _ = Proxy :: Proxy n
+
+seq_invalid :: Seq n i a -> Proxy i
+seq_invalid _ = Proxy :: Proxy i
+
 instance (KnownNat n, KnownNat i) => Applicative (Seq n i) where
   pure a = (Seq ((pure :: a -> Vector n a) a))
   (Seq f) <*> (Seq a) = Seq (f <*> a)
