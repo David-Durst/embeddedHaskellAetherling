@@ -64,10 +64,17 @@ instance Sequence_Language Simulation_Env where
       KnownNat io, KnownNat ii,
       Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
-    Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a ->
+    Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+                                io GHC.TypeLits.* (ni + ii)) a ->
     Simulation_Env (Seq no io (Seq ni ii a))
   partitionC _ proxy_ni unnested_seq =
     return $ seqToSeqOfSeq proxy_ni (Proxy :: Proxy ii) unnested_seq
+
+  partitionC' _ proxy_ni proxy_ii unnested_seq =
+    return $ seqToSeqOfSeq proxy_ni proxy_ii unnested_seq
+    
+  partitionC'' _ proxy_ni _ proxy_ii unnested_seq =
+    return $ seqToSeqOfSeq proxy_ni proxy_ii unnested_seq
 
   unpartitionC _ _ unflattened_seq =
     return $ seqOfSeqToSeq unflattened_seq

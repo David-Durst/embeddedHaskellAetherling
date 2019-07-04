@@ -43,15 +43,33 @@ class Monad m => Sequence_Language m where
                  KnownNat io, KnownNat ii,
                  Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
-    Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a ->
+    Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+                                io GHC.TypeLits.* (ni + ii)) a ->
     m (Seq no io (Seq ni ii a))
 
+  partitionC' :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                 KnownNat io, KnownNat ii,
+                 Aetherling_Value a) =>
+    Proxy no -> Proxy ni -> Proxy ii ->
+    Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+                                io GHC.TypeLits.* (ni + ii)) a ->
+    m (Seq no io (Seq ni ii a))
+    
+  partitionC'' :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                 KnownNat io, KnownNat ii,
+                 Aetherling_Value a) =>
+    Proxy no -> Proxy ni -> Proxy io -> Proxy ii ->
+    Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+                                io GHC.TypeLits.* (ni + ii)) a ->
+    m (Seq no io (Seq ni ii a))
+    
   unpartitionC :: (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
                    KnownNat io, KnownNat ii,
                    Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
     Seq no io (Seq ni ii a) ->
-    m (Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a)
+    m (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+                                   io GHC.TypeLits.* (ni + ii)) a)
 
 
   -- higher order operators

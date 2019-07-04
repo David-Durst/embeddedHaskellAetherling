@@ -136,7 +136,8 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       KnownNat io, KnownNat ii,
       Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
-    Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a ->
+    Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+                                 io GHC.TypeLits.* (ni + ii)) a ->
     Seq_Shallow_To_Deep_Env (Seq no io (Seq ni ii a))
   partitionC proxyNO proxyNI x = add_to_DAG
     (PartitionN no_val ni_val io_val ii_val (get_AST_type (Proxy :: Proxy a)))
@@ -147,13 +148,48 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
       io_val = fromInteger $ natVal (Proxy :: Proxy io)
       ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
 
+  partitionC' :: forall no ni io ii a .
+    (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+      KnownNat io, KnownNat ii,
+      Aetherling_Value a) =>
+    Proxy no -> Proxy ni -> Proxy ii ->
+    Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+                                 io GHC.TypeLits.* (ni + ii)) a ->
+    Seq_Shallow_To_Deep_Env (Seq no io (Seq ni ii a))
+  partitionC' proxyNO proxyNI proxyII x = add_to_DAG
+    (PartitionN no_val ni_val io_val ii_val (get_AST_type (Proxy :: Proxy a)))
+    (input_to_maybe_indices x) "partitionC" "Seq"
+    where
+      no_val = fromInteger $ natVal proxyNO
+      ni_val = fromInteger $ natVal proxyNI
+      io_val = fromInteger $ natVal (Proxy :: Proxy io)
+      ii_val = fromInteger $ natVal proxyII
+      
+  partitionC'' :: forall no ni io ii a .
+    (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+      KnownNat io, KnownNat ii,
+      Aetherling_Value a) =>
+    Proxy no -> Proxy ni -> Proxy io -> Proxy ii ->
+    Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+                                 io GHC.TypeLits.* (ni + ii)) a ->
+    Seq_Shallow_To_Deep_Env (Seq no io (Seq ni ii a))
+  partitionC'' proxyNO proxyNI proxyIO proxyII x = add_to_DAG
+    (PartitionN no_val ni_val io_val ii_val (get_AST_type (Proxy :: Proxy a)))
+    (input_to_maybe_indices x) "partitionC" "Seq"
+    where
+      no_val = fromInteger $ natVal proxyNO
+      ni_val = fromInteger $ natVal proxyNI
+      io_val = fromInteger $ natVal proxyIO
+      ii_val = fromInteger $ natVal proxyII
+      
   unpartitionC :: forall no ni io ii a .
     (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
       KnownNat io, KnownNat ii,
       Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
     Seq no io (Seq ni ii a) ->
-    Seq_Shallow_To_Deep_Env (Seq (no GHC.TypeLits.* ni) (io + (no GHC.TypeLits.* ii)) a)
+    Seq_Shallow_To_Deep_Env (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+                                                          io GHC.TypeLits.* (ni + ii)) a)
   unpartitionC proxyNO proxyNI x = add_to_DAG
     (UnpartitionN no_val ni_val io_val ii_val (get_AST_type (Proxy :: Proxy a)))
     (input_to_maybe_indices x) "unpartitionC" "Seq"

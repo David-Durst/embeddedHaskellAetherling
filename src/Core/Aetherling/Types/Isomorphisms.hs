@@ -55,7 +55,7 @@ sseqToTSeq = seqToTSeq . sseqToSeq
 
 instance (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii, KnownNat np,
           np ~ (no GHC.TypeLits.* ni),
-          ip ~ (io + (no GHC.TypeLits.* ii))) =>
+          ip ~ ((no GHC.TypeLits.* ii) + io GHC.TypeLits.* (ni + ii))) =>
   Injective (Seq no io (Seq ni ii a)) (Seq np ip a) where
   to (Seq vecOfSeqs) =
     let
@@ -64,13 +64,13 @@ instance (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii, KnownNat np,
     in Seq flatVec 
 seqOfSeqToSeq :: (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii, KnownNat np,
                   np ~ (no GHC.TypeLits.* ni),
-                  ip ~ (io + (no GHC.TypeLits.* ii))) =>
+                  ip ~ ((no GHC.TypeLits.* ii) + io GHC.TypeLits.* (ni + ii))) =>
   Seq no io (Seq ni ii a) -> Seq np ip a
 seqOfSeqToSeq = to
   
 instance (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii, KnownNat np,
           np ~ (no GHC.TypeLits.* ni),
-          ip ~ (io + (no GHC.TypeLits.* ii))) =>
+          ip ~ ((no GHC.TypeLits.* ii) + io GHC.TypeLits.* (ni + ii))) =>
   Injective (Seq np ip a) (Seq no io (Seq ni ii a)) where
   to (Seq flatVec) =
     let
@@ -81,18 +81,18 @@ instance (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii, KnownNat np,
     in Seq vecOfSeqs
 seqToSeqOfSeq :: (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii, KnownNat np,
                   np ~ (no GHC.TypeLits.* ni),
-                  ip ~ (io + (no GHC.TypeLits.* ii))) =>
+                  ip ~ ((no GHC.TypeLits.* ii) + io GHC.TypeLits.* (ni + ii))) =>
   Proxy ni -> Proxy ii -> Seq np ip a -> Seq no io (Seq ni ii a)
 seqToSeqOfSeq _ _ = to
 
 instance (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii, KnownNat np,
           np ~ (no GHC.TypeLits.* ni),
-          ip ~ (io + (no GHC.TypeLits.* ii))) =>
+          ip ~ ((no GHC.TypeLits.* ii) + io GHC.TypeLits.* (ni + ii))) =>
   Iso (Seq np ip a) (Seq no io (Seq ni ii a))
 
 instance (KnownNat no, KnownNat ni, KnownNat io, KnownNat ii, KnownNat np,
           np ~ (no GHC.TypeLits.* ni),
-          ip ~ (io + (no GHC.TypeLits.* ii))) =>
+          ip ~ ((no GHC.TypeLits.* ii) + io GHC.TypeLits.* (ni + ii))) =>
   Iso (Seq no io (Seq ni ii a)) (Seq np ip a)
 
   
