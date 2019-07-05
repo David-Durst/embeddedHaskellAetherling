@@ -53,7 +53,7 @@ blur_pyramidC in_row in_col in_img = do
   let layer2 = blurC (in_row `div_p` (Proxy @2)) (in_col `div_p` (Proxy @2)) layer1
   blurC (in_row `div_p` (Proxy @4)) (in_col `div_p` (Proxy @4)) layer2
 
-blurC in_row in_col in_img = mapC'' (blur_bwC in_row in_col) in_img
+blurC in_row in_col in_img = mapC (blur_bwC in_row in_col) in_img
 
 blur_bwC in_row in_col in_img = do
   let stencils = stencil_2dC (Proxy @3) (Proxy @3) in_col in_img
@@ -62,16 +62,16 @@ blur_bwC in_row in_col in_img = do
   --let kernels_list = repeat gaussian_kernel
   let kernels_list = replicate (fromInteger $ natVal length_proxy) gaussian_kernel
   --let zipped = map2C length_proxy (map2C (Proxy @9) atom_tupleC)
-  let kernels = const_genC' (Seq $ listToVector length_proxy $ kernels_list) in_img
-  let zipped = map2C'' (map2C'' atom_tupleC') stencils kernels
-  let multiplied = mapC'' (mapC'' mulC) zipped
-  let sumed = mapC'' (reduceC' addC) multiplied
+  let kernels = const_genC (Seq $ listToVector length_proxy $ kernels_list) in_img
+  let zipped = map2C (map2C atom_tupleC) stencils kernels
+  let multiplied = mapC (mapC mulC) zipped
+  let sumed = mapC (reduceC addC) multiplied
   let norms_list = replicate (fromInteger $ natVal length_proxy) norm_consts
-  let normalizers = const_genC' (Seq $ listToVector length_proxy $ norms_list) in_img
-  let zipped_norm = map2C'' (map2C'' atom_tupleC') sumed normalizers
-  let normed = mapC'' (mapC'' divC) zipped_norm
-  let flattened = unpartitionC' normed
-  flattened >>= down_2dC (Proxy @2) (Proxy @2) in_row in_col 0 0
+  let normalizers = const_genC (Seq $ listToVector length_proxy $ norms_list) in_img
+  let zipped_norm = map2C (map2C atom_tupleC) sumed normalizers
+  let normed = mapC (mapC divC) zipped_norm
+  let flattened = unpartitionC normed
+  down_2dC (Proxy @2) (Proxy @2) in_row in_col 0 0 flattened
 
 gaussian_kernel :: Seq 9 0 Atom_Int
 gaussian_kernel = Seq $ listToVector (Proxy @9) $ fmap Atom_Int [1,2,1,2,4,2,1,2,1]
@@ -95,8 +95,8 @@ stencil_2dC window_size_row window_size_col in_col in_img = do
                      [in_img] [0 .. natVal window_size_row - 2]
   let stenciled_seqs = fmap (stencil_1dC window_size_col) shifted_seqs
   let tupled_seqs = zipC window_size_row stenciled_seqs
-  let unflattened_windows = mapC' seq_tuple_to_seqC tupled_seqs
-  mapC'' unpartitionC' unflattened_windows
+  let unflattened_windows = mapC seq_tuple_to_seqC tupled_seqs
+  mapC unpartitionC unflattened_windows
 
 stencil_1dC :: (KnownNat n, KnownNat i, KnownNat w, Sequence_Language m,
                Aetherling_Value a) =>
@@ -107,7 +107,7 @@ stencil_1dC window_size in_seq | (natVal window_size) >= 2 = do
                                (shiftC (Proxy @1) last_shifted_seq) : l)
                      [in_seq] [0 .. natVal window_size - 2]
   let tuple = zipC window_size shifted_seqs
-  mapC' seq_tuple_to_seqC tuple
+  mapC seq_tuple_to_seqC tuple
   --let in_len = seq_length in_seq
   --mapC' in_len seq_tuple_to_seqC tuple
   --undefined
@@ -118,21 +118,20 @@ stencil_1dC window_size in_seq | (natVal window_size) >= 2 = do
 stencil_1dC window_size _ = fail $ printf "window size %d < 2" (natVal window_size)
 
 down_2dC down_row down_col in_row in_col idx_row idx_col =
-  partitionC' out_row (down_row `mul_p` down_col `mul_p` out_col) (Proxy @0) >>>
-  mapC out_row (down_2d_one_rowC down_row down_col out_col idx_row idx_col) >>>
-  unpartitionC out_row out_col
+  partitionC out_row (down_row `mul_p` down_col `mul_p` out_col) (Proxy @0) Proxy >>>
+  mapC' out_row (down_2d_one_rowC down_row down_col out_col idx_row idx_col) >>>
+  unpartitionC' out_row out_col
   where
     out_row = in_row `div_p` down_row
     out_col = in_col `div_p` down_col
 
-
 down_2d_one_rowC down_row down_col out_col idx_row idx_col =
-  partitionC' (down_row `mul_p` out_col) down_col (Proxy @0) >>>
-  (mapC (down_row `mul_p` out_col) (down_1dC down_col idx_col)) >>>
-  unpartitionC (down_row `mul_p` out_col) (Proxy @1) >>>
-  partitionC' down_row out_col (Proxy @0) >>>
-  down_1dC down_row idx_row >>>
-  unpartitionC (Proxy @1) out_col
+  partitionC (down_row `mul_p` out_col) down_col (Proxy @0) Proxy >>>
+  (mapC' (down_row `mul_p` out_col) (down_1dC' down_col idx_col)) >>>
+  unpartitionC' (down_row `mul_p` out_col) (Proxy @1) >>>
+  partitionC down_row out_col (Proxy @0) Proxy >>>
+  down_1dC' down_row idx_row >>>
+  unpartitionC' (Proxy @1) out_col
 
 mul_p :: forall n m . (KnownNat n, KnownNat m) =>
   Proxy n -> Proxy m -> Proxy (n GHC.TypeLits.* m)

@@ -19,41 +19,44 @@ simulate (Simulation_Env a) = a
 
 instance Sequence_Language Simulation_Env where
   -- unary operators
-  idC x = return x
+  idC x = x
 
-  absC (Atom_Int x) = return $ Atom_Int $ abs x
+  absC (Simulation_Env (Atom_Int x)) = return $ Atom_Int $ abs x
   absC _ = fail $ fail_message "absC" "Atom_Int"
   
-  notC (Atom_Bit x) = return $ Atom_Bit $ not x
+  notC (Simulation_Env (Atom_Bit x)) = return $ Atom_Bit $ not x
   notC _ = fail $ fail_message "absC" "Atom_Bit"
 
   -- binary operators
   addC (Simulation_Env (Atom_Tuple (Atom_Int x) (Atom_Int y))) = return $ Atom_Int $ x+y
   addC _ = fail $ fail_message "addC" "Atom_Tuple Atom_Int Atom_Int"
 
+  subC (Simulation_Env (Atom_Tuple (Atom_Int x) (Atom_Int y))) = return $ Atom_Int $ x-y
+  subC _ = fail $ fail_message "addC" "Atom_Tuple Atom_Int Atom_Int"
+  
   mulC (Simulation_Env (Atom_Tuple (Atom_Int x) (Atom_Int y))) = return $ Atom_Int $ x*y
   mulC _ = fail $ fail_message "mulC" "Atom_Tuple Atom_Int Atom_Int"
   
   divC (Simulation_Env (Atom_Tuple (Atom_Int x) (Atom_Int y))) = return $ Atom_Int $ x `div` y
   divC _ = fail $ fail_message "mulC" "Atom_Tuple Atom_Int Atom_Int"
 
-  eqC (Atom_Tuple x y) = return $ Atom_Bit $ x == y 
+  eqC (Simulation_Env (Atom_Tuple x y)) = return $ Atom_Bit $ x == y 
   eqC _ = fail $ fail_message "eqC" "Atom_Tuple"
 
   -- generators
-  lut_genC xs (Atom_Int i) | i < length xs = return $ xs !! i 
-  lut_genC xs (Atom_Int i) = fail "lut lookup index out of bounds"
+  lut_genC xs (Simulation_Env (Atom_Int i)) | i < length xs = return $ xs !! i 
+  lut_genC xs (Simulation_Env (Atom_Int i)) = fail "lut lookup index out of bounds"
   lut_genC _ _ = fail $ fail_message "lut_genC" "Atom_Int"
 
-  const_genC x = return x
-  
-  const_genC' x _ = return x
+  const_genC x _ = return x
 
   -- sequence operators
-  shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
+  shiftC shift_amount_proxy input_vec = shiftC' Proxy shift_amount_proxy input_vec
+  
+  shiftC' :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
                              Aetherling_Value a) =>
-    Proxy r -> Simulation_Env (Seq (n+r) i a) -> Simulation_Env (Seq (n+r) i a)
-  shiftC shift_amount_proxy input_vec =
+    Proxy (n+r) -> Proxy r -> Simulation_Env (Seq (n+r) i a) -> Simulation_Env (Seq (n+r) i a)
+  shiftC' _ shift_amount_proxy input_vec =
     -- put the last r elements at the start, since undefined what is there.
     return $ Seq $ dropped_elements V.++ kept_elements
     where
@@ -61,55 +64,39 @@ instance Sequence_Language Simulation_Env where
       input_vec_val = sVec $ simulate input_vec
       kept_elements = V.take' kept_length_proxy input_vec_val
       dropped_elements = V.drop' kept_length_proxy input_vec_val
-  
-  up_1dC proxyN (Seq elem) = return $ Seq $
+      
+  up_1dC proxyN (Simulation_Env (Seq elem)) = return $ Seq $
     V.replicate' proxyN $ V.head elem
   up_1dC _ _ = fail $ fail_message "up_1dC" "Seq"
 
-  down_1dC proxyN sel_idx (Seq vec) = return $ Seq $
+  down_1dC sel_idx input = down_1dC' Proxy sel_idx input
+  
+  down_1dC' proxyN sel_idx (Simulation_Env (Seq vec)) = return $ Seq $
     V.replicate' (Proxy @1) $ (V.toList vec !! sel_idx)
-  down_1dC _ _ _ = fail $ fail_message "down_1dC" "Seq"
+  down_1dC' _ _ _ = fail $ fail_message "down_1dC" "Seq"
 
-  partitionC :: forall no ni io ii a .
-    (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-      KnownNat io, KnownNat ii,
-      Aetherling_Value a) =>
-    Proxy no -> Proxy ni ->
-    Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
-                                io GHC.TypeLits.* (ni + ii)) a ->
-    Simulation_Env (Seq no io (Seq ni ii a))
-  partitionC _ proxy_ni unnested_seq =
-    return $ seqToSeqOfSeq proxy_ni (Proxy :: Proxy ii) unnested_seq
-
-  partitionC' _ proxy_ni proxy_ii unnested_seq =
-    return $ seqToSeqOfSeq proxy_ni proxy_ii unnested_seq
-    
-  partitionC'' _ proxy_ni _ proxy_ii unnested_seq =
+  partitionC _ proxy_ni _ proxy_ii (Simulation_Env unnested_seq) =
     return $ seqToSeqOfSeq proxy_ni proxy_ii unnested_seq
 
-  unpartitionC _ _ unflattened_seq =
+  unpartitionC (Simulation_Env unflattened_seq) =
     return $ seqOfSeqToSeq unflattened_seq
 
-  unpartitionC' (Simulation_Env unflattened_seq) =
+  unpartitionC' _ _ (Simulation_Env unflattened_seq) =
     return $ seqOfSeqToSeq unflattened_seq
 
   -- higher order operators
-  mapC _ f input = mapM f input
-  mapC' f input = do
+  mapC f input = mapC' Proxy f input
+
+  mapC' _ f input = do
+    let f_unwrapped_ags input_inner = do
+          let input_inner_unwrapped = Simulation_Env input_inner
+          f input_inner_unwrapped
     input_val <- input
-    mapM f input_val
+    traverse f_unwrapped_ags input_val
 
-  mapC'' f (Simulation_Env input) = do
-    let f_unrwapped_args i_val = do
-          let i_m = Simulation_Env i_val
-          f i_m
-    traverse f_unrwapped_args input
-    
-  map2C _ f input = traverse2 f input
-  
-  map2C' f input = traverse2 f input
+  map2C f input1 input2 = map2C' Proxy f input1 input2
 
-  map2C'' f input1 input2 = do
+  map2C' _ f input1 input2 = do
     let f_unrwapped_args i1_val i2_val = do
           let i1 = Simulation_Env i1_val
           let i2 = Simulation_Env i2_val
@@ -117,42 +104,32 @@ instance Sequence_Language Simulation_Env where
     input1_val <- input1
     input2_val <- input2
     traverse2 f_unrwapped_args input1_val input2_val
-    --traverse2 f input
-  
-  reduceC _ f (Simulation_Env (Seq input_vec)) = do
-    let f_unrwapped_args i_val = do
-          let i_m = Simulation_Env i_val
-          f i_m
-    fmap (\out_el -> Seq $ V.singleton out_el) $
-      V.fold1M (\x y -> f_unrwapped_args (Atom_Tuple x y)) input_vec
-  reduceC _ _ _ = fail $ fail_message "reduceC" "Seq"
-  
-  reduceC' f (Simulation_Env (Seq input_vec)) = do
-    let f_unrwapped_args i_val = do
-          let i_m = Simulation_Env i_val
-          f i_m
-    fmap (\out_el -> Seq $ V.singleton out_el) $
-      V.fold1M (\x y -> f_unrwapped_args (Atom_Tuple x y)) input_vec
-  reduceC' _ _ = fail $ fail_message "reduceC" "Seq"
 
-  -- tuple operations
-  fstC (Atom_Tuple x _) = return x
+  reduceC f input = reduceC' Proxy f input
+  
+  reduceC' _ f (Simulation_Env (Seq input_vec)) = do
+    let f_unrwapped_args i_val = do
+          let i_m = Simulation_Env i_val
+          f i_m
+    fmap (\out_el -> Seq $ V.singleton out_el) $
+      V.fold1M (\x y -> f_unrwapped_args (Atom_Tuple x y)) input_vec
+  reduceC' _ _ _ = fail $ fail_message "reduceC" "Seq"
+  fstC (Simulation_Env (Atom_Tuple x _)) = return x
   fstC _ = fail $ fail_message "fstC" "Atom_Tuple"
 
-  sndC (Atom_Tuple _ y) = return y
+  sndC (Simulation_Env (Atom_Tuple _ y)) = return y
   sndC _ = fail $ fail_message "sndC" "Atom_Tuple"
-
-  atom_tupleC x y = return $ Atom_Tuple x y
   
-  atom_tupleC' x y = do
+  atom_tupleC x y = do
     x_val <- x
     y_val <- y
     return $ Atom_Tuple x_val y_val
-
-  seq_tupleC x y = return $ Seq_Tuple (listToVector (Proxy @2) [x, y])
-  
-  seq_tupleC' x y = return $ Seq_Tuple (listToVector (Proxy @2) [x, y])
-  
+    
+  seq_tupleC x y = do
+    x_val <- x
+    y_val <- y
+    return $ Seq_Tuple (listToVector (Proxy @2) [x_val, y_val])
+    
   zipC :: forall n i a l . (Aetherling_Value (Seq n i a), KnownNat l, KnownNat n) =>
     Proxy l -> [Simulation_Env (Seq n i a)] -> Simulation_Env (Seq n i (Seq_Tuple l a))
   zipC proxyL xs | length xs == (fromInteger $ natVal proxyL) = do
@@ -160,26 +137,24 @@ instance Sequence_Language Simulation_Env where
     let xs_lists = fmap (V.toList . sVec) xs_vals
     let zipped_lists = transpose xs_lists
     return $ Seq $ listToVector proxyN $ fmap (Seq_Tuple . listToVector proxyL) zipped_lists
-    -- return $ Seq_Tuple (listToVector proxyL (fmap simulate xs))
     where
       proxyN = Proxy :: Proxy n
   zipC proxyL xs = fail $
     printf "zipC where length proxy %d doesn't match length of input %d"
     (natVal proxyL) (length xs)
 
-  seq_tuple_appendC (Seq_Tuple input_vec) x = return $ Seq_Tuple $ V.snoc input_vec x
+  seq_tuple_appendC (Simulation_Env (Seq_Tuple input_vec)) (Simulation_Env x) =
+    return $ Seq_Tuple $ V.snoc input_vec x
   seq_tuple_appendC _ _ = fail $ fail_message "seq_tuple_appendC" "Seq_Tuple"
 
-  seq_tuple_to_seqC (Seq_Tuple input_vec) = return $ Seq input_vec
+  seq_tuple_to_seqC (Simulation_Env (Seq_Tuple input_vec)) = return $ Seq input_vec
   seq_tuple_to_seqC _ = fail $ fail_message "seq_tuple_to_seqC" "Seq_Tuple"
   
-  seq_to_seq_tupleC (Seq input_vec) = return $ Seq_Tuple input_vec
+  seq_to_seq_tupleC (Simulation_Env (Seq input_vec)) = return $ Seq_Tuple input_vec
   seq_to_seq_tupleC _ = fail $ fail_message "seq_to_seq_tupleC" "Seq"
-
+  
   -- composition operators
-  (>>>) f g x = f x >>= g
-
-  add_monadC _ f (Simulation_Env x) = f x
+  (>>>) f g = g . f
 
 fail_message fName tName = fName ++ " must receive " ++ tName ++
   "not " ++ tName ++ "_Wires or " ++ tName ++ "_Resources."
@@ -220,6 +195,7 @@ seq_to_list (Seq vec) = V.toList vec
 
 atom_int_to_int :: Atom_Int -> Int
 atom_int_to_int (Atom_Int x) = x
+
 atom_bit_to_bool :: Atom_Bit -> Bool
 atom_bit_to_bool (Atom_Bit b) = b
 
