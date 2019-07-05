@@ -143,48 +143,135 @@ class Monad m => Sequence_Language m where
   -- composition operators
   (>>>) :: (m a -> m b) -> (m b -> m c) -> (m a -> m c)
 
-type Seq_DAG = DAG Sequence_Language_AST
-
-data Sequence_Language_AST =
-  IdN
-  | AbsN
-  | NotN
-  | AddN
-  | EqN {t :: AST_Type}
+data Seq_Expr =
+  IdN {seq_id :: DAG_Index, seq_in :: Seq_Expr}
+  | AbsN {seq_id :: DAG_Index, seq_in :: Seq_Expr}
+  | NotN {seq_id :: DAG_Index, seq_in :: Seq_Expr}
+  | AddN {seq_id :: DAG_Index, seq_in :: Seq_Expr}
+  | EqN {t :: AST_Type, seq_id :: DAG_Index, seq_in :: Seq_Expr}
 
   -- generators
-  | Lut_GenN {lookup_table :: [AST_Value], lookup_types :: AST_Type}
-  | Const_GenN {constant :: AST_Value, constant_type :: AST_Type}
+  | Lut_GenN {
+      lookup_table :: [AST_Value],
+      lookup_types :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
+      }
+  | Const_GenN {
+      constant :: AST_Value,
+      constant_type :: AST_Type,
+      seq_id :: DAG_Index
+      }
 
   -- sequence operators
-  | ShiftN {n :: Int, i :: Int, shift_amount :: Int, elem_t :: AST_Type}
-  | Up_1dN {n :: Int, i :: Int, elem_t :: AST_Type}
-  | Down_1dN {n :: Int, i :: Int, sel_idx :: Int, elem_t :: AST_Type}
+  | ShiftN {
+      n :: Int,
+      i :: Int,
+      shift_amount :: Int,
+      elem_t :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
+      }
+  | Up_1dN {
+      n :: Int,
+      i :: Int,
+      elem_t :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
+      }
+  | Down_1dN {
+      n :: Int,
+      i :: Int,
+      sel_idx :: Int,
+      elem_t :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
+      }
   | PartitionN {
       no :: Int,
       ni :: Int,
       io :: Int,
       ii :: Int,
-      t :: AST_Type
+      t :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
       }
   | UnpartitionN {
       no :: Int,
       ni :: Int,
       io :: Int,
       ii :: Int,
-      t :: AST_Type
+      t :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
       }
 
   -- higher order operators
-  | MapN {n :: Int, i :: Int, f :: Seq_DAG}
-  | Map2N {n :: Int, i :: Int, f :: Seq_DAG}
-  | ReduceN {n :: Int, i :: Int, f :: Seq_DAG}
-  | FstN {t0 :: AST_Type, t1 :: AST_Type}
-  | SndN {t0 :: AST_Type, t1 :: AST_Type}
-  | ATupleN {t0 :: AST_Type, t1 :: AST_Type}
-  | STupleN {tuple_elem_t :: AST_Type}
-  | STupleAppendN {out_len :: Int, tuple_elem_t :: AST_Type}
-  | STupleToSeqN {tuple_len :: Int, tuple_elem_t :: AST_Type}
-  | SeqToSTupleN {tuple_len :: Int, tuple_elem_t :: AST_Type}
-  | InputN {t :: AST_Type}
+  | MapN {
+      n :: Int,
+      i :: Int,
+      f :: Seq_Expr,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
+      }
+  | Map2N {
+      n :: Int,
+      i :: Int,
+      f :: Seq_Expr,
+      seq_id :: DAG_Index,
+      seq_in_left :: Seq_Expr,
+      seq_in_right :: Seq_Expr
+      }
+  | ReduceN {
+      n :: Int,
+      i :: Int,
+      f :: Seq_Expr,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
+      }
+  | FstN {
+      t0 :: AST_Type,
+      t1 :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
+      }
+  | SndN {
+      t0 :: AST_Type,
+      t1 :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
+      }
+  | ATupleN {
+      t0 :: AST_Type,
+      t1 :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in_left :: Seq_Expr,
+      seq_in_right :: Seq_Expr
+      }
+  | STupleN {
+      tuple_elem_t :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in_left :: Seq_Expr,
+      seq_in_right :: Seq_Expr
+      }
+  | STupleAppendN {
+      out_len :: Int,
+      tuple_elem_t :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in_left :: Seq_Expr,
+      seq_in_right :: Seq_Expr
+      }
+  | STupleToSeqN {
+      tuple_len :: Int,
+      tuple_elem_t :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
+      }
+  | SeqToSTupleN {
+      tuple_len :: Int,
+      tuple_elem_t :: AST_Type,
+      seq_id :: DAG_Index,
+      seq_in :: Seq_Expr
+      }
+  | InputN {t :: AST_Type, seq_id :: DAG_Index}
   deriving (Show, Eq)
