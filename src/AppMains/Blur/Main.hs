@@ -36,17 +36,6 @@ main = do
   let result_img_pyramid = Pixels (result_pyramid_list !! 0) (result_pyramid_list !! 1)
                    (result_pyramid_list !! 2) (192 `div` 8) (320 `div` 8)
   ints_to_image "blurred_pyramid_HalideParrot.png" result_img_pyramid
-  --putStrLn "hi"
-
-example_image :: Simulation_Env (Seq 64 0 Atom_Int)
-example_image = sim_input_seq $
-  fmap Atom_Int [0..63]
-
-example_image_seq :: Seq 64 0 Atom_Int
-example_image_seq = Seq $ listToVector (Proxy @64) $ fmap Atom_Int [0..63]
-  
-example_rows_seq :: Seq 16 0 Atom_Int
-example_rows_seq = Seq $ listToVector (Proxy @16) $ fmap Atom_Int [0..15]
 
 blur_pyramidC in_row in_col in_img = do
   let layer1 = blurC in_row in_col in_img
@@ -58,10 +47,7 @@ blurC in_row in_col in_img = mapC (blur_bwC in_row in_col) in_img
 blur_bwC in_row in_col in_img = do
   let stencils = stencil_2dC (Proxy @3) (Proxy @3) in_col in_img
   let length_proxy = in_row `mul_p` in_col
-  --let length_num :: Int = fromInteger $ natVal length_proxy
-  --let kernels_list = repeat gaussian_kernel
   let kernels_list = replicate (fromInteger $ natVal length_proxy) gaussian_kernel
-  --let zipped = map2C length_proxy (map2C (Proxy @9) atom_tupleC)
   let kernels = const_genC (Seq $ listToVector length_proxy $ kernels_list) in_img
   let zipped = map2C (map2C atom_tupleC) stencils kernels
   let multiplied = mapC (mapC mulC) zipped
@@ -78,16 +64,6 @@ gaussian_kernel = Seq $ listToVector (Proxy @9) $ fmap Atom_Int [1,2,1,2,4,2,1,2
 
 norm_consts :: Seq 1 8 Atom_Int
 norm_consts = Seq $ listToVector (Proxy @1) [Atom_Int 16]
-{-
-stencil_2d_cpu :: Int -> Int -> [Int] -> [[Int]]
-stencil_2d_cpu window_size_row window_size_col in_row in_col in_img = do
-  let partitioned = splitEvery in_col in_img
-  let indices = [[(r+)] | r <- [0 .. in_row - 1],
-                  c <- [0 .. in_col - 1],
-                  w_r <- [0 .. window_size_row],
-                  w_c <- []]
-  undefined
--}
 
 stencil_2dC window_size_row window_size_col in_col in_img = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
@@ -108,13 +84,7 @@ stencil_1dC window_size in_seq | (natVal window_size) >= 2 = do
                      [in_seq] [0 .. natVal window_size - 2]
   let tuple = zipC window_size shifted_seqs
   mapC seq_tuple_to_seqC tuple
-  --let in_len = seq_length in_seq
-  --mapC' in_len seq_tuple_to_seqC tuple
-  --undefined
-                     {-
-  tuple <- zipC window_size $ reverse shifted_seqs
-  mapC in_len seq_tuple_to_seqC tuple
--}
+  
 stencil_1dC window_size _ = fail $ printf "window size %d < 2" (natVal window_size)
 
 down_2dC down_row down_col in_row in_col idx_row idx_col =
@@ -140,3 +110,13 @@ mul_p _ _ = Proxy :: Proxy (n GHC.TypeLits.* m)
 div_p :: forall n m . (KnownNat n, KnownNat m) =>
   Proxy n -> Proxy m -> Proxy (GHC.TypeLits.Div n m)
 div_p _ _ = Proxy :: Proxy (GHC.TypeLits.Div n m)
+
+example_image :: Simulation_Env (Seq 64 0 Atom_Int)
+example_image = sim_input_seq $
+  fmap Atom_Int [0..63]
+
+example_image_seq :: Seq 64 0 Atom_Int
+example_image_seq = Seq $ listToVector (Proxy @64) $ fmap Atom_Int [0..63]
+  
+example_rows_seq :: Seq 16 0 Atom_Int
+example_rows_seq = Seq $ listToVector (Proxy @16) $ fmap Atom_Int [0..15]
