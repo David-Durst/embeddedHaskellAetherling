@@ -59,7 +59,7 @@ blur_bwC in_row in_col in_img = do
   let norms_list = replicate (fromInteger $ natVal length_proxy) norm_consts
   let normalizers = const_genC' (Seq $ listToVector length_proxy $ norms_list) in_img
   let zipped_norm = map2C'' (map2C'' atom_tupleC') sumed normalizers
-  let normed = mapC'' (mapC'' addC) zipped_norm
+  let normed = mapC'' (mapC'' divC) zipped_norm
   let flattened = unpartitionC' normed
   flattened >>= down_2dC (Proxy @2) (Proxy @2) in_row in_col 0 0
 
