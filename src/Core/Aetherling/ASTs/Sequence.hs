@@ -175,6 +175,8 @@ class Monad m => Sequence_Language m where
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
 
+  add_monadC :: m a -> (b -> m c) -> m b -> m c
+
 type Seq_DAG = DAG Sequence_Language_AST
 
 data Sequence_Language_AST =

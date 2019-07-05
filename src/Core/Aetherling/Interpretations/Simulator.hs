@@ -126,6 +126,14 @@ instance Sequence_Language Simulation_Env where
     fmap (\out_el -> Seq $ V.singleton out_el) $
       V.fold1M (\x y -> f_unrwapped_args (Atom_Tuple x y)) input_vec
   reduceC _ _ _ = fail $ fail_message "reduceC" "Seq"
+  
+  reduceC' f (Simulation_Env (Seq input_vec)) = do
+    let f_unrwapped_args i_val = do
+          let i_m = Simulation_Env i_val
+          f i_m
+    fmap (\out_el -> Seq $ V.singleton out_el) $
+      V.fold1M (\x y -> f_unrwapped_args (Atom_Tuple x y)) input_vec
+  reduceC' _ _ = fail $ fail_message "reduceC" "Seq"
 
   -- tuple operations
   fstC (Atom_Tuple x _) = return x
@@ -135,8 +143,15 @@ instance Sequence_Language Simulation_Env where
   sndC _ = fail $ fail_message "sndC" "Atom_Tuple"
 
   atom_tupleC x y = return $ Atom_Tuple x y
+  
+  atom_tupleC' x y = do
+    x_val <- x
+    y_val <- y
+    return $ Atom_Tuple x_val y_val
 
   seq_tupleC x y = return $ Seq_Tuple (listToVector (Proxy @2) [x, y])
+  
+  seq_tupleC' x y = return $ Seq_Tuple (listToVector (Proxy @2) [x, y])
   
   zipC :: forall n i a l . (Aetherling_Value (Seq n i a), KnownNat l, KnownNat n) =>
     Proxy l -> [Simulation_Env (Seq n i a)] -> Simulation_Env (Seq n i (Seq_Tuple l a))
@@ -163,6 +178,8 @@ instance Sequence_Language Simulation_Env where
 
   -- composition operators
   (>>>) f g x = f x >>= g
+
+  add_monadC _ f (Simulation_Env x) = f x
 
 fail_message fName tName = fName ++ " must receive " ++ tName ++
   "not " ++ tName ++ "_Wires or " ++ tName ++ "_Resources."
@@ -194,3 +211,15 @@ sim_input_seq input_list
   where
     n_proxy = Proxy :: Proxy n
     n_val = fromInteger $ natVal n_proxy
+sim_input_seq' proxyN input_list
+  | length input_list == (fromInteger $ natVal proxyN) = return $ Seq $ listToVector proxyN input_list
+  | otherwise = fail $ "tried to create Seq from list of incorrect size"
+
+seq_to_list :: Seq n i a -> [a]
+seq_to_list (Seq vec) = V.toList vec
+
+atom_int_to_int :: Atom_Int -> Int
+atom_int_to_int (Atom_Int x) = x
+atom_bit_to_bool :: Atom_Bit -> Bool
+atom_bit_to_bool (Atom_Bit b) = b
+

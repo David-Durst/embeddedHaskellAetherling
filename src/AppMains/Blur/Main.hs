@@ -11,9 +11,27 @@ import Aetherling.Types.Isomorphisms
 import Text.Printf
 import Control.Monad
 import qualified Data.Vector.Sized as V
+import System.Environment   
+import Data.List
+import Aetherling.Image_Helper
   
 main = do
-  putStrLn "hi"
+  args <- getArgs
+  img <- load_image_as_ints (head args)
+  let img_width = Proxy @192
+  let img_height = Proxy @320
+  let img_size = img_width `mul_p` img_height
+  let sim_data :: Simulation_Env (Seq 3 0 (Seq (192 GHC.TypeLits.* 320) 0 Atom_Int)) = sim_input_seq' (Proxy @3) [
+        Seq $ listToVector img_size $ fmap Atom_Int $ r_px img,
+        Seq $ listToVector img_size $ fmap Atom_Int $ g_px img,
+        Seq $ listToVector img_size $ fmap Atom_Int $ b_px img
+        ]
+  let result = simulate (blurC img_height img_width sim_data)
+  let result_list = fmap (fmap atom_int_to_int) $ fmap seq_to_list $ seq_to_list result
+  let result_img = Pixels (result_list !! 0) (result_list !! 1)
+                   (result_list !! 2) (192 `div` 2) (320 `div` 2)
+  ints_to_image "blurred_HalideParrot.png" result_img
+  --putStrLn "hi"
 
 example_image :: Simulation_Env (Seq 64 0 Atom_Int)
 example_image = sim_input_seq $
@@ -25,7 +43,9 @@ example_image_seq = Seq $ listToVector (Proxy @64) $ fmap Atom_Int [0..63]
 example_rows_seq :: Seq 16 0 Atom_Int
 example_rows_seq = Seq $ listToVector (Proxy @16) $ fmap Atom_Int [0..15]
 
-blurC in_row in_col in_img = do
+blurC in_row in_col in_img = mapC'' (blur_bwC in_row in_col) in_img
+
+blur_bwC in_row in_col in_img = do
   let stencils = stencil_2dC (Proxy @3) (Proxy @3) in_col in_img
   let length_proxy = in_row `mul_p` in_col
   --let length_num :: Int = fromInteger $ natVal length_proxy
@@ -41,14 +61,23 @@ blurC in_row in_col in_img = do
   let zipped_norm = map2C'' (map2C'' atom_tupleC') sumed normalizers
   let normed = mapC'' (mapC'' addC) zipped_norm
   let flattened = unpartitionC' normed
-  --down_2dC (Proxy @2) (Proxy @2) in_row in_col 0 0 in_img_val
-  undefined
+  flattened >>= down_2dC (Proxy @2) (Proxy @2) in_row in_col 0 0
 
 gaussian_kernel :: Seq 9 0 Atom_Int
 gaussian_kernel = Seq $ listToVector (Proxy @9) $ fmap Atom_Int [1,2,1,2,4,2,1,2,1]
 
 norm_consts :: Seq 1 8 Atom_Int
-norm_consts = Seq $ listToVector (Proxy @1) [Atom_Int 1]
+norm_consts = Seq $ listToVector (Proxy @1) [Atom_Int 16]
+{-
+stencil_2d_cpu :: Int -> Int -> [Int] -> [[Int]]
+stencil_2d_cpu window_size_row window_size_col in_row in_col in_img = do
+  let partitioned = splitEvery in_col in_img
+  let indices = [[(r+)] | r <- [0 .. in_row - 1],
+                  c <- [0 .. in_col - 1],
+                  w_r <- [0 .. window_size_row],
+                  w_c <- []]
+  undefined
+-}
 
 stencil_2dC window_size_row window_size_col in_col in_img = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
@@ -79,7 +108,7 @@ stencil_1dC window_size in_seq | (natVal window_size) >= 2 = do
 stencil_1dC window_size _ = fail $ printf "window size %d < 2" (natVal window_size)
 
 down_2dC down_row down_col in_row in_col idx_row idx_col =
-  partitionC out_row (down_row `mul_p` down_col `mul_p` out_col) >>>
+  partitionC' out_row (down_row `mul_p` down_col `mul_p` out_col) (Proxy @0) >>>
   mapC out_row (down_2d_one_rowC down_row down_col out_col idx_row idx_col) >>>
   unpartitionC out_row out_col
   where
@@ -88,7 +117,7 @@ down_2dC down_row down_col in_row in_col idx_row idx_col =
 
 
 down_2d_one_rowC down_row down_col out_col idx_row idx_col =
-  partitionC (down_row `mul_p` out_col) down_col >>>
+  partitionC' (down_row `mul_p` out_col) down_col (Proxy @0) >>>
   (mapC (down_row `mul_p` out_col) (down_1dC down_col idx_col)) >>>
   unpartitionC (down_row `mul_p` out_col) (Proxy @1) >>>
   partitionC' down_row out_col (Proxy @0) >>>
