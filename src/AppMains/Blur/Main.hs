@@ -31,6 +31,11 @@ main = do
   let result_img = Pixels (result_list !! 0) (result_list !! 1)
                    (result_list !! 2) (192 `div` 2) (320 `div` 2)
   ints_to_image "blurred_HalideParrot.png" result_img
+  let result_pyramid = simulate (blur_pyramidC img_height img_width sim_data)
+  let result_pyramid_list = fmap (fmap atom_int_to_int) $ fmap seq_to_list $ seq_to_list result_pyramid
+  let result_img_pyramid = Pixels (result_pyramid_list !! 0) (result_pyramid_list !! 1)
+                   (result_pyramid_list !! 2) (192 `div` 8) (320 `div` 8)
+  ints_to_image "blurred_pyramid_HalideParrot.png" result_img_pyramid
   --putStrLn "hi"
 
 example_image :: Simulation_Env (Seq 64 0 Atom_Int)
@@ -42,6 +47,11 @@ example_image_seq = Seq $ listToVector (Proxy @64) $ fmap Atom_Int [0..63]
   
 example_rows_seq :: Seq 16 0 Atom_Int
 example_rows_seq = Seq $ listToVector (Proxy @16) $ fmap Atom_Int [0..15]
+
+blur_pyramidC in_row in_col in_img = do
+  let layer1 = blurC in_row in_col in_img
+  let layer2 = blurC (in_row `div_p` (Proxy @2)) (in_col `div_p` (Proxy @2)) layer1
+  blurC (in_row `div_p` (Proxy @4)) (in_col `div_p` (Proxy @4)) layer2
 
 blurC in_row in_col in_img = mapC'' (blur_bwC in_row in_col) in_img
 
