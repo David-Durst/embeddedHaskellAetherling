@@ -2,6 +2,7 @@ module Aetherling.Types.Declarations where
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Vector.Sized as V
+import Data.Map.Lazy as M
 import Data.Proxy
 import GHC.Exts (Constraint)
 
@@ -23,7 +24,7 @@ data DAG_Edge = DAG_Edge {source :: DAG_Index, sink :: DAG_Index}
   deriving (Show, Eq)
 
 data DAG a = DAG {
-  nodes :: [[a]], -- each outer list is for a different rewrite iteration
+  nodes :: M.Map DAG_Index a, -- each outer list is for a different rewrite iteration
   edges :: [DAG_Edge]
   } deriving (Show, Eq)
 

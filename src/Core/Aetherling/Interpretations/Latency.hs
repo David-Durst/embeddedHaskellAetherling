@@ -1,7 +1,7 @@
 module Aetherling.Interpretations.Latency where
 import Aetherling.ASTs.Space_Time
 import Aetherling.Types.Declarations
-
+{-
 get_latency :: ST_DAG -> Int
 -- since each node must take same total time, just take head
 get_latency (DAG (hd_node : _) _) = get_node_latency $ head hd_node
@@ -34,3 +34,5 @@ get_node_latency (Map2_tN n v f) = v + n * get_latency f
 get_node_latency (FstN _ _) = 1
 get_node_latency (SndN _ _) = 1
 get_node_latency (InputN _) = 1
+
+-}

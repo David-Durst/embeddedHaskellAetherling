@@ -5,7 +5,7 @@ import Aetherling.Types.Functions
 import Aetherling.Interpretations.Monad_Helpers
 import Control.Monad.Except
 import Control.Monad.Identity
-
+{-
 estimate_resources :: ST_DAG -> Either String Resources_Data
 estimate_resources dag =
   runIdentity $ runExceptT $ foldM estimate_resourcesM empty_resources all_nodes
@@ -145,3 +145,5 @@ estimate_resourcesM r (FstN _ _) = return r
 estimate_resourcesM r (SndN _ _) = return r
 
 estimate_resourcesM r (InputN _) = return r
+
+-}

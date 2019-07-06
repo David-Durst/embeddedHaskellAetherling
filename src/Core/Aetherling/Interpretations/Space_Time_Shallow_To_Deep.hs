@@ -14,7 +14,7 @@ import GHC.TypeLits
 import Unsafe.Coerce
 import qualified Data.Vector.Sized as V
 import Util
-
+{-
 get_deep_dag :: ST_Shallow_To_Deep_Env a -> Either String DAG_Builder
 get_deep_dag shallow_embedding =
   runIdentity $ runExceptT $ execStateT shallow_embedding empty_dag
@@ -448,3 +448,4 @@ sym_input_tseq = add_to_DAG (InputN seq_type) (Just []) "sym_input_tuple" ""
     n_val = fromInteger $ natVal (Proxy :: Proxy n)
     i_val = fromInteger $ natVal (Proxy :: Proxy i)
     seq_type = TSeqT n_val i_val (get_AST_type a_proxy)
+-}

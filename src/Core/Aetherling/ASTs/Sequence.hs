@@ -274,4 +274,5 @@ data Seq_Expr =
       seq_in :: Seq_Expr
       }
   | InputN {t :: AST_Type, seq_id :: DAG_Index}
+  | ErrorN
   deriving (Show, Eq)

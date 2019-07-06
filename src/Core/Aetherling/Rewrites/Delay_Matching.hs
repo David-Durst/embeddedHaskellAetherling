@@ -1,4 +1,5 @@
 module Aetherling.Rewrites.Delay_Matching where
+{-
 import Aetherling.ASTs.Space_Time
 import Aetherling.Types.Declarations
 import Aetherling.Helpers.DAG_Helpers
@@ -190,4 +191,5 @@ get_node_clock_sig next_index cur_delay (Down_1d_tN n v t) =
     Shift_s n init :: SSeq n t -> SSeq n t :c: type_clock_signature(t) -> type_clock_signature(t)
     Shift_t n init :: TSeq n v t -> TSeq n v t :c: type_clock_signature(TSeq n v t) -> type_clock_signature(TSeq n v t)
 
+-}
 -}

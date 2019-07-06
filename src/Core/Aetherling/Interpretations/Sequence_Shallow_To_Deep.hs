@@ -12,21 +12,27 @@ import Data.Maybe
 import Control.Applicative
 import GHC.TypeLits
 import Unsafe.Coerce
+import Data.Either
 import qualified Data.Vector.Sized as V
+import qualified Data.Map.Lazy as M
 import Util
-{-
-get_deep_dag :: Seq_Shallow_To_Deep_Env a -> Either String DAG_Builder
+
+data Compilation_State = Compilation_State {
+  index_to_seq_map :: M.Map DAG_Index Seq_Expr,
+  cur_DAG_index :: DAG_Index
+  } deriving (Show, Eq)
+
+type Seq_Shallow_To_Deep_Env = StateT Compilation_State (ExceptT String Identity)
+
+get_deep_dag :: Seq_Shallow_To_Deep_Env a -> Either String Compilation_State
 get_deep_dag shallow_embedding =
   runIdentity $ runExceptT $ execStateT shallow_embedding empty_dag
 
-empty_dag = DAG_Builder (DAG [] []) first_DAG_index
+empty_dag = Compilation_State M.empty first_DAG_index
 
-data DAG_Builder = DAG_Builder {
-  get_builder_dag :: Seq_DAG,
-  next_DAG_index :: DAG_Index
-  } deriving (Show, Eq)
+{-
 
-type Seq_Shallow_To_Deep_Env = StateT DAG_Builder (ExceptT String Identity)
+
 
 add_to_DAG :: (Aetherling_Value a) =>
   Sequence_Language_AST -> Maybe [DAG_Index] -> String -> String ->
@@ -42,7 +48,7 @@ add_to_DAG new_node input_indices_maybe node_name args_name = do
     -- since this is first time through, no rewrites, don't have to worry about
     -- rewritten nodes. So just take first list in nodes
     let old_nodes = head $ nodes $ get_builder_dag prior_DAG
-    let new_DAG = DAG_Builder
+    let new_DAG = Compilation_State
           (DAG ([old_nodes ++ [new_node]]) (old_edges ++ new_edges))
           (increment_DAG_index $ next_DAG_index prior_DAG)
     put new_DAG
@@ -53,10 +59,60 @@ add_to_DAG new_node input_indices_maybe node_name args_name = do
 input_to_maybe_indices :: (Aetherling_Value a) =>
   a -> Maybe [DAG_Index]
 input_to_maybe_indices input = traverse convert_ae_value_to_index [input]
+-}
+
+add_unary_expr_to_state :: (Aetherling_Value a, Aetherling_Value b) =>
+  (DAG_Index -> Seq_Expr -> Seq_Expr) -> Seq_Shallow_To_Deep_Env a -> String -> String ->
+  Seq_Shallow_To_Deep_Env b
+add_unary_expr_to_state new_expr_producer arg node_name args_name = do
+  let cur_state = get_deep_dag arg
+  if isLeft cur_state then do
+    -- if there was already an error, propagate it
+    throwError $ fromLeft "" cur_state
+    else do
+    let valid_state = fromRight empty_dag cur_state
+    arg_unwrapped <- arg
+    let arg_maybe = convert_ae_value_to_index arg_unwrapped
+    if isNothing arg_maybe then do
+      -- if the current input can't be converted to an edge, throw an error
+      throwError $ fail_message_edge node_name args_name
+      else do
+      let arg_index = fromJust undefined arg_maybe
+      -- now have non-error state and valid input, generate output
+      let cur_map = index_to_seq_map valid_state
+      let arg_val = cur_map M.! arg_index
+      let cur_index = cur_DAG_index valid_state
+      let cur_expr = new_expr_producer cur_index arg_val
+      let updated_state = Compilation_State
+                          (M.insert cur_index cur_expr cur_map)
+                          (increment_DAG_index cur_index)
+      put updated_state
+      return $ convert_index_to_ae_value cur_index
+  {-
+  prior_DAG <- get
+  let cur_node_index = next_DAG_index prior_DAG
+  if isJust input_indices_maybe
+    then do
+    let input_indices = fromJust input_indices_maybe
+    let new_edges = fmap (\idx -> DAG_Edge idx cur_node_index) input_indices
+    let old_edges = edges $ get_builder_dag prior_DAG
+    -- since this is first time through, no rewrites, don't have to worry about
+    -- rewritten nodes. So just take first list in nodes
+    let old_nodes = head $ nodes $ get_builder_dag prior_DAG
+    let new_DAG = Compilation_State
+          (DAG ([old_nodes ++ [new_node]]) (old_edges ++ new_edges))
+          (increment_DAG_index $ next_DAG_index prior_DAG)
+    put new_DAG
+    return (convert_index_to_ae_value cur_node_index)
+    else do
+    throwError $ fail_message_edge node_name args_name
+-}
 
 instance Sequence_Language Seq_Shallow_To_Deep_Env where
   -- unary operators
-  idC x = add_to_DAG IdN (input_to_maybe_indices x) "idC" "any_input_edge"
+  idC x = add_unary_expr_to_state IdN x "idC" "any_input_edge"
+    --add_to_DAG IdN (input_to_maybe_indices x) "idC" "any_input_edge"
+  {-
   absC x = add_to_DAG AbsN (input_to_maybe_indices x) "absC" "Atom_Int"
   notC x = add_to_DAG NotN (input_to_maybe_indices x) "absC" "Atom_Bit"
 
