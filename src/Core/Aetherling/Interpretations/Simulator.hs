@@ -190,10 +190,13 @@ sim_input_seq' proxyN input_list
 
 seq_to_list :: Seq n i a -> [a]
 seq_to_list (Seq vec) = V.toList vec
+seq_to_list _ = []
 
 atom_int_to_int :: Atom_Int -> Int
 atom_int_to_int (Atom_Int x) = x
+atom_int_to_int _ = (-100)
 
 atom_bit_to_bool :: Atom_Bit -> Bool
 atom_bit_to_bool (Atom_Bit b) = b
+atom_bit_to_bool _ = False
 
