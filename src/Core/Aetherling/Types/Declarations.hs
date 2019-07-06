@@ -11,46 +11,30 @@ Each atomic type has version for simulation.
 Also have version for wiring up connected nodes in a graph
 when doing shallow to deep embedding.
 -}
-data DAG_Index = DAG_Index {rewrite_iteration :: Int, dag_index :: Int}
-  deriving (Show, Eq, Ord)
-
-increment_DAG_index :: DAG_Index -> DAG_Index
-increment_DAG_index (DAG_Index iter idx) = DAG_Index iter (idx+1)
-
-first_DAG_index :: DAG_Index
-first_DAG_index = DAG_Index 0 0
-
-data DAG_Edge = DAG_Edge {source :: DAG_Index, sink :: DAG_Index}
-  deriving (Show, Eq)
-
-data DAG a = DAG {
-  nodes :: M.Map DAG_Index a, -- each outer list is for a different rewrite iteration
-  edges :: [DAG_Edge]
-  } deriving (Show, Eq)
 
 data Atom_Unit =
   Atom_Unit
-  | Atom_Unit_Edge DAG_Index
+  | Atom_Unit_Edge Expr
   deriving (Show, Eq)
 
 data Atom_Bit =
   Atom_Bit Bool
-  | Atom_Bit_Edge DAG_Index
+  | Atom_Bit_Edge Expr
   deriving (Show, Eq)
 
 data Atom_Int =
   Atom_Int Int
-  | Atom_Int_Edge DAG_Index
+  | Atom_Int_Edge Expr
   deriving (Show, Eq)
 
 data Atom_Tuple a b =
   Atom_Tuple a b
-  | Atom_Tuple_Edge DAG_Index
+  | Atom_Tuple_Edge Expr
   deriving (Show, Eq)
 
 data Seq_Tuple n a =
   Seq_Tuple {sTuple :: Vector n a}
-  | Seq_Tuple_Edge DAG_Index
+  | Seq_Tuple_Edge Expr
   deriving (Show, Eq)
 
   {-
@@ -67,7 +51,7 @@ data Atom_NTuple n a =
 
 data Seq n i a =
   Seq {sVec :: Vector n a}
-  | Seq_Edge DAG_Index
+  | Seq_Edge Expr
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
 seq_length :: Seq n i a -> Proxy n
@@ -83,7 +67,7 @@ instance (KnownNat n, KnownNat i) => Applicative (Seq n i) where
 
 data SSeq n a =
   SSeq {ssVec :: Vector n a}
-  | SSeq_Edge DAG_Index
+  | SSeq_Edge Expr
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
 instance (KnownNat n) => Applicative (SSeq n) where
@@ -95,7 +79,7 @@ instance (KnownNat n) => Applicative (SSeq n) where
 -- v is always 0 for now. Please ignore it for the time being
 data TSeq n v a =
   TSeq {tsVec :: Vector n a}
-  | TSeq_Edge DAG_Index
+  | TSeq_Edge Expr
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
 instance (KnownNat n) => Applicative (TSeq n v) where
@@ -126,6 +110,123 @@ data AST_Value =
   | SeqV {vals :: [AST_Value], i_v :: Int}
   | SSeqV [AST_Value]
   | TSeqV {vals :: [AST_Value], i_v :: Int}
+  deriving (Show, Eq)
+
+data Expr =
+  IdN {seq_in :: Expr}
+  | AbsN {seq_in :: Expr}
+  | NotN {seq_in :: Expr}
+  | AddN {seq_in :: Expr}
+  | EqN {t :: AST_Type, seq_in :: Expr}
+
+  -- generators
+  | Lut_GenN {
+      lookup_table :: [AST_Value],
+      lookup_types :: AST_Type,
+      seq_in :: Expr
+      }
+  | Const_GenN {
+      constant :: AST_Value,
+      constant_type :: AST_Type
+      }
+
+  -- sequence operators
+  | ShiftN {
+      n :: Int,
+      i :: Int,
+      shift_amount :: Int,
+      elem_t :: AST_Type,
+      seq_in :: Expr
+      }
+  | Up_1dN {
+      n :: Int,
+      i :: Int,
+      elem_t :: AST_Type,
+      seq_in :: Expr
+      }
+  | Down_1dN {
+      n :: Int,
+      i :: Int,
+      sel_idx :: Int,
+      elem_t :: AST_Type,
+      seq_in :: Expr
+      }
+  | PartitionN {
+      no :: Int,
+      ni :: Int,
+      io :: Int,
+      ii :: Int,
+      t :: AST_Type,
+      seq_in :: Expr
+      }
+  | UnpartitionN {
+      no :: Int,
+      ni :: Int,
+      io :: Int,
+      ii :: Int,
+      t :: AST_Type,
+      seq_in :: Expr
+      }
+
+  -- higher order operators
+  | MapN {
+      n :: Int,
+      i :: Int,
+      f :: Expr,
+      seq_in :: Expr
+      }
+  | Map2N {
+      n :: Int,
+      i :: Int,
+      f :: Expr,
+      seq_in_left :: Expr,
+      seq_in_right :: Expr
+      }
+  | ReduceN {
+      n :: Int,
+      i :: Int,
+      f :: Expr,
+      seq_in :: Expr
+      }
+  | FstN {
+      t0 :: AST_Type,
+      t1 :: AST_Type,
+      seq_in :: Expr
+      }
+  | SndN {
+      t0 :: AST_Type,
+      t1 :: AST_Type,
+      seq_in :: Expr
+      }
+  | ATupleN {
+      t0 :: AST_Type,
+      t1 :: AST_Type,
+      seq_in_left :: Expr,
+      seq_in_right :: Expr
+      }
+  | STupleN {
+      tuple_elem_t :: AST_Type,
+      seq_in_left :: Expr,
+      seq_in_right :: Expr
+      }
+  | STupleAppendN {
+      out_len :: Int,
+      tuple_elem_t :: AST_Type,
+      seq_in_left :: Expr,
+      seq_in_right :: Expr
+      }
+  | STupleToSeqN {
+      tuple_len :: Int,
+      tuple_elem_t :: AST_Type,
+        seq_in :: Expr
+      }
+  | SeqToSTupleN {
+      tuple_len :: Int,
+      tuple_elem_t :: AST_Type,
+        seq_in :: Expr
+      }
+  | InputN {t :: AST_Type}
+  | ErrorN
   deriving (Show, Eq)
 
 sSSeq0_2 :: SSeq 2 Int
