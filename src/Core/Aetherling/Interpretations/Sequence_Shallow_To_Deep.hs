@@ -16,7 +16,7 @@ import Data.Either
 import qualified Data.Vector.Sized as V
 import qualified Data.Map.Lazy as M
 import Util
-
+{-
 data Compilation_State = Compilation_State {
   index_to_seq_map :: M.Map DAG_Index Seq_Expr,
   cur_DAG_index :: DAG_Index
@@ -61,6 +61,25 @@ input_to_maybe_indices :: (Aetherling_Value a) =>
 input_to_maybe_indices input = traverse convert_ae_value_to_index [input]
 -}
 
+add_no_arg_expr_to_state :: (Aetherling_Value a, Aetherling_Value b) =>
+  (DAG_Index -> Seq_Expr) -> Seq_Shallow_To_Deep_Env b
+add_no_arg_expr_to_state new_expr_producer = do
+  let cur_state = Right empty_dag
+  if isLeft cur_state then do
+    -- if there was already an error, propagate it
+    throwError $ fromLeft "" cur_state
+    else do
+    let valid_state = fromRight empty_dag cur_state
+    -- now have non-error state, generate output
+    let cur_map = index_to_seq_map valid_state
+    let cur_index = cur_DAG_index valid_state
+    let cur_expr = new_expr_producer cur_index
+    let updated_state = Compilation_State
+                        (M.insert cur_index cur_expr cur_map)
+                        (increment_DAG_index cur_index)
+    put updated_state
+    return $ convert_index_to_ae_value cur_index
+
 add_unary_expr_to_state :: (Aetherling_Value a, Aetherling_Value b) =>
   (DAG_Index -> Seq_Expr -> Seq_Expr) -> Seq_Shallow_To_Deep_Env a -> String -> String ->
   Seq_Shallow_To_Deep_Env b
@@ -88,6 +107,40 @@ add_unary_expr_to_state new_expr_producer arg node_name args_name = do
                           (increment_DAG_index cur_index)
       put updated_state
       return $ convert_index_to_ae_value cur_index
+      
+add_binary_expr_to_state :: (Aetherling_Value a, Aetherling_Value b) =>
+  (DAG_Index -> Seq_Expr -> Seq_Expr -> Seq_Expr) -> Seq_Shallow_To_Deep_Env a ->
+  String -> String -> Seq_Shallow_To_Deep_Env b
+add_binary_expr_to_state new_expr_producer arg1 arg2 node_name args_name = do
+  let cur_state1 = get_deep_dag arg1
+  let cur_state2 = get_deep_dag arg1
+  if isLeft cur_state1 then do
+    -- if there was already an error, propagate it
+    throwError $ fromLeft "" cur_state1
+    else do
+    if isLeft cur_state2 then do
+      throwError $ fromLeft "" cur_state2
+      else do
+      let valid_state1 = fromRight empty_dag cur_state1
+      arg1_unwrapped <- arg1
+      arg2_unwrapped <- arg2
+      let arg1_maybe = convert_ae_value_to_index arg1_unwrapped
+      let arg2_maybe = convert_ae_value_to_index arg2_unwrapped
+      if isNothing arg1_maybe then do
+        -- if the current input can't be converted to an edge, throw an error
+        throwError $ fail_message_edge node_name args_name
+        else do
+        let arg_index = fromJust undefined arg_maybe
+        -- now have non-error state and valid input, generate output
+        let cur_map = index_to_seq_map valid_state
+        let arg_val = cur_map M.! arg_index
+        let cur_index = cur_DAG_index valid_state
+        let cur_expr = new_expr_producer cur_index arg_val
+        let updated_state = Compilation_State
+                            (M.insert cur_index cur_expr cur_map)
+                            (increment_DAG_index cur_index)
+        put updated_state
+        return $ convert_index_to_ae_value cur_index
   {-
   prior_DAG <- get
   let cur_node_index = next_DAG_index prior_DAG
@@ -386,8 +439,12 @@ instance Sequence_Language Seq_Shallow_To_Deep_Env where
 
 sym_input_unit :: Seq_Shallow_To_Deep_Env Atom_Unit
 sym_input_unit = add_to_DAG (InputN UnitT) (Just []) "sym_input_unit" ""
+-}
 sym_input_int :: Seq_Shallow_To_Deep_Env Atom_Int
-sym_input_int = add_to_DAG (InputN IntT) (Just []) "sym_input_int" ""
+sym_input_int = do
+  put empty_dag
+  (InputN IntT) (Just []) "sym_input_int" ""
+{-
 sym_input_bit :: Seq_Shallow_To_Deep_Env Atom_Bit
 sym_input_bit = add_to_DAG (InputN BitT) (Just []) "sym_input_bit" ""
 sym_input_atom_tuple :: forall a b .
@@ -409,4 +466,5 @@ sym_input_seq = add_to_DAG (InputN seq_type) (Just []) "sym_input_tuple" ""
     seq_type = SeqT n_val i_val (get_AST_type a_proxy)
 
 
+-}
 -}
