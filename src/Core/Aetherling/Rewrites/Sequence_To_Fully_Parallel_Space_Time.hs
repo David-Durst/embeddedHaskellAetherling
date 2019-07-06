@@ -3,7 +3,8 @@ import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
 import Control.Monad.Except
 import Control.Monad.Identity
-import Data.Proxy
+import Data.Maybe
+import Data.Either
 
 type Rewrite_StateM = Except Rewrite_Failure
 
@@ -13,6 +14,16 @@ data Rewrite_Failure = Expr_Failure {rw_msg :: String, rw_expr :: Expr}
                      | Input_Failure {rw_msg :: String}
   deriving (Eq, Show)
 
+rewrite_to_fully_parallel :: (Aetherling_Value a) => a -> Expr
+rewrite_to_fully_parallel seq_program = do
+  let expr_maybe = edge_to_maybe_expr seq_program
+  if isJust expr_maybe
+    then do
+    let expr_par = runExcept $ sequence_to_fully_parallel $ fromJust expr_maybe
+    if isLeft expr_par
+      then ErrorN (rw_msg $ fromLeft undefined expr_par)
+      else fromRight undefined expr_par
+    else ErrorN "Not an edge, please pass in the result of calling compile"
 
 sequence_to_fully_parallel :: Expr -> Rewrite_StateM Expr
 sequence_to_fully_parallel (IdN producer) = parallelize_atom_operator IdN producer

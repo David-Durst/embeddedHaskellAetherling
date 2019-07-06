@@ -231,6 +231,7 @@ data Expr =
       seq_in :: Expr
       }
   | InputN {t :: AST_Type, input_name :: String}
+  | ErrorN {error_msg :: String}
   -- Space-Time IR
   
   -- sequence operators
