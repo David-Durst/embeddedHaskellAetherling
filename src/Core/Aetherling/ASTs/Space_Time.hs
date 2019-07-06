@@ -140,8 +140,8 @@ class Monad m => Space_Time_Language m where
   -- composition operators
   (>>>) :: (a -> m b) -> (b -> m c) -> (a -> m c)
 
-type ST_DAG = DAG Space_Time_Language_AST
-
+--type ST_DAG = DAG Space_Time_Language_AST
+{-
 data Space_Time_Language_AST =
   IdN
   | AbsN
@@ -194,3 +194,4 @@ data Space_Time_Language_AST =
 
   | InputN {t :: AST_Type}
   deriving (Show, Eq)
+-}

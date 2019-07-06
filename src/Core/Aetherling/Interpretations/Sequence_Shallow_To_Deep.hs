@@ -16,449 +16,354 @@ import Data.Either
 import qualified Data.Vector.Sized as V
 import qualified Data.Map.Lazy as M
 import Util
-{-
-data Compilation_State = Compilation_State {
-  index_to_seq_map :: M.Map DAG_Index Seq_Expr,
-  cur_DAG_index :: DAG_Index
-  } deriving (Show, Eq)
 
-type Seq_Shallow_To_Deep_Env = StateT Compilation_State (ExceptT String Identity)
+compile :: Compilation_Env a -> a
+compile (Compilation_Env a) = a
 
-get_deep_dag :: Seq_Shallow_To_Deep_Env a -> Either String Compilation_State
-get_deep_dag shallow_embedding =
-  runIdentity $ runExceptT $ execStateT shallow_embedding empty_dag
-
-empty_dag = Compilation_State M.empty first_DAG_index
-
-{-
-
-
-
-add_to_DAG :: (Aetherling_Value a) =>
-  Sequence_Language_AST -> Maybe [DAG_Index] -> String -> String ->
-  Seq_Shallow_To_Deep_Env a
-add_to_DAG new_node input_indices_maybe node_name args_name = do
-  prior_DAG <- get
-  let cur_node_index = next_DAG_index prior_DAG
-  if isJust input_indices_maybe
-    then do
-    let input_indices = fromJust input_indices_maybe
-    let new_edges = fmap (\idx -> DAG_Edge idx cur_node_index) input_indices
-    let old_edges = edges $ get_builder_dag prior_DAG
-    -- since this is first time through, no rewrites, don't have to worry about
-    -- rewritten nodes. So just take first list in nodes
-    let old_nodes = head $ nodes $ get_builder_dag prior_DAG
-    let new_DAG = Compilation_State
-          (DAG ([old_nodes ++ [new_node]]) (old_edges ++ new_edges))
-          (increment_DAG_index $ next_DAG_index prior_DAG)
-    put new_DAG
-    return (convert_index_to_ae_value cur_node_index)
-    else do
-    throwError $ fail_message_edge node_name args_name
-
-input_to_maybe_indices :: (Aetherling_Value a) =>
-  a -> Maybe [DAG_Index]
-input_to_maybe_indices input = traverse convert_ae_value_to_index [input]
--}
-
-add_no_arg_expr_to_state :: (Aetherling_Value a, Aetherling_Value b) =>
-  (DAG_Index -> Seq_Expr) -> Seq_Shallow_To_Deep_Env b
-add_no_arg_expr_to_state new_expr_producer = do
-  let cur_state = Right empty_dag
-  if isLeft cur_state then do
-    -- if there was already an error, propagate it
-    throwError $ fromLeft "" cur_state
-    else do
-    let valid_state = fromRight empty_dag cur_state
-    -- now have non-error state, generate output
-    let cur_map = index_to_seq_map valid_state
-    let cur_index = cur_DAG_index valid_state
-    let cur_expr = new_expr_producer cur_index
-    let updated_state = Compilation_State
-                        (M.insert cur_index cur_expr cur_map)
-                        (increment_DAG_index cur_index)
-    put updated_state
-    return $ convert_index_to_ae_value cur_index
-
-add_unary_expr_to_state :: (Aetherling_Value a, Aetherling_Value b) =>
-  (DAG_Index -> Seq_Expr -> Seq_Expr) -> Seq_Shallow_To_Deep_Env a -> String -> String ->
-  Seq_Shallow_To_Deep_Env b
-add_unary_expr_to_state new_expr_producer arg node_name args_name = do
-  let cur_state = get_deep_dag arg
-  if isLeft cur_state then do
-    -- if there was already an error, propagate it
-    throwError $ fromLeft "" cur_state
-    else do
-    let valid_state = fromRight empty_dag cur_state
-    arg_unwrapped <- arg
-    let arg_maybe = convert_ae_value_to_index arg_unwrapped
-    if isNothing arg_maybe then do
-      -- if the current input can't be converted to an edge, throw an error
-      throwError $ fail_message_edge node_name args_name
-      else do
-      let arg_index = fromJust undefined arg_maybe
-      -- now have non-error state and valid input, generate output
-      let cur_map = index_to_seq_map valid_state
-      let arg_val = cur_map M.! arg_index
-      let cur_index = cur_DAG_index valid_state
-      let cur_expr = new_expr_producer cur_index arg_val
-      let updated_state = Compilation_State
-                          (M.insert cur_index cur_expr cur_map)
-                          (increment_DAG_index cur_index)
-      put updated_state
-      return $ convert_index_to_ae_value cur_index
-      
-add_binary_expr_to_state :: (Aetherling_Value a, Aetherling_Value b) =>
-  (DAG_Index -> Seq_Expr -> Seq_Expr -> Seq_Expr) -> Seq_Shallow_To_Deep_Env a ->
-  String -> String -> Seq_Shallow_To_Deep_Env b
-add_binary_expr_to_state new_expr_producer arg1 arg2 node_name args_name = do
-  let cur_state1 = get_deep_dag arg1
-  let cur_state2 = get_deep_dag arg1
-  if isLeft cur_state1 then do
-    -- if there was already an error, propagate it
-    throwError $ fromLeft "" cur_state1
-    else do
-    if isLeft cur_state2 then do
-      throwError $ fromLeft "" cur_state2
-      else do
-      let valid_state1 = fromRight empty_dag cur_state1
-      arg1_unwrapped <- arg1
-      arg2_unwrapped <- arg2
-      let arg1_maybe = convert_ae_value_to_index arg1_unwrapped
-      let arg2_maybe = convert_ae_value_to_index arg2_unwrapped
-      if isNothing arg1_maybe then do
-        -- if the current input can't be converted to an edge, throw an error
-        throwError $ fail_message_edge node_name args_name
-        else do
-        let arg_index = fromJust undefined arg_maybe
-        -- now have non-error state and valid input, generate output
-        let cur_map = index_to_seq_map valid_state
-        let arg_val = cur_map M.! arg_index
-        let cur_index = cur_DAG_index valid_state
-        let cur_expr = new_expr_producer cur_index arg_val
-        let updated_state = Compilation_State
-                            (M.insert cur_index cur_expr cur_map)
-                            (increment_DAG_index cur_index)
-        put updated_state
-        return $ convert_index_to_ae_value cur_index
-  {-
-  prior_DAG <- get
-  let cur_node_index = next_DAG_index prior_DAG
-  if isJust input_indices_maybe
-    then do
-    let input_indices = fromJust input_indices_maybe
-    let new_edges = fmap (\idx -> DAG_Edge idx cur_node_index) input_indices
-    let old_edges = edges $ get_builder_dag prior_DAG
-    -- since this is first time through, no rewrites, don't have to worry about
-    -- rewritten nodes. So just take first list in nodes
-    let old_nodes = head $ nodes $ get_builder_dag prior_DAG
-    let new_DAG = Compilation_State
-          (DAG ([old_nodes ++ [new_node]]) (old_edges ++ new_edges))
-          (increment_DAG_index $ next_DAG_index prior_DAG)
-    put new_DAG
-    return (convert_index_to_ae_value cur_node_index)
-    else do
-    throwError $ fail_message_edge node_name args_name
--}
-
-instance Sequence_Language Seq_Shallow_To_Deep_Env where
+instance Sequence_Language Compilation_Env where
   -- unary operators
-  idC x = add_unary_expr_to_state IdN x "idC" "any_input_edge"
+  idC x = x
     --add_to_DAG IdN (input_to_maybe_indices x) "idC" "any_input_edge"
-  {-
-  absC x = add_to_DAG AbsN (input_to_maybe_indices x) "absC" "Atom_Int"
-  notC x = add_to_DAG NotN (input_to_maybe_indices x) "absC" "Atom_Bit"
+  absC (Compilation_Env (Atom_Int_Edge x)) = return $ Atom_Int_Edge $ AbsN x
+  absC _ = fail $ fail_message_edge "absC" "Atom_Int"
+
+  notC (Compilation_Env (Atom_Bit_Edge x)) = return $ Atom_Bit_Edge $ NotN x
+  notC _ = fail $ fail_message_edge "absC" "Atom_Bit"
 
   -- binary operators
-  addC x_wrapped = do
-    x <- x_wrapped
-    add_to_DAG AddN (input_to_maybe_indices x) "addC" "Atom_Tuple"
+  addC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ AddN x
+  addC _ = fail $ fail_message_edge "addC" "Atom_Tuple Atom_Int Atom_Int"
+
+  subC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ SubN x
+  subC _ = fail $ fail_message_edge "subC" "Atom_Tuple Atom_Int Atom_Int"
+
+  mulC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ MulN x
+  mulC _ = fail $ fail_message_edge "mulC" "Atom_Tuple Atom_Int Atom_Int"
+
+  divC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ DivN x
+  divC _ = fail $ fail_message_edge "divC" "Atom_Tuple Atom_Int Atom_Int"
 
   eqC :: forall a . (Aetherling_Value a, Check_Type_Is_Atom a, Eq a) =>
-    Atom_Tuple a a -> Seq_Shallow_To_Deep_Env Atom_Bit
-  eqC x = add_to_DAG eq_node (input_to_maybe_indices x) "eqC" "Atom_Tuple"
-    where
-      input_type_proxy = Proxy :: Proxy a
-      eq_node = EqN (get_AST_type input_type_proxy)
+    Compilation_Env (Atom_Tuple a a) -> Compilation_Env Atom_Bit
+  eqC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Bit_Edge $
+    EqN (get_AST_type (Proxy :: Proxy a)) x
+  eqC _ = fail $ fail_message_edge "eqC" "Atom_Tuple Atom_Int Atom_Int"
 
   -- generators
-  lut_genC :: forall a . Aetherling_Value a => [a] -> Atom_Int -> Seq_Shallow_To_Deep_Env a
-  lut_genC table x = do
+  lut_genC :: forall a . Aetherling_Value a => [a] -> Compilation_Env Atom_Int ->
+    Compilation_Env a
+  lut_genC table (Compilation_Env x) = do
+    let x_expr_maybe = edge_to_maybe_expr x
     let a_proxy = Proxy :: Proxy a
     let lut_table_maybe = traverse get_AST_value table
-    if isJust lut_table_maybe
+    if isJust lut_table_maybe && isJust x_expr_maybe
       then do
-      add_to_DAG (Lut_GenN (fromJust lut_table_maybe) (get_AST_type a_proxy))
-        (input_to_maybe_indices x)
-        "lut_genC" "Atom_Int_edge"
+      return $ expr_to_edge $
+        Lut_GenN (fromJust lut_table_maybe) (get_AST_type a_proxy) (fromJust x_expr_maybe)
       else do
-      throwError $ fail_message_edge "lut_genC" "[a]"
+      fail $ fail_message_edge "lut_genC" "[a] -> Atom_Int"
 
-  const_genC :: forall a . Aetherling_Value a => a -> Seq_Shallow_To_Deep_Env a
-  const_genC const = do
-    let a_proxy = Proxy :: Proxy a
-    let const_maybe = get_AST_value const
-    if isJust const_maybe
+  const_genC :: forall a b . Aetherling_Value a => a -> Compilation_Env b ->
+    Compilation_Env a
+  const_genC const _ = do
+    let const_expr_maybe = get_AST_value const
+    if isJust const_expr_maybe
       then do
-      add_to_DAG (Const_GenN (fromJust const_maybe) (get_AST_type a_proxy))
-        (Just [])
-        "const_genC" "Atom_Unit"
+      return $ expr_to_edge $
+        Const_GenN (fromJust const_expr_maybe) (get_AST_type (Proxy :: Proxy a))
       else do
-      throwError $ fail_message_edge "const_genC" "a"
+      fail $ fail_message_edge "const_genC" "any_edge"
 
-  -- sequence operators
-  shiftC :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
+  -- generators
+  shiftC shift_amount_proxy input_vec = shiftC' Proxy shift_amount_proxy input_vec
+  
+  shiftC' :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
                              Aetherling_Value a) =>
-    Proxy r -> Seq_Shallow_To_Deep_Env (Seq (n+r) i a) -> Seq_Shallow_To_Deep_Env (Seq (n+r) i a)
-  shiftC proxyShiftAmount input_seq = do
-    input_seq_val <- input_seq
-    add_to_DAG (ShiftN len_val i_val shift_amount_val ast_type)
-      (input_to_maybe_indices input_seq_val) "shiftC" "Seq_Tuple"
+    Proxy (n+r) -> Proxy r -> Compilation_Env (Seq (n+r) i a) -> Compilation_Env (Seq (n+r) i a)
+  shiftC' len_proxy shift_amount_proxy (Compilation_Env (Seq_Edge x)) = return $
+    Seq_Edge $ ShiftN len shift i_val a_type x
     where
-      len_val = fromInteger $ natVal (Proxy :: Proxy (n+r))
-      shift_amount_val = fromInteger $ natVal proxyShiftAmount
+      len = fromInteger $ natVal len_proxy
+      shift = fromInteger $ natVal shift_amount_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
-      ast_type = get_AST_type (Proxy :: Proxy a)
-
-  up_1dC :: forall n a i . (KnownNat n, KnownNat i,
-                          Aetherling_Value a) =>
-            Proxy (1+n) -> 
-            Seq 1 (n + i) a -> Seq_Shallow_To_Deep_Env (Seq (1+n) i a)
-  up_1dC proxyN x = add_to_DAG
-    (Up_1dN n_val i_val (get_AST_type (Proxy :: Proxy a)))
-    (input_to_maybe_indices x) "up_1dC" "Seq"
+      a_type = get_AST_type (Proxy :: Proxy a)
+  shiftC' _ _ _ = fail $ fail_message_edge "shiftC" "Seq"
+  
+  up_1dC :: forall a n i . (KnownNat n, KnownNat i,
+             Aetherling_Value a) =>
+    Proxy (1+n) -> Compilation_Env (Seq 1 (n + i) a) -> Compilation_Env (Seq (1+n) i a)
+  up_1dC len_proxy (Compilation_Env (Seq_Edge x)) = return $ Seq_Edge $
+    Up_1dN len i_val a_type x
     where
-      n_val = fromInteger $ natVal proxyN
+      len = fromInteger $ natVal len_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
+      a_type = get_AST_type (Proxy :: Proxy a)
+  up_1dC _ _ = fail $ fail_message_edge "up_1dC" "Seq"
 
-  down_1dC :: forall n a i . (KnownNat n, KnownNat i,
-                              Aetherling_Value a) =>
-              Proxy (1+n) -> Int ->
-              Seq (1+n) i a -> Seq_Shallow_To_Deep_Env (Seq 1 (n + i) a)
-  down_1dC proxyN sel_idx x = add_to_DAG
-    (Down_1dN n_val i_val sel_idx (get_AST_type (Proxy :: Proxy a)))
-    (input_to_maybe_indices x) "down_1dC" "Seq"
+  down_1dC sel_idx x = down_1dC' Proxy sel_idx x
+  
+  down_1dC' :: forall a n i . (KnownNat n, KnownNat i,
+                Aetherling_Value a) =>
+    Proxy (1+n) -> Int -> Compilation_Env (Seq (1+n) i a) ->
+    Compilation_Env (Seq 1 (n + i) a)
+  down_1dC' len_proxy sel_idx (Compilation_Env (Seq_Edge x)) = return $ Seq_Edge $
+    Down_1dN len i_val sel_idx a_type x
     where
-      n_val = fromInteger $ natVal proxyN
+      len = fromInteger $ natVal len_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
-
-
+      a_type = get_AST_type (Proxy :: Proxy a)
+  down_1dC' _ _ _ = fail $ fail_message_edge "down_1dC" "Seq"
+  
   partitionC :: forall no ni io ii a .
-    (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-      KnownNat io, KnownNat ii,
-      Aetherling_Value a) =>
-    Proxy no -> Proxy ni ->
-    Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
-                                 io GHC.TypeLits.* (ni + ii)) a ->
-    Seq_Shallow_To_Deep_Env (Seq no io (Seq ni ii a))
-  partitionC proxyNO proxyNI x = add_to_DAG
-    (PartitionN no_val ni_val io_val ii_val (get_AST_type (Proxy :: Proxy a)))
-    (input_to_maybe_indices x) "partitionC" "Seq"
-    where
-      no_val = fromInteger $ natVal proxyNO
-      ni_val = fromInteger $ natVal proxyNI
-      io_val = fromInteger $ natVal (Proxy :: Proxy io)
-      ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
-
-  partitionC' :: forall no ni io ii a .
-    (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-      KnownNat io, KnownNat ii,
-      Aetherling_Value a) =>
-    Proxy no -> Proxy ni -> Proxy ii ->
-    Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
-                                 io GHC.TypeLits.* (ni + ii)) a ->
-    Seq_Shallow_To_Deep_Env (Seq no io (Seq ni ii a))
-  partitionC' proxyNO proxyNI proxyII x = add_to_DAG
-    (PartitionN no_val ni_val io_val ii_val (get_AST_type (Proxy :: Proxy a)))
-    (input_to_maybe_indices x) "partitionC" "Seq"
-    where
-      no_val = fromInteger $ natVal proxyNO
-      ni_val = fromInteger $ natVal proxyNI
-      io_val = fromInteger $ natVal (Proxy :: Proxy io)
-      ii_val = fromInteger $ natVal proxyII
-      
-  partitionC'' :: forall no ni io ii a .
-    (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-      KnownNat io, KnownNat ii,
-      Aetherling_Value a) =>
+                (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                 KnownNat io, KnownNat ii,
+                 Aetherling_Value a) =>
     Proxy no -> Proxy ni -> Proxy io -> Proxy ii ->
-    Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
-                                 io GHC.TypeLits.* (ni + ii)) a ->
-    Seq_Shallow_To_Deep_Env (Seq no io (Seq ni ii a))
-  partitionC'' proxyNO proxyNI proxyIO proxyII x = add_to_DAG
-    (PartitionN no_val ni_val io_val ii_val (get_AST_type (Proxy :: Proxy a)))
-    (input_to_maybe_indices x) "partitionC" "Seq"
+    Compilation_Env (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+                                io GHC.TypeLits.* (ni + ii)) a) ->
+    Compilation_Env (Seq no io (Seq ni ii a))
+  partitionC proxyNO proxyNI proxyIO proxyII (Compilation_Env (Seq_Edge x)) =
+    return $ Seq_Edge $ PartitionN no_val ni_val io_val ii_val a_type x
     where
       no_val = fromInteger $ natVal proxyNO
       ni_val = fromInteger $ natVal proxyNI
       io_val = fromInteger $ natVal proxyIO
       ii_val = fromInteger $ natVal proxyII
-      
-  unpartitionC :: forall no ni io ii a .
-    (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-      KnownNat io, KnownNat ii,
-      Aetherling_Value a) =>
+      a_type = get_AST_type (Proxy :: Proxy a)
+  partitionC _ _ _ _ _ = fail $ fail_message_edge "partitionC" "Seq"
+
+  unpartitionC x = unpartitionC' Proxy Proxy x
+
+  unpartitionC' :: forall no ni io ii a .
+                   (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
+                    KnownNat io, KnownNat ii,
+                    Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
-    Seq no io (Seq ni ii a) ->
-    Seq_Shallow_To_Deep_Env (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
-                                                          io GHC.TypeLits.* (ni + ii)) a)
-  unpartitionC proxyNO proxyNI x = add_to_DAG
-    (UnpartitionN no_val ni_val io_val ii_val (get_AST_type (Proxy :: Proxy a)))
-    (input_to_maybe_indices x) "unpartitionC" "Seq"
+    Compilation_Env (Seq no io (Seq ni ii a)) ->
+    Compilation_Env (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+                                   io GHC.TypeLits.* (ni + ii)) a)
+  unpartitionC' proxyNO proxyNI (Compilation_Env (Seq_Edge x)) =
+    return $ Seq_Edge $ UnpartitionN no_val ni_val io_val ii_val a_type x
     where
       no_val = fromInteger $ natVal proxyNO
       ni_val = fromInteger $ natVal proxyNI
       io_val = fromInteger $ natVal (Proxy :: Proxy io)
       ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
-
-
+      a_type = get_AST_type (Proxy :: Proxy a)
+  unpartitionC' _ _ _ = fail $ fail_message_edge "unpartitionC" "Seq"
+  
   -- higher order operators
-  mapC :: forall n i a b . (KnownNat n, KnownNat i,
-                            Aetherling_Value a,
-                            Aetherling_Value b) =>
-          Proxy n -> (a -> Seq_Shallow_To_Deep_Env b) ->
-          (Seq n i a -> Seq_Shallow_To_Deep_Env (Seq n i b))
-  mapC proxyN f x = do
-    let n_val = fromInteger $ natVal proxyN
-    let i_val = fromInteger $ natVal (Proxy :: Proxy i)
-    outer_dag <- get
-    put empty_dag
-    put $ empty_dag {next_DAG_index = first_DAG_index}
-    f $ convert_index_to_ae_value (DAG_Index 0 (-1))
-    f_dag <- get
-    put outer_dag
-    add_to_DAG (MapN n_val i_val (get_builder_dag f_dag)) (input_to_maybe_indices x)
-      "mapC" "Seq"
-    
-  map2C :: forall n i a b c . (KnownNat n, KnownNat i,
+
+  mapC f x = mapC' Proxy f x
+
+  mapC' :: forall n i a b . (KnownNat n, KnownNat i,
+           Aetherling_Value a,
+           Aetherling_Value b) =>
+    Proxy n -> (Compilation_Env a -> Compilation_Env b) ->
+    Compilation_Env (Seq n i a) -> Compilation_Env (Seq n i b)
+  mapC' len_proxy f (Compilation_Env (Seq_Edge x)) = return $ Seq_Edge $
+    MapN len_val i_val f_ast x
+    where
+      len_val = fromInteger $ natVal len_proxy
+      i_val = fromInteger $ natVal (Proxy :: Proxy i)
+      f_ast = fromJust $ edge_to_maybe_expr $ compile $ f (return $ get_input_edge "f_in")
+  mapC' _ _ _ = fail $ fail_message_edge "mapC" "Seq"
+
+  map2C f x y = map2C' Proxy f x y
+
+  map2C' :: forall n i a b c . (KnownNat n, KnownNat i,
                                 Aetherling_Value a,
-                               Aetherling_Value b,
-                               Aetherling_Value c) =>
-    Proxy n -> (a -> b -> Seq_Shallow_To_Deep_Env c) ->
-    (Seq n i a -> Seq n i b -> Seq_Shallow_To_Deep_Env (Seq n i c))
-  map2C proxyN f x y = do
-    let n_val = fromInteger $ natVal proxyN
-    let i_val = fromInteger $ natVal (Proxy :: Proxy i)
-    outer_dag <- get
-    put $ empty_dag {next_DAG_index = first_DAG_index}
-    f (convert_index_to_ae_value (DAG_Index 0 (-2)))
-      (convert_index_to_ae_value (DAG_Index 0 (-1)))
-    f_dag <- get
-    put outer_dag
-    let maybe_indices = liftA2 (++)
-          (input_to_maybe_indices x) (input_to_maybe_indices y)
-    add_to_DAG (Map2N n_val i_val (get_builder_dag f_dag)) maybe_indices "mapC" "Seq"
+                                Aetherling_Value b,
+                                Aetherling_Value c) =>
+    Proxy n ->
+    (Compilation_Env a -> Compilation_Env b -> Compilation_Env c) ->
+    Compilation_Env (Seq n i a) -> Compilation_Env (Seq n i b) -> Compilation_Env (Seq n i c)
+  map2C' len_proxy f (Compilation_Env (Seq_Edge x)) (Compilation_Env (Seq_Edge y)) =
+    return $ Seq_Edge $ Map2N len_val i_val f_ast x y
+    where
+      len_val = fromInteger $ natVal len_proxy
+      i_val = fromInteger $ natVal (Proxy :: Proxy i)
+      f_ast = fromJust $ edge_to_maybe_expr $ compile $
+        f (return $ get_input_edge "f_in1") (return $ get_input_edge "f_in2")
+  map2C' _ _ _ _ = fail $ fail_message_edge "mapC" "Seq"
 
-  reduceC :: forall n i a . (KnownNat n, KnownNat i, Aetherling_Value a) =>
-    Proxy (1+n) -> (Seq_Shallow_To_Deep_Env (Atom_Tuple a a) -> Seq_Shallow_To_Deep_Env a) ->
-    Seq_Shallow_To_Deep_Env (Seq (1+n) i a) -> Seq_Shallow_To_Deep_Env (Seq 1 (n + i) a)
-  reduceC proxyN f x_wrapped = do
-    x <- x_wrapped
-    let n_val = fromInteger $ natVal proxyN
-    let i_val = fromInteger $ natVal (Proxy :: Proxy i)
-    outer_dag <- get
-    put empty_dag
-    put $ empty_dag {next_DAG_index = first_DAG_index}
-    f (return $ convert_index_to_ae_value (DAG_Index 0 (-1)))
-    f_dag <- get
-    put outer_dag
-    add_to_DAG (ReduceN n_val i_val (get_builder_dag f_dag)) (input_to_maybe_indices x)
-      "reduceC" "Seq"
+  reduceC f x = reduceC' Proxy f x
 
+  reduceC' :: forall n i a . (KnownNat n, KnownNat i,
+                              Aetherling_Value a) =>
+    Proxy (1+n) -> (Compilation_Env (Atom_Tuple a a) -> Compilation_Env a) ->
+    Compilation_Env (Seq (1+n) i a) -> Compilation_Env (Seq 1 (n + i) a)
+  reduceC' len_proxy f (Compilation_Env (Seq_Edge x)) = return $ Seq_Edge $
+    ReduceN len_val i_val f_ast x
+    where
+      len_val = fromInteger $ natVal len_proxy
+      i_val = fromInteger $ natVal (Proxy :: Proxy i)
+      f_ast = fromJust $ edge_to_maybe_expr $ compile $
+        f (return $ get_input_edge "f_in")
+  reduceC' _ _ _ = fail $ fail_message_edge "reduceC" "Seq"
+  
   fstC :: forall a b . (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
                         Aetherling_Value a,
                         Aetherling_Value b) =>
-    Atom_Tuple a b -> Seq_Shallow_To_Deep_Env a
-  fstC x = add_to_DAG (SndN (get_AST_type (Proxy :: Proxy a))
-                       (get_AST_type (Proxy :: Proxy b)))
-           (input_to_maybe_indices x) "fstC" "Atom_Tuple"
+    Compilation_Env (Atom_Tuple a b) -> Compilation_Env a
+  fstC (Compilation_Env (Atom_Tuple_Edge x)) = return $ expr_to_edge $
+    FstN a_type b_type x
+    where
+      a_type = get_AST_type (Proxy :: Proxy a)
+      b_type = get_AST_type (Proxy :: Proxy b)
+  fstC _ = fail $ fail_message_edge "fstC" "Atom_Tuple"
 
   sndC :: forall a b . (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
                         Aetherling_Value a,
                         Aetherling_Value b) =>
-    Atom_Tuple a b -> Seq_Shallow_To_Deep_Env b
-  sndC x = add_to_DAG (SndN (get_AST_type (Proxy :: Proxy a))
-                       (get_AST_type (Proxy :: Proxy b)))
-           (input_to_maybe_indices x) "sndC" "Atom_Tuple"
+    Compilation_Env (Atom_Tuple a b) -> Compilation_Env b
+  sndC (Compilation_Env (Atom_Tuple_Edge x)) = return $ expr_to_edge $
+    SndN a_type b_type x
+    where
+      a_type = get_AST_type (Proxy :: Proxy a)
+      b_type = get_AST_type (Proxy :: Proxy b)
+  sndC _ = fail $ fail_message_edge "sndC" "Atom_Tuple"
 
   atom_tupleC :: forall a b . (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
-                        Aetherling_Value a,
-                        Aetherling_Value b) =>
-    a -> b -> Seq_Shallow_To_Deep_Env (Atom_Tuple a b)
-  atom_tupleC x y = add_to_DAG (ATupleN (get_AST_type (Proxy :: Proxy a))
-                                (get_AST_type (Proxy :: Proxy b)))
-                    maybe_indices "atom_tupleC" "Atom_Tuple"
-    where
-      maybe_indices = liftA2 (++) (input_to_maybe_indices x)
-        (input_to_maybe_indices y)
+                               Aetherling_Value a,
+                               Aetherling_Value b) =>
+    Compilation_Env a -> Compilation_Env b -> Compilation_Env (Atom_Tuple a b)
+  atom_tupleC (Compilation_Env x) (Compilation_Env y) = do
+    let a_type = get_AST_type (Proxy :: Proxy a)
+    let b_type = get_AST_type (Proxy :: Proxy b)
+    let x_expr_maybe = edge_to_maybe_expr x
+    let y_expr_maybe = edge_to_maybe_expr y
+    if isJust x_expr_maybe && isJust y_expr_maybe
+      then return $ Atom_Tuple_Edge $
+           ATupleN a_type b_type (fromJust x_expr_maybe) (fromJust y_expr_maybe)
+      else fail $ fail_message_edge "atom_tupleC" "any_atom"
 
-  seq_tupleC :: forall n i a . (Aetherling_Value (Seq n i a)) =>
-    Seq n i a -> Seq n i a -> Seq_Shallow_To_Deep_Env (Seq_Tuple 2 (Seq n i a))
-  seq_tupleC x y = add_to_DAG (STupleN (get_AST_type (Proxy :: Proxy (Seq n i a))))
-                   maybe_indices "seq_tupleC" "Seq_Tuple"
-    where
-      maybe_indices = liftA2 (++) (input_to_maybe_indices x)
-        (input_to_maybe_indices y)
+  seq_tupleC :: forall a . (Aetherling_Value a) =>
+    Compilation_Env a -> Compilation_Env a ->
+    Compilation_Env (Seq_Tuple 2 a)
+  seq_tupleC (Compilation_Env x) (Compilation_Env y) = do
+    let a_type = get_AST_type (Proxy :: Proxy a)
+    let x_expr_maybe = edge_to_maybe_expr x
+    let y_expr_maybe = edge_to_maybe_expr y
+    if isJust x_expr_maybe && isJust y_expr_maybe
+      then return $ Seq_Tuple_Edge $
+           STupleN a_type (fromJust x_expr_maybe) (fromJust y_expr_maybe)
+      else fail $ fail_message_edge "seq_tupleC" "any"
 
+  zipC :: forall a l n i . (Aetherling_Value a, KnownNat l, KnownNat n, KnownNat i) =>
+    Proxy l -> [Compilation_Env (Seq n i a)] -> Compilation_Env (Seq n i (Seq_Tuple l a))
+  zipC len_proxy wrapped_x | natVal len_proxy > 2 = do
+    let x_maybe = fmap (edge_to_maybe_expr . compile) wrapped_x
+    if all isJust x_maybe
+      then do
+      let x = fmap fromJust x_maybe
+      let a_type = get_AST_type (Proxy :: Proxy a)
+      let n_val = fromInteger $ natVal len_proxy
+      let i_val = fromInteger $ natVal (Proxy :: Proxy i)
+      -- this will be used after initial step in the fold
+      let map_stuple_append out_len in_left in_right = Map2N n_val i_val
+                                                       (STupleAppendN out_len
+                                                         a_type
+                                                         (InputN a_type "tuple_in_1")
+                                                         (InputN a_type "tuple_in_2"))
+                                                       in_left in_right
+      -- the initial step in the fold
+      let map_stuple_initial = Map2N n_val i_val
+                               (STupleN a_type 
+                                 (InputN a_type "tuple_in_1")
+                                 (InputN a_type "tuple_in_2")
+                               )
+                               (x !! 0) (x !! 1)
+      let tupled_expr = foldl (\prior_tuples cur_len -> map_stuple_append
+                                                        cur_len
+                                                        prior_tuples
+                                                        (x !! (cur_len - 1)))
+                        -- start at 3 to set
+                        map_stuple_initial [3 .. length x]
+      return $ Seq_Edge tupled_expr
+      else fail $ fail_message_edge "zipC" "list of any"
+  zipC _ _ = fail "zipC must have at least 3 inputs, otherwise use seq_tupleC"
 
-  seq_tuple_appendC :: forall n a .
-    (KnownNat n, Aetherling_Value a,
-     Aetherling_Value (Seq_Tuple (n+1) a)) =>
-    Seq_Tuple n a -> a -> Seq_Shallow_To_Deep_Env (Seq_Tuple (n+1) a)
-  seq_tuple_appendC input_seq input_el =
-    add_to_DAG (STupleAppendN output_length (get_AST_type (Proxy :: Proxy a)))
-    maybe_indices "seq_tuple_appendC" "Seq_Tuple"
-    where
-      output_length = fromInteger $ natVal (Proxy :: Proxy (n+1))
-      maybe_indices = liftA2 (++) (input_to_maybe_indices input_seq)
-        (input_to_maybe_indices input_el)
-
-
+  
+  seq_tuple_appendC :: forall n a . (KnownNat n, Aetherling_Value (Seq_Tuple n a),
+                                     Aetherling_Value a,
+                                     Aetherling_Value (Seq_Tuple (n+1) a)) =>
+    Compilation_Env (Seq_Tuple n a) -> Compilation_Env a ->
+    Compilation_Env (Seq_Tuple (n+1) a)
+  seq_tuple_appendC (Compilation_Env (Seq_Tuple_Edge x)) (Compilation_Env wrapped_y) = do
+    let y_expr_maybe = edge_to_maybe_expr wrapped_y
+    if isJust y_expr_maybe
+      then do
+      let y = fromJust y_expr_maybe
+      let out_len = fromInteger $ natVal (Proxy :: Proxy (n+1))
+      let a_type = get_AST_type (Proxy :: Proxy a)
+      return $ Seq_Tuple_Edge $ STupleAppendN out_len a_type x y
+      else fail $ fail_message_edge "seq_tuple_appendC" "for second input any"
+  seq_tuple_appendC _ _ = fail $ fail_message_edge "seq_tuple_appendC" "for first input seq_tuple"
+  
   seq_tuple_to_seqC :: forall n a . (KnownNat n,
-                        Aetherling_Value a,
-                        Aetherling_Value (Seq n 0 a)) =>
-    Seq_Tuple n a -> Seq_Shallow_To_Deep_Env (Seq n 0 a)
-  seq_tuple_to_seqC input_tuple =
-    add_to_DAG (STupleToSeqN tuple_length (get_AST_type (Proxy :: Proxy a)))
-    (input_to_maybe_indices input_tuple) "seq_tuple_appendC" "Seq_Tuple"
+                                     Aetherling_Value a,
+                                     Aetherling_Value (Seq n 0 a)) =>
+    Compilation_Env (Seq_Tuple n a) -> Compilation_Env (Seq n 0 a)
+  seq_tuple_to_seqC (Compilation_Env (Seq_Tuple_Edge x)) =
+    return $ Seq_Edge $ STupleToSeqN len a_type x
     where
-      tuple_length = fromInteger $ natVal (Proxy :: Proxy n)
-
-  seq_to_seq_tupleC :: forall n a . (KnownNat n, 
-                        Aetherling_Value a,
-                        Aetherling_Value (Seq_Tuple n a)) =>
-    Seq n 0 a -> Seq_Shallow_To_Deep_Env (Seq_Tuple n a)
-  seq_to_seq_tupleC input_tuple =
-    add_to_DAG (SeqToSTupleN tuple_length (get_AST_type (Proxy :: Proxy a)))
-    (input_to_maybe_indices input_tuple) "seq_tuple_appendC" "Seq_Tuple"
+      len = fromInteger $ natVal (Proxy :: Proxy n)
+      a_type = get_AST_type (Proxy :: Proxy a)
+  seq_tuple_to_seqC _ = fail $ fail_message_edge "seq_tuple_to_seqC" "seq_tuple"
+  
+  seq_to_seq_tupleC :: forall n a . (KnownNat n,
+                                     Aetherling_Value a,
+                                     Aetherling_Value (Seq_Tuple n a)) =>
+    Compilation_Env (Seq n 0 a) -> Compilation_Env (Seq_Tuple n a)
+  seq_to_seq_tupleC (Compilation_Env (Seq_Edge x)) =
+    return $ Seq_Tuple_Edge $ SeqToSTupleN len a_type x
     where
-      tuple_length = fromInteger $ natVal (Proxy :: Proxy n)
-
+      len = fromInteger $ natVal (Proxy :: Proxy n)
+      a_type = get_AST_type (Proxy :: Proxy a)
+  seq_to_seq_tupleC _ = fail $ fail_message_edge "seq_to_seq_tupleC" "seq"
+  
   -- composition operators
-  (>>>) f g x = f x >>= g
+  (>>>) f g = g . f
 
-sym_input_unit :: Seq_Shallow_To_Deep_Env Atom_Unit
-sym_input_unit = add_to_DAG (InputN UnitT) (Just []) "sym_input_unit" ""
--}
-sym_input_int :: Seq_Shallow_To_Deep_Env Atom_Int
-sym_input_int = do
-  put empty_dag
-  (InputN IntT) (Just []) "sym_input_int" ""
+data Compilation_Env a = Compilation_Env a
+  deriving (Show, Eq, Functor)
+
+instance Applicative Compilation_Env where
+  pure a = Compilation_Env a
+  Compilation_Env f <*> Compilation_Env a = Compilation_Env $ f a
+
+instance Monad Compilation_Env where
+  (Compilation_Env a) >>= f = f a
+  return a = Compilation_Env a
+  
+com_input_unit :: String -> Compilation_Env Atom_Unit
+com_input_unit s = return $ Atom_Unit_Edge $ InputN UnitT s
+com_input_int :: String -> Compilation_Env Atom_Int
+com_input_int s = return $ Atom_Int_Edge $ InputN IntT s
+com_input_bit :: String -> Compilation_Env Atom_Bit
+com_input_bit s = return $ Atom_Bit_Edge $ InputN BitT s
+com_input_atom_tuple :: (Aetherling_Value a, Aetherling_Value b) => String ->
+  Proxy (Atom_Tuple a b) -> Compilation_Env (Atom_Tuple a b)
+com_input_atom_tuple s a_proxy =
+  return $ Atom_Tuple_Edge $ InputN (get_AST_type a_proxy) s
+com_input_seq :: (KnownNat n, KnownNat i, Aetherling_Value a) => String ->
+  Proxy (Seq n i a) -> Compilation_Env (Seq n i a)
+com_input_seq s a_proxy =
+  return $ Seq_Edge $ InputN (get_AST_type a_proxy) s
 {-
-sym_input_bit :: Seq_Shallow_To_Deep_Env Atom_Bit
-sym_input_bit = add_to_DAG (InputN BitT) (Just []) "sym_input_bit" ""
-sym_input_atom_tuple :: forall a b .
+com_input_atom_tuple :: forall a b .
   (Aetherling_Value a, Aetherling_Value b) =>
                     Seq_Shallow_To_Deep_Env (Atom_Tuple a b)
-sym_input_atom_tuple = add_to_DAG (InputN tuple_type) (Just []) "sym_input_tuple" ""
+com_input_atom_tuple = add_to_DAG (InputN tuple_type) (Just []) "com_input_tuple" ""
   where
     a_proxy = Proxy :: Proxy a
     b_proxy = Proxy :: Proxy b
     tuple_type = ATupleT (get_AST_type a_proxy) (get_AST_type b_proxy)
-sym_input_seq :: forall a n i . (KnownNat n, KnownNat i,
+com_input_seq :: forall a n i . (KnownNat n, KnownNat i,
                                   Aetherling_Value a) =>
   Seq_Shallow_To_Deep_Env (Seq n i a)
-sym_input_seq = add_to_DAG (InputN seq_type) (Just []) "sym_input_tuple" ""
+com_input_seq = add_to_DAG (InputN seq_type) (Just []) "com_input_tuple" ""
   where
     a_proxy = Proxy :: Proxy a
     n_val = fromInteger $ natVal (Proxy :: Proxy n)
@@ -466,5 +371,4 @@ sym_input_seq = add_to_DAG (InputN seq_type) (Just []) "sym_input_tuple" ""
     seq_type = SeqT n_val i_val (get_AST_type a_proxy)
 
 
--}
 -}

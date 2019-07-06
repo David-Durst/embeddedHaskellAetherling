@@ -119,10 +119,10 @@ class Monad m => Sequence_Language m where
                   Aetherling_Value b) =>
     m a -> m b -> m (Atom_Tuple a b)
 
-  seq_tupleC :: (Aetherling_Value (Seq n i a)) =>
-    m (Seq n i a) -> m (Seq n i a) -> m (Seq_Tuple 2 (Seq n i a))
+  seq_tupleC :: (Aetherling_Value a) =>
+    m a -> m a -> m (Seq_Tuple 2 a)
 
-  zipC :: (Aetherling_Value (Seq n i a), KnownNat l, KnownNat n) =>
+  zipC :: (Aetherling_Value a, KnownNat l, KnownNat n, KnownNat i) =>
     Proxy l -> [m (Seq n i a)] -> m (Seq n i (Seq_Tuple l a))
 
   seq_tuple_appendC :: (KnownNat n, Aetherling_Value (Seq_Tuple n a),

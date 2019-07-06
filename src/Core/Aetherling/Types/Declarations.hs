@@ -117,6 +117,9 @@ data Expr =
   | AbsN {seq_in :: Expr}
   | NotN {seq_in :: Expr}
   | AddN {seq_in :: Expr}
+  | SubN {seq_in :: Expr}
+  | MulN {seq_in :: Expr}
+  | DivN {seq_in :: Expr}
   | EqN {t :: AST_Type, seq_in :: Expr}
 
   -- generators
@@ -218,14 +221,14 @@ data Expr =
   | STupleToSeqN {
       tuple_len :: Int,
       tuple_elem_t :: AST_Type,
-        seq_in :: Expr
+      seq_in :: Expr
       }
   | SeqToSTupleN {
       tuple_len :: Int,
       tuple_elem_t :: AST_Type,
-        seq_in :: Expr
+      seq_in :: Expr
       }
-  | InputN {t :: AST_Type}
+  | InputN {t :: AST_Type, input_name :: String}
   | ErrorN
   deriving (Show, Eq)
 

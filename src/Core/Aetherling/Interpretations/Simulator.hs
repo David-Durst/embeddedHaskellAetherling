@@ -1,4 +1,5 @@
 module Aetherling.Interpretations.Simulator where
+import Aetherling.Interpretations.Monad_Helpers
 import Aetherling.ASTs.Sequence
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
@@ -32,13 +33,13 @@ instance Sequence_Language Simulation_Env where
   addC _ = fail $ fail_message "addC" "Atom_Tuple Atom_Int Atom_Int"
 
   subC (Simulation_Env (Atom_Tuple (Atom_Int x) (Atom_Int y))) = return $ Atom_Int $ x-y
-  subC _ = fail $ fail_message "addC" "Atom_Tuple Atom_Int Atom_Int"
+  subC _ = fail $ fail_message "subC" "Atom_Tuple Atom_Int Atom_Int"
   
   mulC (Simulation_Env (Atom_Tuple (Atom_Int x) (Atom_Int y))) = return $ Atom_Int $ x*y
   mulC _ = fail $ fail_message "mulC" "Atom_Tuple Atom_Int Atom_Int"
   
   divC (Simulation_Env (Atom_Tuple (Atom_Int x) (Atom_Int y))) = return $ Atom_Int $ x `div` y
-  divC _ = fail $ fail_message "mulC" "Atom_Tuple Atom_Int Atom_Int"
+  divC _ = fail $ fail_message "divC" "Atom_Tuple Atom_Int Atom_Int"
 
   eqC (Simulation_Env (Atom_Tuple x y)) = return $ Atom_Bit $ x == y 
   eqC _ = fail $ fail_message "eqC" "Atom_Tuple"
@@ -130,7 +131,7 @@ instance Sequence_Language Simulation_Env where
     y_val <- y
     return $ Seq_Tuple (listToVector (Proxy @2) [x_val, y_val])
     
-  zipC :: forall n i a l . (Aetherling_Value (Seq n i a), KnownNat l, KnownNat n) =>
+  zipC :: forall n i a l . (Aetherling_Value a, KnownNat l, KnownNat n, KnownNat i) =>
     Proxy l -> [Simulation_Env (Seq n i a)] -> Simulation_Env (Seq n i (Seq_Tuple l a))
   zipC proxyL xs | length xs == (fromInteger $ natVal proxyL) = do
     let xs_vals = fmap simulate xs
@@ -155,9 +156,6 @@ instance Sequence_Language Simulation_Env where
   
   -- composition operators
   (>>>) f g = g . f
-
-fail_message fName tName = fName ++ " must receive " ++ tName ++
-  "not " ++ tName ++ "_Wires or " ++ tName ++ "_Resources."
 
 data Simulation_Env a = Simulation_Env a
   deriving (Show, Eq, Functor)
