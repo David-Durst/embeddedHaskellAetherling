@@ -105,8 +105,8 @@ Unpartition (ni*nj) nk . Unpartition ni nj . Map ni (Partition nj nk)
 
 # Space-Time IR
 ## Operators
-1. `Partition_t_tt no ni :: TSeq (no*ni) (vo + no*vi) t -> TSeq no vo (TSeq ni vi t)`
-1. `Unpartition_t_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) (vo + no*vi) t`
+1. `Partition_t_tt no ni :: TSeq (no*ni) ((no * vi) + (vo * (ni + vi))) t -> TSeq no vo (TSeq ni vi t)`
+1. `Unpartition_t_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) ((no * vi) + (vo * (ni + vi))) t`
 1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
 1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t)`
 
