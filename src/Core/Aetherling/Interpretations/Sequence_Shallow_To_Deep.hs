@@ -306,7 +306,7 @@ instance Sequence_Language Compilation_Env where
                         KnownNat io, KnownNat ii,
                         Aetherling_Value a) =>
     Proxy io -> Proxy ii ->
-    Compilation_Env (Seq no ((ni-1) + (no GHC.TypeLits.* ii) + (io GHC.TypeLits.* (ni + ii)))
+    Compilation_Env (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
        (Seq_Tuple ni a)) ->
     Compilation_Env (Seq no io (Seq ni ii a))
   seq_tuple_to_seqC proxyIO proxyII (Compilation_Env (Seq_Edge x)) =
@@ -324,7 +324,7 @@ instance Sequence_Language Compilation_Env where
                         KnownNat io, KnownNat ii,
                         Aetherling_Value a) =>
     Compilation_Env (Seq no io (Seq ni ii a)) ->
-    Compilation_Env (Seq no ((ni-1) + (no GHC.TypeLits.* ii) + (io GHC.TypeLits.* (ni + ii)))
+    Compilation_Env (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
        (Seq_Tuple ni a))
   seq_to_seq_tupleC (Compilation_Env (Seq_Edge x)) = 
     return $ Seq_Edge $ SeqToSTupleN no_val ni_val io_val ii_val a_type x

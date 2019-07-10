@@ -134,7 +134,7 @@ class Monad m => Sequence_Language m where
                         KnownNat io, KnownNat ii,
                         Aetherling_Value a) =>
     Proxy io -> Proxy ii ->
-    m (Seq no ((ni-1) + (no GHC.TypeLits.* ii) + (io GHC.TypeLits.* (ni + ii)))
+    m (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
        (Seq_Tuple ni a)) ->
     m (Seq no io (Seq ni ii a))
 
@@ -142,7 +142,7 @@ class Monad m => Sequence_Language m where
                         KnownNat io, KnownNat ii,
                         Aetherling_Value a) =>
     m (Seq no io (Seq ni ii a)) ->
-    m (Seq no ((ni-1) + (no GHC.TypeLits.* ii) + (io GHC.TypeLits.* (ni + ii)))
+    m (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
        (Seq_Tuple ni a))
 
   -- composition operators

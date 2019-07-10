@@ -21,7 +21,7 @@ main = do
   let img_width = Proxy @192
   let img_height = Proxy @320
   let img_size = img_width `mul_p` img_height
-  let sim_data :: Simulation_Env (Seq 3 0 (Seq (192 GHC.TypeLits.* 320) 8 Atom_Int)) = sim_input_seq' (Proxy @3) [
+  let sim_data :: Simulation_Env (Seq 3 0 (Seq (192 GHC.TypeLits.* 320) 583680 Atom_Int)) = sim_input_seq' (Proxy @3) [
         Seq $ listToVector img_size $ fmap Atom_Int $ r_px img,
         Seq $ listToVector img_size $ fmap Atom_Int $ g_px img,
         Seq $ listToVector img_size $ fmap Atom_Int $ b_px img
@@ -31,7 +31,7 @@ main = do
   let result_img = Pixels (result_list !! 0) (result_list !! 1)
                    (result_list !! 2) (192 `div` 2) (320 `div` 2)
   ints_to_image "blurred_HalideParrot.png" result_img
-  let result_pyramid = undefined -- simulate (blur_pyramidC img_height img_width sim_data)
+  let result_pyramid = simulate (blur_pyramidC img_height img_width sim_data)
   let result_pyramid_list = fmap (fmap atom_int_to_int) $ fmap seq_to_list $ seq_to_list result_pyramid
   let result_img_pyramid = Pixels (result_pyramid_list !! 0) (result_pyramid_list !! 1)
                    (result_pyramid_list !! 2) (192 `div` 8) (320 `div` 8)
@@ -81,14 +81,6 @@ stencil_1dC window_size in_seq | (natVal window_size) >= 2 = do
   
 stencil_1dC window_size _ = fail $ printf "window size %d < 2" (natVal window_size)
 
-  
-stencil_1dC2 window_size in_seq | (natVal window_size) >= 2 = do
-  let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
-                               (shiftC (Proxy @1) last_shifted_seq) : l)
-                     [in_seq] [0 .. natVal window_size - 2]
-  zipC window_size shifted_seqs
-  --seq_tuple_to_seqC Proxy (Proxy @0) tuple
-  
 down_2dC down_row down_col in_row in_col idx_row idx_col =
   partitionC out_row (down_row `mul_p` down_col `mul_p` out_col) (Proxy @0) Proxy >>>
   mapC' out_row (down_2d_one_rowC down_row down_col out_col idx_row idx_col) >>>
