@@ -36,6 +36,7 @@ dependencies:
 - containers
 - reflection
 - util
+- monad-memo
 
 ghc-options:
 - -fconstraint-solver-iterations=0
@@ -70,6 +71,7 @@ library:
     - ConstraintKinds
     - Rank2Types
     - InstanceSigs
+    - QuasiQuotes
 
 executables:
   Aetherling-Blur-exe:

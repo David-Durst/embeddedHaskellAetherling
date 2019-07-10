@@ -301,25 +301,38 @@ instance Sequence_Language Compilation_Env where
       else fail $ fail_message_edge "seq_tuple_appendC" "for second input any"
   seq_tuple_appendC _ _ = fail $ fail_message_edge "seq_tuple_appendC" "for first input seq_tuple"
   
-  seq_tuple_to_seqC :: forall n a . (KnownNat n,
-                                     Aetherling_Value a,
-                                     Aetherling_Value (Seq n 0 a)) =>
-    Compilation_Env (Seq_Tuple n a) -> Compilation_Env (Seq n 0 a)
-  seq_tuple_to_seqC (Compilation_Env (Seq_Tuple_Edge x)) =
-    return $ Seq_Edge $ STupleToSeqN len a_type x
+  seq_tuple_to_seqC :: forall no ni io ii a .
+                       (KnownNat no, KnownNat ni,
+                        KnownNat io, KnownNat ii,
+                        Aetherling_Value a) =>
+    Proxy io -> Proxy ii ->
+    Compilation_Env (Seq no ((ni-1) + (no GHC.TypeLits.* ii) + (io GHC.TypeLits.* (ni + ii)))
+       (Seq_Tuple ni a)) ->
+    Compilation_Env (Seq no io (Seq ni ii a))
+  seq_tuple_to_seqC proxyIO proxyII (Compilation_Env (Seq_Edge x)) =
+    return $ Seq_Edge $ STupleToSeqN no_val ni_val io_val ii_val a_type x
     where
-      len = fromInteger $ natVal (Proxy :: Proxy n)
+      no_val = fromInteger $ natVal (Proxy :: Proxy no)
+      ni_val = fromInteger $ natVal (Proxy :: Proxy ni)
+      io_val = fromInteger $ natVal proxyIO
+      ii_val = fromInteger $ natVal proxyII
       a_type = get_AST_type (Proxy :: Proxy a)
-  seq_tuple_to_seqC _ = fail $ fail_message_edge "seq_tuple_to_seqC" "seq_tuple"
+  seq_tuple_to_seqC _ _ _ = fail $ fail_message_edge "seq_tuple_to_seqC" "seq_tuple"
   
-  seq_to_seq_tupleC :: forall n a . (KnownNat n,
-                                     Aetherling_Value a,
-                                     Aetherling_Value (Seq_Tuple n a)) =>
-    Compilation_Env (Seq n 0 a) -> Compilation_Env (Seq_Tuple n a)
-  seq_to_seq_tupleC (Compilation_Env (Seq_Edge x)) =
-    return $ Seq_Tuple_Edge $ SeqToSTupleN len a_type x
+  seq_to_seq_tupleC :: forall no ni io ii a .
+                       (KnownNat no, KnownNat ni, 
+                        KnownNat io, KnownNat ii,
+                        Aetherling_Value a) =>
+    Compilation_Env (Seq no io (Seq ni ii a)) ->
+    Compilation_Env (Seq no ((ni-1) + (no GHC.TypeLits.* ii) + (io GHC.TypeLits.* (ni + ii)))
+       (Seq_Tuple ni a))
+  seq_to_seq_tupleC (Compilation_Env (Seq_Edge x)) = 
+    return $ Seq_Edge $ SeqToSTupleN no_val ni_val io_val ii_val a_type x
     where
-      len = fromInteger $ natVal (Proxy :: Proxy n)
+      no_val = fromInteger $ natVal (Proxy :: Proxy no)
+      ni_val = fromInteger $ natVal (Proxy :: Proxy ni)
+      io_val = fromInteger $ natVal (Proxy :: Proxy io)
+      ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
       a_type = get_AST_type (Proxy :: Proxy a)
   seq_to_seq_tupleC _ = fail $ fail_message_edge "seq_to_seq_tupleC" "seq"
   

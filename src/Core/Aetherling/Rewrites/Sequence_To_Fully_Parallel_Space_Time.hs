@@ -1,18 +1,13 @@
 module Aetherling.Rewrites.Sequence_To_Fully_Parallel_Space_Time where
 import Aetherling.Types.Declarations
 import Aetherling.Types.Functions
+import Aetherling.Rewrites.Rewrite_Helpers
 import Control.Monad.Except
 import Control.Monad.Identity
 import Data.Maybe
 import Data.Either
 
 type Rewrite_StateM = Except Rewrite_Failure
-
-data Rewrite_Failure = Expr_Failure {rw_msg :: String, rw_expr :: Expr}
-                     | Type_Failure {rw_msg :: String, rw_t :: AST_Type}
-                     | Value_Failure {rw_msg :: String, rw_v :: AST_Value}
-                     | Input_Failure {rw_msg :: String}
-  deriving (Eq, Show)
 
 rewrite_to_fully_parallel :: (Aetherling_Value a) => a -> Expr
 rewrite_to_fully_parallel seq_program = do
@@ -105,15 +100,15 @@ sequence_to_fully_parallel (STupleAppendN out_len elem_t producer_left producer_
   producer_right_par <- sequence_to_fully_parallel producer_right
   return $ STupleAppendN out_len t_par producer_left_par producer_right_par
   
-sequence_to_fully_parallel (STupleToSeqN out_len elem_t producer) = do
+sequence_to_fully_parallel (STupleToSeqN no ni io ii elem_t producer) = do
   t_par <- parallelize_AST_type elem_t
   producer_par <- sequence_to_fully_parallel producer
-  return $ STupleToSeqN out_len t_par producer_par
+  return $ Map_sN no (STupleToSSeqN ni t_par (InputN t_par "seq_in")) producer_par
   
-sequence_to_fully_parallel (SeqToSTupleN out_len elem_t producer) = do
+sequence_to_fully_parallel (SeqToSTupleN no ni io ii elem_t producer) = do
   t_par <- parallelize_AST_type elem_t
   producer_par <- sequence_to_fully_parallel producer
-  return $ SSeqToSTupleN out_len t_par producer_par
+  return $ Map_sN no (SSeqToSTupleN ni t_par (InputN t_par "seq_in")) producer_par
 
 sequence_to_fully_parallel (InputN t input_name) = do
   t_par <- parallelize_AST_type t

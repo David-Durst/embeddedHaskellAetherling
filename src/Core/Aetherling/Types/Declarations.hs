@@ -96,7 +96,7 @@ data AST_Type =
   | SeqT Int Int AST_Type
   | SSeqT Int AST_Type
   | TSeqT Int Int AST_Type
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 -- these exist only because it's easier to have a value that is an Aetherling value
 -- rather than a value that's a member of a type class of aetherling values,
@@ -110,7 +110,7 @@ data AST_Value =
   | SeqV {vals :: [AST_Value], i_v :: Int}
   | SSeqV [AST_Value]
   | TSeqV {vals :: [AST_Value], i_v :: Int}
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 data Expr =
   IdN {seq_in :: Expr}
@@ -221,12 +221,18 @@ data Expr =
       seq_in_right :: Expr
       }
   | STupleToSeqN {
-      tuple_len :: Int,
+      no :: Int,
+      ni :: Int,
+      io :: Int,
+      ii :: Int,
       tuple_elem_t :: AST_Type,
       seq_in :: Expr
       }
   | SeqToSTupleN {
-      tuple_len :: Int,
+      no :: Int,
+      ni :: Int,
+      io :: Int,
+      ii :: Int,
       tuple_elem_t :: AST_Type,
       seq_in :: Expr
       }
@@ -375,7 +381,7 @@ data Expr =
       tuple_elem_t :: AST_Type,
       seq_in :: Expr
       }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 sSSeq0_2 :: SSeq 2 Int
 sSSeq0_2 = SSeq $ fromTuple (2, 2)

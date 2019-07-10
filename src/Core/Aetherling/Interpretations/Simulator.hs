@@ -148,12 +148,14 @@ instance Sequence_Language Simulation_Env where
     return $ Seq_Tuple $ V.snoc input_vec x
   seq_tuple_appendC _ _ = fail $ fail_message "seq_tuple_appendC" "Seq_Tuple"
 
-  seq_tuple_to_seqC (Simulation_Env (Seq_Tuple input_vec)) = return $ Seq input_vec
-  seq_tuple_to_seqC _ = fail $ fail_message "seq_tuple_to_seqC" "Seq_Tuple"
-  
-  seq_to_seq_tupleC (Simulation_Env (Seq input_vec)) = return $ Seq_Tuple input_vec
+  seq_tuple_to_seqC _ _ (Simulation_Env (Seq input_tuples)) =
+    return $ Seq $ fmap (\(Seq_Tuple x) -> Seq x) input_tuples
+  seq_tuple_to_seqC _ _ _ = fail $ fail_message "seq_tuple_to_seqC" "Seq_Tuple"
+
+  seq_to_seq_tupleC (Simulation_Env (Seq input_seqs)) =
+    return $ Seq $ fmap (\(Seq x) -> Seq_Tuple x) input_seqs
   seq_to_seq_tupleC _ = fail $ fail_message "seq_to_seq_tupleC" "Seq"
-  
+
   -- composition operators
   (>>>) f g = g . f
 
