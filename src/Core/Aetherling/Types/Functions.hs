@@ -251,15 +251,20 @@ expr_to_types (SndN t0 t1 _) = Expr_Types [ATupleT t0 t1] t1
 expr_to_types (ATupleN t0 t1 _ _) = Expr_Types [t0, t1] (ATupleT t0 t1)
 expr_to_types (STupleN elem_t _ _) =
   Expr_Types [elem_t, elem_t] (STupleT 2 elem_t)
+  
 expr_to_types (STupleAppendN out_len elem_t _ _) =
   Expr_Types [STupleT (out_len - 1) elem_t, elem_t] (STupleT out_len elem_t)
-  {-
-expr_to_types (STupleToSeqN tuple_len tuple_elem_t _) =
-  Expr_Types [STupleT tuple_len tuple_elem_t] (SeqT tuple_len 0 tuple_elem_t)
-expr_to_types (SeqToSTupleN tuple_len tuple_elem_t _) =
-  Expr_Types [SeqT tuple_len 0 tuple_elem_t] (STupleT tuple_len tuple_elem_t)
--}
+  
+expr_to_types (STupleToSeqN no ni io ii tuple_elem_t _) =
+  Expr_Types [SeqT no ((no * ((ni - 1) + ii)) + (io * (ni + ii))) (STupleT ni tuple_elem_t)]
+  (SeqT no ni (SeqT no ni tuple_elem_t))
+expr_to_types (SeqToSTupleN no ni io ii tuple_elem_t _) =
+  Expr_Types [SeqT no ni (SeqT no ni tuple_elem_t)]
+  (SeqT no ((no * ((ni - 1) + ii)) + (io * (ni + ii))) (STupleT ni tuple_elem_t))
+  
 expr_to_types (InputN t _) = Expr_Types [] t
+expr_to_types (ErrorN _) = Expr_Types [] UnitT
+
 expr_to_types (FIFON n i _ elem_t _) =
   Expr_Types [SeqT n i elem_t] (SeqT n i elem_t)
   
@@ -304,7 +309,7 @@ expr_to_types (Unpartition_t_ttN no ni io ii elem_t _) =
   where
     in_types = [TSeqT no io (TSeqT ni ii elem_t)]
     out_type = TSeqT (no * ni) ((no * ii) + (io * (ni + ii))) elem_t
-
+ 
 -- higher order operators
 expr_to_types (Map_sN n f _) = Expr_Types in_types out_type
   where
@@ -336,3 +341,15 @@ expr_to_types (Reduce_tN n i f _) = Expr_Types in_types out_type
     inner_types = expr_to_types f
     in_types = fmap (TSeqT n i) $ e_in_types inner_types
     out_type = TSeqT n i $ e_out_type inner_types
+
+expr_to_types (SerializeN no ni io ii tuple_elem_t _) =
+  Expr_Types [TSeqT no ((no * ((ni - 1) + ii)) + (io * (ni + ii))) (SSeqT ni tuple_elem_t)]
+  (TSeqT no ni (TSeqT no ni tuple_elem_t))
+expr_to_types (DeserializeN no ni io ii tuple_elem_t _) =
+  Expr_Types [TSeqT no ni (TSeqT no ni tuple_elem_t)]
+  (TSeqT no ((no * ((ni - 1) + ii)) + (io * (ni + ii))) (SSeqT ni tuple_elem_t))
+  
+expr_to_types (STupleToSSeqN tuple_len tuple_elem_t _) =
+  Expr_Types [STupleT tuple_len tuple_elem_t] (SSeqT tuple_len tuple_elem_t)
+expr_to_types (SSeqToSTupleN tuple_len tuple_elem_t _) =
+  Expr_Types [SSeqT tuple_len tuple_elem_t] (STupleT tuple_len tuple_elem_t)
