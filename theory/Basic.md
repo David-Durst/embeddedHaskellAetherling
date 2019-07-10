@@ -218,9 +218,9 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t`
 1. `Select_1d_t n v idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
 1. `Tuple_To_SSeq n :: NTuple n t -> SSeq n t`
-1. `Serialize no ni vo vi :: TSeq no ((ni-1) + (no * vi) + (vo * (ni + vi))) (SSeq ni t) -> TSeq no vo (TSeq ni vi t)`
+1. `Serialize no ni vo vi :: TSeq no ((no * ((ni - 1) + vi)) + (vo * (ni + vi))) (SSeq ni t) -> TSeq no vo (TSeq ni vi t)`
 1. `SSeq_To_Tuple n :: SSeq n t -> NTuple n t`
-1. `Deserialize no ni vo vi :: TSeq no vo (TSeq ni vi t) -> TSeq no ((ni-1) + (no * vi) + (vo * (ni + vi))) (SSeq ni t)`
+1. `Deserialize no ni vo vi :: TSeq no vo (TSeq ni vi t) -> TSeq no ((no * ((ni - 1) + vi)) + (vo * (ni + vi))) (SSeq ni t)`
 
 **Note: reduce's type signature will need to be modified to handle pipelined operators.**
 **Note: typically, the `v` parameters are implicit**
