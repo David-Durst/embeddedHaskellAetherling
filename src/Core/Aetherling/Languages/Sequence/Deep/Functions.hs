@@ -1,6 +1,7 @@
 module Aetherling.Languages.Sequence.Deep.Functions where
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Sequence.Deep.Expr
+import Control.Monad.State
 import qualified Data.Set as S
 
 size_int :: Int
@@ -105,78 +106,93 @@ expr_to_types (ErrorN _) = Expr_Types [] UnitT
 -- | get the input and output types of the entire expression,
 -- not just those of the last expression like expr_to_types
 
+type Input_TrackerM = State (S.Set String)
+
 expr_to_outer_types :: Expr -> Expr_Types
-expr_to_outer_types (IdN producer_e) = expr_to_outer_types producer_e
-expr_to_outer_types consumer_e@(AbsN producer_e) =
+expr_to_outer_types e = evalState (expr_to_outer_types' e) S.empty
+
+expr_to_outer_types' :: Expr -> Input_TrackerM Expr_Types
+expr_to_outer_types' (IdN producer_e) = expr_to_outer_types' producer_e
+expr_to_outer_types' consumer_e@(AbsN producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(NotN producer_e) =
+expr_to_outer_types' consumer_e@(NotN producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(AddN producer_e) =
+expr_to_outer_types' consumer_e@(AddN producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(SubN producer_e) =
+expr_to_outer_types' consumer_e@(SubN producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(MulN producer_e) =
+expr_to_outer_types' consumer_e@(MulN producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(DivN producer_e) =
+expr_to_outer_types' consumer_e@(DivN producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(EqN _ producer_e) =
+expr_to_outer_types' consumer_e@(EqN _ producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
 
 -- generators
-expr_to_outer_types consumer_e@(Lut_GenN _ _ producer_e) = 
+expr_to_outer_types' consumer_e@(Lut_GenN _ _ producer_e) = 
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types (Const_GenN _ t) = Expr_Types [] t
+expr_to_outer_types' (Const_GenN _ t) = return $ Expr_Types [] t
 
 -- sequence operators
-expr_to_outer_types consumer_e@(ShiftN _ _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(ShiftN _ _ _ _ producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(Up_1dN _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(Up_1dN _ _ _ producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(Down_1dN _ _ _ _ producer_e) = 
+expr_to_outer_types' consumer_e@(Down_1dN _ _ _ _ producer_e) = 
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(PartitionN _ _ _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(PartitionN _ _ _ _ _ producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(UnpartitionN _ _ _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(UnpartitionN _ _ _ _ _ producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
 
 -- higher order operators
-expr_to_outer_types consumer_e@(MapN _ _ _ producer_e) = do
+expr_to_outer_types' consumer_e@(MapN _ _ _ producer_e) = do
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(Map2N _ _ _ producer0_e producer1_e) = do
+expr_to_outer_types' consumer_e@(Map2N _ _ _ producer0_e producer1_e) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
-expr_to_outer_types consumer_e@(ReduceN _ _ _ producer_e) = do
+expr_to_outer_types' consumer_e@(ReduceN _ _ _ producer_e) = do
   expr_to_outer_types_atom_operator consumer_e producer_e
 
 -- tuple operators
-expr_to_outer_types consumer_e@(FstN _ _ producer_e) =
+expr_to_outer_types' consumer_e@(FstN _ _ producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(SndN _ _ producer_e) =
+expr_to_outer_types' consumer_e@(SndN _ _ producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(ATupleN _ _ producer0_e producer1_e) = do
+expr_to_outer_types' consumer_e@(ATupleN _ _ producer0_e producer1_e) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
-expr_to_outer_types consumer_e@(STupleN _ producer0_e producer1_e) = do
+expr_to_outer_types' consumer_e@(STupleN _ producer0_e producer1_e) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
  
-expr_to_outer_types consumer_e@(STupleAppendN _ _ producer0_e producer1_e) = do
+expr_to_outer_types' consumer_e@(STupleAppendN _ _ producer0_e producer1_e) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
   
-expr_to_outer_types consumer_e@(STupleToSeqN _ _ _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(STupleToSeqN _ _ _ _ _ producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types consumer_e@(SeqToSTupleN _ _ _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(SeqToSTupleN _ _ _ _ _ producer_e) =
   expr_to_outer_types_atom_operator consumer_e producer_e
   
-expr_to_outer_types (InputN t _) = Expr_Types [t] t
-expr_to_outer_types (ErrorN _) = Expr_Types [] UnitT
+expr_to_outer_types' (InputN t name) = do
+  previous_names <- get
+  if S.member name previous_names
+    then return $ Expr_Types [] t
+    else do
+    let updated_names = S.insert name previous_names
+    put updated_names 
+    return $ Expr_Types [t] t
+expr_to_outer_types' (ErrorN _) = return $ Expr_Types [] UnitT
 
-expr_to_outer_types_atom_operator :: Expr -> Expr -> Expr_Types 
+expr_to_outer_types_atom_operator :: Expr -> Expr -> Input_TrackerM Expr_Types 
 expr_to_outer_types_atom_operator consumer_op producer_op = do
-  let producer_input_types = e_in_types $ expr_to_outer_types producer_op
+  producer_outer_types <- expr_to_outer_types' producer_op
+  let producer_input_types = e_in_types producer_outer_types
   let consumer_output_type = e_out_type $ expr_to_types consumer_op
-  Expr_Types producer_input_types consumer_output_type
+  return $ Expr_Types producer_input_types consumer_output_type
 
-expr_to_outer_types_binary_operator :: Expr -> Expr -> Expr -> Expr_Types
+expr_to_outer_types_binary_operator :: Expr -> Expr -> Expr -> Input_TrackerM Expr_Types
 expr_to_outer_types_binary_operator consumer_op producer_op0 producer_op1 = do
-  let producer0_input_types = e_in_types $ expr_to_outer_types producer_op0
-  let producer1_input_types = e_in_types $ expr_to_outer_types producer_op1
+  producer0_outer_types <- expr_to_outer_types' producer_op0
+  let producer0_input_types = e_in_types producer0_outer_types
+  producer1_outer_types <- expr_to_outer_types' producer_op1
+  let producer1_input_types = e_in_types producer1_outer_types
   let consumer_output_type = e_out_type $ expr_to_types consumer_op
-  Expr_Types (producer0_input_types ++ producer1_input_types) consumer_output_type
+  return $ Expr_Types (producer0_input_types ++ producer1_input_types) consumer_output_type
