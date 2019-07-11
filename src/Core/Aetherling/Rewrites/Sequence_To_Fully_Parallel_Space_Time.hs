@@ -4,7 +4,7 @@ import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
 import qualified Aetherling.Languages.Sequence.Deep.Types as SeqT
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
-import Aetherling.Languages.Sequence.Shallow.Functions
+import Aetherling.Languages.Sequence.Shallow.Expr_Type_Conversions
 import Control.Monad.Except
 import Control.Monad.Identity
 import Data.Maybe

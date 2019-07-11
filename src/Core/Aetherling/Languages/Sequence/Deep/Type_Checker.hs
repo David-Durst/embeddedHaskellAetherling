@@ -1,7 +1,7 @@
 module Aetherling.Languages.Sequence.Deep.Type_Checker where
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Sequence.Deep.Expr
-import Aetherling.Languages.Sequence.Deep.Functions
+import Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions
 import Control.Monad.Except
 import Data.Either
 

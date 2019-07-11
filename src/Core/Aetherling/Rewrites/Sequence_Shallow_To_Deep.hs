@@ -1,6 +1,6 @@
 module Aetherling.Rewrites.Sequence_Shallow_To_Deep where
 import Aetherling.Languages.Sequence.Shallow.Types
-import Aetherling.Languages.Sequence.Shallow.Functions
+import Aetherling.Languages.Sequence.Shallow.Expr_Type_Conversions
 import Aetherling.Languages.Sequence.Shallow.Expr
 import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Types

@@ -1,4 +1,4 @@
-module Aetherling.Languages.Sequence.Deep.Functions where
+module Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions where
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import Control.Monad.State

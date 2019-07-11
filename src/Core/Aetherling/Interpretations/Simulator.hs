@@ -2,7 +2,7 @@ module Aetherling.Interpretations.Simulator where
 import Aetherling.Monad_Helpers
 import Aetherling.Languages.Sequence.Shallow.Expr
 import Aetherling.Languages.Sequence.Shallow.Types
-import Aetherling.Languages.Sequence.Shallow.Functions
+import Aetherling.Languages.Sequence.Shallow.Expr_Type_Conversions
 import Aetherling.Languages.Isomorphisms
 import Data.Typeable
 import Unsafe.Coerce

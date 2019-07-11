@@ -1,4 +1,4 @@
-module Aetherling.Languages.Space_Time.Deep.Functions where
+module Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions where
 import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Languages.Space_Time.Deep.Expr
 
