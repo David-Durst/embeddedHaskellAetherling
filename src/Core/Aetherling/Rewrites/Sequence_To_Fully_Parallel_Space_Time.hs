@@ -102,12 +102,18 @@ sequence_to_fully_parallel (SeqE.STupleAppendN out_len elem_t producer_left prod
 sequence_to_fully_parallel (SeqE.STupleToSeqN no ni io ii elem_t producer) = do
   t_par <- parallelize_AST_type elem_t
   producer_par <- sequence_to_fully_parallel producer
-  return $ STE.Map_sN no (STE.STupleToSSeqN ni t_par (STE.InputN t_par "seq_in")) producer_par
+  return $ STE.Map_sN no (STE.STupleToSSeqN ni t_par
+                          -- need to wrap t_par for input as STuple takes
+                          -- in an stuple of elements
+                          (STE.InputN (STT.STupleT ni t_par) "seq_in")) producer_par
   
 sequence_to_fully_parallel (SeqE.SeqToSTupleN no ni io ii elem_t producer) = do
   t_par <- parallelize_AST_type elem_t
   producer_par <- sequence_to_fully_parallel producer
-  return $ STE.Map_sN no (STE.SSeqToSTupleN ni t_par (STE.InputN t_par "seq_in")) producer_par
+  return $ STE.Map_sN no (STE.SSeqToSTupleN ni t_par
+                          -- need to wrap t_par for input as STuple takes
+                          -- in an stuple of elements
+                          (STE.InputN (STT.SSeqT ni t_par) "seq_in")) producer_par
 
 sequence_to_fully_parallel (SeqE.InputN t input_name) = do
   t_par <- parallelize_AST_type t
