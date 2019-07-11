@@ -87,7 +87,7 @@ instance Sequence_Language Compilation_Env where
                              Aetherling_Value a) =>
     Proxy (n+r) -> Proxy r -> Compilation_Env (Seq (n+r) i a) -> Compilation_Env (Seq (n+r) i a)
   shiftC' len_proxy shift_amount_proxy (Compilation_Env (Seq_Edge x)) = return $
-    Seq_Edge $ ShiftN len shift i_val a_type x
+    Seq_Edge $ ShiftN len i_val shift a_type x
     where
       len = fromInteger $ natVal len_proxy
       shift = fromInteger $ natVal shift_amount_proxy
@@ -260,13 +260,13 @@ instance Sequence_Language Compilation_Env where
   zipC len_proxy wrapped_x | natVal len_proxy > 2 = do
     let x = fmap compile wrapped_x
     let a_type = get_AST_type (Proxy :: Proxy a)
-    let n_val = fromInteger $ natVal len_proxy
+    let n_val = fromInteger $ natVal (Proxy :: Proxy n)
     let i_val = fromInteger $ natVal (Proxy :: Proxy i)
     -- this will be used after initial step in the fold
     let map_stuple_append out_len in_left in_right = Map2N n_val i_val
                                                       (STupleAppendN out_len
                                                         a_type
-                                                        (InputN a_type "tuple_in_1")
+                                                        (InputN (STupleT (out_len - 1) a_type) "tuple_in_1")
                                                         (InputN a_type "tuple_in_2"))
                                                       in_left in_right
     -- the initial step in the fold
