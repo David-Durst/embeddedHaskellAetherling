@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-module Aetherling.Types.Isomorphisms where
-import Aetherling.Types.Declarations
+module Aetherling.Languages.Isomorphisms where
+import Aetherling.Languages.Sequence.Shallow.Types
+import Aetherling.Languages.Space_Time.Shallow.Types
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Proxy

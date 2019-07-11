@@ -1,6 +1,6 @@
-module Aetherling.ASTs.Sequence where 
-import Aetherling.Types.Declarations
-import Aetherling.Types.Functions
+module Aetherling.Languages.Sequence.Shallow.Expr where
+import Aetherling.Languages.Sequence.Shallow.Types
+import Aetherling.Languages.Sequence.Shallow.Functions
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Extra

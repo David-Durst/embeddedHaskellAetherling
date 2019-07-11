@@ -1,13 +1,14 @@
 import Aetherling.Interpretations.Simulator
-import Aetherling.Types.Declarations
-import Aetherling.Types.Functions
-import Aetherling.ASTs.Sequence
+import Aetherling.Languages.Sequence.Shallow.Types
+import Aetherling.Languages.Sequence.Shallow.Expr
+import Aetherling.Rewrites.Sequence_Shallow_To_Deep
+import Aetherling.Rewrites.Sequence_To_Fully_Parallel_Space_Time
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import GHC.Exts (Constraint)
 import Data.Proxy
 import Data.List.Split
-import Aetherling.Types.Isomorphisms
+import Aetherling.Languages.Isomorphisms
 import Text.Printf
 import Control.Monad
 import qualified Data.Vector.Sized as V
@@ -37,6 +38,12 @@ main = do
                    (result_pyramid_list !! 2) (192 `div` 8) (320 `div` 8)
   ints_to_image "blurred_pyramid_HalideParrot.png" result_img_pyramid
 
+deep_embedded_blur_pyramid = compile $
+  blur_pyramidC (Proxy @192) (Proxy @320) $
+  com_input_seq "i" (Proxy :: Proxy ( (Seq 3 0 (Seq (192 GHC.TypeLits.* 320) 583680 Atom_Int)) ))
+
+fully_parallel_blur_pyramid = rewrite_to_fully_parallel deep_embedded_blur_pyramid
+  
 blur_pyramidC in_row in_col in_img = do
   let layer1 = blurC in_row in_col in_img
   let layer2 = blurC (in_row `div_p` (Proxy @2)) (in_col `div_p` (Proxy @2)) layer1

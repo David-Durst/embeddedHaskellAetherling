@@ -11,23 +11,8 @@ import Data.List.Split
 import qualified Data.List as L
 
 {-
-Below are type families for computing types depending on other types
-These are mainly used in function declarations
+Type families for computing whether types satisfy constraints
 -}
-size_int :: Int
-size_int = 8
-size_bit :: Int
-size_bit = 1
-
-size_t :: AST_Type -> Int
-size_t UnitT = 0
-size_t BitT = size_bit
-size_t IntT = size_int
-size_t (ATupleT t0 t1) = size_t t0 + size_t t1
-size_t (STupleT n t) = n * size_t t
-size_t (SeqT _ _ _) = 0
-size_t (SSeqT n t) = n * size_t t
-size_t (TSeqT n _ t) = size_t t
 
 type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom Atom_Unit = True ~ True
@@ -49,10 +34,9 @@ type family Check_Type_Is_Atom_Or_Nested (x :: *) :: Constraint where
     TypeError (ShowType x :<>: Text " is not an atom, a Seq containing atoms,"
               :<>: Text " an SSeq containing atoms, or a TSeq containing atoms.")
 
--- A typeclass that indicates all the valid Aetherling values
--- For each Aetherling value, when converting from shallow to deep representation,
--- must be able to convert between edges' types and the index of the node they
--- are produced by
+-- | A typeclass that shows how to convert all valid Aetherling values between
+-- shallow and deep representations. This requires
+-- converting between expr, edges, index of the nodes, and types
 class Aetherling_Value a where
   edge_to_maybe_expr :: a -> Maybe Expr
   expr_to_edge :: Expr -> a
