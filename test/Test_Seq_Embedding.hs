@@ -1,4 +1,5 @@
 module Test_Seq_Embedding where
+{-
 import Test.Tasty
 import Test.Tasty.HUnit
 import Aetherling.ASTs.Sequence
@@ -9,7 +10,6 @@ import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Either
 import Aetherling.Types.Isomorphisms
-{-
 two_abs = sym_input_int >>= absC >>> absC 
 two_abs_DAG = DAG {
   nodes = [InputN {t = IntT},AbsN,AbsN],
