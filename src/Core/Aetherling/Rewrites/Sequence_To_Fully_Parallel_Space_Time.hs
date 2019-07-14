@@ -10,8 +10,6 @@ import Control.Monad.Identity
 import Data.Maybe
 import Data.Either
 
-type Rewrite_StateM = Except Rewrite_Failure
-
 rewrite_to_fully_parallel :: SeqE.Expr -> STE.Expr
 rewrite_to_fully_parallel seq_expr = do
   let expr_par = runExcept $ sequence_to_fully_parallel seq_expr
