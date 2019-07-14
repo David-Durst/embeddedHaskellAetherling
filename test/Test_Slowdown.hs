@@ -32,11 +32,24 @@ double_up = compile $
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 1 14 Atom_Int)) )
 
   -- down 6 >>> up 6
-
+matching_down_up = compile $
+  (down_1dC' (Proxy @6) 0 >>>
+   up_1dC (Proxy @6)) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 6 0 Atom_Int))
+  
   -- down 7 >>> up 5
+mismatched_down_up = compile $
+  (down_1dC' (Proxy @7) 0 >>>
+   up_1dC (Proxy @5)) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 7 0 Atom_Int))
 
 
   -- map 4 of map 6 abs into map 4 of down_1d 6 - test which policy to use when downsample by 6 and 8
+matched_nested_abs_down = compile $
+  (mapC' (Proxy @4) (mapC' (Proxy @6) absC) >>>
+   mapC' (Proxy @4) (down_1dC' (Proxy @6) 0)) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 6 0 Atom_Int)))
+  
 
   -- map 4 abs >>> partition 4 1 >>> up_1d 4  - nullset in second nesting
 
