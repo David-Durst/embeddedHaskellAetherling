@@ -4,59 +4,52 @@ import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
 import qualified Aetherling.Languages.Sequence.Deep.Types as SeqT
 import Data.Maybe
 import Data.Either
+import Control.Applicative
 
 -- once I get to an empty layer, everything at that layer or below is empty
-data Lengths_Per_Layer =
-  Unary_Atom_Layer { next_element_cur_layer :: Lengths_Per_Layer}
-  | Binary_Atom_Layer {
-      next_left_element_cur_layer :: Lengths_Per_Layer,
-      next_right_element_cur_layer :: Lengths_Per_Layer
-      }
-  | Unary_Seq_Layer {
-      next_element_cur_layer :: Lengths_Per_Layer,
-      next_layer :: Lengths_Per_Layer,
-      length_cur_node :: Int
-      }
-  | Binary_Seq_Layer {
-      next_left_element_cur_layer :: Lengths_Per_Layer,
-      next_right_element_cur_layer :: Lengths_Per_Layer,
-      next_layer :: Lengths_Per_Layer,
-      length_cur_node :: Int
-      }
-  | Start_Atom_Layer
-  | Start_Seq_Layer {
-      next_layer :: Lengths_Per_Layer,
-      length_cur_node :: Int
-      }
-  | Start_Empty_Layer { next_layer :: Lengths_Per_Layer }
-  | Unary_Empty_Layer {
-      next_element_cur_layer :: Lengths_Per_Layer,
-      next_layer :: Lengths_Per_Layer
-      }
-  | Binary_Empty_Layer {
-      next_left_element_cur_layer :: Lengths_Per_Layer,
-      next_right_element_cur_layer :: Lengths_Per_Layer,
-      next_layer :: Lengths_Per_Layer
-      }
+data Lengths_Per_Layer = Lengths_Per_Layer { lengths :: [[Maybe Int]]}
     deriving (Eq, Show)
+
+merge_lengths_per_layer :: Lengths_Per_Layer -> Lengths_Per_Layer -> Lengths_Per_Layer
+merge_lengths_per_layer (Lengths_Per_Layer lengths0) (Lengths_Per_Layer lengths1) =
+  Lengths_Per_Layer $ getZipList $ (++) <$>
+  ZipList deep_layer_list <*> ZipList extended_list 
+  where
+    -- need to extended the shallower list so that don't truncate longer one
+    -- when merging
+    deep_layer_list = max lengths0 lengths1
+    shallower_layer_list = min lengths0 lengths1
+    extended_list = shallower_layer_list ++ (repeat [])
+
+prepend_lengths_per_layer :: Maybe Int -> Lengths_Per_Layer -> Lengths_Per_Layer
+prepend_lengths_per_layer prefix (Lengths_Per_Layer body) =
+  Lengths_Per_Layer ([prefix] : body)
   
 get_lengths_per_layer :: SeqE.Expr -> Lengths_Per_Layer
 get_lengths_per_layer (SeqE.IdN producer) =
-  Unary_Atom_Layer $ get_lengths_per_layer producer
+  merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
+  get_lengths_per_layer producer
 get_lengths_per_layer (SeqE.AbsN producer) =
-  Unary_Atom_Layer $ get_lengths_per_layer producer
+  merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
+  get_lengths_per_layer producer
 get_lengths_per_layer (SeqE.NotN producer) =
-  Unary_Atom_Layer $ get_lengths_per_layer producer
+  merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
+  get_lengths_per_layer producer
 get_lengths_per_layer (SeqE.AddN producer) =
-  Unary_Atom_Layer $ get_lengths_per_layer producer
+  merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
+  get_lengths_per_layer producer
 get_lengths_per_layer (SeqE.SubN producer) =
-  Unary_Atom_Layer $ get_lengths_per_layer producer
+  merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
+  get_lengths_per_layer producer
 get_lengths_per_layer (SeqE.MulN producer) =
-  Unary_Atom_Layer $ get_lengths_per_layer producer
+  merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
+  get_lengths_per_layer producer
 get_lengths_per_layer (SeqE.DivN producer) =
-  Unary_Atom_Layer $ get_lengths_per_layer producer
+  merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
+  get_lengths_per_layer producer
 get_lengths_per_layer (SeqE.EqN _ producer) =
-  Unary_Atom_Layer $ get_lengths_per_layer producer
+  merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
+  get_lengths_per_layer producer
 
 -- generators
 get_lengths_per_layer (SeqE.Lut_GenN _ _ producer) = undefined
@@ -64,86 +57,99 @@ get_lengths_per_layer (SeqE.Const_GenN _ t) =
   get_lengths_per_layer_AST_type t
 
 -- sequence operators
-get_lengths_per_layer (SeqE.ShiftN n _ _ elem_t producer) = Unary_Seq_Layer
-  (get_lengths_per_layer producer)
-  (get_lengths_per_layer_AST_type elem_t)
-  n
-get_lengths_per_layer (SeqE.Up_1dN n _ elem_t producer) = Unary_Seq_Layer
-  (get_lengths_per_layer producer)
-  (get_lengths_per_layer_AST_type elem_t)
-  n
-get_lengths_per_layer (SeqE.Down_1dN n _ _ elem_t producer) = Unary_Seq_Layer
-  (get_lengths_per_layer producer)
-  (get_lengths_per_layer_AST_type elem_t)
-  n
-get_lengths_per_layer (SeqE.PartitionN no ni _ _ elem_t producer) = Unary_Seq_Layer
-  (get_lengths_per_layer producer)
-  (Start_Seq_Layer (get_lengths_per_layer_AST_type elem_t) ni)
-  no
-get_lengths_per_layer (SeqE.UnpartitionN no ni _ _ elem_t producer) = Unary_Seq_Layer
-  (get_lengths_per_layer producer)
-  (Start_Seq_Layer (get_lengths_per_layer_AST_type elem_t) ni)
-  no
+get_lengths_per_layer (SeqE.ShiftN n _ _ elem_t producer) = do
+  let cur_op_lengths = prepend_lengths_per_layer (Just n)
+                       (get_lengths_per_layer_AST_type elem_t)
+  merge_lengths_per_layer cur_op_lengths (get_lengths_per_layer producer)
+get_lengths_per_layer (SeqE.Up_1dN n _ elem_t producer) = do
+  let cur_op_lengths = prepend_lengths_per_layer (Just n)
+                       (get_lengths_per_layer_AST_type elem_t)
+  merge_lengths_per_layer cur_op_lengths (get_lengths_per_layer producer)
+get_lengths_per_layer (SeqE.Down_1dN n _ _ elem_t producer) = do
+  let cur_op_lengths = prepend_lengths_per_layer (Just n)
+                       (get_lengths_per_layer_AST_type elem_t)
+  merge_lengths_per_layer cur_op_lengths (get_lengths_per_layer producer)
+get_lengths_per_layer (SeqE.PartitionN no ni _ _ elem_t producer) = do
+  let cur_op_lengths = prepend_lengths_per_layer (Just no) $
+                       prepend_lengths_per_layer (Just ni)
+                       (get_lengths_per_layer_AST_type elem_t)
+  merge_lengths_per_layer cur_op_lengths (get_lengths_per_layer producer)
+get_lengths_per_layer (SeqE.UnpartitionN no ni _ _ elem_t producer) = do
+  let cur_op_lengths = prepend_lengths_per_layer (Just no) $
+                       prepend_lengths_per_layer (Just ni)
+                       (get_lengths_per_layer_AST_type elem_t)
+  merge_lengths_per_layer cur_op_lengths (get_lengths_per_layer producer)
 
 -- higher order operators
-get_lengths_per_layer (SeqE.MapN n _ f producer) = Unary_Seq_Layer
-  (get_lengths_per_layer producer)
-  (get_lengths_per_layer f)
-  n
-get_lengths_per_layer (SeqE.Map2N n _ f producer_left producer_right) = Binary_Seq_Layer
-  (get_lengths_per_layer producer_left)
-  (get_lengths_per_layer producer_right)
-  (get_lengths_per_layer f)
-  n
-get_lengths_per_layer (SeqE.ReduceN n _ f producer) = Unary_Seq_Layer
-  (get_lengths_per_layer producer)
-  (get_lengths_per_layer f)
-  n
+get_lengths_per_layer (SeqE.MapN n _ f producer) = do
+  let cur_op_lengths = prepend_lengths_per_layer (Just n)
+                       (get_lengths_per_layer f)
+  merge_lengths_per_layer cur_op_lengths (get_lengths_per_layer producer)
+get_lengths_per_layer (SeqE.Map2N n _ f producer_left producer_right) = do
+  let cur_op_lengths = prepend_lengths_per_layer (Just n)
+                       (get_lengths_per_layer f)
+  merge_lengths_per_layer cur_op_lengths $
+    merge_lengths_per_layer (get_lengths_per_layer producer_left)
+    (get_lengths_per_layer producer_right)
+get_lengths_per_layer (SeqE.ReduceN n _ f producer) = do
+  let cur_op_lengths = prepend_lengths_per_layer (Just n)
+                       (get_lengths_per_layer f)
+  merge_lengths_per_layer cur_op_lengths (get_lengths_per_layer producer)
 
 -- tuple operations
-get_lengths_per_layer (SeqE.FstN _ _ producer) = Unary_Atom_Layer
-  (get_lengths_per_layer producer)
+get_lengths_per_layer (SeqE.FstN _ _ producer) =
+  merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
+  get_lengths_per_layer producer
 
-get_lengths_per_layer (SeqE.SndN _ _ producer) = Unary_Atom_Layer
-  (get_lengths_per_layer producer)
+get_lengths_per_layer (SeqE.SndN _ _ producer) =
+  merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
+  get_lengths_per_layer producer
 
-get_lengths_per_layer (SeqE.ATupleN _ _ producer_left producer_right) = Binary_Atom_Layer
-  (get_lengths_per_layer producer_left)
-  (get_lengths_per_layer producer_right)
+get_lengths_per_layer (SeqE.ATupleN _ _ producer_left producer_right) = do
+  merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
+    merge_lengths_per_layer (get_lengths_per_layer producer_left)
+    (get_lengths_per_layer producer_left)
   
-get_lengths_per_layer (SeqE.STupleN elem_t producer_left producer_right) = Binary_Empty_Layer 
-  (get_lengths_per_layer producer_left)
-  (get_lengths_per_layer producer_right)
-  (get_lengths_per_layer_AST_type elem_t)
+get_lengths_per_layer (SeqE.STupleN elem_t producer_left producer_right) = do
+  merge_lengths_per_layer (get_lengths_per_layer_AST_type elem_t) $
+    merge_lengths_per_layer (get_lengths_per_layer producer_left)
+    (get_lengths_per_layer producer_left)
 
-get_lengths_per_layer (SeqE.STupleAppendN _ elem_t producer_left producer_right) = Binary_Empty_Layer 
-  (get_lengths_per_layer producer_left)
-  (get_lengths_per_layer producer_right)
-  (get_lengths_per_layer_AST_type elem_t)
+get_lengths_per_layer (SeqE.STupleAppendN _ elem_t producer_left producer_right) = do
+  merge_lengths_per_layer cur_op_lengths $
+    merge_lengths_per_layer (get_lengths_per_layer producer_left)
+    (get_lengths_per_layer producer_left)
+  where
+    elem_lengths = get_lengths_per_layer_AST_type elem_t
+    cur_op_lengths = prepend_lengths_per_layer Nothing elem_lengths
   
-get_lengths_per_layer (SeqE.STupleToSeqN _ _ _ _ elem_t producer) = Unary_Empty_Layer
-  (get_lengths_per_layer producer)
-  (get_lengths_per_layer_AST_type elem_t)
+get_lengths_per_layer (SeqE.STupleToSeqN no ni _ _ elem_t producer) = do
+  let cur_op_lengths = prepend_lengths_per_layer (Just no) $
+                       prepend_lengths_per_layer (Just ni)
+                       (get_lengths_per_layer_AST_type elem_t)
+  merge_lengths_per_layer cur_op_lengths (get_lengths_per_layer producer)
   
-get_lengths_per_layer (SeqE.SeqToSTupleN no ni io ii elem_t producer) = Unary_Empty_Layer
-  (get_lengths_per_layer producer)
-  (get_lengths_per_layer_AST_type elem_t)
+get_lengths_per_layer (SeqE.SeqToSTupleN no ni _ _ elem_t producer) = do
+  let cur_op_lengths = prepend_lengths_per_layer (Just no) $
+                       prepend_lengths_per_layer (Just ni)
+                       (get_lengths_per_layer_AST_type elem_t)
+  merge_lengths_per_layer cur_op_lengths (get_lengths_per_layer producer)
 
 get_lengths_per_layer (SeqE.InputN t _) = do
   get_lengths_per_layer_AST_type t
 
-get_lengths_per_layer (SeqE.ErrorN s) = Start_Seq_Layer Start_Atom_Layer (-1)
+get_lengths_per_layer (SeqE.ErrorN s) = Lengths_Per_Layer []
 
 
 get_lengths_per_layer_AST_type :: SeqT.AST_Type -> Lengths_Per_Layer
-get_lengths_per_layer_AST_type SeqT.UnitT = Start_Atom_Layer 
-get_lengths_per_layer_AST_type SeqT.BitT = Start_Atom_Layer
-get_lengths_per_layer_AST_type SeqT.IntT = Start_Atom_Layer 
-get_lengths_per_layer_AST_type (SeqT.ATupleT x y) = Start_Atom_Layer 
+get_lengths_per_layer_AST_type SeqT.UnitT = Lengths_Per_Layer [[Nothing]]
+get_lengths_per_layer_AST_type SeqT.BitT = Lengths_Per_Layer [[Nothing]]
+get_lengths_per_layer_AST_type SeqT.IntT = Lengths_Per_Layer [[Nothing]]
+get_lengths_per_layer_AST_type (SeqT.ATupleT x y) = Lengths_Per_Layer [[Nothing]]
 get_lengths_per_layer_AST_type (SeqT.SeqT n _ t) =
-  Start_Seq_Layer (get_lengths_per_layer_AST_type t) n
+  prepend_lengths_per_layer (Just n) $ get_lengths_per_layer_AST_type t
 get_lengths_per_layer_AST_type (SeqT.STupleT n t) =
-  Start_Empty_Layer (get_lengths_per_layer_AST_type t)
+  prepend_lengths_per_layer Nothing $ get_lengths_per_layer_AST_type t
 {-
 sequence_to_partially_parallel node@(SeqE.Lut_GenN _ _ producer) =
   throwError $ Expr_Failure $ "Can't parallelize LUTs: " ++ show node
