@@ -11,6 +11,8 @@ import Data.Proxy
 
 -- comments are max slow down while not underutil for each layer
 -- (layer is in ops, not seqs)
+
+-- two most basic examples
 single_map = compile $
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
@@ -19,17 +21,53 @@ single_map_underutil = compile $
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 4 Atom_Int))
 
+-- tests basic multi-rate
 map_to_up = compile $
   mapC' (Proxy @1) absC >>> -- [1]
   up_1dC (Proxy @4) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 1 3 Atom_Int))
   
+-- next two test how to distribute slowdown correctly when multi-rate is nested
+nested_map_to_top_level_up = compile $
+  mapC' (Proxy @1) (mapC' (Proxy @4) absC) >>> -- [1]
+  up_1dC (Proxy @4) $ -- [4]
+  com_input_seq "hi" (Proxy :: Proxy (Seq 1 5 (Seq 4 0 Atom_Int)))
+
+nested_map_to_nested_up = compile $
+  mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
+  mapC' (Proxy @4) (up_1dC (Proxy @4)) $ -- [4]
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 1 5 Atom_Int)))
+  
+-- combining multi-rate with partitioning
 double_up = compile $
   (mapC' (Proxy @2) (up_1dC (Proxy @3)) >>> -- [2, 3]
    unpartitionC >>> -- in : [2, 3], out : [6] (or [[2, 3]] if not splitting here)
    partitionC (Proxy @1) (Proxy @6) Proxy (Proxy @0) >>> -- in : [6], out : [1, 6] or in : [[2, 3]] out : [1, [2, 3]] (this doesn't work as can't slow input down by 5, so must not be able to slow output down by 5) or in : [[2, 3]] out : []
    up_1dC (Proxy @5)) $ -- [5, [2, 3]]
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 1 14 Atom_Int)) )
+
+-- multiple unpartitions into a multi-rate
+multi_unpartition_with_multi_rate = compile $
+  (mapC' (Proxy @3) (unpartitionC' (Proxy @2) (Proxy @5)) >>>
+   unpartitionC' (Proxy @3) (Proxy @10) >>>
+   down_1dC' (Proxy @30) 0) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 3 0 (Seq 2 0 (Seq 5 0 Atom_Int))))
+
+multi_partition_with_multi_rate = compile $
+  (up_1dC (Proxy @30) >>>
+   partitionC (Proxy @3) (Proxy @10) (Proxy @0) (Proxy @0)  >>>
+   mapC' (Proxy @3) (partitionC (Proxy @2) (Proxy @5) (Proxy @0) (Proxy @0) )) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 1 29 Atom_Int))
+  
+-- multiple unpartitions into a multi-rate, using fewer factors to show
+-- can't split map between fully sequential 0 invalid clocks and
+-- fully sequential with all invalid clocks
+multi_unpartition_with_multi_rate_cant_split = compile $
+  (mapC' (Proxy @2) (mapC' (Proxy @2) absC) >>>
+   unpartitionC' (Proxy @2) (Proxy @2) >>>
+   partitionC (Proxy @1) (Proxy @4) Proxy (Proxy @0) >>>
+   up_1dC (Proxy @4)) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 2 6 Atom_Int)))
 
   -- down 6 >>> up 6
 matching_down_up = compile $
@@ -49,6 +87,19 @@ matched_nested_abs_down = compile $
   (mapC' (Proxy @4) (mapC' (Proxy @6) absC) >>>
    mapC' (Proxy @4) (down_1dC' (Proxy @6) 0)) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 6 0 Atom_Int)))
+
+  -- multi-rate to map
+  -- why won't the max approach without global solving for i work here?
+  -- slow down by 8. Max n is 8, so think I can slow outer down by 8.
+  -- this fails for slwoding down down 2 as end up partially parallelizing it
+  -- I end up slowing down the down by 2 and then splitting the seq 8 that I'm downsampling
+  -- into a tseq 4 and sseq 2.  This doesn't match how the map 8 abs is serialized without splitting
+multi_rate_to_map = compile $
+  (down_1dC' (Proxy @2) 0 >>>
+   unpartitionC' (Proxy @1) (Proxy @8) >>>
+   mapC' (Proxy @8) absC) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 8 0 Atom_Int)))
+
   
 
   -- map 4 abs >>> partition 4 1 >>> up_1d 4  - nullset in second nesting
@@ -65,3 +116,14 @@ matched_nested_abs_down = compile $
   -- on way up, if remaining s is greater than all remaining parallaleism for that layer, then underudtil for that layer and stop
   -- if reach top and s is not 1, fail
   -- if underutil at layer below one that a node has lengths for, propagate unduertilization up using the underutil formulas for partition and unpartition
+
+  -- this algorithm doesn't work. The layers don't have consistent amount of nesting
+  -- so figuring out the max for one layer doesn't account for how that max
+  -- will be distributed over other layers with partition/unpartition.
+  -- the global solve for i does this as it makes it clear how to solve for all levels.
+
+
+
+  -- new algorithm:
+  -- try to rewrite each node from top to bottom, keeping track of either sseq, tseq, or split output
+  -- each node accepts its 

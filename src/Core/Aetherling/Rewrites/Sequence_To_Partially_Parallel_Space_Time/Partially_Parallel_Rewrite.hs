@@ -69,49 +69,33 @@ partially_parallelize_AST_type e (SeqT.STupleT n t) = do
   inner_type <- partially_parallelize_AST_type e t
   return $ STT.STupleT n inner_type
 
--}
 partially_parallelize_AST_value :: [Layer_Slowdown] -> Int -> SeqT.AST_Value ->
   Rewrite_StateM (STT.AST_Value, Int)
-partially_parallelize_AST_value _ s_extra SeqT.UnitV |
-  s_extra /= 1 =
-  throwError $ Slowdown_Failure "s_extra not 1 when hit UnitV"
-partially_parallelize_AST_value _ s_extra (SeqT.BitV _) |
-  s_extra /= 1 =
-  throwError $ Slowdown_Failure "s_extra not 1 when hit AtomV"
-partially_parallelize_AST_value _ s_extra (SeqT.IntV _) |
-  s_extra /= 1 =
-  throwError $ Slowdown_Failure "s_extra not 1 when hit IntV"
-partially_parallelize_AST_value _ s_extra (SeqT.ATupleV _ _) |
-  s_extra /= 1 =
-  throwError $ Slowdown_Failure "s_extra not 1 when hit ATupleV"
-partially_parallelize_AST_value (cur_layer : _) s_extra (SeqT.BitV b) =
-  return ((STT.BitV b), layer_s cur_layer)
-partially_parallelize_AST_value (cur_layer : _) s_extra (SeqT.IntV i) =
-  return (STT.IntV i)
-{-
-partially_parallelize_AST_value (SeqT.ATupleV x y) = do
-  x_stv <- partially_parallelize_AST_value x
-  y_stv <- partially_parallelize_AST_value y
-  return $ (STT.ATupleV x_stv y_stv) 
+partially_parallelize_AST_value (cur_layer : _) down_extra_s (SeqT.BitV b) =
+  return (STT.BitV b, layer_s cur_layer * down_extra_s)
+partially_parallelize_AST_value (cur_layer : _) down_extra_s (SeqT.IntV i) =
+  return (STT.IntV i, layer_s cur_layer * down_extra_s)
+partially_parallelize_AST_value (cur_layer : lower_layers) down_extra_s (SeqT.ATupleV x y) = do
+  x_stv <- partially_parallelize_AST_value lower_layers 1 x
+  y_stv <- partially_parallelize_AST_value lower_layers 1 y
+  return $ (STT.ATupleV x_stv y_stv, layer_s cur_layer * down_extra_s) 
 partially_parallelize_AST_value (SeqT.SeqV xs _) = do
   xs_par <- mapM partially_parallelize_AST_value xs
   return $ STT.SSeqV xs_par
 partially_parallelize_AST_value (SeqT.STupleV xs) = do
   xs_par <- mapM partially_parallelize_AST_value xs
   return $ STT.STupleV xs_par
--}
 partially_parallelize_AST_value [] _ _ = 
   throwError $ Slowdown_Failure "ran out of slowdown layers when doing AST value rewrite"
-  
+
+-}
 partially_parallelize_atom_operator :: [Layer_Slowdown] -> Int -> SeqE.Expr -> (STE.Expr -> STE.Expr) -> SeqE.Expr
   -> Rewrite_StateM (STE.Expr, Int)
-partially_parallelize_atom_operator _ s_extra _ _ _ | s_extra /= 1 =
-  throwError $ Slowdown_Failure "s_extra not 1 when hit an atom operator"
-partially_parallelize_atom_operator ls@(cur_layer : _) _ consumer atom_op_gen producer = do
+partially_parallelize_atom_operator ls@(cur_layer : _) down_extra_s consumer atom_op_gen producer = do
   (producer_par, producer_upwards_s) <- sequence_to_partially_parallel' ls 1 producer
   if producer_upwards_s /= layer_s cur_layer
     then throwError $ Slowdown_Failure "adding an extra slowdown in chained atom operators"
-    else return $ (atom_op_gen producer_par, layer_s cur_layer)
+    else return $ (atom_op_gen producer_par, layer_s cur_layer * down_extra_s)
 partially_parallelize_atom_operator [] _ _ _ _ =
   throwError $ Slowdown_Failure "ran out of slowdown layers when doing atom rewrite"
 

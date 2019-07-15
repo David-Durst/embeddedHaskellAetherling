@@ -87,7 +87,7 @@ Unpartition (ni*nj) nk . Unpartition ni nj . Partition ni nj ===? (Commutativity
 Unpartition ni (nj*nk) . Map ni (Unpartition nj nk) . Partition ni nj
 ```
 
-#### Nesting With Outer `Seq` Equal To `UpPartition`'s Outer `Seq`
+#### Nesting With Outer `Seq` Equal To `Unpartition`'s Outer `Seq`
 Do Nothing. The `Partition no ni` from applying the nesting rewrite rule to downstream will obliterate this and the upstream is already partitioned appropriately by `no` and `ni`.
 ```
 Unpartition no ni
@@ -109,6 +109,8 @@ Unpartition (ni*nj) nk . Unpartition ni nj . Map ni (Partition nj nk)
 1. `Unpartition_t_tt no ni :: TSeq no vo (TSeq ni vi t) -> TSeq (no*ni) ((no * vi) + (vo * (ni + vi))) t`
 1. `Partition_s_ss no ni :: SSeq (no*ni) t -> SSeq no (SSeq ni t)`
 1. `Unpartition_s_ss no ni :: SSeq no (SSeq ni t) -> SSeq no (SSeq ni t)`
+1. `Flip_ts_to_st no ni :: TSeq no (SSeq ni t) -> SSeq no (TSeq ni t)`
+1. `Flip_st_to_ts no ni :: SSeq no (TSeq ni t) -> TSeq no (SSeq ni t)`
 
 ## Area Property
 1. `area(Partition_t_tt no ni) = {0, 0, 0}`
@@ -130,7 +132,7 @@ The Outer and Inner rewrite rules are derived from the other ones in this sectio
 #### Sequence To Time 
 `Partition no ni === TSeq_To_Seq . Map_t no (TSeq_To_Seq) . Partition_t_tt . Seq_To_TSeq`
 
-#### Sequence To Space-Time with Outer `Seq` `nj` Less Than `Partition`'s Outer `Seq`
+#### Sequence To Space-Time with Slowdown `ni` That Is `nj` Less Than `Partition`'s Outer `Seq`
 ```
 Partition (ni*nj) nk === (Partition Nesting Less Than)
 Unpartition ni nj . Map ni (Partition nj nk) . Partition ni (nj*nk) === (Seq To TSeq)
@@ -152,17 +154,30 @@ Unpartition ni nj . TSeq_To_Seq .
     Seq_To_TSeq . Partition ni (nj*nk)
 ```
 
-#### Sequence To Space-Time with Outer `Seq` Equal To `Partition`'s Outer `Seq`
+#### Sequence To Space-Time with Slowdown `no` Equal To `Partition`'s Outer `Seq`
 Do nothing. Same obliteration argument applies as above.
 ```
 Partition no ni
 ```
 
-#### Sequence To Space-Time with Outer `Seq` `nj` Greater Than `Partition`'s Outer `Seq`
+#### Sequence To Space-Time with Slowdown `ni*nj` That Is `nj` Greater Than `Partition`'s Outer `Seq`
 ```
 Partition ni (nj*nk) === (Partition Nesting Greater Than)
 Map ni (Unpartition nj nk) . Partition ni nj . Partition (ni*nj) nk === (Seq To TSeq)
-Map ni (Unpartition nj nk) . TSeq_To_Seq . Map_t ni TSeq_To_Seq . Partition_t_tt ni nj . Seq_To_TSeq . Partition (ni*nj) nk
+Map ni (Unpartition nj nk) . TSeq_To_Seq . Map_t ni TSeq_To_Seq . Partition_t_tt ni nj . Seq_To_TSeq . Partition (ni*nj) nk === (Isomorphism Addition)
+Map ni (Unpartition nj nk) . TSeq_To_Seq . Map_t ni TSeq_To_Seq . Map_t ni (Map_t nj SSeq_to_Seq) . 
+    Partition_t_tt ni nj . 
+    Map_t (ni*nj) Seq_To_SSeq . Seq_To_TSeq . Partition (ni*nj) nk === (Isomorphism Addition)
+```
+
+#### Sequence To Space-Time with Slowdown `nk` That Is `nj` Less Than `Partition`'s Inner `Seq`
+```
+Partition ni (nj*nk) === (Partition Nesting Greater Than)
+Map ni (Unpartition nj nk) . Partition ni nj . Partition (ni*nj) nk === (Seq To SSeq)
+Map ni (Unpartition nj nk) . SSeq_To_Seq . Map_s ni SSeq_To_Seq . Partition_s_ss ni nk . Seq_To_TSeq . Partition (ni*nj) nk === (Isomorphism Addition)
+Map ni (Unpartition nj nk) . SSeq_To_Seq . Map_s ni SSeq_To_Seq . Map_s ni (Map_s nj TSeq_To_Seq) .
+    Partition_s_ss ni nk . 
+    Map_s ni (Map_s nj Seq_To_TSeq) . Seq_To_TSeq . Partition (ni*nj) nk 
 ```
 
 ### Unpartition

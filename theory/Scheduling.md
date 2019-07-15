@@ -12,10 +12,212 @@ The goal of this document is:
 Scheduling is converting a program from the sequence language to the space-time IR.
 Scheduling is performed to target a specific `input_throughput` and `output_throughput`
 as defined in [the basic theory document's throughput section.](Basic.md#throughput).
-The target is specified using a **throughput factor s**.
+The target is specified using a **slowdown factor s**.
 Scheduling with factor **s** means produce a pipeline with `input_throughput` and
 `output_throughput` that are **s** times smaller than the fully parallel pipeline's
 `input_throughput` and `output_throughput`.
+
+# Motivating Examples
+
+## Basic Example
+This example shows the simplest pipeline that can be scheduled.
+
+Attainable s are `s = 1, 2,4`
+```
+Map 4 Abs
+```
+
+## Nested Multi-Rate
+**This example demonstrates the first issue the scheduler faces: where to distribute invalid clocks when connecting to a nested, multi-rate operator.**
+
+### Upsample Outer
+The first example is a multi-rate where the `Up_1d` is on the outer seq.
+For this example, the scheduler should know to slow down the outer `Map`.
+Attainable s are `1, 2, 4`
+```
+Map 1 (Map 4 Abs) >>> Up_1d 4
+```
+
+Slowing down the outer `Map` produces 
+```
+Map_t 1 (Map_s 4 Abs) >>> Up_1d_t 4
+```
+which is much more efficient than slowing down the inner `Map`
+```
+Map_s 1 (Map_t 4 Abs) >>> Up_1d_s 4
+```
+
+### Upsample Inner
+The first example is a multi-rate where the `Up_1d` is on the inner seq.
+For this example, the scheduler should know to slow down the inner `Map`.
+```
+Map 4 (Map 1 Abs) >>> Map 4 (Up_1d 4)
+```
+
+Slowing down the inner `Map` produces 
+```
+Map_s 4 (Map_t 1 Abs) >>> Map_s 4 (Up_1d_t 4)
+```
+which is much more efficient than slowing down the outer `Map`
+```
+Map_t 4 (Map_s 1 Abs) >>> Map_t 4 (Up_1d_s 4)
+```
+
+### Solution:
+This problem is solved by computing the number of invalid clocks for each operator
+in a pipeline in it's "slowest" implementation.
+
+For the **Upsample Outer** example, the outer `Map` can have 3 invalid clocks while the inner 
+`Map` can have 0 invalid clocks. Thus, the outer `Map` will be slowed.
+
+For the **Upsample Inner** example, the inner `Map` can have 3 invalid clocks while the outer
+`Map` can have 0 invalid clocks. Thus, the inner `Map` will be slowed.
+
+## Partition
+**This example demonstrates the second issue the scheduler faces: how to maintain appropriate nesting when scheduling a `Partition` or `Unpartition`**
+
+### Single Nesting
+The first example is a single `Partition`.
+Attainable s are `1, 2, 3, 5, 6, 10, 15, 30`
+```
+Partition 3 10
+```
+
+Slowing down the output by `s=5` yields:
+```
+Map_s 3 Id :: SSeq 3 (TSeq 5 0 (SSeq 2 a)) -> SSeq 3 (TSeq 5 0 (SSeq 2 a))
+```
+This means that the input is nested twice from `Seq 30 a` to `SSeq 3 (TSeq 5 0 (SSeq 2 a))`
+and the output is nested once from `Seq 3 (Seq 10 a)` to `SSeq 3 (TSeq 5 0 (SSeq 2 a))`.
+
+This will create problems when slowing down earlier parts of the pipeline as now the algorithm has to nest each operator not just once, but n+1 times where n is the number `Partition`s down pipeline from an operator.
+
+I couldn't produce a space-time expression with two levels of nesting on the input and three levels of nesting on the output without a new operator as:
+1. If I had chosen the operator `Map_s 3 (Partition_t_tt 5 2 >>> Deserialize 5 2)`, that would have prevented the 
+upstream operators from being appropriately partially parallel.
+The input to that operator is `SSeq 3 (TSeq 10 0 a)`, which is slowdown `s=10`, not `s=5`.
+2. If I had chosen the operator `Partition_s_ss 3 2 :: SSeq 6 (TSeq 5 a) -> SSeq 3 (SSeq 2 (TSeq 5 a))`,
+That would have been a non-canonical form as `SSeq` wraps `TSeq`.
+
+The second approach won't work as a standard, canonical form-following algorithm won't
+be able to produce it for examples such as:
+
+```
+Partition 3 10 >>> Map 3 (Map 10 Abs)
+```
+
+For this example, `s=5` scheduling will first rewrite the `Map` to `Map_s 3 (Map_t 5 (Map_s 2 Abs))`.
+Then, the `Partition_s_ss 3 2` can't be connected as the types mismatch
+```
+INVALID: Partition_s_ss 3 2 >>> Map_s 3 (Map_t 5 (Map_s Abs))
+```
+
+**Answer:** I flip the `TSeq` and inner `SSeq` with a new operator:
+```
+Partition_s_ss 3 2 >>> Map_s 3 (Flip_ts_to_st 5 2) >>> Map_s 3 (Map_t 5 (Map_s Abs))
+```
+
+So I need a rewrite rule that, if I need to nest the inner `Seq` produced by `Partition`, need to append `Flip_ts_to_st` to `Partition_s_ss`
+
+Note: `Flip` is not transpose. It doesn't change the order or elements. It changes nesting. Therefore, it compiles only to wires in hardware. 
+
+### Multi-Layer Nesting
+The second examples are repeated multiple `Partition`s.
+Attainable s include `1, 2, 3, 5, 6, 10, 15, 30`
+```
+Partition 7 30 >>> Map 7 (Partition 3 10)
+```
+
+Using the `Flip_xx` operators, slowing down the output by `s=5` yields:
+```
+
+Flip_st_to_ts 42 5
+Partition_s_ss 7 6 >>> 
+Map_s 7 (Flip_ts_to_st 5 6) >>>
+Map_s 7 ( 
+    Flip_st_to_ts 6 5 >>>
+    Partition_s_ss 3 2 >>> 
+    Map_s 3 (Flip_ts_to_st 5 2))
+```
+
+### Multi-Layer Nesting With Multiple Nests
+The third example is repeated multiple `Partition`s with multiple splits
+Attainable s include `35`
+```
+Partition 77 30 >>> Map 77 (Partition 3 10)
+```
+
+Using the `Flip_xx` operators, slowing down the output by `s=35` yields:
+```
+Partition_t_tt 7 5 >>>
+Map_t 7 (Flip_st_to_ts 42 5)
+Map_t 7 (Partition_s_ss 11 6) >>> 
+Map_t 7 (Map_s 11 (Flip_ts_to_st 5 6)) >>>
+Map_t 7 ( Map_s 11 (
+    Flip_st_to_ts 6 5 >>>
+    Partition_s_ss 3 2 >>> 
+    Map_s 3 (Flip_ts_to_st 5 2)))
+```
+The extra `Partition_t_tt` ensures that the input to the `Partition` is split once for the `TSeq` outer and `SSeq` inner, not twice.
+
+### Unpartition Equivalents
+These examples repeat the above ones with `Unpartition`.
+They show that replacing `Partition` with it's symmetric operator doesn't introduce new problems.
+Attainable s are `1, 2, 3, 5, 6, 10, 15, 30`
+```
+Unpartition 3 10 >>> Map 30 Abs
+```
+
+Slowing down the output with `s=5` yields
+```
+Unparition_s_ss 3 2 >>> Flip_ts_to_st 5 6 >>> 
+Map_t 5 (Map_s 6 Abs)
+```
+
+This requires a rewrite rule that if using `Unparition` where the inputted `TSeq` is not adjacent to it's `SSeq`, I must keep the split factors adjacent by applying a `Flip_ts_to_st`
+
+This is necessary in this example as upstream operators will be depending on dealing with an outer `Seq 3` and an inner `Seq 10`.
+
+For example:
+```
+Map 3 (Map 10 Abs) >>> Unpartition 3 10 >>> Map 30 Abs
+```
+
+Without the `Flip_ts_to_st 5 6`, I would have been required to perform the following, 
+more complicated rewrite where I nest the `Map 10 Abs` to `Map 5 (Map 2 Abs)` and then lift the `Map 5` around the surrounding `Map 3`:
+```
+Map_t 5 (Map_s 3 (Map_s 2 Abs)) >>>
+Map_t 5 (Unparition_s_ss 3 2) >>> 
+Map_t 5 (Map_s 6 Abs)
+```
+
+# Scheduling Algorithm
+The algorithm for scheduling a program P with a throughput factor s is:
+1. Let T_O be the output type of P
+1. Let T_OT be the output type of P if it is scheduled fully in time - each operator is made as temporal as possible while ensuring that the bottleneck is fully utilized.
+1. T\_OT will be T\_O where each `Seq n t` is replaced by `TSeq n i t`
+1. Compute the scheduled version of T\_O, T\_OS, using the below algorithm:
+```
+s_remaining = s
+s_remaining_factors = prime_factorization(s)
+T_OS = []
+for (TSeq n i) in layers(T_OT):
+   n_factors = prime_factorization(n)
+   if s_remaining % (n+i) == 0:
+       s_remaining = s // (n+i)
+       T_OS += TSeq n i
+   else if Set.union s_remaining_factors n_factors != Set.empty:
+       cur_layer_slowdown_factors = Set.intersect s_remaining_factors n_factors 
+       cur_layer_parallel_factors = Set.difference n_factors cur_layer_slowdown_factors
+       s_remaining_factors = Set.difference s_remaining_factors cur_layer_slowdown_factors
+       T_OS += Split(TSeq cur_layer_slowdown_factors 0, cur_layer_slowdown_factors)
+   else 
+       T_OS += SSeq n
+```
+1. Next, feed this output backwards through the graph. Each operator gets T\_OS and is nested according the Sequence To Space-Time rewrite rules.
+    1. We require that each operator accept and emit each layer split at most once.
+
+#  Garbage Below
 
 ## Distributive Property
 I require that `schedule(g . f, s) === schedule(g, s) . schedule(f, s)`.
