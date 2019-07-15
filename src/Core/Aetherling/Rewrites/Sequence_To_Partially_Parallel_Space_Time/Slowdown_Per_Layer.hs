@@ -1,4 +1,4 @@
-module Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Parallelism_Per_Layer where
+module Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Slowdown_Per_Layer where
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Sequence_Length_Per_Layer
 import Aetherling.Rewrites.Rewrite_Helpers
 import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
