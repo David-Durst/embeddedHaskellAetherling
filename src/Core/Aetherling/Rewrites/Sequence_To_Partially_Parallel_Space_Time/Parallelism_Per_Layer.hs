@@ -16,6 +16,12 @@ get_max_length_per_layer (Binary_Atom_Layer e_left_cur_layer e_right_cur_layer) 
   (get_max_length_per_layer e_right_cur_layer)
 -}
 
+data Layer_Slowdown = Layer_Slowdown {
+  layer_s :: Int,
+  layer_max_len :: Int,
+  layer_split :: Bool
+  } deriving (Show, Eq)
+
 get_max_length_per_layer :: Lengths_Per_Layer -> [Int]
 get_max_length_per_layer (Lengths_Per_Layer lengths) = do
   fmap maximum $ fmap (fmap fromJust) $ fmap (filter isJust) lengths
@@ -28,11 +34,17 @@ get_lengths :: Lengths_Per_Layer -> [[Int]]
 get_lengths (Lengths_Per_Layer lengths) = do
   fmap (fmap fromJust) $ fmap (filter isJust) lengths
 
-compute_slowdown_per_layer :: Int -> Lengths_Per_Layer -> Rewrite_StateM [Int]
+compute_slowdown_per_layer :: Int -> Lengths_Per_Layer -> Rewrite_StateM [Layer_Slowdown]
 compute_slowdown_per_layer slowdown layers = do
   possible_slowdowns <- compute_slowdown_per_layer' slowdown $ get_lengths layers
   if product possible_slowdowns == slowdown
-    then return possible_slowdowns
+    then do
+    let max_per_layer = get_max_length_per_layer layers
+    let max_and_slowdown_per_layer = zip possible_slowdowns max_per_layer
+    return $
+      fmap (\(s_this_layer, max_this_layer) ->
+              Layer_Slowdown s_this_layer max_this_layer (s_this_layer == max_this_layer))
+      max_and_slowdown_per_layer
     else throwError $ Slowdown_Failure $ "Didn't achieve slowdown " ++ show slowdown ++
          ", instead got slowdown " ++ (show $ product possible_slowdowns) ++
          " with nested slowdowns " ++ show possible_slowdowns
