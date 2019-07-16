@@ -8,32 +8,27 @@ It adds:
 
 # Sequence Language
 ## Sequence Operators
-1. `Shift n init :: Seq n t -> Seq n t`
-    1. `Shift` translates a sequence by 1 element.
-    For `y <- Shift n x`, the item at index `n+1` in `y` is equal to the item at index `n` in `x`.
-    1. `Shift` replaces the first element of the input `Seq` with `init`.
-1. `Stencil_1d n w init :: Seq n t -> Seq n (Seq w t)`
+1. `Shift n s :: Seq n t -> Seq n t`
+    1. `Shift` translates a sequence by s elements.
+    For `y <- Shift n 1 x`, the item at index `n+1` in `y` is equal to the item at index `n` in `x`.
+1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
 ```
-Stencil_1d n w init = 
+Stencil_1d n w in_seq = 
 Tuple_To_Seq .
     foldl1 (\accum _ -> Map2 n Tuple) .
-    scanl (\accum _ -> Shift n init (head accum) : accum) [Id] [1..w-1]
-```
-
-1. `Repeated_Shift n m init :: Seq n t -> Seq n t`
-```
-Repeated_Shift n m init = foldl (\accum _ -> Shift n init accum) (Shift n Init) [1..m-1] 
-
+    foldl (\l@(last_shifted_seq:_) _ -> (Shift n 1 last_shifted_seq) : l)
+        [in_seq] [0 ..w-2]
 ```
 
 1. `Stencil_2d n_row n_col w_row w_col init :: Seq (n_row*n_col) t -> Seq (n_row*n_col) (Seq w_row (Seq w_col t))`
 ```
 Stencil_2d n_row n_col w_row w_col init = 
-Transpose w_row (n_row*n_col) .
-    Map w_row (Stencil_1d (n_row*n_col) w_col init) .
-    HMap w_row (List_To_Seq . foldl (\accum _ -> Repeated_Shift (n_row*n_col) n_col init (head accum) : accum) [Id] [1..w-1]) .
-    Up_1d w_row .
-    Partition 1 (n_row*c_col)
+Map (n_row*n_col) (Unpartition w_row w_col) .
+    Tuple_To_Seq .
+    foldl1 (\accum _ -> Map2 n Tuple) .
+    fmap (Stencil_1d (n_row*n_col) w_col) .
+    foldl (\l@(last_shifted_seq:_) _ -> (Shift (n_row*n_col) n_col init last_shifted_seq) : l)
+        [in_seq] [0 .. w_row - 2]
 ```
 
 ## Nesting Rewrite Rules
@@ -55,7 +50,7 @@ Unpartition no ni .
 
 Let `Shift_Nested no ni init` be the above nested composition of operators without the outer `Unpartition no ni` and `Partition no ni`
 
-![Nested Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/nested_shift.png "Nested Shift")
+![Nested Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/computation_diagram/stencil_1d/stencil_1d_computation_explanation.png "Nested Shift")
 
 ### `Stencil_1d`
 
