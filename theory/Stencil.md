@@ -34,17 +34,16 @@ Map (n_row*n_col) (Unpartition w_row w_col) .
 ## Nesting Rewrite Rules
 ### `Shift`
 ```
-Shift (no*ni) init ===
+Shift (no*ni) in_seq ===
 Unpartition no ni .
-    Transpose ni no
-    Unpartition ni 1 .
-    HMap ni (List_To_Seq 
-        [Map 1 (Shift no init) . Select_1d ni (ni-1)] ++ 
-        [Select_1d ni i | i <- [0..n-2]] 
-        ) .
-    Up_1d ni .
-    Partition 1 ni .
-    Transpose no ni .
+    Tuple_To_Seq .
+    foldl1 (\accum _ -> Map2 n Tuple) .
+    foldl (\l i -> (
+        if i == 0
+            then Shift no 1 . Map no (Select_1d ni (ni-1)) in_seqs
+            else Map no (Select_1d ni (i - 1)) 
+        ) : l
+    ) [] [0..ni - 1]
     Partition no ni
 ```
 
