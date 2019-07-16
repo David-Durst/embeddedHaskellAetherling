@@ -1,12 +1,8 @@
 # Scheduling
 The goal of this document is:
-1. Define scheduling and its properties
+1. Define scheduling
+1. List the motivating examples for the scheduling algorithm
 1. Define the scheduling algorithm
-1. Enumerate the rewrite rules that each operator in the sequence language must
-   support in order to enable scheduling
-1. Define the relationship between scheduling and the auto-scheduler
-1. Explain the auto-scheduling algorithm
-1. Prove optimality of the algorithm
    
 # Scheduling Definition
 Scheduling is converting a program from the sequence language to the space-time IR.
