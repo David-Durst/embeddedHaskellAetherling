@@ -15,7 +15,7 @@ It adds:
 ```
 Stencil_1d n w in_seq = 
 Tuple_To_Seq .
-    foldl1 (\accum _ -> Map2 n Tuple) .
+    foldl1 (\accum next -> Map2 n Tuple accum next) .
     foldl (\l@(last_shifted_seq:_) _ -> (Shift n 1 last_shifted_seq) : l)
         [in_seq] [0 ..w-2]
 ```
@@ -25,7 +25,7 @@ Tuple_To_Seq .
 Stencil_2d n_row n_col w_row w_col init = 
 Map (n_row*n_col) (Unpartition w_row w_col) .
     Tuple_To_Seq .
-    foldl1 (\accum _ -> Map2 n Tuple) .
+    foldl1 (\accum next -> Map2 (n_row*n_col) Tuple accum next) .
     fmap (Stencil_1d (n_row*n_col) w_col) .
     foldl (\l@(last_shifted_seq:_) _ -> (Shift (n_row*n_col) n_col init last_shifted_seq) : l)
         [in_seq] [0 .. w_row - 2]
@@ -34,16 +34,15 @@ Map (n_row*n_col) (Unpartition w_row w_col) .
 ## Nesting Rewrite Rules
 ### `Shift`
 ```
-Shift (no*ni) in_seq ===
+Shift (no*ni) s in_seq ===
 Unpartition no ni .
     Tuple_To_Seq .
-    foldl1 (\accum _ -> Map2 n Tuple) .
-    foldl (\l i -> (
-        if i == 0
-            then Shift no 1 . Map no (Select_1d ni (ni-1)) in_seqs
-            else Map no (Select_1d ni (i - 1)) 
-        ) : l
-    ) [] [0..ni - 1]
+    foldl1 (\accum next -> Map2 no Tuple accum next) .
+    fmap (\(i, in_seq) -> 
+            Shift no ((ni - i + s - 1) // ni) $ Map no (Select_1d ni ((i - s) % ni)) in_seq
+        ) .
+    zipWith [0..]
+    repeat ni .
     Partition no ni
 ```
 
@@ -51,103 +50,15 @@ Let `Shift_Nested no ni init` be the above nested composition of operators witho
 
 ![Nested Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/computation_diagram/nested_shift/nested_shift_computation_explained.png "Nested Shift")
 
-### `Stencil_1d`
-
-**Key Insight** - You only ever need `w-1` registers for a `Stencil_1d` with
-stride 1 no matter how parallel it is. If your input parallelism is `p`, you can
-emit `p` output windows as have `p` pixels of new information and, since stride
-is 1, each window only has 1 new pixel. This means, need `p+w-1` pixels to fill
-all your windows. But, getting `p` pixels in per clock, so only need to remember
-`w-1` pixels from the last clock to fill out the windows. This means need `w-1`
-registers.
-
-The stencil only makes `w-1` registers (with repeat register elimination). 
-The nested shifts handle accessing data from those registers and from the current clock
-
-```
-Stencil_1d (no*ni) w xs = 
-
-Transpose w (no*ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift (no*ni) init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
-    Up_1d w .
-    Partition 1 (no*ni) === (Partition Nesting Inner)
-
-Transpose w (no*ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift (no*ni) init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
-    Up_1d w . 
-    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . Partition 1 (no*ni) === (Shift Nesting)
-
-Transpose w (no*ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init . Partition no ni (head in_seqs) : in_seqs) [Id] [1..w-1]) .
-    Up_1d w . 
-    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
-    Partition 1 (no*ni) === (Isomorphism Operator Introduction)
-
-Transpose w (no*ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init . Partition no ni (head in_seqs) : in_seqs) (Unpartition no ni . Partition no ni) [1..w-1]) .
-    Up_1d w . 
-    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
-    Partition 1 (no*ni) === (Identity Addition)
-
-Transpose w (no*ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Unpartition no ni . Shift_Nested no ni init . Partition no ni (head in_seqs) : in_seqs) (Unpartition no ni . [Id] . Partition no ni) [1..w-1]) .
-    Up_1d w . 
-    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
-    Partition 1 (no*ni) === (HMap Equivalence and HMap and Map Equivalence)
-
-Transpose w (no*ni) .
-    Map w (Unpartition no ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
-    Map w (Partition no ni) . 
-    Up_1d w . 
-    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
-    Partition 1 (no*ni) === (Sequence Commutativity)
-
-Transpose w (no*ni) .
-    Map w (Unpartition no ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
-    Up_1d w . 
-    Map 1 (Partition no ni) . 
-    Map 1 (Unpartition no ni) . Map 1 (Partition no ni) . 
-    Partition 1 (no*ni) === (Map Fusion and Isomorphism Removal)
-
-Transpose w (no*ni) .
-    Map w (Unpartition no ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
-    Up_1d w . 
-    Map 1 (Partition no ni) . Partition 1 (no*ni) === (Transpose Nesting Inner)
-
-Unpartition no ni . Map no (Transpose w ni) . Transpose w no . Map w (Partition no ni) .
-    Map w (Unpartition no ni) .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
-    Up_1d w . 
-    Map 1 (Partition no ni) . Partition 1 (no*ni) === (Isomorphism Removal)
-
-Unpartition no ni . Map no (Transpose w ni) . Transpose w no .
-    HMap w (List_To_Seq . foldl (\in_seqs _ ->  Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
-    Up_1d w . 
-    Map 1 (Partition no ni) . Partition 1 (no*ni) === (Commutativity)
-
-Unpartition no ni . Map no (Transpose w ni) . Transpose w no .
-    HMap w (List_To_Seq . foldl (\in_seqs _ -> Shift_Nested no ni init (head in_seqs) : in_seqs) [Id] [1..w-1]) .
-    Up_1d w . 
-    Partition 1 no . Partition no ni
-```
-
-Let `Stencil_1d_Nested no ni init` be the above nested composition of operators without the outer `Unpartition no ni` and `Partition no ni**.
-
-**Note:** This derivation is not an actual rewrite rule in the system. 
-Since `Stencil_1d` is not a primitive in the language, it doesn't have rewrite rules. 
-This derivation is only here to prove that standard application of the rewrite rules produces the nested stencil shown in the picture below.
-
-![Nested Stencil\_1d](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/stencil_1d/nested_stencil_1d.png "Nested Stencil\_1d")
 
 # Space-Time IR
 ## Space-Time Operators
 1. `Shift_s n init :: SSeq n t -> SSeq n t`
 1. `Shift_t n init :: TSeq n v t -> TSeq n v t`
-1. `Stencil_1d_s n w init :: SSeq n t -> SSeq n (SSeq w t)`
-1. `Stencil_1d_t n w init :: TSeq n v t -> TSeq n (TSeq w t)`
+
+The stencil operators don't need Space-Time versions because they are composed
+of more basic Aetherling operators. The more basic Aetherling operators
+will be mapped to the Space-Time IR.
 
 ## Sequence To Space-Time Rewrite Rules
 
@@ -163,213 +74,162 @@ This derivation is only here to prove that standard application of the rewrite r
 Shift (no*ni) init === (Nesting)
 
 Unpartition no ni .
-    Transpose ni no
-    Unpartition ni 1 .
-    HMap ni (List_To_Seq 
-        [Map 1 (Shift no init) . Select_1d ni (ni-1)] ++ 
-        [Select_1d ni i | i <- [0..n-2]] 
-        ) .
-    Up_1d ni .
-    Partition 1 ni .
-    Transpose no ni .
-    Partition no ni === (Seq To Space)
-    
+    Tuple_To_Seq .
+    foldl1 (\accum next -> Map2 no Tuple accum next) .
+    fmap (if i == 0
+              then Shift no 1 . Map no (Select_1d ni (ni-1))
+              else Map no (Select_1d ni (i - 1)) in_seq
+         ) .
+    repeat ni .
+    Partition no ni === (Seq To TSeq)
+
 Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 . Map_s ni Seq_To_SSeq . Seq_To_SSeq
-    SSeq_to_Seq . HMap_s ni (List_To_Seq 
-        [Map 1 (Shift no init) . Select_1d ni (ni-1)] ++ 
-        [Select_1d ni i | i <- [0..n-2]] 
-        ) . Seq_To_SSeq
-    SSeq_To_Seq . Up_1d_s ni . Seq_To_SSeq
-    SSeq_To_Seq . Map_s 1 SSeq_To_Seq . Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
+    Tuple_To_Seq .
+    foldl (\accum next -> TSeq_To_Seq . Map2_t no Tuple
+          (Seq_To_TSeq accum) (Seq_To_TSeq next)) .
+    fmap (if i == 0
+              then TSeq_To_Seq . Shift_t no 1 . Seq_To_TSeq .
+                  TSeq_To_Seq . Map_t no (Select_1d ni (ni-1)) . Seq_To_TSeq
+              else TSeq_To_Seq . Map_t no (Select_1d ni (i - 1)) . Seq_To_TSeq 
+         )
+    repeat ni .
     Partition no ni === (Isomorphism Removal)
 
 Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 . Map_s ni Seq_To_SSeq .
-    HMap_s ni (List_To_Seq 
-        [Map 1 (Shift no init) . Select_1d ni (ni-1)] ++ 
-        [Select_1d ni i | i <- [0..n-2]] 
-        ) .
-    Up_1d_s ni
-    Map_s 1 SSeq_To_Seq . Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
-    Partition no ni === (Seq To Space)
+    Tuple_To_Seq .
+    foldl (\accum next -> TSeq_To_Seq . Map2_t no Tuple
+          (Seq_To_TSeq accum) (Seq_To_TSeq next)) .
+    fmap (if i == 0
+              then TSeq_To_Seq . Shift_t no 1 .
+                  Map_t no (Select_1d ni (ni-1)) . Seq_To_TSeq
+              else TSeq_To_Seq . Map_t no (Select_1d ni (i - 1)) . Seq_To_TSeq 
+         )
+    repeat ni .
+    Partition no ni === (Functor Map Fusion)
 
 Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 . Map_s ni Seq_To_SSeq .
-    HMap_s ni (List_To_Seq 
-        [SSeq_To_Seq . Map_s 1 (Shift no init) . Seq_To_SSeq . SSeq_To_Seq . Select_1d_s ni (ni-1) . Seq_To_SSeq] ++ 
-        [SSeq_To_Seq . Select_1d_s ni i . Seq_To_SSeq | i <- [0..n-2]] 
-        ) .
-    Up_1d_s ni
-    Map_s 1 SSeq_To_Seq . Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
-    Partition no ni === (Identity Addition)
+    Tuple_To_Seq .
+    foldl (\accum next -> TSeq_To_Seq . Map2_t no Tuple
+          (Seq_To_TSeq accum) (Seq_To_TSeq next)) .
+    fmap TSeq_To_Seq .
+    fmap (if i == 0
+              then Shift_t no 1 . Map_t no (Select_1d ni (ni-1))
+              else Map_t no (Select_1d ni (i - 1))
+         )
+    fmap TSeq_To_Seq .
+    repeat ni .
+    Partition no ni === (Functor Map Fusion)
 
 Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 . Map_s ni Seq_To_SSeq .
-    HMap_s ni (List_To_Seq 
-        [SSeq_To_Seq . Map_s 1 (Shift no init) . Seq_To_SSeq . SSeq_To_Seq . Select_1d_s ni (ni-1) . Seq_To_SSeq] ++ 
-        [Map 1 (TSeq_To_Seq . Seq_To_TSeq) . SSeq_To_Seq . Select_1d_s ni i . Seq_To_SSeq | i <- [0..n-2]] 
-        ) .
-    Up_1d_s ni
-    Map_s 1 SSeq_To_Seq . Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
-    Partition no ni === (Seq To Space and Isomorphism Removal)
+    Tuple_To_Seq .
+    foldl (\accum next -> TSeq_To_Seq . Map2_t no Tuple
+          (Seq_To_TSeq accum) (Seq_To_TSeq next)) .
+    fmap TSeq_To_Seq .
+    fmap (if i == 0
+              then Shift_t no 1 . Map_t no (Select_1d ni (ni-1))
+              else Map_t no (Select_1d ni (i - 1))
+         )
+    fmap TSeq_To_Seq .
+    repeat ni .
+    Partition no ni === (By Fold and Repeat Semantics)
 
 Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 . Map_s ni Seq_To_SSeq .
-    HMap_s ni (List_To_Seq 
-        [SSeq_To_Seq . Map_s 1 (Shift no init) . Seq_To_SSeq . SSeq_To_Seq . Select_1d_s ni (ni-1) . Seq_To_SSeq] ++ 
-        [SSeq_To_Seq . Map_s 1 (TSeq_To_Seq . Seq_To_TSeq) . Select_1d_s ni i . Seq_To_SSeq | i <- [0..n-2]] 
-        ) .
-    Up_1d_s ni
-    Map_s 1 SSeq_To_Seq . Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
-    Partition no ni === (HMap Equivalence and HMap and Map Equivalence)
-
-Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 . Map_s ni Seq_To_SSeq .
-    Map_s ni SSeq_To_Seq . 
-    HMap_s ni (List_To_Seq 
-        [Map_s 1 (Shift no init) . Seq_To_SSeq . SSeq_To_Seq . Select_1d_s ni (ni-1)] ++ 
-        [Map_s 1 (TSeq_To_Seq . Seq_To_TSeq) . Select_1d_s ni i | i <- [0..n-2]] 
-        ) .
-    Map_s ni Seq_To_SSeq . 
-    Up_1d_s ni
-    Map_s 1 SSeq_To_Seq . Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
-    Partition no ni === (Commutativity)
-
-Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 . Map_s ni Seq_To_SSeq .
-    Map_s ni SSeq_To_Seq . 
-    HMap_s ni (List_To_Seq 
-        [Map_s 1 (Shift no init) . Seq_To_SSeq . SSeq_To_Seq . Select_1d_s ni (ni-1)] ++ 
-        [Map_s 1 (TSeq_To_Seq . Seq_To_TSeq) . Select_1d_s ni i | i <- [0..n-2]] 
-        ) .
-    Map_s ni Seq_To_SSeq . 
-    Map_s ni SSeq_To_Seq . Up_1d_s ni
-    Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
+    Tuple_To_Seq .
+    TSeq_To_Seq . 
+    foldl (\accum next -> Map2_t no Tuple accum next) .
+    fmap Seq_To_Seq .
+    fmap TSeq_To_Seq .
+    fmap (if i == 0
+              then Shift_t no 1 . Map_t no (Select_1d ni (ni-1))
+              else Map_t no (Select_1d ni (i - 1))
+         )
+    repeat ni .
+    TSeq_To_Seq .
     Partition no ni === (Isomorphism Removal)
 
 Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 .
-    HMap_s ni (List_To_Seq 
-        [Map_s 1 (Shift no init) . Select_1d_s ni (ni-1)] ++ 
-        [Map_s 1 (TSeq_To_Seq . Seq_To_TSeq) . Select_1d_s ni i | i <- [0..n-2]] 
-        ) .
-    Up_1d_s ni
-    Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
-    Partition no ni === (Seq To TSeq and Identity Addition)
+    Tuple_To_Seq .
+    TSeq_To_Seq . 
+    foldl (\accum next -> Map2_t no Tuple accum next) .
+    fmap (if i == 0
+              then Shift_t no 1 . Map_t no (Select_1d ni (ni-1))
+              else Map_t no (Select_1d ni (i - 1))
+         )
+    repeat ni .
+    TSeq_To_Seq .
+    Partition no ni === (Seq To SSeq)
 
 Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 .
-    HMap_s ni (List_To_Seq 
-        [Map_s 1 (TSeq_to_Seq . Shift_t no init . Seq_to_TSeq) . Select_1d_s ni (ni-1)] ++ 
-        [Map_s 1 (TSeq_To_Seq . Seq_To_TSeq) . Select_1d_s ni i | i <- [0..n-2]] 
-        ) .
-    Up_1d_s ni
-    Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
-    Partition no ni === (Map Functor Fusion and Commutativity)
+    Tuple_To_Seq .
+    TSeq_To_Seq . 
+    foldl (\accum next -> Map2_t no Tuple accum next) .
+    fmap (if i == 0
+              then Shift_t no 1 . Map_t no (SSeq_To_Seq . Select_1d_s ni (ni-1) . Seq_To_SSeq)
+              else Map_t no (SSeq_To_Seq . Select_1d_s ni (i - 1) . SSeq_To_Seq)
+         )
+    repeat ni .
+    TSeq_To_Seq .
+    Partition no ni === (Functor Map Fusion)
 
 Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 .
-    HMap_s ni (List_To_Seq 
-        [Map_s 1 TSeq_to_Seq . Map_s 1 (Shift_t no init) . Select_1d_s ni (ni-1) . Map_s ni Seq_To_TSeq] ++ 
-        [Map_s 1 TSeq_To_Seq . Select_1d_s ni i . Map_s ni Seq_To_TSeq | i <- [0..n-2]] 
-        ) .
-    Up_1d_s ni
-    Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
-    Partition no ni === (HMap Equivalence and HMap and Map Equivalence)
+    Tuple_To_Seq .
+    TSeq_To_Seq . 
+    foldl (\accum next -> Map2_t no Tuple accum next) .
+    fmap (if i == 0
+              then Shift_t no 1 . Map_t no SSeq_To_Seq .
+                  Map_t no (Select_1d_s ni (ni-1)) . 
+                  Map_t no Seq_To_SSeq
+              else Map_t no SSeq_To_Seq . 
+                   Map_t no (Select_1d_s ni (i - 1)) . 
+                   Map_t no SSeq_To_Seq
+         )
+    repeat ni .
+    TSeq_To_Seq .
+    Partition no ni === (Repeating Same Process As For Seq_To_TSeq)
 
 Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 .
-    Map_s ni (Map_s 1 TSeq_To_Seq) .
-    HMap_s ni (List_To_Seq 
-        [Map_s 1 (Shift_t no init) . Select_1d_s ni (ni-1)] ++ 
-        [Select_1d_s ni i | i <- [0..n-2]] 
-        ) .
-    Map_s ni (Map_s ni TSeq_To_Seq) .
-    Up_1d_s ni
-    Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
-    Partition no ni === (Commutativity)
+    Tuple_To_Seq .
+    TSeq_To_Seq . 
+    Map_t no SSeq_To_Seq
+    foldl (\accum next -> Map2_t no Tuple accum next) .
+    fmap (if i == 0
+              then Shift_t no 1 . Map_t no (Select_1d_s ni (ni-1))
+              else Map_t no (Select_1d_s ni (i - 1)) . 
+         )
+    repeat ni .
+    Map_t no Seq_To_SSeq
+    TSeq_To_Seq .
+    Partition no ni === (Partially Parallel Tuple_To_Seq)
 
 Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Unpartition_s_ss ni 1 .
-    Map_s ni (Map_s 1 TSeq_To_Seq) .
-    HMap_s ni (List_To_Seq 
-        [Map_s 1 (Shift_t no init) . Select_1d_s ni (ni-1)] ++ 
-        [Select_1d_s ni i | i <- [0..n-2]] 
-        ) .
-    Up_1d_s ni
-    Map_s 1 (Map_s ni TSeq_To_Seq) .
-    Partition_s_ss 1 ni . Seq_To_SSeq
-    Transpose no ni .
-    Partition no ni === (Commutativity)
-
-Unpartition no ni .
-    Transpose ni no
-    SSeq_To_Seq . Map_s ni TSeq_To_Seq .
-    Unpartition_s_ss ni 1 .
-    HMap_s ni (List_To_Seq 
-        [Map_s 1 (Shift_t no init) . Select_1d_s ni (ni-1)] ++ 
-        [Select_1d_s ni i | i <- [0..n-2]] 
-        ) .
-    Up_1d_s ni
-    Partition_s_ss 1 ni . 
-    Map_s ni TSeq_To_Seq . Seq_To_SSeq
-    Transpose no ni .
-    Partition no ni === (Sequence To Time-Space-To-Space-Time and Sequence To Space-Time-To-Time-Space)
-
-Unpartition no ni .
-    TSeq_To_Seq . Map_t no SSeq_To_Seq . Transpose_st_to_ts ni no . Map_s ni Seq_To_TSeq . Seq_To_SSeq
-    SSeq_To_Seq . Map_s ni TSeq_To_Seq .
-    Unpartition_s_ss ni 1 .
-    HMap_s ni (List_To_Seq 
-        [Map_s 1 (Shift_t no init) . Select_1d_s ni (ni-1)] ++ 
-        [Select_1d_s ni i | i <- [0..n-2]] 
-        ) .
-    Up_1d_s ni
-    Partition_s_ss 1 ni . 
-    Map_s ni TSeq_To_Seq . Seq_To_SSeq
-    SSeq_To_Seq . Map_s ni TSeq_To_Seq . Transpose_ts_to_st no ni . Map_t no Seq_To_SSeq . Seq_To_TSeq
+    TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Tuple_To_SSeq ni) . Map_t no Seq_To_SSeq . Seq_To_TSeq
+    TSeq_To_Seq . 
+    Map_t no SSeq_To_Seq
+    foldl (\accum next -> Map2_t no Tuple accum next) .
+    fmap (if i == 0
+              then Shift_t no 1 . Map_t no (Select_1d_s ni (ni-1))
+              else Map_t no (Select_1d_s ni (i - 1)) . 
+         )
+    repeat ni .
+    Map_t no Seq_To_SSeq
+    TSeq_To_Seq .
     Partition no ni === (Isomorphism Removal)
 
-Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . 
-    Transpose_st_to_ts ni no . 
-    Unpartition_s_ss ni 1 .
-    HMap_s ni (List_To_Seq 
-        [Map_s 1 (Shift_t no init) . Select_1d_s ni (ni-1)] ++ 
-        [Select_1d_s ni i | i <- [0..n-2]] 
+Unpartition no ni .
+    TSeq_To_Seq . 
+    Map_t no SSeq_To_Seq . 
+    Map_t no (Tuple_To_SSeq ni) . 
+    foldl (\accum next -> Map2_t no Tuple accum next) .
+    fmap (\(i, in_seq) -> 
+            Shift_t no ((ni - i + s - 1) // ni) $ Map_t no (Select_1d_s ni ((i - s) % ni)) in_seq
         ) .
-    Up_1d_s ni
-    Partition_s_ss 1 ni . 
-    Transpose_ts_to_st no ni . 
-    Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition no ni
+    zipWith [0..]
+    repeat ni .
+    Map_t no Seq_To_SSeq
+    TSeq_To_Seq .
+    Partition no ni === (Isomorphism Removal)
+
 ```
-
-### `Stencil_1d`
-`Stencil_1d`  doesn't have it's own rewrite rules. It is not a primitive in the language.
-To schedule it in space-time, just apply the rewrite rules to the operators that compose it.
 
 # Examples
 
