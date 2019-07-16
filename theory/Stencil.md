@@ -50,7 +50,7 @@ Unpartition no ni .
 
 Let `Shift_Nested no ni init` be the above nested composition of operators without the outer `Unpartition no ni` and `Partition no ni`
 
-![Nested Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/computation_diagram/stencil_1d/stencil_1d_computation_explanation.png "Nested Shift")
+![Nested Shift](https://raw.githubusercontent.com/David-Durst/embeddedHaskellAetherling/rewrites/theory/computation_diagram/nested_shift/nested_shift_computation_explained.png "Nested Shift")
 
 ### `Stencil_1d`
 
