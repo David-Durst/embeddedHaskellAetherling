@@ -198,24 +198,43 @@ The algorithm for scheduling a program P with a throughput factor s is:
 1. T\_OT will be T\_O where each `Seq n t` is replaced by `TSeq n i t`
 1. Compute the scheduled version of T\_O, T\_OS, using the below algorithm:
 ```
-s_remaining = s
 s_remaining_factors = prime_factorization(s)
 T_OS = []
 for (TSeq n i) in layers(T_OT):
    n_factors = prime_factorization(n)
-   if s_remaining % (n+i) == 0:
-       s_remaining = s // (n+i)
+   n_i_factors = prime_factorization(n+i)
+   if S.is_subset_of n_i_factors s_remaining_factors == 0:
+       s_remaining_factors = Set.difference s_remaining_factor n_i_factors
        T_OS += TSeq n i
-   else if Set.union s_remaining_factors n_factors != Set.empty:
+   else if Set.intersect s_remaining_factors n_factors != Set.empty:
        cur_layer_slowdown_factors = Set.intersect s_remaining_factors n_factors 
+       cur_layer_slowdown = product cur_layer_slowdown_factors
        cur_layer_parallel_factors = Set.difference n_factors cur_layer_slowdown_factors
+       cur_layer_parallel = product cur_layer_parallel_factors
        s_remaining_factors = Set.difference s_remaining_factors cur_layer_slowdown_factors
-       T_OS += Split(TSeq cur_layer_slowdown_factors 0, cur_layer_slowdown_factors)
+       T_OS += Split(TSeq cur_layer_slowdown 0, SSeq cur_layer_parallel)
    else 
        T_OS += SSeq n
 ```
 1. Next, feed this output backwards through the graph. Each operator gets T\_OS and is nested according the Sequence To Space-Time rewrite rules.
     1. We require that each operator accept and emit each layer split at most once.
+    1. T\_IS is the same data structure as T\_OS, but it is produced from the rewritten operators and passed back
+```
+T_OS
+T_IS = apply_rewrite_rules(T_OS, f)
+
+apply_rewrite_rules(T_OS, f) =
+   if T_OS[0] == SSeq n:
+       sequence_to_fully_parallel(f)
+   else if T_OS[0] == TSeq n i:
+       sequence_to_fully_sequential(f)
+   else:
+       sequence_to_partially_parallel(f, T_OS[0])
+   if f is nested:
+     f_inner = get_inner(f)
+     apply_rewrite_rules(T_OS[1:], f_inner)
+
+```
 
 #  Garbage Below
 

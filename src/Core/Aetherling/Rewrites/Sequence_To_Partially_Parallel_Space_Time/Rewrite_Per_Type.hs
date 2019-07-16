@@ -1,12 +1,14 @@
-module Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Slowdown_Per_Type where
-import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Sequence_Length_Per_Layer
+module Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Per_Type where
 import Aetherling.Rewrites.Rewrite_Helpers
-import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
 import qualified Aetherling.Languages.Sequence.Deep.Types as SeqT
 import Control.Monad.Except
+import Data.List
 import Data.Maybe
 import Data.Either
+import qualified Data.Set as S
 import Text.Printf
+import Math.NumberTheory.Primes.Factorisation
+import Debug.Trace
 {-
 get_max_length_per_layer :: Lengths_Per_Layer -> [Int]
 get_max_length_per_layer (Unary_Atom_Layer e_cur_layer) = get_max_length_per_layer e_cur_layer
@@ -16,12 +18,144 @@ get_max_length_per_layer (Binary_Atom_Layer e_left_cur_layer e_right_cur_layer) 
   (get_max_length_per_layer e_right_cur_layer)
 -}
 
-data Layer_Slowdown = Layer_Slowdown {
-  layer_s :: Int,
-  layer_max_len :: Int,
-  layer_split :: Bool
-  } deriving (Show, Eq)
+data Type_Rewrite =
+  SpaceR { tr_n :: Int}
+  | TimeR { tr_n :: Int, tr_i :: Int}
+  | SplitR { tr_n_outer :: Int, tr_i_outer :: Int, tr_n_inner :: Int }
+  | NonSeqR
+  deriving (Show, Eq)
 
+rewrite_AST_type :: Int -> SeqT.AST_Type -> Rewrite_StateM [Type_Rewrite]
+rewrite_AST_type s e = do
+  let s_factors = ae_factorize s
+  let (t_rewrites, s_remaining) = rewrite_AST_type' s_factors e
+  if ae_all_non_one_factors_used s_remaining
+    then return t_rewrites
+    else throwError $ Slowdown_Failure $ show s_remaining ++ " slowdown not 1 " ++
+         "with t_rewrites "
+
+rewrite_AST_type' :: Factors -> SeqT.AST_Type -> ([Type_Rewrite], Factors)
+rewrite_AST_type' s_remaining_factors SeqT.UnitT = ([NonSeqR], s_remaining_factors)
+rewrite_AST_type' s_remaining_factors SeqT.BitT = ([NonSeqR], s_remaining_factors)
+rewrite_AST_type' s_remaining_factors SeqT.IntT = ([NonSeqR], s_remaining_factors)
+rewrite_AST_type' s_remaining_factors (SeqT.ATupleT _ _) = ([NonSeqR], s_remaining_factors)
+rewrite_AST_type' s_remaining_factors (SeqT.SeqT n i t) = do
+  let n_factors = ae_factorize n
+  let n_i_factors = ae_factorize (n+i)
+  if n_i_factors `ae_factors_subset` s_remaining_factors
+    then do
+    let result_s_remaining_factors = ae_renumber_factors $
+          ae_factors_diff s_remaining_factors n_i_factors
+    let (inner_rewrites, final_factors) = rewrite_AST_type' result_s_remaining_factors t
+    (TimeR n i : inner_rewrites, final_factors)
+
+    else if (ae_factors_intersect s_remaining_factors n_factors) /= S.empty
+    then do
+    let cur_layer_slowdown_factors = ae_factors_intersect s_remaining_factors n_factors
+    let cur_layer_slowdown = ae_factors_product cur_layer_slowdown_factors
+    let cur_layer_parallel_factors = ae_factors_diff n_factors cur_layer_slowdown_factors
+    let cur_layer_parallel = ae_factors_product cur_layer_parallel_factors
+    let result_s_remaining_factors = ae_renumber_factors $
+          ae_factors_diff s_remaining_factors cur_layer_slowdown_factors 
+    let (inner_rewrites, final_factors) = rewrite_AST_type' result_s_remaining_factors t
+    (SplitR cur_layer_slowdown 0 cur_layer_parallel : inner_rewrites, final_factors)
+
+    else do
+    let (inner_rewrites, final_factors) = rewrite_AST_type' s_remaining_factors t
+    (SpaceR n : inner_rewrites, final_factors)
+rewrite_AST_type' s_remaining_factors (SeqT.STupleT n t) = do
+  let (inner_rewrites, final_factors) = rewrite_AST_type' s_remaining_factors t
+  (NonSeqR : inner_rewrites, final_factors)
+
+data Factor = Factor { factor_val :: Int, factor_num :: Int }
+  deriving (Show, Eq, Ord)
+
+type Factors = S.Set Factor
+
+factor_num_pair_to_factor_list :: (Integer, Int) -> Factors
+factor_num_pair_to_factor_list (factor, copies) = do
+  let factor_int = fromInteger factor
+  S.fromList $ [Factor factor_int i | i <- [0 .. copies - 1]]
+  
+ae_factorize :: Int -> Factors
+ae_factorize n = do
+  let factors = factorise $ fromIntegral n
+  let nested_factors = S.fromList $ fmap factor_num_pair_to_factor_list factors
+  S.foldl S.union S.empty nested_factors
+
+ae_all_non_one_factors_used :: Factors -> Bool
+ae_all_non_one_factors_used fs = fs == S.empty
+
+ae_factors_to_int_list :: Factors -> [Int]
+ae_factors_to_int_list factors = do
+  let factors_list = S.toList factors
+  fmap factor_val factors_list
+
+ae_renumber_factors :: Factors -> Factors
+ae_renumber_factors input_factors = do
+  let input_factors_list = ae_factors_to_int_list input_factors
+  -- note: group only combines adjacent elements
+  -- which is fine since ae_factors_to_int_list puts all equivalent ints adjacent
+  let grouped_factors_list = group input_factors_list
+  let indices :: [Int] = [0..]
+  let factors_with_indices = fmap (\x -> zip x indices) grouped_factors_list
+  let flattened_factors_with_indices = foldl (++) [] factors_with_indices
+  let typed_factors = fmap
+        (\(factor, idx) -> Factor factor idx)
+        flattened_factors_with_indices
+  S.fromList typed_factors
+
+ae_factors_product :: Factors -> Int
+ae_factors_product = product . ae_factors_to_int_list
+
+ae_factors_subset :: Factors -> Factors -> Bool
+ae_factors_subset = S.isSubsetOf
+
+ae_factors_diff :: Factors -> Factors -> Factors
+ae_factors_diff = S.difference
+
+ae_factors_intersect :: Factors -> Factors -> Factors
+ae_factors_intersect = S.intersection
+
+ae_factors_union :: Factors -> Factors -> Factors
+ae_factors_union = S.union
+{-
+rewrite_AST_type :: Int -> 
+partially_parallelize_AST_type e SeqT.UnitT = do
+  slowdown_factor <- get_remaining_slowdown
+  if slowdown_factor /= 1
+    then throw_partially_parallel_error e
+    else return STT.UnitT
+partially_parallelize_AST_type e SeqT.BitT = do
+  slowdown_factor <- get_remaining_slowdown
+  if slowdown_factor /= 1
+    then throw_partially_parallel_error e
+    else return STT.BitT
+partially_parallelize_AST_type e SeqT.IntT = do
+  slowdown_factor <- get_remaining_slowdown
+  if slowdown_factor /= 1
+    then throw_partially_parallel_error e
+    else return STT.IntT
+partially_parallelize_AST_type e (SeqT.ATupleT x y) = do
+  x_stt <- partially_parallelize_AST_type e x
+  y_stt <- partially_parallelize_AST_type e y
+  return $ (STT.ATupleT x_stt y_stt) 
+partially_parallelize_AST_type e (SeqT.SeqT n _ t) = do
+  slowdown_factor <- get_remaining_slowdown
+  -- fully sequential as factor is only part of length of seq
+  -- what about i? Need to consider divisibility of i as well
+  if n `mod` slowdown_factor == 0
+    then do
+    let par_amount = n `div` slowdown_factor
+    set_remaining_slowdown n slowdown_factor
+    inner_type <- partially_parallelize_AST_type t
+    return $ STT.TSeqT n inner_type
+    else undefined
+partially_parallelize_AST_type e (SeqT.STupleT n t) = do
+  inner_type <- partially_parallelize_AST_type e t
+  return $ STT.STupleT n inner_type
+-}
+{-
 get_max_length_per_layer :: Lengths_Per_Layer -> [Int]
 get_max_length_per_layer (Lengths_Per_Layer lengths) = do
   fmap maximum $ fmap (fmap fromJust) $ fmap (filter isJust) lengths
@@ -119,4 +253,5 @@ compute_slowdown_per_layer' s (cur_layer_lengths : lower_lengths) |
 -- so propagate slowdown down
 compute_slowdown_per_layer' s (cur_layer_lengths : lower_lengths) =
   compute_slowdown_per_layer' s lower_lengths
+-}
 -}
