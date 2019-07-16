@@ -1,4 +1,4 @@
-module Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Per_Type where
+module Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type where
 import Aetherling.Rewrites.Rewrite_Helpers
 import qualified Aetherling.Languages.Sequence.Deep.Types as SeqT
 import Control.Monad.Except
