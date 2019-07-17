@@ -104,7 +104,20 @@ data Expr =
       elem_t :: AST_Type,
       seq_in :: Expr
       }
-
+  | Flip_ts_to_st {
+      n_t :: Int,
+      i :: Int,
+      n_s :: Int,
+      elem_t :: AST_Type,
+      seq_in :: Expr
+      }
+  | Flip_st_to_ts {
+      n_t :: Int,
+      i :: Int,
+      n_s :: Int,
+      elem_t :: AST_Type,
+      seq_in :: Expr
+      }
   -- higher order operators
   | Map_sN {
       n :: Int,

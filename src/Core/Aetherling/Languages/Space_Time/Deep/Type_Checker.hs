@@ -59,6 +59,10 @@ check_type' consumer_e@(SerializeN _ _ _ _ _ producer_e) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(DeserializeN _ _ _ _ _ producer_e) =
   check_unary_operator consumer_e producer_e
+check_type' consumer_e@(Flip_ts_to_st _ _ _ _ producer_e) =
+  check_unary_operator consumer_e producer_e
+check_type' consumer_e@(Flip_st_to_ts _ _ _ _ producer_e) =
+  check_unary_operator consumer_e producer_e
 
 -- higher order operators
 check_type' consumer_e@(Map_sN _ f producer_e) = do

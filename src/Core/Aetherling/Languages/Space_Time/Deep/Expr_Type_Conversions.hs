@@ -89,6 +89,11 @@ expr_to_types (SerializeN no ni io ii tuple_elem_t _) =
 expr_to_types (DeserializeN no ni io ii tuple_elem_t _) =
   Expr_Types [TSeqT no io (TSeqT ni ii tuple_elem_t)]
   (TSeqT no ((no * ((ni - 1) + ii)) + (io * (ni + ii))) (STupleT ni tuple_elem_t))
+
+expr_to_types (Flip_ts_to_st n_t i n_s elem_t _) =
+  Expr_Types [TSeqT n_t i (SSeqT n_s elem_t)] (SSeqT n_s (TSeqT n_t i elem_t))
+expr_to_types (Flip_st_to_ts n_t i n_s elem_t _) =
+  Expr_Types [SSeqT n_s (TSeqT n_t i elem_t)] (TSeqT n_t i (SSeqT n_s elem_t))
   
 -- higher order operators
 expr_to_types (Map_sN n f _) = Expr_Types in_types out_type
@@ -201,6 +206,10 @@ expr_to_outer_types' consumer_e@(Unpartition_t_ttN _ _ _ _ _ producer_e) =
 expr_to_outer_types' consumer_e@(SerializeN _ _ _ _ _ producer_e) = 
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(DeserializeN _ _ _ _ _ producer_e) = 
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' consumer_e@(Flip_ts_to_st _ _ _ _ producer_e) = 
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' consumer_e@(Flip_st_to_ts _ _ _ _ producer_e) = 
   expr_to_outer_types_unary_operator consumer_e producer_e
 
 -- higher order operators
