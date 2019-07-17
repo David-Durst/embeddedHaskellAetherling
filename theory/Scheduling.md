@@ -14,7 +14,7 @@ Scheduling with factor **s** means produce a pipeline with `input_throughput` an
 `input_throughput` and `output_throughput`.
 
 # Motivating Examples
-
+**note: I mix up slowdown and speedup factor. I will come back and fix this when I've finished implementing the algorithm.**
 ## Basic Example
 This example shows the simplest pipeline that can be scheduled.
 
@@ -30,7 +30,7 @@ Attainable s are `1, 2, 4`
 Down_1d 4
 ```
 
-Slowing down the output by two means converting it from `SSeq 1 Int` to `TSeq 1 1 (SSeq 1 Int)`
+Speeding up the output by two means converting it from `TSeq 1 1 (SSeq 1 Int)` to `SSeq 1 Int`
 
 ## Nested Multi-Rate
 **This example demonstrates the first issue of where to distribute invalid clocks when connecting to a nested, multi-rate operator.**
@@ -205,6 +205,19 @@ Map 2 (Down 2) >>> Unpartition 2 1 >>> Map 2 Abs
 One would not know that `s=4` is attainable just by looking at `Map 2 Abs`. 
 It is necessary to look at the whole pipeline. 
 By examining `Map 2 (Down 2)`, the bottleneck, the correct downstream type can be determined: `Map_t 2 Abs :: TSeq 2 2 Int`
+
+## Differently Nested Multi-Rates
+**This example demonstrates the issue of how to distribute underutilization in a pipeline multiple, differntly nested downsamples.**
+```
+Map 2 (Down 3) >>> Unpartition 2 1 >>> Down 2
+```
+The output fully sequential type is `TSeq 1 5 Int`.
+
+To make this example speedup with `s = 2` is 
+```
+Map_s 2 (Down_t 3) >>> Flip_ts_to_st >>> Down_t 2 >>> Map_t 1 (Down_s 2)
+```
+
 
 **Another issue to address is when a downsample is fed a SplitR, how to decide how much underutilization is for the downsample and howmuch is to be passed backwards?**
 # Scheduling Algorithm
