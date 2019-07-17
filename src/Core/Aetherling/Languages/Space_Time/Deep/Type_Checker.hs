@@ -15,58 +15,58 @@ check_type e = do
 check_type' :: Expr -> Type_Checker_Error AST_Type
 check_type' (IdN producer_e) = check_type' producer_e
 check_type' consumer_e@(AbsN producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(NotN producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(AddN producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(SubN producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(MulN producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(DivN producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(EqN _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 
 -- generators
 check_type' consumer_e@(Lut_GenN _ _ producer_e) = 
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' (Const_GenN _ t) = return t
 
 -- sequence operators
 check_type' consumer_e@(Shift_sN _ _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Shift_tN _ _ _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Up_1d_sN _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Up_1d_tN _ _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Down_1d_sN _ _ _ producer_e) = 
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Down_1d_tN _ _ _ _ producer_e) = 
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Partition_s_ssN _ _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Partition_t_ttN _ _ _ _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Unpartition_s_ssN _ _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Unpartition_t_ttN _ _ _ _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(SerializeN _ _ _ _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(DeserializeN _ _ _ _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 
 -- higher order operators
 check_type' consumer_e@(Map_sN _ f producer_e) = do
   check_type' f
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Map_tN _ _ f producer_e) = do
   check_type' f
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Map2_sN _ f producer0_e producer1_e) = do
   check_type' f
   check_binary_operator consumer_e producer0_e producer1_e
@@ -75,16 +75,16 @@ check_type' consumer_e@(Map2_tN _ _ f producer0_e producer1_e) = do
   check_binary_operator consumer_e producer0_e producer1_e
 check_type' consumer_e@(Reduce_sN _ f producer_e) = do
   check_type' f
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Reduce_tN _ _ f producer_e) = do
   check_type' f
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 
 -- tuple operators
 check_type' consumer_e@(FstN _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(SndN _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(ATupleN _ _ producer0_e producer1_e) = do
   check_binary_operator consumer_e producer0_e producer1_e
 check_type' consumer_e@(STupleN _ producer0_e producer1_e) = do
@@ -94,17 +94,17 @@ check_type' consumer_e@(STupleAppendN _ _ producer0_e producer1_e) = do
   check_binary_operator consumer_e producer0_e producer1_e
   
 check_type' consumer_e@(STupleToSSeqN _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(SSeqToSTupleN _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
   
 check_type' (InputN t _) = return t
 check_type' e@(ErrorN _) = throwError e
 check_type' consumer_e@(FIFON _ _ _ _ producer_e) =
-  check_atom_operator consumer_e producer_e
+  check_unary_operator consumer_e producer_e
   
-check_atom_operator :: Expr -> Expr -> Type_Checker_Error AST_Type
-check_atom_operator consumer_op producer_op = do
+check_unary_operator :: Expr -> Expr -> Type_Checker_Error AST_Type
+check_unary_operator consumer_op producer_op = do
   producer_output_type <- check_type' producer_op
   let consumer_input_types = e_in_types $ expr_to_types consumer_op
   let consumer_output_type = e_out_type $ expr_to_types consumer_op
