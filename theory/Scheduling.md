@@ -8,7 +8,7 @@ The goal of this document is:
 Scheduling is converting a program from the sequence language to the space-time IR.
 Scheduling is performed to target a specific `input_throughput` and `output_throughput`
 as defined in [the basic theory document's throughput section.](Basic.md#throughput).
-The target is specified using a **slowdown factor s**.
+The target is specified using a **speedup factor s**.
 Scheduling with factor **s** means produce a pipeline with `input_throughput` and
 `output_throughput` that are **s** times smaller than the fully parallel pipeline's
 `input_throughput` and `output_throughput`.
@@ -23,8 +23,17 @@ Attainable s are `s = 1, 2,4`
 Map 4 Abs
 ```
 
+## Multi-Rate
+**This example demonstrates the issue of how to parallelize a multi-rate operator where invalid clocks are necessary to understand throughput.**
+Attainable s are `1, 2, 4`
+```
+Down_1d 4
+```
+
+Slowing down the output by two means converting it from `SSeq 1 Int` to `TSeq 1 1 (SSeq 1 Int)`
+
 ## Nested Multi-Rate
-**This example demonstrates the first issue the scheduler faces: where to distribute invalid clocks when connecting to a nested, multi-rate operator.**
+**This example demonstrates the first issue of where to distribute invalid clocks when connecting to a nested, multi-rate operator.**
 
 ### Upsample Outer
 The first example is a multi-rate where the `Up_1d` is on the outer seq.
@@ -70,7 +79,7 @@ For the **Upsample Inner** example, the inner `Map` can have 3 invalid clocks wh
 `Map` can have 0 invalid clocks. Thus, the inner `Map` will be slowed.
 
 ## Partition
-**This example demonstrates the second issue the scheduler faces: how to maintain appropriate nesting when scheduling a `Partition` or `Unpartition`**
+**This example demonstrates the another issue the scheduler faces: how to maintain appropriate nesting when scheduling a `Partition` or `Unpartition`**
 
 ### Single Nesting
 The first example is a single `Partition`.
@@ -187,7 +196,42 @@ Map_t 5 (Unparition_s_ss 3 2) >>>
 Map_t 5 (Map_s 6 Abs)
 ```
 
+## Partition With Multi-Rates
+**This example demonstrates the issue of how to parallelize a multi-rate pipeline where some operators must always be underutilized.**
+Attainable s are `1, 2, 4`.
+```
+Map 2 (Down 2) >>> Unpartition 2 1 >>> Map 2 Abs
+```
+One would not know that `s=4` is attainable just by looking at `Map 2 Abs`. 
+It is necessary to look at the whole pipeline. 
+By examining `Map 2 (Down 2)`, the bottleneck, the correct downstream type can be determined: `Map_t 2 Abs :: TSeq 2 2 Int`
+
+**Another issue to address is when a downsample is fed a SplitR, how to decide how much underutilization is for the downsample and howmuch is to be passed backwards?**
 # Scheduling Algorithm
+## Divisibility Constraints
+```
+input type - Seq n i
+result type - TSeq no io (SSeq ni)
+
+ASSERT:
+no * ni = n
+no + io = (n+i) / speedup
+speedup = common factors of s and (n+i)
+time_after_speedup = (n+i) / speedup
+
+from the above 3 equations, know that no has to be a factor of n
+
+no = factors(n) union factors ((n+i) / speedup) 
+
+This ensures that can compute io >= 0 as no has to be less than (n+i) / speedup.
+This ensures that can compute ni as an natural number as no is only factors of n
+
+-- wrong below, if n = 1, i = 3, then speed up by 2 with no = 1, ni = 1, io = 2
+ni = speedup (parallel component)
+```
+
+## Algorithm
+
 The algorithm for scheduling a program P with a throughput factor s is:
 1. Let T_O be the output type of P
 1. Let T_OT be the output type of P if it is scheduled fully in time - each operator is made as temporal as possible while ensuring that the bottleneck is fully utilized.
@@ -199,18 +243,21 @@ T_OS = []
 for (TSeq n i) in layers(T_OT):
    n_factors = prime_factorization(n)
    n_i_factors = prime_factorization(n+i)
-   if S.is_subset_of n_i_factors s_remaining_factors == 0:
-       s_remaining_factors = Set.difference s_remaining_factor n_i_factors
-       T_OS += TSeq n i
-   else if Set.intersect s_remaining_factors n_factors != Set.empty:
-       cur_layer_slowdown_factors = Set.intersect s_remaining_factors n_factors 
-       cur_layer_slowdown = product cur_layer_slowdown_factors
-       cur_layer_parallel_factors = Set.difference n_factors cur_layer_slowdown_factors
-       cur_layer_parallel = product cur_layer_parallel_factors
-       s_remaining_factors = Set.difference s_remaining_factors cur_layer_slowdown_factors
+   n_i_s_factors = Set.intersect s_remaining_factors n_i_factors
+   if S.is_subset_of n_factors s_remaining_factors == 0:
+       s_remaining_factors = Set.difference s_remaining_factor n_factors
+       T_OS += SSeq n i
+   else if n_i_s_factors != Set.empty:
+       speedup_factors = n_i_s_factors
+       speedup = product speedup_factors
+       no_factors = Set.intersect n_factors n_i_s_factors
+       no = product no_factors
+       ni = n / no
+       io = (n + i) / speedup - no
+       s_remaining_factors = Set.difference s_remaining_factors speedup_factors
        T_OS += Split(TSeq cur_layer_slowdown 0, SSeq cur_layer_parallel)
    else 
-       T_OS += SSeq n
+       T_OS += TSeq n i
 ```
 1. Next, feed this output backwards through the graph. Each operator gets T\_OS and is nested according the Sequence To Space-Time rewrite rules.
     1. We require that each operator accept and emit each layer split at most once.
