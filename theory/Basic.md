@@ -403,7 +403,7 @@ Unpartition no ni . Map no (SSeq_To_Seq . Up_1d_s ni . Seq_To_SSeq) . Up_1d no .
 Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Up_1d_s ni . Seq_To_SSeq) . Seq_To_TSeq . TSeq_To_Seq . Up_1d_t no . Seq_To_TSeq . Partition 1 1 === (Isomorphism Operator Removal)
 Unpartition no ni . TSeq_To_Seq . Map_t no (SSeq_To_Seq . Up_1d_s ni . Seq_To_SSeq) . Up_1d_t no . Seq_To_TSeq . Partition 1 1 === (Functor Map Fusion)
 Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) . Map_t no Seq_To_SSeq . Up_1d_t no . Seq_To_TSeq . Partition 1 1 === (Commutativity)
-Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) . Up_1d_t no . Map_t no Seq_To_SSeq . Seq_To_TSeq . Partition 1 1 
+Unpartition no ni . TSeq_To_Seq . Map_t no SSeq_To_Seq . Map_t no (Up_1d_s ni) . Up_1d_t no . Map_t 1 Seq_To_SSeq . Seq_To_TSeq . Partition 1 1 
 ```
 
 See [the Functor Properties section](#functor-properties) for a description of Map Fusion.
