@@ -100,7 +100,11 @@ multi_rate_to_map = compile $
    mapC' (Proxy @8) absC) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 8 0 Atom_Int)))
 
-  
+nested_down_to_down = compile $
+  (mapC' (Proxy @2) (down_1dC' (Proxy @3) 0) >>>
+   unpartitionC' (Proxy @2) (Proxy @1) >>>
+   down_1dC' (Proxy @2) 0) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 3 0 Atom_Int)))
 
   -- map 4 abs >>> partition 4 1 >>> up_1d 4  - nullset in second nesting
 
