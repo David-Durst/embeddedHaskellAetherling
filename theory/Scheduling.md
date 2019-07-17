@@ -243,19 +243,22 @@ T_OS = []
 for (TSeq n i) in layers(T_OT):
    n_factors = prime_factorization(n)
    n_i_factors = prime_factorization(n+i)
-   n_i_s_factors = Set.intersect s_remaining_factors n_i_factors
-   if S.is_subset_of n_factors s_remaining_factors == 0:
-       s_remaining_factors = Set.difference s_remaining_factor n_factors
+   n_i_s_factors = ae_factors_intersect s_remaining_factors n_i_factors
+   -- speedup if amount of output to produce divides into speedup amount
+   if S.is_subset_of n_i_factors s_remaining_factors == 0:
+       s_remaining_factors = Set.difference s_remaining_factor n_i_factors
        T_OS += SSeq n i
+   -- if there are common factors between total runtime and speedup
+   -- use them to do speedup
    else if n_i_s_factors != Set.empty:
        speedup_factors = n_i_s_factors
-       speedup = product speedup_factors
-       no_factors = Set.intersect n_factors n_i_s_factors
-       no = product no_factors
+       speedup = ae_factors_product speedup_factors
+       no_factors = ae_factors_intersect n_factors n_i_s_factors
+       no = ae_factors_product no_factors
        ni = n / no
-       io = (n + i) / speedup - no
-       s_remaining_factors = Set.difference s_remaining_factors speedup_factors
-       T_OS += Split(TSeq cur_layer_slowdown 0, SSeq cur_layer_parallel)
+       io = ((n + i) / speedup) - no
+       s_remaining_factors = ae_factors_difference s_remaining_factors speedup_factors
+       T_OS += Split(TSeq no io, SSeq ni) 
    else 
        T_OS += TSeq n i
 ```

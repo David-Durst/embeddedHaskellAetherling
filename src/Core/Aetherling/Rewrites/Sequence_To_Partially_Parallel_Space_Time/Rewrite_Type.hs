@@ -42,27 +42,34 @@ rewrite_AST_type' s_remaining_factors (SeqT.ATupleT _ _) = ([NonSeqR], s_remaini
 rewrite_AST_type' s_remaining_factors (SeqT.SeqT n i t) = do
   let n_factors = ae_factorize n
   let n_i_factors = ae_factorize (n+i)
+  let n_i_s_factors = ae_factors_intersect s_remaining_factors n_i_factors
+  
+   -- speedup if amount of output to produce divides into speedup amount
   if n_i_factors `ae_factors_subset` s_remaining_factors
     then do
     let result_s_remaining_factors = ae_renumber_factors $
           ae_factors_diff s_remaining_factors n_i_factors
     let (inner_rewrites, final_factors) = rewrite_AST_type' result_s_remaining_factors t
-    (TimeR n i : inner_rewrites, final_factors)
+    (SpaceR n : inner_rewrites, final_factors)
 
-    else if (ae_factors_intersect s_remaining_factors n_factors) /= S.empty
+    -- if there are common factors between total runtime and speedup
+    -- use them to do speedup
+    else if n_i_s_factors /= S.empty
     then do
-    let cur_layer_slowdown_factors = ae_factors_intersect s_remaining_factors n_factors
-    let cur_layer_slowdown = ae_factors_product cur_layer_slowdown_factors
-    let cur_layer_parallel_factors = ae_factors_diff n_factors cur_layer_slowdown_factors
-    let cur_layer_parallel = ae_factors_product cur_layer_parallel_factors
+    let speedup_factors = n_i_s_factors
+    let speedup = ae_factors_product speedup_factors
+    let no_factors = ae_factors_intersect n_factors n_i_s_factors
+    let no = ae_factors_product no_factors
+    let ni = n `div` no
+    let io = ((n + i) `div` speedup) - no
     let result_s_remaining_factors = ae_renumber_factors $
-          ae_factors_diff s_remaining_factors cur_layer_slowdown_factors 
+          ae_factors_diff s_remaining_factors speedup_factors
     let (inner_rewrites, final_factors) = rewrite_AST_type' result_s_remaining_factors t
-    (SplitR cur_layer_slowdown 0 cur_layer_parallel : inner_rewrites, final_factors)
+    (SplitR no io ni : inner_rewrites, final_factors)
 
     else do
     let (inner_rewrites, final_factors) = rewrite_AST_type' s_remaining_factors t
-    (SpaceR n : inner_rewrites, final_factors)
+    (TimeR n i : inner_rewrites, final_factors)
 rewrite_AST_type' s_remaining_factors (SeqT.STupleT n t) = do
   let (inner_rewrites, final_factors) = rewrite_AST_type' s_remaining_factors t
   (NonSeqR : inner_rewrites, final_factors)
