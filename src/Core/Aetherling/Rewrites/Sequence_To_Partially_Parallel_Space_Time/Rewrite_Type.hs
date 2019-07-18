@@ -25,6 +25,12 @@ data Type_Rewrite =
   | NonSeqR
   deriving (Show, Eq)
 
+get_type_rewrite_periods :: Type_Rewrite -> Int
+get_type_rewrite_periods (SpaceR _) = 1
+get_type_rewrite_periods (TimeR tr_n tr_i) = tr_n + tr_i
+get_type_rewrite_periods (SplitR tr_no tr_io _) = tr_no + tr_io
+get_type_rewrite_periods NonSeqR = -1
+
 rewrite_AST_type :: Int -> SeqT.AST_Type -> Rewrite_IO_StateM [Type_Rewrite]
 rewrite_AST_type s e = do
   let s_factors = ae_factorize s
@@ -126,139 +132,3 @@ ae_factors_intersect = S.intersection
 
 ae_factors_union :: Factors -> Factors -> Factors
 ae_factors_union = S.union
-{-
-rewrite_AST_type :: Int -> 
-partially_parallelize_AST_type e SeqT.UnitT = do
-  slowdown_factor <- get_remaining_slowdown
-  if slowdown_factor /= 1
-    then throw_partially_parallel_error e
-    else return STT.UnitT
-partially_parallelize_AST_type e SeqT.BitT = do
-  slowdown_factor <- get_remaining_slowdown
-  if slowdown_factor /= 1
-    then throw_partially_parallel_error e
-    else return STT.BitT
-partially_parallelize_AST_type e SeqT.IntT = do
-  slowdown_factor <- get_remaining_slowdown
-  if slowdown_factor /= 1
-    then throw_partially_parallel_error e
-    else return STT.IntT
-partially_parallelize_AST_type e (SeqT.ATupleT x y) = do
-  x_stt <- partially_parallelize_AST_type e x
-  y_stt <- partially_parallelize_AST_type e y
-  return $ (STT.ATupleT x_stt y_stt) 
-partially_parallelize_AST_type e (SeqT.SeqT n _ t) = do
-  slowdown_factor <- get_remaining_slowdown
-  -- fully sequential as factor is only part of length of seq
-  -- what about i? Need to consider divisibility of i as well
-  if n `mod` slowdown_factor == 0
-    then do
-    let par_amount = n `div` slowdown_factor
-    set_remaining_slowdown n slowdown_factor
-    inner_type <- partially_parallelize_AST_type t
-    return $ STT.TSeqT n inner_type
-    else undefined
-partially_parallelize_AST_type e (SeqT.STupleT n t) = do
-  inner_type <- partially_parallelize_AST_type e t
-  return $ STT.STupleT n inner_type
--}
-{-
-get_max_length_per_layer :: Lengths_Per_Layer -> [Int]
-get_max_length_per_layer (Lengths_Per_Layer lengths) = do
-  fmap maximum $ fmap (fmap fromJust) $ fmap (filter isJust) lengths
-
-get_lengths_at_layer :: Int -> Lengths_Per_Layer -> [Int]
-get_lengths_at_layer layer (Lengths_Per_Layer lengths) = do
-  fmap fromJust $ filter isJust (lengths !! layer)
-  
-get_lengths :: Lengths_Per_Layer -> [[Int]]
-get_lengths (Lengths_Per_Layer lengths) = do
-  fmap (fmap fromJust) $ fmap (filter isJust) lengths
-
-compute_slowdown_per_layer :: Int -> Lengths_Per_Layer -> Rewrite_StateM [Layer_Slowdown]
-compute_slowdown_per_layer slowdown layers = do
-  possible_slowdowns <- compute_slowdown_per_layer' slowdown $ get_lengths layers
-  if product possible_slowdowns == slowdown
-    then do
-    let max_per_layer = get_max_length_per_layer layers
-    let max_and_slowdown_per_layer = zip possible_slowdowns max_per_layer
-    return $
-      fmap (\(s_this_layer, max_this_layer) ->
-              Layer_Slowdown s_this_layer max_this_layer (s_this_layer == max_this_layer))
-      max_and_slowdown_per_layer
-    else throwError $ Slowdown_Failure $ "Didn't achieve slowdown " ++ show slowdown ++
-         ", instead got slowdown " ++ (show $ product possible_slowdowns) ++
-         " with nested slowdowns " ++ show possible_slowdowns
-
-slowdown_lte_and_mod_condition :: Int -> Int -> Bool
-slowdown_lte_and_mod_condition s seq_length =
-  (s <= seq_length) && ((seq_length `mod` s) == 0)
-
-slowdown_greater_than_max_and_mod_condition :: Int -> [Int] -> Bool
-slowdown_greater_than_max_and_mod_condition s seq_length =
-  (s > seq_length) && ()
-  (all (\n -> (s `mod` n) == 0) cur_layer_lengths) &&
-  (all (\n -> n == (head cur_layer_lengths)) cur_layer_lengths)
-{-
-compute_slowdown_per_layer' :: Int -> [[Int]] -> Rewrite_StateM [Int]
--- if called with no layers, mistake
-compute_slowdown_per_layer' _ [] = throwError $ Slowdown_Failure $
-  "Can't slowdown with 0 layers. Should be " ++
-  "impossible as even layers just with atoms should produce tombstones."
--- if this is last layer and its empty, return 1 as no slowdown
-compute_slowdown_per_layer' s [[]] = return [1]
--- if this is last layer and its not empty, error
-compute_slowdown_per_layer' s [_] =
-  throwError $ Slowdown_Failure "last layer lengths not empty"
--- if this is not the layer layer but its empty, return 1 for slowdown on
--- this layer as not doing anything here
-compute_slowdown_per_layer' s ([] : lower_lengths) = do
-  lower_layer_slowdowns <- compute_slowdown_per_layer' s lower_lengths
-  return $ 1 : lower_layer_slowdowns
--- if s <= min(layer lengths) and length `mod` s == 0 for all lengths in a layer
--- then slow down all op's for this layer by s and done
--- show done by making slowdown of 1 for all lower_layers
-compute_slowdown_per_layer' s (cur_layer_lengths : lower_lengths) |
-  slowdown_less_than_min_and_mod_condition s cur_layer_lengths =
-  return $ s : replicate 1 (length lower_lengths)
--- if s >= max(layer lengths) and s `mod` length == 0 for all lengths in a layer
--- and all layer lengths equal
--- then slow down all op's for this layer by s and propagate s / (max layer lengths)
-compute_slowdown_per_layer' s (cur_layer_lengths : lower_lengths) |
-   slowdown_greater_than_max_and_mod_condition s cur_layer_lengths = do
-    let s_this_layer = s `div` maximum cur_layer_lengths
-    let s_remainder = s `div` (s_this_layer)
-    lower_layer_slowdowns <- compute_slowdown_per_layer' s_remainder lower_lengths
-    return $ s_this_layer : lower_layer_slowdowns
--- if s >= min(layer lengths) and s <= max(layer lengths) and
--- length `mod` s == 0 or length >= s for all, then split current layer
--- split by slowing down all op's for this layer by s and done
--- show done by making slowdown of 1 for all lower_layers
-compute_slowdown_per_layer' s (cur_layer_lengths : lower_lengths) |
-   slowdown_between_min_max_and_mod_condition s cur_layer_lengths =
-  return $ s : replicate 1 (length lower_lengths)
--- if s >= max(layer lengths) and for all lengths in a layer
--- try slowing down lower layers, if result is not using up all of s and then try
--- using it here either by:
--- using it all if s_remainder >= all layer lengths for all layer lengths
--- using it all if s_remainder <= all layer lengths and length `mod` s_remainder == 0 for all layer lengths
--- using it all if s_remainder between min and max of layer lengths and mod conditions hold
--- else no slowdown and propagate up
-compute_slowdown_per_layer' s (cur_layer_lengths : lower_lengths) |
-  s >= maximum cur_layer_lengths = do
-    lower_layer_slowdowns <- compute_slowdown_per_layer' s lower_lengths
-    let s_used = product lower_layer_slowdowns
-    let s_remainder = s `div` s_used
-    if all (\n -> s_remainder >= n) cur_layer_lengths
-      then return $ s_remainder : lower_layer_slowdowns
-      else if slowdown_less_than_min_and_mod_condition s_remainder cur_layer_lengths
-           then return $ s_remainder : lower_layer_slowdowns
-           else if slowdown_between_min_max_and_mod_condition s_remainder cur_layer_lengths
-                then return $ s_remainder : lower_layer_slowdowns
-                else return $ 1 : lower_layer_slowdowns
--- else s < max(layer lengths) but divisibility conditions don't hold,
--- so propagate slowdown down
-compute_slowdown_per_layer' s (cur_layer_lengths : lower_lengths) =
-  compute_slowdown_per_layer' s lower_lengths
--}
--}
