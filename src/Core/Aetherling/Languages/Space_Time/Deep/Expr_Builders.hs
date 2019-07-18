@@ -40,3 +40,10 @@ add_input_to_expr_for_map expr_gen = do
   let expr_in_type = head $ e_in_types expr_types
   expr_gen $ InputN expr_in_type "f_in"
   
+add_input_to_expr_for_map2 :: (Expr -> Expr -> Expr) -> Expr
+add_input_to_expr_for_map2 expr_gen = do
+  let expr_types = expr_to_types (expr_gen (ErrorN "not an error") (ErrorN "not an error"))
+  let expr_in_type0 = head $ e_in_types expr_types
+  let expr_in_type1 = (e_in_types expr_types) !! 1
+  expr_gen (InputN expr_in_type0 "f_in0") (InputN expr_in_type1 "f_in0")
+  
