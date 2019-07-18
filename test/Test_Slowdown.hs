@@ -107,6 +107,12 @@ nested_down_to_down = compile $
    down_1dC' (Proxy @2) 0) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 3 0 Atom_Int)))
 
+down_unpartition_down = compile $
+  (down_1dC' (Proxy @4) 0 >>>
+   unpartitionC' (Proxy @1) (Proxy @4) >>>
+   down_1dC' (Proxy @4) 0) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
+
 f_sbv :: IO SatResult
 f_sbv = sat $ do
       x <- sInteger "x"
