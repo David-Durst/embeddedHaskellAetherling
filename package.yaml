@@ -38,6 +38,7 @@ dependencies:
 - util
 - monad-memo
 - arithmoi
+- sbv
 
 ghc-options:
 - -fconstraint-solver-iterations=0

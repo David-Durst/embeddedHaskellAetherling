@@ -3,6 +3,7 @@ import Aetherling.Languages.Sequence.Shallow.Expr
 import Aetherling.Languages.Sequence.Shallow.Types
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
 import Data.Proxy
+import Data.SBV
 
 -- input to scheduling algorithm: expr tree
 -- output to scheduling algorithm: amount to slow down each node
@@ -106,6 +107,99 @@ nested_down_to_down = compile $
    down_1dC' (Proxy @2) 0) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 3 0 Atom_Int)))
 
+f_sbv :: IO SatResult
+f_sbv = sat $ do
+      x <- sInteger "x"
+      constrain $ x .< 200
+
+f_add_sbv :: Int -> IO SatResult
+f_add_sbv x = sat $ do
+  in_no <- sInteger "in_no"
+  constrain $ in_no .== (fromIntegral x) + 1
+  
+f_comp_sbv :: Int -> IO SatResult
+f_comp_sbv x = sat $ do
+  in_no <- sInteger "in_no"
+  in_ni <- sInteger "in_ni"
+  in_io <- sInteger "in_io"
+  in_ii <- sInteger "in_ii"
+  constrain $ in_no .== (fromIntegral x)
+  constrain $ in_ni .== 300
+  constrain $ 300 .== (in_no * in_ii) + (in_io * (in_ni + in_ii))
+  constrain $ in_io .<= 600
+  constrain $ in_ii .<= 600
+  constrain $ in_io .>= 0
+  constrain $ in_ii .>= 0
+ {- 
+script :: Z3 (Result, Maybe [Integer])
+script = do
+  in_no <- mkFreshIntVar "in_no"
+  in_ni <- mkFreshIntVar "in_ni"
+  in_io <- mkFreshIntVar "in_io"
+  in_ii <- mkFreshIntVar "in_ii"
+  no <- mkInteger 1
+  ni <- mkInteger 3
+  tr_no <- mkInteger 3
+  tr_io <- mkInteger 3
+  ni_add_ii <- mkAdd [in_ni,in_ii]
+  io_mul_ni_add_ii <- mkMul [in_io, ni_add_ii]
+  no_mul_ii <- mkMul [in_no, in_ii]
+  flattened_invalids <- mkAdd [no_mul_ii, io_mul_ni_add_ii]
+  assert =<< mkAnd =<< T.sequence
+    [
+      in_no `mkEq` no,
+      in_ni `mkEq` ni,
+      tr_io `mkEq` flattened_invalids
+    ]
+  withModel $ \m ->
+    catMaybes <$> mapM (evalInt m) [in_no, in_ni, in_io, in_ii]
+ 
+script2 :: Z3 (Result, Maybe Model)
+script2 = do
+  in_no <- mkFreshIntVar "in_no"
+  no <- mkInteger 1
+  assert =<< mkAnd =<< T.sequence
+    [
+      in_no `mkEq` no
+    ]
+  getModel
+
+script3 :: Z3 (Maybe [Integer])
+script3 = do
+  q1 <- mkFreshIntVar "q1"
+  q2 <- mkFreshIntVar "q2"
+  q3 <- mkFreshIntVar "q3"
+  q4 <- mkFreshIntVar "q4"
+  _1 <- mkInteger 1
+  _4 <- mkInteger 4
+  -- the ith-queen is in the ith-row.
+  -- qi is the column of the ith-queen
+  assert =<< mkAnd =<< T.sequence
+    [ mkLe _1 q1, mkLe q1 _4  -- 1 <= q1 <= 4
+    , mkLe _1 q2, mkLe q2 _4
+    , mkLe _1 q3, mkLe q3 _4
+    , mkLe _1 q4, mkLe q4 _4
+    ]
+  -- different columns
+  assert =<< mkDistinct [q1,q2,q3,q4]
+  -- avoid diagonal attacks
+  assert =<< mkNot =<< mkOr =<< T.sequence
+    [ diagonal 1 q1 q2  -- diagonal line of attack between q1 and q2
+    , diagonal 2 q1 q3
+    , diagonal 3 q1 q4
+    , diagonal 1 q2 q3
+    , diagonal 2 q2 q4
+    , diagonal 1 q3 q4
+    ]
+  -- check and get solution
+  fmap snd $ withModel $ \m ->
+    catMaybes <$> mapM (evalInt m) [q1,q2,q3,q4]
+  where mkAbs x = do
+          _0 <- mkInteger 0
+          join $ mkIte <$> mkLe _0 x <*> pure x <*> mkUnaryMinus x
+        diagonal d c c' =
+          join $ mkEq <$> (mkAbs =<< mkSub [c',c]) <*> (mkInteger d)
+-}
   -- map 4 abs >>> partition 4 1 >>> up_1d 4  - nullset in second nesting
 
   -- map 8 abs >>> partition 4 2 >>> map 4 (map 2 abs)
