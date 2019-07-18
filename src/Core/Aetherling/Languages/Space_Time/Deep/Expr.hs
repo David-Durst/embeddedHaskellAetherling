@@ -89,18 +89,14 @@ data Expr =
       seq_in :: Expr
       }
   | SerializeN {
-      no :: Int,
-      ni :: Int,
-      io :: Int,
-      ii :: Int,
+      n :: Int,
+      i :: Int,
       elem_t :: AST_Type,
       seq_in :: Expr
       }
   | DeserializeN {
-      no :: Int,
-      ni :: Int,
-      io :: Int,
-      ii :: Int,
+      n :: Int,
+      i :: Int,
       elem_t :: AST_Type,
       seq_in :: Expr
       }
