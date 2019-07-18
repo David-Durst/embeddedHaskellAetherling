@@ -291,7 +291,7 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) 
     STE.Partition_t_ttN tr0_no tr0_ni tr1_no tr1_io partition_t_tt_elem_t_ppar producer_ppar
 
 
-
+{-
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : type_rewrites_tl)
   (SeqE.UnpartitionN no ni io ii elem_t producer) |
   parameters_match tr (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) = do
@@ -321,28 +321,29 @@ sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrit
   let upstream_type_rewrites = TimeR no io : TimeR ni ii : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
   return $ STE.Unpartition_t_ttN no ni io ii elem_t_ppar producer_ppar
-  
-sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : type_rewrites_tl)
+ -}
+sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   (SeqE.UnpartitionN no ni io ii elem_t producer) |
   parameters_match tr (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) = do
   -- to compute how to speed up input, get the amount the output is sped up
   -- then distribute that speedup over the input
-  let total_spedup_clocks = tr_no + tr_io
-  let original_clocks = Seq_Conv.total_clocks_from_nested no ni io ii
-  let speedup = original_clocks `div` total_spedup_clocks
+  let total_spedup_clocks = get_type_rewrite_periods tr
+  let fully_sequential_clocks = Seq_Conv.total_clocks_from_nested no ni io ii
+  let speedup = fully_sequential_clocks `div` total_spedup_clocks
+
   (outer_input_rewrite : inner_input_rewrite : _) <- rewrite_AST_type speedup (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
+
   elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
-  -- only get a time if fully sequential, using all invalid clocks
-  -- therefore can use io and ii
-  let upstream_type_rewrites = TimeR no io : TimeR ni ii : type_rewrites_tl
+  let upstream_type_rewrites = outer_input_rewrite : inner_input_rewrite : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+
   get_scheduled_partition outer_input_rewrite inner_input_rewrite elem_t_ppar producer_ppar
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
     get_scheduled_partition :: Type_Rewrite -> Type_Rewrite -> STT.AST_Type -> STE.Expr -> Rewrite_IO_StateM STE.Expr
-    get_scheduled_partition (SpaceR _) (SpaceR _) _ _ = throwError $
-      Slowdown_Failure $ "Can't have partial speedup for unpartition that is fully parallel"
+    get_scheduled_partition (SpaceR in0_n) (SpaceR in1_n) elem_t_ppar producer_ppar =
+      return $ STE.Unpartition_s_ssN in0_n in1_n elem_t_ppar producer_ppar
     get_scheduled_partition (SpaceR in0_n) (TimeR in1_n in1_i) elem_t_ppar producer_ppar =
       return $ STE.Flip_st_to_ts in1_n in1_i in0_n elem_t_ppar producer_ppar
     get_scheduled_partition (SpaceR in0_n) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
@@ -352,8 +353,8 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : ty
         STE.Flip_st_to_ts in1_no in1_io in0_n flip_elem_t_ppar producer_ppar
     get_scheduled_partition (TimeR in0_n in0_i) (SpaceR in1_n) elem_t_ppar producer_ppar = do
       return producer_ppar
-    get_scheduled_partition (TimeR _ _) (TimeR _ _) _ _ = throwError $
-      Slowdown_Failure $ "Can't have partial speedup for unpartition that is fully sequential"
+    get_scheduled_partition (TimeR in0_n in0_i) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = 
+      return $ STE.Unpartition_t_ttN in0_n in1_n in0_i in1_i elem_t_ppar producer_ppar
     get_scheduled_partition (TimeR in0_n in0_i) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
       let unpartition_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
       return $ STE.Unpartition_t_ttN in0_n in1_no in0_i in1_ni unpartition_elem_t_ppar producer_ppar
@@ -381,56 +382,140 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : ty
       Slowdown_Failure "can't get nonseq for unpartition input"
     get_scheduled_partition _ NonSeqR _ _ = throwError $
       Slowdown_Failure "can't get nonseq for unpartition input"
-{-
+
+
 
 -- higher order operators
-sequence_to_partially_parallel (SeqE.MapN n _ f producer) = do
-  f_par <- sequence_to_partially_parallel f
-  producer_par <- sequence_to_partially_parallel producer
-  return $ STE.Map_sN n f_par producer_par
-sequence_to_partially_parallel (SeqE.Map2N n _ f producer_left producer_right) = do
-  f_par <- sequence_to_partially_parallel f
-  producer_left_par <- sequence_to_partially_parallel producer_left
-  producer_right_par <- sequence_to_partially_parallel producer_right
-  return $ STE.Map2_sN n f_par producer_left_par producer_right_par
-sequence_to_partially_parallel (SeqE.ReduceN n _ f producer) = do
-  f_par <- sequence_to_partially_parallel f
-  producer_par <- sequence_to_partially_parallel producer
-  return $ STE.Reduce_sN n f_par producer_par
+sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
+  (SeqE.MapN n i f producer) |
+  parameters_match tr n i = do
+  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
+  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  return $ STE.Map_sN tr_n f_ppar producer_ppar
+  
+sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrites_tl)
+  (SeqE.MapN n i f producer) |
+  parameters_match tr n i = do
+  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
+  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  return $ STE.Map_tN tr_n tr_i f_ppar producer_ppar
+  
+sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : type_rewrites_tl)
+  (SeqE.MapN n i f producer) |
+  parameters_match tr n i = do
+  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
+  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  return $ STE.Map_tN tr_no tr_io (STB.add_input_to_expr_for_map $
+                                   STE.Map_sN tr_ni f_ppar)
+    producer_ppar
+
+
+
+sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
+  (SeqE.Map2N n i f producer_left producer_right) |
+  parameters_match tr n i = do
+  producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
+  producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
+  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  return $ STE.Map2_sN tr_n f_ppar producer_left_ppar producer_right_ppar
+
+sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrites_tl)
+  (SeqE.Map2N n i f producer_left producer_right) |
+  parameters_match tr n i = do
+  producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
+  producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
+  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  return $ STE.Map2_tN tr_n tr_i f_ppar producer_left_ppar producer_right_ppar
+
+sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : type_rewrites_tl)
+  (SeqE.Map2N n i f producer_left producer_right) |
+  parameters_match tr n i = do
+  producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
+  producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
+  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  return $ STE.Map2_tN tr_no tr_io (STB.add_input_to_expr_for_map2 $
+                                    STE.Map2_sN tr_ni f_ppar)
+    producer_left_ppar producer_right_ppar
+
+
+
+sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
+  (SeqE.ReduceN n i f producer) |
+  parameters_match tr n i = do
+  -- to compute how to speed up input, get the amount the output is sped up
+  -- then distribute that speedup over the input
+  let total_spedup_clocks = get_type_rewrite_periods tr
+  let fully_sequential_clocks = n + i
+  let speedup = fully_sequential_clocks `div` total_spedup_clocks
+
+  input_rewrite : _ <- rewrite_AST_type speedup (SeqT.SeqT n i SeqT.IntT)
+
+  let upstream_type_rewrites = input_rewrite : type_rewrites_tl
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+
+  get_scheduled_partition input_rewrite f_ppar producer_ppar
+  where
+    -- note: these type_rewrites represent how the input is rewritten, not the output
+    -- like all the type_rewrites passed to sequence_to_partially_parallel
+    get_scheduled_partition :: Type_Rewrite -> STE.Expr -> STE.Expr -> Rewrite_IO_StateM STE.Expr
+    get_scheduled_partition (SpaceR in_n) f_ppar producer_ppar =
+      return $ STE.Reduce_sN in_n f_ppar producer_ppar
+    get_scheduled_partition (TimeR in_n in_i) f_ppar producer_ppar =
+      return $ STE.Reduce_tN in_n in_i f_ppar producer_ppar
+    get_scheduled_partition (SplitR in_no in_io in_ni) f_ppar producer_ppar =
+      return $ STE.Reduce_tN in_no in_io (STB.add_input_to_expr_for_map $
+                                          STE.Map_sN 1 f_ppar) $
+      STE.Map_tN in_no in_io (STB.add_input_to_expr_for_map $
+                              STE.Reduce_sN in_ni f_ppar)
+      producer_ppar
+    get_scheduled_partition NonSeqR _ _ = throwError $
+      Slowdown_Failure "can't get nonseq for reduce input"
 
 -- tuple operations
-sequence_to_partially_parallel (SeqE.FstN t0 t1 producer) = do
-  producer_par <- sequence_to_partially_parallel producer
-  t0_par <- parallelize_AST_type t0
-  t1_par <- parallelize_AST_type t1
-  return $ STE.FstN t0_par t1_par producer_par
-
-sequence_to_partially_parallel (SeqE.SndN t0 t1 producer) = do
-  producer_par <- sequence_to_partially_parallel producer
-  t0_par <- parallelize_AST_type t0
-  t1_par <- parallelize_AST_type t1
-  return $ STE.SndN t0_par t1_par producer_par
-
-sequence_to_partially_parallel (SeqE.ATupleN t0 t1 producer_left producer_right) = do
-  producer_left_par <- sequence_to_partially_parallel producer_left
-  producer_right_par <- sequence_to_partially_parallel producer_right
-  t0_par <- parallelize_AST_type t0
-  t1_par <- parallelize_AST_type t1
-  return $ STE.ATupleN t0_par t1_par producer_left_par producer_right_par
-
-sequence_to_partially_parallel (SeqE.STupleN elem_t producer_left producer_right) = do
-  t_par <- parallelize_AST_type elem_t
-  producer_left_par <- sequence_to_partially_parallel producer_left
-  producer_right_par <- sequence_to_partially_parallel producer_right
-  return $ STE.STupleN t_par producer_left_par producer_right_par
-
-sequence_to_partially_parallel (SeqE.STupleAppendN out_len elem_t producer_left producer_right) = do
-  t_par <- parallelize_AST_type elem_t
-  producer_left_par <- sequence_to_partially_parallel producer_left
-  producer_right_par <- sequence_to_partially_parallel producer_right
-  return $ STE.STupleAppendN out_len t_par producer_left_par producer_right_par
+sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
+  (SeqE.FstN t0 t1 producer) = do
+  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
+  t0_ppar <- part_par_AST_type type_rewrites_tl t0
+  t1_ppar <- part_par_AST_type type_rewrites_tl t1
+  return $ STE.FstN t0_ppar t1_ppar producer_ppar
   
-sequence_to_partially_parallel (SeqE.STupleToSeqN no ni io ii elem_t producer) = do
+sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
+  (SeqE.SndN t0 t1 producer) = do
+  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
+  t0_ppar <- part_par_AST_type type_rewrites_tl t0
+  t1_ppar <- part_par_AST_type type_rewrites_tl t1
+  return $ STE.SndN t0_ppar t1_ppar producer_ppar
+
+sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
+  (SeqE.ATupleN t0 t1 producer_left producer_right) = do
+  producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
+  producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
+  t0_ppar <- part_par_AST_type type_rewrites_tl t0
+  t1_ppar <- part_par_AST_type type_rewrites_tl t1
+  return $ STE.ATupleN t0_ppar t1_ppar producer_left_ppar producer_right_ppar
+
+sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
+  (SeqE.STupleN elem_t producer_left producer_right) = do
+  producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
+  producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  return $ STE.STupleN elem_t_ppar producer_left_ppar producer_right_ppar
+
+sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
+  (SeqE.STupleAppendN out_len elem_t producer_left producer_right) = do
+  producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
+  producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  return $ STE.STupleAppendN out_len elem_t_ppar producer_left_ppar producer_right_ppar
+  
+{-
+sequence_to_partially_parallel type_rewrites@(tr0 : tr1 : type_rewrites_tl) (SeqE.STupleToSeqN no ni io ii elem_t producer) = do
+  -- to compute how to speed up input, get the amount the output is sped up
+  -- then distribute that speedup over the input
+  let total_spedup_clocks = get_type_rewrite_periods tr
+  let fully_sequential_clocks = Seq_Conv.total_clocks_from_nested no ni io ii
+  let speedup = fully_sequential_clocks `div` total_spedup_clocks
   t_par <- parallelize_AST_type elem_t
   producer_par <- sequence_to_partially_parallel producer
   return $ STE.Map_sN no (STE.STupleToSSeqN ni t_par
@@ -446,12 +531,12 @@ sequence_to_partially_parallel (SeqE.SeqToSTupleN no ni io ii elem_t producer) =
                           -- in an stuple of elements
                           (STE.InputN (STT.SSeqT ni t_par) "seq_in")) producer_par
 
-sequence_to_partially_parallel (SeqE.InputN t input_name) = do
-  t_par <- parallelize_AST_type t
-  return $ STE.InputN t_par input_name
-
-sequence_to_partially_parallel (SeqE.ErrorN s) = return $ STE.ErrorN s
 -}
+sequence_to_partially_parallel type_rewrites (SeqE.InputN t input_name) = do
+  t_ppar <- part_par_AST_type type_rewrites t
+  return $ STE.InputN t_ppar input_name
+
+sequence_to_partially_parallel _ (SeqE.ErrorN s) = return $ STE.ErrorN s
 
 -- | Verifies that Type_Rewrite matches the output Seq that is being rewritten
 parameters_match :: Type_Rewrite -> Int -> Int -> Bool
