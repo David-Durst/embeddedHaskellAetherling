@@ -25,7 +25,7 @@ data Type_Rewrite =
   | NonSeqR
   deriving (Show, Eq)
 
-rewrite_AST_type :: Int -> SeqT.AST_Type -> Rewrite_StateM [Type_Rewrite]
+rewrite_AST_type :: Int -> SeqT.AST_Type -> Rewrite_IO_StateM [Type_Rewrite]
 rewrite_AST_type s e = do
   let s_factors = ae_factorize s
   let (t_rewrites, s_remaining) = rewrite_AST_type' s_factors e

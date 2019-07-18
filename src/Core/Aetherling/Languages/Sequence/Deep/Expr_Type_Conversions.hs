@@ -54,13 +54,13 @@ expr_to_types (Down_1dN n i _ elem_t _) = Expr_Types in_types out_type
 expr_to_types (PartitionN no ni io ii elem_t _) =
   Expr_Types in_types out_type
   where
-    in_types = [SeqT (no * ni) ((no * ii) + (io * (ni + ii))) elem_t]
+    in_types = [SeqT (no * ni) (invalid_clocks_from_nested no ni io ii) elem_t]
     out_type = SeqT no io (SeqT ni ii elem_t)
 expr_to_types (UnpartitionN no ni io ii elem_t _) =
   Expr_Types in_types out_type
   where
     in_types = [SeqT no io (SeqT ni ii elem_t)]
-    out_type = SeqT (no * ni) ((no * ii) + (io * (ni + ii))) elem_t
+    out_type = SeqT (no * ni) (invalid_clocks_from_nested no ni io ii) elem_t
 
 -- higher order operators
 expr_to_types (MapN n i f _) = Expr_Types in_types out_type
@@ -196,3 +196,9 @@ expr_to_outer_types_binary_operator consumer_op producer_op0 producer_op1 = do
   let producer1_input_types = e_in_types producer1_outer_types
   let consumer_output_type = e_out_type $ expr_to_types consumer_op
   return $ Expr_Types (producer0_input_types ++ producer1_input_types) consumer_output_type
+
+invalid_clocks_from_nested :: Int -> Int -> Int -> Int -> Int
+invalid_clocks_from_nested no ni io ii = (no * ii) + (io * (ni + ii))
+
+total_clocks_from_nested :: Int -> Int -> Int -> Int -> Int
+total_clocks_from_nested no ni io ii = (no * (ni + ii)) + (io * (ni + ii))
