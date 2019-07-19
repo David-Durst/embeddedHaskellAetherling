@@ -125,6 +125,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io ni) : type_rewrit
                                  ) up_outer
   return up_inner
 
+{-
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
   (SeqE.Down_1dN n i sel_idx elem_t producer) |
   parameters_match tr 1 (n+i-1) = do
@@ -176,7 +177,40 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io ni) : type_rewrit
                                             STE.Down_1d_sN (n `div` outer_down_amount) (sel_idx `mod` outer_down_amount) elem_t_ppar
                                           ) down_outer
     return down_inner
-                                      
+ -}                                     
+sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
+  (SeqE.Down_1dN n i sel_idx elem_t producer) |
+  parameters_match tr n i = do
+  -- to compute how to speed up input, get the amount the output is sped up
+  -- then distribute that speedup over the input
+  let total_spedup_clocks = get_type_rewrite_periods tr
+  let fully_sequential_clocks = n + i
+  let speedup = fully_sequential_clocks `div` total_spedup_clocks
+
+  input_rewrites <- rewrite_AST_type speedup (SeqT.SeqT n i SeqT.IntT)
+  let input_rewrite : _ = input_rewrites
+
+  let upstream_type_rewrites = input_rewrite : type_rewrites_tl
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+
+  get_scheduled_partition input_rewrite elem_t_ppar producer_ppar
+  where
+    -- note: these type_rewrites represent how the input is rewritten, not the output
+    -- like all the type_rewrites passed to sequence_to_partially_parallel
+    get_scheduled_partition :: Type_Rewrite -> STT.AST_Type -> STE.Expr -> Rewrite_StateM STE.Expr
+    get_scheduled_partition (SpaceR in_n) elem_t_ppar producer_ppar =
+      return $ STE.Down_1d_sN in_n sel_idx elem_t_ppar producer_ppar
+    get_scheduled_partition (TimeR in_n in_i) elem_t_ppar producer_ppar =
+      return $ STE.Down_1d_tN in_n in_i sel_idx elem_t_ppar producer_ppar
+    get_scheduled_partition (SplitR in_no in_io in_ni) elem_t_ppar producer_ppar = do
+      let down_outer = STE.Down_1d_tN in_no in_io (sel_idx `div` in_no) (STT.SSeqT in_ni elem_t_ppar) producer_ppar
+      let down_inner = STE.Map_tN 1 (in_no + in_io - 1) ( STB.add_input_to_expr_for_map $
+                                                          STE.Down_1d_sN in_ni (sel_idx `mod` in_ni) elem_t_ppar
+                                                        ) down_outer
+      return down_inner
+    get_scheduled_partition NonSeqR _ _ = throwError $
+      Slowdown_Failure "can't get nonseq for down_1d input"
   {-
 )ddSTE.Down_1d_tN no io (sel_idx `div` no) (STT.SSeqT ni elem_t_ppar) producer_ppar
   let up_inner = STE.Map_tN no i ( STB.add_input_to_expr_for_map $
