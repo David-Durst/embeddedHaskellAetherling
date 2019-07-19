@@ -510,21 +510,161 @@ sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
   producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
   elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
   return $ STE.STupleAppendN out_len elem_t_ppar producer_left_ppar producer_right_ppar
+
+
   
+sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr0_n) : tr1@(SpaceR tr1_n) :
+                                              type_rewrites_tl)
+  (SeqE.STupleToSeqN no ni io ii elem_t producer) |
+  parameters_match tr0 no io && parameters_match tr1 ni ii = do
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
+  let upstream_type_rewrites = tr0 : NonSeqR : type_rewrites_tl
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+  return $ STE.Map_sN tr0_n (STB.add_input_to_expr_for_map $
+                          STE.STupleToSSeqN tr1_n elem_t_ppar) producer_ppar
+
+sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr0_n) : tr1@(TimeR tr1_n tr1_i) :
+                                              type_rewrites_tl)
+  (SeqE.STupleToSeqN no ni io ii elem_t producer) |
+  parameters_match tr0 no io && parameters_match tr1 ni ii = do
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
+  let upstream_type_rewrites = SplitR 1 (tr1_i + tr1_n - 1) tr0_n : NonSeqR : type_rewrites_tl
+  let flip_elem_t_ppar = STT.SSeqT tr1_n elem_t_ppar
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+  -- producing cirucit where all the invalid clocks needed by the inner TimeR output
+  -- are provided by the outer TSeq input. Since the outer output is a space,
+  -- the outer input must be a SplitR 
+  -- map_t 1 (tr1_i + (tr1_n - 1)) (map_s tr0_n (STupleToSSeq tr1_n)) >>>
+  -- flip_ts_to_st (sseq tr1_n) >>>
+  -- map_s tr0_n (Serialize tr1_n tr1_i)
+  -- the input is a TSeq 1 (tr1_i + (tr1_n) - 1) (SSeq tr0_n (STuple tr1_n))
+  -- as the output only has tr1_n + tr1_i clocks and tr0_n elements
+  return $ STE.Map_sN tr0_n (STB.add_input_to_expr_for_map $
+                             STE.SerializeN tr1_n tr1_i elem_t_ppar) $
+    STE.Flip_ts_to_st 1 (tr1_i + (tr1_n - 1)) tr0_n flip_elem_t_ppar $
+    STE.Map_tN 1 (tr1_i + (tr1_n - 1)) (STB.add_input_to_expr_for_map $
+                                       STE.Map_sN tr0_n (
+                                           STB.add_input_to_expr_for_map $
+                                           STE.STupleToSSeqN tr1_n elem_t_ppar
+                                           )
+                                       ) producer_ppar
+  
+sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr0_n) : tr1@(SplitR tr1_no tr1_io tr1_ni) :
+                                              type_rewrites_tl)
+  (SeqE.STupleToSeqN no ni io ii elem_t producer) |
+  parameters_match tr0 no io && parameters_match tr1 ni ii = do
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
+  -- the SplitR doesn't need tr1_ni in it's invalid inputted clocks as those are emitted
+  -- in parallel
+  let upstream_type_rewrites = SplitR 1 (tr1_io + tr1_no - 1) tr0_n : NonSeqR : type_rewrites_tl
+  let flip_elem_t_ppar = STT.SSeqT (tr1_no * tr1_ni) elem_t_ppar
+  let serialize_elem_t_ppar = STT.SSeqT tr1_ni elem_t_ppar
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+  -- producing cirucit where all the invalid clocks needed by the inner SplitR output
+  -- are provided by the outer TSeq input. Since the outer output is a space,
+  -- the outer input must be a SplitR
+  -- difference between this pattern (SpaceR SplitR) and the above (SpaceR TimeR)
+  -- is that the STuple has elements that are split to become both the Split
+  -- map_t 1 (tr1_io + (tr1_no - 1)) (map_s tr0_n (STupleToSSeq (tr1_no * tr1_ni))) >>>
+  -- flip_ts_to_st (sseq (tr1_no * tr1_ni)) >>>
+  -- map_s tr0_no (
+  --               map_t 1 (tr1_io + (tr1_no - 1)) (Partition_s_ss tr1_no tr1_ni) >>>
+  --               Serialize tr1_no tr1_io (sseq tr1_ni elem_t))
+  -- the input is a TSeq 1 (tr1_i + (tr1_n) - 1) (SSeq tr0_n)
+  -- as the output only has tr1_n + tr1_i clocks and tr0_n elements
+  return $ STE.Map_sN tr0_n (STE.SerializeN tr1_no tr1_io serialize_elem_t_ppar $
+                             STB.add_input_to_expr_for_map $
+                             STE.Map_tN 1 (tr1_io + (tr1_no - 1)) (
+                                STB.add_input_to_expr_for_map $
+                                STE.Partition_s_ssN tr1_no tr1_ni elem_t_ppar)) $
+    STE.Flip_ts_to_st 1 (tr1_io + (tr1_no - 1)) tr0_n flip_elem_t_ppar $
+    STE.Map_tN 1 (tr1_io + (tr1_no - 1)) (STB.add_input_to_expr_for_map $
+                                          STE.Map_sN tr0_n (
+                                             STB.add_input_to_expr_for_map $
+                                             STE.STupleToSSeqN (tr1_no * tr1_ni) elem_t_ppar
+                                             )
+                                         ) producer_ppar
+    
+sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr0_n tr0_i) : tr1@(SpaceR tr1_n) :
+                                              type_rewrites_tl)
+  (SeqE.STupleToSeqN no ni io ii elem_t producer) |
+  parameters_match tr0 no io && parameters_match tr1 ni ii = do
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
+  let upstream_type_rewrites = tr0 : NonSeqR : type_rewrites_tl
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+  return $ STE.Map_tN tr0_n tr0_i (STB.add_input_to_expr_for_map $
+                                   STE.STupleToSSeqN tr1_n elem_t_ppar) producer_ppar
+    
+sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr0_n tr0_i) : tr1@(TimeR tr1_n tr1_i) :
+                                              type_rewrites_tl)
+  (SeqE.STupleToSeqN no ni io ii elem_t producer) |
+  parameters_match tr0 no io && parameters_match tr1 ni ii = do
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
+  let input_invalid_clocks =
+        Seq_Conv.invalid_clocks_from_nested tr0_n 1 tr0_i (tr1_i + (tr1_n - 1))
+  let upstream_type_rewrites = TimeR tr0_n input_invalid_clocks : NonSeqR : type_rewrites_tl
+  let partition_elem_t_ppar = STT.SSeqT tr1_n elem_t_ppar
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+  -- producing cirucit where all the invalid clocks needed by the inner TimeR output
+  -- are provided by the outer TSeq input. Since the outer output is a TimeR,
+  -- the outer input must be a TimeR that is partitioned by the circuit
+  -- partition_t_tt tr0_n 1 tr0_i (tr1_i + (tr_n - 1)) ::
+  --     tr0_n (invalid_clocks_from_nested tr0_n 1 tr0_i (tr1_i + (tr1_n - 1))) ->
+  --     TSeq tr0_n tr0_i (TSeq 1 (tr1_i + (tr_n - 1)))
+  -- the circuit is:
+  -- map_t tr0_n (invalid_clocks_from_nested tr0_n 1 tr0_i (tr1_i + (tr_n - 1)))
+  --             (STupleToSSeq tr1_n) >>>
+  -- partition_t_tt tr0_n 1 tr0_i (tr1_i + (tr1_n - 1)) (sseq tr1_n) >>>
+  -- map_t tr0_n tr0_i (Serialize tr1_n tr1_i)
+  return $ STE.Map_tN tr0_n tr0_i (STB.add_input_to_expr_for_map $
+                                   STE.SerializeN tr1_n tr1_i elem_t_ppar) $
+    STE.Partition_t_ttN tr0_n 1 tr0_i (tr1_i + (tr1_n - 1)) partition_elem_t_ppar $
+    STE.Map_tN tr0_n input_invalid_clocks (STB.add_input_to_expr_for_map $
+                                           STE.STupleToSSeqN tr1_n elem_t_ppar
+                                           ) producer_ppar
+    
+sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr0_n tr0_i) :
+                                              tr1@(SplitR tr1_no tr1_io tr1_ni) :
+                                              type_rewrites_tl)
+  (SeqE.STupleToSeqN no ni io ii elem_t producer) |
+  parameters_match tr0 no io && parameters_match tr1 ni ii = do
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
+  -- the TimeR doesn't consider tr1_ni as those are emitted in parallel by the
+  -- STupleToSSeq
+  let input_invalid_clocks =
+        Seq_Conv.invalid_clocks_from_nested tr0_n 1 tr0_i (tr1_io + (tr1_no - 1))
+  let upstream_type_rewrites = TimeR tr0_n input_invalid_clocks : NonSeqR : type_rewrites_tl
+  let partition_elem_t_ppar = STT.SSeqT (tr1_no*tr1_ni) elem_t_ppar
+  let serialize_elem_t_ppar = STT.SSeqT tr1_ni elem_t_ppar
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+  -- producing cirucit where all the invalid clocks needed by the inner SplitR output
+  -- are provided by the outer TSeq input. Since the outer output is a TimeR,
+  -- the outer input must be a TimeR
+  -- difference between this pattern (TimeR SplitR) and the above (TimeR TimeR)
+  -- is that the STuple has elements that are split to become both the Split components
+  -- the circuit is:
+  -- map_t tr0_n (invalid_clocks_from_nested tr0_n 1 tr0_i (tr1_io + (tr1_no - 1)))
+  --             (STupleToSSeq (tr1_no*tr1_ni)) >>>
+  -- partition_t_tt tr0_n 1 tr0_i (tr1_io + (tr1_no - 1)) (sseq (tr1_no*tr1_ni)) >>>
+  -- map_t tr0_n tr0_i (
+  --               map_t 1 (tr1_io + (tr1_no - 1)) (Partition_s_ss tr1_no tr1_ni) >>>
+  --               Serialize tr1_no tr1_io (sseq tr1_ni elem_t))
+  return $ STE.Map_tN tr0_n tr0_i (STE.SerializeN tr1_no tr1_io serialize_elem_t_ppar $
+                                   STB.add_input_to_expr_for_map $
+                                   STE.Map_tN 1 (tr1_io + (tr1_no - 1)) (
+                                      STB.add_input_to_expr_for_map $
+                                      STE.Unpartition_s_ssN tr1_no tr1_ni elem_t_ppar)) $
+    STE.Partition_t_ttN tr0_n 1 tr0_i (tr1_io + (tr1_no - 1)) partition_elem_t_ppar $
+    STE.Map_tN tr0_n input_invalid_clocks (STB.add_input_to_expr_for_map $
+                                            STE.STupleToSSeqN (tr1_no * tr1_ni) elem_t_ppar
+                                          ) producer_ppar
 {-
-sequence_to_partially_parallel type_rewrites@(tr0 : tr1 : type_rewrites_tl) (SeqE.STupleToSeqN no ni io ii elem_t producer) = do
-  -- to compute how to speed up input, get the amount the output is sped up
-  -- then distribute that speedup over the input
-  let total_spedup_clocks = get_type_rewrite_periods tr
-  let fully_sequential_clocks = Seq_Conv.total_clocks_from_nested no ni io ii
-  let speedup = fully_sequential_clocks `div` total_spedup_clocks
-  t_par <- parallelize_AST_type elem_t
-  producer_par <- sequence_to_partially_parallel producer
-  return $ STE.Map_sN no (STE.STupleToSSeqN ni t_par
-                          -- need to wrap t_par for input as STuple takes
-                          -- in an stuple of elements
-                          (STE.InputN (STT.STupleT ni t_par) "seq_in")) producer_par
-  
 sequence_to_partially_parallel (SeqE.SeqToSTupleN no ni io ii elem_t producer) = do
   t_par <- parallelize_AST_type elem_t
   producer_par <- sequence_to_partially_parallel producer
