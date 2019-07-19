@@ -2,6 +2,8 @@ module Test_Slowdown where
 import Aetherling.Languages.Sequence.Shallow.Expr
 import Aetherling.Languages.Sequence.Shallow.Types
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
+import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import Data.Proxy
 import Data.SBV
 
@@ -17,6 +19,8 @@ import Data.SBV
 single_map = compile $
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+single_map_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map) [1,2,4]
+single_map_ppar_results = fmap check_type single_map_ppar
   
 single_map_underutil = compile $
   mapC' (Proxy @4) absC $ -- [4]

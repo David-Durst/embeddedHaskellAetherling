@@ -801,7 +801,133 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) 
                                                STE.STupleToSSeqN (tr1_no*tr1_ni) elem_t_ppar
                                                          )
                                            ) producer_ppar
-{-
+
+
+    
+sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
+  (SeqE.SeqToSTupleN no ni io ii elem_t producer) |
+  parameters_match tr (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) = do
+  -- to compute how to speed up input, get the amount the output is sped up
+  -- then distribute that speedup over the input
+  let total_spedup_clocks = get_type_rewrite_periods tr
+  let fully_sequential_clocks = Seq_Conv.total_clocks_from_nested no ni io ii
+  let speedup = fully_sequential_clocks `div` total_spedup_clocks
+
+  input_rewrites <- rewrite_AST_type speedup (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
+  let (outer_input_rewrite : inner_input_rewrite : _) = input_rewrites
+  
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  let upstream_type_rewrites = outer_input_rewrite : inner_input_rewrite : type_rewrites_tl
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+
+  get_scheduled_partition outer_input_rewrite inner_input_rewrite elem_t_ppar producer_ppar
+  where
+    -- note: these type_rewrites represent how the input is rewritten, not the output
+    -- like all the type_rewrites passed to sequence_to_partially_parallel
+    get_scheduled_partition :: Type_Rewrite -> Type_Rewrite -> STT.AST_Type -> STE.Expr -> Rewrite_StateM STE.Expr
+    get_scheduled_partition (SpaceR in0_n) (SpaceR in1_n) elem_t_ppar producer_ppar =
+      return $ STE.Map_sN in0_n (STB.add_input_to_expr_for_map $
+                                 STE.SSeqToSTupleN in1_n elem_t_ppar) producer_ppar
+      
+    get_scheduled_partition (SpaceR in0_n) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
+
+      -- after deserializing, inner TSeq input becomes a TSeq (SSeq) where
+      -- all clocks are invalid but the first
+      let post_deser_invalid_clocks = in1_i + (in1_n - 1)
+      let flip_elem_t_ppar = STT.STupleT in1_n elem_t_ppar
+      return $ STE.Flip_st_to_ts 1 post_deser_invalid_clocks in0_n flip_elem_t_ppar $
+        STE.Map_sN in0_n (STE.Map_tN 1 post_deser_invalid_clocks (
+                             STB.add_input_to_expr_for_map $
+                             STE.SSeqToSTupleN in1_n elem_t_ppar
+                             ) $
+                          STB.add_input_to_expr_for_map $
+                          STE.DeserializeN in1_n in1_i elem_t_ppar) producer_ppar
+        
+    get_scheduled_partition (SpaceR in0_n) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+
+      -- input is SSeq (TSeq (SSeq))
+      -- after deserializing TSeq, need to merge inner most SSeqs
+      -- and the flip the TSeq 1 (in1_io + (in1_no - 1)) to outside of all other sseqs
+      -- all clocks are invalid but the first
+      let post_deser_invalid_clocks = in1_io + (in1_no - 1)
+      let deser_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
+      let flip_elem_t_ppar = STT.STupleT (in1_no*in1_ni) elem_t_ppar
+      return $ STE.Flip_st_to_ts 1 post_deser_invalid_clocks in0_n flip_elem_t_ppar $
+        STE.Map_sN in0_n (STE.Map_tN 1 post_deser_invalid_clocks (
+                             STE.SSeqToSTupleN (in1_no*in1_ni) elem_t_ppar $
+                             STB.add_input_to_expr_for_map $
+                             STE.Unpartition_s_ssN in1_no in1_ni elem_t_ppar
+                             ) $
+                          STB.add_input_to_expr_for_map $
+                          STE.DeserializeN in1_no in1_io deser_elem_t_ppar) producer_ppar
+        
+    get_scheduled_partition (TimeR in0_n in0_i) (SpaceR in1_n) elem_t_ppar producer_ppar =
+      return $ STE.Map_tN in0_n in0_i (STB.add_input_to_expr_for_map $
+                                       STE.SSeqToSTupleN in1_n elem_t_ppar) producer_ppar
+      
+    get_scheduled_partition (TimeR in0_n in0_i) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
+
+      -- after deserializing, inner TSeq input becomes a TSeq (SSeq) where
+      -- all clocks are invalid but the first
+      let post_deser_inner_invalid_clocks = in1_i + (in1_n - 1)
+      let unpartition_elem_t_ppar = STT.STupleT in1_n elem_t_ppar
+      return $
+        STE.Unpartition_t_ttN in0_n 1 in0_i post_deser_inner_invalid_clocks unpartition_elem_t_ppar $
+        STE.Map_tN in0_n in0_i (STE.Map_tN 1 post_deser_inner_invalid_clocks (
+                                   STB.add_input_to_expr_for_map $
+                                   STE.SSeqToSTupleN in1_n elem_t_ppar
+                                   ) $
+                                STB.add_input_to_expr_for_map $
+                                STE.DeserializeN in1_n in1_i elem_t_ppar) producer_ppar
+        
+      {-
+-- THIS ONE WAS WRITTEN BUT IS WRONG
+    get_scheduled_partition (TimeR in0_n in0_i) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+
+      -- after deserializing, inner TSeq input becomes a TSeq (SSeq) where
+      -- all clocks are invalid but the first
+      let post_deser_inner_invalid_clocks = in1_io + (in1_no - 1)
+      let unpartition_elem_t_ppar = STT.STupleT (in1_no*in1_ni) elem_t_ppar
+      return $
+        STE.Unpartition_t_ttN in0_n 1 in0_i post_deser_inner_invalid_clocks unpartition_elem_t_ppar $
+        STE.Map_tN in0_n in0_i (STE.Map_tN 1 post_deser_inner_invalid_clocks (
+                                   STB.add_input_to_expr_for_map $
+                                   STE.SSeqToSTupleN in1_n elem_t_ppar
+                                   ) $
+                                STB.add_input_to_expr_for_map $
+                                STE.DeserializeN in1_n in1_i elem_t_ppar) producer_ppar
+
+
+    get_scheduled_partition (TimeR in0_n in0_i) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+      let unpartition_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
+      return $ STE.Unpartition_t_ttN in0_n in1_no in0_i in1_ni unpartition_elem_t_ppar producer_ppar
+    get_scheduled_partition (SplitR in0_no in0_io in0_ni) (SpaceR in1_n) elem_t_ppar producer_ppar = do
+      return $ STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
+                                         STE.Unpartition_s_ssN in0_ni in1_n elem_t_ppar)
+        producer_ppar
+    get_scheduled_partition (SplitR in0_no in0_io in0_ni) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
+      let unpartition_elem_t_ppar = STT.SSeqT in0_ni elem_t_ppar
+      return $ STE.Unpartition_t_ttN in0_ni in1_n in0_io in1_i unpartition_elem_t_ppar $
+        STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
+                                   STE.Flip_st_to_ts in1_n in1_i in0_ni elem_t_ppar) $
+        producer_ppar
+    get_scheduled_partition (SplitR in0_no in0_io in0_ni) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+      let unpartition_t_tt_elem_t_ppar = STT.SSeqT in0_ni (STT.SSeqT in1_ni elem_t_ppar)
+      let flip_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
+      return $ STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ STE.Map_tN in1_no in1_io $
+                                         STB.add_input_to_expr_for_map $ STE.Unpartition_s_ssN in0_ni in1_ni elem_t_ppar
+                                        ) $
+        STE.Unpartition_t_ttN in0_no in1_no in0_io in1_io unpartition_t_tt_elem_t_ppar $
+        STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
+                                   STE.Flip_st_to_ts in1_no in1_io in0_ni flip_elem_t_ppar) $
+        producer_ppar
+    get_scheduled_partition NonSeqR _ _ _ = throwError $
+      Slowdown_Failure "can't get nonseq for unpartition input"
+    get_scheduled_partition _ NonSeqR _ _ = throwError $
+      Slowdown_Failure "can't get nonseq for unpartition input"
+
+
+
 sequence_to_partially_parallel (SeqE.SeqToSTupleN no ni io ii elem_t producer) = do
   t_par <- parallelize_AST_type elem_t
   producer_par <- sequence_to_partially_parallel producer
