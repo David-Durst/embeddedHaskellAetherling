@@ -971,7 +971,7 @@ part_par_AST_type (tr@(SplitR tr_n_outer tr_i_outer tr_n_inner) : type_rewrites_
   (SeqT.SeqT n i t) |
   parameters_match tr n i = do
   inner_type <- part_par_AST_type type_rewrites_tl t
-  return $ STT.TSeqT n tr_i_outer inner_type
+  return $ STT.TSeqT tr_n_outer tr_i_outer (STT.SSeqT tr_n_inner inner_type)
 part_par_AST_type (NonSeqR : type_rewrites_tl) (SeqT.STupleT n t) = do
   inner_type <- part_par_AST_type type_rewrites_tl t
   return $ STT.STupleT n inner_type

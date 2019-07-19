@@ -1,8 +1,14 @@
 module Test_Slowdown where
 import Aetherling.Languages.Sequence.Shallow.Expr
 import Aetherling.Languages.Sequence.Shallow.Types
+import Aetherling.Languages.Sequence.Deep.Expr
+import Aetherling.Languages.Sequence.Deep.Types
+import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
+import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
+import Aetherling.Rewrites.Rewrite_Helpers
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import Data.Proxy
 import Data.SBV
@@ -21,6 +27,15 @@ single_map = compile $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
 single_map_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map) [1,2,4]
 single_map_ppar_results = fmap check_type single_map_ppar
+input_rewrite = rewrite_to_partially_parallel 2 (InputN (SeqT 4 0 IntT) "hi")
+input_rewrite' :: Rewrite_StateM STE.Expr
+input_rewrite' = do
+  tr <- rewrite_AST_type 2 (SeqT 4 0 IntT)
+  sequence_to_partially_parallel tr (InputN (SeqT 4 0 IntT) "hi")
+seq_rewrite' :: Rewrite_StateM STT.AST_Type
+seq_rewrite' = do
+  tr <- rewrite_AST_type 2 (SeqT 4 0 IntT)
+  part_par_AST_type tr (SeqT 4 0 IntT)
   
 single_map_underutil = compile $
   mapC' (Proxy @4) absC $ -- [4]
