@@ -40,6 +40,9 @@ seq_rewrite' = do
 single_map_underutil = compile $
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 4 Atom_Int))
+single_map_underutil_ppar = fmap
+  (\s -> rewrite_to_partially_parallel s single_map_underutil) [1,2,4,8]
+single_map_underutil_ppar_results = fmap check_type single_map_underutil_ppar
 
 -- tests basic multi-rate
 map_to_up = compile $

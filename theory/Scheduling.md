@@ -246,13 +246,49 @@ ni = speedup (parallel component)
 ## Algorithm
 
 The algorithm for scheduling a program P with a throughput factor s is:
-1. Let T_O be the output type of P
-1. Let T_OT be the output type of P if it is scheduled fully in time - each operator is made as temporal as possible while ensuring that the bottleneck is fully utilized.
-1. T\_OT will be T\_O where each `Seq n t` is replaced by `TSeq n i t`
-1. Compute the scheduled version of T\_O, T\_OS, using the below algorithm:
+1. Find an output type at the desired throughput
+  1. Let T_O be the output type of P
+  1. Let T_OT be the output type of P if it is scheduled fully in time - each operator is made as temporal as possible while ensuring that the bottleneck is fully utilized.
+  1. Let T_OS be the output type of P if it is scheduled fully in space - each operator is made fully parallel.
+  1. T\_OT will be T\_O where each `Seq n t` is replaced by `TSeq n i t`
+  1. Compute the scheduled version of T\_O, T\_OC, using the below algorithm:
 ```
 s_remaining_factors = prime_factorization(s)
-T_OS = []
+T_OC = []
+for (TSeq n i) in layers(T_OT):
+   n_factors = prime_factorization(n)
+   n_i_factors = prime_factorization(n+i)
+   n_i_s_factors = ae_factors_intersect s_remaining_factors n_i_factors
+   -- if there are slowdown factors that match current seq length
+   -- without counting i, make a TSeq slowdown_amount 0 (SSeq (n / slowdown amount) Int)
+   -- this will never produce invalid clocks. Slowing down is just using extra clocks
+   -- of valid with less per clock.
+   -- this will only explore partial parallelism slowdowns that don't create
+   -- invalid clocks would rather go slower than add more invalids
+   if ae_factors_intersect n_factors s_remaining_factors != S.empty:
+       slowdown_factors = ae_factors_intersect n_factors s_remaining_factors
+       slowdown = ae_factors_product slowdown_factors
+       no = slowdown
+       ni = n / no
+       io = 0
+       s_remaining_factors = ae_factors_difference s_remaining_factors speedup_factors
+       T_OC += Split(TSeq no io, SSeq ni) 
+   -- once you are less than 1 px per clock, all possible scheudles expressibel by
+   -- TSeq n (total_clocks - n), no need for nesting
+   -- speedup if amount of output to produce divides into speedup amount
+   -- this explores slowdowns s.t. s > n, (n+i) % s == 0
+   if S.is_subset_of n_i_factors s_remaining_factors == 0:
+       s_remaining_factors = Set.difference s_remaining_factor n_i_factors
+       T_OC += SSeq n i
+   -- if there are common factors between total runtime and speedup
+   -- use them to do speedup
+   else 
+       T_OC += TSeq n i
+```
+1. Compute the scheduled version of T\_O, T\_OC, using the below algorithm:
+```
+s_remaining_factors = prime_factorization(s)
+T_OC = []
 for (TSeq n i) in layers(T_OT):
    n_factors = prime_factorization(n)
    n_i_factors = prime_factorization(n+i)
@@ -260,7 +296,7 @@ for (TSeq n i) in layers(T_OT):
    -- speedup if amount of output to produce divides into speedup amount
    if S.is_subset_of n_i_factors s_remaining_factors == 0:
        s_remaining_factors = Set.difference s_remaining_factor n_i_factors
-       T_OS += SSeq n i
+       T_OC += SSeq n i
    -- if there are common factors between total runtime and speedup
    -- use them to do speedup
    else if n_i_s_factors != Set.empty:
@@ -271,27 +307,28 @@ for (TSeq n i) in layers(T_OT):
        ni = n / no
        io = ((n + i) / speedup) - no
        s_remaining_factors = ae_factors_difference s_remaining_factors speedup_factors
-       T_OS += Split(TSeq no io, SSeq ni) 
+       T_OC += Split(TSeq no io, SSeq ni) 
    else 
-       T_OS += TSeq n i
+       T_OC += TSeq n i
 ```
-1. Next, feed this output backwards through the graph. Each operator gets T\_OS and is nested according the Sequence To Space-Time rewrite rules.
-    1. We require that each operator accept and emit each layer split at most once.
-    1. T\_IS is the same data structure as T\_OS, but it is produced from the rewritten operators and passed back
+1. Lower P to a program in the Space-Time IR at the desired throughput
+  1. Next, feed this output backwards through the graph. Each operator gets T\_OS and is nested according the Sequence To Space-Time rewrite rules.
+      1. We require that each operator accept and emit each layer split at most once.
+      1. T\_IS is the same data structure as T\_OS, but it is produced from the rewritten operators and passed back
 ```
-T_OS
-T_IS = apply_rewrite_rules(T_OS, f)
+T_OC
+T_IS = apply_rewrite_rules(T_OC, f)
 
-apply_rewrite_rules(T_OS, f) =
-   if T_OS[0] == SSeq n:
+apply_rewrite_rules(T_OC, f) =
+   if T_OC[0] == SSeq n:
        sequence_to_fully_parallel(f)
-   else if T_OS[0] == TSeq n i:
+   else if T_OC[0] == TSeq n i:
        sequence_to_fully_sequential(f)
    else:
-       sequence_to_partially_parallel(f, T_OS[0])
+       sequence_to_partially_parallel(f, T_OC[0])
    if f is nested:
      f_inner = get_inner(f)
-     apply_rewrite_rules(T_OS[1:], f_inner)
+     apply_rewrite_rules(T_OC[1:], f_inner)
 
 ```
 
