@@ -483,25 +483,55 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : ty
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
   (SeqE.Map2N n i f producer_left producer_right) |
   parameters_match tr n i = do
-  producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
-  producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
+  outer_state <- get
   f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- need to know what f_ppar's input type rewrites were
+  -- as those are the inner type rewrites that the map must propagate up
+  inner_state <- get
+  let f_ppar_in_rewrites_tl_list = S.toList $ input_types_rewrites inner_state
+  let f_ppar_in_rewrites_tl_l = input_rewrites $ head f_ppar_in_rewrites_tl_list
+  let f_ppar_in_rewrites_tl_r = input_rewrites $ (f_ppar_in_rewrites_tl_list !! 1)
+  put outer_state
+  producer_left_ppar <- sequence_to_partially_parallel
+                        (tr : f_ppar_in_rewrites_tl_l) producer_left
+  producer_right_ppar <- sequence_to_partially_parallel 
+                        (tr : f_ppar_in_rewrites_tl_r) producer_right
   return $ STE.Map2_sN tr_n f_ppar producer_left_ppar producer_right_ppar
 
 sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrites_tl)
   (SeqE.Map2N n i f producer_left producer_right) |
   parameters_match tr n i = do
-  producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
-  producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
+  outer_state <- get
   f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- need to know what f_ppar's input type rewrites were
+  -- as those are the inner type rewrites that the map must propagate up
+  inner_state <- get
+  let f_ppar_in_rewrites_tl_list = S.toList $ input_types_rewrites inner_state
+  let f_ppar_in_rewrites_tl_l = input_rewrites $ head f_ppar_in_rewrites_tl_list
+  let f_ppar_in_rewrites_tl_r = input_rewrites $ (f_ppar_in_rewrites_tl_list !! 1)
+  put outer_state
+  producer_left_ppar <- sequence_to_partially_parallel
+                        (tr : f_ppar_in_rewrites_tl_l) producer_left
+  producer_right_ppar <- sequence_to_partially_parallel 
+                        (tr : f_ppar_in_rewrites_tl_r) producer_right
   return $ STE.Map2_tN tr_n tr_i f_ppar producer_left_ppar producer_right_ppar
 
 sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : type_rewrites_tl)
   (SeqE.Map2N n i f producer_left producer_right) |
   parameters_match tr n i = do
-  producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
-  producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
+  outer_state <- get
   f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- need to know what f_ppar's input type rewrites were
+  -- as those are the inner type rewrites that the map must propagate up
+  inner_state <- get
+  let f_ppar_in_rewrites_tl_list = S.toList $ input_types_rewrites inner_state
+  let f_ppar_in_rewrites_tl_l = input_rewrites $ head f_ppar_in_rewrites_tl_list
+  let f_ppar_in_rewrites_tl_r = input_rewrites $ (f_ppar_in_rewrites_tl_list !! 1)
+  put outer_state
+  producer_left_ppar <- sequence_to_partially_parallel
+                        (tr : f_ppar_in_rewrites_tl_l) producer_left
+  producer_right_ppar <- sequence_to_partially_parallel 
+                        (tr : f_ppar_in_rewrites_tl_r) producer_right
   return $ STE.Map2_tN tr_no tr_io (STB.add_input_to_expr_for_map2 $
                                     STE.Map2_sN tr_ni f_ppar)
     producer_left_ppar producer_right_ppar
