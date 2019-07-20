@@ -11,10 +11,12 @@ import qualified Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions as S
 import Aetherling.Languages.Sequence.Shallow.Expr_Type_Conversions
 import Control.Monad.Except
 import Control.Monad.Identity
+import Control.Monad.State
 import Data.Maybe
 import Data.Either
 import Data.List.Split (chunksOf)
 import Debug.Trace
+import qualified Data.Set as S
 
 rewrite_to_partially_parallel :: Int -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel s seq_expr = do
@@ -27,10 +29,25 @@ rewrite_to_partially_parallel' :: Int -> SeqE.Expr -> Rewrite_StateM STE.Expr
 rewrite_to_partially_parallel' s seq_expr = do
   let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
   output_type_slowdowns <- rewrite_AST_type s seq_expr_out_type
-  sequence_to_partially_parallel output_type_slowdowns seq_expr
-  
+  evalStateT (sequence_to_partially_parallel output_type_slowdowns seq_expr) empty_ppar_state
 
-sequence_to_partially_parallel :: [Type_Rewrite] -> SeqE.Expr -> Rewrite_StateM STE.Expr
+data Input_Type_Rewrites = Input_Type_Rewrites {
+  input_rewrites :: [Type_Rewrite],
+  input_name :: String
+  } deriving (Show, Eq)
+
+instance Ord Input_Type_Rewrites where
+  tr0 <= tr1 = input_name tr0 <= input_name tr1
+
+data Partially_Parallel_State = Partially_Parallel_State {
+  input_types_rewrites :: S.Set Input_Type_Rewrites
+  }
+
+empty_ppar_state = Partially_Parallel_State S.empty
+  
+type Partially_Parallel_StateM = StateT Partially_Parallel_State Rewrite_StateM
+
+sequence_to_partially_parallel :: [Type_Rewrite] -> SeqE.Expr -> Partially_Parallel_StateM STE.Expr
 sequence_to_partially_parallel type_rewrites (SeqE.IdN producer) =
   part_par_atom_operator type_rewrites STE.IdN producer
 sequence_to_partially_parallel type_rewrites (SeqE.AbsN producer) =
@@ -186,7 +203,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   -- to compute how to slowed input, get the number of clocks the output takes
   let slowdown = get_type_rewrite_periods tr
 
-  input_rewrites <- rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
+  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
   let input_rewrite : _ = input_rewrites
 
   let upstream_type_rewrites = input_rewrite : type_rewrites_tl
@@ -197,7 +214,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
-    get_scheduled_partition :: Type_Rewrite -> STT.AST_Type -> STE.Expr -> Rewrite_StateM STE.Expr
+    get_scheduled_partition :: Type_Rewrite -> STT.AST_Type -> STE.Expr -> Partially_Parallel_StateM STE.Expr
     get_scheduled_partition (SpaceR in_n) elem_t_ppar producer_ppar =
       return $ STE.Down_1d_sN in_n sel_idx elem_t_ppar producer_ppar
     get_scheduled_partition (TimeR in_n in_i) elem_t_ppar producer_ppar =
@@ -361,7 +378,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   -- to compute how to slowdown input, get number of clocks for output 
   let slowdown = get_type_rewrite_periods tr
 
-  input_rewrites <- rewrite_AST_type slowdown (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
+  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
   let (outer_input_rewrite : inner_input_rewrite : _) = input_rewrites
   
   elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
@@ -372,7 +389,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
-    get_scheduled_partition :: Type_Rewrite -> Type_Rewrite -> STT.AST_Type -> STE.Expr -> Rewrite_StateM STE.Expr
+    get_scheduled_partition :: Type_Rewrite -> Type_Rewrite -> STT.AST_Type -> STE.Expr -> Partially_Parallel_StateM STE.Expr
     get_scheduled_partition (SpaceR in0_n) (SpaceR in1_n) elem_t_ppar producer_ppar =
       return $ STE.Unpartition_s_ssN in0_n in1_n elem_t_ppar producer_ppar
     get_scheduled_partition (SpaceR in0_n) (TimeR in1_n in1_i) elem_t_ppar producer_ppar =
@@ -420,39 +437,42 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
   (SeqE.MapN n i f producer) |
   parameters_match tr n i = do
+  outer_state <- get
   f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
   -- need to know what f_ppar's input type rewrites were
   -- as those are the inner type rewrites that the map must propagate up
-  let f_input = head $ Seq_Conv.e_in_types $ Seq_Conv.expr_to_types f
-  let f_ppar_input = head $ ST_Conv.e_in_types $ ST_Conv.expr_to_types f_ppar
-  let slowdown = STT.periods_t f_ppar_input
-  f_ppar_in_rewrites_tl <- rewrite_AST_type slowdown f_input
+  inner_state <- get
+  let f_ppar_in_rewrites_tl_set = input_types_rewrites inner_state
+  let f_ppar_in_rewrites_tl = input_rewrites $ head $ S.toList f_ppar_in_rewrites_tl_set
+  put outer_state
   producer_ppar <- sequence_to_partially_parallel (tr : f_ppar_in_rewrites_tl) producer
   return $ STE.Map_sN tr_n f_ppar producer_ppar
   
 sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrites_tl)
   (SeqE.MapN n i f producer) |
   parameters_match tr n i = do
+  outer_state <- get
   f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
   -- need to know what f_ppar's input type rewrites were
   -- as those are the inner type rewrites that the map must propagate up
-  let f_input = head $ Seq_Conv.e_in_types $ Seq_Conv.expr_to_types f
-  let f_ppar_input = head $ ST_Conv.e_in_types $ ST_Conv.expr_to_types f_ppar
-  let slowdown = STT.periods_t f_ppar_input
-  f_ppar_in_rewrites_tl <- rewrite_AST_type slowdown f_input
+  inner_state <- get
+  let f_ppar_in_rewrites_tl_set = input_types_rewrites inner_state
+  let f_ppar_in_rewrites_tl = input_rewrites $ head $ S.toList f_ppar_in_rewrites_tl_set
+  put outer_state
   producer_ppar <- sequence_to_partially_parallel (tr : f_ppar_in_rewrites_tl) producer
   return $ STE.Map_tN tr_n tr_i f_ppar producer_ppar
   
 sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : type_rewrites_tl)
   (SeqE.MapN n i f producer) |
   parameters_match tr n i = do
+  outer_state <- get
   f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
   -- need to know what f_ppar's input type rewrites were
   -- as those are the inner type rewrites that the map must propagate up
-  let f_input = head $ Seq_Conv.e_in_types $ Seq_Conv.expr_to_types f
-  let f_ppar_input = head $ ST_Conv.e_in_types $ ST_Conv.expr_to_types f_ppar
-  let slowdown = STT.periods_t f_ppar_input
-  f_ppar_in_rewrites_tl <- rewrite_AST_type slowdown f_input
+  inner_state <- get
+  let f_ppar_in_rewrites_tl_set = input_types_rewrites inner_state
+  let f_ppar_in_rewrites_tl = input_rewrites $ head $ S.toList f_ppar_in_rewrites_tl_set
+  put outer_state
   producer_ppar <- sequence_to_partially_parallel (tr : f_ppar_in_rewrites_tl) producer
   return $ STE.Map_tN tr_no tr_io (STB.add_input_to_expr_for_map $
                                    STE.Map_sN tr_ni f_ppar)
@@ -494,7 +514,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   -- to compute how to slowdown input, get output slowdown
   let slowdown = get_type_rewrite_periods tr
 
-  input_rewrites <- rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
+  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
   let input_rewrite : _ = input_rewrites
 
   let upstream_type_rewrites = input_rewrite : type_rewrites_tl
@@ -505,7 +525,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
-    get_scheduled_partition :: Type_Rewrite -> STE.Expr -> STE.Expr -> Rewrite_StateM STE.Expr
+    get_scheduled_partition :: Type_Rewrite -> STE.Expr -> STE.Expr -> Partially_Parallel_StateM STE.Expr
     get_scheduled_partition (SpaceR in_n) f_ppar producer_ppar =
       return $ STE.Reduce_sN in_n f_ppar producer_ppar
     get_scheduled_partition (TimeR in_n in_i) f_ppar producer_ppar =
@@ -821,7 +841,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   -- to compute how to slowdown input, get the amount output is slowed 
   let slowdown = get_type_rewrite_periods tr
 
-  input_rewrites <- rewrite_AST_type slowdown (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
+  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
   let (outer_input_rewrite : inner_input_rewrite : _) = input_rewrites
   
   elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
@@ -832,7 +852,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
-    get_scheduled_partition :: Type_Rewrite -> Type_Rewrite -> STT.AST_Type -> STE.Expr -> Rewrite_StateM STE.Expr
+    get_scheduled_partition :: Type_Rewrite -> Type_Rewrite -> STT.AST_Type -> STE.Expr -> Partially_Parallel_StateM STE.Expr
     get_scheduled_partition (SpaceR in0_n) (SpaceR in1_n) elem_t_ppar producer_ppar =
       return $ STE.Map_sN in0_n (STB.add_input_to_expr_for_map $
                                  STE.SSeqToSTupleN in1_n elem_t_ppar) producer_ppar
@@ -947,6 +967,12 @@ sequence_to_partially_parallel (SeqE.SeqToSTupleN no ni io ii elem_t producer) =
 -}
 sequence_to_partially_parallel type_rewrites (SeqE.InputN t input_name) = do
   t_ppar <- part_par_AST_type type_rewrites t
+  state <- get
+  -- if same input appears multiple times, ok as inserting into set is idempotent
+  put $ state {
+    input_types_rewrites =
+        S.insert (Input_Type_Rewrites type_rewrites input_name) (input_types_rewrites state)
+    }
   return $ STE.InputN t_ppar input_name
 
 sequence_to_partially_parallel _ (SeqE.ErrorN s) = return $ STE.ErrorN s
@@ -962,7 +988,7 @@ parameters_match (SplitR tr_n_outer tr_i_outer tr_n_inner) n i =
   tr_n_outer * tr_n_inner == n && tr_i_outer <= i
 parameters_match _ _ _ = False
 
-part_par_AST_type :: [Type_Rewrite] -> SeqT.AST_Type -> Rewrite_StateM STT.AST_Type
+part_par_AST_type :: [Type_Rewrite] -> SeqT.AST_Type -> Partially_Parallel_StateM STT.AST_Type
 part_par_AST_type [NonSeqR] SeqT.UnitT = return STT.UnitT
 part_par_AST_type [NonSeqR] SeqT.BitT = return STT.BitT
 part_par_AST_type [NonSeqR] SeqT.IntT = return STT.IntT
@@ -990,7 +1016,7 @@ part_par_AST_type type_rewrites t = throwError $ Slowdown_Failure $
   "type_rewrite " ++ show type_rewrites ++ " not valid for partially " ++
   "parallelizing AST type " ++ show t
 
-part_par_AST_value :: [Type_Rewrite] -> SeqT.AST_Value -> Rewrite_StateM STT.AST_Value
+part_par_AST_value :: [Type_Rewrite] -> SeqT.AST_Value -> Partially_Parallel_StateM STT.AST_Value
 part_par_AST_value [NonSeqR] SeqT.UnitV = return STT.UnitV
 part_par_AST_value [NonSeqR] (SeqT.BitV b) = return (STT.BitV b)
 part_par_AST_value [NonSeqR] (SeqT.IntV i) = return (STT.IntV i)
@@ -1024,7 +1050,7 @@ part_par_AST_value type_rewrites v = throwError $ Slowdown_Failure $
   "type_rewrite " ++ show type_rewrites ++ " not valid for partially " ++
   "parallelizing AST value " ++ show v
   
-part_par_atom_operator :: [Type_Rewrite] -> (STE.Expr -> STE.Expr) -> SeqE.Expr -> Rewrite_StateM STE.Expr
+part_par_atom_operator :: [Type_Rewrite] -> (STE.Expr -> STE.Expr) -> SeqE.Expr -> Partially_Parallel_StateM STE.Expr
 part_par_atom_operator [] atom_op_gen _ = throwError $ Slowdown_Failure $
   "type_rewrite list empty while processing " ++
   show (atom_op_gen $ STE.ErrorN "place_holder")
@@ -1036,7 +1062,7 @@ part_par_atom_operator type_rewrites atom_op_gen _ = throwError $ Slowdown_Failu
   show (atom_op_gen $ STE.ErrorN "place_holder")
  {- 
 parallelize_unary_seq_operator :: (STT.AST_Type -> STE.Expr -> STE.Expr) -> SeqT.AST_Type ->
-                                  SeqE.Expr -> Rewrite_StateM STE.Expr
+                                  SeqE.Expr -> Partially_Parallel_StateM STE.Expr
 parallelize_unary_seq_operator unary_seq_op_gen t producer = do
   producer_par <- sequence_to_partially_parallel producer
   t_par <- parallelize_AST_type t

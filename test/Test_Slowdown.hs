@@ -12,6 +12,7 @@ import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Typ
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import Data.Proxy
 import Data.SBV
+import Control.Monad.State
 
 -- input to scheduling algorithm: expr tree
 -- output to scheduling algorithm: amount to slow down each node
@@ -28,13 +29,13 @@ single_map = compile $
 single_map_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map) [1,2,4]
 single_map_ppar_results = fmap check_type single_map_ppar
 input_rewrite = rewrite_to_partially_parallel 2 (InputN (SeqT 4 0 IntT) "hi")
-input_rewrite' :: Rewrite_StateM STE.Expr
+input_rewrite' :: Partially_Parallel_StateM STE.Expr
 input_rewrite' = do
-  tr <- rewrite_AST_type 2 (SeqT 4 0 IntT)
+  tr <- lift $ rewrite_AST_type 2 (SeqT 4 0 IntT)
   sequence_to_partially_parallel tr (InputN (SeqT 4 0 IntT) "hi")
-seq_rewrite' :: Rewrite_StateM STT.AST_Type
+seq_rewrite' :: Partially_Parallel_StateM STT.AST_Type
 seq_rewrite' = do
-  tr <- rewrite_AST_type 2 (SeqT 4 0 IntT)
+  tr <- lift $ rewrite_AST_type 2 (SeqT 4 0 IntT)
   part_par_AST_type tr (SeqT 4 0 IntT)
   
 single_map_underutil = compile $
@@ -75,7 +76,7 @@ nested_map_to_nested_up = compile $
   --mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
   mapC' (Proxy @4) (up_1dC (Proxy @4)) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 1 5 Atom_Int)))
-nested_map_to_nested_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_nested_up) [1,2,4,8,16]
+nested_map_to_nested_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_nested_up) [1,2,3,4,8,16]
 nested_map_to_nested_up_ppar_result = fmap check_type nested_map_to_nested_up_ppar
   
 -- combining multi-rate with partitioning
