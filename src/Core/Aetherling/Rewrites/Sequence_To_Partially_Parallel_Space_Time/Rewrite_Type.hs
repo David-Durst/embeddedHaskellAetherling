@@ -94,15 +94,18 @@ rewrite_AST_type_add_underutil s_remaining_factors (cur_tr_no_under : no_under_t
     (cur_tr_no_under : inner_rewrites, final_factors)
     where
       add_invalid_clocks :: Type_Rewrite -> Int -> Type_Rewrite
-      -- if going to emit only 1 valid per clock and using all possible clocks
+      -- if going to emit at most 1 valid per clock and using all possible clocks
       -- then fully sequential so only a time
       add_invalid_clocks (SpaceR 1) slowdown |
         slowdown == (n+i) =
         TimeR 1 (slowdown - 1)
-      add_invalid_clocks (SplitR no io 1) slowdown |
-        slowdown*(no+io) == (n+i) =
+      add_invalid_clocks (SplitR no io ni) slowdown |
+        slowdown*(no+io) == (n+i) && (no*ni) <= slowdown*(no+io) =
         -- need to subtract no from invalids as total time should be (no+io) * slowdown
-        TimeR no (slowdown*(no+io) - no)
+        TimeR (no*ni) (slowdown*(no+io) - (no*ni))
+      add_invalid_clocks (SpaceR n) slowdown |
+        n <= slowdown =
+        TimeR n (slowdown - n)
       -- otherwise, just make it a splitr and slow down by requested amount
       add_invalid_clocks (SpaceR n) slowdown =
         SplitR 1 (slowdown - 1) n

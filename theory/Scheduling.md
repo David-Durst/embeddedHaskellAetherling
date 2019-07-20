@@ -294,9 +294,19 @@ for (TSeq n i, pass1_result) in (zip T_OT T_OC_temp)
    else 
        T_OC += pass1_result
 
+-- special case: if slowdown by amount that is co-prime with number of elements
+-- the prior steps will create a TSeq 1 (i-1) (SSeq n) where it should be TSeq n (i-n). 
+-- That is also addressed in add_invalid_clocks
+
 Need second pass to handle Down_1d 4
 For Seq 4 4 Int, need the second pass to get from TSeq 4 0 (SSeq 1 Int) to TSeq 4 4 (SSeq 1 Int)
 For Seq 1 3 Int, need the second pass to get any slowdown including TSeq 1 1 (SSeq 1 Int) and TSeq 1 3 Int
+Handles Seq 1 2 (Seq 1 3 Int) correclty also due to second pass
+
+potential issue with this algorithm: 
+If could produce a Seq n i where n was not a factor of (n+i), a complete slow down will yield TSeq 1 (i + (n-1)) (SSeq n)
+can't come up with an example in Aetherling where this will occur, so not handling it for now
+This will come up - Down_1d_t 5 0 >>> Up_1d_t 4 1 - here Up_1d_t's 4 is not a factor of (4+1)
 ```
   1. Compute the scheduled version of T\_O, T\_OC, using the below algorithm:
     1. goal 1: if `n` and `s` share common factors, then slow down by that amount

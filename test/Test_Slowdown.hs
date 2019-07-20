@@ -49,12 +49,24 @@ map_to_up = compile $
   mapC' (Proxy @1) absC >>> -- [1]
   up_1dC (Proxy @4) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 1 3 Atom_Int))
-  
+map_to_up_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_up) [1,2,4]
+map_to_up_ppar_result = fmap check_type map_to_up_ppar
+
+-- test two multi-rates of different rates
+up_to_down = compile $
+  down_1dC' (Proxy @5) 0 >>>
+  up_1dC (Proxy @4) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 5 0 Atom_Int))
+up_to_down_ppar = fmap (\s -> rewrite_to_partially_parallel s up_to_down) [1,5]
+up_to_down_ppar_result = fmap check_type up_to_down_ppar
+
 -- next two test how to distribute slowdown correctly when multi-rate is nested
 nested_map_to_top_level_up = compile $
   mapC' (Proxy @1) (mapC' (Proxy @4) absC) >>> -- [1]
   up_1dC (Proxy @4) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 1 5 (Seq 4 0 Atom_Int)))
+nested_map_to_top_level_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_top_level_up) [1,2,4]
+nested_map_to_top_level_up_ppar_result = fmap check_type nested_map_to_top_level_up_ppar
 
 nested_map_to_nested_up = compile $
   mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
