@@ -357,13 +357,10 @@ sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrit
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   (SeqE.UnpartitionN no ni io ii elem_t producer) |
   parameters_match tr (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) = do
-  -- to compute how to speed up input, get the amount the output is sped up
-  -- then distribute that speedup over the input
-  let total_spedup_clocks = get_type_rewrite_periods tr
-  let fully_sequential_clocks = Seq_Conv.total_clocks_from_nested no ni io ii
-  let speedup = fully_sequential_clocks `div` total_spedup_clocks
+  -- to compute how to slowdown input, get number of clocks for output 
+  let slowdown = get_type_rewrite_periods tr
 
-  input_rewrites <- rewrite_AST_type speedup (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
+  input_rewrites <- rewrite_AST_type slowdown (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
   let (outer_input_rewrite : inner_input_rewrite : _) = input_rewrites
   
   elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
@@ -475,13 +472,10 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : ty
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   (SeqE.ReduceN n i f producer) |
   parameters_match tr n i = do
-  -- to compute how to speed up input, get the amount the output is sped up
-  -- then distribute that speedup over the input
-  let total_spedup_clocks = get_type_rewrite_periods tr
-  let fully_sequential_clocks = n + i
-  let speedup = fully_sequential_clocks `div` total_spedup_clocks
+  -- to compute how to slowdown input, get output slowdown
+  let slowdown = get_type_rewrite_periods tr
 
-  input_rewrites <- rewrite_AST_type speedup (SeqT.SeqT n i SeqT.IntT)
+  input_rewrites <- rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
   let input_rewrite : _ = input_rewrites
 
   let upstream_type_rewrites = input_rewrite : type_rewrites_tl
@@ -805,13 +799,10 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) 
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   (SeqE.SeqToSTupleN no ni io ii elem_t producer) |
   parameters_match tr (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) = do
-  -- to compute how to speed up input, get the amount the output is sped up
-  -- then distribute that speedup over the input
-  let total_spedup_clocks = get_type_rewrite_periods tr
-  let fully_sequential_clocks = Seq_Conv.total_clocks_from_nested no ni io ii
-  let speedup = fully_sequential_clocks `div` total_spedup_clocks
+  -- to compute how to slowdown input, get the amount output is slowed 
+  let slowdown = get_type_rewrite_periods tr
 
-  input_rewrites <- rewrite_AST_type speedup (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
+  input_rewrites <- rewrite_AST_type slowdown (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
   let (outer_input_rewrite : inner_input_rewrite : _) = input_rewrites
   
   elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
