@@ -78,7 +78,16 @@ nested_map_to_nested_up = compile $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 1 5 Atom_Int)))
 nested_map_to_nested_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_nested_up) [1,2,3,4,8,16]
 nested_map_to_nested_up_ppar_result = fmap check_type nested_map_to_nested_up_ppar
-  
+
+-- testing basic partitioning
+partition_to_flat_map = compile $
+  partitionC (Proxy @2) (Proxy @2) (Proxy @2) (Proxy @2) >>>
+  mapC (mapC absC) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 12 Atom_Int))
+partition_to_flat_map_ppar = fmap (\s -> rewrite_to_partially_parallel s partition_to_flat_map) [1,2,4,8,16]
+partition_to_flat_map_ppar_result = fmap check_type partition_to_flat_map_ppar
+
+
 -- combining multi-rate with partitioning
 double_up = compile $
   (mapC' (Proxy @2) (up_1dC (Proxy @3)) >>> -- [2, 3]

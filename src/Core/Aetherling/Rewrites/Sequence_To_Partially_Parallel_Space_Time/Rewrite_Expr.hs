@@ -338,7 +338,7 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) 
     STE.Map_tN tr0_no tr0_io (STB.add_input_to_expr_for_map $
                               STE.Map_tN tr1_no tr1_io (STB.add_input_to_expr_for_map $
                                                         STE.Partition_s_ssN tr0_ni tr1_ni elem_t_ppar)) $
-    STE.Partition_t_ttN tr0_no tr0_ni tr1_no tr1_io partition_t_tt_elem_t_ppar producer_ppar
+    STE.Partition_t_ttN tr0_no tr1_no tr0_io tr1_io partition_t_tt_elem_t_ppar producer_ppar
 
 
 {-
