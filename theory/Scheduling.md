@@ -252,12 +252,60 @@ The algorithm for scheduling a program P with a throughput factor s is:
   1. Let T_OS be the output type of P if it is scheduled fully in space - each operator is made fully parallel.
   1. T\_OT will be T\_O where each `Seq n t` is replaced by `TSeq n i t`
   1. Compute the scheduled version of T\_O, T\_OC, using the below algorithm:
+    1. Iteration 1: if `n` and `s` share common factors, then slow down by that amount
+        1. This will never produce invalid clocks. Slowing down this way just is extra, valid clocks
+    1. Iteration 2: If don't use up all of s, walk down tree again. If can combine the slowdown applied to that layer with remaining `s` to produce `TSeq n i (SSeq 1 t)`, then do so
+```
+s_remaining_factors = prime_factorization(s)
+T_OC
+T_OC_temp = []
+for (TSeq n i) in (T_OT):
+   n_factors = prime_factorization n
+   -- if there are slowdown factors that match current seq length
+   -- without counting i, make a TSeq slowdown_amount 0 (SSeq (n / slowdown amount) Int)
+   -- this will never produce invalid clocks. Slowing down is just using extra clocks
+   -- of valid with less per clock.
+   -- this will only explore partial parallelism slowdowns that don't create
+   -- invalid clocks would rather go slower than add more invalids
+   if ae_factors_intersect n_factors s_remaining_factors != S.empty:
+       slowdown_factors = ae_factors_intersect n_factors s_remaining_factors
+       s_remaining_factors = Set.difference s_remaining_factors slowdown_factors 
+       slowdown = ae_factors_product slowdown_factors
+       no = slowdown
+       ni = n / no
+       io = 0
+       s_remaining_factors = ae_factors_difference s_remaining_factors slowdown_factors
+       T_OC_temp += Split(TSeq no io, SSeq ni) 
+  else :
+       T_OC_temp += SSeq ni
+
+-- if there is still slowdown remaining, see if can add invalids
+-- Maximum slowdown is (n+i / time pass1_result)
+for (TSeq n i, pass1_result) in (zip T_OT T_OC_temp)
+   max_slowdown = (n+i / time pass1_result)
+   max_slowdown_factors = prime_factorization max_slowdown
+   if ae_factors_intersect max_slowdown_factors s_remaining_factors != S.empty:
+       slowdown_factors = ae_factors_intersect max_slowdown_factors s_remaining_factors
+       slowdown = ae_factors_product slowdown_factors
+       s_remaining_factors = Set.difference s_remaining_factor slowdown_factors
+       T_OC += add_invalid_clocks pass1_result slowdown
+   -- if there are common factors between total runtime and speedup
+   -- use them to do speedup
+   else 
+       T_OC += pass1_result
+
+Need second pass to handle Down_1d 4
+For Seq 4 4 Int, need the second pass to get from TSeq 4 0 (SSeq 1 Int) to TSeq 4 4 (SSeq 1 Int)
+For Seq 1 3 Int, need the second pass to get any slowdown including TSeq 1 1 (SSeq 1 Int) and TSeq 1 3 Int
+```
+  1. Compute the scheduled version of T\_O, T\_OC, using the below algorithm:
+    1. goal 1: if `n` and `s` share common factors, then slow down by that amount
+    1. goal 2: if `n` and `s` don't share common factors, see is `n+i` and `s` share common factors. If they do, 
 ```
 s_remaining_factors = prime_factorization(s)
 T_OC = []
 for (TSeq n i) in layers(T_OT):
    n_factors = prime_factorization(n)
-   n_i_factors = prime_factorization(n+i)
    n_i_s_factors = ae_factors_intersect s_remaining_factors n_i_factors
    -- if there are slowdown factors that match current seq length
    -- without counting i, make a TSeq slowdown_amount 0 (SSeq (n / slowdown amount) Int)
@@ -267,6 +315,7 @@ for (TSeq n i) in layers(T_OT):
    -- invalid clocks would rather go slower than add more invalids
    if ae_factors_intersect n_factors s_remaining_factors != S.empty:
        slowdown_factors = ae_factors_intersect n_factors s_remaining_factors
+       s_remaining_factors = Set.difference s_remaining_factors slowdown_factors 
        slowdown = ae_factors_product slowdown_factors
        no = slowdown
        ni = n / no
@@ -277,7 +326,9 @@ for (TSeq n i) in layers(T_OT):
    -- TSeq n (total_clocks - n), no need for nesting
    -- speedup if amount of output to produce divides into speedup amount
    -- this explores slowdowns s.t. s > n, (n+i) % s == 0
-   if S.is_subset_of n_i_factors s_remaining_factors == 0:
+   else if S.is_subset_of n_i_factors s_remaining_factors == 0:
+       slowdown_factors = ae_factors_intersect n_factors s_remaining_factors
+       slowdown = ae_factors_product slowdown_factors
        s_remaining_factors = Set.difference s_remaining_factor n_i_factors
        T_OC += SSeq n i
    -- if there are common factors between total runtime and speedup
@@ -310,6 +361,15 @@ for (TSeq n i) in layers(T_OT):
        T_OC += Split(TSeq no io, SSeq ni) 
    else 
        T_OC += TSeq n i
+This algorithm bad for - 
+1. Seq 4 4 Int with s = 2 - it will produce TSeq 2 2 (SSeq 2 Int) when should produce TSeq 4 0 (SSeq 1 Int)
+    1. For any speedup where speedup is less than no, will decrease no and add to ni where should be decreasing io and increasing no.
+1. Seq 4 4 Int with s = 2 - it will produce TSeq 4 (-2) (SSeq 1 Int) when should produce TSeq 2 0 (SSeq 2 Int)
+    1. This is wrong for 2 reasons - 
+        1. Can't have a negative number of invalids
+        1. This is only a 2x speedup at most, even if i was 0
+    1. It's producing a negative number of invalids as it thinks the speedup is 4, so it thinks 2 total clocks are necessary. But, since no=4, this takes at most 4 clocks. Thus, ((n+i) / speedup) = -2, which is number of clocks necessary to make the TSeq 4 (-2) take 2 clocks.
+
 ```
 1. Lower P to a program in the Space-Time IR at the desired throughput
   1. Next, feed this output backwards through the graph. Each operator gets T\_OS and is nested according the Sequence To Space-Time rewrite rules.

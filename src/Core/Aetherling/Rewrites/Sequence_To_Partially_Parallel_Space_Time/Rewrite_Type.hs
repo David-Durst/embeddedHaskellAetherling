@@ -34,51 +34,79 @@ get_type_rewrite_periods NonSeqR = -1
 rewrite_AST_type :: Int -> SeqT.AST_Type -> Rewrite_StateM [Type_Rewrite]
 rewrite_AST_type s e = do
   let s_factors = ae_factorize s
-  let (t_rewrites, s_remaining) = rewrite_AST_type' s_factors e
+  let (t_rewrites_no_underutil, s_remaining_no_underutil) =
+        rewrite_AST_type_no_underutil s_factors e
+  let (t_rewrites, s_remaining) =
+        rewrite_AST_type_add_underutil s_remaining_no_underutil t_rewrites_no_underutil e
   if ae_all_non_one_factors_used s_remaining
     then return t_rewrites
     else throwError $ Slowdown_Failure $ show s_remaining ++ " slowdown not 1 " ++
          "with t_rewrites "
 
-rewrite_AST_type' :: Factors -> SeqT.AST_Type -> ([Type_Rewrite], Factors)
-rewrite_AST_type' s_remaining_factors SeqT.UnitT = ([NonSeqR], s_remaining_factors)
-rewrite_AST_type' s_remaining_factors SeqT.BitT = ([NonSeqR], s_remaining_factors)
-rewrite_AST_type' s_remaining_factors SeqT.IntT = ([NonSeqR], s_remaining_factors)
-rewrite_AST_type' s_remaining_factors (SeqT.ATupleT _ _) = ([NonSeqR], s_remaining_factors)
-rewrite_AST_type' s_remaining_factors (SeqT.SeqT n i t) = do
+rewrite_AST_type_no_underutil :: Factors -> SeqT.AST_Type -> ([Type_Rewrite], Factors)
+rewrite_AST_type_no_underutil s_remaining_factors (SeqT.SeqT n i t) = do
   let n_factors = ae_factorize n
-  let n_i_factors = ae_factorize (n+i)
-  let n_i_s_factors = ae_factors_intersect s_remaining_factors n_i_factors
-  
-   -- speedup if amount of output to produce divides into speedup amount
-  if n_i_factors `ae_factors_subset` s_remaining_factors
+  if ae_factors_intersect n_factors s_remaining_factors /= S.empty
     then do
-    let result_s_remaining_factors = ae_renumber_factors $
-          ae_factors_diff s_remaining_factors n_i_factors
-    let (inner_rewrites, final_factors) = rewrite_AST_type' result_s_remaining_factors t
-    (SpaceR n : inner_rewrites, final_factors)
-
-    -- if there are common factors between total runtime and speedup
-    -- use them to do speedup
-    else if n_i_s_factors /= S.empty
-    then do
-    let speedup_factors = n_i_s_factors
-    let speedup = ae_factors_product speedup_factors
-    let no_factors = ae_factors_intersect n_factors n_i_s_factors
-    let no = ae_factors_product no_factors
+    let slowdown_factors = ae_factors_intersect n_factors s_remaining_factors
+    let slowdown = ae_factors_product slowdown_factors
+    let no = slowdown
     let ni = n `div` no
-    let io = ((n + i) `div` speedup) - no
+    let io = 0
     let result_s_remaining_factors = ae_renumber_factors $
-          ae_factors_diff s_remaining_factors speedup_factors
-    let (inner_rewrites, final_factors) = rewrite_AST_type' result_s_remaining_factors t
+          ae_factors_diff s_remaining_factors slowdown_factors
+    let (inner_rewrites, final_factors) = rewrite_AST_type_no_underutil result_s_remaining_factors t
     (SplitR no io ni : inner_rewrites, final_factors)
 
     else do
-    let (inner_rewrites, final_factors) = rewrite_AST_type' s_remaining_factors t
-    (TimeR n i : inner_rewrites, final_factors)
-rewrite_AST_type' s_remaining_factors (SeqT.STupleT n t) = do
-  let (inner_rewrites, final_factors) = rewrite_AST_type' s_remaining_factors t
+    let (inner_rewrites, final_factors) = rewrite_AST_type_no_underutil s_remaining_factors t
+    (SpaceR n : inner_rewrites, final_factors)
+rewrite_AST_type_no_underutil s_remaining_factors (SeqT.STupleT n t) = do
+  let (inner_rewrites, final_factors) = rewrite_AST_type_no_underutil s_remaining_factors t
   (NonSeqR : inner_rewrites, final_factors)
+rewrite_AST_type_no_underutil s_remaining_factors _ = ([NonSeqR], s_remaining_factors)
+
+rewrite_AST_type_add_underutil :: Factors -> [Type_Rewrite] -> SeqT.AST_Type -> ([Type_Rewrite], Factors)
+rewrite_AST_type_add_underutil s_remaining_factors (cur_tr_no_under : no_under_tl)
+  (SeqT.SeqT n i t) = do
+  let max_slowdown = (n + i) `div` get_type_rewrite_periods cur_tr_no_under
+  let max_slowdown_factors = ae_factorize max_slowdown
+  if ae_factors_intersect max_slowdown_factors s_remaining_factors /= S.empty
+    then do
+    let slowdown_factors = ae_factors_intersect max_slowdown_factors s_remaining_factors
+    let slowdown = ae_factors_product slowdown_factors
+    let result_s_remaining_factors = ae_renumber_factors $
+          ae_factors_diff s_remaining_factors slowdown_factors
+    let (inner_rewrites, final_factors) = rewrite_AST_type_add_underutil
+                                          result_s_remaining_factors no_under_tl t
+    (add_invalid_clocks cur_tr_no_under slowdown : inner_rewrites, final_factors)
+
+    else do
+    let (inner_rewrites, final_factors) = rewrite_AST_type_add_underutil
+                                          s_remaining_factors no_under_tl t
+    (cur_tr_no_under : inner_rewrites, final_factors)
+    where
+      add_invalid_clocks :: Type_Rewrite -> Int -> Type_Rewrite
+      -- if going to emit only 1 valid per clock and using all possible clocks
+      -- then fully sequential so only a time
+      add_invalid_clocks (SpaceR 1) slowdown |
+        slowdown == (n+i) =
+        TimeR 1 (slowdown - 1)
+      add_invalid_clocks (SplitR no io 1) slowdown |
+        slowdown*(no+io) == (n+i) =
+        -- need to subtract no from invalids as total time should be (no+io) * slowdown
+        TimeR no (slowdown*(no+io) - no)
+      -- otherwise, just make it a splitr and slow down by requested amount
+      add_invalid_clocks (SpaceR n) slowdown =
+        SplitR 1 (slowdown - 1) n
+      add_invalid_clocks (SplitR no io ni) slowdown =
+        SplitR no (slowdown*(no+io) - no) ni
+      add_invalid_clocks _ _ = traceShow "calling add_invalid_wrong" undefined
+rewrite_AST_type_add_underutil s_remaining_factors (_ : no_under_tl) (SeqT.STupleT n t) = do
+  let (inner_rewrites, final_factors) =
+        rewrite_AST_type_add_underutil s_remaining_factors no_under_tl t
+  (NonSeqR : inner_rewrites, final_factors)
+rewrite_AST_type_add_underutil s_remaining_factors _ _ = ([NonSeqR], s_remaining_factors)
 
 data Factor = Factor { factor_val :: Int, factor_num :: Int }
   deriving (Show, Eq, Ord)
