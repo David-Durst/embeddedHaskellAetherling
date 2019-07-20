@@ -65,13 +65,18 @@ nested_map_to_top_level_up = compile $
   mapC' (Proxy @1) (mapC' (Proxy @4) absC) >>> -- [1]
   up_1dC (Proxy @4) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 1 5 (Seq 4 0 Atom_Int)))
-nested_map_to_top_level_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_top_level_up) [1,2,4]
+-- note: the reason the output is a seminly unecessary split on the outer seq
+-- for the slowest schedule is that there are still 2 invalid clocks not used
+-- and I say partially parallel for those, becuase not fully slowed down
+nested_map_to_top_level_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_top_level_up) [1,2,4,8,16]
 nested_map_to_top_level_up_ppar_result = fmap check_type nested_map_to_top_level_up_ppar
 
 nested_map_to_nested_up = compile $
-  mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
+  --mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
   mapC' (Proxy @4) (up_1dC (Proxy @4)) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 1 5 Atom_Int)))
+nested_map_to_nested_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_nested_up) [1,2,4,8,16]
+nested_map_to_nested_up_ppar_result = fmap check_type nested_map_to_nested_up_ppar
   
 -- combining multi-rate with partitioning
 double_up = compile $

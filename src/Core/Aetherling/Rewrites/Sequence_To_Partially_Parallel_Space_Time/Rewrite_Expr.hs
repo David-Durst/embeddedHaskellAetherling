@@ -7,6 +7,7 @@ import qualified Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import qualified Aetherling.Languages.Space_Time.Deep.Expr_Builders as STB
+import qualified Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions as ST_Conv
 import Aetherling.Languages.Sequence.Shallow.Expr_Type_Conversions
 import Control.Monad.Except
 import Control.Monad.Identity
@@ -120,10 +121,10 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io ni) : type_rewrit
   elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
   let upstream_type_rewrites = SplitR 1 (no + io - 1) 1 : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
-  let up_outer = STE.Up_1d_tN no i (STT.SSeqT 1 elem_t_ppar) producer_ppar
-  let up_inner = STE.Map_tN no i ( STB.add_input_to_expr_for_map $
-                                   STE.Up_1d_sN ni elem_t_ppar
-                                 ) up_outer
+  let up_outer = STE.Up_1d_tN no io (STT.SSeqT 1 elem_t_ppar) producer_ppar
+  let up_inner = STE.Map_tN no io ( STB.add_input_to_expr_for_map $
+                                               STE.Up_1d_sN ni elem_t_ppar
+                                             ) up_outer
   return up_inner
 
 {-
@@ -419,22 +420,40 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
   (SeqE.MapN n i f producer) |
   parameters_match tr n i = do
-  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
   f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- need to know what f_ppar's input type rewrites were
+  -- as those are the inner type rewrites that the map must propagate up
+  let f_input = head $ Seq_Conv.e_in_types $ Seq_Conv.expr_to_types f
+  let f_ppar_input = head $ ST_Conv.e_in_types $ ST_Conv.expr_to_types f_ppar
+  let slowdown = STT.periods_t f_ppar_input
+  f_ppar_in_rewrites_tl <- rewrite_AST_type slowdown f_input
+  producer_ppar <- sequence_to_partially_parallel (tr : f_ppar_in_rewrites_tl) producer
   return $ STE.Map_sN tr_n f_ppar producer_ppar
   
 sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrites_tl)
   (SeqE.MapN n i f producer) |
   parameters_match tr n i = do
-  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
   f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- need to know what f_ppar's input type rewrites were
+  -- as those are the inner type rewrites that the map must propagate up
+  let f_input = head $ Seq_Conv.e_in_types $ Seq_Conv.expr_to_types f
+  let f_ppar_input = head $ ST_Conv.e_in_types $ ST_Conv.expr_to_types f_ppar
+  let slowdown = STT.periods_t f_ppar_input
+  f_ppar_in_rewrites_tl <- rewrite_AST_type slowdown f_input
+  producer_ppar <- sequence_to_partially_parallel (tr : f_ppar_in_rewrites_tl) producer
   return $ STE.Map_tN tr_n tr_i f_ppar producer_ppar
   
 sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : type_rewrites_tl)
   (SeqE.MapN n i f producer) |
   parameters_match tr n i = do
-  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
   f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- need to know what f_ppar's input type rewrites were
+  -- as those are the inner type rewrites that the map must propagate up
+  let f_input = head $ Seq_Conv.e_in_types $ Seq_Conv.expr_to_types f
+  let f_ppar_input = head $ ST_Conv.e_in_types $ ST_Conv.expr_to_types f_ppar
+  let slowdown = STT.periods_t f_ppar_input
+  f_ppar_in_rewrites_tl <- rewrite_AST_type slowdown f_input
+  producer_ppar <- sequence_to_partially_parallel (tr : f_ppar_in_rewrites_tl) producer
   return $ STE.Map_tN tr_no tr_io (STB.add_input_to_expr_for_map $
                                    STE.Map_sN tr_ni f_ppar)
     producer_ppar

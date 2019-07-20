@@ -4,21 +4,6 @@ import Aetherling.Languages.Space_Time.Deep.Expr
 import Control.Monad.State
 import qualified Data.Set as S
 
-size_int :: Int
-size_int = 8
-size_bit :: Int
-size_bit = 1
-
--- | The size in bits of types
-size_t :: AST_Type -> Int
-size_t UnitT = 0
-size_t BitT = size_bit
-size_t IntT = size_int
-size_t (ATupleT t0 t1) = size_t t0 + size_t t1
-size_t (STupleT n t) = n * size_t t
-size_t (SSeqT n t) = n * size_t t
-size_t (TSeqT n _ t) = size_t t
-
 -- | input and outputs for an expression when not considering the
 -- input expressions to it
 data Expr_Types = Expr_Types { e_in_types :: [AST_Type], e_out_type :: AST_Type}
