@@ -13,6 +13,7 @@ import Control.Monad.Identity
 import Data.Maybe
 import Data.Either
 import Data.List.Split (chunksOf)
+import Debug.Trace
 
 rewrite_to_partially_parallel :: Int -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel s seq_expr = do
@@ -108,7 +109,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrit
   parameters_match tr n i = do
   elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
   let upstream_type_rewrites = TimeR 1 (tr_n + tr_i - 1) : type_rewrites_tl
-  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
   return $ STE.Up_1d_tN tr_n tr_i elem_t_ppar producer_ppar
 
 sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io ni) : type_rewrites_tl)
@@ -117,7 +118,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io ni) : type_rewrit
   -- so can use i here
   parameters_match tr n i = do
   elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
-  let upstream_type_rewrites = SplitR 1 (no + io - 1) ni : type_rewrites_tl
+  let upstream_type_rewrites = SplitR 1 (no + io - 1) 1 : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
   let up_outer = STE.Up_1d_tN no i (STT.SSeqT 1 elem_t_ppar) producer_ppar
   let up_inner = STE.Map_tN no i ( STB.add_input_to_expr_for_map $
@@ -180,14 +181,11 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io ni) : type_rewrit
  -}                                     
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   (SeqE.Down_1dN n i sel_idx elem_t producer) |
-  parameters_match tr n i = do
-  -- to compute how to speed up input, get the amount the output is sped up
-  -- then distribute that speedup over the input
-  let total_spedup_clocks = get_type_rewrite_periods tr
-  let fully_sequential_clocks = n + i
-  let speedup = fully_sequential_clocks `div` total_spedup_clocks
+  parameters_match tr 1 (n+i-1) = do
+  -- to compute how to slowed input, get the number of clocks the output takes
+  let slowdown = get_type_rewrite_periods tr
 
-  input_rewrites <- rewrite_AST_type speedup (SeqT.SeqT n i SeqT.IntT)
+  input_rewrites <- rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
   let input_rewrite : _ = input_rewrites
 
   let upstream_type_rewrites = input_rewrite : type_rewrites_tl
@@ -942,6 +940,9 @@ sequence_to_partially_parallel type_rewrites (SeqE.InputN t input_name) = do
   return $ STE.InputN t_ppar input_name
 
 sequence_to_partially_parallel _ (SeqE.ErrorN s) = return $ STE.ErrorN s
+sequence_to_partially_parallel tr e =
+  trace ("can't handle type_rewrites: " ++ show tr ++ "\n and expr: " ++ show e ++ "\n") $
+  undefined
 
 -- | Verifies that Type_Rewrite matches the output Seq that is being rewritten
 parameters_match :: Type_Rewrite -> Int -> Int -> Bool
