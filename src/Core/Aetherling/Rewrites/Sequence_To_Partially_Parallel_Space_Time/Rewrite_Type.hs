@@ -56,7 +56,14 @@ rewrite_AST_type_no_underutil s_remaining_factors (SeqT.SeqT n i t) = do
     let result_s_remaining_factors = ae_renumber_factors $
           ae_factors_diff s_remaining_factors slowdown_factors
     let (inner_rewrites, final_factors) = rewrite_AST_type_no_underutil result_s_remaining_factors t
-    (SplitR no io ni : inner_rewrites, final_factors)
+    if i == 0 && no == n
+      -- special case of doing a full slowdown, can only happen
+      -- if i is 0. Need to produce time
+      -- Ok that add_invalid_clocks will can't handle timer's
+      -- produced by this function as won't be able to slow
+      -- this down any further
+      then (TimeR no 0 : inner_rewrites, final_factors)
+      else (SplitR no io ni : inner_rewrites, final_factors)
 
     else do
     let (inner_rewrites, final_factors) = rewrite_AST_type_no_underutil s_remaining_factors t
