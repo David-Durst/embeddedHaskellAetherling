@@ -1,20 +1,73 @@
 # Scheduling
 The goal of this document is:
-1. Define scheduling
+1. Define auto-scheduling and scheduling
 1. List the motivating examples for the scheduling algorithm
 1. Define the scheduling algorithm
    
-# Scheduling Definition
-Scheduling is converting a program from the sequence language to the space-time IR.
-Scheduling is performed to target a specific `input_throughput` and `output_throughput`
-as defined in [the basic theory document's throughput section.](Basic.md#throughput).
-The target is specified using a **speedup factor s**.
-Scheduling with factor **s** means produce a pipeline with `input_throughput` and
-`output_throughput` that are **s** times smaller than the fully parallel pipeline's
-`input_throughput` and `output_throughput`.
+# Auto-Scheduling and Scheduling Definitions
+For a program `pseq` in the sequence language, the auto-scheduler searches for the highest throughput program in the space-time IR that fits within the target chip's constraints.
+The auto-scheduler's algorithm is:
+1. Find the highest throughput schedule of `pseq` in the space-time IR. I will refer to this program as `pspace`
+    1. This is determined by rewriting every operator in `pseq` to it's space version in the space-time IR.
+    1. Once every operator produces its entire output in one clock cycle, you cannot increase throughput any further without increasing the `Seq` sizes.
+1. Find one of the least area schedules of `pseq` in the space-time IR. I will refer to this program as `ptime`
+    1. This is determined by rewriting every operator in `pseq` to it's time version in the space-time IR.
+    1. There are an infinite number of least area schedules because all operators can be arbitrarily underutilized with the same hardware resources.
+        1. For example, `Map_t 2 0 Abs :: TSeq 2 0 Int -> TSeq 2 0` requires the same hardware and is three times higher throuhgput than `Map_t 2 4 Abs :: TSeq 2 4 Int -> TSeq 2 4`
+    1. This step requires solving a non-linear, integer programming problem. 
+        1. Each time operator in the space-time IR has a relationship between it's input and output number of invalid clocks.
+        1. Each composition of two time operators creates an equality between the producer's output valid and invalid clocks and the consumer's input valid and invalid clocks.
+        1. Operators such as `partition no ni io ii Int :: TSeq (no*ni) (no*ii + io*(ni+ii)) Int -> TSeq no io (TSeq ni ii Int)` create non-linear equations.
+        1. Producing a space-time schedule with time operators requires finding a solution for all time operator's number of invalid clocks that satisfies these equations.
+1. Let `max_slowdown = floor(throughput(Pspace) / throughput(Ptime))`. For each integer **s** from 1 to `max_slowdown`, schedule `pseq` with slowdown factor **s**. Stop at the first **s** that fits on the target chip.
+    1. Scheduling with a slowdown factor is converting a program from the sequence language to one in the space-time IR that has an output throughput that is **s** times less than `pspace`.
+
+The below image is a visualization of the auto-scheduler. 
+The blue line is the auto-scheduler's search space: the set of program's in the space-time IR that `Pseq` can be converted into. 
+The red line is the maximum amount of area on the target chip.
+The green line is the auto-scheduler's search process from `Pspace` to `Ptime`.
+The goal is the find the right-most point on the blue line that is below the red line.
+The auto-scheduler accomplishes this goal by walking along the blue line in the direction indicated by the green line. 
+
+![Auto-Scheduler Search Process](other_diagrams/area_throughput_tradeoff/area_throughput_tradeoff.png "Auto-Scheduler Search Process")
+
+The code for the auto-scheduler is:
+```
+autoscheduler :: Area -> Seq_Expr -> Space_Time_Expr
+autoscheduler max_area pseq = 
+    pspace = sequence_to_space_operators(pseq)
+
+    # assume automatically solving non-linear integer programming problem
+    ptime = sequence_to_time_operators(pseq)
+
+    max_slowdown = floor(throughput(pspace) / throughput(ptime))
+    for i in [1 .. max_slowdown]:
+        pspace_time = schedule pseq pspace ptime i
+        if area(pspace_time) <= max_area:
+            return pspace_time
+    
+    fail "Unable to fit sequence program on target chip."
+```
+
+The following sections will work through the implementation of the scheduling algorithm. 
+
+# Naive Scheduler
+The naive auto-scheduler is, for each operator, apply the slowdown factor if possible. 
+If not possible or if making the sequence operator into a time operator doesn't consume the entire slowdown factor, recur either on the operators inner operator or inner type.
+
+```
+naive_schedule
+```
+
+The [motivating examples](#motivating_examples) show that this auto-scheduler does not correctly schedule programs that a user can be expected to write. 
+
 
 # Motivating Examples
-**note: I mix up slowdown and speedup factor. I will come back and fix this when I've finished implementing the algorithm.**
+There are four main issues that the auto-scheduler will have to handle:
+1. **Rewrites** - scheduling individual, sequence operators by rewriting them to space-time operators with the desired throughput
+1. **Composition** - scheduling composed operators so that the produced space-time operators have matching type signatures 
+1. **Multi-Rate** - scheduling operators that accept and emit different numbers of outputs, such as `Up_1d` and `Down_1d`
+1. **Nesting Manipulation** - scheduling operators that change that change the nesting of `Seq`s, such as `Partition` and `Unpartition`
 ## Basic Example
 This example shows the simplest pipeline that can be scheduled.
 
@@ -403,6 +456,15 @@ apply_rewrite_rules(T_OC, f) =
 ```
 
 #  Garbage Below
+
+
+Scheduling is converting a program from the sequence language to the space-time IR.
+Scheduling is performed to target a specific `input_throughput` and `output_throughput`
+as defined in [the basic theory document's throughput section.](Basic.md#throughput).
+The target is specified using a **slowdown factor s**.
+Scheduling with factor **s** means produce a pipeline with `input_throughput` and
+`output_throughput` that are **s** times smaller than the fully parallel pipeline's
+`input_throughput` and `output_throughput`.
 
 ## Distributive Property
 I require that `schedule(g . f, s) === schedule(g, s) . schedule(f, s)`.
