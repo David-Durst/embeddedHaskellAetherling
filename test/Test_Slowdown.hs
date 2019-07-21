@@ -87,6 +87,13 @@ partition_to_flat_map = compile $
 partition_to_flat_map_ppar = fmap (\s -> rewrite_to_partially_parallel s partition_to_flat_map) [1,2,4,8,16]
 partition_to_flat_map_ppar_result = fmap check_type partition_to_flat_map_ppar
 
+map_to_unpartition = compile $
+  mapC (mapC absC) >>>
+  unpartitionC' (Proxy @2) (Proxy @2) >>>
+  mapC absC $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 2 2 (Seq 2 2 Atom_Int)))
+map_to_unpartition_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_unpartition) [1,2,4,8,16]
+map_to_unpartition_ppar_result = fmap check_type map_to_unpartition_ppar
 
 -- combining multi-rate with partitioning
 double_up = compile $

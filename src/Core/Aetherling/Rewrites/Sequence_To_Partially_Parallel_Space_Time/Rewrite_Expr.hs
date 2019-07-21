@@ -419,9 +419,9 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
     get_scheduled_partition (SplitR in0_no in0_io in0_ni) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
       let unpartition_t_tt_elem_t_ppar = STT.SSeqT in0_ni (STT.SSeqT in1_ni elem_t_ppar)
       let flip_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
-      return $ STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ STE.Map_tN in1_no in1_io $
-                                         STB.add_input_to_expr_for_map $ STE.Unpartition_s_ssN in0_ni in1_ni elem_t_ppar
-                                        ) $
+      return $ STE.Map_tN (in0_no*in1_no) (Seq_Conv.invalid_clocks_from_nested in0_no in1_no in0_io in1_io) (
+        STB.add_input_to_expr_for_map $ STE.Unpartition_s_ssN in0_ni in1_ni elem_t_ppar
+        ) $
         STE.Unpartition_t_ttN in0_no in1_no in0_io in1_io unpartition_t_tt_elem_t_ppar $
         STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
                                    STE.Flip_st_to_ts in1_no in1_io in0_ni flip_elem_t_ppar) $
