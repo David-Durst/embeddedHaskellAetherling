@@ -462,7 +462,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
       return $ STE.Unpartition_t_ttN in0_n in1_n in0_i in1_i elem_t_ppar producer_ppar
     get_scheduled_unpartition (TimeR in0_n in0_i) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
       let unpartition_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
-      return $ STE.Unpartition_t_ttN in0_n in1_no in0_i in1_ni unpartition_elem_t_ppar producer_ppar
+      return $ STE.Unpartition_t_ttN in0_n in1_no in0_i in1_io unpartition_elem_t_ppar producer_ppar
     get_scheduled_unpartition (SplitR in0_no in0_io in0_ni) (SpaceR in1_n) elem_t_ppar producer_ppar = do
       return $ STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
                                          STE.Unpartition_s_ssN in0_ni in1_n elem_t_ppar)
