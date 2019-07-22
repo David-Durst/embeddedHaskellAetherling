@@ -8,7 +8,31 @@ data AST_Type =
   | STupleT Int AST_Type
   | SSeqT Int AST_Type
   | TSeqT Int Int AST_Type
-  deriving (Show, Eq, Ord)
+  deriving (Show, Ord)
+
+instance Eq AST_Type where
+  UnitT == UnitT = True
+  BitT == BitT = True
+  IntT == IntT = True
+  ATupleT l_x l_y == ATupleT r_x r_y = (l_x == r_x) && (l_y == r_y)
+  (STupleT l_n l_t) == (STupleT r_n r_t) = (l_n == r_n) && (l_t == r_t)
+  
+  (SSeqT 1 l_t) == r@(SSeqT r_n r_t) = ((1 == r_n) && (l_t == r_t)) ||
+    (l_t == r)
+  (SSeqT 1 l_t) == r = (l_t == r)
+  l@(SSeqT l_n l_t) == (SSeqT 1 r_t) = ((l_n == 1) && (l_t == r_t)) ||
+    (l == r_t)
+  l == (SSeqT 1 r_t) = l == r_t
+  (SSeqT l_n l_t) == (SSeqT r_n r_t) = (l_n == r_n) && (l_t == r_t)
+  
+  (TSeqT 1 0 l_t) == r@(TSeqT r_n r_i r_t) = ((1 == r_n) && (1 == r_i) && (l_t == r_t)) ||
+    (l_t == r)
+  (TSeqT 1 0 l_t) == r = l_t == r
+  l@(TSeqT l_n l_i l_t) == (TSeqT 1 0 r_t) = ((l_n == 1) && (l_i == 1) && (l_t == r_t)) ||
+    (l == r_t)
+  l == (TSeqT 1 0 r_t) = l == r_t
+  (TSeqT l_n l_i l_t) == (TSeqT r_n r_i r_t) = (l_n == r_n) && (l_i == r_i) && (l_t == r_t)
+  _ == _ = False
 
 -- these exist only because it's easier to have a value that is an Aetherling value
 -- rather than a value that's a member of a type class of aetherling values,
