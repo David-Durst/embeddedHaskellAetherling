@@ -102,6 +102,13 @@ double_up = compile $
    partitionC (Proxy @1) (Proxy @6) Proxy (Proxy @0) >>> -- in : [6], out : [1, 6] or in : [[2, 3]] out : [1, [2, 3]] (this doesn't work as can't slow input down by 5, so must not be able to slow output down by 5) or in : [[2, 3]] out : []
    up_1dC (Proxy @5)) $ -- [5, [2, 3]]
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 1 14 Atom_Int)) )
+double_up_ppar = filter (not . STE.is_error_node) $
+  fmap (\s -> rewrite_to_partially_parallel s double_up) [1,2,3,5,6,10,15,30]
+double_up_ppar_result = fmap check_type double_up_ppar
+double_up_ppar_result' = fmap check_type' double_up_ppar
+double_up_slow_6 = rewrite_to_partially_parallel 6 double_up
+double_up_slow_6_result = check_type double_up_slow_6
+double_up_slow_6_result' = check_type' double_up_slow_6
 
 -- multiple unpartitions into a multi-rate
 multi_unpartition_with_multi_rate = compile $
