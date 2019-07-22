@@ -210,22 +210,22 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
   elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
 
-  get_scheduled_partition input_rewrite elem_t_ppar producer_ppar
+  get_scheduled_down input_rewrite elem_t_ppar producer_ppar
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
-    get_scheduled_partition :: Type_Rewrite -> STT.AST_Type -> STE.Expr -> Partially_Parallel_StateM STE.Expr
-    get_scheduled_partition (SpaceR in_n) elem_t_ppar producer_ppar =
+    get_scheduled_down :: Type_Rewrite -> STT.AST_Type -> STE.Expr -> Partially_Parallel_StateM STE.Expr
+    get_scheduled_down (SpaceR in_n) elem_t_ppar producer_ppar =
       return $ STE.Down_1d_sN in_n sel_idx elem_t_ppar producer_ppar
-    get_scheduled_partition (TimeR in_n in_i) elem_t_ppar producer_ppar =
+    get_scheduled_down (TimeR in_n in_i) elem_t_ppar producer_ppar =
       return $ STE.Down_1d_tN in_n in_i sel_idx elem_t_ppar producer_ppar
-    get_scheduled_partition (SplitR in_no in_io in_ni) elem_t_ppar producer_ppar = do
+    get_scheduled_down (SplitR in_no in_io in_ni) elem_t_ppar producer_ppar = do
       let down_outer = STE.Down_1d_tN in_no in_io (sel_idx `div` in_no) (STT.SSeqT in_ni elem_t_ppar) producer_ppar
       let down_inner = STE.Map_tN 1 (in_no + in_io - 1) ( STB.add_input_to_expr_for_map $
                                                           STE.Down_1d_sN in_ni (sel_idx `mod` in_ni) elem_t_ppar
                                                         ) down_outer
       return down_inner
-    get_scheduled_partition NonSeqR _ _ = throwError $
+    get_scheduled_down NonSeqR _ _ = throwError $
       Slowdown_Failure "can't get nonseq for down_1d input"
   {-
 )ddSTE.Down_1d_tN no io (sel_idx `div` no) (STT.SSeqT ni elem_t_ppar) producer_ppar
@@ -434,46 +434,46 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let upstream_type_rewrites = outer_input_rewrite : inner_input_rewrite : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
 
-  get_scheduled_partition outer_input_rewrite inner_input_rewrite elem_t_ppar producer_ppar
+  get_scheduled_unpartition outer_input_rewrite inner_input_rewrite elem_t_ppar producer_ppar
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
-    get_scheduled_partition :: Type_Rewrite -> Type_Rewrite -> STT.AST_Type -> STE.Expr -> Partially_Parallel_StateM STE.Expr
-    get_scheduled_partition (SpaceR in0_n) (SpaceR in1_n) elem_t_ppar producer_ppar =
+    get_scheduled_unpartition :: Type_Rewrite -> Type_Rewrite -> STT.AST_Type -> STE.Expr -> Partially_Parallel_StateM STE.Expr
+    get_scheduled_unpartition (SpaceR in0_n) (SpaceR in1_n) elem_t_ppar producer_ppar =
       return $ STE.Unpartition_s_ssN in0_n in1_n elem_t_ppar producer_ppar
-    get_scheduled_partition (SpaceR 1) (TimeR in1_no in1_io) elem_t_ppar producer_ppar = do
+    get_scheduled_unpartition (SpaceR 1) (TimeR in1_no in1_io) elem_t_ppar producer_ppar = do
       let remove_1_t_ppar = STT.TSeqT in1_no in1_io elem_t_ppar 
       return $ STE.Remove_1_sN remove_1_t_ppar producer_ppar
-    get_scheduled_partition (SpaceR 1) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+    get_scheduled_unpartition (SpaceR 1) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
       let remove_1_t_ppar = STT.TSeqT in1_no in1_io (STT.SSeqT in1_ni elem_t_ppar)
       return $ STE.Remove_1_sN remove_1_t_ppar producer_ppar
       {-
-    get_scheduled_partition (SpaceR in0_n) (TimeR in1_n in1_i) elem_t_ppar producer_ppar =
+    get_scheduled_unpartition (SpaceR in0_n) (TimeR in1_n in1_i) elem_t_ppar producer_ppar =
       return $ STE.Flip_st_to_ts in1_n in1_i in0_n elem_t_ppar producer_ppar
-    get_scheduled_partition (SpaceR in0_n) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+    get_scheduled_unpartition (SpaceR in0_n) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
       let flip_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
       return $ STE.Map_tN in1_no in1_io (STB.add_input_to_expr_for_map $ 
                                          STE.Unpartition_s_ssN in0_n in1_ni elem_t_ppar) $
         STE.Flip_st_to_ts in1_no in1_io in0_n flip_elem_t_ppar producer_ppar
 -}
-    get_scheduled_partition (TimeR in0_n in0_i) (SpaceR in1_n) elem_t_ppar producer_ppar = do
+    get_scheduled_unpartition (TimeR in0_n in0_i) (SpaceR in1_n) elem_t_ppar producer_ppar = do
       return producer_ppar
-    get_scheduled_partition (TimeR in0_n in0_i) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = 
+    get_scheduled_unpartition (TimeR in0_n in0_i) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = 
       return $ STE.Unpartition_t_ttN in0_n in1_n in0_i in1_i elem_t_ppar producer_ppar
-    get_scheduled_partition (TimeR in0_n in0_i) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+    get_scheduled_unpartition (TimeR in0_n in0_i) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
       let unpartition_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
       return $ STE.Unpartition_t_ttN in0_n in1_no in0_i in1_ni unpartition_elem_t_ppar producer_ppar
-    get_scheduled_partition (SplitR in0_no in0_io in0_ni) (SpaceR in1_n) elem_t_ppar producer_ppar = do
+    get_scheduled_unpartition (SplitR in0_no in0_io in0_ni) (SpaceR in1_n) elem_t_ppar producer_ppar = do
       return $ STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
                                          STE.Unpartition_s_ssN in0_ni in1_n elem_t_ppar)
         producer_ppar
-    get_scheduled_partition (SplitR in0_no in0_io 1) (TimeR in1_no in1_io) elem_t_ppar producer_ppar = do
+    get_scheduled_unpartition (SplitR in0_no in0_io 1) (TimeR in1_no in1_io) elem_t_ppar producer_ppar = do
       let remove_1_t_ppar = STT.TSeqT in1_no in1_io elem_t_ppar 
       return $ STE.Unpartition_t_ttN in0_no in1_no in0_io in1_io elem_t_ppar $
         STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $
                                   STE.Remove_1_sN remove_1_t_ppar)
         producer_ppar
-    get_scheduled_partition (SplitR in0_no in0_io 1) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+    get_scheduled_unpartition (SplitR in0_no in0_io 1) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
       let unpartition_t_tt_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
       let remove_1_t_ppar = STT.TSeqT in1_no in1_io unpartition_t_tt_elem_t_ppar 
       return $ STE.Unpartition_t_ttN in0_no in1_no in0_io in1_io unpartition_t_tt_elem_t_ppar $
@@ -481,13 +481,13 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
                                   STE.Remove_1_sN remove_1_t_ppar)
         producer_ppar
         {-
-    get_scheduled_partition (SplitR in0_no in0_io in0_ni) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
+    get_scheduled_unpartition (SplitR in0_no in0_io in0_ni) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
       let unpartition_elem_t_ppar = STT.SSeqT in0_ni elem_t_ppar
       return $ STE.Unpartition_t_ttN in0_ni in1_n in0_io in1_i unpartition_elem_t_ppar $
         STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
                                    STE.Flip_st_to_ts in1_n in1_i in0_ni elem_t_ppar) $
         producer_ppar
-    get_scheduled_partition (SplitR in0_no in0_io in0_ni) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+    get_scheduled_unpartition (SplitR in0_no in0_io in0_ni) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
       let unpartition_t_tt_elem_t_ppar = STT.SSeqT in0_ni (STT.SSeqT in1_ni elem_t_ppar)
       let flip_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
       return $ STE.Map_tN (in0_no*in1_no) (Seq_Conv.invalid_clocks_from_nested in0_no in1_no in0_io in1_io) (
@@ -498,11 +498,11 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
                                    STE.Flip_st_to_ts in1_no in1_io in0_ni flip_elem_t_ppar) $
         producer_ppar
 -}
-    get_scheduled_partition NonSeqR _ _ _ = throwError $
+    get_scheduled_unpartition NonSeqR _ _ _ = throwError $
       Slowdown_Failure "can't get nonseq for unpartition input"
-    get_scheduled_partition _ NonSeqR _ _ = throwError $
+    get_scheduled_unpartition _ NonSeqR _ _ = throwError $
       Slowdown_Failure "can't get nonseq for unpartition input"
-    get_scheduled_partition tr0 tr1 elem_t_ppar _ = throwError $ Slowdown_Failure $
+    get_scheduled_unpartition tr0 tr1 elem_t_ppar _ = throwError $ Slowdown_Failure $
       show op ++ "\n with the outer input type rewrite " ++ show tr0 ++
       " and inner input type rewrite " ++ show tr1 ++ " requires a flip, which is not supported."
 
@@ -951,16 +951,16 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let upstream_type_rewrites = outer_input_rewrite : inner_input_rewrite : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
 
-  get_scheduled_partition outer_input_rewrite inner_input_rewrite elem_t_ppar producer_ppar
+  get_scheduled_seq_to_stuple outer_input_rewrite inner_input_rewrite elem_t_ppar producer_ppar
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
-    get_scheduled_partition :: Type_Rewrite -> Type_Rewrite -> STT.AST_Type -> STE.Expr -> Partially_Parallel_StateM STE.Expr
-    get_scheduled_partition (SpaceR in0_n) (SpaceR in1_n) elem_t_ppar producer_ppar =
+    get_scheduled_seq_to_stuple :: Type_Rewrite -> Type_Rewrite -> STT.AST_Type -> STE.Expr -> Partially_Parallel_StateM STE.Expr
+    get_scheduled_seq_to_stuple (SpaceR in0_n) (SpaceR in1_n) elem_t_ppar producer_ppar =
       return $ STE.Map_sN in0_n (STB.add_input_to_expr_for_map $
                                  STE.SSeqToSTupleN in1_n elem_t_ppar) producer_ppar
      {- 
-    get_scheduled_partition (SpaceR in0_n) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
+    get_scheduled_seq_to_stuple (SpaceR in0_n) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
 
       -- after deserializing, inner TSeq input becomes a TSeq (SSeq) where
       -- all clocks are invalid but the first
@@ -974,7 +974,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
                           STB.add_input_to_expr_for_map $
                           STE.DeserializeN in1_n in1_i elem_t_ppar) producer_ppar
         
-    get_scheduled_partition (SpaceR in0_n) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+    get_scheduled_seq_to_stuple (SpaceR in0_n) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
 
       -- input is SSeq (TSeq (SSeq))
       -- after deserializing TSeq, need to merge inner most SSeqs
@@ -992,11 +992,11 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
                           STB.add_input_to_expr_for_map $
                           STE.DeserializeN in1_no in1_io deser_elem_t_ppar) producer_ppar
       -}  
-    get_scheduled_partition (TimeR in0_n in0_i) (SpaceR in1_n) elem_t_ppar producer_ppar =
+    get_scheduled_seq_to_stuple (TimeR in0_n in0_i) (SpaceR in1_n) elem_t_ppar producer_ppar =
       return $ STE.Map_tN in0_n in0_i (STB.add_input_to_expr_for_map $
                                        STE.SSeqToSTupleN in1_n elem_t_ppar) producer_ppar
       
-    get_scheduled_partition (TimeR in0_n in0_i) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
+    get_scheduled_seq_to_stuple (TimeR in0_n in0_i) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
 
       -- after deserializing, inner TSeq input becomes a TSeq (SSeq) where
       -- all clocks are invalid but the first
@@ -1013,7 +1013,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
         
       {-
 -- THIS ONE WAS WRITTEN BUT IS WRONG
-    get_scheduled_partition (TimeR in0_n in0_i) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+    get_scheduled_seq_to_stuple (TimeR in0_n in0_i) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
 
       -- after deserializing, inner TSeq input becomes a TSeq (SSeq) where
       -- all clocks are invalid but the first
@@ -1029,20 +1029,20 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
                                 STE.DeserializeN in1_n in1_i elem_t_ppar) producer_ppar
 
 
-    get_scheduled_partition (TimeR in0_n in0_i) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+    get_scheduled_seq_to_stuple (TimeR in0_n in0_i) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
       let unpartition_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
       return $ STE.Unpartition_t_ttN in0_n in1_no in0_i in1_ni unpartition_elem_t_ppar producer_ppar
-    get_scheduled_partition (SplitR in0_no in0_io in0_ni) (SpaceR in1_n) elem_t_ppar producer_ppar = do
+    get_scheduled_seq_to_stuple (SplitR in0_no in0_io in0_ni) (SpaceR in1_n) elem_t_ppar producer_ppar = do
       return $ STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
                                          STE.Unpartition_s_ssN in0_ni in1_n elem_t_ppar)
         producer_ppar
-    get_scheduled_partition (SplitR in0_no in0_io in0_ni) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
+    get_scheduled_seq_to_stuple (SplitR in0_no in0_io in0_ni) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
       let unpartition_elem_t_ppar = STT.SSeqT in0_ni elem_t_ppar
       return $ STE.Unpartition_t_ttN in0_ni in1_n in0_io in1_i unpartition_elem_t_ppar $
         STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
                                    STE.Flip_st_to_ts in1_n in1_i in0_ni elem_t_ppar) $
         producer_ppar
-    get_scheduled_partition (SplitR in0_no in0_io in0_ni) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+    get_scheduled_seq_to_stuple (SplitR in0_no in0_io in0_ni) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
       let unpartition_t_tt_elem_t_ppar = STT.SSeqT in0_ni (STT.SSeqT in1_ni elem_t_ppar)
       let flip_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
       return $ STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ STE.Map_tN in1_no in1_io $
@@ -1052,9 +1052,9 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
         STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
                                    STE.Flip_st_to_ts in1_no in1_io in0_ni flip_elem_t_ppar) $
         producer_ppar
-    get_scheduled_partition NonSeqR _ _ _ = throwError $
+    get_scheduled_seq_to_stuple NonSeqR _ _ _ = throwError $
       Slowdown_Failure "can't get nonseq for unpartition input"
-    get_scheduled_partition _ NonSeqR _ _ = throwError $
+    get_scheduled_seq_to_stuple _ NonSeqR _ _ = throwError $
       Slowdown_Failure "can't get nonseq for unpartition input"
 
 
