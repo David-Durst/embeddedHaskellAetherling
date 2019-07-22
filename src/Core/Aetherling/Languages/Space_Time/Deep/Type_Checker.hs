@@ -5,7 +5,13 @@ import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Control.Monad.Except
 import Data.Either
 
-type Type_Checker_Error = Except Expr
+type Type_Checker_Error = Except (Either String Type_Error)
+
+data Type_Error = Type_Error {
+  consumer_input_type :: AST_Type,
+  producer_output_type :: AST_Type,
+  consumer :: Expr
+  } deriving (Show, Eq)
 
 check_type :: Expr -> Bool
 check_type e = do
@@ -107,7 +113,7 @@ check_type' consumer_e@(SSeqToSTupleN _ _ producer_e) =
   check_unary_operator consumer_e producer_e
   
 check_type' (InputN t _) = return t
-check_type' e@(ErrorN _) = throwError e
+check_type' e@(ErrorN _) = throwError $ Left $ show e
 check_type' consumer_e@(FIFON _ _ _ _ producer_e) =
   check_unary_operator consumer_e producer_e
   
@@ -119,7 +125,8 @@ check_unary_operator consumer_op producer_op = do
   if (length consumer_input_types == 1) &&
     (head consumer_input_types == producer_output_type)
     then return consumer_output_type
-    else throwError consumer_op
+    else throwError $ Right $
+         Type_Error (head consumer_input_types) producer_output_type consumer_op
 
 check_binary_operator :: Expr -> Expr -> Expr -> Type_Checker_Error AST_Type
 check_binary_operator consumer_op producer_op0 producer_op1 = do
@@ -127,8 +134,12 @@ check_binary_operator consumer_op producer_op0 producer_op1 = do
   producer1_output_type <- check_type' producer_op1
   let consumer_input_types = e_in_types $ expr_to_types consumer_op
   let consumer_output_type = e_out_type $ expr_to_types consumer_op
-  if (length consumer_input_types == 2) &&
-    (consumer_input_types !! 0 == producer0_output_type) &&
-    (consumer_input_types !! 1 == producer1_output_type)
-    then return consumer_output_type
-    else throwError consumer_op
+  if (length consumer_input_types /= 2)
+    then throwError $ Left ("no two inputs for " ++ show consumer_op)
+    else if (consumer_input_types !! 0 /= producer0_output_type)
+    then throwError $ Right $
+         Type_Error (head consumer_input_types) producer0_output_type consumer_op
+    else if (consumer_input_types !! 1 /= producer1_output_type)
+    then throwError $ Right $
+         Type_Error (consumer_input_types !! 1) producer0_output_type consumer_op
+    else return consumer_output_type

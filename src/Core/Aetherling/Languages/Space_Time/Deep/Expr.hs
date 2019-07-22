@@ -206,3 +206,7 @@ data Expr =
       seq_in :: Expr
       }
   deriving (Show, Eq, Ord)
+
+is_error_node :: Expr -> Bool
+is_error_node (ErrorN _) = True
+is_error_node _ = False
