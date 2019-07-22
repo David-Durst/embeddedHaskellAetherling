@@ -107,6 +107,13 @@ double_up_ppar = filter (not . STE.is_error_node) $
 double_up_ppar_result = fmap check_type double_up_ppar
 double_up_ppar_result' = fmap check_type' double_up_ppar
 double_up_slow_6 = rewrite_to_partially_parallel 6 double_up
+-- the problem with this case is that, for the output Seq 5 (Seq 6 Int)
+-- with s = 6, the 5 is fully utilized and the 6 is fully underutilized.
+-- so the up and add don't put an extra sseq below the TSeq 6 0 Int.
+-- The add is the only thing necessary for the partition to work
+-- However, when unpartitioning, the unpartition 2 3 have lots of
+-- potentially empty clocks from all of 5 that got rolled into them.
+-- So unpartition creates an extra 1.
 double_up_slow_6_result = check_type double_up_slow_6
 double_up_slow_6_result' = check_type' double_up_slow_6
 
