@@ -7,18 +7,19 @@ The goal of this document is:
 # Auto-Scheduling and Scheduling Definitions
 For a program `pseq` in the sequence language, the auto-scheduler searches for the highest throughput program in the space-time IR that fits within the target chip's constraints.
 The auto-scheduler's algorithm is:
-1. Find the highest throughput schedule of `pseq` in the space-time IR. I will refer to this program as `pspace`
+1. Compile `pseq` to the program in the space-time IR with the greatest throughput. I will refer to this program as `pspace`
     1. This is determined by rewriting every operator in `pseq` to it's space version in the space-time IR.
     1. Once every operator produces its entire output in one clock cycle, you cannot increase throughput any further without increasing the `Seq` sizes.
-1. Find one of the least area schedules of `pseq` in the space-time IR. I will refer to this program as `ptime`
-    1. This is determined by rewriting every operator in `pseq` to it's time version in the space-time IR.
-    1. There are an infinite number of least area schedules because all operators can be arbitrarily underutilized with the same hardware resources.
-        1. For example, `Map_t 2 0 Abs :: TSeq 2 0 Int -> TSeq 2 0` requires the same hardware and is three times higher throuhgput than `Map_t 2 4 Abs :: TSeq 2 4 Int -> TSeq 2 4`
-    1. This step requires solving a non-linear, integer programming problem. 
+1. Compile `pseq` to the program in the space-time IR that is: the greatest throughput of the minimum area programs. I will refer to this program as `ptime`
+    1. This is partially determined by rewriting every operator in `pseq` to it's time version in the space-time IR.
+    1. There are an infinite number of least area programs because all operators can be arbitrarily underutilized with the same hardware resources.
+        1. For example, `Map_t 2 0 Abs :: TSeq 2 0 Int -> TSeq 2 0` requires the same hardware and is three times higher throughput than `Map_t 2 4 Abs :: TSeq 2 4 Int -> TSeq 2 4`
+    1. This step requires solving a non-linear, integer optimization problem. 
         1. Each time operator in the space-time IR has a relationship between it's input and output number of invalid clocks.
         1. Each composition of two time operators creates an equality between the producer's output valid and invalid clocks and the consumer's input valid and invalid clocks.
+        1. Producing a space-time schedule with time operators requires finding a solution for all time operators' number of invalid clocks that satisfies these equations.
+            1. For example, compiling `Down_1d 3 Int >>> Map 1 Int` to `Down_1d_t 3 0 Int >>> Map_t 1 2 Int` requires finding that the `Map_t` must be invalid for two clocks to match the type signature of the `Down_1d_t`.
         1. Operators such as `partition no ni io ii Int :: TSeq (no*ni) (no*ii + io*(ni+ii)) Int -> TSeq no io (TSeq ni ii Int)` create non-linear equations.
-        1. Producing a space-time schedule with time operators requires finding a solution for all time operator's number of invalid clocks that satisfies these equations.
 1. Let `max_slowdown = floor(throughput(Pspace) / throughput(Ptime))`. For each integer **s** from 1 to `max_slowdown`, schedule `pseq` with slowdown factor **s**. Stop at the first **s** that fits on the target chip.
     1. Scheduling with a slowdown factor is converting a program from the sequence language to one in the space-time IR that has an output throughput that is **s** times less than `pspace`.
 
@@ -41,8 +42,8 @@ autoscheduler max_area pseq =
     ptime = sequence_to_time_operators(pseq)
 
     max_slowdown = floor(throughput(pspace) / throughput(ptime))
-    for i in [1 .. max_slowdown]:
-        pspace_time = schedule pseq pspace ptime i
+    for s in [1 .. max_slowdown]:
+        pspace_time = schedule pseq pspace ptime s
         if area(pspace_time) <= max_area:
             return pspace_time
     
@@ -52,23 +53,46 @@ autoscheduler max_area pseq =
 The following sections will work through the implementation of the scheduling algorithm. 
 
 # Naive Scheduler
-The naive auto-scheduler is, for each operator, apply the slowdown factor if possible. 
-If not possible or if making the sequence operator into a time operator doesn't consume the entire slowdown factor, recur either on the operators inner operator or inner type.
+The naive auto-scheduler is, for each operator, apply the slowdown factor if possible by applying the appropriate rewrite rules.
+If not possible or slowing down the operator is insufficient to reach the desired throughput, recur on nested operators. 
 
 ```
-naive_schedule
+naive_schedule :: Seq_Expr -> Int -> Space_Time_Expr
+naive_schedule pseq s =
+    for op in (operators pseq):
+        naive_schedule_op op s
+
+naive_schedule_op op s =
+    n = max (input_seq_len op) (output_seq_len op)
+    if (s % n) == 0:
+        sequence_to_time op
+        remaining_s = s / n
+    if (n % s) == 0:
+        sequence_to_nested_time_space op s
+        remaining_s = 1
+    # higher order op's include Map, Map2, and Reduce
+    if is_higher_order op:
+        inner = inner_op op 
+        naive_schedule_op inner remaining_s
+    # other operators, such as Shift, can operator on nested types
+    # Need to convert those nested Seq types to TSeqs or SSeqs
+    else:
+       inner = inner_type op
+       naive_schedule_type inner remaining_s
+    
 ```
 
 The [motivating examples](#motivating_examples) show that this auto-scheduler does not correctly schedule programs that a user can be expected to write. 
 
 
 # Motivating Examples
-There are four main issues that the auto-scheduler will have to handle:
-1. **Rewrites** - scheduling individual, sequence operators by rewriting them to space-time operators with the desired throughput
+There are four main issues that the scheduler will have to handle:
+1. **Individual Operator Rewrites** - scheduling individual, sequence operators by rewriting them to space-time operators with the desired throughput
 1. **Composition** - scheduling composed operators so that the produced space-time operators have matching type signatures 
 1. **Multi-Rate** - scheduling operators that accept and emit different numbers of outputs, such as `Up_1d` and `Down_1d`
 1. **Nesting Manipulation** - scheduling operators that change that change the nesting of `Seq`s, such as `Partition` and `Unpartition`
-## Basic Example
+
+## Individual Operator
 This example shows the simplest pipeline that can be scheduled.
 
 Attainable s are `s = 1, 2,4`
