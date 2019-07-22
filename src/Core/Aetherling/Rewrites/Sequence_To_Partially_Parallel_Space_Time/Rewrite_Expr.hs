@@ -246,7 +246,8 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr_no) : tr1@(SpaceR t
   let upstream_type_rewrites = SpaceR (no*ni) : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
   return $ STE.Partition_s_ssN tr_no tr_ni elem_t_ppar producer_ppar
-  
+
+{-
 sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr_no) : tr1@(TimeR tr_ni tr_ii) : type_rewrites_tl)
   (SeqE.PartitionN no ni io ii elem_t producer) |
   parameters_match tr0 no io && parameters_match tr1 ni ii = do
@@ -257,7 +258,19 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr_no) : tr1@(TimeR tr
   let upstream_type_rewrites = SplitR tr_ni tr_ii tr_no : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
   return $ STE.Flip_ts_to_st tr_ni tr_ii tr_no elem_t_ppar producer_ppar
-
+-} 
+sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR 1) : tr1@(SplitR tr1_no tr1_io tr1_ni) : type_rewrites_tl)
+  op@(SeqE.PartitionN no ni io ii elem_t producer) = do
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  let add_1_t_ppar = STT.TSeqT tr1_no tr1_io (STT.SSeqT tr1_ni elem_t_ppar)
+  let upstream_type_rewrites = tr1 : type_rewrites_tl
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+  return $ STE.Add_1_sN add_1_t_ppar producer_ppar
+sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr0_no) : tr1@(SplitR tr1_no tr1_io tr1_ni) : type_rewrites_tl)
+  op@(SeqE.PartitionN no ni io ii elem_t producer) = throwError $ Slowdown_Failure $
+  "Split of TimeR into Parititon requires a flip, which is not supported. " ++
+  "type rewrites: " ++ show type_rewrites ++ "\n Partition: " ++ show op
+{-
 sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr0_no) : tr1@(SplitR tr1_no tr1_io tr1_ni) : type_rewrites_tl)
   (SeqE.PartitionN no ni io ii elem_t producer) |
   parameters_match tr0 no io && parameters_match tr1 ni ii = do
@@ -270,7 +283,7 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr0_no) : tr1@(SplitR 
   return $ STE.Flip_ts_to_st tr1_no tr1_io tr0_no flip_elem_t_ppar $
     STE.Map_tN tr1_no tr1_ni (STB.add_input_to_expr_for_map $
                               STE.Partition_s_ssN tr0_no tr1_ni elem_t_ppar) producer_ppar
-    
+-}   
 sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr_no tr_io) : tr1@(SpaceR tr_ni) : type_rewrites_tl)
   (SeqE.PartitionN no ni io ii elem_t producer) |
   parameters_match tr0 no io && parameters_match tr1 ni ii = do
@@ -310,7 +323,43 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) 
   return $ STE.Map_tN tr0_no tr0_io (STB.add_input_to_expr_for_map $
                                      STE.Partition_s_ssN tr0_ni tr1_ni elem_t_ppar)
     producer_ppar
-    
+
+sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io 1) : tr1@(TimeR tr1_no tr1_io) : type_rewrites_tl)
+  op@(SeqE.PartitionN no ni io ii elem_t producer) |
+  parameters_match tr0 no io && parameters_match tr1 ni ii = do
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  let add_s_t_ppar = STT.TSeqT tr1_no tr1_io elem_t_ppar
+  let upstream_type_rewrites = TimeR (tr0_no*tr1_no) ((tr0_no * tr1_io) + (tr0_io * (tr1_no + tr1_io))) : type_rewrites_tl
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+  return $ STE.Map_tN tr0_no tr0_io (
+    STB.add_input_to_expr_for_map $
+    STE.Add_1_sN add_s_t_ppar
+    ) $
+    STE.Partition_t_ttN tr0_no tr1_no tr0_io tr1_io elem_t_ppar producer_ppar
+sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) : tr1@(TimeR tr1_n tr1_i) : type_rewrites_tl)
+  op@(SeqE.PartitionN no ni io ii elem_t producer) = throwError $ Slowdown_Failure $
+  "SplitR of TimeR into Parititon requires a flip, which is not supported. " ++
+  "type rewrites: " ++ show type_rewrites ++ "\n Partition: " ++ show op
+  
+sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io 1) : tr1@(SplitR tr1_no tr1_io tr1_ni) : type_rewrites_tl)
+  op@(SeqE.PartitionN no ni io ii elem_t producer) |
+  parameters_match tr0 no io && parameters_match tr1 ni ii = do
+  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  let partition_t_tt_elem_t_ppar = STT.SSeqT tr1_ni elem_t_ppar
+  let add_s_t_ppar = STT.TSeqT tr1_no tr1_io partition_t_tt_elem_t_ppar
+  let upstream_type_rewrites = SplitR (tr0_no*tr1_no) ((tr0_no * tr1_io) + (tr0_io * (tr1_no + tr1_io))) tr1_ni : type_rewrites_tl
+  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
+  return $ STE.Map_tN tr0_no tr0_io (
+    STB.add_input_to_expr_for_map $
+    STE.Add_1_sN add_s_t_ppar
+    ) $
+    STE.Partition_t_ttN tr0_no tr1_no tr0_io tr1_io partition_t_tt_elem_t_ppar producer_ppar
+  
+sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) : tr1@(SplitR tr1_no tr1_io tr1_ni) : type_rewrites_tl)
+  op@(SeqE.PartitionN no ni io ii elem_t producer) = throwError $ Slowdown_Failure $
+  "SplitR of SplitR into Parititon requires a flip, which is not supported. " ++
+  "type rewrites: " ++ show type_rewrites ++ "\n Partition: " ++ show op
+{-    
 sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) : tr1@(TimeR tr1_n tr1_i) : type_rewrites_tl)
   (SeqE.PartitionN no ni io ii elem_t producer) |
   parameters_match tr0 no io && parameters_match tr1 ni ii = do
@@ -339,7 +388,7 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) 
                               STE.Map_tN tr1_no tr1_io (STB.add_input_to_expr_for_map $
                                                         STE.Partition_s_ssN tr0_ni tr1_ni elem_t_ppar)) $
     STE.Partition_t_ttN tr0_no tr1_no tr0_io tr1_io partition_t_tt_elem_t_ppar producer_ppar
-
+-}
 
 {-
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : type_rewrites_tl)
@@ -373,7 +422,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrit
   return $ STE.Unpartition_t_ttN no ni io ii elem_t_ppar producer_ppar
  -}
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
-  (SeqE.UnpartitionN no ni io ii elem_t producer) |
+  op@(SeqE.UnpartitionN no ni io ii elem_t producer) |
   parameters_match tr (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) = do
   -- to compute how to slowdown input, get number of clocks for output 
   let slowdown = get_type_rewrite_periods tr
@@ -392,6 +441,13 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
     get_scheduled_partition :: Type_Rewrite -> Type_Rewrite -> STT.AST_Type -> STE.Expr -> Partially_Parallel_StateM STE.Expr
     get_scheduled_partition (SpaceR in0_n) (SpaceR in1_n) elem_t_ppar producer_ppar =
       return $ STE.Unpartition_s_ssN in0_n in1_n elem_t_ppar producer_ppar
+    get_scheduled_partition (SpaceR 1) (TimeR in1_no in1_io) elem_t_ppar producer_ppar = do
+      let remove_1_t_ppar = STT.TSeqT in1_no in1_io elem_t_ppar 
+      return $ STE.Remove_1_sN remove_1_t_ppar producer_ppar
+    get_scheduled_partition (SpaceR 1) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+      let remove_1_t_ppar = STT.TSeqT in1_no in1_io (STT.SSeqT in1_ni elem_t_ppar)
+      return $ STE.Remove_1_sN remove_1_t_ppar producer_ppar
+      {-
     get_scheduled_partition (SpaceR in0_n) (TimeR in1_n in1_i) elem_t_ppar producer_ppar =
       return $ STE.Flip_st_to_ts in1_n in1_i in0_n elem_t_ppar producer_ppar
     get_scheduled_partition (SpaceR in0_n) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
@@ -399,6 +455,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
       return $ STE.Map_tN in1_no in1_io (STB.add_input_to_expr_for_map $ 
                                          STE.Unpartition_s_ssN in0_n in1_ni elem_t_ppar) $
         STE.Flip_st_to_ts in1_no in1_io in0_n flip_elem_t_ppar producer_ppar
+-}
     get_scheduled_partition (TimeR in0_n in0_i) (SpaceR in1_n) elem_t_ppar producer_ppar = do
       return producer_ppar
     get_scheduled_partition (TimeR in0_n in0_i) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = 
@@ -410,6 +467,20 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
       return $ STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
                                          STE.Unpartition_s_ssN in0_ni in1_n elem_t_ppar)
         producer_ppar
+    get_scheduled_partition (SplitR in0_no in0_io 1) (TimeR in1_no in1_io) elem_t_ppar producer_ppar = do
+      let remove_1_t_ppar = STT.TSeqT in1_no in1_io elem_t_ppar 
+      return $ STE.Unpartition_t_ttN in0_no in1_no in0_io in1_io elem_t_ppar $
+        STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $
+                                  STE.Remove_1_sN remove_1_t_ppar)
+        producer_ppar
+    get_scheduled_partition (SplitR in0_no in0_io 1) (SplitR in1_no in1_io in1_ni) elem_t_ppar producer_ppar = do
+      let unpartition_t_tt_elem_t_ppar = STT.SSeqT in1_ni elem_t_ppar
+      let remove_1_t_ppar = STT.TSeqT in1_no in1_io unpartition_t_tt_elem_t_ppar 
+      return $ STE.Unpartition_t_ttN in0_no in1_no in0_io in1_io unpartition_t_tt_elem_t_ppar $
+        STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $
+                                  STE.Remove_1_sN remove_1_t_ppar)
+        producer_ppar
+        {-
     get_scheduled_partition (SplitR in0_no in0_io in0_ni) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
       let unpartition_elem_t_ppar = STT.SSeqT in0_ni elem_t_ppar
       return $ STE.Unpartition_t_ttN in0_ni in1_n in0_io in1_i unpartition_elem_t_ppar $
@@ -426,12 +497,14 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
         STE.Map_tN in0_no in0_io (STB.add_input_to_expr_for_map $ 
                                    STE.Flip_st_to_ts in1_no in1_io in0_ni flip_elem_t_ppar) $
         producer_ppar
+-}
     get_scheduled_partition NonSeqR _ _ _ = throwError $
       Slowdown_Failure "can't get nonseq for unpartition input"
     get_scheduled_partition _ NonSeqR _ _ = throwError $
       Slowdown_Failure "can't get nonseq for unpartition input"
-
-
+    get_scheduled_partition tr0 tr1 elem_t_ppar _ = throwError $ Slowdown_Failure $
+      show op ++ "\n with the outer input type rewrite " ++ show tr0 ++
+      " and inner input type rewrite " ++ show tr1 ++ " requires a flip, which is not supported."
 
 -- higher order operators
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
@@ -618,7 +691,7 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr0_n) : tr1@(SpaceR t
   producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
   return $ STE.Map_sN tr0_n (STB.add_input_to_expr_for_map $
                           STE.STupleToSSeqN tr1_n elem_t_ppar) producer_ppar
-
+{-
 sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr0_n) : tr1@(TimeR tr1_n tr1_i) :
                                               type_rewrites_tl)
   (SeqE.STupleToSeqN no ni io ii elem_t producer) |
@@ -682,7 +755,7 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr0_n) : tr1@(SplitR t
                                              STE.STupleToSSeqN (tr1_no * tr1_ni) elem_t_ppar
                                              )
                                          ) producer_ppar
-    
+ -}   
 sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr0_n tr0_i) : tr1@(SpaceR tr1_n) :
                                               type_rewrites_tl)
   (SeqE.STupleToSeqN no ni io ii elem_t producer) |
@@ -775,7 +848,7 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) 
                                         )
                                    ) producer_ppar
 
-
+{-
 sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) : tr1@(TimeR tr1_n tr1_i) :
                                               type_rewrites_tl)
   (SeqE.STupleToSeqN no ni io ii elem_t producer) |
@@ -862,7 +935,7 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) 
                                                STE.STupleToSSeqN (tr1_no*tr1_ni) elem_t_ppar
                                                          )
                                            ) producer_ppar
-
+-}
 
     
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
@@ -886,7 +959,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
     get_scheduled_partition (SpaceR in0_n) (SpaceR in1_n) elem_t_ppar producer_ppar =
       return $ STE.Map_sN in0_n (STB.add_input_to_expr_for_map $
                                  STE.SSeqToSTupleN in1_n elem_t_ppar) producer_ppar
-      
+     {- 
     get_scheduled_partition (SpaceR in0_n) (TimeR in1_n in1_i) elem_t_ppar producer_ppar = do
 
       -- after deserializing, inner TSeq input becomes a TSeq (SSeq) where
@@ -918,7 +991,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
                              ) $
                           STB.add_input_to_expr_for_map $
                           STE.DeserializeN in1_no in1_io deser_elem_t_ppar) producer_ppar
-        
+      -}  
     get_scheduled_partition (TimeR in0_n in0_i) (SpaceR in1_n) elem_t_ppar producer_ppar =
       return $ STE.Map_tN in0_n in0_i (STB.add_input_to_expr_for_map $
                                        STE.SSeqToSTupleN in1_n elem_t_ppar) producer_ppar
@@ -1007,8 +1080,8 @@ sequence_to_partially_parallel type_rewrites (SeqE.InputN t input_name) = do
 
 sequence_to_partially_parallel _ (SeqE.ErrorN s) = return $ STE.ErrorN s
 sequence_to_partially_parallel tr e =
-  trace ("can't handle type_rewrites: " ++ show tr ++ "\n and expr: " ++ show e ++ "\n") $
-  undefined
+  throwError $ Slowdown_Failure $
+  "can't handle type_rewrites: " ++ show tr ++ "\n and expr: " ++ show e
 
 -- | Verifies that Type_Rewrite matches the output Seq that is being rewritten
 parameters_match :: Type_Rewrite -> Int -> Int -> Bool

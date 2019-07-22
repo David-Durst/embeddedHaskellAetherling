@@ -100,17 +100,19 @@ data Expr =
       elem_t :: AST_Type,
       seq_in :: Expr
       }
-  | Flip_ts_to_st {
-      n_t :: Int,
-      i :: Int,
-      n_s :: Int,
+  | Add_1_sN {
       elem_t :: AST_Type,
       seq_in :: Expr
       }
-  | Flip_st_to_ts {
-      n_t :: Int,
-      i :: Int,
-      n_s :: Int,
+  | Add_1_0_tN {
+      elem_t :: AST_Type,
+      seq_in :: Expr
+      }
+  | Remove_1_sN {
+      elem_t :: AST_Type,
+      seq_in :: Expr
+      }
+  | Remove_1_0_tN {
       elem_t :: AST_Type,
       seq_in :: Expr
       }

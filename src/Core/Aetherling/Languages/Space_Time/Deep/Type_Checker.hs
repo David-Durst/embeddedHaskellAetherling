@@ -59,9 +59,13 @@ check_type' consumer_e@(SerializeN _ _ _ producer_e) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(DeserializeN _ _ _ producer_e) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(Flip_ts_to_st _ _ _ _ producer_e) =
+check_type' consumer_e@(Add_1_sN _ producer_e) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(Flip_st_to_ts _ _ _ _ producer_e) =
+check_type' consumer_e@(Add_1_0_tN _ producer_e) =
+  check_unary_operator consumer_e producer_e
+check_type' consumer_e@(Remove_1_sN _ producer_e) =
+  check_unary_operator consumer_e producer_e
+check_type' consumer_e@(Remove_1_0_tN _ producer_e) =
   check_unary_operator consumer_e producer_e
 
 -- higher order operators
