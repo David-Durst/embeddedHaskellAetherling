@@ -73,7 +73,6 @@ library:
     - ConstraintKinds
     - Rank2Types
     - InstanceSigs
-    - QuasiQuotes
 
 executables:
   Aetherling-Blur-exe:

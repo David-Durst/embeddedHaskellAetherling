@@ -91,7 +91,7 @@ map_to_unpartition = compile $
   mapC (mapC absC) >>>
   unpartitionC' (Proxy @2) (Proxy @2) >>>
   mapC absC $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 2 2 (Seq 2 2 Atom_Int)))
+  com_input_seq "hi" (Proxy :: Proxy (Seq 2 6 (Seq 2 0 Atom_Int)))
 map_to_unpartition_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_unpartition) [1,2,4,8,16]
 map_to_unpartition_ppar_result = fmap check_type map_to_unpartition_ppar
 
@@ -102,8 +102,8 @@ double_up = compile $
    partitionC (Proxy @1) (Proxy @6) Proxy (Proxy @0) >>> -- in : [6], out : [1, 6] or in : [[2, 3]] out : [1, [2, 3]] (this doesn't work as can't slow input down by 5, so must not be able to slow output down by 5) or in : [[2, 3]] out : []
    up_1dC (Proxy @5)) $ -- [5, [2, 3]]
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 1 14 Atom_Int)) )
-double_up_ppar = filter (not . STE.is_error_node) $
-  fmap (\s -> rewrite_to_partially_parallel s double_up) [1,2,3,5,6,10,15,30]
+double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up) [1,2,3,5,6,10,15,30]
+double_up_ppar_no_errors = filter (not . STE.is_error_node) double_up_ppar
 double_up_ppar_result = fmap check_type double_up_ppar
 double_up_ppar_result' = fmap check_type' double_up_ppar
 double_up_slow_6 = rewrite_to_partially_parallel 6 double_up
