@@ -6,31 +6,34 @@ The goal of this document is:
    
 # Auto-Scheduling and Scheduling Definitions
 For a program `pseq` in the sequence language, the auto-scheduler searches for the highest throughput program in the space-time IR that fits within the target chip's constraints.
-The auto-scheduler's algorithm is:
-1. Compile `pseq` to the program in the space-time IR with the greatest throughput. I will refer to this program as `pspace`
-    1. This is determined by rewriting every operator in `pseq` to it's space version in the space-time IR.
-    1. Once every operator produces its entire output in one clock cycle, you cannot increase throughput any further without increasing the `Seq` sizes.
-1. Compile `pseq` to the program in the space-time IR that is: the greatest throughput of the minimum area programs. I will refer to this program as `ptime`
-    1. This is partially determined by rewriting every operator in `pseq` to it's time version in the space-time IR.
-    1. There are an infinite number of least area programs because all operators can be arbitrarily underutilized with the same hardware resources.
-        1. For example, `Map_t 2 0 Abs :: TSeq 2 0 Int -> TSeq 2 0` requires the same hardware and is three times higher throughput than `Map_t 2 4 Abs :: TSeq 2 4 Int -> TSeq 2 4`
-    1. This step requires solving a non-linear, integer optimization problem. 
-        1. Each time operator in the space-time IR has a relationship between it's input and output number of invalid clocks.
-        1. Each composition of two time operators creates an equality between the producer's output valid and invalid clocks and the consumer's input valid and invalid clocks.
-        1. Producing a space-time schedule with time operators requires finding a solution for all time operators' number of invalid clocks that satisfies these equations.
-            1. For example, compiling `Down_1d 3 Int >>> Map 1 Int` to `Down_1d_t 3 0 Int >>> Map_t 1 2 Int` requires finding that the `Map_t` must be invalid for two clocks to match the type signature of the `Down_1d_t`.
-        1. Operators such as `partition no ni io ii Int :: TSeq (no*ni) (no*ii + io*(ni+ii)) Int -> TSeq no io (TSeq ni ii Int)` create non-linear equations.
-1. Let `max_slowdown = floor(throughput(Pspace) / throughput(Ptime))`. For each integer **s** from 1 to `max_slowdown`, schedule `pseq` with slowdown factor **s**. Stop at the first **s** that fits on the target chip.
-    1. Scheduling with a slowdown factor is converting a program from the sequence language to one in the space-time IR that has an output throughput that is **s** times less than `pspace`.
 
 The below image is a visualization of the auto-scheduler. 
 The blue line is the auto-scheduler's search space: the set of program's in the space-time IR that `Pseq` can be converted into. 
 The red line is the maximum amount of area on the target chip.
-The green line is the auto-scheduler's search process from `Pspace` to `Ptime`.
+The green line is the auto-scheduler's search process from the maximum throughput space-time IR program, `Pspace`, to the minimum area space-time IR program, `Ptime`.
 The goal is the find the right-most point on the blue line that is below the red line.
 The auto-scheduler accomplishes this goal by walking along the blue line in the direction indicated by the green line. 
 
 ![Auto-Scheduler Search Process](other_diagrams/area_throughput_tradeoff/area_throughput_tradeoff.png "Auto-Scheduler Search Process")
+
+The auto-scheduler's algorithm is:
+1. Compile `pseq` to the program in the space-time IR with the greatest throughput. I will refer to this program as `pspace`
+    1. This is determined by rewriting every operator in `pseq` to it's space version in the space-time IR.
+1. Compile `pseq` to the program in the space-time IR that is the greatest throughput of the minimum area programs. I will refer to this program as `ptime`.
+    1. This is partially determined by rewriting every operator in `pseq` to it's time version in the space-time IR.
+    1. There are an infinite number of least area programs because all operators can be arbitrarily underutilized with the same hardware resources.
+        1. For example, `Map_t 2 0 Abs :: TSeq 2 0 Int -> TSeq 2 0` requires the same hardware and is three times higher throughput than `Map_t 2 4 Abs :: TSeq 2 4 Int -> TSeq 2 4`
+        1. Adding more invalid clocks expresses the underutilized. In the above example, `Map_t 2 0` has 0 invalid clocks on its input and output. `Map_t 2 4` has 4 invalid clocks on its input and output.
+    1. We use integer linear optimization to find the least area program with the least underutilization, and thus the greatest throughput.
+        1. Each composition of two time operators in the space-time IR creates an equality between the producer's output valid and invalid clocks and the consumer's input valid and invalid clocks.
+        1. ILP solves for the minimum number of valid and invalid clocks that satisfies all equalities.
+            1. Some operators would appear to introduce non-linearity. 
+            1. For example, `partition no ni io ii Int :: TSeq (no*ni) (no*ii + io*(ni+ii)) Int -> TSeq no io (TSeq ni ii Int)` would create non-linear equations.
+            1. We address this issue by requiring that either `io = 0` or `ii = 0`.
+            1. We will show below that this does not restrict the expressiveness of the language.
+1. Let `max_slowdown = floor(throughput(Pspace) / throughput(Ptime))`. For each integer **s** from 1 to `max_slowdown`, schedule `pseq` with slowdown factor **s**. Stop at the first **s** that fits on the target chip.
+    1. Scheduling with a slowdown factor is converting a program from the sequence language to one in the space-time IR that has an output throughput that is **s** times less than `pspace`.
+
 
 The code for the auto-scheduler is:
 ```
@@ -38,7 +41,7 @@ autoscheduler :: Area -> Seq_Expr -> Space_Time_Expr
 autoscheduler max_area pseq = 
     pspace = sequence_to_space_operators(pseq)
 
-    # assume automatically solving non-linear integer programming problem
+    # assume automatically solving ILP optimization problem
     ptime = sequence_to_time_operators(pseq)
 
     max_slowdown = floor(throughput(pspace) / throughput(ptime))
@@ -95,7 +98,7 @@ There are four main issues that the scheduler will have to handle:
 ## Individual Operator
 This example shows the simplest pipeline that can be scheduled.
 
-Attainable s are `s = 1, 2,4`
+Attainable s are `s = 1,2,4`
 ```
 Map 4 Abs
 ```
