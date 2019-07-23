@@ -117,6 +117,20 @@ double_up_slow_6 = rewrite_to_partially_parallel 6 double_up
 double_up_slow_6_result = check_type double_up_slow_6
 double_up_slow_6_result' = check_type' double_up_slow_6
 
+down_over_nested_to_down_over_flattened = compile $
+  (down_1dC' (Proxy @4) 0 >>>
+   unpartitionC' (Proxy @1) (Proxy @4) >>>
+   down_1dC' (Proxy @4) 0) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
+down_over_nested_to_down_over_flattened_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s down_over_nested_to_down_over_flattened)
+  [1,2,4,8,16]
+down_over_nested_to_down_over_flattened_ppar_result =
+  fmap check_type down_over_nested_to_down_over_flattened_ppar
+down_over_nested_to_down_over_flattened_ppar_result' =
+  fmap check_type' down_over_nested_to_down_over_flattened_ppar
+
+
 -- multiple unpartitions into a multi-rate
 multi_unpartition_with_multi_rate = compile $
   (mapC' (Proxy @3) (unpartitionC' (Proxy @2) (Proxy @5)) >>>
