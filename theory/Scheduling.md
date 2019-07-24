@@ -62,10 +62,9 @@ If not possible or slowing down the operator is insufficient to reach the desire
 ```
 naive_schedule :: Seq_Expr -> Int -> Space_Time_Expr
 naive_schedule pseq s =
-    for op in (operators pseq):
-        naive_schedule_op op s
+    map (naive_schedule_op s) (operators pseq)
 
-naive_schedule_op op s =
+naive_schedule_op s op =
     n = max (input_seq_len op) (output_seq_len op)
     if (s % n) == 0:
         sequence_to_time op
@@ -76,12 +75,12 @@ naive_schedule_op op s =
     # higher order op's include Map, Map2, and Reduce
     if is_higher_order op:
         inner = inner_op op 
-        naive_schedule_op inner remaining_s
-    # other operators, such as Shift, can operator on nested types
+        naive_schedule_op remaining_s inner 
+    # other operators, such as Shift, can operate on nested types
     # Need to convert those nested Seq types to TSeqs or SSeqs
     else:
        inner = inner_type op
-       naive_schedule_type inner remaining_s
+       naive_schedule_type remaining_s inner
     
 ```
 
@@ -89,22 +88,74 @@ The [motivating examples](#motivating_examples) show that this auto-scheduler do
 
 
 # Motivating Examples
-There are four main issues that the scheduler will have to handle:
+There are five main issues that the scheduler will have to handle:
 1. **Individual Operator Rewrites** - scheduling individual, sequence operators by rewriting them to space-time operators with the desired throughput
 1. **Composition** - scheduling composed operators so that the produced space-time operators have matching type signatures 
 1. **Multi-Rate** - scheduling operators that accept and emit different numbers of outputs, such as `Up_1d` and `Down_1d`
 1. **Nesting Manipulation** - scheduling operators that change that change the nesting of `Seq`s, such as `Partition` and `Unpartition`
+1. **Composition of Multi-Rate and Nesting Manipulation** - scheduling both types of operators. This is the example that the naive scheduler cannot handle.
 
-## Individual Operator
+## Individual Operator Rewrites
 This example shows the simplest pipeline that can be scheduled.
 
-Attainable s are `s = 1,2,4`
 ```
 Map 4 Abs
 ```
 
+Slowdown factors **s** that the rewrite rules can produce are `1,2,4`.
+These are the valid **s** as they are the factors of `4`.
+The following diagrams shows the process of applying the naive scheduler with these different **s**.
+The first diagram is the program in the sequence language AST.
+Each box represents a node in the AST. 
+A box inside another box indicates a parent-child relationship.
+For example, `Map 4 Abs` on the left indicates that `Map 4` is the parent node of `Abs`. 
+The text below the `Map 4 Abs` is the type signature of the AST node.
+
+![Unscheduled Individual Operator](other_diagrams/scheduler_examples/individual_operator/individual_operator_seq.png "Unscheduled Individual Operator")
+
+The second diagram is the program in the space-time IR AST after scheduling with `s=1`
+The `Map 4` has been rewritten into a `Map_s 4`.
+The naive scheduler correctly handles this case:
+1. The outputs of the programs are at the correct throughputs. 
+The output type is `SSeq 4 Int`, four `Int`s in one clock. 
+This is the highest possible throughput for four `Int`s.
+1. The type signatures of all composed operators match. There are no composed operators.
+
+![Scheduled s=1 Individual Operator](other_diagrams/scheduler_examples/individual_operator/individual_operator_st_s_1.png "Scheduled s=1 Individual Operator")
+
+The third diagram is the program in the space-time IR AST after scheduling with `s=2`
+The `Map 4` has been rewritten into a `Map_t 2 0 (Map_s 2)`.
+The naive scheduler correctly handles this case:
+1. The outputs of the programs are at the correct throughputs. 
+The output type is `TSeq 2 0 (SSeq 2 Int)`, four `Int` in two clocks.
+This throughput is two times smaller than the throughput of the `s=1` program with output type `SSeq 4 Int`.
+1. The type signatures of all composed operators match. There are no composed operators.
+
+![Scheduled s=2 Individual Operator](other_diagrams/scheduler_examples/individual_operator/individual_operator_st_s_2.png "Scheduled s=2 Individual Operator")
+
+## Composition
+This example demonstrates the issue of rewriting composed operators while preserving the fact that all producers and consumers have matching type signatures.
+
+```
+Map 4 Abs >>> Map 4 Abs
+```
+
+Slowdown factors **s** that the rewrite rules can produce are `1,2,4`.
+The following diagrams shows the process of applying the naive scheduler with these different **s**.
+The first diagram is the program in the sequence language AST.
+The arrow from one operator to the next with `>>>` indicates composition.
+The left operator is the producer and the right operator is the consumer.
+
+![Unscheduled Composition](other_diagrams/scheduler_examples/composition/composition_seq.png "Unscheduled Composition")
+
+The second diagram is the program in the space-time IR AST after scheduling with `s=2`
+The naive scheduler correctly handles this case for the same reasons as the [individual operator rewrites example.](#individual-operator-rewrites)
+
+![Scheduled s=2 Composition](other_diagrams/scheduler_examples/composition/composition_seq_s_2.png "Scheduled s=2 Composition")
+
 ## Multi-Rate
-**This example demonstrates the issue of how to parallelize a multi-rate operator where invalid clocks are necessary to understand throughput.**
+
+This example demonstrates the issue of rewriting operators with to parallelize a multi-rate operator where invalid clocks are necessary to understand throughput.
 Attainable s are `1, 2, 4`
 ```
 Down_1d 4
