@@ -157,13 +157,23 @@ The naive scheduler correctly handles this case for the same reasons as the [ind
 
 This example demonstrates the issue of rewriting operators with different input and output invalid clocks and thus throughputs.
 ```
-Down_1d 4
+Select_1d 4 Int
 ```
 
 Attainable s are `1, 2, 4`
 The following diagrams shows the process of applying the naive scheduler with these different **s**.
 The first diagram is the program in the sequence language AST.
-There type signatures do not account for invalid clocks since the sequence language doesn't consider throughput.
+The type signature does not account for invalid clocks since the sequence language doesn't consider throughput.
+
+![Unscheduled Multi-Rate](other_diagrams/scheduler_examples/multi_rate/multi_rate_seq.png "Unscheduled Multi-Rate")
+
+The second diagram is the program in the space-time IR AST after scheduling with `s=2`
+The naive scheduler correctly handles this case for the same reasons as the [individual operator rewrites example.](#individual-operator-rewrites)
+Note in this diagram the `Map_t 1 1` has one invalid clock on its input and output types. This is necessary in order to match the type produced by `Select_1d_t 2 0`.
+The throughputs for this program are four `Int` inputs per two clocks and one `Int` output per two clocks.
+
+![Scheduled s=2 Multi-Rate](other_diagrams/scheduler_examples/multi_rate/multi_rate_st_s_2.png "Scheduled s=2 Multi-Rate")
+
 
 
 Since 
