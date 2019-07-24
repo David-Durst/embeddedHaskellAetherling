@@ -284,7 +284,7 @@ compute_slowed_output_type pseq ptime s =
     for (TSeq n i) in (ot_time):
         n_factors = prime_factorization n
         if Set.intersect n_factors s_remaining_factors != Set.empty:
-            slowdown_factors = intersect n_factors s_remaining_factors
+            slowdown_factors = Set.intersect n_factors s_remaining_factors
             s_remaining_factors = Set.difference s_remaining_factors slowdown_factors 
             slowdown = Set.product slowdown_factors
             no = slowdown
