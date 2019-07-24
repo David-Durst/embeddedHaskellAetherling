@@ -256,7 +256,6 @@ schedule pseq pspace ptime s =
 ```
 
 ## Slowed Output Type Computation
-Each `SSeq n` in `pspace`'s output type either remains an `SSeq n`, becomes a `TSeq n i`, or is split into a `TSeq no io (Seq ni ii)` such that `no*ni == n`.
 The algorithm for performing step 2 of the above scheduling algorithm is
 1. Let `ot_time` be the output type of `ptime`
 1. Let `ot_space` be the output type of `pspace`
@@ -271,6 +270,8 @@ For each `SSeq n t` in `ot_space` starting with the outer most one:
         1. `ni = n / no`
 For each `TSeq n i t` in `ot_time` starting with the outer most one:
     1. slow it down to ime, if `n+i` and `s` share common factors, the replace the `SSeq` with `TSeq n i (SSeq 1 t)`.
+
+The code is:
 ```
 compute_slowed_output_type :: Seq_Expr -> Space_Time_Expr -> Int -> Space_Time_Type 
 compute_slowed_output_type pseq ptime s = 
