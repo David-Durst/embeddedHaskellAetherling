@@ -151,15 +151,24 @@ The left operator is the producer and the right operator is the consumer.
 The second diagram is the program in the space-time IR AST after scheduling with `s=2`
 The naive scheduler correctly handles this case for the same reasons as the [individual operator rewrites example.](#individual-operator-rewrites)
 
-![Scheduled s=2 Composition](other_diagrams/scheduler_examples/composition/composition_seq_s_2.png "Scheduled s=2 Composition")
+![Scheduled s=2 Composition](other_diagrams/scheduler_examples/composition/composition_st_s_2.png "Scheduled s=2 Composition")
 
 ## Multi-Rate
 
-This example demonstrates the issue of rewriting operators with to parallelize a multi-rate operator where invalid clocks are necessary to understand throughput.
-Attainable s are `1, 2, 4`
+This example demonstrates the issue of rewriting operators with different input and output invalid clocks and thus throughputs.
 ```
 Down_1d 4
 ```
+
+Attainable s are `1, 2, 4`
+The following diagrams shows the process of applying the naive scheduler with these different **s**.
+The first diagram is the program in the sequence language AST.
+There type signatures do not account for invalid clocks since the sequence language doesn't consider throughput.
+
+
+Since 
+The arrow from one operator to the next with `>>>` indicates composition.
+The left operator is the producer and the right operator is the consumer.
 
 Speeding up the output by two means converting it from `TSeq 1 1 (SSeq 1 Int)` to `SSeq 1 Int`
 
