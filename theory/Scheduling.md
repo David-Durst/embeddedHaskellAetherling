@@ -231,6 +231,87 @@ Thus, the naive scheduler has failed to produce valid hardware.
 
 ![Scheduled Composition Of Multi-Rate and Nesting Manipulation](other_diagrams/scheduler_examples/nesting_multi_composition/nesting_multi_composition_st_s_2.png "Scheduled Composition Of Multi-Rate and Nesting Manipulation")
 
+# Scheduling Algorithm
+The scheduling algorithm is:
+1. Given: 
+    1. `pseq` - the program in the sequence language
+    1. `pspace` - the program in the space-time IR with the greatest throughput
+    1. `ptime` - he program in the space-time IR that is the greatest throughput of the minimum area programs
+    1. `s` - the slowdown factor
+1. Compute a space-time IR output type for `pseq` that is `s` times slower than the output type of `pspace`. 
+Each `SSeq n` in `pspace`'s output type either remains an `SSeq n`, becomes a `TSeq n i`, or is split into a `TSeq no io (Seq ni ii)` such that `no*ni == n`.
+1. Rewrite the `pseq` AST using the following visitor pattern. The first node to visit is the last node in the `pseq` AST.
+   1. Rewrite the current operator `op_cur` to match it's slowed output type.
+   1. Compute the `op_cur`'s input type after rewriting
+   1. Recur on all operators that produce input for `op_cur`.
+   The output types for those operators are the input types to `op_cur`.
+
+## Slow Output Type Computation
+The algorithm for performing step 2 of the above scheduling algorithm is
+1. Let T\_O be the output type of `pseq`
+1. Let T\_OT be the output type of `ptime`
+1. Let T\_OS be the output type of `pspace`
+1. Slowdown pass 1: for each `SSeq n` in `pspace` starting with the outer most one, slow down the `SSeq` to `TSeq no 0 (SSeq ni)` if `n` and `s` share common factors.
+    1. The data structure for a `TSeq no 0 (SSeq ni)` is `Split no 0 ni`
+    1. This pass attempts to slow down without underutilizing.
+1. Iteration 2: If don't use up all of s, walk down the nested types again. This time, if `n+i` and `s` share common factors, the replace the `SSeq` with `TSeq n i (SSeq 1 t)`.
+```
+s_remaining_factors = prime_factorization(s)
+T_OC
+T_OC_temp = []
+for (TSeq n i) in (T_OT):
+   n_factors = prime_factorization n
+   -- if there are slowdown factors that match current seq length
+   -- without counting i, make a TSeq slowdown_amount 0 (SSeq (n / slowdown amount) Int)
+   -- this will never produce invalid clocks. Slowing down is just using extra clocks
+   -- of valid with less per clock.
+   -- this will only explore partial parallelism slowdowns that don't create
+   -- invalid clocks would rather go slower than add more invalids
+   if Set.intersect n_factors s_remaining_factors != Set.empty:
+       slowdown_factors = intersect n_factors s_remaining_factors
+       s_remaining_factors = Set.difference s_remaining_factors slowdown_factors 
+       slowdown = Set.product slowdown_factors
+       no = slowdown
+       ni = n / no
+       io = 0
+       s_remaining_factors = Set.difference s_remaining_factors slowdown_factors
+       T_OC_temp += Split(TSeq no io, SSeq ni) 
+  else :
+       T_OC_temp += SSeq ni
+
+-- if there is still slowdown remaining, see if can add invalids
+-- Maximum slowdown is (n+i / time pass1_result)
+for (TSeq n i, pass1_result) in (zip T_OT T_OC_temp)
+   max_slowdown = (n+i / time pass1_result)
+   max_slowdown_factors = prime_factorization max_slowdown
+   if ae_factors_intersect max_slowdown_factors s_remaining_factors != S.empty:
+       slowdown_factors = ae_factors_intersect max_slowdown_factors s_remaining_factors
+       slowdown = ae_factors_product slowdown_factors
+       s_remaining_factors = Set.difference s_remaining_factor slowdown_factors
+       T_OC += add_invalid_clocks pass1_result slowdown
+   -- if there are common factors between total runtime and speedup
+   -- use them to do speedup
+   else 
+       T_OC += pass1_result
+```
+
+## Rewrite Operators
+The alogrithm for performing step 3 of the above scheduling algorithm is:
+```
+apply_rewrite_rules(T_OC, f) =
+   if T_OC[0] == SSeq n:
+       sequence_to_fully_parallel(f)
+   else if T_OC[0] == TSeq n i:
+       sequence_to_fully_sequential(f)
+   else:
+       sequence_to_partially_parallel(f, T_OC[0])
+   if f is nested:
+     f_inner = get_inner(f)
+     apply_rewrite_rules(T_OC[1:], f_inner)
+
+```
+
+#  Garbage Below
 ## Nested Multi-Rate
 **This example demonstrates the first issue of where to distribute invalid clocks when connecting to a nested, multi-rate operator.**
 
@@ -601,7 +682,6 @@ apply_rewrite_rules(T_OC, f) =
 
 ```
 
-#  Garbage Below
 
 
 Scheduling is converting a program from the sequence language to the space-time IR.
