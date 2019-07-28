@@ -770,23 +770,26 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
 sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
   (SeqE.FstN t0 t1 producer) = do
   producer_ppar <- sequence_to_partially_parallel type_rewrites producer
-  t0_ppar <- part_par_AST_type type_rewrites_tl t0
-  t1_ppar <- part_par_AST_type type_rewrites_tl t1
+  -- use whole type rewrites here as Atom_Tuple (x, y) is compacted to one type rewrite
+  t0_ppar <- part_par_AST_type type_rewrites t0
+  t1_ppar <- part_par_AST_type type_rewrites t1
   return $ STE.FstN t0_ppar t1_ppar producer_ppar
   
 sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
   (SeqE.SndN t0 t1 producer) = do
   producer_ppar <- sequence_to_partially_parallel type_rewrites producer
-  t0_ppar <- part_par_AST_type type_rewrites_tl t0
-  t1_ppar <- part_par_AST_type type_rewrites_tl t1
+  -- use whole type rewrites here as Atom_Tuple (x, y) is compacted to one type rewrite
+  t0_ppar <- part_par_AST_type type_rewrites t0
+  t1_ppar <- part_par_AST_type type_rewrites t1
   return $ STE.SndN t0_ppar t1_ppar producer_ppar
 
 sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
   (SeqE.ATupleN t0 t1 producer_left producer_right) = do
   producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
   producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
-  t0_ppar <- part_par_AST_type type_rewrites_tl t0
-  t1_ppar <- part_par_AST_type type_rewrites_tl t1
+  -- use whole type rewrites here as Atom_Tuple (x, y) is compacted to one type rewrite
+  t0_ppar <- part_par_AST_type type_rewrites t0
+  t1_ppar <- part_par_AST_type type_rewrites t1
   return $ STE.ATupleN t0_ppar t1_ppar producer_left_ppar producer_right_ppar
 
 sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)

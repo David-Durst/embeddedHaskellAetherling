@@ -3,6 +3,7 @@ import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Languages.Space_Time.Deep.Expr
 import Control.Monad.State
 import qualified Data.Set as S
+import Debug.Trace
 
 -- | input and outputs for an expression when not considering the
 -- input expressions to it
@@ -100,7 +101,9 @@ expr_to_types (Map2_sN n f _ _) = Expr_Types in_types out_type
     inner_types = expr_to_outer_types f
     in_types = fmap (SSeqT n) $ e_in_types inner_types
     out_type = SSeqT n $ e_out_type inner_types
-expr_to_types (Map2_tN n i f _ _) = Expr_Types in_types out_type
+expr_to_types (Map2_tN n i f _ _) = do
+  trace ("f" ++ show f ++ "\n") $ trace ("inner_types: " ++ show inner_types) $
+    Expr_Types in_types out_type
   where
     inner_types = expr_to_outer_types f
     in_types = fmap (TSeqT n i) $ e_in_types inner_types

@@ -3,6 +3,7 @@ import Aetherling.Languages.Sequence.Shallow.Expr
 import Aetherling.Languages.Sequence.Shallow.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Types
+import Aetherling.Languages.Isomorphisms
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
@@ -130,7 +131,23 @@ down_over_nested_to_down_over_flattened_ppar_result =
 down_over_nested_to_down_over_flattened_ppar_result' =
   fmap check_type' down_over_nested_to_down_over_flattened_ppar
 
+tuple_sum_shallow in_seq = do
+  let kernel_list = fmap Atom_Int [1,2,3,4]
+  let kernel = const_genC (Seq $ listToVector (Proxy @4) kernel_list) in_seq
+  let kernel_and_values = map2C atom_tupleC kernel in_seq
+  mapC addC kernel_and_values
+tuple_sum = compile $
+  tuple_sum_shallow $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+tuple_sum_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s tuple_sum) [1,2,4]
+tuple_sum_ppar_result =
+  fmap check_type tuple_sum_ppar
+tuple_sum_ppar_result' =
+  fmap check_type' tuple_sum_ppar
+tuple_sum_ppar_result_s_2 = check_type' $ rewrite_to_partially_parallel 2 tuple_sum
 
+-- END OF ACTUALLY TESTED THINGS
 -- multiple unpartitions into a multi-rate
 multi_unpartition_with_multi_rate = compile $
   (mapC' (Proxy @3) (unpartitionC' (Proxy @2) (Proxy @5)) >>>
