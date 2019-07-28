@@ -206,6 +206,8 @@ The naive scheduler correctly handles this case for the same reasons as the [ind
 
 ![Scheduled s=2 Nesting Manipulation](other_diagrams/scheduler_examples/nesting/nesting_st_s_2.png "Scheduled s=2 Nesting Manipulation")
 
+## Simpler Composition of Multi-Rate and Nesting Manipulation
+
 ## Composition of Multi-Rate and Nesting Manipulation
 This example demonstrates the issue of scheduling both types of operators while ensuring that their types compose after applying the rewrite rules.
 This is the example that the naive scheduler cannot handle.
@@ -345,3 +347,17 @@ rewrite_to_match_output_type op ot_slowed =
     op_slowed = update_op_inpute op_slowed op_slowed_input_exprs
     return op_slowed
 ```
+
+# What Are The Problems Facing My Scheduling
+## Areas That I Haven't Addressed
+1. reshape operator 
+1. dropping elements
+1. flipping
+1. making different Nesting but same throughput types equivalent 
+1. delays
+
+## Core Issues
+1. I haven't dealt with operators that change the shape of the matrix and thus require large memories
+1. I haven't dealt with operators that don't have inputs/outputs that are factors of each other
+1. The space-time IR cannot consider just throuhgput without delay while giving a good cost model
+
