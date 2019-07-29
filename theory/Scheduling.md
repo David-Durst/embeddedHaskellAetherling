@@ -206,8 +206,6 @@ The naive scheduler correctly handles this case for the same reasons as the [ind
 
 ![Scheduled s=2 Nesting Manipulation](other_diagrams/scheduler_examples/nesting/nesting_st_s_2.png "Scheduled s=2 Nesting Manipulation")
 
-## Simpler Composition of Multi-Rate and Nesting Manipulation
-
 ## Composition of Multi-Rate and Nesting Manipulation
 This example demonstrates the issue of scheduling both types of operators while ensuring that their types compose after applying the rewrite rules.
 This is the example that the naive scheduler cannot handle.
@@ -361,3 +359,133 @@ rewrite_to_match_output_type op ot_slowed =
 1. I haven't dealt with operators that don't have inputs/outputs that are factors of each other
 1. The space-time IR cannot consider just throuhgput without delay while giving a good cost model
 
+# Ideal Scheduler
+
+## Composition of Multi-Rate With Nested Operators
+This example demonstrates the issue of scheduling multiple operators while preserving nesting.
+```
+Select_1d 4 0 (Seq 2 Int) >>> Map 1 (Map 2 Abs)
+```
+
+Attainable s are `1, 2, 4`.
+The first diagram is the program in the sequence language AST.
+
+![Unscheduled Multi-Rate and Nested Operators](other_diagrams/scheduler_examples/nesting_map_multi_composition/nesting_map_multi_composition_seq.png "Unscheduled s=4 Multi-Rate and Nesting Operators")
+
+An intuitive but suboptimal space-time IR program that implements this pipeline with a slowdown of `s=4` is:
+```
+Select_1d_t 4 0 0 (SSeq 2 Int) >>> Map_t 1 0 (Map_s 2 Abs)
+```
+
+A diagram of the produced hardware is below. 
+The components of the diagram are:
+1. Wire labels indicating the data types communicated between operators.
+For example, the wire into the `Select_1d_t` is `TSeq 4 0 (SSeq 2 Int)`.
+1. Titles at the top of each box indicating the space-time IR expression that produced the hardware.
+For example, the box labeled `Select_1d_t 4 0 (SSeq 2 Int)` is the space-time IR expression that produced the desired hardware in that box.
+1. Hardware inside each box. Each hardware component has it's own box.
+For example, the box labeled `Select_1d_t 4 0 (SSeq 2 Int)` has:
+    1. `Counter 4` to track the current element of the input.
+    1. `Eq 0` to select only the 0th element of the input.
+    1. An output that merges the `Eq 0`'s output and the input. 
+    This drop 3 of the input elements by indicating invalid on the output wire.
+
+![Scheduled s=4 Multi-Rate and Nested Operators Hardware](other_diagrams/scheduler_examples/nesting_map_multi_composition/nesting_map_multi_composition_s_4_hardware.png "Scheduled s=4 Multi-Rate and Nesting Operators Hardware")
+
+The below space-time IR program is a superior implementation of the same pipeline with a slowdown of `s=4`.
+```
+Select_1d_t 2 0 0 (SSeq 2 (TSeq 2 0 Int)) >>> Map_t 1 1 (Select_1d_s 1 0 (TSeq 2 0 Int)) >>> Map_t 1 1 (Map_s 1 (Map_t 2 0 Abs))
+```
+
+The hardware diagram below is more efficient as it uses one less `Abs` unit.
+Additionally, the `Select_1d` requires no more resources in the program compared to the prior one.
+The `Select_1d_t` has the same size counter as it still covers 4 total clocks, 2 of which are valid for the first `SSeq 2 (TSeq 2 0 Int)` input.
+The `Select_1d_s` requires no hardware.
+
+![Optimized Scheduled s=4 Multi-Rate and Nested Operators Hardware](other_diagrams/scheduler_examples/nesting_map_multi_composition/nesting_map_multi_composition_s_4_hardware_optimal.png "Optimized Scheduled s=4 Multi-Rate and Nesting Operators Hardware")
+
+## Diamond Pattern
+This example demonstrates the issue of scheduling a DAG with a diamond pattern.
+This example is a rolling window sum of two pixels.
+The `Abs` is added to ensure both paths in the diamond have an operator.
+
+```
+rolling_sum n input = do
+    let shifted_1 = Shift n 1 Int input
+    let abs_input = Map n Abs input
+    let tupled_window = Map2 n Tuple abs_input shifted_1
+    let seq_window = Tuple_To_Seq n (Int x Int) tupled_window
+    return (Map n (Reduce 2 Add) seq_window)
+
+rolling_sum 4 [0,1,2,3]
+```
+
+Attainable s are `1, 2, 4, and 8`.
+The first diagram is the program in the sequence language AST.
+In the diagram, all operators are specialized for `n=10` and for the input.
+The diagram uses different wire labels compared to above sequence language diagrams.
+Unlike the prior programs, this one is not written in point-free notation. 
+Therefore, the wires are labeled with variable names rather than the `>>>` combinator.
+
+![Unscheduled Diamond Pattern](other_diagrams/scheduler_examples/diamond/diamond_seq.png "Unscheduled Diamond Pattern")
+
+
+The below space-time IR program implements the pipeline with a slowdown of `s=8`.
+The `Serialize` converts the `SSeq` produced by the `Tuple_To_SSeq` to a `TSeq` that can be processed by the `Reduce_t`.
+```
+rolling_sum_t n input = do
+    let shifted_1 = Shift_t 4 4 1 Int input
+    let abs_input = Map_t 4 4 Abs input
+    let tupled_window = Map2_t 4 4 Tuple abs_input shifted_1
+    let tseq_of_sseq_window = Map_t 4 4 Tuple_To_SSeq tupled_window
+    let seq_window = Serialize 4 0 2 0 Int tseq_of_sseq_window
+    return (Map_t 4 0 (Reduce_t 2 0 Add) seq_window)
+
+rolling_sum_t 4 [0,1,2,3]
+```
+
+The diagram below shows the hardware necessary to implement this space-time IR program.
+Note that the output of the reduce is a combination of the register and the counter.
+The register emits the value of the summation.
+The counter provides the valid signal.
+Since this is a `Reduce_t 2 0 Add :: TSeq 2 0 Int -> TSeq 1 1 Int`, it is only valid every other clock.
+
+![Scheduled s=8 Diamond Pattern](other_diagrams/scheduler_examples/diamond/diamond_s_8.png "Scheduled s=8 Diamond Pattern")
+```
+nested_shift input = 
+    let inputs_to_shift = Map_t 2 (Select_1d_s 2 0) input
+    let inputs_to_pass = Map_t 2 (Select_1d_s 2 1) input
+    let shifted_values = Shift_t 2 1 inputs_to_shift
+    let tupled_outputs = Map2_t 2 Tuple shiftred_values inputs_to_pass
+    return (Map_t 2 (Tuple_To_SSeq 2) tupled_outputs)
+
+rolling_sum_ppar n input = do
+    let shifted_1 = nested_shift input
+    let abs_input = Map_t 2 0 (Map_s 2 Abs) input
+    let tupled_window = Map2_t 2 0 (Map2_s n Tuple) abs_input shifted_1
+    let seq_window = Map2_t 2 0 (Map_s 2 Tuple_To_SSeq) tupled_window
+    return (Map_t 2 0 (Reduce_s 2 Add) seq_window)
+Select_1d_t 2 0 0 (SSeq 2 (TSeq 2 0 Int)) >>> Map_t 1 1 (Select_1d_s 1 0 (TSeq 2 0 Int)) >>> Map_t 1 1 (Map_s 1 (Map_t 2 0 Abs))
+```
+
+## Composition of Multi-Rate With Nested Operators and Memories
+This example demonstrates the issue of scheduling multiple operators while preserving nesting and using memories.
+```
+linebuffer_3_1d n input = do
+    let first_shift = Shift n 1 input
+    let second_shift = Shift n 1 first_shift
+    let tupled_outputs = Map2 n Tuple (Map2 n Tuple input first_shift) second_shift
+    return (Tuple_To_Seq n tupled_outputs)
+
+linebuffer_3_1d 10 >>> 
+Map 10 (
+    Map2 3 Tuple (Const_Gen [1,2,1]) >>> 
+    Map 3 Mul >>>
+    Reduce 3 Add >>> 
+    Map2 1 Tuple (Const_Gen [4]) >>>
+    Map 1 Div
+)
+```
+
+`Select_1d` doesn't require a memory as it just emits or doesn't emit the input.
+`Up_1d` requires a memory as it must repeat.
