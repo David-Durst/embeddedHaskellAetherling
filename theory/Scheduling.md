@@ -451,22 +451,6 @@ The counter provides the valid signal.
 Since this is a `Reduce_t 2 0 Add :: TSeq 2 0 Int -> TSeq 1 1 Int`, it is only valid every other clock.
 
 ![Scheduled s=8 Diamond Pattern](other_diagrams/scheduler_examples/diamond/diamond_s_8.png "Scheduled s=8 Diamond Pattern")
-```
-nested_shift input = 
-    let inputs_to_shift = Map_t 2 (Select_1d_s 2 0) input
-    let inputs_to_pass = Map_t 2 (Select_1d_s 2 1) input
-    let shifted_values = Shift_t 2 1 inputs_to_shift
-    let tupled_outputs = Map2_t 2 Tuple shiftred_values inputs_to_pass
-    return (Map_t 2 (Tuple_To_SSeq 2) tupled_outputs)
-
-rolling_sum_ppar n input = do
-    let shifted_1 = nested_shift input
-    let abs_input = Map_t 2 0 (Map_s 2 Abs) input
-    let tupled_window = Map2_t 2 0 (Map2_s n Tuple) abs_input shifted_1
-    let seq_window = Map2_t 2 0 (Map_s 2 Tuple_To_SSeq) tupled_window
-    return (Map_t 2 0 (Reduce_s 2 Add) seq_window)
-Select_1d_t 2 0 0 (SSeq 2 (TSeq 2 0 Int)) >>> Map_t 1 1 (Select_1d_s 1 0 (TSeq 2 0 Int)) >>> Map_t 1 1 (Map_s 1 (Map_t 2 0 Abs))
-```
 
 ## Composition of Multi-Rate With Nested Operators and Memories
 This example demonstrates the issue of scheduling multiple operators while preserving nesting and using memories.
