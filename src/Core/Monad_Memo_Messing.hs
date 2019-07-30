@@ -1,13 +1,16 @@
 module Monad_Memo_Messing where
 import Control.Monad.Identity
-import Control.Monad.Memo
 import Control.Monad.State
+import Aetherling.Monad_Helpers
 
 data FibState = FibState { total_steps :: Int } deriving (Show, Eq)
 
 empty_fib_state = FibState 0
 
-type MemoInt = MemoT Integer Integer (StateT FibState Identity)
+type MemoInt a = DAG_MemoT (StateT FibState Identity) Integer a
+
+instance Indexible Integer where
+  get_index i = Index 0 (fromInteger i)
 
 fibm ::  Integer -> MemoInt Integer
 fibm 0 = do
@@ -18,8 +21,8 @@ fibm 1 = do
   return 1
 fibm n = do
   increment_state
-  f1 <- memo fibm (n-1)
-  f2 <- memo fibm (n-2)
+  f1 <- memo (n-1) $ fibm (n-1)
+  f2 <- memo (n-2) $ fibm (n-2)
   return (f1+f2)
 
 increment_state :: MemoInt ()
