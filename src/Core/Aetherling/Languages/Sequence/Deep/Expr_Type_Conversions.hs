@@ -2,6 +2,7 @@ module Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions where
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import Control.Monad.State
+import Aetherling.Monad_Helpers
 import qualified Data.Set as S
 
 size_int :: Int
@@ -106,10 +107,10 @@ expr_to_types (ErrorN _ _) = Expr_Types [] UnitT
 -- | get the input and output types of the entire expression,
 -- not just those of the last expression like expr_to_types
 
-type Input_TrackerM = State (S.Set String)
+type Input_TrackerM = DAG_MemoT Expr_Types (State (S.Set String))
 
 expr_to_outer_types :: Expr -> Expr_Types
-expr_to_outer_types e = evalState (expr_to_outer_types' e) S.empty
+expr_to_outer_types e = evalState (startEvalMemoT $ expr_to_outer_types' e) S.empty
 
 expr_to_outer_types' :: Expr -> Input_TrackerM Expr_Types
 expr_to_outer_types' (IdN producer_e _) = expr_to_outer_types' producer_e
@@ -172,12 +173,12 @@ expr_to_outer_types' consumer_e@(SeqToSTupleN _ _ _ _ _ producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
   
 expr_to_outer_types' (InputN t name _) = do
-  previous_names <- get
+  previous_names <- lift get
   if S.member name previous_names
     then return $ Expr_Types [] t
     else do
     let updated_names = S.insert name previous_names
-    put updated_names 
+    lift $ put updated_names 
     return $ Expr_Types [t] t
 expr_to_outer_types' (ErrorN _ _) = return $ Expr_Types [] UnitT
 

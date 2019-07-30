@@ -2,16 +2,16 @@ module Aetherling.Languages.Sequence.Deep.Type_Checker where
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions
+import Aetherling.Monad_Helpers
 import Control.Monad.Except
-import Control.Monad.Memo
 import Control.Monad.Identity
 import Data.Either
 
-type Type_Checker_Error = ExceptT Expr (MemoT Integer Expr Identity)
+type Type_Checker_Error = DAG_MemoT AST_Type (ExceptT Expr Identity)
 
 check_type :: Expr -> Bool
 check_type e = do
-  let checked_result = runIdentity $ startEvalMemoT $ runExceptT $ check_type' e
+  let checked_result = runIdentity $ runExceptT $ startEvalMemoT $ check_type' e
   isRight checked_result
 
 check_type' :: Expr -> Type_Checker_Error AST_Type
@@ -82,7 +82,7 @@ check_type' e@(ErrorN _ _) = throwError e
 
 check_atom_operator :: Expr -> Expr -> Type_Checker_Error AST_Type
 check_atom_operator consumer_op producer_op = do
-  producer_output_type <- check_type' producer_op
+  producer_output_type <- memo producer_op $ check_type' producer_op
   let consumer_input_types = e_in_types $ expr_to_types consumer_op
   let consumer_output_type = e_out_type $ expr_to_types consumer_op
   if (length consumer_input_types == 1) &&
@@ -92,8 +92,8 @@ check_atom_operator consumer_op producer_op = do
 
 check_binary_operator :: Expr -> Expr -> Expr -> Type_Checker_Error AST_Type
 check_binary_operator consumer_op producer_op0 producer_op1 = do
-  producer0_output_type <- check_type' producer_op0
-  producer1_output_type <- check_type' producer_op1
+  producer0_output_type <- memo producer_op0 $ check_type' producer_op0
+  producer1_output_type <- memo producer_op1 $ check_type' producer_op1
   let consumer_input_types = e_in_types $ expr_to_types consumer_op
   let consumer_output_type = e_out_type $ expr_to_types consumer_op
   if (length consumer_input_types == 2) &&

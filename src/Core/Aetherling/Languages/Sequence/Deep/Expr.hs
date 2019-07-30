@@ -147,3 +147,5 @@ data Expr =
   | ErrorN {error_msg :: String, index :: DAG_Index}
   deriving (Show, Eq, Ord)
 
+instance Indexible Expr where
+  get_index e = index e

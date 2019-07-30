@@ -2,6 +2,7 @@ module Aetherling.Languages.Sequence.Shallow.Expr_Type_Conversions where
 import Aetherling.Languages.Sequence.Shallow.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Types
+import Aetherling.Monad_Helpers
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Vector.Sized as V
@@ -15,7 +16,7 @@ instance Aetherling_Value Atom_Unit where
   get_AST_type _ = UnitT
   get_AST_value Atom_Unit = Just $ UnitV
   get_AST_value _ = Nothing
-  get_input_edge s = Atom_Unit_Edge (InputN UnitT s)
+  get_input_edge s = Atom_Unit_Edge (InputN UnitT s No_Index)
 
 instance Aetherling_Value Atom_Bit where
   edge_to_maybe_expr (Atom_Bit_Edge x) = Just x
@@ -24,7 +25,7 @@ instance Aetherling_Value Atom_Bit where
   get_AST_type _ = BitT
   get_AST_value (Atom_Bit b) = Just $ BitV b
   get_AST_value _ = Nothing
-  get_input_edge s = Atom_Bit_Edge (InputN BitT s)
+  get_input_edge s = Atom_Bit_Edge (InputN BitT s No_Index)
 
 instance Aetherling_Value Atom_Int where
   edge_to_maybe_expr (Atom_Int_Edge x) = Just x
@@ -33,7 +34,7 @@ instance Aetherling_Value Atom_Int where
   get_AST_type _ = IntT
   get_AST_value (Atom_Int i) = Just $ IntV i
   get_AST_value _ = Nothing
-  get_input_edge s = Atom_Int_Edge (InputN IntT s)
+  get_input_edge s = Atom_Int_Edge (InputN IntT s No_Index)
 
 instance (Aetherling_Value a, Aetherling_Value b) =>
   Aetherling_Value (Atom_Tuple a b) where
@@ -48,7 +49,7 @@ instance (Aetherling_Value a, Aetherling_Value b) =>
     Just $ ATupleV x_val y_val
   get_AST_value _ = Nothing
   get_input_edge s = Atom_Tuple_Edge
-                     (InputN (get_AST_type (Proxy :: Proxy (Atom_Tuple a b))) s)
+                     (InputN (get_AST_type (Proxy :: Proxy (Atom_Tuple a b))) s No_Index)
 
 instance (KnownNat n, Aetherling_Value a) =>
   Aetherling_Value (Seq_Tuple n a)  where
@@ -64,7 +65,7 @@ instance (KnownNat n, Aetherling_Value a) =>
     Just $ STupleV elements_as_AST_values
   get_AST_value _ = Nothing
   get_input_edge s = Seq_Tuple_Edge
-                     (InputN (get_AST_type (Proxy :: Proxy (Seq_Tuple n a))) s)
+                     (InputN (get_AST_type (Proxy :: Proxy (Seq_Tuple n a))) s No_Index)
 
 instance (KnownNat n, KnownNat i, Aetherling_Value a) =>
   Aetherling_Value (Seq n i a) where
@@ -82,4 +83,4 @@ instance (KnownNat n, KnownNat i, Aetherling_Value a) =>
     Just $ SeqV elements_as_AST_values iVal
   get_AST_value _ = Nothing
   get_input_edge s = Seq_Edge
-                     (InputN (get_AST_type (Proxy :: Proxy (Seq n i a))) s)
+                     (InputN (get_AST_type (Proxy :: Proxy (Seq n i a))) s No_Index)
