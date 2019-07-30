@@ -360,7 +360,6 @@ rewrite_to_match_output_type op ot_slowed =
 1. The space-time IR cannot consider just throuhgput without delay while giving a good cost model
 
 # Ideal Scheduler
-
 ## Composition of Multi-Rate With Nested Operators
 This example demonstrates the issue of scheduling multiple operators while preserving nesting.
 ```
@@ -370,7 +369,7 @@ Select_1d 4 0 (Seq 2 Int) >>> Map 1 (Map 2 Abs)
 Attainable s are `1, 2, 4`.
 The first diagram is the program in the sequence language AST.
 
-![Unscheduled Multi-Rate and Nested Operators](other_diagrams/scheduler_examples/nesting_map_multi_composition/nesting_map_multi_composition_seq.png "Unscheduled s=4 Multi-Rate and Nesting Operators")
+![Unscheduled Multi-Rate and Nested Operators](other_diagrams/scheduler_examples/hardware/nesting_map_multi_composition/nesting_map_multi_seq.png "Unscheduled s=4 Multi-Rate and Nesting Operators")
 
 An intuitive but suboptimal space-time IR program that implements this pipeline with a slowdown of `s=4` is:
 ```
@@ -390,7 +389,7 @@ For example, the box labeled `Select_1d_t 4 0 (SSeq 2 Int)` has:
     1. An output that merges the `Eq 0`'s output and the input. 
     This drop 3 of the input elements by indicating invalid on the output wire.
 
-![Scheduled s=4 Multi-Rate and Nested Operators Hardware](other_diagrams/scheduler_examples/nesting_map_multi_composition/nesting_map_multi_composition_s_4_hardware.png "Scheduled s=4 Multi-Rate and Nesting Operators Hardware")
+![Scheduled s=4 Multi-Rate and Nested Operators Hardware](other_diagrams/scheduler_examples/hardware/nesting_map_multi_composition/nesting_map_multi_s_4_hardware.png "Scheduled s=4 Multi-Rate and Nesting Operators Hardware")
 
 The below space-time IR program is a superior implementation of the same pipeline with a slowdown of `s=4`.
 ```
@@ -402,7 +401,63 @@ Additionally, the `Select_1d` requires no more resources in the program compared
 The `Select_1d_t` has the same size counter as it still covers 4 total clocks, 2 of which are valid for the first `SSeq 2 (TSeq 2 0 Int)` input.
 The `Select_1d_s` requires no hardware.
 
-![Optimized Scheduled s=4 Multi-Rate and Nested Operators Hardware](other_diagrams/scheduler_examples/nesting_map_multi_composition/nesting_map_multi_composition_s_4_hardware_optimal.png "Optimized Scheduled s=4 Multi-Rate and Nesting Operators Hardware")
+![Optimized Scheduled s=4 Multi-Rate and Nested Operators Hardware](other_diagrams/scheduler_examples/hardware/nesting_map_multi_composition/nesting_map_multi_s_4_hardware_optimal.png "Optimized Scheduled s=4 Multi-Rate and Nesting Operators Hardware")
+
+## Composition of Multi-Rate With Nesting Manipulation
+This example demonstrates the issue of scheduling multiple operators while preserving nesting.
+This example is 2D upsampling a row of an image.
+The row has two pixels before upsampling.
+The upsampling duplicates by three pixels in the X dimension and 5 pixels in the Y dimension.
+
+```
+Map 2 (Up_1d 3 Int) >>> 
+    Unpartition 2 3 Int >>>
+    Partition 1 6 >>>
+    Up_1d 5 (Seq 6 Int)
+```
+
+Attainable s include `1, 2, 3, 10, and 30`.
+The first diagram is the program in the sequence language AST.
+
+![Unscheduled Multi-Rate With Nesting Manipulation](other_diagrams/scheduler_examples/hardware/nesting_manip_multi/nesting_manip_multi_seq.png "Unscheduled Multi-Rate With Nesting Manipulation")
+
+The below space-time IR program implements the pipeline with a slowdown of `s=10`.
+
+```
+Map_t 1 4 (Map_s 2 (Up_1d 3 Int)) >>> 
+    Up_1d_t 5 0 (SSeq 2 (TSeq 3 0 Int))
+```
+
+The hardware diagram for the space-time IR program is:
+
+![Scheduled s=10 Multi-Rate With Nesting Manipulation](other_diagrams/scheduler_examples/hardware/nesting_manip_multi/nesting_manip_multi_s_10.png "Scheduled s=10 Multi-Rate With Nesting Manipulation")
+
+## Non-Removable Partition
+The prior example had `Unpartition` and `Partition` that could be optimized away. 
+The `Partition` was moved to the front of the pipeline and the `Unpartition` was moved to the back.
+This example demonstrates `Unpartition` and `Partition` that can't be optimized away.
+
+```
+Unpartition 5 6 Int >>> Partition 6 5 Int
+```
+
+Attainable s are `1, 2, 3, 5, 6, 10, 15, and 30`.
+The program in the sequence language AST is:
+
+![Unscheduled Non-Removable Partition](other_diagrams/scheduler_examples/hardware/irreducible_nesting_manip/irreducible_nesting_manip_seq.png "Unscheduled Non-Removable Partition")
+
+The below space-time IR program implements the pipeline with a slowdown of `s=5`
+
+```
+
+```
+
+## Non-Removable Partition With Invalids
+This example demonstrates `Unpartition` and `Partition` that can't be optimized away and have to deal with invalid clocks
+
+```
+Down_1d 5 (Seq 6 Int) >>> Unpartition 1 6 Int >>> Partition 6 1 Int
+```
 
 ## Diamond Pattern
 This example demonstrates the issue of scheduling a DAG with a diamond pattern.
@@ -427,8 +482,7 @@ The diagram uses different wire labels compared to above sequence language diagr
 Unlike the prior programs, this one is not written in point-free notation. 
 Therefore, the wires are labeled with variable names rather than the `>>>` combinator.
 
-![Unscheduled Diamond Pattern](other_diagrams/scheduler_examples/diamond/diamond_seq.png "Unscheduled Diamond Pattern")
-
+![Unscheduled Diamond Pattern](other_diagrams/scheduler_examples/hardware/diamond/diamond_seq.png "Unscheduled Diamond Pattern")
 
 The below space-time IR program implements the pipeline with a slowdown of `s=8`.
 The `Serialize` converts the `SSeq` produced by the `Tuple_To_SSeq` to a `TSeq` that can be processed by the `Reduce_t`.
@@ -450,7 +504,43 @@ The register emits the value of the summation.
 The counter provides the valid signal.
 Since this is a `Reduce_t 2 0 Add :: TSeq 2 0 Int -> TSeq 1 1 Int`, it is only valid every other clock.
 
-![Scheduled s=8 Diamond Pattern](other_diagrams/scheduler_examples/diamond/diamond_s_8.png "Scheduled s=8 Diamond Pattern")
+![Scheduled s=8 Diamond Pattern](other_diagrams/scheduler_examples/hardware/diamond/diamond_s_8.png "Scheduled s=8 Diamond Pattern")
+
+## Diamond With Nesting Manipulation
+This example demonstrates the issue of scheduling a DAG where one of the branches has different nesting from the other.
+```
+merge_with_up input = do
+    -- branch 1
+    let nested = Partition 2 15 Int input
+    let repeated = Map 2 (Select_1d 15 0 Int >>> Up_1d 15 Int) nested
+    let flattened = Unpartition 2 15 Int repeated
+    
+    -- branch 2
+    let other_branch = Map 30 Abs input
+
+    return (Map2 30 tuple other_branch flattened)
+```
+
+Attainable s include `1,2, and 30`.
+The first diagram is the program in the sequence language AST.
+
+![Unscheduled Diamond Pattern With Nesting Manipulation](other_diagrams/scheduler_examples/hardware/diamond_nest_manip/diamond_nesting_manip_seq.png "Unscheduled Diamond Pattern With Nesting Manipulation")
+
+The below space-time IR program implements the pipeline with a slowdown of `s=8`.
+```
+merge_with_up input = do
+    -- branch 1
+    let repeated = Map_s 2 (Select_1d_t 15 0 Int >>> Up_1d_t 15 0 Int) input
+    
+    -- branch 2
+    let other_branch = Map_s 2 (Map_t 15 0 Abs) input
+
+    return (Map2_s 2 (Map2_t 15 0 tuple) other_branch flattened)
+```
+
+The diagram below shows the hardware implementation of this space-time IR program.
+
+![Scheduled s=15 Diamond Pattern With Nesting Manipulation](other_diagrams/scheduler_examples/hardware/diamond_nest_manip/diamond_nesting_manip_s_15.png "Scheduled s=15 Diamond Pattern With Nesting Manipulation")
 
 ## Composition of Multi-Rate With Nested Operators and Memories
 This example demonstrates the issue of scheduling multiple operators while preserving nesting and using memories.
