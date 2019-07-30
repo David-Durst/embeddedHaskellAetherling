@@ -26,56 +26,56 @@ data Expr_Types = Expr_Types { e_in_types :: [AST_Type], e_out_type :: AST_Type}
 -- | Convert an Expr to it's input and output tpyes not considering the input
 -- expressions to it
 expr_to_types :: Expr -> Expr_Types
-expr_to_types (IdN in_e) = Expr_Types [input_type] input_type
+expr_to_types (IdN in_e _) = Expr_Types [input_type] input_type
   where input_type = e_out_type $ expr_to_types in_e
-expr_to_types (AbsN _) = Expr_Types [IntT] IntT
-expr_to_types (NotN _) = Expr_Types [BitT] BitT
-expr_to_types (AddN _) = Expr_Types [ATupleT IntT IntT] IntT
-expr_to_types (SubN _) = Expr_Types [ATupleT IntT IntT] IntT
-expr_to_types (MulN _) = Expr_Types [ATupleT IntT IntT] IntT
-expr_to_types (DivN _) = Expr_Types [ATupleT IntT IntT] IntT
-expr_to_types (EqN t _) = Expr_Types [ATupleT t t] BitT
+expr_to_types (AbsN _ _) = Expr_Types [IntT] IntT
+expr_to_types (NotN _ _) = Expr_Types [BitT] BitT
+expr_to_types (AddN _ _) = Expr_Types [ATupleT IntT IntT] IntT
+expr_to_types (SubN _ _) = Expr_Types [ATupleT IntT IntT] IntT
+expr_to_types (MulN _ _) = Expr_Types [ATupleT IntT IntT] IntT
+expr_to_types (DivN _ _) = Expr_Types [ATupleT IntT IntT] IntT
+expr_to_types (EqN t _ _) = Expr_Types [ATupleT t t] BitT
 
 -- generators
-expr_to_types (Lut_GenN _ t _) = Expr_Types [IntT] t
-expr_to_types (Const_GenN _ t) = Expr_Types [] t
+expr_to_types (Lut_GenN _ t _ _) = Expr_Types [IntT] t
+expr_to_types (Const_GenN _ t _) = Expr_Types [] t
 
 -- sequence operators
-expr_to_types (ShiftN n i _ elem_t _) = Expr_Types [seq_type] seq_type
+expr_to_types (ShiftN n i _ elem_t _ _) = Expr_Types [seq_type] seq_type
   where seq_type = SeqT n i elem_t
-expr_to_types (Up_1dN n i elem_t _) = Expr_Types in_types out_type
+expr_to_types (Up_1dN n i elem_t _ _) = Expr_Types in_types out_type
   where
     in_types = [SeqT 1 (n - 1 + i) elem_t]
     out_type = SeqT n i elem_t
-expr_to_types (Down_1dN n i _ elem_t _) = Expr_Types in_types out_type
+expr_to_types (Down_1dN n i _ elem_t _ _) = Expr_Types in_types out_type
   where
     in_types = [SeqT n i elem_t]
     out_type = SeqT 1 (n - 1 + i) elem_t
-expr_to_types (PartitionN no ni io ii elem_t _) =
+expr_to_types (PartitionN no ni io ii elem_t _ _) =
   Expr_Types in_types out_type
   where
     in_types = [SeqT (no * ni) (invalid_clocks_from_nested no ni io ii) elem_t]
     out_type = SeqT no io (SeqT ni ii elem_t)
-expr_to_types (UnpartitionN no ni io ii elem_t _) =
+expr_to_types (UnpartitionN no ni io ii elem_t _ _) =
   Expr_Types in_types out_type
   where
     in_types = [SeqT no io (SeqT ni ii elem_t)]
     out_type = SeqT (no * ni) (invalid_clocks_from_nested no ni io ii) elem_t
 
 -- higher order operators
-expr_to_types (MapN n i f _) = Expr_Types in_types out_type
+expr_to_types (MapN n i f _ _) = Expr_Types in_types out_type
   where
     inner_types = expr_to_outer_types f
     in_types = fmap (SeqT n i) $ e_in_types inner_types
     out_type = SeqT n i $ e_out_type inner_types
-expr_to_types (Map2N n i f _ _) = Expr_Types in_types out_type
+expr_to_types (Map2N n i f _ _ _) = Expr_Types in_types out_type
   where
     -- this only looks at last node (f's) type, need to get input
     -- type to whole inner expression ending with f
     inner_types = expr_to_outer_types f
     in_types = fmap (SeqT n i) $ e_in_types inner_types
     out_type = SeqT n i $ e_out_type inner_types
-expr_to_types (ReduceN n i f _) = Expr_Types in_types out_type
+expr_to_types (ReduceN n i f _ _) = Expr_Types in_types out_type
   where
     inner_types = expr_to_outer_types f
     -- the reducer f must accept a tuple of the same type as it's output
@@ -84,24 +84,24 @@ expr_to_types (ReduceN n i f _) = Expr_Types in_types out_type
     out_type = SeqT 1 (n - 1 + i) $ e_out_type inner_types
 
 -- tuple operators
-expr_to_types (FstN t0 t1 _) = Expr_Types [ATupleT t0 t1] t0
-expr_to_types (SndN t0 t1 _) = Expr_Types [ATupleT t0 t1] t1
-expr_to_types (ATupleN t0 t1 _ _) = Expr_Types [t0, t1] (ATupleT t0 t1)
-expr_to_types (STupleN elem_t _ _) =
+expr_to_types (FstN t0 t1 _ _) = Expr_Types [ATupleT t0 t1] t0
+expr_to_types (SndN t0 t1 _ _) = Expr_Types [ATupleT t0 t1] t1
+expr_to_types (ATupleN t0 t1 _ _ _) = Expr_Types [t0, t1] (ATupleT t0 t1)
+expr_to_types (STupleN elem_t _ _ _) =
   Expr_Types [elem_t, elem_t] (STupleT 2 elem_t)
   
-expr_to_types (STupleAppendN out_len elem_t _ _) =
+expr_to_types (STupleAppendN out_len elem_t _ _ _) =
   Expr_Types [STupleT (out_len - 1) elem_t, elem_t] (STupleT out_len elem_t)
   
-expr_to_types (STupleToSeqN no ni io ii tuple_elem_t _) =
+expr_to_types (STupleToSeqN no ni io ii tuple_elem_t _ _) =
   Expr_Types [SeqT no ((no * ((ni - 1) + ii)) + (io * (ni + ii))) (STupleT ni tuple_elem_t)]
   (SeqT no io (SeqT ni ii tuple_elem_t))
-expr_to_types (SeqToSTupleN no ni io ii tuple_elem_t _) =
+expr_to_types (SeqToSTupleN no ni io ii tuple_elem_t _ _) =
   Expr_Types [SeqT no io (SeqT ni ii tuple_elem_t)]
   (SeqT no ((no * ((ni - 1) + ii)) + (io * (ni + ii))) (STupleT ni tuple_elem_t))
   
-expr_to_types (InputN t _) = Expr_Types [] t
-expr_to_types (ErrorN _) = Expr_Types [] UnitT
+expr_to_types (InputN t _ _) = Expr_Types [] t
+expr_to_types (ErrorN _ _) = Expr_Types [] UnitT
 
 -- | get the input and output types of the entire expression,
 -- not just those of the last expression like expr_to_types
@@ -112,66 +112,66 @@ expr_to_outer_types :: Expr -> Expr_Types
 expr_to_outer_types e = evalState (expr_to_outer_types' e) S.empty
 
 expr_to_outer_types' :: Expr -> Input_TrackerM Expr_Types
-expr_to_outer_types' (IdN producer_e) = expr_to_outer_types' producer_e
-expr_to_outer_types' consumer_e@(AbsN producer_e) =
+expr_to_outer_types' (IdN producer_e _) = expr_to_outer_types' producer_e
+expr_to_outer_types' consumer_e@(AbsN producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(NotN producer_e) =
+expr_to_outer_types' consumer_e@(NotN producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(AddN producer_e) =
+expr_to_outer_types' consumer_e@(AddN producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(SubN producer_e) =
+expr_to_outer_types' consumer_e@(SubN producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(MulN producer_e) =
+expr_to_outer_types' consumer_e@(MulN producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(DivN producer_e) =
+expr_to_outer_types' consumer_e@(DivN producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(EqN _ producer_e) =
+expr_to_outer_types' consumer_e@(EqN _ producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
 
 -- generators
-expr_to_outer_types' consumer_e@(Lut_GenN _ _ producer_e) = 
+expr_to_outer_types' consumer_e@(Lut_GenN _ _ producer_e _) = 
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' (Const_GenN _ t) = return $ Expr_Types [] t
+expr_to_outer_types' (Const_GenN _ t _) = return $ Expr_Types [] t
 
 -- sequence operators
-expr_to_outer_types' consumer_e@(ShiftN _ _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(ShiftN _ _ _ _ producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(Up_1dN _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(Up_1dN _ _ _ producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(Down_1dN _ _ _ _ producer_e) = 
+expr_to_outer_types' consumer_e@(Down_1dN _ _ _ _ producer_e _) = 
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(PartitionN _ _ _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(PartitionN _ _ _ _ _ producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(UnpartitionN _ _ _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(UnpartitionN _ _ _ _ _ producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
 
 -- higher order operators
-expr_to_outer_types' consumer_e@(MapN _ _ _ producer_e) = do
+expr_to_outer_types' consumer_e@(MapN _ _ _ producer_e _) = do
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(Map2N _ _ _ producer0_e producer1_e) = do
+expr_to_outer_types' consumer_e@(Map2N _ _ _ producer0_e producer1_e _) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
-expr_to_outer_types' consumer_e@(ReduceN _ _ _ producer_e) = do
+expr_to_outer_types' consumer_e@(ReduceN _ _ _ producer_e _) = do
   expr_to_outer_types_atom_operator consumer_e producer_e
 
 -- tuple operators
-expr_to_outer_types' consumer_e@(FstN _ _ producer_e) =
+expr_to_outer_types' consumer_e@(FstN _ _ producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(SndN _ _ producer_e) =
+expr_to_outer_types' consumer_e@(SndN _ _ producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(ATupleN _ _ producer0_e producer1_e) = do
+expr_to_outer_types' consumer_e@(ATupleN _ _ producer0_e producer1_e _) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
-expr_to_outer_types' consumer_e@(STupleN _ producer0_e producer1_e) = do
+expr_to_outer_types' consumer_e@(STupleN _ producer0_e producer1_e _) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
  
-expr_to_outer_types' consumer_e@(STupleAppendN _ _ producer0_e producer1_e) = do
+expr_to_outer_types' consumer_e@(STupleAppendN _ _ producer0_e producer1_e _) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
   
-expr_to_outer_types' consumer_e@(STupleToSeqN _ _ _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(STupleToSeqN _ _ _ _ _ producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(SeqToSTupleN _ _ _ _ _ producer_e) =
+expr_to_outer_types' consumer_e@(SeqToSTupleN _ _ _ _ _ producer_e _) =
   expr_to_outer_types_atom_operator consumer_e producer_e
   
-expr_to_outer_types' (InputN t name) = do
+expr_to_outer_types' (InputN t name _) = do
   previous_names <- get
   if S.member name previous_names
     then return $ Expr_Types [] t
@@ -179,7 +179,7 @@ expr_to_outer_types' (InputN t name) = do
     let updated_names = S.insert name previous_names
     put updated_names 
     return $ Expr_Types [t] t
-expr_to_outer_types' (ErrorN _) = return $ Expr_Types [] UnitT
+expr_to_outer_types' (ErrorN _ _) = return $ Expr_Types [] UnitT
 
 expr_to_outer_types_atom_operator :: Expr -> Expr -> Input_TrackerM Expr_Types 
 expr_to_outer_types_atom_operator consumer_op producer_op = do

@@ -3,80 +3,82 @@ import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions
 import Control.Monad.Except
+import Control.Monad.Memo
+import Control.Monad.Identity
 import Data.Either
 
-type Type_Checker_Error = Except Expr
+type Type_Checker_Error = ExceptT Expr (MemoT Integer Expr Identity)
 
 check_type :: Expr -> Bool
 check_type e = do
-  let checked_result = runExcept $ check_type' e
+  let checked_result = runIdentity $ startEvalMemoT $ runExceptT $ check_type' e
   isRight checked_result
 
 check_type' :: Expr -> Type_Checker_Error AST_Type
-check_type' (IdN producer_e) = check_type' producer_e
-check_type' consumer_e@(AbsN producer_e) =
+check_type' (IdN producer_e _) = check_type' producer_e
+check_type' consumer_e@(AbsN producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(NotN producer_e) =
+check_type' consumer_e@(NotN producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(AddN producer_e) =
+check_type' consumer_e@(AddN producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(SubN producer_e) =
+check_type' consumer_e@(SubN producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(MulN producer_e) =
+check_type' consumer_e@(MulN producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(DivN producer_e) =
+check_type' consumer_e@(DivN producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(EqN _ producer_e) =
+check_type' consumer_e@(EqN _ producer_e _) =
   check_atom_operator consumer_e producer_e
 
 -- generators
-check_type' consumer_e@(Lut_GenN _ _ producer_e) = 
+check_type' consumer_e@(Lut_GenN _ _ producer_e _) = 
   check_atom_operator consumer_e producer_e
-check_type' (Const_GenN _ t) = return t
+check_type' (Const_GenN _ t _) = return t
 
 -- sequence operators
-check_type' consumer_e@(ShiftN _ _ _ _ producer_e) =
+check_type' consumer_e@(ShiftN _ _ _ _ producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(Up_1dN _ _ _ producer_e) =
+check_type' consumer_e@(Up_1dN _ _ _ producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(Down_1dN _ _ _ _ producer_e) = 
+check_type' consumer_e@(Down_1dN _ _ _ _ producer_e _) = 
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(PartitionN _ _ _ _ _ producer_e) =
+check_type' consumer_e@(PartitionN _ _ _ _ _ producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(UnpartitionN _ _ _ _ _ producer_e) =
+check_type' consumer_e@(UnpartitionN _ _ _ _ _ producer_e _) =
   check_atom_operator consumer_e producer_e
 
 -- higher order operators
-check_type' consumer_e@(MapN _ _ f producer_e) = do
+check_type' consumer_e@(MapN _ _ f producer_e _) = do
   check_type' f
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(Map2N _ _ f producer0_e producer1_e) = do
+check_type' consumer_e@(Map2N _ _ f producer0_e producer1_e _) = do
   check_type' f
   check_binary_operator consumer_e producer0_e producer1_e
-check_type' consumer_e@(ReduceN _ _ f producer_e) = do
+check_type' consumer_e@(ReduceN _ _ f producer_e _) = do
   check_type' f
   check_atom_operator consumer_e producer_e
 
 -- tuple operators
-check_type' consumer_e@(FstN _ _ producer_e) =
+check_type' consumer_e@(FstN _ _ producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(SndN _ _ producer_e) =
+check_type' consumer_e@(SndN _ _ producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(ATupleN _ _ producer0_e producer1_e) = do
+check_type' consumer_e@(ATupleN _ _ producer0_e producer1_e _) = do
   check_binary_operator consumer_e producer0_e producer1_e
-check_type' consumer_e@(STupleN _ producer0_e producer1_e) = do
+check_type' consumer_e@(STupleN _ producer0_e producer1_e _) = do
   check_binary_operator consumer_e producer0_e producer1_e
  
-check_type' consumer_e@(STupleAppendN _ _ producer0_e producer1_e) = do
+check_type' consumer_e@(STupleAppendN _ _ producer0_e producer1_e _) = do
   check_binary_operator consumer_e producer0_e producer1_e
   
-check_type' consumer_e@(STupleToSeqN _ _ _ _ _ producer_e) =
+check_type' consumer_e@(STupleToSeqN _ _ _ _ _ producer_e _) =
   check_atom_operator consumer_e producer_e
-check_type' consumer_e@(SeqToSTupleN _ _ _ _ _ producer_e) =
+check_type' consumer_e@(SeqToSTupleN _ _ _ _ _ producer_e _) =
   check_atom_operator consumer_e producer_e
   
-check_type' (InputN t _) = return t
-check_type' e@(ErrorN _) = throwError e
+check_type' (InputN t _ _) = return t
+check_type' e@(ErrorN _ _) = throwError e
 
 check_atom_operator :: Expr -> Expr -> Type_Checker_Error AST_Type
 check_atom_operator consumer_op producer_op = do
