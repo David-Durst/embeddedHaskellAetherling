@@ -20,9 +20,9 @@ data DAG_Index = No_Index
 class Indexible a where
   get_index :: a -> DAG_Index
 
-type DAG_MemoT m v a = StateT (M.Map DAG_Index v) m a
+type DAG_MemoT v m = StateT (M.Map DAG_Index v) m
 
-memo :: (Indexible k, Show k, Monad m, Show v) => k -> DAG_MemoT m v v -> DAG_MemoT m v v
+memo :: (Indexible k, Show k, Monad m, Show v) => k -> DAG_MemoT v m v -> DAG_MemoT v m v
 memo indexible_obj computed_result = do
   memo_map <- get
   let result_index = get_index indexible_obj
@@ -35,5 +35,5 @@ memo indexible_obj computed_result = do
     put new_memo_map
     return unwrapped_computed_result
 
-startEvalMemoT :: Monad m => DAG_MemoT m v a -> m a
+startEvalMemoT :: Monad m => DAG_MemoT v m a -> m a
 startEvalMemoT f = evalStateT f M.empty

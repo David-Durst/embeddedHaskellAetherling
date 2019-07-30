@@ -7,7 +7,7 @@ data FibState = FibState { total_steps :: Int } deriving (Show, Eq)
 
 empty_fib_state = FibState 0
 
-type MemoInt a = DAG_MemoT (StateT FibState Identity) Integer a
+type MemoInt = DAG_MemoT Integer (StateT FibState Identity)
 
 instance Indexible Integer where
   get_index i = Index 0 (fromInteger i)
