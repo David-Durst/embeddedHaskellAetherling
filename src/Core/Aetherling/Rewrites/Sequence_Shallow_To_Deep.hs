@@ -24,35 +24,35 @@ compile (Compilation_Env shallow_program) = do
   let expr_maybe = edge_to_maybe_expr shallow_program 
   if isJust expr_maybe
     then fromJust expr_maybe
-    else ErrorN "Not an edge, please pass in the result of calling compile"
+    else ErrorN "Not an edge, please pass in the result of calling compile" No_Index
     
 instance Sequence_Language Compilation_Env where
   -- unary operators
   idC x = x
     --add_to_DAG IdN (input_to_maybe_indices x) "idC" "any_input_edge"
-  absC (Compilation_Env (Atom_Int_Edge x)) = return $ Atom_Int_Edge $ AbsN x
+  absC (Compilation_Env (Atom_Int_Edge x)) = return $ Atom_Int_Edge $ AbsN x No_Index
   absC _ = fail $ fail_message_edge "absC" "Atom_Int"
 
-  notC (Compilation_Env (Atom_Bit_Edge x)) = return $ Atom_Bit_Edge $ NotN x
+  notC (Compilation_Env (Atom_Bit_Edge x)) = return $ Atom_Bit_Edge $ NotN x No_Index
   notC _ = fail $ fail_message_edge "absC" "Atom_Bit"
 
   -- binary operators
-  addC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ AddN x
+  addC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ AddN x No_Index
   addC _ = fail $ fail_message_edge "addC" "Atom_Tuple Atom_Int Atom_Int"
 
-  subC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ SubN x
+  subC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ SubN x No_Index
   subC _ = fail $ fail_message_edge "subC" "Atom_Tuple Atom_Int Atom_Int"
 
-  mulC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ MulN x
+  mulC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ MulN x No_Index
   mulC _ = fail $ fail_message_edge "mulC" "Atom_Tuple Atom_Int Atom_Int"
 
-  divC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ DivN x
+  divC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Int_Edge $ DivN x No_Index
   divC _ = fail $ fail_message_edge "divC" "Atom_Tuple Atom_Int Atom_Int"
 
   eqC :: forall a . (Aetherling_Value a, Check_Type_Is_Atom a, Eq a) =>
     Compilation_Env (Atom_Tuple a a) -> Compilation_Env Atom_Bit
   eqC (Compilation_Env (Atom_Tuple_Edge x)) = return $ Atom_Bit_Edge $
-    EqN (get_AST_type (Proxy :: Proxy a)) x
+    EqN (get_AST_type (Proxy :: Proxy a)) x No_Index
   eqC _ = fail $ fail_message_edge "eqC" "Atom_Tuple Atom_Int Atom_Int"
 
   -- generators
@@ -65,7 +65,7 @@ instance Sequence_Language Compilation_Env where
     if isJust lut_table_maybe && isJust x_expr_maybe
       then do
       return $ expr_to_edge $
-        Lut_GenN (fromJust lut_table_maybe) (get_AST_type a_proxy) (fromJust x_expr_maybe)
+        Lut_GenN (fromJust lut_table_maybe) (get_AST_type a_proxy) (fromJust x_expr_maybe) No_Index
       else do
       fail $ fail_message_edge "lut_genC" "[a] -> Atom_Int"
 
@@ -76,7 +76,7 @@ instance Sequence_Language Compilation_Env where
     if isJust const_expr_maybe
       then do
       return $ expr_to_edge $
-        Const_GenN (fromJust const_expr_maybe) (get_AST_type (Proxy :: Proxy a))
+        Const_GenN (fromJust const_expr_maybe) (get_AST_type (Proxy :: Proxy a)) No_Index
       else do
       fail $ fail_message_edge "const_genC" "any_edge"
 
@@ -87,7 +87,7 @@ instance Sequence_Language Compilation_Env where
                              Aetherling_Value a) =>
     Proxy (n+r) -> Proxy r -> Compilation_Env (Seq (n+r) i a) -> Compilation_Env (Seq (n+r) i a)
   shiftC' len_proxy shift_amount_proxy (Compilation_Env (Seq_Edge x)) = return $
-    Seq_Edge $ ShiftN len i_val shift a_type x
+    Seq_Edge $ ShiftN len i_val shift a_type x No_Index
     where
       len = fromInteger $ natVal len_proxy
       shift = fromInteger $ natVal shift_amount_proxy
@@ -99,7 +99,7 @@ instance Sequence_Language Compilation_Env where
              Aetherling_Value a) =>
     Proxy (1+n) -> Compilation_Env (Seq 1 (n + i) a) -> Compilation_Env (Seq (1+n) i a)
   up_1dC len_proxy (Compilation_Env (Seq_Edge x)) = return $ Seq_Edge $
-    Up_1dN len i_val a_type x
+    Up_1dN len i_val a_type x No_Index
     where
       len = fromInteger $ natVal len_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
@@ -113,7 +113,7 @@ instance Sequence_Language Compilation_Env where
     Proxy (1+n) -> Int -> Compilation_Env (Seq (1+n) i a) ->
     Compilation_Env (Seq 1 (n + i) a)
   down_1dC' len_proxy sel_idx (Compilation_Env (Seq_Edge x)) = return $ Seq_Edge $
-    Down_1dN len i_val sel_idx a_type x
+    Down_1dN len i_val sel_idx a_type x No_Index
     where
       len = fromInteger $ natVal len_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
@@ -129,7 +129,7 @@ instance Sequence_Language Compilation_Env where
                                 io GHC.TypeLits.* (ni + ii)) a) ->
     Compilation_Env (Seq no io (Seq ni ii a))
   partitionC proxyNO proxyNI proxyIO proxyII (Compilation_Env (Seq_Edge x)) =
-    return $ Seq_Edge $ PartitionN no_val ni_val io_val ii_val a_type x
+    return $ Seq_Edge $ PartitionN no_val ni_val io_val ii_val a_type x No_Index
     where
       no_val = fromInteger $ natVal proxyNO
       ni_val = fromInteger $ natVal proxyNI
@@ -149,7 +149,7 @@ instance Sequence_Language Compilation_Env where
     Compilation_Env (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
                                    io GHC.TypeLits.* (ni + ii)) a)
   unpartitionC' proxyNO proxyNI (Compilation_Env (Seq_Edge x)) =
-    return $ Seq_Edge $ UnpartitionN no_val ni_val io_val ii_val a_type x
+    return $ Seq_Edge $ UnpartitionN no_val ni_val io_val ii_val a_type x No_Index
     where
       no_val = fromInteger $ natVal proxyNO
       ni_val = fromInteger $ natVal proxyNI
@@ -168,7 +168,7 @@ instance Sequence_Language Compilation_Env where
     Proxy n -> (Compilation_Env a -> Compilation_Env b) ->
     Compilation_Env (Seq n i a) -> Compilation_Env (Seq n i b)
   mapC' len_proxy f (Compilation_Env (Seq_Edge x)) = return $ Seq_Edge $
-    MapN len_val i_val f_ast x
+    MapN len_val i_val f_ast x No_Index
     where
       len_val = fromInteger $ natVal len_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
@@ -185,7 +185,7 @@ instance Sequence_Language Compilation_Env where
     (Compilation_Env a -> Compilation_Env b -> Compilation_Env c) ->
     Compilation_Env (Seq n i a) -> Compilation_Env (Seq n i b) -> Compilation_Env (Seq n i c)
   map2C' len_proxy f (Compilation_Env (Seq_Edge x)) (Compilation_Env (Seq_Edge y)) =
-    return $ Seq_Edge $ Map2N len_val i_val f_ast x y
+    return $ Seq_Edge $ Map2N len_val i_val f_ast x y No_Index
     where
       len_val = fromInteger $ natVal len_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
@@ -200,7 +200,7 @@ instance Sequence_Language Compilation_Env where
     Proxy (1+n) -> (Compilation_Env (Atom_Tuple a a) -> Compilation_Env a) ->
     Compilation_Env (Seq (1+n) i a) -> Compilation_Env (Seq 1 (n + i) a)
   reduceC' len_proxy f (Compilation_Env (Seq_Edge x)) = return $ Seq_Edge $
-    ReduceN len_val i_val f_ast x
+    ReduceN len_val i_val f_ast x No_Index
     where
       len_val = fromInteger $ natVal len_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
@@ -212,7 +212,7 @@ instance Sequence_Language Compilation_Env where
                         Aetherling_Value b) =>
     Compilation_Env (Atom_Tuple a b) -> Compilation_Env a
   fstC (Compilation_Env (Atom_Tuple_Edge x)) = return $ expr_to_edge $
-    FstN a_type b_type x
+    FstN a_type b_type x No_Index
     where
       a_type = get_AST_type (Proxy :: Proxy a)
       b_type = get_AST_type (Proxy :: Proxy b)
@@ -223,7 +223,7 @@ instance Sequence_Language Compilation_Env where
                         Aetherling_Value b) =>
     Compilation_Env (Atom_Tuple a b) -> Compilation_Env b
   sndC (Compilation_Env (Atom_Tuple_Edge x)) = return $ expr_to_edge $
-    SndN a_type b_type x
+    SndN a_type b_type x No_Index
     where
       a_type = get_AST_type (Proxy :: Proxy a)
       b_type = get_AST_type (Proxy :: Proxy b)
@@ -240,7 +240,7 @@ instance Sequence_Language Compilation_Env where
     let y_expr_maybe = edge_to_maybe_expr y
     if isJust x_expr_maybe && isJust y_expr_maybe
       then return $ Atom_Tuple_Edge $
-           ATupleN a_type b_type (fromJust x_expr_maybe) (fromJust y_expr_maybe)
+           ATupleN a_type b_type (fromJust x_expr_maybe) (fromJust y_expr_maybe) No_Index
       else fail $ fail_message_edge "atom_tupleC" "any_atom"
 
   seq_tupleC :: forall a . (Aetherling_Value a) =>
@@ -252,7 +252,7 @@ instance Sequence_Language Compilation_Env where
     let y_expr_maybe = edge_to_maybe_expr y
     if isJust x_expr_maybe && isJust y_expr_maybe
       then return $ Seq_Tuple_Edge $
-           STupleN a_type (fromJust x_expr_maybe) (fromJust y_expr_maybe)
+           STupleN a_type (fromJust x_expr_maybe) (fromJust y_expr_maybe) No_Index
       else fail $ fail_message_edge "seq_tupleC" "any"
 
   zipC :: forall a l n i . (Aetherling_Value a, KnownNat l, KnownNat n, KnownNat i) =>
@@ -266,16 +266,17 @@ instance Sequence_Language Compilation_Env where
     let map_stuple_append out_len in_left in_right = Map2N n_val i_val
                                                       (STupleAppendN out_len
                                                         a_type
-                                                        (InputN (STupleT (out_len - 1) a_type) "tuple_in_1")
-                                                        (InputN a_type "tuple_in_2"))
-                                                      in_left in_right
+                                                        (InputN (STupleT (out_len - 1) a_type) "tuple_in_1" No_Index)
+                                                        (InputN a_type "tuple_in_2" No_Index)
+                                                        No_Index)
+                                                      in_left in_right No_Index
     -- the initial step in the fold
     let map_stuple_initial = Map2N n_val i_val
                               (STupleN a_type 
-                                (InputN a_type "tuple_in_1")
-                                (InputN a_type "tuple_in_2")
-                              )
-                              (x !! 0) (x !! 1)
+                                (InputN a_type "tuple_in_1" No_Index)
+                                (InputN a_type "tuple_in_2" No_Index)
+                               No_Index)
+                              (x !! 0) (x !! 1) No_Index
     let tupled_expr = foldl (\prior_tuples cur_len -> map_stuple_append
                                                       cur_len
                                                       prior_tuples
@@ -298,7 +299,7 @@ instance Sequence_Language Compilation_Env where
       let y = fromJust y_expr_maybe
       let out_len = fromInteger $ natVal (Proxy :: Proxy (n+1))
       let a_type = get_AST_type (Proxy :: Proxy a)
-      return $ Seq_Tuple_Edge $ STupleAppendN out_len a_type x y
+      return $ Seq_Tuple_Edge $ STupleAppendN out_len a_type x y No_Index
       else fail $ fail_message_edge "seq_tuple_appendC" "for second input any"
   seq_tuple_appendC _ _ = fail $ fail_message_edge "seq_tuple_appendC" "for first input seq_tuple"
   
@@ -311,7 +312,7 @@ instance Sequence_Language Compilation_Env where
        (Seq_Tuple ni a)) ->
     Compilation_Env (Seq no io (Seq ni ii a))
   seq_tuple_to_seqC proxyIO proxyII (Compilation_Env (Seq_Edge x)) =
-    return $ Seq_Edge $ STupleToSeqN no_val ni_val io_val ii_val a_type x
+    return $ Seq_Edge $ STupleToSeqN no_val ni_val io_val ii_val a_type x No_Index
     where
       no_val = fromInteger $ natVal (Proxy :: Proxy no)
       ni_val = fromInteger $ natVal (Proxy :: Proxy ni)
@@ -328,7 +329,7 @@ instance Sequence_Language Compilation_Env where
     Compilation_Env (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
        (Seq_Tuple ni a))
   seq_to_seq_tupleC (Compilation_Env (Seq_Edge x)) = 
-    return $ Seq_Edge $ SeqToSTupleN no_val ni_val io_val ii_val a_type x
+    return $ Seq_Edge $ SeqToSTupleN no_val ni_val io_val ii_val a_type x No_Index
     where
       no_val = fromInteger $ natVal (Proxy :: Proxy no)
       ni_val = fromInteger $ natVal (Proxy :: Proxy ni)
@@ -352,19 +353,19 @@ instance Monad Compilation_Env where
   return a = Compilation_Env a
   
 com_input_unit :: String -> Compilation_Env Atom_Unit
-com_input_unit s = return $ Atom_Unit_Edge $ InputN UnitT s
+com_input_unit s = return $ Atom_Unit_Edge $ InputN UnitT s No_Index
 com_input_int :: String -> Compilation_Env Atom_Int
-com_input_int s = return $ Atom_Int_Edge $ InputN IntT s
+com_input_int s = return $ Atom_Int_Edge $ InputN IntT s No_Index
 com_input_bit :: String -> Compilation_Env Atom_Bit
-com_input_bit s = return $ Atom_Bit_Edge $ InputN BitT s
+com_input_bit s = return $ Atom_Bit_Edge $ InputN BitT s No_Index
 com_input_atom_tuple :: (Aetherling_Value a, Aetherling_Value b) => String ->
   Proxy (Atom_Tuple a b) -> Compilation_Env (Atom_Tuple a b)
 com_input_atom_tuple s a_proxy =
-  return $ Atom_Tuple_Edge $ InputN (get_AST_type a_proxy) s
+  return $ Atom_Tuple_Edge $ InputN (get_AST_type a_proxy) s No_Index
 com_input_seq :: (KnownNat n, KnownNat i, Aetherling_Value a) => String ->
   Proxy (Seq n i a) -> Compilation_Env (Seq n i a)
 com_input_seq s a_proxy =
-  return $ Seq_Edge $ InputN (get_AST_type a_proxy) s
+  return $ Seq_Edge $ InputN (get_AST_type a_proxy) s No_Index
 {-
 com_input_atom_tuple :: forall a b .
   (Aetherling_Value a, Aetherling_Value b) =>
