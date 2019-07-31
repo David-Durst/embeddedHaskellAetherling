@@ -359,7 +359,11 @@ rewrite_to_match_output_type op ot_slowed =
 1. I haven't dealt with operators that don't have inputs/outputs that are factors of each other
 1. The space-time IR cannot consider just throuhgput without delay while giving a good cost model
 
-# Ideal Scheduler
+# More Examples Expressible In Sequence Language With Hardware Produced By Ideal Scheduler
+The below examples demonstrate:
+1. The ideal hardware to produce
+2. Any additional space-time IR operators necessary to express that hardware
+
 ## Composition of Multi-Rate With Nested Operators
 This example demonstrates the issue of scheduling multiple operators while preserving nesting.
 ```
@@ -438,25 +442,75 @@ The `Partition` was moved to the front of the pipeline and the `Unpartition` was
 This example demonstrates `Unpartition` and `Partition` that can't be optimized away.
 
 ```
-Unpartition 5 6 Int >>> Partition 6 5 Int
+Unpartition 2 3 Int >>> Partition 3 2 Int
 ```
 
-Attainable s are `1, 2, 3, 5, 6, 10, 15, and 30`.
+Attainable s are `1, 2, 3, 6`.
 The program in the sequence language AST is:
 
 ![Unscheduled Non-Removable Partition](other_diagrams/scheduler_examples/hardware/irreducible_nesting_manip/irreducible_nesting_manip_seq.png "Unscheduled Non-Removable Partition")
 
-The below space-time IR program implements the pipeline with a slowdown of `s=5`
+For the below programs, I will not yet provide hardware diagrams.
+All of these as just buffers with counters for inputs and outputs.
 
+The below space-time IR program implements the pipeline with a slowdown of `s=2`
+```
+Flip_ts_to_st 2 3 0 Int
 ```
 
+This requires a new operator `Flip_ts_to_st no ni io t :: TSeq no io (SSeq ni t) -> SSeq ni (TSeq no io t)` that has the same type as a transpose, but different semantics.
+The below diagram demonstrates the difference.
+In the diagram, square boxes indicate `TSeq` and circular braces indicate `SSeq`.
+The ordering from outer to inner of box and braces indicates the nesting of `TSeq` and `SSeq`.
+Below, the inputs to both `Flip_ts_to_st` and `Transpose_ts_to_st` have boxes surrounding braces as the inputs are `TSeq 2 0 (SSeq 3 Int)`.
+Clock cycles are read left to right. 
+For the inputs to both operators, the first `SSeq` is emitted on clock 0 because it is in the left most box.
+Although not shown in this diagram, nested boxes or braces would indicate nested `TSeq`s and `SSeq`s.
+
+The diagram shows that `Flip_ts_to_st` and `Transpose_ts_to_st` produce outputs in different orders.
+The implementation of `Transpose_ts_to_st` is just wires in hardware.
+All elements are accepted and emitted on the same clock cycles.
+`Flip_ts_to_st` requires buffering the `3, 5, and 6` because they are accepted and emitted on different clocks.
+
+![Transpose Vs Flip](other_diagrams/scheduler_examples/hardware/irreducible_nesting_manip/transpose_vs_flip.png "Transpose vs Flip")
+
+The below space-time IR program implements the pipeline with a slowdown of `s=3`
+```
+Flip_st_to_ts 2 3 0 Int
+```
+
+This requires a new operator `Flip_st_to_ts no ni io t :: SSeq ni (TSeq no io t) -> TSeq no io (SSeq ni t)`.
+
+The below space-time IR program implements the pipeline with a slowdown of `s=6`:
+```
+Unpartition_t_tt 2 3 0 0 Int >>> Partition_t_tt 3 2 0 0 Int
 ```
 
 ## Non-Removable Partition With Invalids
 This example demonstrates `Unpartition` and `Partition` that can't be optimized away and have to deal with invalid clocks
 
 ```
-Down_1d 5 (Seq 6 Int) >>> Unpartition 1 6 Int >>> Partition 6 1 Int
+Select_1d 4 0 (Seq 9 Int) >>> Up_1d 2 (Seq 9 Int) >>> Unpartition 2 9 Int >>> Partition 9 2 Int
+```
+
+Attainable s include `1, 2, 3, 4, 6, 9, and 36`.
+The program in the sequence language AST is:
+
+![Unscheduled Non-Removable Partition With Invalids](other_diagrams/scheduler_examples/hardware/irreducible_underutil/irreducible_underutil_seq.png "Unscheduled Non-Removable Partition With Invalids")
+
+
+The below space-time IR program implements the pipeline with a slowdown of `s=36`
+
+```
+Select_1d_t 4 0 0 (TSeq 9 0 Int) >>> Up_1d_t 2 2 (TSeq 9 0 Int) >>> Unpartition_t_tt 2 9 2 0 Int >>> Partition_t_tt 9 2 0 2 Int
+```
+
+The below space-time IR program implements the pipeline with a slowdown of `s=18`
+```
+Select_1d_t 2 0 0 (SSeq 2 (TSeq 9 0 Int)) >>> Map_t 1 1 (Select_1d_s 2 0 (TSeq 9 0 Int)) >>> 
+    Up_1d_t 2 0 (SSeq 1 (TSeq 9 0 Int)) >>> 
+    Map_t 2 0 (Flip_st_to_ts 9 0 1) >>> 
+    Unpartition_t_tt 2 9 0 0 (SSeq 1 Int)
 ```
 
 ## Diamond Pattern
@@ -541,6 +595,13 @@ merge_with_up input = do
 The diagram below shows the hardware implementation of this space-time IR program.
 
 ![Scheduled s=15 Diamond Pattern With Nesting Manipulation](other_diagrams/scheduler_examples/hardware/diamond_nest_manip/diamond_nesting_manip_s_15.png "Scheduled s=15 Diamond Pattern With Nesting Manipulation")
+
+# Examples Not Conveniently Expressible In Sequence Language
+The below examples demonstrate certain common patterns that cannot be expressed in Aetherling.
+
+## Double Buffer
+
+## Histogram
 
 ## Composition of Multi-Rate With Nested Operators and Memories
 This example demonstrates the issue of scheduling multiple operators while preserving nesting and using memories.
