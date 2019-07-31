@@ -14,7 +14,7 @@ fail_message_edge fName tName = fName ++ " must receive " ++ tName ++
   "_Edge not " ++ tName ++ "."
 
 data DAG_Index = No_Index
-  | Index {rewrite :: Int, elem_index :: Int}
+  | Index Int
   deriving (Show, Eq, Ord)
 
 class Indexible a where

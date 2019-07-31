@@ -1,4 +1,5 @@
 module Aetherling.Languages.Sequence.Shallow.Types where
+import Aetherling.Monad_Helpers
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import GHC.TypeLits
@@ -85,4 +86,4 @@ class Aetherling_Value a where
   expr_to_edge :: Expr -> a
   get_AST_type :: Proxy a -> AST_Type
   get_AST_value :: a -> Maybe AST_Value
-  get_input_edge :: String -> a
+  get_input_edge :: String -> DAG_Index -> a
