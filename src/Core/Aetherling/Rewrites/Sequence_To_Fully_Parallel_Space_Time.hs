@@ -18,86 +18,86 @@ rewrite_to_fully_parallel seq_expr = do
     else fromRight undefined expr_par
 
 sequence_to_fully_parallel :: SeqE.Expr -> Rewrite_StateM STE.Expr
-sequence_to_fully_parallel (SeqE.IdN producer) = parallelize_atom_operator STE.IdN producer
-sequence_to_fully_parallel (SeqE.AbsN producer) = parallelize_atom_operator STE.AbsN producer
-sequence_to_fully_parallel (SeqE.NotN producer) = parallelize_atom_operator STE.NotN producer
-sequence_to_fully_parallel (SeqE.AddN producer) = parallelize_atom_operator STE.AddN producer
-sequence_to_fully_parallel (SeqE.SubN producer) = parallelize_atom_operator STE.SubN producer
-sequence_to_fully_parallel (SeqE.MulN producer) = parallelize_atom_operator STE.MulN producer
-sequence_to_fully_parallel (SeqE.DivN producer) = parallelize_atom_operator STE.DivN producer
-sequence_to_fully_parallel (SeqE.EqN t producer) = do
+sequence_to_fully_parallel (SeqE.IdN producer _) = parallelize_atom_operator STE.IdN producer
+sequence_to_fully_parallel (SeqE.AbsN producer _) = parallelize_atom_operator STE.AbsN producer
+sequence_to_fully_parallel (SeqE.NotN producer _) = parallelize_atom_operator STE.NotN producer
+sequence_to_fully_parallel (SeqE.AddN producer _) = parallelize_atom_operator STE.AddN producer
+sequence_to_fully_parallel (SeqE.SubN producer _) = parallelize_atom_operator STE.SubN producer
+sequence_to_fully_parallel (SeqE.MulN producer _) = parallelize_atom_operator STE.MulN producer
+sequence_to_fully_parallel (SeqE.DivN producer _) = parallelize_atom_operator STE.DivN producer
+sequence_to_fully_parallel (SeqE.EqN t producer _) = do
   producer_par <- sequence_to_fully_parallel producer
   t_par <- parallelize_AST_type t
   return $ STE.EqN t_par producer_par
 
 -- generators
-sequence_to_fully_parallel node@(SeqE.Lut_GenN _ _ producer) =
+sequence_to_fully_parallel node@(SeqE.Lut_GenN _ _ producer _) =
   throwError $ Expr_Failure $ "Can't parallelize LUTs: " ++ show node
-sequence_to_fully_parallel (SeqE.Const_GenN constant_val constant_type) = do
+sequence_to_fully_parallel (SeqE.Const_GenN constant_val constant_type _) = do
   t_par <- parallelize_AST_type constant_type
   v_par <- parallelize_AST_value constant_val
   return $ STE.Const_GenN v_par t_par
 
 -- sequence operators
-sequence_to_fully_parallel (SeqE.ShiftN n _ shift_amount elem_t producer) =
+sequence_to_fully_parallel (SeqE.ShiftN n _ shift_amount elem_t producer _) =
   parallelize_unary_seq_operator (STE.Shift_sN n shift_amount) elem_t producer
-sequence_to_fully_parallel (SeqE.Up_1dN n _ elem_t producer) =
+sequence_to_fully_parallel (SeqE.Up_1dN n _ elem_t producer _) =
   parallelize_unary_seq_operator (STE.Up_1d_sN n) elem_t producer
-sequence_to_fully_parallel (SeqE.Down_1dN n _ sel_idx elem_t producer) =
+sequence_to_fully_parallel (SeqE.Down_1dN n _ sel_idx elem_t producer _) =
   parallelize_unary_seq_operator (STE.Down_1d_sN n sel_idx) elem_t producer
-sequence_to_fully_parallel (SeqE.PartitionN no ni _ _ elem_t producer) =
+sequence_to_fully_parallel (SeqE.PartitionN no ni _ _ elem_t producer _) =
   parallelize_unary_seq_operator (STE.Partition_s_ssN no ni) elem_t producer
-sequence_to_fully_parallel (SeqE.UnpartitionN no ni _ _ elem_t producer) =
+sequence_to_fully_parallel (SeqE.UnpartitionN no ni _ _ elem_t producer _) =
   parallelize_unary_seq_operator (STE.Unpartition_s_ssN no ni) elem_t producer
 
 -- higher order operators
-sequence_to_fully_parallel (SeqE.MapN n _ f producer) = do
+sequence_to_fully_parallel (SeqE.MapN n _ f producer _) = do
   f_par <- sequence_to_fully_parallel f
   producer_par <- sequence_to_fully_parallel producer
   return $ STE.Map_sN n f_par producer_par
-sequence_to_fully_parallel (SeqE.Map2N n _ f producer_left producer_right) = do
+sequence_to_fully_parallel (SeqE.Map2N n _ f producer_left producer_right _) = do
   f_par <- sequence_to_fully_parallel f
   producer_left_par <- sequence_to_fully_parallel producer_left
   producer_right_par <- sequence_to_fully_parallel producer_right
   return $ STE.Map2_sN n f_par producer_left_par producer_right_par
-sequence_to_fully_parallel (SeqE.ReduceN n _ f producer) = do
+sequence_to_fully_parallel (SeqE.ReduceN n _ f producer _) = do
   f_par <- sequence_to_fully_parallel f
   producer_par <- sequence_to_fully_parallel producer
   return $ STE.Reduce_sN n f_par producer_par
 
 -- tuple operations
-sequence_to_fully_parallel (SeqE.FstN t0 t1 producer) = do
+sequence_to_fully_parallel (SeqE.FstN t0 t1 producer _) = do
   producer_par <- sequence_to_fully_parallel producer
   t0_par <- parallelize_AST_type t0
   t1_par <- parallelize_AST_type t1
   return $ STE.FstN t0_par t1_par producer_par
 
-sequence_to_fully_parallel (SeqE.SndN t0 t1 producer) = do
+sequence_to_fully_parallel (SeqE.SndN t0 t1 producer _) = do
   producer_par <- sequence_to_fully_parallel producer
   t0_par <- parallelize_AST_type t0
   t1_par <- parallelize_AST_type t1
   return $ STE.SndN t0_par t1_par producer_par
 
-sequence_to_fully_parallel (SeqE.ATupleN t0 t1 producer_left producer_right) = do
+sequence_to_fully_parallel (SeqE.ATupleN t0 t1 producer_left producer_right _) = do
   producer_left_par <- sequence_to_fully_parallel producer_left
   producer_right_par <- sequence_to_fully_parallel producer_right
   t0_par <- parallelize_AST_type t0
   t1_par <- parallelize_AST_type t1
   return $ STE.ATupleN t0_par t1_par producer_left_par producer_right_par
 
-sequence_to_fully_parallel (SeqE.STupleN elem_t producer_left producer_right) = do
+sequence_to_fully_parallel (SeqE.STupleN elem_t producer_left producer_right _) = do
   t_par <- parallelize_AST_type elem_t
   producer_left_par <- sequence_to_fully_parallel producer_left
   producer_right_par <- sequence_to_fully_parallel producer_right
   return $ STE.STupleN t_par producer_left_par producer_right_par
 
-sequence_to_fully_parallel (SeqE.STupleAppendN out_len elem_t producer_left producer_right) = do
+sequence_to_fully_parallel (SeqE.STupleAppendN out_len elem_t producer_left producer_right _) = do
   t_par <- parallelize_AST_type elem_t
   producer_left_par <- sequence_to_fully_parallel producer_left
   producer_right_par <- sequence_to_fully_parallel producer_right
   return $ STE.STupleAppendN out_len t_par producer_left_par producer_right_par
   
-sequence_to_fully_parallel (SeqE.STupleToSeqN no ni io ii elem_t producer) = do
+sequence_to_fully_parallel (SeqE.STupleToSeqN no ni io ii elem_t producer _) = do
   t_par <- parallelize_AST_type elem_t
   producer_par <- sequence_to_fully_parallel producer
   return $ STE.Map_sN no (STE.STupleToSSeqN ni t_par
@@ -105,7 +105,7 @@ sequence_to_fully_parallel (SeqE.STupleToSeqN no ni io ii elem_t producer) = do
                           -- in an stuple of elements
                           (STE.InputN (STT.STupleT ni t_par) "seq_in")) producer_par
   
-sequence_to_fully_parallel (SeqE.SeqToSTupleN no ni io ii elem_t producer) = do
+sequence_to_fully_parallel (SeqE.SeqToSTupleN no ni io ii elem_t producer _) = do
   t_par <- parallelize_AST_type elem_t
   producer_par <- sequence_to_fully_parallel producer
   return $ STE.Map_sN no (STE.SSeqToSTupleN ni t_par
@@ -113,11 +113,11 @@ sequence_to_fully_parallel (SeqE.SeqToSTupleN no ni io ii elem_t producer) = do
                           -- in an stuple of elements
                           (STE.InputN (STT.SSeqT ni t_par) "seq_in")) producer_par
 
-sequence_to_fully_parallel (SeqE.InputN t input_name) = do
+sequence_to_fully_parallel (SeqE.InputN t input_name _) = do
   t_par <- parallelize_AST_type t
   return $ STE.InputN t_par input_name
 
-sequence_to_fully_parallel (SeqE.ErrorN s) = return $ STE.ErrorN s
+sequence_to_fully_parallel (SeqE.ErrorN s _) = return $ STE.ErrorN s
 
 parallelize_AST_type :: SeqT.AST_Type -> Rewrite_StateM STT.AST_Type
 parallelize_AST_type SeqT.UnitT = return STT.UnitT
