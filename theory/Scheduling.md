@@ -364,6 +364,10 @@ The below examples demonstrate:
 1. The ideal hardware to produce
 2. Any additional space-time IR operators necessary to express that hardware
 
+The issues to look for in the examples are:
+1. How to handle nesting
+1. How to handling diamond patterns from DAGs
+
 ## Composition of Multi-Rate With Nested Operators
 This example demonstrates the issue of scheduling multiple operators while preserving nesting.
 ```
