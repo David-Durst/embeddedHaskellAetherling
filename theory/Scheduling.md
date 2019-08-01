@@ -603,9 +603,46 @@ The diagram below shows the hardware implementation of this space-time IR progra
 # Examples Not Conveniently Expressible In Sequence Language
 The below examples demonstrate certain common patterns that cannot be expressed in Aetherling.
 
-## Double Buffer
+## Reorder
+This is going to become a deserialize, then a bunch of fsts and seconds (which I can desugar from an index operator), and then a serialize
+
+What is the desired hardware:
+double buffer, read from buffer in unique order
+
+Problem:
+```
+Deserialize >>> Serialize
+```
+is not a double buffer. Deserialize and serialize each can't be memoreis, they have to be lots of registers as need to read from them all in one clock
 
 ## Histogram
+This is 
+
+Should I use a  big memory to store whole histogram?
+pros:
+1. Will need to write to 1 address every cycle
+cons:
+1. will need to read entire histogram out on one cycle or stall after writing while I ready out all parts
+1. will need to reset entire memory one entry at a time after done writing.
+
+implementation - if convert tuples to seq, then can do shift using normal shift operator and register/adders can just be mapped to right sizes
+
+The following diagrams show the implementations of histogram in hardware. 
+The first one creates a separate register for each bin.
+This could be made slightly more efficient by merging all of the counters.
+
+
+![Histogram Simplest Hardware Implementation](other_diagrams/scheduler_examples/hardware/histogram/histogram_hardware_basic.png "Histogram Simplest Hardware Implementation")
+
+The second diagram may be more efficient depending on the target FPGA.
+It requires the same amount of memory. 
+However, the memory is in one SRAM rather than in different registers. 
+This is more efficient if the target FPGA can take advantage of the fact that all the memories share one read port and one write port.
+The problem with this implementation is that it requires `num_bins` extra clock cycles. 
+The histogram bins must be read out one per clock cycle after computing them. 
+Also, during those read-out clock cycles, the histogram bins must be zeroed.
+
+![Histogram One Memory Hardware Implementation](other_diagrams/scheduler_examples/hardware/histogram/histogram_hardware_one_mem.png "Histogram One Memory Hardware Implementation")
 
 ## Composition of Multi-Rate With Nested Operators and Memories
 This example demonstrates the issue of scheduling multiple operators while preserving nesting and using memories.
