@@ -603,6 +603,11 @@ The diagram below shows the hardware implementation of this space-time IR progra
 # Examples Not Conveniently Expressible In Sequence Language
 The below examples demonstrate certain common patterns that cannot be expressed in Aetherling.
 
+## List Reverse
+The hardware to implement this is a memory. 
+The memory is written to and then read from.
+The total amount of time is equal to two times the length to reverse.
+
 ## Reorder
 This is going to become a deserialize, then a bunch of fsts and seconds (which I can desugar from an index operator), and then a serialize
 
@@ -616,16 +621,6 @@ Deserialize >>> Serialize
 is not a double buffer. Deserialize and serialize each can't be memoreis, they have to be lots of registers as need to read from them all in one clock
 
 ## Histogram
-This is 
-
-Should I use a  big memory to store whole histogram?
-pros:
-1. Will need to write to 1 address every cycle
-cons:
-1. will need to read entire histogram out on one cycle or stall after writing while I ready out all parts
-1. will need to reset entire memory one entry at a time after done writing.
-
-implementation - if convert tuples to seq, then can do shift using normal shift operator and register/adders can just be mapped to right sizes
 
 The following diagrams show the implementations of histogram in hardware. 
 The first one creates a separate register for each bin.
@@ -644,6 +639,35 @@ Also, during those read-out clock cycles, the histogram bins must be zeroed.
 
 ![Histogram One Memory Hardware Implementation](other_diagrams/scheduler_examples/hardware/histogram/histogram_hardware_one_mem.png "Histogram One Memory Hardware Implementation")
 
+The implementation of the first hardware version in the sequence language is below.
+Note that I've added a ternary operator `If ... Then ... Else ...`.
+```
+histogram input num_bins bin_width =
+    let bin_mins = [i * bin_width | i <- 0..num_bins]
+    let bin_signals = map (\i ->
+        Map (length input) (
+            If ((Lt input bin_mins[i]) And (Gt input bin_mins[i+1]))
+            Then 1
+            Else 0
+        )
+    ) [0..num_bins - 1]
+    let bin_stores = map (\signal -> 
+        Reduce Add signal
+    ) bin_signals
+    let tuple_bin_stores = foldl (Map2 1 Tuple) (head bin_stores) (tail bin_stores)
+    return (Tuple_To_Seq tuple_bin_stores)
+```
+
+This is 
+
+Should I use a  big memory to store whole histogram?
+pros:
+1. Will need to write to 1 address every cycle
+cons:
+1. will need to read entire histogram out on one cycle or stall after writing while I ready out all parts
+1. will need to reset entire memory one entry at a time after done writing.
+
+implementation - if convert tuples to seq, then can do shift using normal shift operator and register/adders can just be mapped to right sizes
 ## Composition of Multi-Rate With Nested Operators and Memories
 This example demonstrates the issue of scheduling multiple operators while preserving nesting and using memories.
 ```
