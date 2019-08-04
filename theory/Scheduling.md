@@ -359,6 +359,13 @@ rewrite_to_match_output_type op ot_slowed =
 1. I haven't dealt with operators that don't have inputs/outputs that are factors of each other
 1. The space-time IR cannot consider just throuhgput without delay while giving a good cost model
 
+## What Do Hardware Designers Use Memories For?
+1. Reordering elements
+1. Reshaping - converting between parallel and sequential, also known as serialize and deserialize
+    1. This is linked with reordering as may need to do reordering when reshaping, like flipping a SSeq and a TSeq
+1. Pipelining
+1. Retiming
+
 # More Examples Expressible In Sequence Language With Hardware Produced By Ideal Scheduler
 The below examples demonstrate:
 1. The ideal hardware to produce
@@ -668,6 +675,14 @@ cons:
 1. will need to reset entire memory one entry at a time after done writing.
 
 implementation - if convert tuples to seq, then can do shift using normal shift operator and register/adders can just be mapped to right sizes
+
+# Intuition For Scheduler
+
+What do he spreadsheets show me:
+1. Basic statement - if focus on slowing down map's before down's and up's, then rates match
+1. More global statement - need a consistent ordering for which factors to slowdown
+
+# Garbage
 ## Composition of Multi-Rate With Nested Operators and Memories
 This example demonstrates the issue of scheduling multiple operators while preserving nesting and using memories.
 ```
