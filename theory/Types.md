@@ -19,12 +19,15 @@ The below diagrams show how the distribution of this value's elements in space a
 The first diagram visualizes the structure of Aetherling's nested `SSeq`s and `TSeq`s.
 The `()` indicate an `SSeq`.
 This flat `SSeq` represents six elements on one clock cycle.
+
 ![SSeq 6 Int](other_diagrams/types/seq6/sseq6.png "SSeq 6 Int")
 
 The second diagram shows the hardware perspective: what elements of the sequence will be materialized on which clock cycles. 
 It does this by flattening the `SSeq`s and `TSeq`s.
 The `SSeq 6 Int` materializes all six elements on the first clock cycle.
+
 ![SSeq 6 Int Table](other_diagrams/types/seq6/sseq6_table.png "SSeq 6 Int Table")
+
 Note that, until the nested `Seq` example below, there is no flattening to demonstrate with this diagram.
 
 ## Flat TSeq With No Invalids
@@ -37,10 +40,12 @@ This diagram has six boxes, each with one integer.
 If a box contains only atoms and `SSeq`s, then the period for that box is one clock cycle.
 Otherwise, the period of the box is computed based on the periods of the elements inside the box.
 Therefore, it indicates one integer per clock for six clocks.
+
 ![TSeq 6 0 Int](other_diagrams/types/seq6/tseq60.png "TSeq 6 0 Int")
 
 The second diagram shows the flattened, hardware perspective.
 It also shows one integer per clock for six clocks.
+
 ![TSeq 6 0 Int Table](other_diagrams/types/seq6/tseq60_table.png "TSeq 6 0 Int Table")
 
 ## Flat TSeq With Invalids
@@ -51,11 +56,13 @@ The first diagram shows the nested structure of the Aetherling type.
 This diagram has eight boxes.
 The shaded ones indicate invalid periods with no data.
 Therefore, it indicates one integer per clock for six clocks and then two invalid clocks.
+
 ![TSeq 6 2 Int](other_diagrams/types/seq6/tseq62.png "TSeq 6 2 Int")
 
 The second diagram shows the flattened, hardware perspective.
 It also shows one integer per clock for six clocks and then two invalid clocks.
 The shaded regions indicate no data.
+
 ![TSeq 6 2 Int Table](other_diagrams/types/seq6/tseq62_table.png "TSeq 6 2 Int Table")
 
 
@@ -76,10 +83,12 @@ The above `Seq 2 (Seq 3 Int)` can be converted into a `SSeq 2 (SSeq 3 Int)` with
 The nested, Aetherling structure diagram shows an outer `SSeq 2`.
 Each element of the `SSeq 2` is an `SSeq 3 Int`.
 The six integers in total are all on one clock cycle.
+
 ![SSeq 2 (SSeq 3 Int)](other_diagrams/types/seq2seq3/sseq2sseq3.png "SSeq 2 (SSeq 3 Int)")
 
 The flattened, hardware diagram is the same as the one for the `SSeq 6 Int`.
 All six integers are on one clock cycle.
+
 ![SSeq 2 (SSeq 3 Int) Table](other_diagrams/types/seq2seq3/sseq2sseq3_table.png "SSeq 2 (SSeq 3 Int) Table")
 
 ## Nested TSeq With no Invalids
@@ -91,10 +100,12 @@ The period of `TSeq 3 0 Int` is one clock cycle.
 Since each element of the `TSeq 2 0` is a `TSeq 3 0 Int` that takes three clock cycles, the period of `TSeq 2 0 (TSeq 3 0 Int)` is three clock cycles.
 The total time for the `TSeq 2 0 (TSeq 3 0 Int)` is `2 periods * 3 clocks / period = 6 clocks`.
 The diagram shows that as each outer box, representing an element of the `TSeq 2 0`, contains three inner boxes, representing elements of `TSeq 3 0 Int`. 
+
 ![TSeq 2 0 (TSeq 3 0 Int)](other_diagrams/types/seq2seq3/tseq20tseq30.png "TSeq 2 0 (TSeq 3 0 Int)")
 
 The flattened, hardware diagram is the same as the one for the `TSeq 6 0 Int`.
 There is one integer per clock for six clock cycles.
+
 ![TSeq 2 0 (TSeq 3 0 Int) Table](other_diagrams/types/seq2seq3/tseq20tseq30_table.png "TSeq 2 0 (TSeq 3 0 Int) Table")
 
 ## Nested TSeq With Inner Invalids
@@ -104,12 +115,14 @@ The nested, Aetherling structure diagram shows an outer `TSeq 2 0` where each el
 Each of the `TSeq 3 1 Int` has one invalid period.
 Note that, unlike the `TSeq 6 2 Int`, once of the invalid periods occurs at the fourth clock cycle.
 The diagram indicates this because the fourth inner box is shaded red.
+
 ![TSeq 2 0 (TSeq 3 1 Int)](other_diagrams/types/seq2seq3/tseq20tseq31.png "TSeq 2 0 (TSeq 3 1 Int)")
 
 The flattened, hardware diagram is different from the one for `TSeq 6 0 Int`.
 They both have six integers over eight clock cycles.
 However, one of the invalid clocks occurs earlier in the below diagram. 
 It occurs on the fourth clock cycle.
+
 ![TSeq 2 0 (TSeq 3 1 Int) Table](other_diagrams/types/seq2seq3/tseq20tseq31_table.png "TSeq 2 0 (TSeq 3 1 Int) Table")
 
 ## TSeq of SSeq
@@ -118,11 +131,13 @@ The above `Seq 2 (Seq 3 Int)` can be converted into a `TSeq 2 1 (SSeq 3 Int)` wi
 The nested, Aetherling structure diagram shows an outer `TSeq 2 1` where each valid element is a `SSeq 3 Int`.
 Since the time of `SSeq 3 Int` is one clock, each period `TSeq 2 1` takes one clock.
 Therefore, the `TSeq 2 1 (SSeq 3 Int)` takes 3 total clocks.
+
 ![TSeq 2 1 (SSeq 3 Int)](other_diagrams/types/seq2seq3/tseq21sseq3.png "TSeq 2 1 (SSeq 3 Int)")
 
 The flattened, hardware diagram shows three clock cycles.
 The first two each are an `SSeq 3 Int`. 
 The last clock cycle is invalid.
+
 ![TSeq 2 1 (SSeq 3 Int) Table](other_diagrams/types/seq2seq3/tseq21sseq3_table.png "TSeq 2 1 (SSeq 3 Int) Table")
 
 # Repeatedly Nested `TSeq` And `SSeq` Patterns
@@ -158,6 +173,7 @@ Therefore, the total time is twelve clock cycles.
 The flattened, hardware diagram shows twelve clock cycles.
 There are two integers per valid clock cycle.
 The integers are in an unusual order to match the nesting of `SSeq`s and `TSeq`s.
+
 ![TSeq 2 1 (SSeq 2 (TSeq 3 1 Int)) Table](other_diagrams/types/complex/tseq21sseq2tseq31_table.png "TSeq 2 1 (SSeq 2 (TSeq 3 1 Int)) Table")
 
 ## TSeq of SSeq of TSeq of SSeq
@@ -194,7 +210,9 @@ This example will be based on the following value in the sequence language:
 By the [sequence-to-space-time-isomorphisms](Basic.md#sequence-isomorphisms), the type can be converted to `TSeq 2 1 (SSeq 2 (TSeq 3 1 (SSeq 3 Int)))`.
 
 The nested, Aetherling structure diagram shows the pattern of `SSeq`s and `TSeq`s.
+
 ![TSeq 2 1 (SSeq 2 (TSeq 3 1 (SSeq 3 Int)))](other_diagrams/types/complex/tseq21sseq2tseq31sseq3.png "TSeq 2 1 (SSeq 2 (TSeq 3 1 (SSeq 3 Int)))")
 
 The flattened, hardware diagram is below.
+
 ![TSeq 2 1 (SSeq 2 (TSeq 3 1 (SSeq 3 Int))) Table](other_diagrams/types/complex/tseq21sseq2tseq31sseq3_table.png "TSeq 2 1 (SSeq 2 (TSeq 3 1 (SSeq 3 Int))) Table")
