@@ -14,12 +14,8 @@ By the [sequence-to-space-time-isomorphisms](Basic.md#sequence-isomorphisms), th
 
 ## Flat SSeq
 The above `Seq` can be converted to an `SSeq` with six integers on one clock cycle.
-The textual representation of the `SSeq` is:
-```
-[0, 1, 2, 3, 4, 5] :: SSeq 6 Int
-```
-
 The below diagrams show how the distribution of this value's elements in space and time.
+
 The first diagram visualizes the structure of Aetherling's nested `SSeq`s and `TSeq`s.
 The `()` indicate an `SSeq`.
 This flat `SSeq` represents six elements on one clock cycle.
@@ -33,11 +29,6 @@ Note that, until the nested `Seq` example below, there is no flattening to demon
 
 ## Flat TSeq With No Invalids
 The above `Seq` can be converted to an `TSeq` with six integers on six clock cycle.
-The textual representation of the `TSeq` is:
-```
-[0, 1, 2, 3, 4, 5] :: TSeq 6 0 Int
-```
-
 Just as with the `SSeq 6 Int` example, there are two diagrams.
 
 The first diagram shows the nested structure of the Aetherling type.
@@ -54,11 +45,6 @@ It also shows one integer per clock for six clocks.
 
 ## Flat TSeq With Invalids
 The above `Seq` can be converted to an `TSeq` with six integers on eight clock cycles.
-The textual representation of the `TSeq` is:
-```
-[0, 1, 2, 3, 4, 5] :: TSeq 6 2 Int
-```
-
 Just as with the `SSeq 6 Int` example, there are two diagrams.
 
 The first diagram shows the nested structure of the Aetherling type.
@@ -85,9 +71,6 @@ Flattening the nested sequence will produce a `Seq 6 Int` with integers in the s
 
 ## Nested SSeq
 The above `Seq 2 (Seq 3 Int)` can be converted into a nested set of `SSeq`s with six integers on one clock cycle.
-```
-[[0, 1, 2], [3, 4, 5]] :: SSeq 2 (SSeq 3 Int)
-```
 
 The nested, Aetherling structure diagram shows an outer `SSeq 2`.
 Each element of the `SSeq 2` is an `SSeq 3 Int`.
@@ -100,10 +83,6 @@ All six integers are on one clock cycle.
 
 ## Nested TSeq 
 The above `Seq` can be converted to an `TSeq` with six integers on six clock cycle.
-```
-[0, 1, 2, 3, 4, 5] :: TSeq 6 0 Int
-```
-ith No Invalids
 
 
 
