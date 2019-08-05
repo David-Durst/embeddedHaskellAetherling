@@ -220,13 +220,14 @@ instance Sequence_Language Compilation_Env where
   mapC' len_proxy f inputM = do
     input <- inputM
     cur_idx <- get_cur_index
-    case input of
-      Seq_Edge x -> return $ Seq_Edge $ MapN len_val i_val f_ast x cur_idx
+    f_ast <- f (com_input_any "f_in")
+    let f_edge_maybe = edge_to_maybe_expr f_ast
+    case (input, f_edge_maybe) of
+      (Seq_Edge x, Just f_ast_edge) -> return $ Seq_Edge $ MapN len_val i_val f_ast_edge x cur_idx
       _ -> throwError $ Expr_Failure $ fail_message_edge "mapC" "Seq"
     where
       len_val = fromInteger $ natVal len_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
-      f_ast = compile $ f (com_input_any "f_in")
 
   map2C f x y = map2C' Proxy f x y
 
@@ -241,14 +242,14 @@ instance Sequence_Language Compilation_Env where
     input1 <- input1M
     input2 <- input2M
     cur_idx <- get_cur_index
-    case (input1, input2) of
-      (Seq_Edge x, Seq_Edge y) -> return $ Seq_Edge $ Map2N len_val i_val f_ast x y cur_idx
+    f_ast <- f (com_input_any "f_in1") (com_input_any "f_in2")
+    let f_edge_maybe = edge_to_maybe_expr f_ast
+    case (input1, input2, f_edge_maybe) of
+      (Seq_Edge x, Seq_Edge y, Just f_edge) -> return $ Seq_Edge $ Map2N len_val i_val f_edge x y cur_idx
       _ -> throwError $ Expr_Failure $ fail_message_edge "map2C" "Seq Seq"
     where
       len_val = fromInteger $ natVal len_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
-      f_ast = compile $
-        f (com_input_any "f_in1") (com_input_any "f_in2")
 
   reduceC f x = reduceC' Proxy f x
 
@@ -259,13 +260,14 @@ instance Sequence_Language Compilation_Env where
   reduceC' len_proxy f inputM = do
     input <- inputM
     cur_idx <- get_cur_index
-    case input of
-      Seq_Edge x -> return $ Seq_Edge $ ReduceN len_val i_val f_ast x cur_idx
+    f_ast <- f (com_input_any "f_in")
+    let f_edge_maybe = edge_to_maybe_expr f_ast
+    case (input, f_edge_maybe) of
+      (Seq_Edge x, Just f_edge) -> return $ Seq_Edge $ ReduceN len_val i_val f_edge x cur_idx
       _ -> throwError $ Expr_Failure $ fail_message_edge "reduceC" "Seq"
     where
       len_val = fromInteger $ natVal len_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
-      f_ast = compile $ f (com_input_any "f_in")
 
   fstC :: forall a b . (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
                         Aetherling_Value a,
