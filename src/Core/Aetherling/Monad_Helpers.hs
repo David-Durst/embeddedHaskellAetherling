@@ -1,5 +1,5 @@
 module Aetherling.Monad_Helpers where
-import Control.Monad.State
+import qualified Control.Monad.State as S
 import Control.Monad.Identity
 import Debug.Trace
 import qualified Data.Map as M
@@ -20,20 +20,24 @@ data DAG_Index = No_Index
 class Indexible a where
   get_index :: a -> DAG_Index
 
-type DAG_MemoT v m = StateT (M.Map DAG_Index v) m
+type DAG_MemoT v m = S.StateT (M.Map DAG_Index v) m
 
 memo :: (Indexible k, Show k, Monad m, Show v) => k -> DAG_MemoT v m v -> DAG_MemoT v m v
 memo indexible_obj computed_result = do
-  memo_map <- get
+  memo_map <- S.get
   let result_index = get_index indexible_obj
   if M.member result_index memo_map
     then return $ memo_map M.! result_index
     else do
     unwrapped_computed_result <- computed_result
-    post_eval_memo_map <- get
+    post_eval_memo_map <- S.get
     let new_memo_map = M.insert result_index unwrapped_computed_result post_eval_memo_map
-    put new_memo_map
+    S.put new_memo_map
     return unwrapped_computed_result
 
+empty_memo_state :: M.Map DAG_Index v
+empty_memo_state = M.empty
+  
+
 startEvalMemoT :: Monad m => DAG_MemoT v m a -> m a
-startEvalMemoT f = evalStateT f M.empty
+startEvalMemoT f = S.evalStateT f M.empty
