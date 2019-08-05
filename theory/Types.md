@@ -167,9 +167,10 @@ This example will be based on the following value in the sequence language:
 By the [sequence-to-space-time-isomorphisms](Basic.md#sequence-isomorphisms), the type can be converted to `TSeq 2 1 (SSeq 2 (TSeq 3 1 Int))`.
 
 The nested, Aetherling structure diagram shows the pattern of `SSeq`s and `TSeq`s.
-Note the order of elements in the below diagram. The elements have this order since the `Tseq 3 1` is inside `SSeq 2`.
+Note the order of elements in the below diagram. 
+The elements have this order since the `TSeq 3 1` is the innermost sequence type.
 Also, the total number of clock cycles for this data type is twelve.
-Each inner `TSeq` takes four clock cycles.
+Each inner `TSeq` has a period of one clock cycle and takes four periods.
 Each `SSeq` has a period of four clock cycles and takes one period.
 The outer `TSeq` has a period of four clock cycles and takes three periods.
 Therefore, the total time is twelve clock cycles.
