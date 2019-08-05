@@ -2,6 +2,9 @@
 The goal of this document is to give a visual intuition for the semantics of Aetherling's type systems.
 It shows examples of values in the sequence language, visualizations of the values, isomorphic values in the space-time IR, and visualizations of those values.
 
+Unlike other documents, the space-time IR types in this document indicate the order of valid and invalid clocks. 
+In speaking with Gilbert, it appears that this is necessary in order to accurately estimate the cost due to delay buffers in the space-time IR.
+
 # Flat Sequences
 The simplest example of a sequence value in the sequence language is below.
 It is a sequence of four integers. 
@@ -14,7 +17,7 @@ By the [sequence-to-space-time-isomorphisms](Basic.md#sequence-isomorphisms), th
 
 ## Flat SSeq
 The above `Seq 6 Int` can be converted to an `SSeq 6 Int` with six integers on one clock cycle.
-The below diagrams show how the distribution of this value's elements in space and time.
+The below diagrams show the distribution of this value's elements in space and time.
 
 The first diagram visualizes the structure of Aetherling's nested `SSeq`s and `TSeq`s.
 The `()` indicate an `SSeq`.
@@ -25,13 +28,15 @@ This flat `SSeq` represents six elements on one clock cycle.
 The second diagram shows the hardware perspective: what elements of the sequence will be materialized on which clock cycles. 
 It does this by flattening the `SSeq`s and `TSeq`s.
 The `SSeq 6 Int` materializes all six elements on the first clock cycle.
+Note that the `0` in the below table indicates the element with value `0`, not time `0`.
+The hardware perspective diagram does not have labels on the axes.
 
 ![SSeq 6 Int Table](other_diagrams/types/seq6/sseq6_table.png "SSeq 6 Int Table")
 
 Note that, until the nested `Seq` example below, there is no flattening to demonstrate with this diagram.
 
 ## Flat TSeq With No Invalids
-The above `Seq 6 Int` can be converted to an `TSeq 6 0 Int` with six integers on six clock cycle.
+The above `Seq 6 Int` can be converted to an `TSeq 6 0 Int` with six integers on six clock cycles.
 Just as with the `SSeq 6 Int` example, there are two diagrams.
 
 The first diagram shows the nested structure of the Aetherling type.
@@ -39,7 +44,7 @@ Each box indicates one period of the `TSeq`.
 This diagram has six boxes, each with one integer.
 If a box contains only atoms and `SSeq`s, then the period for that box is one clock cycle.
 Otherwise, the period of the box is computed based on the periods of the elements inside the box.
-Therefore, it indicates one integer per clock for six clocks.
+Therefore, the below diagram indicates one integer per clock for six clocks.
 
 ![TSeq 6 0 Int](other_diagrams/types/seq6/tseq60.png "TSeq 6 0 Int")
 
@@ -113,12 +118,12 @@ The above `Seq 2 (Seq 3 Int)` can be converted into a `TSeq 2 0 (TSeq 3 1 Int)` 
 
 The nested, Aetherling structure diagram shows an outer `TSeq 2 0` where each element is a `TSeq 3 1 Int`.
 Each of the `TSeq 3 1 Int` has one invalid period.
-Note that, unlike the `TSeq 6 2 Int`, once of the invalid periods occurs at the fourth clock cycle.
+Note that, unlike the `TSeq 6 2 Int`, one of the invalid periods occurs at the fourth clock cycle.
 The diagram indicates this because the fourth inner box is shaded red.
 
 ![TSeq 2 0 (TSeq 3 1 Int)](other_diagrams/types/seq2seq3/tseq20tseq31.png "TSeq 2 0 (TSeq 3 1 Int)")
 
-The flattened, hardware diagram is different from the one for `TSeq 6 0 Int`.
+The flattened, hardware diagram is different from the one for `TSeq 6 2 Int`.
 They both have six integers over eight clock cycles.
 However, one of the invalid clocks occurs earlier in the below diagram. 
 It occurs on the fourth clock cycle.
@@ -126,10 +131,10 @@ It occurs on the fourth clock cycle.
 ![TSeq 2 0 (TSeq 3 1 Int) Table](other_diagrams/types/seq2seq3/tseq20tseq31_table.png "TSeq 2 0 (TSeq 3 1 Int) Table")
 
 ## TSeq of SSeq
-The above `Seq 2 (Seq 3 Int)` can be converted into a `TSeq 2 1 (SSeq 3 Int)` with six integers on eight clock cycle.
+The above `Seq 2 (Seq 3 Int)` can be converted into a `TSeq 2 1 (SSeq 3 Int)` with six integers on three clock cycle.
 
 The nested, Aetherling structure diagram shows an outer `TSeq 2 1` where each valid element is a `SSeq 3 Int`.
-Since the time of `SSeq 3 Int` is one clock, each period `TSeq 2 1` takes one clock.
+Since the time of `SSeq 3 Int` is one clock, each period of `TSeq 2 1` takes one clock.
 Therefore, the `TSeq 2 1 (SSeq 3 Int)` takes 3 total clocks.
 
 ![TSeq 2 1 (SSeq 3 Int)](other_diagrams/types/seq2seq3/tseq21sseq3.png "TSeq 2 1 (SSeq 3 Int)")
@@ -168,6 +173,7 @@ Each inner `TSeq` takes four clock cycles.
 Each `SSeq` has a period of four clock cycles and takes one period.
 The outer `TSeq` has a period of four clock cycles and takes three periods.
 Therefore, the total time is twelve clock cycles.
+
 ![TSeq 2 1 (SSeq 2 (TSeq 3 1 Int))](other_diagrams/types/complex/tseq21sseq2tseq31.png "TSeq 2 1 (SSeq 2 (TSeq 3 1 Int))")
 
 The flattened, hardware diagram shows twelve clock cycles.
