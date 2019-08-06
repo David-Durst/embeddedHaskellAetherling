@@ -184,16 +184,16 @@ expr_to_outer_types' (ErrorN _ _) = return $ Expr_Types [] UnitT
 
 expr_to_outer_types_atom_operator :: Expr -> Expr -> Input_TrackerM Expr_Types 
 expr_to_outer_types_atom_operator consumer_op producer_op = do
-  producer_outer_types <- expr_to_outer_types' producer_op
+  producer_outer_types <- memo consumer_op $ expr_to_outer_types' producer_op
   let producer_input_types = e_in_types producer_outer_types
   let consumer_output_type = e_out_type $ expr_to_types consumer_op
   return $ Expr_Types producer_input_types consumer_output_type
 
 expr_to_outer_types_binary_operator :: Expr -> Expr -> Expr -> Input_TrackerM Expr_Types
 expr_to_outer_types_binary_operator consumer_op producer_op0 producer_op1 = do
-  producer0_outer_types <- expr_to_outer_types' producer_op0
+  producer0_outer_types <- memo producer_op0 $ expr_to_outer_types' producer_op0
   let producer0_input_types = e_in_types producer0_outer_types
-  producer1_outer_types <- expr_to_outer_types' producer_op1
+  producer1_outer_types <- memo producer_op1 $ expr_to_outer_types' producer_op1
   let producer1_input_types = e_in_types producer1_outer_types
   let consumer_output_type = e_out_type $ expr_to_types consumer_op
   return $ Expr_Types (producer0_input_types ++ producer1_input_types) consumer_output_type

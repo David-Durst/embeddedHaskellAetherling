@@ -20,16 +20,16 @@ import qualified Data.Vector.Sized as V
 import qualified Data.Map.Lazy as M
 import Util
 
-compile :: (Aetherling_Value a) => Compilation_Env a -> Expr
+compile :: (Aetherling_Value a) => Rewrite_StateM a -> Expr
 compile shallow_programM = do
   let shallow_program = fromRight undefined $
-        evalState (runExceptT shallow_programM) empty_compilation_data
+        evalState (runExceptT shallow_programM) empty_rewrite_data
   let expr_maybe = edge_to_maybe_expr shallow_program 
   if isJust expr_maybe
     then fromJust expr_maybe
     else ErrorN "Not an edge, please pass in the result of calling compile" No_Index
     
-instance Sequence_Language Compilation_Env where
+instance Sequence_Language Rewrite_StateM where
   -- unary operators
   idC x = x
     --add_to_DAG IdN (input_to_maybe_indices x) "idC" "any_input_edge"
@@ -77,7 +77,7 @@ instance Sequence_Language Compilation_Env where
       _ -> throwError $ Expr_Failure $ fail_message_edge "divC" "Atom_Tuple Atom_Int Atom_Int"
 
   eqC :: forall a . (Aetherling_Value a, Check_Type_Is_Atom a, Eq a) =>
-    Compilation_Env (Atom_Tuple a a) -> Compilation_Env Atom_Bit
+    Rewrite_StateM (Atom_Tuple a a) -> Rewrite_StateM Atom_Bit
   eqC inputM = do
     input <- inputM
     cur_idx <- get_cur_index
@@ -87,8 +87,8 @@ instance Sequence_Language Compilation_Env where
       _ -> throwError $ Expr_Failure $ fail_message_edge "eqC" "Atom_Tuple any_type any_type"
       
   -- generators
-  lut_genC :: forall a . Aetherling_Value a => [a] -> Compilation_Env Atom_Int ->
-    Compilation_Env a
+  lut_genC :: forall a . Aetherling_Value a => [a] -> Rewrite_StateM Atom_Int ->
+    Rewrite_StateM a
   lut_genC table inputM = do
     input <- inputM
     cur_idx <- get_cur_index
@@ -103,8 +103,8 @@ instance Sequence_Language Compilation_Env where
       else do
       throwError $ Expr_Failure $ fail_message_edge "lut_genC" "[a] -> Atom_Int"
 
-  const_genC :: forall a b . Aetherling_Value a => a -> Compilation_Env b ->
-    Compilation_Env a
+  const_genC :: forall a b . Aetherling_Value a => a -> Rewrite_StateM b ->
+    Rewrite_StateM a
   const_genC const _ = do
     let const_expr_maybe = get_AST_value const
     cur_idx <- get_cur_index
@@ -121,7 +121,7 @@ instance Sequence_Language Compilation_Env where
   
   shiftC' :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
                              Aetherling_Value a) =>
-    Proxy (n+r) -> Proxy r -> Compilation_Env (Seq (n+r) i a) -> Compilation_Env (Seq (n+r) i a)
+    Proxy (n+r) -> Proxy r -> Rewrite_StateM (Seq (n+r) i a) -> Rewrite_StateM (Seq (n+r) i a)
   shiftC' len_proxy shift_amount_proxy inputM = do
     input <- inputM
     cur_idx <- get_cur_index
@@ -136,7 +136,7 @@ instance Sequence_Language Compilation_Env where
   
   up_1dC :: forall a n i . (KnownNat n, KnownNat i,
              Aetherling_Value a) =>
-    Proxy (1+n) -> Compilation_Env (Seq 1 (n + i) a) -> Compilation_Env (Seq (1+n) i a)
+    Proxy (1+n) -> Rewrite_StateM (Seq 1 (n + i) a) -> Rewrite_StateM (Seq (1+n) i a)
   up_1dC len_proxy inputM = do
     input <- inputM
     cur_idx <- get_cur_index
@@ -152,8 +152,8 @@ instance Sequence_Language Compilation_Env where
   
   down_1dC' :: forall a n i . (KnownNat n, KnownNat i,
                 Aetherling_Value a) =>
-    Proxy (1+n) -> Int -> Compilation_Env (Seq (1+n) i a) ->
-    Compilation_Env (Seq 1 (n + i) a)
+    Proxy (1+n) -> Int -> Rewrite_StateM (Seq (1+n) i a) ->
+    Rewrite_StateM (Seq 1 (n + i) a)
   down_1dC' len_proxy sel_idx inputM = do
     input <- inputM
     cur_idx <- get_cur_index
@@ -170,9 +170,9 @@ instance Sequence_Language Compilation_Env where
                  KnownNat io, KnownNat ii,
                  Aetherling_Value a) =>
     Proxy no -> Proxy ni -> Proxy io -> Proxy ii ->
-    Compilation_Env (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+    Rewrite_StateM (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
                                 io GHC.TypeLits.* (ni + ii)) a) ->
-    Compilation_Env (Seq no io (Seq ni ii a))
+    Rewrite_StateM (Seq no io (Seq ni ii a))
   partitionC proxyNO proxyNI proxyIO proxyII inputM = do
     input <- inputM
     cur_idx <- get_cur_index
@@ -193,8 +193,8 @@ instance Sequence_Language Compilation_Env where
                     KnownNat io, KnownNat ii,
                     Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
-    Compilation_Env (Seq no io (Seq ni ii a)) ->
-    Compilation_Env (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
+    Rewrite_StateM (Seq no io (Seq ni ii a)) ->
+    Rewrite_StateM (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
                                    io GHC.TypeLits.* (ni + ii)) a)
   unpartitionC' proxyNO proxyNI inputM = do
     input <- inputM
@@ -215,8 +215,8 @@ instance Sequence_Language Compilation_Env where
   mapC' :: forall n i a b . (KnownNat n, KnownNat i,
            Aetherling_Value a,
            Aetherling_Value b) =>
-    Proxy n -> (Compilation_Env a -> Compilation_Env b) ->
-    Compilation_Env (Seq n i a) -> Compilation_Env (Seq n i b)
+    Proxy n -> (Rewrite_StateM a -> Rewrite_StateM b) ->
+    Rewrite_StateM (Seq n i a) -> Rewrite_StateM (Seq n i b)
   mapC' len_proxy f inputM = do
     input <- inputM
     cur_idx <- get_cur_index
@@ -236,8 +236,8 @@ instance Sequence_Language Compilation_Env where
                                 Aetherling_Value b,
                                 Aetherling_Value c) =>
     Proxy n ->
-    (Compilation_Env a -> Compilation_Env b -> Compilation_Env c) ->
-    Compilation_Env (Seq n i a) -> Compilation_Env (Seq n i b) -> Compilation_Env (Seq n i c)
+    (Rewrite_StateM a -> Rewrite_StateM b -> Rewrite_StateM c) ->
+    Rewrite_StateM (Seq n i a) -> Rewrite_StateM (Seq n i b) -> Rewrite_StateM (Seq n i c)
   map2C' len_proxy f input1M input2M = do
     input1 <- input1M
     input2 <- input2M
@@ -255,8 +255,8 @@ instance Sequence_Language Compilation_Env where
 
   reduceC' :: forall n i a . (KnownNat n, KnownNat i,
                               Aetherling_Value a) =>
-    Proxy (1+n) -> (Compilation_Env (Atom_Tuple a a) -> Compilation_Env a) ->
-    Compilation_Env (Seq (1+n) i a) -> Compilation_Env (Seq 1 (n + i) a)
+    Proxy (1+n) -> (Rewrite_StateM (Atom_Tuple a a) -> Rewrite_StateM a) ->
+    Rewrite_StateM (Seq (1+n) i a) -> Rewrite_StateM (Seq 1 (n + i) a)
   reduceC' len_proxy f inputM = do
     input <- inputM
     cur_idx <- get_cur_index
@@ -272,7 +272,7 @@ instance Sequence_Language Compilation_Env where
   fstC :: forall a b . (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
                         Aetherling_Value a,
                         Aetherling_Value b) =>
-    Compilation_Env (Atom_Tuple a b) -> Compilation_Env a
+    Rewrite_StateM (Atom_Tuple a b) -> Rewrite_StateM a
   fstC inputM = do
     input <- inputM
     cur_idx <- get_cur_index
@@ -286,7 +286,7 @@ instance Sequence_Language Compilation_Env where
   sndC :: forall a b . (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
                         Aetherling_Value a,
                         Aetherling_Value b) =>
-    Compilation_Env (Atom_Tuple a b) -> Compilation_Env b
+    Rewrite_StateM (Atom_Tuple a b) -> Rewrite_StateM b
   sndC inputM = do
     input <- inputM
     cur_idx <- get_cur_index
@@ -300,7 +300,7 @@ instance Sequence_Language Compilation_Env where
   atom_tupleC :: forall a b . (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
                                Aetherling_Value a,
                                Aetherling_Value b) =>
-    Compilation_Env a -> Compilation_Env b -> Compilation_Env (Atom_Tuple a b)
+    Rewrite_StateM a -> Rewrite_StateM b -> Rewrite_StateM (Atom_Tuple a b)
   atom_tupleC input1M input2M = do
     input1 <- input1M
     input2 <- input2M
@@ -316,8 +316,8 @@ instance Sequence_Language Compilation_Env where
       else throwError $ Expr_Failure $ fail_message_edge "atom_tupleC" "any_atom"
 
   seq_tupleC :: forall a . (Aetherling_Value a) =>
-    Compilation_Env a -> Compilation_Env a ->
-    Compilation_Env (Seq_Tuple 2 a)
+    Rewrite_StateM a -> Rewrite_StateM a ->
+    Rewrite_StateM (Seq_Tuple 2 a)
   seq_tupleC input1M input2M = do
     input1 <- input1M
     input2 <- input2M
@@ -332,7 +332,7 @@ instance Sequence_Language Compilation_Env where
       else throwError $ Expr_Failure $ fail_message_edge "seq_tupleC" "any"
 
   zipC :: forall a l n i . (Aetherling_Value a, KnownNat l, KnownNat n, KnownNat i) =>
-    Proxy l -> [Compilation_Env (Seq n i a)] -> Compilation_Env (Seq n i (Seq_Tuple l a))
+    Proxy l -> [Rewrite_StateM (Seq n i a)] -> Rewrite_StateM (Seq n i (Seq_Tuple l a))
   zipC len_proxy inputsM | natVal len_proxy > 2 = do
     let inputs = fmap compile inputsM
     let a_type = get_AST_type (Proxy :: Proxy a)
@@ -380,8 +380,8 @@ instance Sequence_Language Compilation_Env where
   seq_tuple_appendC :: forall n a . (KnownNat n, Aetherling_Value (Seq_Tuple n a),
                                      Aetherling_Value a,
                                      Aetherling_Value (Seq_Tuple (n+1) a)) =>
-    Compilation_Env (Seq_Tuple n a) -> Compilation_Env a ->
-    Compilation_Env (Seq_Tuple (n+1) a)
+    Rewrite_StateM (Seq_Tuple n a) -> Rewrite_StateM a ->
+    Rewrite_StateM (Seq_Tuple (n+1) a)
   seq_tuple_appendC input1M input2M = do
     input1 <- input1M
     let input1_expr_maybe = edge_to_maybe_expr input1
@@ -402,9 +402,9 @@ instance Sequence_Language Compilation_Env where
                         KnownNat io, KnownNat ii,
                         Aetherling_Value a) =>
     Proxy io -> Proxy ii ->
-    Compilation_Env (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
+    Rewrite_StateM (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
        (Seq_Tuple ni a)) ->
-    Compilation_Env (Seq no io (Seq ni ii a))
+    Rewrite_StateM (Seq no io (Seq ni ii a))
   seq_tuple_to_seqC proxyIO proxyII inputM = do
     input <- inputM
     cur_idx <- get_cur_index
@@ -422,8 +422,8 @@ instance Sequence_Language Compilation_Env where
                        (KnownNat no, KnownNat ni, 
                         KnownNat io, KnownNat ii,
                         Aetherling_Value a) =>
-    Compilation_Env (Seq no io (Seq ni ii a)) ->
-    Compilation_Env (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
+    Rewrite_StateM (Seq no io (Seq ni ii a)) ->
+    Rewrite_StateM (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
        (Seq_Tuple ni a))
   seq_to_seq_tupleC inputM = do
     input <- inputM
@@ -441,46 +441,29 @@ instance Sequence_Language Compilation_Env where
   -- composition operators
   (>>>) f g = g . f
 
-data Compilation_Data = Compilation_Data {
-  cur_index :: DAG_Index
-  } deriving (Show, Eq)
-
-empty_compilation_data = Compilation_Data $ Index 0
-
-type Compilation_Env = ExceptT Rewrite_Failure (State Compilation_Data)
-
-get_cur_index :: Compilation_Env DAG_Index
-get_cur_index = do
-  cur_data <- get
-  case cur_index cur_data of
-    Index cur_idx -> do
-      put $ Compilation_Data $ Index (cur_idx + 1)
-      return $ Index cur_idx
-    _ -> return No_Index
-
-com_input_unit :: String -> Compilation_Env Atom_Unit
+com_input_unit :: String -> Rewrite_StateM Atom_Unit
 com_input_unit s = do
   cur_idx <- get_cur_index
   return $ Atom_Unit_Edge $ InputN UnitT s cur_idx
-com_input_int :: String -> Compilation_Env Atom_Int
+com_input_int :: String -> Rewrite_StateM Atom_Int
 com_input_int s = do
   cur_idx <- get_cur_index
   return $ Atom_Int_Edge $ InputN IntT s cur_idx
-com_input_bit :: String -> Compilation_Env Atom_Bit
+com_input_bit :: String -> Rewrite_StateM Atom_Bit
 com_input_bit s = do
   cur_idx <- get_cur_index
   return $ Atom_Bit_Edge $ InputN BitT s cur_idx
 com_input_atom_tuple :: (Aetherling_Value a, Aetherling_Value b) => String ->
-  Proxy (Atom_Tuple a b) -> Compilation_Env (Atom_Tuple a b)
+  Proxy (Atom_Tuple a b) -> Rewrite_StateM (Atom_Tuple a b)
 com_input_atom_tuple s a_proxy = do
   cur_idx <- get_cur_index
   return $ Atom_Tuple_Edge $ InputN (get_AST_type a_proxy) s cur_idx
 com_input_seq :: (KnownNat n, KnownNat i, Aetherling_Value a) => String ->
-  Proxy (Seq n i a) -> Compilation_Env (Seq n i a)
+  Proxy (Seq n i a) -> Rewrite_StateM (Seq n i a)
 com_input_seq s a_proxy = do
   cur_idx <- get_cur_index
   return $ Seq_Edge $ InputN (get_AST_type a_proxy) s cur_idx
-com_input_any :: Aetherling_Value a => String -> Compilation_Env a
+com_input_any :: Aetherling_Value a => String -> Rewrite_StateM a
 com_input_any s = do
   cur_idx <- get_cur_index
   return $ get_input_edge s cur_idx
