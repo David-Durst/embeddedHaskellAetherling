@@ -19,8 +19,6 @@ data DAG_Index = No_Index
 
 class Indexible a where
   get_index :: a -> DAG_Index
-  get_inputs :: a -> [a]
-  get_child :: a -> Maybe a
 
 -- allow for DAG_MemoT to be a monad with type not what's stored in cache
 -- as sometimes want a function that has access to cache but doesn't return result from it
