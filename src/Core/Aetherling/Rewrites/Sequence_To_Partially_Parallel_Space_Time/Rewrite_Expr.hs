@@ -17,7 +17,7 @@ import Data.Either
 import Data.List.Split (chunksOf)
 import Debug.Trace
 import qualified Data.Set as S
-
+{-
 rewrite_to_partially_parallel :: Int -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel s seq_expr = do
   let expr_par = runIdentity $ runExceptT $ rewrite_to_partially_parallel' s seq_expr
@@ -1297,4 +1297,5 @@ parallelize_unary_seq_operator unary_seq_op_gen t producer = do
   producer_par <- sequence_to_partially_parallel producer
   t_par <- parallelize_AST_type t
   return $ unary_seq_op_gen t_par producer_par
+-}
 -}

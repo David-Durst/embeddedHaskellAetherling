@@ -10,6 +10,7 @@ import Control.Monad.Except
 import Data.Maybe
 import Data.Either
 
+{-
 -- int parameter will be extra slowdown needed to propagate from above
 sequence_to_partially_parallel' :: [Layer_Slowdown] -> Int -> SeqE.Expr ->
                                    Rewrite_StateM (STE.Expr, Int)
@@ -29,7 +30,6 @@ sequence_to_partially_parallel' s_layers s_extra consumer@(SeqE.DivN producer) =
   partially_parallelize_atom_operator s_layers s_extra consumer STE.DivN producer
 
 -- generators
-{-
 sequence_to_partially_parallel node@(SeqE.Lut_GenN _ _ producer) =
   throwError $ Expr_Failure $ "Can't parallelize LUTs: " ++ show node
 
@@ -88,7 +88,6 @@ partially_parallelize_AST_value (SeqT.STupleV xs) = do
 partially_parallelize_AST_value [] _ _ = 
   throwError $ Slowdown_Failure "ran out of slowdown layers when doing AST value rewrite"
 
--}
 partially_parallelize_atom_operator :: [Layer_Slowdown] -> Int -> SeqE.Expr -> (STE.Expr -> STE.Expr) -> SeqE.Expr
   -> Rewrite_StateM (STE.Expr, Int)
 partially_parallelize_atom_operator ls@(cur_layer : _) down_extra_s consumer atom_op_gen producer = do
@@ -99,3 +98,4 @@ partially_parallelize_atom_operator ls@(cur_layer : _) down_extra_s consumer ato
 partially_parallelize_atom_operator [] _ _ _ _ =
   throwError $ Slowdown_Failure "ran out of slowdown layers when doing atom rewrite"
 
+-}

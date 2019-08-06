@@ -24,7 +24,7 @@ merge_lengths_per_layer (Lengths_Per_Layer lengths0) (Lengths_Per_Layer lengths1
 prepend_lengths_per_layer :: Maybe Int -> Lengths_Per_Layer -> Lengths_Per_Layer
 prepend_lengths_per_layer prefix (Lengths_Per_Layer body) =
   Lengths_Per_Layer ([prefix] : body)
-  
+{-  
 get_lengths_per_layer :: SeqE.Expr -> Lengths_Per_Layer
 get_lengths_per_layer (SeqE.IdN producer) =
   merge_lengths_per_layer (Lengths_Per_Layer [[Nothing]]) $
@@ -150,6 +150,7 @@ get_lengths_per_layer_AST_type (SeqT.SeqT n _ t) =
   prepend_lengths_per_layer (Just n) $ get_lengths_per_layer_AST_type t
 get_lengths_per_layer_AST_type (SeqT.STupleT n t) =
   prepend_lengths_per_layer Nothing $ get_lengths_per_layer_AST_type t
+-}
 {-
 sequence_to_partially_parallel node@(SeqE.Lut_GenN _ _ producer) =
   throwError $ Expr_Failure $ "Can't parallelize LUTs: " ++ show node

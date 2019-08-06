@@ -10,7 +10,7 @@ empty_fib_state = FibState 0
 type MemoInt = DAG_MemoT Integer (StateT FibState Identity)
 
 instance Indexible Integer where
-  get_index i = Index 0 (fromInteger i)
+  get_index i = Index (fromInteger i)
 
 fibm ::  Integer -> MemoInt Integer
 fibm 0 = do
