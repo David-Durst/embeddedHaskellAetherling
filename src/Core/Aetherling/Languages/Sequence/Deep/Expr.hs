@@ -149,3 +149,15 @@ data Expr =
 
 instance Indexible Expr where
   get_index e = index e
+  get_inputs (Map2N _ _ _ in_l in_r _) = [in_l, in_r]
+  get_inputs (ATupleN _ _ in_l in_r _) = [in_l, in_r]
+  get_inputs (STupleN _ in_l in_r _) = [in_l, in_r]
+  get_inputs (STupleAppendN _ _ in_l in_r _) = [in_l, in_r]
+  get_inputs (InputN _ _ _) = []
+  get_inputs (ErrorN _ _) = []
+  get_inputs e = [seq_in e]
+  get_child (MapN _ _ f _ _) = Just f
+  get_child (Map2N _ _ f _ _ _) = Just f
+  get_child e = Nothing
+  
+  

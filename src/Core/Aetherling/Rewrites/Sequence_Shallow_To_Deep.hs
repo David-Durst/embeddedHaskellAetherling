@@ -35,55 +35,48 @@ instance Sequence_Language Rewrite_StateM where
     --add_to_DAG IdN (input_to_maybe_indices x) "idC" "any_input_edge"
   absC inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Atom_Int_Edge x -> return $ Atom_Int_Edge $ AbsN x cur_idx
+      Atom_Int_Edge x -> return $ Atom_Int_Edge $ AbsN x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "absC" "Atom_Int"
 
   notC inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Atom_Bit_Edge x -> return $ Atom_Bit_Edge $ NotN x cur_idx
+      Atom_Bit_Edge x -> return $ Atom_Bit_Edge $ NotN x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "absC" "Atom_Bit"
 
   -- binary operators
   addC inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ AddN x cur_idx
+      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ AddN x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "addC" "Atom_Tuple Atom_Int Atom_Int"
 
   subC inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ SubN x cur_idx
+      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ SubN x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "subC" "Atom_Tuple Atom_Int Atom_Int"
 
   mulC inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ MulN x cur_idx
+      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ MulN x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "mulC" "Atom_Tuple Atom_Int Atom_Int"
 
   divC inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ DivN x cur_idx
+      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ DivN x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "divC" "Atom_Tuple Atom_Int Atom_Int"
 
   eqC :: forall a . (Aetherling_Value a, Check_Type_Is_Atom a, Eq a) =>
     Rewrite_StateM (Atom_Tuple a a) -> Rewrite_StateM Atom_Bit
   eqC inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
       Atom_Tuple_Edge x -> return $ Atom_Bit_Edge $
-        EqN (get_AST_type (Proxy :: Proxy a)) x cur_idx
+        EqN (get_AST_type (Proxy :: Proxy a)) x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "eqC" "Atom_Tuple any_type any_type"
       
   -- generators
@@ -91,7 +84,6 @@ instance Sequence_Language Rewrite_StateM where
     Rewrite_StateM a
   lut_genC table inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     let input_expr_maybe = edge_to_maybe_expr input
     let a_proxy = Proxy :: Proxy a
     let lut_table_maybe = traverse get_AST_value table
@@ -99,7 +91,7 @@ instance Sequence_Language Rewrite_StateM where
       then do
       return $ expr_to_edge $
         Lut_GenN (fromJust lut_table_maybe)
-        (get_AST_type a_proxy) (fromJust input_expr_maybe) cur_idx
+        (get_AST_type a_proxy) (fromJust input_expr_maybe) No_Index
       else do
       throwError $ Expr_Failure $ fail_message_edge "lut_genC" "[a] -> Atom_Int"
 
@@ -107,11 +99,10 @@ instance Sequence_Language Rewrite_StateM where
     Rewrite_StateM a
   const_genC const _ = do
     let const_expr_maybe = get_AST_value const
-    cur_idx <- get_cur_index
     if isJust const_expr_maybe
       then do
       return $ expr_to_edge $
-        Const_GenN (fromJust const_expr_maybe) (get_AST_type (Proxy :: Proxy a)) cur_idx
+        Const_GenN (fromJust const_expr_maybe) (get_AST_type (Proxy :: Proxy a)) No_Index
       else do
       throwError $ Expr_Failure $ fail_message_edge "const_genC" "any_edge"
 
@@ -124,9 +115,8 @@ instance Sequence_Language Rewrite_StateM where
     Proxy (n+r) -> Proxy r -> Rewrite_StateM (Seq (n+r) i a) -> Rewrite_StateM (Seq (n+r) i a)
   shiftC' len_proxy shift_amount_proxy inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ ShiftN len i_val shift a_type x cur_idx
+      Seq_Edge x -> return $ Seq_Edge $ ShiftN len i_val shift a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "shiftC" "Seq"
     where
       len = fromInteger $ natVal len_proxy
@@ -139,9 +129,8 @@ instance Sequence_Language Rewrite_StateM where
     Proxy (1+n) -> Rewrite_StateM (Seq 1 (n + i) a) -> Rewrite_StateM (Seq (1+n) i a)
   up_1dC len_proxy inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ Up_1dN len i_val a_type x cur_idx
+      Seq_Edge x -> return $ Seq_Edge $ Up_1dN len i_val a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "up_1dC" "Seq"
     where
       len = fromInteger $ natVal len_proxy
@@ -156,9 +145,8 @@ instance Sequence_Language Rewrite_StateM where
     Rewrite_StateM (Seq 1 (n + i) a)
   down_1dC' len_proxy sel_idx inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ Down_1dN len i_val sel_idx a_type x cur_idx
+      Seq_Edge x -> return $ Seq_Edge $ Down_1dN len i_val sel_idx a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "down_1dC" "Seq"
     where
       len = fromInteger $ natVal len_proxy
@@ -175,9 +163,8 @@ instance Sequence_Language Rewrite_StateM where
     Rewrite_StateM (Seq no io (Seq ni ii a))
   partitionC proxyNO proxyNI proxyIO proxyII inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ PartitionN no_val ni_val io_val ii_val a_type x cur_idx
+      Seq_Edge x -> return $ Seq_Edge $ PartitionN no_val ni_val io_val ii_val a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "partitionC" "Seq"
     where
       no_val = fromInteger $ natVal proxyNO
@@ -198,9 +185,8 @@ instance Sequence_Language Rewrite_StateM where
                                    io GHC.TypeLits.* (ni + ii)) a)
   unpartitionC' proxyNO proxyNI inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ UnpartitionN no_val ni_val io_val ii_val a_type x cur_idx
+      Seq_Edge x -> return $ Seq_Edge $ UnpartitionN no_val ni_val io_val ii_val a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "unpartitionC" "Seq"
     where
       no_val = fromInteger $ natVal proxyNO
@@ -219,11 +205,10 @@ instance Sequence_Language Rewrite_StateM where
     Rewrite_StateM (Seq n i a) -> Rewrite_StateM (Seq n i b)
   mapC' len_proxy f inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     f_ast <- f (com_input_any "f_in")
     let f_edge_maybe = edge_to_maybe_expr f_ast
     case (input, f_edge_maybe) of
-      (Seq_Edge x, Just f_ast_edge) -> return $ Seq_Edge $ MapN len_val i_val f_ast_edge x cur_idx
+      (Seq_Edge x, Just f_ast_edge) -> return $ Seq_Edge $ MapN len_val i_val f_ast_edge x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "mapC" "Seq"
     where
       len_val = fromInteger $ natVal len_proxy
@@ -241,11 +226,10 @@ instance Sequence_Language Rewrite_StateM where
   map2C' len_proxy f input1M input2M = do
     input1 <- input1M
     input2 <- input2M
-    cur_idx <- get_cur_index
     f_ast <- f (com_input_any "f_in1") (com_input_any "f_in2")
     let f_edge_maybe = edge_to_maybe_expr f_ast
     case (input1, input2, f_edge_maybe) of
-      (Seq_Edge x, Seq_Edge y, Just f_edge) -> return $ Seq_Edge $ Map2N len_val i_val f_edge x y cur_idx
+      (Seq_Edge x, Seq_Edge y, Just f_edge) -> return $ Seq_Edge $ Map2N len_val i_val f_edge x y No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "map2C" "Seq Seq"
     where
       len_val = fromInteger $ natVal len_proxy
@@ -259,11 +243,10 @@ instance Sequence_Language Rewrite_StateM where
     Rewrite_StateM (Seq (1+n) i a) -> Rewrite_StateM (Seq 1 (n + i) a)
   reduceC' len_proxy f inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     f_ast <- f (com_input_any "f_in")
     let f_edge_maybe = edge_to_maybe_expr f_ast
     case (input, f_edge_maybe) of
-      (Seq_Edge x, Just f_edge) -> return $ Seq_Edge $ ReduceN len_val i_val f_edge x cur_idx
+      (Seq_Edge x, Just f_edge) -> return $ Seq_Edge $ ReduceN len_val i_val f_edge x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "reduceC" "Seq"
     where
       len_val = fromInteger $ natVal len_proxy
@@ -275,9 +258,8 @@ instance Sequence_Language Rewrite_StateM where
     Rewrite_StateM (Atom_Tuple a b) -> Rewrite_StateM a
   fstC inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Atom_Tuple_Edge x -> return $ expr_to_edge $ FstN a_type b_type x cur_idx
+      Atom_Tuple_Edge x -> return $ expr_to_edge $ FstN a_type b_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "fstC" "Atom_Tuple"
     where
       a_type = get_AST_type (Proxy :: Proxy a)
@@ -289,9 +271,8 @@ instance Sequence_Language Rewrite_StateM where
     Rewrite_StateM (Atom_Tuple a b) -> Rewrite_StateM b
   sndC inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Atom_Tuple_Edge x -> return $ expr_to_edge $ SndN a_type b_type x cur_idx
+      Atom_Tuple_Edge x -> return $ expr_to_edge $ SndN a_type b_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "sndC" "Atom_Tuple"
     where
       a_type = get_AST_type (Proxy :: Proxy a)
@@ -304,7 +285,6 @@ instance Sequence_Language Rewrite_StateM where
   atom_tupleC input1M input2M = do
     input1 <- input1M
     input2 <- input2M
-    cur_idx <- get_cur_index
     let a_type = get_AST_type (Proxy :: Proxy a)
     let b_type = get_AST_type (Proxy :: Proxy b)
     let input1_expr_maybe = edge_to_maybe_expr input1
@@ -312,7 +292,7 @@ instance Sequence_Language Rewrite_StateM where
     if isJust input1_expr_maybe && isJust input2_expr_maybe
       then return $ Atom_Tuple_Edge $
            ATupleN a_type b_type
-           (fromJust input1_expr_maybe) (fromJust input2_expr_maybe) cur_idx
+           (fromJust input1_expr_maybe) (fromJust input2_expr_maybe) No_Index
       else throwError $ Expr_Failure $ fail_message_edge "atom_tupleC" "any_atom"
 
   seq_tupleC :: forall a . (Aetherling_Value a) =>
@@ -321,14 +301,13 @@ instance Sequence_Language Rewrite_StateM where
   seq_tupleC input1M input2M = do
     input1 <- input1M
     input2 <- input2M
-    cur_idx <- get_cur_index
     let a_type = get_AST_type (Proxy :: Proxy a)
     let input1_expr_maybe = edge_to_maybe_expr input1
     let input2_expr_maybe = edge_to_maybe_expr input2
     if isJust input1_expr_maybe && isJust input2_expr_maybe
       then return $ Seq_Tuple_Edge $
            STupleN a_type (fromJust input1_expr_maybe) (fromJust input2_expr_maybe)
-           cur_idx
+           No_Index
       else throwError $ Expr_Failure $ fail_message_edge "seq_tupleC" "any"
 
   zipC :: forall a l n i . (Aetherling_Value a, KnownNat l, KnownNat n, KnownNat i) =>
@@ -340,31 +319,23 @@ instance Sequence_Language Rewrite_StateM where
     let i_val = fromInteger $ natVal (Proxy :: Proxy i)
     -- this will be used after initial step in the fold
     let map_stuple_append out_len in_left in_right = do
-          map2_idx <- get_cur_index
-          stuple_append_idx <- get_cur_index
-          input1_idx <- get_cur_index
-          input2_idx <- get_cur_index
           return $
             Map2N n_val i_val
             (STupleAppendN out_len
               a_type
-              (InputN (STupleT (out_len - 1) a_type) "tuple_in_1" input1_idx)
-              (InputN a_type "tuple_in_2" input2_idx)
-              stuple_append_idx)
-            in_left in_right map2_idx
+              (InputN (STupleT (out_len - 1) a_type) "tuple_in_1" No_Index)
+              (InputN a_type "tuple_in_2" No_Index)
+              No_Index)
+            in_left in_right No_Index
     -- the initial step in the fold
     let map_stuple_initial = do
-          map2_idx <- get_cur_index
-          stuple_idx <- get_cur_index
-          input1_idx <- get_cur_index
-          input2_idx <- get_cur_index
           return $
             Map2N n_val i_val
             (STupleN a_type 
-              (InputN a_type "tuple_in_1" input1_idx)
-              (InputN a_type "tuple_in_2" input2_idx)
-              stuple_idx)
-            (inputs !! 0) (inputs !! 1) map2_idx
+              (InputN a_type "tuple_in_1" No_Index)
+              (InputN a_type "tuple_in_2" No_Index)
+              No_Index)
+            (inputs !! 0) (inputs !! 1) No_Index
     tupled_expr <- foldl (\prior_tuplesM cur_len -> do
                              prior_tuples <- prior_tuplesM
                              map_stuple_append
@@ -387,14 +358,13 @@ instance Sequence_Language Rewrite_StateM where
     let input1_expr_maybe = edge_to_maybe_expr input1
     input2 <- input2M
     let input2_expr_maybe = edge_to_maybe_expr input2
-    cur_idx <- get_cur_index
     if isJust input1_expr_maybe && isJust input2_expr_maybe
       then do
       let input1_expr = fromJust input1_expr_maybe
       let input2_expr = fromJust input2_expr_maybe
       let out_len = fromInteger $ natVal (Proxy :: Proxy (n+1))
       let a_type = get_AST_type (Proxy :: Proxy a)
-      return $ Seq_Tuple_Edge $ STupleAppendN out_len a_type input1_expr input2_expr cur_idx
+      return $ Seq_Tuple_Edge $ STupleAppendN out_len a_type input1_expr input2_expr No_Index
       else throwError $ Expr_Failure $ fail_message "seq_tuple_appendC" "inputs must be edges"
   
   seq_tuple_to_seqC :: forall no ni io ii a .
@@ -407,9 +377,8 @@ instance Sequence_Language Rewrite_StateM where
     Rewrite_StateM (Seq no io (Seq ni ii a))
   seq_tuple_to_seqC proxyIO proxyII inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ STupleToSeqN no_val ni_val io_val ii_val a_type x cur_idx
+      Seq_Edge x -> return $ Seq_Edge $ STupleToSeqN no_val ni_val io_val ii_val a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "seq_tuple_to_seqC" "seq_tuple"
     where
       no_val = fromInteger $ natVal (Proxy :: Proxy no)
@@ -427,9 +396,8 @@ instance Sequence_Language Rewrite_StateM where
        (Seq_Tuple ni a))
   seq_to_seq_tupleC inputM = do
     input <- inputM
-    cur_idx <- get_cur_index
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ SeqToSTupleN no_val ni_val io_val ii_val a_type x cur_idx
+      Seq_Edge x -> return $ Seq_Edge $ SeqToSTupleN no_val ni_val io_val ii_val a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "seq_to_seq_tupleC" "seq"
     where
       no_val = fromInteger $ natVal (Proxy :: Proxy no)
@@ -443,30 +411,24 @@ instance Sequence_Language Rewrite_StateM where
 
 com_input_unit :: String -> Rewrite_StateM Atom_Unit
 com_input_unit s = do
-  cur_idx <- get_cur_index
-  return $ Atom_Unit_Edge $ InputN UnitT s cur_idx
+  return $ Atom_Unit_Edge $ InputN UnitT s No_Index
 com_input_int :: String -> Rewrite_StateM Atom_Int
 com_input_int s = do
-  cur_idx <- get_cur_index
-  return $ Atom_Int_Edge $ InputN IntT s cur_idx
+  return $ Atom_Int_Edge $ InputN IntT s No_Index
 com_input_bit :: String -> Rewrite_StateM Atom_Bit
 com_input_bit s = do
-  cur_idx <- get_cur_index
-  return $ Atom_Bit_Edge $ InputN BitT s cur_idx
+  return $ Atom_Bit_Edge $ InputN BitT s No_Index
 com_input_atom_tuple :: (Aetherling_Value a, Aetherling_Value b) => String ->
   Proxy (Atom_Tuple a b) -> Rewrite_StateM (Atom_Tuple a b)
 com_input_atom_tuple s a_proxy = do
-  cur_idx <- get_cur_index
-  return $ Atom_Tuple_Edge $ InputN (get_AST_type a_proxy) s cur_idx
+  return $ Atom_Tuple_Edge $ InputN (get_AST_type a_proxy) s No_Index
 com_input_seq :: (KnownNat n, KnownNat i, Aetherling_Value a) => String ->
   Proxy (Seq n i a) -> Rewrite_StateM (Seq n i a)
 com_input_seq s a_proxy = do
-  cur_idx <- get_cur_index
-  return $ Seq_Edge $ InputN (get_AST_type a_proxy) s cur_idx
+  return $ Seq_Edge $ InputN (get_AST_type a_proxy) s No_Index
 com_input_any :: Aetherling_Value a => String -> Rewrite_StateM a
 com_input_any s = do
-  cur_idx <- get_cur_index
-  return $ get_input_edge s cur_idx
+  return $ get_input_edge s No_Index
 {-
 com_input_atom_tuple :: forall a b .
   (Aetherling_Value a, Aetherling_Value b) =>

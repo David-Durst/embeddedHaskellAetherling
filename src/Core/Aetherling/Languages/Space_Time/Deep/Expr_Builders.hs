@@ -13,7 +13,7 @@ import Aetherling.Rewrites.Rewrite_Helpers
 -- The list of expression argument is the list of expressions to tuple
 -- The AST_Type is the type of each element in the outputed STuple
 repeated_stuple :: (Monad m) => (Expr -> Expr -> Expr -> DAG_Index -> Expr) ->
-                   [Expr] -> AST_Type -> Rewrite_StateM Expr
+                   [Expr] -> AST_Type -> Memo_Rewrite_StateM Expr Expr
 repeated_stuple map_gen input_exprs elem_t = do
   let map_stuple_append out_len in_left in_right = do
         map2_idx <- get_cur_index
@@ -51,14 +51,14 @@ repeated_stuple map_gen input_exprs elem_t = do
     -- start at 3 to set
     map_stuple_initial [3 .. length input_exprs]
 
-add_input_to_expr_for_map :: (Expr -> Expr) -> Rewrite_StateM Expr
+add_input_to_expr_for_map :: (Expr -> Expr) -> Memo_Rewrite_StateM Expr Expr
 add_input_to_expr_for_map expr_gen = do
   input_idx <- get_cur_index
   let expr_types = expr_to_types (expr_gen $ ErrorN "not an error" input_idx)
   let expr_in_type = head $ e_in_types expr_types
   return $ expr_gen $ InputN expr_in_type "f_in" input_idx
   
-add_input_to_expr_for_map2 :: (Expr -> Expr -> Expr) -> Rewrite_StateM Expr
+add_input_to_expr_for_map2 :: (Expr -> Expr -> Expr) -> Memo_Rewrite_StateM Expr Expr
 add_input_to_expr_for_map2 expr_gen = do
   input1_idx <- get_cur_index
   input2_idx <- get_cur_index
