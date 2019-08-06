@@ -439,7 +439,7 @@ The first diagram is the program in the sequence language AST.
 The below space-time IR program implements the pipeline with a slowdown of `s=10`.
 
 ```
-Map_t 1 4 (Map_s 2 (Up_1d 3 Int)) >>> 
+Map_t 1 4 (Map_s 2 (Up_1d_t 3 Int)) >>> 
     Up_1d_t 5 0 (SSeq 2 (TSeq 3 0 Int))
 ```
 
@@ -591,7 +591,7 @@ The first diagram is the program in the sequence language AST.
 
 ![Unscheduled Diamond Pattern With Nesting Manipulation](other_diagrams/scheduler_examples/hardware/diamond_nest_manip/diamond_nesting_manip_seq.png "Unscheduled Diamond Pattern With Nesting Manipulation")
 
-The below space-time IR program implements the pipeline with a slowdown of `s=8`.
+The below space-time IR program implements the pipeline with a slowdown of `s=2`.
 ```
 merge_with_up input = do
     -- branch 1
@@ -607,13 +607,49 @@ The diagram below shows the hardware implementation of this space-time IR progra
 
 ![Scheduled s=15 Diamond Pattern With Nesting Manipulation](other_diagrams/scheduler_examples/hardware/diamond_nest_manip/diamond_nesting_manip_s_15.png "Scheduled s=15 Diamond Pattern With Nesting Manipulation")
 
+## Diamond With Nesting Manipulation Both Branches
+The example demonstrates the issue of scheduling a DAG where both of the branches have different nestings from the other.
+```
+merge_with_up_twice input = do
+    -- branch 1
+    let nested = Partition 2 15 Int input
+    let repeated = Map 2 (Select_1d 15 0 Int >>> Up_1d 15 Int) nested
+    let flattened = Unpartition 2 15 Int repeated
+    
+    -- branch 2
+    let nested = Partition 6 5 Int input
+    let repeated = Map 6 (Select_1d 5 0 Int >>> Up_1d 5 Int) nested
+    let flattened = Unpartition 6 5 Int repeated
+
+    return (Map2 30 tuple other_branch flattened)
+```
+
+The below space-time IR program implements the pipeline with a slowdown of `s=2`.
+```
+merge_with_up input = do
+    -- branch 1
+    let repeated = Map_s 2 (Select_1d_t 15 0 Int >>> Up_1d_t 15 0 Int) input
+    
+    -- branch 2
+    let other_branch = 
+        (Unpartition 2 15 Int >>> 
+        Partition 6 5 Int >>>
+        Map_s 6 (Select_1d_t 5 0 Int >>> Up_1d_t 5 0 Int) >>>
+        Unpartition 6 5 Int >>>
+        Partition 15 2 Int) Input
+
+    return (Map2_s 2 (Map2_t 15 0 tuple) other_branch flattened)
+```
+
+## More Multi-Rate And Composition Examples
+Here are many possible compositions of nesting, `Up_1d`, and `Down_1d`: https://github.com/David-Durst/embeddedHaskellAetherling/raw/rewrites/theory/Multi_Rate_Nesting_Slowdown.xlsx
+
+The algorithm for scheduling them all is: slow down all stages independently. For each stage, slow down the operators that are at the layers with the fewest invalids across all stages. 
+
+For example: `Select 2 0 (Seq 3 Int)` - slow down the `Seq 3` because that layer has no invalids compared to the outer layer where the `Select` is.
+
 # Examples Not Conveniently Expressible In Sequence Language
 The below examples demonstrate certain common patterns that cannot be expressed in Aetherling.
-
-## List Reverse
-The hardware to implement this is a memory. 
-The memory is written to and then read from.
-The total amount of time is equal to two times the length to reverse.
 
 ## Reorder
 This is going to become a deserialize, then a bunch of fsts and seconds (which I can desugar from an index operator), and then a serialize
@@ -626,6 +662,12 @@ Problem:
 Deserialize >>> Serialize
 ```
 is not a double buffer. Deserialize and serialize each can't be memoreis, they have to be lots of registers as need to read from them all in one clock
+
+## List Reverse
+The hardware to implement this is a memory. 
+The memory is written to and then read from.
+The total amount of time is equal to two times the length to reverse.
+This is a more specific version of reorder.
 
 ## Histogram
 
@@ -665,22 +707,20 @@ histogram input num_bins bin_width =
     return (Tuple_To_Seq tuple_bin_stores)
 ```
 
-This is 
-
-Should I use a  big memory to store whole histogram?
-pros:
-1. Will need to write to 1 address every cycle
-cons:
-1. will need to read entire histogram out on one cycle or stall after writing while I ready out all parts
-1. will need to reset entire memory one entry at a time after done writing.
-
-implementation - if convert tuples to seq, then can do shift using normal shift operator and register/adders can just be mapped to right sizes
-
 # Intuition For Scheduler
 
 What do he spreadsheets show me:
-1. Basic statement - if focus on slowing down map's before down's and up's, then rates match
+1. Basic statement - if focus on slowing down each operator based on underutilization across whole program, then rates match
 1. More global statement - need a consistent ordering for which factors to slowdown
+
+Steps:
+1. For every operator `f :: [a, b, c] -> [a', b', c']`, get `ai, bi, ci` which are number of invalids for any operator in the program at that layer
+1. `invalid_min_to_max = sort(ai, bi, ci, (<))`
+1. let `af` be all the factors of a, do this for all elements of each operator
+1. For each layer, get the factors of that layer and the lower layers.
+1. `slowdown :: [(a, ai, [(ci, cf), (bi, bf), (ai, af)]), (b, bi, [(ci, cf), (bi, bf)]), (c, ci, [(ci, cf)])] -> ` - search 
+
+
 
 # Garbage
 ## Composition of Multi-Rate With Nested Operators and Memories
