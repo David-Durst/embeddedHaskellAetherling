@@ -720,6 +720,25 @@ Steps:
 1. For each layer, get the factors of that layer and the lower layers.
 1. `slowdown :: [(a, ai, [(ci, cf), (bi, bf), (ai, af)]), (b, bi, [(ci, cf), (bi, bf)]), (c, ci, [(ci, cf)])] -> ` - search 
 
+## What Do I Use Nesting For?
+1. In Sequence Language - To create 2D operations out of 1D primitives
+1. In Space-Time IR - To express partial parallelism
+
+So in sequence language, I'm allow to reshape however I want as long as I preserve semantics.
+As long as I'm keeping the 2D operations as 2D, I'm not breaking a contract about performance.
+
+**Problem** - I can't have a flip rewrite rule - 
+1. I can nest my predefined set of operators.
+1. However, if the user writes `Partition 2 3 Int >>> Map 2 (Reduce 3 Abs) >>> Unpartition 2 3 Int`, I'm not sure how to flip the 2 and 3 dimensions while preserving semantics.
+1. I can't flip operators and preserve semantics, only nest them
+
+
+## Normal Form Thoughts
+1. Move `Partition` to start of pipeline and `Unpartition` to end of pipeline.
+1. Make every downsample/upsample operate on it's own nested layer that nothing else touches
+    1. This is a bad idea - don't want unnecessary nesting.
+    1. Each extra layer of nesting will require an extra counter for each `Map_t` to count for that layer.
+
 
 
 # Garbage
