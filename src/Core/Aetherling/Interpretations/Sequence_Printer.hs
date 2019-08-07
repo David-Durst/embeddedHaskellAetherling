@@ -7,7 +7,6 @@ import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Identity
 import Aetherling.Monad_Helpers
-import Text.Printf
 
 data Print_Data = Print_Data {
   cur_module_output_lines :: [String],
@@ -147,14 +146,14 @@ print_inner consumer_e@(PartitionN no ni io ii elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module $ cur_ref_name ++ " = PartitionN " ++
-    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show io ++ " " ++
+    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show ii ++ " " ++
     show elem_t ++ " " ++ producer_ref
   return cur_ref_name
 print_inner consumer_e@(UnpartitionN no ni io ii elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module $ cur_ref_name ++ " = UnpartitionN " ++
-    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show io ++ " " ++
+    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show ii ++ " " ++
     show elem_t ++ " " ++ producer_ref
   return cur_ref_name
 
@@ -223,14 +222,14 @@ print_inner consumer_e@(STupleToSeqN no ni io ii elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module $ cur_ref_name ++ " = STupleToSeqN " ++
-    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show io ++ " " ++
+    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show ii ++ " " ++
     show elem_t ++ " " ++ producer_ref
   return cur_ref_name
 print_inner consumer_e@(SeqToSTupleN no ni io ii elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module $ cur_ref_name ++ " = SeqToSTupleN " ++
-    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show io ++ " " ++
+    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show ii ++ " " ++
     show elem_t ++ " " ++ producer_ref
   return cur_ref_name
   

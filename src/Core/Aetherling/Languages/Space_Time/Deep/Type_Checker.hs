@@ -77,22 +77,22 @@ check_type' consumer_e@(Remove_1_0_tN _ producer_e _) =
 
 -- higher order operators
 check_type' consumer_e@(Map_sN _ f producer_e _) = do
-  check_type' f
+  memo f $ check_type' f
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Map_tN _ _ f producer_e _) = do
-  check_type' f
+  memo f $ check_type' f
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Map2_sN _ f producer0_e producer1_e _) = do
-  check_type' f
+  memo f $ check_type' f
   check_binary_operator consumer_e producer0_e producer1_e
 check_type' consumer_e@(Map2_tN _ _ f producer0_e producer1_e _) = do
-  check_type' f
+  memo f $ check_type' f
   check_binary_operator consumer_e producer0_e producer1_e
 check_type' consumer_e@(Reduce_sN _ f producer_e _) = do
-  check_type' f
+  memo f $ check_type' f
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Reduce_tN _ _ f producer_e _) = do
-  check_type' f
+  memo f $ check_type' f
   check_unary_operator consumer_e producer_e
 
 -- tuple operators

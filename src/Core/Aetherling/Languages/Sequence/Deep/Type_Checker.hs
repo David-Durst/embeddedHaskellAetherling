@@ -57,13 +57,13 @@ check_type' consumer_e@(UnpartitionN _ _ _ _ _ producer_e _) =
 
 -- higher order operators
 check_type' consumer_e@(MapN _ _ f producer_e _) = do
-  check_type' f
+  memo f $ check_type' f
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Map2N _ _ f producer0_e producer1_e _) = do
-  check_type' f
+  memo f $ check_type' f
   check_binary_operator consumer_e producer0_e producer1_e
 check_type' consumer_e@(ReduceN _ _ f producer_e _) = do
-  check_type' f
+  memo f $ check_type' f
   check_unary_operator consumer_e producer_e
 
 -- tuple operators
