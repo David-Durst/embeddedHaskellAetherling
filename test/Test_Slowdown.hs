@@ -10,6 +10,7 @@ import Aetherling.Rewrites.Sequence_Shallow_To_Deep
 import Aetherling.Rewrites.Rewrite_Helpers
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
+import Aetherling.Rewrites.Sequence_Assign_Indexes
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import Data.Proxy
 import Data.SBV
@@ -27,6 +28,8 @@ import Control.Monad.State
 single_map = compile $
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+single_map_seq_idx = add_indexes single_map
+{-
 single_map_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map) [1,2,4]
 single_map_ppar_results = fmap check_type single_map_ppar
 input_rewrite = rewrite_to_partially_parallel 2 (InputN (SeqT 4 0 IntT) "hi")
@@ -38,7 +41,15 @@ seq_rewrite' :: Partially_Parallel_StateM STT.AST_Type
 seq_rewrite' = do
   tr <- lift $ rewrite_AST_type 2 (SeqT 4 0 IntT)
   part_par_AST_type tr (SeqT 4 0 IntT)
-  
+-}
+
+diamond_map_uncompiled input = do
+  let branch = mapC absC input
+  map2C atom_tupleC branch branch
+diamond_map = compile $ diamond_map_uncompiled $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+diamond_map_seq_idx = add_indexes diamond_map
+{-
 single_map_underutil = compile $
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 4 Atom_Int))
@@ -147,6 +158,7 @@ tuple_sum_ppar_result' =
   fmap check_type' tuple_sum_ppar
 tuple_sum_ppar_result_s_2 = check_type' $ rewrite_to_partially_parallel 2 tuple_sum
 
+ -} 
 -- END OF ACTUALLY TESTED THINGS
 -- multiple unpartitions into a multi-rate
 multi_unpartition_with_multi_rate = compile $
