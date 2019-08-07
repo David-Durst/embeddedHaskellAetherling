@@ -149,3 +149,15 @@ data Expr =
 
 instance Indexible Expr where
   get_index e = index e
+  set_index e new_idx = e { index = new_idx }
+  get_producers (Map2N _ _ _ in_l in_r _) = [in_l, in_r]
+  get_producers (ATupleN _ _ in_l in_r _) = [in_l, in_r]
+  get_producers (STupleN _ in_l in_r _) = [in_l, in_r]
+  get_producers (STupleAppendN _ _ in_l in_r _) = [in_l, in_r]
+  get_producers (InputN _ _ _) = []
+  get_producers (ErrorN _ _) = []
+  get_producers e = [seq_in e]
+  get_child (MapN _ _ f _ _) = Just f
+  get_child (Map2N _ _ f _ _ _) = Just f
+  get_child (ReduceN _ _ f _ _) = Just f
+  get_child e = Nothing

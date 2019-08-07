@@ -2,16 +2,9 @@ module Aetherling.Rewrites.Sequence_Assign_Indexes where
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Sequence.Deep.Expr
-import Aetherling.Languages.Sequence.Deep.Types
-import Aetherling.Languages.Isomorphisms
 import Control.Monad.State
 import Control.Monad.Except
-import Control.Monad.Identity
 import Control.Monad.Memo
-import Data.Proxy
-import Data.Maybe
-import Control.Applicative
-import Data.Either
 
 add_indexes :: Expr -> Expr
 add_indexes e = do
