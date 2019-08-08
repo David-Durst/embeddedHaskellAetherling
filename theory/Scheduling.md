@@ -735,12 +735,98 @@ As long as I'm keeping the 2D operations as 2D, I'm not breaking a contract abou
 
 ## Normal Form Thoughts
 1. Move `Partition` to start of pipeline and `Unpartition` to end of pipeline.
+    1. How to get here?
+    1. Single Child Normal Form - First, make every `map (f >>> g)` into `map f >>> map g`
+    1. Max Connected Components - Then, check if adjacent to a `Unpartition` or `Partition`, applying nesting rewrite rule. Then apply `Unpartition`/`Partition` cancelling rules and drop any `Partition` at start or `Unpartition` at end
+        1. repeat while there is a `Partition` or `Unpartition` in function
+    1. Issues with this approach:
+        1. DAG - if run into another path, add a `Partition` to end of DAG or `Unpartition` to start of DAG and push it through that branch
+        1. Multiple `Partition` and `Unpartition` - if you are pushing and get a `Unpartition >>> Partition` that doesn't cancel out, need to create a reshape
+            1. Note: `Partition >>> Unparittion` not an issue as this keeps same nesting in and out, becomes a no-op regardless of parameters 
 1. Make every downsample/upsample operate on it's own nested layer that nothing else touches
     1. This is a bad idea - don't want unnecessary nesting.
     1. Each extra layer of nesting will require an extra counter for each `Map_t` to count for that layer.
 
+```
+normal_form pseq =
 
+split_map e = 
+    if is_map e:
+        child_nodes = children e
+        split_child_nodes = fmap split_map child_nodes
+        n = get_map_len e
+        return (fmap (Map n) split_child_nodes)
+    else
+        return [e]
 
+flip_partition e = 
+    e_is_partition = false
+    if is_map e:
+        child_nodes = children e
+        e_is_partition = contains_partition e
+    e_is_partition = e_is_partition || is_partition e
+    producer_nodes = producers e
+    if len producer_nodes != 0:
+        fmap 
+```
+
+## Problem Formulation
+1. I have a DAG `G={N,E}`
+1. Each node is an operator in Aetherling.
+1. All edges have a sequence or atom type, all nodes have a function type.
+1. All edges connect at most one operator output to at most one operator input
+1. One edge is connected to the output of an operator and not connected to any input - this is output edge of graph
+1. One or two edges are connected to the input of an operator and not any output - these are the input edges of the graph
+1. A graph has a function type. 
+    1. The types of the inputs to that function are the types of the input edges. 
+    1. The type of the output of the function is the type of the output edge
+1. The nesting structure of a sequence type is the number of nested `Seq`'s. 
+    1. For example, the sequence type `Seq 4 (Seq 4 Int)` has a nesting structure of two `Seq`'s.
+    1. We write this nesting structure as `(4, 4)`.
+1. Each node in the graph is either:
+    1. Higher-Order Sequence Operator - 
+        1. Node `n_i` contains a subgraph `G_i={N_i, E_i}`
+        1. Node `n_i` has type 
+            1. `n_i == Map` - then type is `Seq n a -> Seq n b` where `a` and `b` are input and output types of `G_i`
+            1. `n_i == Map2` - then type is `Seq n a -> Seq n b -> Seq n c` where `a`, 'b', and `c` are input and output types of `G_i`
+            1. `n_i == Reduce` - then type is `Seq n a -> Seq 1 a` where `a x a` and `a` are input and output types of `G_i`
+    1. Nesting Structure Changing Operator - 
+        1. `Partition :: Seq (no*ni) a -> Seq no (Seq ni a)`
+        1. `Unpartition :: Seq no (Seq ni a) -> Seq (no*ni) a`
+        1. `Tuple_To_Seq :: Seq no (NTuple ni a) -> Seq no (Seq ni a)`
+        1. `Seq_To_Tuple :: Seq no (Seq ni a) -> Seq no (NTuple ni a)`
+    1. Non-Higher Order, Structure Preserving Operator - then node has type `Seq n a -> Seq m a`
+
+## Allowed Type Rewrites
+I will allow the following type rewrites:
+1. Convert `Seq n a` to `SSeq n a`
+1. Convert `Seq n a` to `TSeq n i a`
+1. Convert `Seq (no*ni) a` to `TSeq no i (SSeq ni a)`
+
+### Why These Types Are Necessary
+These types each express an output with a different throughput. 
+`SSeq n a` is `n` elements in 1 clock.
+`TSeq n i a` is `n` elements in `n+i` clocks.
+Need a nested structure to accomplish any other throughput, such as `n` elements in `n/2` clocks.
+`TSeq no i (SSeq 2 a)` accomplishes that throughput.
+
+### Why These Types Span The A Wide Space of Throughputs
+I allow only these conversions to preserve the normal form for types of `TSeq no i (SSeq ni a)` rather than `SSeq ni (TSeq no i a)`.
+These types are isomorphic and have the same throughput.
+They have the same throuhgput: `no*ni` elements over `no+i` clock cycles.
+They are isomorphic as the following functions create isomorphisms between them:
+1. `SSeq_To_Seq >>> Map ni TSeq_To_Seq >>> Unpartition ni no >>> Unpartition no ni >>> Map no Seq_To_SSeq >>> Seq_To_TSeq :: SSeq ni (TSeq no i a) -> TSeq no i (SSeq ni a)` 
+1. `SSeq_To_Seq . Map ni TSeq_To_Seq . Unpartition ni no . Unpartition no ni . Map no Seq_To_SSeq . Seq_To_TSeq :: TSeq no i (SSeq ni a) -> SSeq ni (TSeq no i a)`
+
+Likewise, for any other type `t` with a nesting of `SSeq` and `TSeq` that emit a structure `[n_0/d_0, n_1/d_1, ..., n_j/d_j]`, there exists an isomorphic type with the same throughput of the form `TSeq no i (SSeq ni a)`.
+The construction is:
+1. Let `no = ` product of all `n_i` for any `SSeq`
+1. Let `ni = ` product of all `n_i` for any `TSeq`
+1. Let `i = time(t)  - ni` 
+The pattern of isomorphism construction is the same as above.
+
+## Operator Rewrite Process
+1. Given a rewritten output type
 # Garbage
 ## Composition of Multi-Rate With Nested Operators and Memories
 This example demonstrates the issue of scheduling multiple operators while preserving nesting and using memories.
