@@ -32,34 +32,6 @@ get_type_rewrite_periods (TimeR tr_n tr_i) = tr_n + tr_i
 get_type_rewrite_periods (SplitR tr_no tr_io _) = tr_no + tr_io
 get_type_rewrite_periods NonSeqR = -1
 
-apply_type_rewrite :: (Monad m) => SeqT.AST_Type -> [Type_Rewrite] ->
-                      Rewrite_StateTM m STT.AST_Type
-apply_type_rewrite (SeqT.SeqT n _ inner_t) (SpaceR tr_n : type_rewrites_tl) |
-  n == tr_n = do
-  inner_rewrite <- apply_type_rewrite inner_t type_rewrites_tl
-  return $ STT.SSeqT n inner_rewrite
-apply_type_rewrite (SeqT.SeqT n _ inner_t) (TimeR tr_n tr_i : type_rewrites_tl) |
-  n == tr_n = do
-  inner_rewrite <- apply_type_rewrite inner_t type_rewrites_tl
-  return $ STT.TSeqT n tr_i inner_rewrite
-apply_type_rewrite (SeqT.SeqT n _ inner_t) (SplitR tr_no tr_io tr_ni : type_rewrites_tl) |
-  n == (tr_no*tr_ni) = do
-  inner_rewrite <- apply_type_rewrite inner_t type_rewrites_tl
-  return $ STT.TSeqT tr_no tr_io (STT.SSeqT tr_ni inner_rewrite)
-apply_type_rewrite (SeqT.STupleT n inner_t) (NonSeqR : type_rewrites_tl) = do
-  inner_rewrite <- apply_type_rewrite inner_t type_rewrites_tl
-  return $ STT.STupleT n inner_rewrite
-apply_type_rewrite SeqT.UnitT [NonSeqR] = return $ STT.UnitT
-apply_type_rewrite SeqT.BitT [NonSeqR] = return $ STT.BitT
-apply_type_rewrite SeqT.IntT [NonSeqR] = return $ STT.IntT
-apply_type_rewrite (SeqT.ATupleT t_l t_r) [NonSeqR] = do
-  t_l_st <- apply_type_rewrite t_l [NonSeqR]
-  t_r_st <- apply_type_rewrite t_r [NonSeqR]
-  return $ STT.ATupleT t_l_st t_r_st
-apply_type_rewrite seqt tr = throwError $ Type_Failure $
-  "Couldn't rewrite " ++ show seqt ++ " with type rewrite " ++ show tr
-  
-
 rewrite_AST_type :: (Monad m) => Int -> SeqT.AST_Type -> Rewrite_StateTM m [Type_Rewrite]
 rewrite_AST_type s e = do
   let s_factors = ae_factorize s
