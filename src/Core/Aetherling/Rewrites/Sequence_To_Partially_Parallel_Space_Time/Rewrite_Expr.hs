@@ -18,6 +18,7 @@ import Data.Either
 import Data.List.Split (chunksOf)
 import Debug.Trace
 import qualified Data.Set as S
+import qualified Data.Map as M
 
 rewrite_to_partially_parallel :: Int -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel s seq_expr = do
@@ -34,8 +35,8 @@ rewrite_to_partially_parallel' s seq_expr = do
   let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
   output_type_slowdowns <- rewrite_AST_type s seq_expr_out_type
   undefined
-  -- trace ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n") $
-  --  evalStateT (sequence_to_partially_parallel output_type_slowdowns seq_expr) empty_ppar_state
+  trace ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n") $
+    startEvalMemoT $ sequence_to_partially_parallel output_type_slowdowns seq_expr
 
 data Input_Type_Rewrites = Input_Type_Rewrites {
   input_rewrites :: [Type_Rewrite],
@@ -46,10 +47,16 @@ instance Ord Input_Type_Rewrites where
   tr0 <= tr1 = input_name tr0 <= input_name tr1
 
 data Partially_Parallel_State = Partially_Parallel_State {
-  input_types_rewrites :: S.Set Input_Type_Rewrites
+  -- these are used to track the input rewrites for subgraphs
+  -- because a map must know the input_type rewrites of its subgraph
+  -- to compute it's input type
+  input_types_rewrites :: S.Set Input_Type_Rewrites,
+  -- these are used to track the input_rewrites seen by each node
+  -- to detect a DAG where a single node may be rewritten multiple times
+  input_rewrites_per_st_index :: M.Map DAG_Index [Type_Rewrite]
   }
 
-empty_ppar_state = Partially_Parallel_State S.empty
+empty_ppar_state = Partially_Parallel_State S.empty M.empty
   
 type Partially_ParallelM = ExceptT Rewrite_Failure (
   StateT Rewrite_Data (
@@ -59,22 +66,50 @@ type Partially_ParallelM = ExceptT Rewrite_Failure (
 
 type Partially_Parallel_MemoM v = DAG_MemoT v Partially_ParallelM
 
-sequence_to_partially_parallel :: [Type_Rewrite] -> SeqE.Expr -> Partially_Parallel_MemoM STE.Expr STE.Expr
+get_input_types_rewrites :: Partially_Parallel_MemoM STE.Expr (S.Set Input_Type_Rewrites)
+get_input_types_rewrites = do
+  cur_data <- lift $ lift $ lift get
+  return $ input_types_rewrites cur_data
+
+add_input_type_rewrite :: Input_Type_Rewrites -> Partially_Parallel_MemoM STE.Expr ()
+add_input_type_rewrite new_rewrite = do
+  cur_rewrites_set <- get_input_types_rewrites
+  let new_rewrites_set = S.insert new_rewrite cur_rewrites_set
+  lift $ lift $ lift $ modify
+    (\cur_data -> cur_data { input_types_rewrites = new_rewrites_set })
+    
+get_input_rewrites_for_node :: Indexible a => a ->
+                               Partially_Parallel_MemoM STE.Expr [Type_Rewrite]
+get_input_rewrites_for_node node = do
+  cur_data <- lift $ lift $ lift get
+  let cur_map = input_rewrites_per_st_index cur_data
+  return $ cur_map M.! (get_index node)
+
+add_input_rewrite_for_node :: Indexible a => a -> [Type_Rewrite] ->
+                              Partially_Parallel_MemoM STE.Expr ()
+add_input_rewrite_for_node node new_rewrite = do
+  cur_data <- lift $ lift $ lift get
+  let cur_map = input_rewrites_per_st_index cur_data
+  let new_map = M.insert (get_index node) new_rewrite cur_map
+  lift $ lift $ lift $ modify
+    (\cur_data -> cur_data { input_rewrites_per_st_index = new_map })
+
+sequence_to_partially_parallel :: [Type_Rewrite] -> SeqE.Expr ->
+                                  Partially_Parallel_MemoM STE.Expr STE.Expr
 sequence_to_partially_parallel type_rewrites (SeqE.IdN producer _) =
-  part_par_atom_operator type_rewrites STE.IdN producer
+  ppar_atom_operator type_rewrites STE.IdN producer
 sequence_to_partially_parallel type_rewrites (SeqE.AbsN producer _) =
-  part_par_atom_operator type_rewrites STE.AbsN producer
+  ppar_atom_operator type_rewrites STE.AbsN producer
 sequence_to_partially_parallel type_rewrites (SeqE.NotN producer _) =
-  part_par_atom_operator type_rewrites STE.NotN producer
+  ppar_atom_operator type_rewrites STE.NotN producer
 sequence_to_partially_parallel type_rewrites (SeqE.AddN producer _) =
-  part_par_atom_operator type_rewrites STE.AddN producer
+  ppar_atom_operator type_rewrites STE.AddN producer
 sequence_to_partially_parallel type_rewrites (SeqE.SubN producer _) =
-  part_par_atom_operator type_rewrites STE.SubN producer
+  ppar_atom_operator type_rewrites STE.SubN producer
 sequence_to_partially_parallel type_rewrites (SeqE.MulN producer _) =
-  part_par_atom_operator type_rewrites STE.MulN producer
+  ppar_atom_operator type_rewrites STE.MulN producer
 sequence_to_partially_parallel type_rewrites (SeqE.DivN producer _) =
-  part_par_atom_operator type_rewrites STE.DivN producer
-{-
+  ppar_atom_operator type_rewrites STE.DivN producer
 sequence_to_partially_parallel type_rewrites (SeqE.EqN t producer) = do
   -- can reuse all of type_rewrites in these calls as atom tuples
   -- and other atoms all have same Type_Rewrite object - NonSeqR
@@ -82,6 +117,7 @@ sequence_to_partially_parallel type_rewrites (SeqE.EqN t producer) = do
   t_par <- part_par_AST_type type_rewrites t
   return $ STE.EqN t_par producer_par
 
+{-
 -- generators
 sequence_to_partially_parallel _ node@(SeqE.Lut_GenN _ _ producer) =
   throwError $ Expr_Failure $ "Can't parallelize LUTs: " ++ show node
@@ -1294,34 +1330,48 @@ part_par_AST_value type_rewrites v = throwError $ Slowdown_Failure $
   "parallelizing AST value " ++ show v
   
 -}
-part_par_atom_operator :: [Type_Rewrite] -> (STE.Expr -> DAG_Index -> STE.Expr) ->
-                          SeqE.Expr -> Partially_Parallel_MemoM STE.Expr STE.Expr
-part_par_atom_operator [] atom_op_gen _ = do
+ppar_atom_operator :: [Type_Rewrite] -> (STE.Expr -> DAG_Index -> STE.Expr) ->
+                      SeqE.Expr -> Partially_Parallel_MemoM STE.Expr STE.Expr
+ppar_atom_operator [] atom_op_gen _ = do
   cur_idx <- get_cur_index
   throwError $ Slowdown_Failure $
     "type_rewrite list empty while processing " ++
     show (atom_op_gen (STE.ErrorN "place_holder" No_Index) cur_idx)
-part_par_atom_operator [NonSeqR] atom_op_gen producer = do
-  producer_par <- sequence_to_partially_parallel [NonSeqR] producer
+ppar_atom_operator [NonSeqR] atom_op_gen producer = do
+  producer_ppar <- sequence_to_partially_parallel_with_reshape [NonSeqR] producer
   cur_idx <- get_cur_index
-  return $ atom_op_gen producer_par cur_idx
-part_par_atom_operator type_rewrites atom_op_gen _ = do
+  return $ atom_op_gen producer_ppar cur_idx
+ppar_atom_operator type_rewrites atom_op_gen _ = do
   cur_idx <- get_cur_index
   throwError $ Slowdown_Failure $
     "type_rewrite list " ++ show type_rewrites ++ " not just a NonSeqR for atom op " ++
     show (atom_op_gen (STE.ErrorN "place_holder" No_Index) cur_idx)
- {- 
-parallelize_unary_seq_operator :: (STT.AST_Type -> STE.Expr -> STE.Expr) -> SeqT.AST_Type ->
-                                  SeqE.Expr -> Partially_Parallel_StateM STE.Expr
-parallelize_unary_seq_operator unary_seq_op_gen t producer = do
-  producer_par <- sequence_to_partially_parallel producer
-  t_par <- parallelize_AST_type t
-  return $ unary_seq_op_gen t_par producer_par
--}
+    
+ppar_unary_seq_operator :: [Type_Rewrite] -> (STE.Expr -> DAG_Index -> STE.Expr) ->
+                           SeqE.Expr -> Partially_Parallel_MemoM STE.Expr STE.Expr
+ppar_unary_seq_operator tr unary_seq_op_gen producer = do
+  producer_ppar <- sequence_to_partially_parallel_with_reshape tr producer
+  cur_idx <- get_cur_index
+  return $ unary_seq_op_gen producer_ppar cur_idx
 
 -- |Rewrite the producer using memoization. Then check it's input type rewrite
 -- if it's not the same as the one passed in, do a reshape
-sequence_to_partially_parallel_with_reshape :: [Type_Rewrite] -> DAG_Index -> SeqE.Expr ->
+-- cur_type_rewrites are the rewrties for the current call to rewrite the producer
+-- the producer may have been previously rewritten. That is the actual rewrite
+-- this needs to introduce a reshape then to match actual and what the current
+-- type that the consumer expects
+sequence_to_partially_parallel_with_reshape :: [Type_Rewrite] -> SeqE.Expr ->
                                             Partially_Parallel_MemoM STE.Expr STE.Expr
-sequence_to_partially_parallel_with_reshape type_rewrites consumer_index producer = do
-  cur_idx <- get_cur_index
+sequence_to_partially_parallel_with_reshape cur_type_rewrites producer = do
+  producer_ppar <- memo producer $ sequence_to_partially_parallel cur_type_rewrites producer
+  actual_type_rewrites <- get_input_rewrites_for_node producer_ppar
+  if actual_type_rewrites == cur_type_rewrites
+    then return producer_ppar
+    else do
+    reshape_idx <- get_cur_index
+    let producer_seq_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types producer
+    actual_st_type <- lift $
+      apply_type_rewrite producer_seq_out_type actual_type_rewrites
+    cur_st_type <- lift $
+      apply_type_rewrite producer_seq_out_type cur_type_rewrites
+    return $ STE.ReshapeN actual_st_type cur_st_type producer_ppar reshape_idx
