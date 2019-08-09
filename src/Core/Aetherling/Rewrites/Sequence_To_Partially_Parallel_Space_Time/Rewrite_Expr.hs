@@ -110,12 +110,12 @@ sequence_to_partially_parallel type_rewrites (SeqE.MulN producer _) =
   ppar_atom_operator type_rewrites STE.MulN producer
 sequence_to_partially_parallel type_rewrites (SeqE.DivN producer _) =
   ppar_atom_operator type_rewrites STE.DivN producer
-sequence_to_partially_parallel type_rewrites (SeqE.EqN t producer) = do
+sequence_to_partially_parallel type_rewrites (SeqE.EqN t producer _) = do
   -- can reuse all of type_rewrites in these calls as atom tuples
   -- and other atoms all have same Type_Rewrite object - NonSeqR
   producer_par <- sequence_to_partially_parallel type_rewrites producer
-  t_par <- part_par_AST_type type_rewrites t
-  return $ STE.EqN t_par producer_par
+  t_ppar <- ppar_AST_type type_rewrites t
+  ppar_atom_operator type_rewrites (STE.EqN t_ppar) producer
 
 {-
 -- generators
@@ -1259,6 +1259,7 @@ sequence_to_partially_parallel tr e =
   throwError $ Slowdown_Failure $
   "can't handle type_rewrites: " ++ show tr ++ "\n and expr: " ++ show e
 
+-}
 -- | Verifies that Type_Rewrite matches the output Seq that is being rewritten
 parameters_match :: Type_Rewrite -> Int -> Int -> Bool
 parameters_match (SpaceR tr_n) n _ = tr_n == n
@@ -1267,69 +1268,68 @@ parameters_match (SplitR tr_n_outer tr_i_outer tr_n_inner) n i =
   tr_n_outer * tr_n_inner == n && tr_i_outer <= i
 parameters_match _ _ _ = False
 
-part_par_AST_type :: [Type_Rewrite] -> SeqT.AST_Type -> Partially_Parallel_StateM STT.AST_Type
-part_par_AST_type [NonSeqR] SeqT.UnitT = return STT.UnitT
-part_par_AST_type [NonSeqR] SeqT.BitT = return STT.BitT
-part_par_AST_type [NonSeqR] SeqT.IntT = return STT.IntT
-part_par_AST_type [NonSeqR] (SeqT.ATupleT x y) = do
-  x_stt <- part_par_AST_type [NonSeqR] x
-  y_stt <- part_par_AST_type [NonSeqR] y
+ppar_AST_type :: [Type_Rewrite] -> SeqT.AST_Type -> Partially_Parallel_MemoM STE.Expr STT.AST_Type
+ppar_AST_type [NonSeqR] SeqT.UnitT = return STT.UnitT
+ppar_AST_type [NonSeqR] SeqT.BitT = return STT.BitT
+ppar_AST_type [NonSeqR] SeqT.IntT = return STT.IntT
+ppar_AST_type [NonSeqR] (SeqT.ATupleT x y) = do
+  x_stt <- ppar_AST_type [NonSeqR] x
+  y_stt <- ppar_AST_type [NonSeqR] y
   return $ (STT.ATupleT x_stt y_stt) 
-part_par_AST_type (tr@(SpaceR tr_n) : type_rewrites_tl) (SeqT.SeqT n i t) |
+ppar_AST_type (tr@(SpaceR tr_n) : type_rewrites_tl) (SeqT.SeqT n i t) |
   parameters_match tr n i = do
-  inner_type <- part_par_AST_type type_rewrites_tl t
+  inner_type <- ppar_AST_type type_rewrites_tl t
   return $ STT.SSeqT n inner_type
-part_par_AST_type (tr@(TimeR tr_n tr_i) : type_rewrites_tl) (SeqT.SeqT n i t) |
+ppar_AST_type (tr@(TimeR tr_n tr_i) : type_rewrites_tl) (SeqT.SeqT n i t) |
   parameters_match tr n i = do
-  inner_type <- part_par_AST_type type_rewrites_tl t
+  inner_type <- ppar_AST_type type_rewrites_tl t
   return $ STT.TSeqT n tr_i inner_type
-part_par_AST_type (tr@(SplitR tr_n_outer tr_i_outer tr_n_inner) : type_rewrites_tl)
+ppar_AST_type (tr@(SplitR tr_n_outer tr_i_outer tr_n_inner) : type_rewrites_tl)
   (SeqT.SeqT n i t) |
   parameters_match tr n i = do
-  inner_type <- part_par_AST_type type_rewrites_tl t
+  inner_type <- ppar_AST_type type_rewrites_tl t
   return $ STT.TSeqT tr_n_outer tr_i_outer (STT.SSeqT tr_n_inner inner_type)
-part_par_AST_type (NonSeqR : type_rewrites_tl) (SeqT.STupleT n t) = do
-  inner_type <- part_par_AST_type type_rewrites_tl t
+ppar_AST_type (NonSeqR : type_rewrites_tl) (SeqT.STupleT n t) = do
+  inner_type <- ppar_AST_type type_rewrites_tl t
   return $ STT.STupleT n inner_type
-part_par_AST_type type_rewrites t = throwError $ Slowdown_Failure $
+ppar_AST_type type_rewrites t = throwError $ Slowdown_Failure $
   "type_rewrite " ++ show type_rewrites ++ " not valid for partially " ++
   "parallelizing AST type " ++ show t
 
-part_par_AST_value :: [Type_Rewrite] -> SeqT.AST_Value -> Partially_Parallel_StateM STT.AST_Value
-part_par_AST_value [NonSeqR] SeqT.UnitV = return STT.UnitV
-part_par_AST_value [NonSeqR] (SeqT.BitV b) = return (STT.BitV b)
-part_par_AST_value [NonSeqR] (SeqT.IntV i) = return (STT.IntV i)
-part_par_AST_value [NonSeqR] (SeqT.ATupleV x y) = do
-  x_stv <- part_par_AST_value [NonSeqR] x
-  y_stv <- part_par_AST_value [NonSeqR] y
+ppar_AST_value :: [Type_Rewrite] -> SeqT.AST_Value -> Partially_Parallel_MemoM STE.Expr STT.AST_Value
+ppar_AST_value [NonSeqR] SeqT.UnitV = return STT.UnitV
+ppar_AST_value [NonSeqR] (SeqT.BitV b) = return (STT.BitV b)
+ppar_AST_value [NonSeqR] (SeqT.IntV i) = return (STT.IntV i)
+ppar_AST_value [NonSeqR] (SeqT.ATupleV x y) = do
+  x_stv <- ppar_AST_value [NonSeqR] x
+  y_stv <- ppar_AST_value [NonSeqR] y
   return $ (STT.ATupleV x_stv y_stv)
-part_par_AST_value (tr@(SpaceR tr_n) : type_rewrites_tl) (SeqT.SeqV xs i) |
+ppar_AST_value (tr@(SpaceR tr_n) : type_rewrites_tl) (SeqT.SeqV xs i) |
   -- just sticking IntT here as need some type that won't be looked at
   parameters_match tr (length xs) i = do
-  xs_par <- mapM (part_par_AST_value type_rewrites_tl) xs
+  xs_par <- mapM (ppar_AST_value type_rewrites_tl) xs
   return $ STT.SSeqV xs_par
-part_par_AST_value (tr@(TimeR tr_n tr_i) : type_rewrites_tl) (SeqT.SeqV xs i) |
+ppar_AST_value (tr@(TimeR tr_n tr_i) : type_rewrites_tl) (SeqT.SeqV xs i) |
   parameters_match tr (length xs) i = do
-  xs_par <- mapM (part_par_AST_value type_rewrites_tl) xs
+  xs_par <- mapM (ppar_AST_value type_rewrites_tl) xs
   return $ STT.TSeqV xs_par tr_i 
-part_par_AST_value (tr@(SplitR tr_n_outer tr_i_outer tr_n_inner) : type_rewrites_tl)
+ppar_AST_value (tr@(SplitR tr_n_outer tr_i_outer tr_n_inner) : type_rewrites_tl)
   (SeqT.SeqV xs i) |
   parameters_match tr (length xs) i = do
-  xs_par <- mapM (part_par_AST_value type_rewrites_tl) xs
+  xs_par <- mapM (ppar_AST_value type_rewrites_tl) xs
   -- split the xs into chunks where each chunk is an sseq of length
   -- tr_n_inner
   -- and then group all the sseq into one tseq
   let xs_par_chunked = chunksOf tr_n_inner xs_par
   let xs_chunks_as_sseqs = fmap STT.SSeqV xs_par_chunked
   return $ STT.TSeqV xs_chunks_as_sseqs tr_i_outer
-part_par_AST_value (NonSeqR : type_rewrites_tl) (SeqT.STupleV xs) = do
-  xs_par <- mapM (part_par_AST_value type_rewrites_tl) xs
+ppar_AST_value (NonSeqR : type_rewrites_tl) (SeqT.STupleV xs) = do
+  xs_par <- mapM (ppar_AST_value type_rewrites_tl) xs
   return $ STT.STupleV xs_par
-part_par_AST_value type_rewrites v = throwError $ Slowdown_Failure $
+ppar_AST_value type_rewrites v = throwError $ Slowdown_Failure $
   "type_rewrite " ++ show type_rewrites ++ " not valid for partially " ++
   "parallelizing AST value " ++ show v
   
--}
 ppar_atom_operator :: [Type_Rewrite] -> (STE.Expr -> DAG_Index -> STE.Expr) ->
                       SeqE.Expr -> Partially_Parallel_MemoM STE.Expr STE.Expr
 ppar_atom_operator [] atom_op_gen _ = do
@@ -1370,8 +1370,6 @@ sequence_to_partially_parallel_with_reshape cur_type_rewrites producer = do
     else do
     reshape_idx <- get_cur_index
     let producer_seq_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types producer
-    actual_st_type <- lift $
-      apply_type_rewrite producer_seq_out_type actual_type_rewrites
-    cur_st_type <- lift $
-      apply_type_rewrite producer_seq_out_type cur_type_rewrites
+    actual_st_type <- ppar_AST_type actual_type_rewrites producer_seq_out_type 
+    cur_st_type <- ppar_AST_type cur_type_rewrites producer_seq_out_type
     return $ STE.ReshapeN actual_st_type cur_st_type producer_ppar reshape_idx
