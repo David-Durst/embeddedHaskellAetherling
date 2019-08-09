@@ -19,10 +19,16 @@ get_cur_index = do
       lift $ put $ Rewrite_Data $ Index (cur_idx + 1)
       return $ Index cur_idx
     _ -> return No_Index
-    
+
+add_index :: Monad m => (a -> DAG_Index -> a) -> a -> Memo_Rewrite_StateTM a m a
+add_index node_gen producer = do
+  cur_idx <- get_cur_index
+  return $ node_gen producer cur_idx
+
 type Rewrite_StateTM m = ExceptT Rewrite_Failure (StateT Rewrite_Data m)
 type Rewrite_StateM = ExceptT Rewrite_Failure (State Rewrite_Data)
 
+type Memo_Rewrite_StateTM v m = DAG_MemoT v (ExceptT Rewrite_Failure (StateT Rewrite_Data m))
 type Memo_Rewrite_StateM v = DAG_MemoT v (ExceptT Rewrite_Failure (State Rewrite_Data))
 
 type Rewrite_IO_StateM = ExceptT Rewrite_Failure IO

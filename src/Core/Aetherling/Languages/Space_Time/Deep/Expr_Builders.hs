@@ -12,15 +12,17 @@ import Aetherling.Rewrites.Rewrite_Helpers
 -- to indicate the lengths of the outer sequence containing the tupled items
 -- The list of expression argument is the list of expressions to tuple
 -- The AST_Type is the type of each element in the outputed STuple
-repeated_stuple :: (Monad m) => (Expr -> Expr -> Expr -> DAG_Index -> Expr) ->
-                   [Expr] -> AST_Type -> Memo_Rewrite_StateM Expr Expr
+repeated_stuple :: (Monad m) =>
+                   (Expr -> Expr -> Expr -> DAG_Index -> Expr) ->
+                   [Memo_Rewrite_StateTM Expr m Expr] -> AST_Type ->
+                   Memo_Rewrite_StateTM Expr m Expr
 repeated_stuple map_gen input_exprs elem_t = do
   let map_stuple_append out_len in_left in_right = do
         map2_idx <- get_cur_index
         stuple_append_idx <- get_cur_index
         input1_idx <- get_cur_index
         input2_idx <- get_cur_index
-        return $
+        return $ 
           map_gen 
           (STupleAppendN out_len
             elem_t
@@ -32,6 +34,8 @@ repeated_stuple map_gen input_exprs elem_t = do
   let map_stuple_initial = do
         map2_idx <- get_cur_index
         stuple_idx <- get_cur_index
+        input1 <- input_exprs !! 0
+        input2 <- input_exprs !! 1
         input1_idx <- get_cur_index
         input2_idx <- get_cur_index
         return $
@@ -39,26 +43,31 @@ repeated_stuple map_gen input_exprs elem_t = do
           (STupleN elem_t 
            (InputN elem_t "tuple_in_1" input1_idx)
            (InputN elem_t "tuple_in_2" input2_idx)
-          stuple_idx)
-          (input_exprs !! 0) (input_exprs !! 1) map2_idx
-
+           stuple_idx)
+          input1 input2 map2_idx
+  
   foldl (\prior_tuplesM cur_len -> do
             prior_tuples <- prior_tuplesM
+            next_input <- (input_exprs !! (cur_len - 1))
             map_stuple_append
               cur_len
               prior_tuples
-              (input_exprs !! (cur_len - 1)))
+              next_input)
     -- start at 3 to set
     map_stuple_initial [3 .. length input_exprs]
 
-add_input_to_expr_for_map :: (Expr -> Expr) -> Memo_Rewrite_StateM Expr Expr
+add_input_to_expr_for_map :: Monad m => (Expr -> DAG_Index -> Expr) ->
+                             Memo_Rewrite_StateTM Expr m Expr
 add_input_to_expr_for_map expr_gen = do
   input_idx <- get_cur_index
-  let expr_types = expr_to_types (expr_gen $ ErrorN "not an error" input_idx)
+  let expr_idx_gen = add_index expr_gen
+  expr_with_error_input <- expr_idx_gen $ ErrorN "not an error" input_idx
+  let expr_types = expr_to_types expr_with_error_input
   let expr_in_type = head $ e_in_types expr_types
-  return $ expr_gen $ InputN expr_in_type "f_in" input_idx
+  expr_idx_gen $ InputN expr_in_type "f_in" input_idx
   
-add_input_to_expr_for_map2 :: (Expr -> Expr -> Expr) -> Memo_Rewrite_StateM Expr Expr
+add_input_to_expr_for_map2 :: Monad m => (Expr -> Expr -> Expr) ->
+                              Memo_Rewrite_StateTM Expr m Expr
 add_input_to_expr_for_map2 expr_gen = do
   input1_idx <- get_cur_index
   input2_idx <- get_cur_index
@@ -71,3 +80,14 @@ add_input_to_expr_for_map2 expr_gen = do
     expr_gen (InputN expr_in_type0 "f_in1" input1_idx)
     (InputN expr_in_type1 "f_in2" input2_idx)
   
+make_map_t :: Monad m => Int -> Int -> (Expr -> DAG_Index -> Expr) ->
+             Expr -> Memo_Rewrite_StateTM Expr m Expr
+make_map_t n i inner_expr_gen producer = do
+  inner_expr <- add_input_to_expr_for_map inner_expr_gen
+  (add_index $ Map_tN n i inner_expr) producer
+
+make_map_s :: Monad m => Int -> (Expr -> DAG_Index -> Expr) ->
+             Expr -> Memo_Rewrite_StateTM Expr m Expr
+make_map_s n inner_expr_gen producer = do
+  inner_expr <- add_input_to_expr_for_map inner_expr_gen
+  (add_index $ Map_sN n inner_expr) producer

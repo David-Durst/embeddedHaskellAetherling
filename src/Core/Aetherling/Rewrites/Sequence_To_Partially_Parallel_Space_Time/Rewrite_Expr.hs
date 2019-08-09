@@ -113,56 +113,55 @@ sequence_to_partially_parallel type_rewrites (SeqE.DivN producer _) =
 sequence_to_partially_parallel type_rewrites (SeqE.EqN t producer _) = do
   -- can reuse all of type_rewrites in these calls as atom tuples
   -- and other atoms all have same Type_Rewrite object - NonSeqR
-  producer_par <- sequence_to_partially_parallel type_rewrites producer
   t_ppar <- ppar_AST_type type_rewrites t
   ppar_atom_operator type_rewrites (STE.EqN t_ppar) producer
 
-{-
 -- generators
-sequence_to_partially_parallel _ node@(SeqE.Lut_GenN _ _ producer) =
+sequence_to_partially_parallel _ node@(SeqE.Lut_GenN _ _ producer _) =
   throwError $ Expr_Failure $ "Can't parallelize LUTs: " ++ show node
-sequence_to_partially_parallel type_rewrites (SeqE.Const_GenN constant_val constant_type) = do
-  t_par <- part_par_AST_type type_rewrites constant_type
-  v_par <- part_par_AST_value type_rewrites constant_val
-  return $ STE.Const_GenN v_par t_par
+sequence_to_partially_parallel type_rewrites (SeqE.Const_GenN constant_val constant_type _) = do
+  t_par <- ppar_AST_type type_rewrites constant_type
+  v_par <- ppar_AST_value type_rewrites constant_val
+  cur_idx <- get_cur_index
+  return $ STE.Const_GenN v_par t_par cur_idx
 
 -- sequence operators
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
-  (SeqE.ShiftN n i shift_amount elem_t producer) |
+  (SeqE.ShiftN n i shift_amount elem_t producer _) |
   parameters_match tr n i = do
-  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
-  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
-  return $ STE.Shift_sN tr_n shift_amount elem_t_ppar producer_ppar
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  ppar_unary_seq_operator type_rewrites
+    (STE.Shift_sN tr_n shift_amount elem_t_ppar) producer
   
 sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrites_tl)
-  (SeqE.ShiftN n i shift_amount elem_t producer) |
+  (SeqE.ShiftN n i shift_amount elem_t producer _) |
   parameters_match tr n i = do
-  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
-  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
-  return $ STE.Shift_tN tr_n tr_i shift_amount elem_t_ppar producer_ppar
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  ppar_unary_seq_operator type_rewrites
+    (STE.Shift_tN tr_n tr_i shift_amount elem_t_ppar) producer
   
 sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io ni) : type_rewrites_tl)
-  (SeqE.ShiftN n i shift_amount elem_t producer) |
+  (SeqE.ShiftN n i shift_amount elem_t producer _) |
   parameters_match tr n i = do
-  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
-  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  producer_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites producer
   let repeated_inputs_with_index = zip [0..] $ replicate ni producer_ppar
   let inner_sseqs_shifted = fmap (
-        \(i, in_seq) ->
-          STE.Shift_tN no io ((ni - i + shift_amount - 1) `div` ni) elem_t_ppar $
-          STE.Map_tN no io (STE.Down_1d_sN ni ((i - shift_amount) `mod` ni) elem_t_ppar $
-                            STE.InputN (STT.SSeqT ni elem_t_ppar) "f_in") $
-          in_seq
+        \(i, in_seq) -> do
+          (add_index $ STE.Shift_tN no io ((ni - i + shift_amount - 1) `div` ni) elem_t_ppar) =<<
+            (STB.make_map_t no io (
+                STE.Down_1d_sN ni ((i - shift_amount) `mod` ni) elem_t_ppar
+                ) $
+              in_seq)
         ) repeated_inputs_with_index
-  let nested_stuple_of_shifted_rows =
+  nested_stuple_of_shifted_rows <-
         STB.repeated_stuple (STE.Map2_tN no io) inner_sseqs_shifted elem_t_ppar
-  let nested_stuple_to_sseq = STE.Map_tN no io (
-        STE.STupleToSSeqN ni elem_t_ppar (
-            STE.InputN (STT.SSeqT ni elem_t_ppar) "f_in")) nested_stuple_of_shifted_rows
-  return nested_stuple_to_sseq
+
+  STB.make_map_t no io (STE.STupleToSSeqN ni elem_t_ppar) nested_stuple_of_shifted_rows
 
 
 
+{-
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
   (SeqE.Up_1dN n i elem_t producer) |
   parameters_match tr n i = do
@@ -1349,8 +1348,8 @@ ppar_atom_operator type_rewrites atom_op_gen _ = do
     
 ppar_unary_seq_operator :: [Type_Rewrite] -> (STE.Expr -> DAG_Index -> STE.Expr) ->
                            SeqE.Expr -> Partially_Parallel_MemoM STE.Expr STE.Expr
-ppar_unary_seq_operator tr unary_seq_op_gen producer = do
-  producer_ppar <- sequence_to_partially_parallel_with_reshape tr producer
+ppar_unary_seq_operator type_rewrites unary_seq_op_gen producer = do
+  producer_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites producer
   cur_idx <- get_cur_index
   return $ unary_seq_op_gen producer_ppar cur_idx
 
