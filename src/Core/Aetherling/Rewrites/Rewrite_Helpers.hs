@@ -11,7 +11,7 @@ data Rewrite_Data = Rewrite_Data {
 
 empty_rewrite_data = Rewrite_Data $ Index 0
 
-get_cur_index :: Memo_Rewrite_StateM v DAG_Index
+get_cur_index :: (Monad m) => DAG_MemoT v (Rewrite_StateTM m) DAG_Index
 get_cur_index = do
   cur_data <- lift get
   case cur_index cur_data of
@@ -20,6 +20,7 @@ get_cur_index = do
       return $ Index cur_idx
     _ -> return No_Index
     
+type Rewrite_StateTM m = ExceptT Rewrite_Failure (StateT Rewrite_Data m)
 type Rewrite_StateM = ExceptT Rewrite_Failure (State Rewrite_Data)
 
 type Memo_Rewrite_StateM v = DAG_MemoT v (ExceptT Rewrite_Failure (State Rewrite_Data))

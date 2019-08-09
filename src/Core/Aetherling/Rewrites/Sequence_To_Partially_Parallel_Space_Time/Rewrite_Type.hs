@@ -31,7 +31,7 @@ get_type_rewrite_periods (TimeR tr_n tr_i) = tr_n + tr_i
 get_type_rewrite_periods (SplitR tr_no tr_io _) = tr_no + tr_io
 get_type_rewrite_periods NonSeqR = -1
 
-rewrite_AST_type :: Int -> SeqT.AST_Type -> Rewrite_StateM [Type_Rewrite]
+rewrite_AST_type :: (Monad m) => Int -> SeqT.AST_Type -> Rewrite_StateTM m [Type_Rewrite]
 rewrite_AST_type s e = do
   let s_factors = ae_factorize s
   let (t_rewrites_no_underutil, s_remaining_no_underutil) =

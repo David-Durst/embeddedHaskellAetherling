@@ -1,6 +1,7 @@
 module Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr where
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 import Aetherling.Rewrites.Rewrite_Helpers
+import Aetherling.Monad_Helpers
 import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
 import qualified Aetherling.Languages.Sequence.Deep.Types as SeqT
 import qualified Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq_Conv
@@ -17,19 +18,24 @@ import Data.Either
 import Data.List.Split (chunksOf)
 import Debug.Trace
 import qualified Data.Set as S
-{-
+
 rewrite_to_partially_parallel :: Int -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel s seq_expr = do
-  let expr_par = runIdentity $ runExceptT $ rewrite_to_partially_parallel' s seq_expr
+  let expr_par = evalState (evalStateT
+                             (runExceptT $ rewrite_to_partially_parallel' s seq_expr)
+                             empty_rewrite_data)
+                 empty_ppar_state
   if isLeft expr_par
-    then STE.ErrorN (rw_msg $ fromLeft undefined expr_par)
+    then STE.ErrorN (rw_msg $ fromLeft undefined expr_par) No_Index
     else fromRight undefined expr_par
 
-rewrite_to_partially_parallel' :: Int -> SeqE.Expr -> Rewrite_StateM STE.Expr
+rewrite_to_partially_parallel' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
 rewrite_to_partially_parallel' s seq_expr = do
   let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
   output_type_slowdowns <- rewrite_AST_type s seq_expr_out_type
-  trace ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n") $ evalStateT (sequence_to_partially_parallel output_type_slowdowns seq_expr) empty_ppar_state
+  undefined
+  -- trace ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n") $
+  --  evalStateT (sequence_to_partially_parallel output_type_slowdowns seq_expr) empty_ppar_state
 
 data Input_Type_Rewrites = Input_Type_Rewrites {
   input_rewrites :: [Type_Rewrite],
@@ -45,23 +51,30 @@ data Partially_Parallel_State = Partially_Parallel_State {
 
 empty_ppar_state = Partially_Parallel_State S.empty
   
-type Partially_Parallel_StateM = StateT Partially_Parallel_State Rewrite_StateM
+type Partially_ParallelM = ExceptT Rewrite_Failure (
+  StateT Rewrite_Data (
+      State Partially_Parallel_State
+      )
+  )
 
-sequence_to_partially_parallel :: [Type_Rewrite] -> SeqE.Expr -> Partially_Parallel_StateM STE.Expr
-sequence_to_partially_parallel type_rewrites (SeqE.IdN producer) =
+type Partially_Parallel_MemoM v = DAG_MemoT v Partially_ParallelM
+
+sequence_to_partially_parallel :: [Type_Rewrite] -> SeqE.Expr -> Partially_Parallel_MemoM STE.Expr STE.Expr
+sequence_to_partially_parallel type_rewrites (SeqE.IdN producer _) =
   part_par_atom_operator type_rewrites STE.IdN producer
-sequence_to_partially_parallel type_rewrites (SeqE.AbsN producer) =
+sequence_to_partially_parallel type_rewrites (SeqE.AbsN producer _) =
   part_par_atom_operator type_rewrites STE.AbsN producer
-sequence_to_partially_parallel type_rewrites (SeqE.NotN producer) =
+sequence_to_partially_parallel type_rewrites (SeqE.NotN producer _) =
   part_par_atom_operator type_rewrites STE.NotN producer
-sequence_to_partially_parallel type_rewrites (SeqE.AddN producer) =
+sequence_to_partially_parallel type_rewrites (SeqE.AddN producer _) =
   part_par_atom_operator type_rewrites STE.AddN producer
-sequence_to_partially_parallel type_rewrites (SeqE.SubN producer) =
+sequence_to_partially_parallel type_rewrites (SeqE.SubN producer _) =
   part_par_atom_operator type_rewrites STE.SubN producer
-sequence_to_partially_parallel type_rewrites (SeqE.MulN producer) =
+sequence_to_partially_parallel type_rewrites (SeqE.MulN producer _) =
   part_par_atom_operator type_rewrites STE.MulN producer
-sequence_to_partially_parallel type_rewrites (SeqE.DivN producer) =
+sequence_to_partially_parallel type_rewrites (SeqE.DivN producer _) =
   part_par_atom_operator type_rewrites STE.DivN producer
+{-
 sequence_to_partially_parallel type_rewrites (SeqE.EqN t producer) = do
   -- can reuse all of type_rewrites in these calls as atom tuples
   -- and other atoms all have same Type_Rewrite object - NonSeqR
@@ -1280,16 +1293,23 @@ part_par_AST_value type_rewrites v = throwError $ Slowdown_Failure $
   "type_rewrite " ++ show type_rewrites ++ " not valid for partially " ++
   "parallelizing AST value " ++ show v
   
-part_par_atom_operator :: [Type_Rewrite] -> (STE.Expr -> STE.Expr) -> SeqE.Expr -> Partially_Parallel_StateM STE.Expr
-part_par_atom_operator [] atom_op_gen _ = throwError $ Slowdown_Failure $
-  "type_rewrite list empty while processing " ++
-  show (atom_op_gen $ STE.ErrorN "place_holder")
+-}
+part_par_atom_operator :: [Type_Rewrite] -> (STE.Expr -> DAG_Index -> STE.Expr) ->
+                          SeqE.Expr -> Partially_Parallel_MemoM STE.Expr STE.Expr
+part_par_atom_operator [] atom_op_gen _ = do
+  cur_idx <- get_cur_index
+  throwError $ Slowdown_Failure $
+    "type_rewrite list empty while processing " ++
+    show (atom_op_gen (STE.ErrorN "place_holder" No_Index) cur_idx)
 part_par_atom_operator [NonSeqR] atom_op_gen producer = do
   producer_par <- sequence_to_partially_parallel [NonSeqR] producer
-  return $ atom_op_gen producer_par
-part_par_atom_operator type_rewrites atom_op_gen _ = throwError $ Slowdown_Failure $
-  "type_rewrite list " ++ show type_rewrites ++ " not just a NonSeqR for atom op " ++
-  show (atom_op_gen $ STE.ErrorN "place_holder")
+  cur_idx <- get_cur_index
+  return $ atom_op_gen producer_par cur_idx
+part_par_atom_operator type_rewrites atom_op_gen _ = do
+  cur_idx <- get_cur_index
+  throwError $ Slowdown_Failure $
+    "type_rewrite list " ++ show type_rewrites ++ " not just a NonSeqR for atom op " ++
+    show (atom_op_gen (STE.ErrorN "place_holder" No_Index) cur_idx)
  {- 
 parallelize_unary_seq_operator :: (STT.AST_Type -> STE.Expr -> STE.Expr) -> SeqT.AST_Type ->
                                   SeqE.Expr -> Partially_Parallel_StateM STE.Expr
@@ -1297,5 +1317,4 @@ parallelize_unary_seq_operator unary_seq_op_gen t producer = do
   producer_par <- sequence_to_partially_parallel producer
   t_par <- parallelize_AST_type t
   return $ unary_seq_op_gen t_par producer_par
--}
 -}
