@@ -1318,3 +1318,10 @@ parallelize_unary_seq_operator unary_seq_op_gen t producer = do
   t_par <- parallelize_AST_type t
   return $ unary_seq_op_gen t_par producer_par
 -}
+
+-- |Rewrite the producer using memoization. Then check it's input type rewrite
+-- if it's not the same as the one passed in, do a reshape
+sequence_to_partially_parallel_with_reshape :: [Type_Rewrite] -> DAG_Index -> SeqE.Expr ->
+                                            Partially_Parallel_MemoM STE.Expr STE.Expr
+sequence_to_partially_parallel_with_reshape type_rewrites consumer_index producer = do
+  cur_idx <- get_cur_index

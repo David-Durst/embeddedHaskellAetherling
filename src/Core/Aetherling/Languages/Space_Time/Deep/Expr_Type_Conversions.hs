@@ -144,7 +144,8 @@ expr_to_types (ErrorN _ _) = Expr_Types [] UnitT
 
 expr_to_types (FIFON n i _ elem_t _ _) =
   Expr_Types [TSeqT n i elem_t] (TSeqT n i elem_t)
-
+expr_to_types (ReshapeN in_t out_t _ _) =
+  Expr_Types [in_t] (out_t)
 -- | get the input and output types of the entire expression,
 -- not just those of the last expression like expr_to_types
 
@@ -252,6 +253,8 @@ expr_to_outer_types' (InputN t name _) = do
 expr_to_outer_types' (ErrorN _ _) = return $ Expr_Types [] UnitT
 
 expr_to_outer_types' consumer_e@(FIFON _ _ _ _ producer_e _) =
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' consumer_e@(ReshapeN _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
   
 expr_to_outer_types_unary_operator :: Expr -> Expr -> Input_TrackerM Expr_Types 

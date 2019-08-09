@@ -238,6 +238,12 @@ data Expr =
       seq_in :: Expr,
       index :: DAG_Index
       }
+   | ReshapeN {
+       in_t :: AST_Type,
+       out_t :: AST_Type,
+       seq_in :: Expr,
+       index :: DAG_Index
+       }
   deriving (Show, Eq, Ord)
 
 is_error_node :: Expr -> Bool
