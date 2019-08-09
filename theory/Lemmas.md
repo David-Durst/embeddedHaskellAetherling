@@ -39,15 +39,52 @@ This means:
 1. Therefore, any structure preserving operation, I can do:
     1. `f >>> Partition no ni t === Partition no ni t >>> g >>> Unpartition no ni t >>> Partition no ni === Partition no ni t >>> g`
     1. `Unpartition no ni t >>> f === Unpartition no ni t >>> Partition no ni t >>> g >>> Unpartition no ni t >>> Partition no ni === g >>> Unpartition no ni t`
+1. This can be extended to a DAG by repeating the nesting rewrite rule and `Partition`/`Unpartition` cancelling for each branch of the DAG.
 
-## Max Underutilization Computation
+## Minimum Underutilization Computation
+**Given a DAG such as the one below, find the minimum necessary underutiliziation for a fully sequential operator.**
 
-Given a DAG such as the one below, find the maximum necessary underutilziation.
 ![General Diamond Form](other_diagrams/lemmas/diamond_input/diamond_input.png "General Diamond Form")
 
 Approach: 
 1. Treat each path of the DAG independently by searching the DAG as if it was a tree.
-    1. In a tree structure, each producer to a consumer gets a different pth
-    1. Therefore, in a DAG, the entire upstream for each path is independent.
-1. Walk each path in the tree, find the maximum necessary underutilization.
+1. Walk each path in the tree, find the minimum necessary underutilization, propagate that back to output
+1. When merging two paths in the DAG, take the larger of the underutilizations
 1. Issue - partition - if partitioning, underutilization may be divided between two layers. This is addressed by tracking how much utilization is required at each layer or divdied between multiple layers.
+
+
+1. For a program with a graph structure `G={N,E}`, start with the output edge.
+    1. Let the edge's output type have form `[n_0/d_0, ..., n_i/d_i]`.
+    1. Initialize the per layer underutilization data structure as a list of length i of `0`.
+    1. Initialize the shared underutilization between layers data structure as an empty list.
+1. For the current node at depth i:
+     1. If higher-order: 
+          1. If `Reduce n`: increment the underutilization data structure with index i by `n-1`
+          1. For all higher order nodes: recur on the output edge of the sub-graph with depth (i+1)
+      1. If `Partition`:
+          1. Replace element i of the per layer underutilization data structure two elements, both 0's, and add a triple to the shared underutilziation data structure of `{i, i+1, u}`, where `u` was the value stored in location i of the per layer underutilization data structure
+      1. If `Unpartition`
+          1. Replace element i and i+1 of the per layer underutilization data structure with one element:
+              1. `max(u, (no+ni)**per_layer[i]*per_layer[i+1])` if `{i, i+1, u}` exists
+                  1. This needs to actually use the partition invalid formula
+              1. `per_layer[i]*per_layer[i+1]` otherwise
+          1. For any shared underutilization data structures with `i+1`, replace that with `i`
+      1. If `Seq_to_Tuple`:
+          1. Replace element i and i+1 of the per layer underutilization data structure with one element:
+              1. `max(u, per_layer[i]*per_layer[i+1])` if `{i, i+1, u}` exists
+              1. `per_layer[i]*per_layer[i+1]` otherwise
+
+
+### Structure Changing Operations Issue
+The issue with structure changing operations is that underutilization is assigned per layer of the nesting.
+However, when a layer is split, it is unclear how to split undertuilization.
+The following examples show this:
+
+```
+Select_1d 4 0 (Seq 4 Int) >>> Unpartition 1 4 Int
+Map 1 (Select_1d 4 0 Int) >>> Unpartition 1 1 Int
+Select 4 0 (Seq 4 Int) >>> Map 1 (Select_1d 4 0 Int) >>> Unpartition 1 1 Int
+```
+
+#### `Partition` and `Unpartition`
+
