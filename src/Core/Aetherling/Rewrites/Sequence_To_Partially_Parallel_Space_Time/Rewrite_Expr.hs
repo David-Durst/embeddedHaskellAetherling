@@ -77,7 +77,12 @@ add_input_type_rewrite new_rewrite = do
   let new_rewrites_set = S.insert new_rewrite cur_rewrites_set
   lift $ lift $ lift $ modify
     (\cur_data -> cur_data { input_types_rewrites = new_rewrites_set })
-    
+
+set_input_types_rewrites :: S.Set Input_Type_Rewrites -> Partially_Parallel_MemoM STE.Expr ()
+set_input_types_rewrites rewrites = do
+  lift $ lift $ lift $ modify
+    (\cur_data -> cur_data { input_types_rewrites = rewrites })
+
 get_input_rewrites_for_node :: Indexible a => a ->
                                Partially_Parallel_MemoM STE.Expr [Type_Rewrite]
 get_input_rewrites_for_node node = do
@@ -603,7 +608,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : ty
       then do
 -}
       
-      
+     
       
   
     {-
@@ -692,111 +697,126 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : ty
       show op ++ "\n with the outer input type rewrite " ++ show tr0 ++
       " and inner input type rewrite " ++ show tr1 ++ " requires a flip, which is not supported."
 -}
+-}
 -- higher order operators
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
-  (SeqE.MapN n i f producer) |
+  (SeqE.MapN n i f producer _) |
   parameters_match tr n i = do
-  outer_state <- get
-  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- clear the outer input type rewrites for subgraph f
+  outer_input_type_rewrites <- get_input_types_rewrites
+  set_input_types_rewrites $ S.empty
+  f_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl f
   -- need to know what f_ppar's input type rewrites were
   -- as those are the inner type rewrites that the map must propagate up
-  inner_state <- get
-  let f_ppar_in_rewrites_tl_set = input_types_rewrites inner_state
+  f_ppar_in_rewrites_tl_set <- get_input_types_rewrites
   let f_ppar_in_rewrites_tl = input_rewrites $ head $ S.toList f_ppar_in_rewrites_tl_set
-  put outer_state
-  producer_ppar <- sequence_to_partially_parallel (tr : f_ppar_in_rewrites_tl) producer
-  return $ STE.Map_sN tr_n f_ppar producer_ppar
+  -- reset the input type rewrites for the current graph
+  set_input_types_rewrites outer_input_type_rewrites
+  ppar_unary_seq_operator (tr : f_ppar_in_rewrites_tl)
+    (STE.Map_sN tr_n f_ppar) producer
   
 sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrites_tl)
-  (SeqE.MapN n i f producer) |
+  (SeqE.MapN n i f producer _) |
   parameters_match tr n i = do
-  outer_state <- get
-  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- clear the outer input type rewrites for subgraph f
+  outer_input_type_rewrites <- get_input_types_rewrites
+  set_input_types_rewrites $ S.empty
+  f_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl f
   -- need to know what f_ppar's input type rewrites were
   -- as those are the inner type rewrites that the map must propagate up
-  inner_state <- get
-  let f_ppar_in_rewrites_tl_set = input_types_rewrites inner_state
+  f_ppar_in_rewrites_tl_set <- get_input_types_rewrites
   let f_ppar_in_rewrites_tl = input_rewrites $ head $ S.toList f_ppar_in_rewrites_tl_set
-  put outer_state
-  producer_ppar <- sequence_to_partially_parallel (tr : f_ppar_in_rewrites_tl) producer
-  return $ STE.Map_tN tr_n tr_i f_ppar producer_ppar
+  -- reset the input type rewrites for the current graph
+  set_input_types_rewrites outer_input_type_rewrites
+  ppar_unary_seq_operator (tr : f_ppar_in_rewrites_tl)
+    (STE.Map_sN tr_n f_ppar) producer
   
 sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : type_rewrites_tl)
-  (SeqE.MapN n i f producer) |
+  (SeqE.MapN n i f producer _) |
   parameters_match tr n i = do
-  outer_state <- get
-  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- clear the outer input type rewrites for subgraph f
+  outer_input_type_rewrites <- get_input_types_rewrites
+  set_input_types_rewrites $ S.empty
+  f_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl f
   -- need to know what f_ppar's input type rewrites were
   -- as those are the inner type rewrites that the map must propagate up
-  inner_state <- get
-  let f_ppar_in_rewrites_tl_set = input_types_rewrites inner_state
+  f_ppar_in_rewrites_tl_set <- get_input_types_rewrites
   let f_ppar_in_rewrites_tl = input_rewrites $ head $ S.toList f_ppar_in_rewrites_tl_set
-  put outer_state
-  producer_ppar <- sequence_to_partially_parallel (tr : f_ppar_in_rewrites_tl) producer
-  return $ STE.Map_tN tr_no tr_io (STB.add_input_to_expr_for_map $
-                                   STE.Map_sN tr_ni f_ppar)
-    producer_ppar
-
-
+  -- reset the input type rewrites for the current graph
+  set_input_types_rewrites outer_input_type_rewrites
+  producer_ppar <- sequence_to_partially_parallel_with_reshape
+                   (tr : f_ppar_in_rewrites_tl) producer
+  STB.make_map_t tr_no tr_io (STE.Map_sN tr_ni f_ppar) producer_ppar
 
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
-  (SeqE.Map2N n i f producer_left producer_right) |
+  (SeqE.Map2N n i f producer_left producer_right _) |
   parameters_match tr n i = do
-  outer_state <- get
-  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- clear the outer input type rewrites for subgraph f
+  outer_input_type_rewrites <- get_input_types_rewrites
+  set_input_types_rewrites $ S.empty
+  f_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl f
   -- need to know what f_ppar's input type rewrites were
   -- as those are the inner type rewrites that the map must propagate up
-  inner_state <- get
-  let f_ppar_in_rewrites_tl_list = S.toList $ input_types_rewrites inner_state
+  f_ppar_in_rewrites_tl_set <- get_input_types_rewrites
+  let f_ppar_in_rewrites_tl_list = S.toList f_ppar_in_rewrites_tl_set
   let f_ppar_in_rewrites_tl_l = input_rewrites $ head f_ppar_in_rewrites_tl_list
   let f_ppar_in_rewrites_tl_r = input_rewrites $ (f_ppar_in_rewrites_tl_list !! 1)
-  put outer_state
-  producer_left_ppar <- sequence_to_partially_parallel
+  -- reset the input type rewrites for the current graph
+  set_input_types_rewrites outer_input_type_rewrites
+  producer_left_ppar <- sequence_to_partially_parallel_with_reshape
                         (tr : f_ppar_in_rewrites_tl_l) producer_left
-  producer_right_ppar <- sequence_to_partially_parallel 
+  producer_right_ppar <- sequence_to_partially_parallel_with_reshape
                         (tr : f_ppar_in_rewrites_tl_r) producer_right
-  return $ STE.Map2_sN tr_n f_ppar producer_left_ppar producer_right_ppar
+  cur_idx <- get_cur_index
+  return $ STE.Map2_sN tr_n f_ppar producer_left_ppar producer_right_ppar cur_idx
 
 sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrites_tl)
-  (SeqE.Map2N n i f producer_left producer_right) |
+  (SeqE.Map2N n i f producer_left producer_right _) |
   parameters_match tr n i = do
-  outer_state <- get
-  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- clear the outer input type rewrites for subgraph f
+  outer_input_type_rewrites <- get_input_types_rewrites
+  set_input_types_rewrites $ S.empty
+  f_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl f
   -- need to know what f_ppar's input type rewrites were
   -- as those are the inner type rewrites that the map must propagate up
-  inner_state <- get
-  let f_ppar_in_rewrites_tl_list = S.toList $ input_types_rewrites inner_state
+  f_ppar_in_rewrites_tl_set <- get_input_types_rewrites
+  let f_ppar_in_rewrites_tl_list = S.toList f_ppar_in_rewrites_tl_set
   let f_ppar_in_rewrites_tl_l = input_rewrites $ head f_ppar_in_rewrites_tl_list
   let f_ppar_in_rewrites_tl_r = input_rewrites $ (f_ppar_in_rewrites_tl_list !! 1)
-  put outer_state
-  producer_left_ppar <- sequence_to_partially_parallel
+  -- reset the input type rewrites for the current graph
+  set_input_types_rewrites outer_input_type_rewrites
+  producer_left_ppar <- sequence_to_partially_parallel_with_reshape
                         (tr : f_ppar_in_rewrites_tl_l) producer_left
-  producer_right_ppar <- sequence_to_partially_parallel 
+  producer_right_ppar <- sequence_to_partially_parallel_with_reshape
                         (tr : f_ppar_in_rewrites_tl_r) producer_right
-  return $ STE.Map2_tN tr_n tr_i f_ppar producer_left_ppar producer_right_ppar
+  cur_idx <- get_cur_index
+  return $ STE.Map2_tN tr_n tr_i f_ppar producer_left_ppar producer_right_ppar cur_idx
 
 sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : type_rewrites_tl)
-  (SeqE.Map2N n i f producer_left producer_right) |
+  (SeqE.Map2N n i f producer_left producer_right _) |
   parameters_match tr n i = do
-  outer_state <- get
-  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  -- clear the outer input type rewrites for subgraph f
+  outer_input_type_rewrites <- get_input_types_rewrites
+  set_input_types_rewrites $ S.empty
+  f_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl f
   -- need to know what f_ppar's input type rewrites were
   -- as those are the inner type rewrites that the map must propagate up
-  inner_state <- get
-  let f_ppar_in_rewrites_tl_list = S.toList $ input_types_rewrites inner_state
+  f_ppar_in_rewrites_tl_set <- get_input_types_rewrites
+  let f_ppar_in_rewrites_tl_list = S.toList f_ppar_in_rewrites_tl_set
   let f_ppar_in_rewrites_tl_l = input_rewrites $ head f_ppar_in_rewrites_tl_list
   let f_ppar_in_rewrites_tl_r = input_rewrites $ (f_ppar_in_rewrites_tl_list !! 1)
-  put outer_state
-  producer_left_ppar <- sequence_to_partially_parallel
+  -- reset the input type rewrites for the current graph
+  set_input_types_rewrites outer_input_type_rewrites
+  producer_left_ppar <- sequence_to_partially_parallel_with_reshape
                         (tr : f_ppar_in_rewrites_tl_l) producer_left
-  producer_right_ppar <- sequence_to_partially_parallel 
+  producer_right_ppar <- sequence_to_partially_parallel_with_reshape
                         (tr : f_ppar_in_rewrites_tl_r) producer_right
-  return $ STE.Map2_tN tr_no tr_io (STB.add_input_to_expr_for_map2 $
-                                    STE.Map2_sN tr_ni f_ppar)
-    producer_left_ppar producer_right_ppar
+  inner_map_s <- STB.add_input_to_expr_for_map2 $ STE.Map2_sN tr_ni f_ppar
+  outer_map2_idx <- get_cur_index
+  return $ STE.Map2_tN tr_no tr_io inner_map_s
+    producer_left_ppar producer_right_ppar outer_map2_idx
 
-
-
+{-
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   (SeqE.ReduceN n i f producer) |
   parameters_match tr n i = do
