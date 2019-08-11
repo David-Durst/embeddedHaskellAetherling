@@ -29,9 +29,9 @@ single_map = compile $
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
 single_map_seq_idx = add_indexes single_map
-{-
 single_map_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map) [1,2,4]
 single_map_ppar_results = fmap check_type single_map_ppar
+{-
 input_rewrite = rewrite_to_partially_parallel 2 (InputN (SeqT 4 0 IntT) "hi")
 input_rewrite' :: Partially_Parallel_StateM STE.Expr
 input_rewrite' = do
@@ -49,13 +49,14 @@ diamond_map_uncompiled input = do
 diamond_map = compile $ diamond_map_uncompiled $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
 diamond_map_seq_idx = add_indexes diamond_map
-{-
+
 single_map_underutil = compile $
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 4 Atom_Int))
 single_map_underutil_ppar = fmap
   (\s -> rewrite_to_partially_parallel s single_map_underutil) [1,2,4,8]
 single_map_underutil_ppar_results = fmap check_type single_map_underutil_ppar
+{-
 
 -- tests basic multi-rate
 map_to_up = compile $

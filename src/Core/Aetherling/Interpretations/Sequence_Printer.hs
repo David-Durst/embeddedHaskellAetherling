@@ -26,10 +26,14 @@ add_to_cur_module new_string = do
   lift $ put $ cur_data { cur_module_output_lines = cur_output_lines ++ [new_string] }
   return ()
 
-print_seq :: Expr -> IO ()
+print_seq :: Expr -> String
 print_seq e = do
   let lines = execState (runExceptT $ startEvalMemoT $ print_module e) empty_print_data
-  putStrLn $ foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
+  foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
+  
+print_seq_io :: Expr -> IO ()
+print_seq_io e = do
+  putStrLn $ print_seq e
 
 -- this handles creating a module
 print_module :: Expr -> Memo_Print_StateM String String
