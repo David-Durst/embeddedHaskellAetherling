@@ -442,17 +442,15 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) 
                    upstream_type_rewrites producer
   add_index (STE.ReshapeN in_t_ppar out_t_ppar) producer_ppar
 
-{-    
-{-
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : type_rewrites_tl)
-  (SeqE.UnpartitionN no ni io ii elem_t producer) |
+  (SeqE.UnpartitionN no ni io ii elem_t producer _) |
   parameters_match tr (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) = do
-  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   -- this works as parameters_match makes sure no*ni equals tr_no
   -- and unpartition must accept same no and ni regardless of invalid clocks
   let upstream_type_rewrites = SpaceR no : SpaceR ni : type_rewrites_tl
-  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
-  return $ STE.Unpartition_s_ssN no ni elem_t_ppar producer_ppar
+  ppar_unary_seq_operator upstream_type_rewrites
+    (STE.Unpartition_s_ssN no ni elem_t_ppar) producer
 
 -- use these computations if I'm wrong about TimeR always being fully sequential
 -- for Unpartition no ni io ii into a TimeR tr_no tr_io
@@ -465,15 +463,37 @@ sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : type_rewrites_
 -- in_ii <= ii
 -- since 3 equations and 4 unknowns, need solver
 sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrites_tl)
-  (SeqE.UnpartitionN no ni io ii elem_t producer) |
-  parameters_match tr (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) = do
-  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
-  -- only get a time if fully sequential, using all invalid clocks
+  (SeqE.UnpartitionN no ni io ii elem_t producer _) |
+  parameters_match tr (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) &&
+  -- this case only matches if fully sequential
+  (Seq_Conv.invalid_clocks_from_nested no ni io ii == tr_i) = do
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  -- only get if fully sequential, using all invalid clocks
   -- therefore can use io and ii
   let upstream_type_rewrites = TimeR no io : TimeR ni ii : type_rewrites_tl
-  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
-  return $ STE.Unpartition_t_ttN no ni io ii elem_t_ppar producer_ppar
- -}
+  ppar_unary_seq_operator upstream_type_rewrites
+    (STE.Unpartition_t_ttN no ni io ii elem_t_ppar) producer
+
+sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
+  seq_e@(SeqE.UnpartitionN no ni io ii elem_t producer _) |
+  parameters_match tr (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) = do
+  let types = Seq_Conv.expr_to_types seq_e
+  out_t_ppar <- ppar_AST_type type_rewrites (Seq_Conv.e_out_type types)
+
+  -- to compute how to slowed input, get the number of clocks the output takes
+  let slowdown = get_type_rewrite_periods tr
+
+  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io
+                                                      (SeqT.SeqT ni ii SeqT.IntT))
+  let input_rewrite_outer : input_rewrite_inner : _ = input_rewrites
+  let upstream_type_rewrites = input_rewrite_outer : input_rewrite_inner : type_rewrites_tl
+  in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
+  
+  ppar_unary_seq_operator upstream_type_rewrites
+    (STE.ReshapeN in_t_ppar out_t_ppar) producer
+
+
+{-    
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
   op@(SeqE.UnpartitionN no ni io ii elem_t producer) |
   parameters_match tr (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) = do
