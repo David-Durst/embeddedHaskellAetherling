@@ -29,7 +29,7 @@ single_map = compile $
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
 single_map_seq_idx = add_indexes single_map
-single_map_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map) [1,2,4]
+single_map_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map_seq_idx) [1,2,4]
 single_map_ppar_results = fmap check_type single_map_ppar
 {-
 input_rewrite = rewrite_to_partially_parallel 2 (InputN (SeqT 4 0 IntT) "hi")
@@ -53,17 +53,18 @@ diamond_map_seq_idx = add_indexes diamond_map
 single_map_underutil = compile $
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 4 Atom_Int))
+single_map_underutil_seq_idx = add_indexes single_map_underutil
 single_map_underutil_ppar = fmap
-  (\s -> rewrite_to_partially_parallel s single_map_underutil) [1,2,4,8]
+  (\s -> rewrite_to_partially_parallel s single_map_underutil_seq_idx) [1,2,4,8]
 single_map_underutil_ppar_results = fmap check_type single_map_underutil_ppar
-{-
 
 -- tests basic multi-rate
 map_to_up = compile $
   mapC' (Proxy @1) absC >>> -- [1]
   up_1dC (Proxy @4) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 1 3 Atom_Int))
-map_to_up_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_up) [1,2,4]
+map_to_up_seq_idx = add_indexes map_to_up
+map_to_up_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_up_seq_idx) [1,2,4]
 map_to_up_ppar_result = fmap check_type map_to_up_ppar
 
 -- test two multi-rates of different rates
@@ -71,7 +72,8 @@ up_to_down = compile $
   down_1dC' (Proxy @5) 0 >>>
   up_1dC (Proxy @4) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 5 0 Atom_Int))
-up_to_down_ppar = fmap (\s -> rewrite_to_partially_parallel s up_to_down) [1,5]
+up_to_down_seq_idx = add_indexes up_to_down
+up_to_down_ppar = fmap (\s -> rewrite_to_partially_parallel s up_to_down_seq_idx) [1,5]
 up_to_down_ppar_result = fmap check_type up_to_down_ppar
 
 -- next two test how to distribute slowdown correctly when multi-rate is nested
@@ -82,16 +84,19 @@ nested_map_to_top_level_up = compile $
 -- note: the reason the output is a seminly unecessary split on the outer seq
 -- for the slowest schedule is that there are still 2 invalid clocks not used
 -- and I say partially parallel for those, becuase not fully slowed down
-nested_map_to_top_level_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_top_level_up) [1,2,4,8,16]
+nested_map_to_top_level_up_seq_idx = add_indexes nested_map_to_top_level_up
+nested_map_to_top_level_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_top_level_up_seq_idx) [1,2,4,8,16]
 nested_map_to_top_level_up_ppar_result = fmap check_type nested_map_to_top_level_up_ppar
 
 nested_map_to_nested_up = compile $
   --mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
   mapC' (Proxy @4) (up_1dC (Proxy @4)) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 1 5 Atom_Int)))
-nested_map_to_nested_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_nested_up) [1,2,3,4,8,16]
+nested_map_to_nested_up_seq_idx = add_indexes nested_map_to_nested_up
+nested_map_to_nested_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_nested_up_seq_idx) [1,2,3,4,8,16]
 nested_map_to_nested_up_ppar_result = fmap check_type nested_map_to_nested_up_ppar
 
+{-
 -- testing basic partitioning
 partition_to_flat_map = compile $
   partitionC (Proxy @2) (Proxy @2) (Proxy @2) (Proxy @2) >>>
