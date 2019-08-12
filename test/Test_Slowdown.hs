@@ -188,6 +188,15 @@ seq_to_stuple_basic_ppar =
 seq_to_stuple_basic_ppar_result =
   fmap check_type seq_to_stuple_basic_ppar
  
+stuple_to_seq_basic = compile $
+  seq_tuple_to_seqC Proxy (Proxy @0) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 12 (Seq_Tuple 4 Atom_Int)))
+stuple_to_seq_basic_seq_idx = add_indexes stuple_to_seq_basic
+stuple_to_seq_basic_ppar = 
+  fmap (\s -> rewrite_to_partially_parallel s stuple_to_seq_basic_seq_idx) [1,2,4,8,16]
+stuple_to_seq_basic_ppar_result =
+  fmap check_type stuple_to_seq_basic_ppar
+  
 stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC (Proxy @1) last_shifted_seq) : l)

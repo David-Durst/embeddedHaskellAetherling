@@ -973,7 +973,8 @@ sequence_to_partially_parallel type_rewrites@(tr0 : tr1 : type_rewrites_tl)
   -- rewrite outer seq to get same throuhgput of output,
   -- but this can be in whatever nesting structure rewrite_AST_type chooses
   -- only modifying outer seq as inner will be the STuple that occurs on one clock cycle
-  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io SeqT.IntT)
+  input_rewrites <- lift $ rewrite_AST_type slowdown
+                    (SeqT.SeqT no ((no * (ni - 1 + ii)) + (io * (ni + ii))) SeqT.IntT)
   let seq_input_rewrite : _ = input_rewrites
   -- the input is a seq of an stuple, and stuple rewrite is with NonSeqR
   let upstream_type_rewrites = seq_input_rewrite : NonSeqR : type_rewrites_tl

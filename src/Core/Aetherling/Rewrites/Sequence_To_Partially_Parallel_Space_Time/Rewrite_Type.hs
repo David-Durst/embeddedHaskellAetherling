@@ -33,16 +33,16 @@ get_type_rewrite_periods (SplitR tr_no tr_io _) = tr_no + tr_io
 get_type_rewrite_periods NonSeqR = -1
 
 rewrite_AST_type :: (Monad m) => Int -> SeqT.AST_Type -> Rewrite_StateTM m [Type_Rewrite]
-rewrite_AST_type s e = do
+rewrite_AST_type s seq_t = do
   let s_factors = ae_factorize s
   let (t_rewrites_no_underutil, s_remaining_no_underutil) =
-        rewrite_AST_type_no_underutil s_factors e
+        rewrite_AST_type_no_underutil s_factors seq_t
   let (t_rewrites, s_remaining) =
-        rewrite_AST_type_add_underutil s_remaining_no_underutil t_rewrites_no_underutil e
+        rewrite_AST_type_add_underutil s_remaining_no_underutil t_rewrites_no_underutil seq_t
   if ae_all_non_one_factors_used s_remaining
     then return t_rewrites
     else throwError $ Slowdown_Failure $ show s_remaining ++ " slowdown not 1 " ++
-         "with t_rewrites "
+         "with t_rewrites " ++ show t_rewrites ++ " for initial type " ++ show seq_t
 
 rewrite_AST_type_no_underutil :: Factors -> SeqT.AST_Type -> ([Type_Rewrite], Factors)
 rewrite_AST_type_no_underutil s_remaining_factors (SeqT.SeqT n i t) = do
