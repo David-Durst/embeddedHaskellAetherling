@@ -20,6 +20,10 @@ get_cur_index = do
       return $ Index cur_idx
     _ -> return No_Index
 
+set_next_index :: (Monad m) => DAG_Index -> DAG_MemoT v (Rewrite_StateTM m) ()
+set_next_index next_index = do
+  lift $ put $ Rewrite_Data next_index
+
 add_index :: Monad m => (a -> DAG_Index -> a) -> a -> Memo_Rewrite_StateTM a m a
 add_index node_gen producer = do
   cur_idx <- get_cur_index

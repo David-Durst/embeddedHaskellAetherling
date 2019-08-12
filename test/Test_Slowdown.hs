@@ -31,6 +31,14 @@ single_map = compile $
 single_map_seq_idx = add_indexes single_map
 single_map_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map_seq_idx) [1,2,4]
 single_map_ppar_results = fmap check_type single_map_ppar
+
+two_maps = compile $
+  mapC' (Proxy @4) absC >>>
+  mapC absC $ -- [4]
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+two_maps_seq_idx = add_indexes two_maps
+two_maps_ppar = fmap (\s -> rewrite_to_partially_parallel s two_maps_seq_idx) [1,2,4]
+two_maps_ppar_results = fmap check_type two_maps_ppar
 {-
 input_rewrite = rewrite_to_partially_parallel 2 (InputN (SeqT 4 0 IntT) "hi")
 input_rewrite' :: Partially_Parallel_StateM STE.Expr
@@ -96,13 +104,13 @@ nested_map_to_nested_up_seq_idx = add_indexes nested_map_to_nested_up
 nested_map_to_nested_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_nested_up_seq_idx) [1,2,3,4,8,16]
 nested_map_to_nested_up_ppar_result = fmap check_type nested_map_to_nested_up_ppar
 
-{-
 -- testing basic partitioning
 partition_to_flat_map = compile $
   partitionC (Proxy @2) (Proxy @2) (Proxy @2) (Proxy @2) >>>
   mapC (mapC absC) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 12 Atom_Int))
-partition_to_flat_map_ppar = fmap (\s -> rewrite_to_partially_parallel s partition_to_flat_map) [1,2,4,8,16]
+partition_to_flat_map_seq_idx = add_indexes partition_to_flat_map
+partition_to_flat_map_ppar = fmap (\s -> rewrite_to_partially_parallel s partition_to_flat_map_seq_idx) [1,2,4,8,16]
 partition_to_flat_map_ppar_result = fmap check_type partition_to_flat_map_ppar
 
 map_to_unpartition = compile $
@@ -110,9 +118,11 @@ map_to_unpartition = compile $
   unpartitionC' (Proxy @2) (Proxy @2) >>>
   mapC absC $
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 6 (Seq 2 0 Atom_Int)))
-map_to_unpartition_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_unpartition) [1,2,4,8,16]
+map_to_unpartition_seq_idx = add_indexes map_to_unpartition
+map_to_unpartition_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_unpartition_seq_idx) [1,2,4,8,16]
 map_to_unpartition_ppar_result = fmap check_type map_to_unpartition_ppar
 
+{-
 -- combining multi-rate with partitioning
 double_up = compile $
   (mapC' (Proxy @2) (up_1dC (Proxy @3)) >>> -- [2, 3]
