@@ -1239,17 +1239,6 @@ sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : NonSeqR : type
   let upstream_type_rewrites = SpaceR no : SpaceR ni : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
   STB.make_map_s no (STE.SSeqToSTupleN ni elem_t_ppar) producer_ppar
-
-sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : NonSeqR :
-                                              type_rewrites_tl)
-  seq_e@(SeqE.SeqToSTupleN no ni io ii elem_t producer _) = do
-  -- can't check parameters as NonSeqR carries no information
-  add_output_rewrite_for_node seq_e type_rewrites
-  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
-  -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
-  let upstream_type_rewrites = TimeR tr_n tr_i : SpaceR ni : type_rewrites_tl
-  producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
-  STB.make_map_t tr_n tr_i (STE.STupleToSSeqN ni elem_t_ppar) producer_ppar
   
 sequence_to_partially_parallel type_rewrites@(tr : NonSeqR : type_rewrites_tl)
   seq_e@(SeqE.SeqToSTupleN no ni io ii elem_t producer _) = do
