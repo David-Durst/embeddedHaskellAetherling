@@ -97,7 +97,7 @@ nested_map_to_top_level_up_ppar = fmap (\s -> rewrite_to_partially_parallel s ne
 nested_map_to_top_level_up_ppar_result = fmap check_type nested_map_to_top_level_up_ppar
 
 nested_map_to_nested_up = compile $
-  --mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
+  mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
   mapC' (Proxy @4) (up_1dC (Proxy @4)) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 1 5 Atom_Int)))
 nested_map_to_nested_up_seq_idx = add_indexes nested_map_to_nested_up
@@ -122,7 +122,6 @@ map_to_unpartition_seq_idx = add_indexes map_to_unpartition
 map_to_unpartition_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_unpartition_seq_idx) [1,2,4,8,16]
 map_to_unpartition_ppar_result = fmap check_type map_to_unpartition_ppar
 
-{-
 -- combining multi-rate with partitioning
 double_up = compile $
   (mapC' (Proxy @2) (up_1dC (Proxy @3)) >>> -- [2, 3]
@@ -130,11 +129,12 @@ double_up = compile $
    partitionC (Proxy @1) (Proxy @6) Proxy (Proxy @0) >>> -- in : [6], out : [1, 6] or in : [[2, 3]] out : [1, [2, 3]] (this doesn't work as can't slow input down by 5, so must not be able to slow output down by 5) or in : [[2, 3]] out : []
    up_1dC (Proxy @5)) $ -- [5, [2, 3]]
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 1 14 Atom_Int)) )
-double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up) [1,2,3,5,6,10,15,30]
-double_up_ppar_no_errors = filter (not . STE.is_error_node) double_up_ppar
+double_up_seq_idx = add_indexes double_up
+double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up_seq_idx) [1,2,3,5,6,10,15,30]
+--double_up_ppar_no_errors = filter (not . STE.is_error_node) double_up_ppar
 double_up_ppar_result = fmap check_type double_up_ppar
 double_up_ppar_result' = fmap check_type' double_up_ppar
-double_up_slow_6 = rewrite_to_partially_parallel 6 double_up
+double_up_slow_6 = rewrite_to_partially_parallel 6 double_up_seq_idx
 -- the problem with this case is that, for the output Seq 5 (Seq 6 Int)
 -- with s = 6, the 5 is fully utilized and the 6 is fully underutilized.
 -- so the up and add don't put an extra sseq below the TSeq 6 0 Int.
@@ -150,14 +150,16 @@ down_over_nested_to_down_over_flattened = compile $
    unpartitionC' (Proxy @1) (Proxy @4) >>>
    down_1dC' (Proxy @4) 0) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
+down_over_nested_to_down_over_flattened_seq_idx = add_indexes down_over_nested_to_down_over_flattened
 down_over_nested_to_down_over_flattened_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s down_over_nested_to_down_over_flattened)
+  fmap (\s -> rewrite_to_partially_parallel s down_over_nested_to_down_over_flattened_seq_idx)
   [1,2,4,8,16]
 down_over_nested_to_down_over_flattened_ppar_result =
   fmap check_type down_over_nested_to_down_over_flattened_ppar
 down_over_nested_to_down_over_flattened_ppar_result' =
   fmap check_type' down_over_nested_to_down_over_flattened_ppar
 
+{-
 tuple_sum_shallow in_seq = do
   let kernel_list = fmap Atom_Int [1,2,3,4]
   let kernel = const_genC (Seq $ listToVector (Proxy @4) kernel_list) in_seq

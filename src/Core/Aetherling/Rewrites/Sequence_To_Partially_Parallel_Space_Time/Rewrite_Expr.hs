@@ -263,7 +263,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io ni) : type_rewrit
                                             STE.Down_1d_sN (n `div` outer_down_amount) (sel_idx `mod` outer_down_amount) elem_t_ppar
                                           ) down_outer
     return down_inner
- -}                                     
+ -}                                    
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   seq_e@(SeqE.Down_1dN n i sel_idx elem_t producer _) |
   parameters_match tr 1 (n+i-1) = do
@@ -1328,7 +1328,7 @@ sequence_to_partially_parallel type_rewrites seq_e@(SeqE.ErrorN s _) = do
   return $ STE.ErrorN s cur_idx
 sequence_to_partially_parallel tr e =
   throwError $ Slowdown_Failure $
-  "can't handle type_rewrites: " ++ show tr ++ "\n and expr: \n" ++ show e  --Seq_Print.print_seq e
+  "can't handle type_rewrites: " ++ show tr ++ "\n and expr: \n" ++ Seq_Print.print_seq e
 
 -- | Verifies that Type_Rewrite matches the output Seq that is being rewritten
 parameters_match :: Type_Rewrite -> Int -> Int -> Bool
