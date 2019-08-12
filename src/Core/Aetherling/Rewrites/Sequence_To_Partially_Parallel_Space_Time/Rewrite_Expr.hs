@@ -1230,9 +1230,8 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) 
 -}
 -}
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : NonSeqR : type_rewrites_tl)
-  seq_e@(SeqE.SeqToSTupleN no ni io ii elem_t producer _) |
-  -- can't check parameters for inner as NonSeqR carries no information
-  parameters_match tr no io = do
+  seq_e@(SeqE.SeqToSTupleN no ni io ii elem_t producer _) = do
+  -- can't check parameters as NonSeqR carries no information
   add_output_rewrite_for_node seq_e type_rewrites
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   -- this works as parameters_match makes sure no*ni equals tr_no
@@ -1243,9 +1242,8 @@ sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : NonSeqR : type
 
 sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : NonSeqR :
                                               type_rewrites_tl)
-  seq_e@(SeqE.SeqToSTupleN no ni io ii elem_t producer _) |
-  -- can't check parameters for inner as NonSeqR carries no information
-  parameters_match tr no io = do
+  seq_e@(SeqE.SeqToSTupleN no ni io ii elem_t producer _) = do
+  -- can't check parameters as NonSeqR carries no information
   add_output_rewrite_for_node seq_e type_rewrites
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
@@ -1254,9 +1252,8 @@ sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : NonSeqR :
   STB.make_map_t tr_n tr_i (STE.STupleToSSeqN ni elem_t_ppar) producer_ppar
   
 sequence_to_partially_parallel type_rewrites@(tr : NonSeqR : type_rewrites_tl)
-  seq_e@(SeqE.SeqToSTupleN no ni io ii elem_t producer _) |
-  -- can't check parameters for inner as NonSeqR carries no information
-  parameters_match tr no io = do
+  seq_e@(SeqE.SeqToSTupleN no ni io ii elem_t producer _) = do
+  -- can't check parameters as NonSeqR carries no information
   add_output_rewrite_for_node seq_e type_rewrites
   let types = Seq_Conv.expr_to_types seq_e
   -- ppar_AST_type applies the type_rewrites to match downstream
@@ -1264,7 +1261,7 @@ sequence_to_partially_parallel type_rewrites@(tr : NonSeqR : type_rewrites_tl)
 
   -- to compute how to slowed input, get the number of clocks the output takes
   let slowdown = get_type_rewrite_periods tr
-  
+ 
   -- rewrite inputs to get same throuhgput of output,
   -- but this can be in whatever nesting structure rewrite_AST_type chooses
   input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io

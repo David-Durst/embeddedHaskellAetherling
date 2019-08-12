@@ -13,6 +13,8 @@ import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Typ
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import Data.Proxy
+import GHC.TypeLits
+import GHC.TypeLits.Extra
 import Data.SBV
 import Control.Monad.State
 
@@ -159,7 +161,7 @@ down_over_nested_to_down_over_flattened_ppar_result =
 down_over_nested_to_down_over_flattened_ppar_result' =
   fmap check_type' down_over_nested_to_down_over_flattened_ppar
 
-{-
+
 tuple_sum_shallow in_seq = do
   let kernel_list = fmap Atom_Int [1,2,3,4]
   let kernel = const_genC (Seq $ listToVector (Proxy @4) kernel_list) in_seq
@@ -168,15 +170,42 @@ tuple_sum_shallow in_seq = do
 tuple_sum = compile $
   tuple_sum_shallow $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+tuple_sum_seq_idx = add_indexes tuple_sum
 tuple_sum_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s tuple_sum) [1,2,4]
+  fmap (\s -> rewrite_to_partially_parallel s tuple_sum_seq_idx) [1,2,4]
 tuple_sum_ppar_result =
   fmap check_type tuple_sum_ppar
 tuple_sum_ppar_result' =
   fmap check_type' tuple_sum_ppar
 tuple_sum_ppar_result_s_2 = check_type' $ rewrite_to_partially_parallel 2 tuple_sum
 
- -} 
+seq_to_stuple_basic = compile $
+  seq_to_seq_tupleC $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
+seq_to_stuple_basic_seq_idx = add_indexes seq_to_stuple_basic
+seq_to_stuple_basic_ppar = 
+  fmap (\s -> rewrite_to_partially_parallel s seq_to_stuple_basic_seq_idx) [1,2,4,8,16]
+seq_to_stuple_basic_ppar_result =
+  fmap check_type seq_to_stuple_basic_ppar
+ 
+stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
+  let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
+                               (shiftC (Proxy @1) last_shifted_seq) : l)
+                     [in_seq] [0 .. natVal window_size - 2]
+  let tuple = zipC window_size shifted_seqs
+  seq_tuple_to_seqC Proxy (Proxy @0) tuple
+stencil_1dC_test _ _ = undefined
+stencil_1d_test = compile $
+  stencil_1dC_test (Proxy @3) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 10 20 Atom_Int))
+stencil_1d_test_seq_idx = add_indexes stencil_1d_test
+stencil_1d_test_ppar = 
+  fmap (\s -> rewrite_to_partially_parallel s stencil_1d_test_seq_idx) [1,2,5,10,30]
+stencil_1d_test_ppar_result =
+  fmap check_type stencil_1d_test_ppar
+stencil_1d_test_ppar_result' =
+  fmap check_type' stencil_1d_test_ppar
+  
 -- END OF ACTUALLY TESTED THINGS
 -- multiple unpartitions into a multi-rate
 multi_unpartition_with_multi_rate = compile $

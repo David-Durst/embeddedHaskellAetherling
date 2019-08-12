@@ -81,7 +81,6 @@ executables:
     - src/Apps/
     - src/AppMains/Blur/
     ghc-options:
-    - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
@@ -117,7 +116,6 @@ tests:
     source-dirs:
     - test/ 
     ghc-options:
-    - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
