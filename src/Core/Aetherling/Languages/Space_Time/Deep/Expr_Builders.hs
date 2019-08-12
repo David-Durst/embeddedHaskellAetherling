@@ -92,3 +92,15 @@ make_map_s :: Monad m => Int -> (Expr -> DAG_Index -> Expr) ->
 make_map_s n inner_expr_gen producer = do
   inner_expr <- add_input_to_expr_for_map inner_expr_gen
   (add_index $ Map_sN n inner_expr) producer
+
+make_reduce_s :: Monad m => Int -> (Expr -> DAG_Index -> Expr) ->
+                 Expr -> Memo_Rewrite_StateTM Expr m Expr
+make_reduce_s n inner_expr_gen producer = do
+  inner_expr <- add_input_to_expr_for_map inner_expr_gen
+  (add_index $ Reduce_sN n inner_expr) producer
+
+make_reduce_t :: Monad m => Int -> Int -> (Expr -> DAG_Index -> Expr) ->
+                 Expr -> Memo_Rewrite_StateTM Expr m Expr
+make_reduce_t n i inner_expr_gen producer = do
+  inner_expr <- add_input_to_expr_for_map inner_expr_gen
+  (add_index $ Reduce_tN n i inner_expr) producer

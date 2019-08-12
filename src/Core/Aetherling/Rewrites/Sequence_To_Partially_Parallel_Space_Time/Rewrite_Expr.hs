@@ -852,80 +852,88 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : ty
   return $ STE.Map2_tN tr_no tr_io inner_map_s
     producer_left_ppar producer_right_ppar outer_map2_idx
 
-{-
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
-  (SeqE.ReduceN n i f producer) |
+  seq_e@(SeqE.ReduceN n i f producer _) |
   parameters_match tr n i = do
-  -- to compute how to slowdown input, get output slowdown
+  add_output_rewrite_for_node seq_e type_rewrites
+  -- to compute how to slowed input, get the number of clocks the output takes
   let slowdown = get_type_rewrite_periods tr
 
   input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
   let input_rewrite : _ = input_rewrites
 
   let upstream_type_rewrites = input_rewrite : type_rewrites_tl
-  producer_ppar <- sequence_to_partially_parallel upstream_type_rewrites producer
-  f_ppar <- sequence_to_partially_parallel type_rewrites_tl f
+  producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+  f_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl f
 
   get_scheduled_partition input_rewrite f_ppar producer_ppar
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
-    get_scheduled_partition :: Type_Rewrite -> STE.Expr -> STE.Expr -> Partially_Parallel_StateM STE.Expr
+    get_scheduled_partition :: Type_Rewrite -> STE.Expr -> STE.Expr -> Partially_Parallel_MemoM STE.Expr STE.Expr
     get_scheduled_partition (SpaceR in_n) f_ppar producer_ppar =
-      return $ STE.Reduce_sN in_n f_ppar producer_ppar
+      add_index (STE.Reduce_sN in_n f_ppar) producer_ppar
     get_scheduled_partition (TimeR in_n in_i) f_ppar producer_ppar =
-      return $ STE.Reduce_tN in_n in_i f_ppar producer_ppar
+      add_index (STE.Reduce_tN in_n in_i f_ppar) producer_ppar
     get_scheduled_partition (SplitR in_no in_io in_ni) f_ppar producer_ppar =
-      return $ STE.Reduce_tN in_no in_io (STB.add_input_to_expr_for_map $
-                                          STE.Map_sN 1 f_ppar) $
-      STE.Map_tN in_no in_io (STB.add_input_to_expr_for_map $
-                              STE.Reduce_sN in_ni f_ppar)
-      producer_ppar
+      STB.make_reduce_t in_no in_io (STE.Map_sN 1 f_ppar) =<<
+        STB.make_map_t in_no in_io (STE.Reduce_sN in_ni f_ppar)
+        producer_ppar
     get_scheduled_partition NonSeqR _ _ = throwError $
       Slowdown_Failure "can't get nonseq for reduce input"
 
 -- tuple operations
 sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
-  (SeqE.FstN t0 t1 producer) = do
-  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
-  -- use whole type rewrites here as Atom_Tuple (x, y) is compacted to one type rewrite
-  t0_ppar <- part_par_AST_type type_rewrites t0
-  t1_ppar <- part_par_AST_type type_rewrites t1
-  return $ STE.FstN t0_ppar t1_ppar producer_ppar
+  seq_e@(SeqE.FstN t0 t1 producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  -- use whole type rewrites here as Atom_Tuple (x, y) has type rewrite NonSeqR
+  -- just like the atoms x and y
+  t0_ppar <- ppar_AST_type type_rewrites t0
+  t1_ppar <- ppar_AST_type type_rewrites t1
+  ppar_unary_seq_operator type_rewrites (STE.FstN t0_ppar t1_ppar) producer
   
 sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
-  (SeqE.SndN t0 t1 producer) = do
-  producer_ppar <- sequence_to_partially_parallel type_rewrites producer
-  -- use whole type rewrites here as Atom_Tuple (x, y) is compacted to one type rewrite
-  t0_ppar <- part_par_AST_type type_rewrites t0
-  t1_ppar <- part_par_AST_type type_rewrites t1
-  return $ STE.SndN t0_ppar t1_ppar producer_ppar
+  seq_e@(SeqE.SndN t0 t1 producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  -- use whole type rewrites here as Atom_Tuple (x, y) has type rewrite NonSeqR
+  -- just like the atoms x and y
+  t0_ppar <- ppar_AST_type type_rewrites t0
+  t1_ppar <- ppar_AST_type type_rewrites t1
+  ppar_unary_seq_operator type_rewrites (STE.SndN t0_ppar t1_ppar) producer
 
 sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
-  (SeqE.ATupleN t0 t1 producer_left producer_right) = do
+  seq_e@(SeqE.ATupleN t0 t1 producer_left producer_right _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
   producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
   producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
-  -- use whole type rewrites here as Atom_Tuple (x, y) is compacted to one type rewrite
-  t0_ppar <- part_par_AST_type type_rewrites t0
-  t1_ppar <- part_par_AST_type type_rewrites t1
-  return $ STE.ATupleN t0_ppar t1_ppar producer_left_ppar producer_right_ppar
+  -- use whole type rewrites here as Atom_Tuple (x, y) has type rewrite NonSeqR
+  -- just like the atoms x and y
+  t0_ppar <- ppar_AST_type type_rewrites t0
+  t1_ppar <- ppar_AST_type type_rewrites t1
+  cur_idx <- get_cur_index
+  return $ STE.ATupleN t0_ppar t1_ppar producer_left_ppar producer_right_ppar cur_idx
 
 sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
-  (SeqE.STupleN elem_t producer_left producer_right) = do
+  seq_e@(SeqE.STupleN elem_t producer_left producer_right _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
   producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
   producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
-  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
-  return $ STE.STupleN elem_t_ppar producer_left_ppar producer_right_ppar
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  cur_idx <- get_cur_index
+  return $ STE.STupleN elem_t_ppar producer_left_ppar producer_right_ppar cur_idx
 
 sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
-  (SeqE.STupleAppendN out_len elem_t producer_left producer_right) = do
+  seq_e@(SeqE.STupleAppendN out_len elem_t producer_left producer_right _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
   producer_left_ppar <- sequence_to_partially_parallel type_rewrites producer_left
   producer_right_ppar <- sequence_to_partially_parallel type_rewrites producer_right
-  elem_t_ppar <- part_par_AST_type type_rewrites_tl elem_t
-  return $ STE.STupleAppendN out_len elem_t_ppar producer_left_ppar producer_right_ppar
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  cur_idx <- get_cur_index
+  return $ STE.STupleAppendN out_len elem_t_ppar producer_left_ppar producer_right_ppar cur_idx
 
 
   
+{-
 sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr0_n) : tr1@(SpaceR tr1_n) :
                                               type_rewrites_tl)
   (SeqE.STupleToSeqN no ni io ii elem_t producer) |
