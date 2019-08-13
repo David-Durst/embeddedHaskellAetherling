@@ -179,6 +179,23 @@ tuple_sum_ppar_result' =
   fmap check_type' tuple_sum_ppar
 tuple_sum_ppar_result_s_2 = check_type' $ rewrite_to_partially_parallel 2 tuple_sum
 
+tuple_reduce_shallow in_seq = do
+  let kernel_list = fmap Atom_Int [1,2,3,4,5,6,7,8]
+  let kernel = const_genC (Seq $ listToVector (Proxy @8) kernel_list) in_seq
+  let kernel_and_values = map2C atom_tupleC kernel in_seq
+  let summed_pairs = mapC addC kernel_and_values
+  reduceC addC summed_pairs
+tuple_reduce = compile $
+  tuple_reduce_shallow $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 Atom_Int))
+tuple_reduce_seq_idx = add_indexes tuple_reduce
+tuple_reduce_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s tuple_reduce_seq_idx) [1,2,4,8]
+tuple_reduce_ppar_result =
+  fmap check_type tuple_reduce_ppar
+tuple_reduce_ppar_result' =
+  fmap check_type' tuple_reduce_ppar
+
 seq_to_stuple_basic = compile $
   seq_to_seq_tupleC $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))

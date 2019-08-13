@@ -857,7 +857,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : ty
 
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   seq_e@(SeqE.ReduceN n i f producer _) |
-  parameters_match tr n i = do
+  parameters_match tr 1 (n+i-1) = do
   add_output_rewrite_for_node seq_e type_rewrites
   -- to compute how to slowed input, get the number of clocks the output takes
   let slowdown = get_type_rewrite_periods tr
