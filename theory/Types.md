@@ -7,17 +7,22 @@ In speaking with Gilbert, it appears that this is necessary in order to accurate
 
 # Flat Sequences
 The simplest example of a sequence value in the sequence language is below.
-It is a sequence of four integers. 
+It is a sequence of six integers. 
 Following Haskell syntax, we provide the type after `::`.
+
 ```
 [0, 1, 2, 3, 4, 5] :: Seq 6 Int
 ```
 
-By the [sequence-to-space-time-isomorphisms](Basic.md#sequence-isomorphisms), the prior sequence can be converted to an `SSeq` or a `TSeq`.
+An operator with an output type of `Seq 6 Int` emits six integers.
+
+By the [sequence-to-space-time isomorphisms](Basic.md#sequence-isomorphisms) and [space-time rewrites](Basic.md#rewrites), the operator emitting a `Seq 6 Int` can be converted to an operator emitting `SSeq`s and `TSeq`s.
 
 ## Flat SSeq
-The above `Seq 6 Int` can be converted to an `SSeq 6 Int` with six integers on one clock cycle.
-The below diagrams show the distribution of this value's elements in space and time.
+An operator `O` in the sequence language that emits a value of type `Seq 6 Int` can be converted to an operator `O_s` in the space-time IR that emits `SSeq 6 Int`. 
+By the interpretation of [`SSeq` stated in the basic document](Basic.md#space-time-types), the hardware implementation of `O_s` must emit all six integers on one clock cycle.
+The below diagrams show the distribution of the `SSeq`'s integers in space and time.
+
 
 The first diagram visualizes the structure of Aetherling's nested `SSeq`s and `TSeq`s.
 The `()` indicate an `SSeq`.
@@ -25,7 +30,7 @@ This flat `SSeq` represents six elements on one clock cycle.
 
 ![SSeq 6 Int](other_diagrams/types/seq6/sseq6.png "SSeq 6 Int")
 
-The second diagram shows the hardware perspective: what elements of the sequence will be materialized on which clock cycles. 
+The second diagram shows the hardware perspective: what elements of the sequence will be emitted on which clock cycles. 
 It does this by flattening the `SSeq`s and `TSeq`s.
 The `SSeq 6 Int` materializes all six elements on the first clock cycle.
 Note that the `0` in the below table indicates the element with value `0`, not time `0`.
@@ -36,7 +41,8 @@ The hardware perspective diagram does not have labels on the axes.
 Note that, until the nested `Seq` example below, there is no flattening to demonstrate with this diagram.
 
 ## Flat TSeq With No Invalids
-The above `Seq 6 Int` can be converted to an `TSeq 6 0 Int` with six integers on six clock cycles.
+An operator `O` in the sequence language that emits a value of type `Seq 6 Int` can be converted to an operator `O_t` in the space-time IR that emits `TSeq 6 0 Int`. 
+By the interpretation of [`TSeq` stated in the basic document](Basic.md#space-time-types), the hardware implementation of `O_t` must emit six integers on six clock cycles.
 Just as with the `SSeq 6 Int` example, there are two diagrams.
 
 The first diagram shows the nested structure of the Aetherling type.
@@ -54,7 +60,8 @@ It also shows one integer per clock for six clocks.
 ![TSeq 6 0 Int Table](other_diagrams/types/seq6/tseq60_table.png "TSeq 6 0 Int Table")
 
 ## Flat TSeq With Invalids
-The above `Seq 6 Int` can be converted to an `TSeq 6 2 Int` with six integers on eight clock cycles.
+An operator `O` in the sequence language that emits a value of type `Seq 6 Int` can be converted to an operator `O_ti` in the space-time IR that emits `TSeq 6 2 Int`. 
+The hardware implementation of `O_t` must emit six integers on eight clock cycles.
 Just as with the `SSeq 6 Int` example, there are two diagrams.
 
 The first diagram shows the nested structure of the Aetherling type.
@@ -72,18 +79,27 @@ The shaded regions indicate no data.
 
 
 # Nested Sequence
-By the [sequence language isomorphisms](Basic.md#sequence-isomorphisms), the above `Seq 6 Int` sequence can be converted into:
+By the [sequence language isomorphisms and nesting rewrite rules](Basic.md#sequence-isomorphisms), an operator with an output type of `Seq 6 Int` can be rewritten into one with an output type of `Seq 2 (Seq 3 Int)`.
+
+If the original operator emits the value
+```
+[0, 1, 2, 3, 4, 5] :: Seq 6 Int
+```
+
+Then the rewritten operator will emit the value 
 ```
 [[0, 1, 2], [3, 4, 5]] :: Seq 2 (Seq 3 Int)
 ```
 
-The isomorphism preserves the order of the elements.
-Flattening the nested sequence will produce a `Seq 6 Int` with integers in the same order as the initial `Seq 6 Int`.
+The isomorphisms and rewrite rules preserves the order of the elements.
+Flattening the nested sequence of type `Seq 2 (Seq 3 Int)` will produce a `Seq 6 Int` with integers in the same order as the initial `Seq 6 Int`.
 
-By the [sequence-to-space-time-isomorphisms](Basic.md#sequence-isomorphisms), both of the `Seq`s in `Seq 2 (Seq 3 Int)` can be converted to a `SSeq` or a `TSeq`.
+By the [sequence-to-space-time isomorphisms](Basic.md#sequence-isomorphisms) and [space-time rewrites](Basic.md#rewrites), the operator emitting a `Seq 2 (Seq 3 Int)` can be converted to an operator emitting `SSeq`s and `TSeq`s.
 
 ## Nested SSeq
-The above `Seq 2 (Seq 3 Int)` can be converted into a `SSeq 2 (SSeq 3 Int)` with six integers on one clock cycle.
+An operator `ON` in the sequence language that emits the above value of type `Seq 2 (Seq 3 Int)` can be converted to an operator `ON_s` in the space-time IR that emits `SSeq 2 (SSeq 3 Int)`. 
+The hardware implementation of `O_s` must emit all six integers on one clock cycle.
+The below diagrams show the distribution of the `SSeq`'s integers in space and time.
 
 The nested, Aetherling structure diagram shows an outer `SSeq 2`.
 Each element of the `SSeq 2` is an `SSeq 3 Int`.
@@ -97,7 +113,8 @@ All six integers are on one clock cycle.
 ![SSeq 2 (SSeq 3 Int) Table](other_diagrams/types/seq2seq3/sseq2sseq3_table.png "SSeq 2 (SSeq 3 Int) Table")
 
 ## Nested TSeq With no Invalids
-The above `Seq 2 (Seq 3 Int)` can be converted into a `TSeq 2 0 (TSeq 3 0 Int)` with six integers on six clock cycle.
+An operator `ON` in the sequence language that emits the above value of type `Seq 2 (Seq 3 Int)` can be converted to an operator `ON_t` in the space-time IR that emits `TSeq 2 0 (TSeq 3 0 Int)`. 
+The hardware implementation of `ON_t` must emit six integers on six clock cycle.
 
 The nested, Aetherling structure diagram shows an outer `TSeq 2 0`.
 Each element of the `TSeq 2 0` is an `TSeq 3 0 Int`.
@@ -114,7 +131,8 @@ There is one integer per clock for six clock cycles.
 ![TSeq 2 0 (TSeq 3 0 Int) Table](other_diagrams/types/seq2seq3/tseq20tseq30_table.png "TSeq 2 0 (TSeq 3 0 Int) Table")
 
 ## Nested TSeq With Inner Invalids
-The above `Seq 2 (Seq 3 Int)` can be converted into a `TSeq 2 0 (TSeq 3 1 Int)` with six integers on eight clock cycle.
+An operator `ON` in the sequence language that emits the above value of type `Seq 2 (Seq 3 Int)` can be converted to an operator `ON_ti` in the space-time IR that emits `TSeq 2 0 (TSeq 3 1 Int)`. 
+The hardware implementation of `ON_t` must emit six integers on eight clock cycle.
 
 The nested, Aetherling structure diagram shows an outer `TSeq 2 0` where each element is a `TSeq 3 1 Int`.
 Each of the `TSeq 3 1 Int` has one invalid period.
@@ -131,7 +149,8 @@ It occurs on the fourth clock cycle.
 ![TSeq 2 0 (TSeq 3 1 Int) Table](other_diagrams/types/seq2seq3/tseq20tseq31_table.png "TSeq 2 0 (TSeq 3 1 Int) Table")
 
 ## TSeq of SSeq
-The above `Seq 2 (Seq 3 Int)` can be converted into a `TSeq 2 1 (SSeq 3 Int)` with six integers on three clock cycle.
+An operator `ON` in the sequence language that emits the above value of type `Seq 2 (Seq 3 Int)` can be converted to an operator `ON_ts` in the space-time IR that emits `TSeq 2 1 (SSeq 3 Int)`. 
+The hardware implementation of `ON_ts` must emit six integers on three clock cycle.
 
 The nested, Aetherling structure diagram shows an outer `TSeq 2 1` where each valid element is a `SSeq 3 Int`.
 Since the time of `SSeq 3 Int` is one clock, each period of `TSeq 2 1` takes one clock.
@@ -150,7 +169,7 @@ The last part of this document will address more complex examples.
 The below examples will not be based on the `Seq 6 Int` sequence like those above.
 
 ## TSeq of SSeq of TSeq
-This example will be based on the following value in the sequence language:
+This example will be based on an operator in the sequence language that emits the following value:
 ```
 [
     [
@@ -164,7 +183,7 @@ This example will be based on the following value in the sequence language:
 ] :: Seq 2 (Seq 2 (Seq 3 Int))
 ```
 
-By the [sequence-to-space-time-isomorphisms](Basic.md#sequence-isomorphisms), the type can be converted to `TSeq 2 1 (SSeq 2 (TSeq 3 1 Int))`.
+By the [sequence-to-space-time isomorphisms](Basic.md#sequence-isomorphisms) and [space-time rewrites](Basic.md#rewrites), the operator emitting a value of type `Seq 2 (Seq 2 (Seq 3 Int))` can be converted to an operator emitting a value of type `TSeq 2 1 (SSeq 2 (TSeq 3 1 Int))`.
 
 The nested, Aetherling structure diagram shows the pattern of `SSeq`s and `TSeq`s.
 Note the order of elements in the below diagram. 
@@ -184,7 +203,7 @@ The integers are in an unusual order to match the nesting of `SSeq`s and `TSeq`s
 ![TSeq 2 1 (SSeq 2 (TSeq 3 1 Int)) Table](other_diagrams/types/complex/tseq21sseq2tseq31_table.png "TSeq 2 1 (SSeq 2 (TSeq 3 1 Int)) Table")
 
 ## TSeq of SSeq of TSeq of SSeq
-This example will be based on the following value in the sequence language:
+This example will be based on an operator in the sequence language that emits the following value:
 ```
 [
     [
@@ -214,7 +233,7 @@ This example will be based on the following value in the sequence language:
 ] :: Seq 2 (Seq 2 (Seq 3 (Seq 3 Int)))
 ```
 
-By the [sequence-to-space-time-isomorphisms](Basic.md#sequence-isomorphisms), the type can be converted to `TSeq 2 1 (SSeq 2 (TSeq 3 1 (SSeq 3 Int)))`.
+By the [sequence-to-space-time isomorphisms](Basic.md#sequence-isomorphisms) and [space-time rewrites](Basic.md#rewrites), the operator emitting a value of type `Seq 2 (Seq 2 (Seq 3 (Seq 3 Int)))` can be converted to an operator emitting a value of type `TSeq 2 1 (SSeq 2 (TSeq 3 1 (SSeq 3 Int)))`.
 
 The nested, Aetherling structure diagram shows the pattern of `SSeq`s and `TSeq`s.
 
