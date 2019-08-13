@@ -16,7 +16,7 @@ Following Haskell syntax, we provide the type after `::`.
 
 An operator with an output type of `Seq 6 Int` emits six integers.
 
-By the [sequence-to-space-time isomorphisms](Basic.md#sequence-isomorphisms) and [space-time rewrites](Basic.md#rewrites), the operator emitting a `Seq 6 Int` can be converted to an operator emitting `SSeq`s and `TSeq`s.
+By the [sequence isomorphisms](Basic.md#sequence-isomorphisms), [sequence-to-space-time isomorphisms](Basic.md#sequence-to-space-time-isomorphisms), and [space-time rewrites](Basic.md#rewrites), the operator emitting a `Seq 6 Int` can be converted to an operator emitting `SSeq`s and `TSeq`s.
 
 ## Flat SSeq
 An operator `O` in the sequence language that emits a value of type `Seq 6 Int` can be converted to an operator `O_s` in the space-time IR that emits `SSeq 6 Int`. 
@@ -94,7 +94,7 @@ Then the rewritten operator will emit the value
 The isomorphisms and rewrite rules preserves the order of the elements.
 Flattening the nested sequence of type `Seq 2 (Seq 3 Int)` will produce a `Seq 6 Int` with integers in the same order as the initial `Seq 6 Int`.
 
-By the [sequence-to-space-time isomorphisms](Basic.md#sequence-isomorphisms) and [space-time rewrites](Basic.md#rewrites), the operator emitting a `Seq 2 (Seq 3 Int)` can be converted to an operator emitting `SSeq`s and `TSeq`s.
+By the [sequence isomorphisms](Basic.md#sequence-isomorphisms), [sequence-to-space-time isomorphisms](Basic.md#sequence-to-space-time-isomorphisms), and [space-time rewrites](Basic.md#rewrites), the operator emitting a `Seq 2 (Seq 3 Int)` can be converted to an operator emitting `SSeq`s and `TSeq`s.
 
 ## Nested SSeq
 An operator `ON` in the sequence language that emits the above value of type `Seq 2 (Seq 3 Int)` can be converted to an operator `ON_s` in the space-time IR that emits `SSeq 2 (SSeq 3 Int)`. 
@@ -183,7 +183,7 @@ This example will be based on an operator in the sequence language that emits th
 ] :: Seq 2 (Seq 2 (Seq 3 Int))
 ```
 
-By the [sequence-to-space-time isomorphisms](Basic.md#sequence-isomorphisms) and [space-time rewrites](Basic.md#rewrites), the operator emitting a value of type `Seq 2 (Seq 2 (Seq 3 Int))` can be converted to an operator emitting a value of type `TSeq 2 1 (SSeq 2 (TSeq 3 1 Int))`.
+By the [sequence isomorphisms](Basic.md#sequence-isomorphisms), [sequence-to-space-time isomorphisms](Basic.md#sequence-to-space-time-isomorphisms), and [space-time rewrites](Basic.md#rewrites), the operator emitting a value of type `Seq 2 (Seq 2 (Seq 3 Int))` can be converted to an operator emitting a value of type `TSeq 2 1 (SSeq 2 (TSeq 3 1 Int))`.
 
 The nested, Aetherling structure diagram shows the pattern of `SSeq`s and `TSeq`s.
 Note the order of elements in the below diagram. 
