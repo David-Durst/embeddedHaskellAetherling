@@ -196,6 +196,41 @@ tuple_reduce_ppar_result =
 tuple_reduce_ppar_result' =
   fmap check_type' tuple_reduce_ppar
 
+
+fst_snd_sum_shallow in_seq = do
+  let kernel_list = fmap Atom_Int [1,2,3,4,5,6,7,8]
+  let kernel = const_genC (Seq $ listToVector (Proxy @8) kernel_list) in_seq
+  let kernel_and_values = map2C atom_tupleC kernel in_seq
+  let kernel_again = mapC fstC kernel_and_values
+  let in_seq_again = mapC sndC kernel_and_values
+  let kernel_and_values_again = map2C atom_tupleC kernel_again in_seq_again
+  mapC addC kernel_and_values_again
+fst_snd_sum = compile $
+  fst_snd_sum_shallow $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 Atom_Int))
+fst_snd_sum_seq_idx = add_indexes fst_snd_sum
+fst_snd_sum_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s fst_snd_sum_seq_idx) [1,2,4,8]
+fst_snd_sum_ppar_result =
+  fmap check_type fst_snd_sum_ppar
+fst_snd_sum_ppar_result' =
+  fmap check_type' fst_snd_sum_ppar
+
+striple_shallow in_seq = do
+  let pair = map2C seq_tupleC in_seq in_seq
+  --map2C seq_tuple_appendC pair in_seq
+  pair
+striple = compile $
+  striple_shallow $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 Atom_Int))
+striple_seq_idx = add_indexes striple
+striple_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s striple_seq_idx) [1,2,4,8]
+striple_ppar_result =
+  fmap check_type striple_ppar
+striple_ppar_result' =
+  fmap check_type' striple_ppar
+
 seq_to_stuple_basic = compile $
   seq_to_seq_tupleC $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
@@ -204,7 +239,8 @@ seq_to_stuple_basic_ppar =
   fmap (\s -> rewrite_to_partially_parallel s seq_to_stuple_basic_seq_idx) [1,2,4,8,16]
 seq_to_stuple_basic_ppar_result =
   fmap check_type seq_to_stuple_basic_ppar
- 
+
+
 stuple_to_seq_basic = compile $
   seq_tuple_to_seqC Proxy (Proxy @0) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 12 (Seq_Tuple 4 Atom_Int)))
@@ -213,7 +249,24 @@ stuple_to_seq_basic_ppar =
   fmap (\s -> rewrite_to_partially_parallel s stuple_to_seq_basic_seq_idx) [1,2,4,8,16]
 stuple_to_seq_basic_ppar_result =
   fmap check_type stuple_to_seq_basic_ppar
-  
+
+
+striple_to_seq_shallow in_seq = do
+  let pair = map2C seq_tupleC in_seq in_seq
+  let triple = map2C seq_tuple_appendC pair in_seq
+  seq_tuple_to_seqC Proxy (Proxy @0) triple
+striple_to_seq = compile $
+  striple_to_seq_shallow $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 8 16 Atom_Int))
+striple_to_seq_seq_idx = add_indexes striple_to_seq
+striple_to_seq_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s striple_to_seq_seq_idx) [1,2,4,8]
+striple_to_seq_ppar_result =
+  fmap check_type striple_to_seq_ppar
+striple_to_seq_ppar_result' =
+  fmap check_type' striple_to_seq_ppar
+
+
 stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC (Proxy @1) last_shifted_seq) : l)
