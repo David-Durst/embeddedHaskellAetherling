@@ -218,8 +218,7 @@ fst_snd_sum_ppar_result' =
 
 striple_shallow in_seq = do
   let pair = map2C seq_tupleC in_seq in_seq
-  --map2C seq_tuple_appendC pair in_seq
-  pair
+  map2C seq_tuple_appendC pair in_seq
 striple = compile $
   striple_shallow $
   com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 Atom_Int))
