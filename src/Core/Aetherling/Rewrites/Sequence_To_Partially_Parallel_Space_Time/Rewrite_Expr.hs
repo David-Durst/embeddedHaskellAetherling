@@ -919,8 +919,11 @@ sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
 sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
   seq_e@(SeqE.STupleN elem_t producer_left producer_right _) = do
   add_output_rewrite_for_node seq_e type_rewrites
-  producer_left_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites producer_left
-  producer_right_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites producer_right
+  -- using type_rewrites_tl here
+  -- as the NonSeqR rewrite is for the STuple is introduced by the STupleN
+  -- upstream doesn't have it
+  producer_left_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl producer_left
+  producer_right_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl producer_right
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   cur_idx <- get_cur_index
   return $ STE.STupleN elem_t_ppar producer_left_ppar producer_right_ppar cur_idx
@@ -929,7 +932,10 @@ sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
   seq_e@(SeqE.STupleAppendN out_len elem_t producer_left producer_right _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   producer_left_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites producer_left
-  producer_right_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites producer_right
+  -- using type_rewrites_tl for right input
+  -- as the NonSeqR rewrite is for the STuple is introduced by the STupleN
+  -- upstream on the right input doesn't have it
+  producer_right_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl producer_right
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   cur_idx <- get_cur_index
   return $ STE.STupleAppendN out_len elem_t_ppar producer_left_ppar producer_right_ppar cur_idx
