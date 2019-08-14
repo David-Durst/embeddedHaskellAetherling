@@ -2,7 +2,9 @@ import Aetherling.Interpretations.Simulator
 import Aetherling.Languages.Sequence.Shallow.Types
 import Aetherling.Languages.Sequence.Shallow.Expr
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
+import Aetherling.Rewrites.Sequence_Assign_Indexes
 import Aetherling.Rewrites.Sequence_To_Fully_Parallel_Space_Time
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import GHC.Exts (Constraint)
@@ -38,11 +40,21 @@ main = do
                    (result_pyramid_list !! 2) (192 `div` 8) (320 `div` 8)
   ints_to_image "blurred_pyramid_HalideParrot.png" result_img_pyramid
 
-deep_embedded_blur_pyramid = compile $
+deep_embedded_blur_pyramid = add_indexes $ compile $
   blur_pyramidC (Proxy @192) (Proxy @320) $
   com_input_seq "i" (Proxy :: Proxy ( (Seq 3 0 (Seq (192 GHC.TypeLits.* 320) 583680 Atom_Int)) ))
 
 fully_parallel_blur_pyramid = rewrite_to_fully_parallel deep_embedded_blur_pyramid
+  
+deep_embedded_sub_pyramid = add_indexes $ compile $
+                            stencil_2dC (Proxy @3) (Proxy @3) (Proxy @320) $
+                            com_input_seq "i" (Proxy :: Proxy ( (Seq (192 GHC.TypeLits.* 320) 583680 Atom_Int)) )
+  
+blur_sub_pyramid_ppar = 
+  fmap (\s -> rewrite_to_partially_parallel s deep_embedded_sub_pyramid) [1,2,4,61440,245760,983040]
+  
+blur_pyramid_ppar = 
+  fmap (\s -> rewrite_to_partially_parallel s deep_embedded_blur_pyramid) [1,2,4,61440,245760,983040]
   
 blur_pyramidC in_row in_col in_img = do
   let layer1 = blurC in_row in_col in_img

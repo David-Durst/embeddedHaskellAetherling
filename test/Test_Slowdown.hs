@@ -283,7 +283,7 @@ stencil_1d_test_ppar_result =
   fmap check_type stencil_1d_test_ppar
 stencil_1d_test_ppar_result' =
   fmap check_type' stencil_1d_test_ppar
-  
+
 -- END OF ACTUALLY TESTED THINGS
 -- multiple unpartitions into a multi-rate
 multi_unpartition_with_multi_rate = compile $
