@@ -107,58 +107,61 @@ expr_to_types (ErrorN _ _) = Expr_Types [] UnitT
 -- | get the input and output types of the entire expression,
 -- not just those of the last expression like expr_to_types
 
-type Input_TrackerM = DAG_MemoT Expr_Types (State (S.Set String))
+type Input_TrackerM = DAG_MemoT AST_Type (State (S.Set (String, AST_Type)))
 
 expr_to_outer_types :: Expr -> Expr_Types
-expr_to_outer_types e = evalState (startEvalMemoT $ expr_to_outer_types' e) S.empty
+expr_to_outer_types e = do
+  let (out_t, in_t_set) = runState (startEvalMemoT $ expr_to_outer_types' e) S.empty
+  let in_t = fmap snd $ S.toList in_t_set
+  Expr_Types in_t out_t
 
-expr_to_outer_types' :: Expr -> Input_TrackerM Expr_Types
+expr_to_outer_types' :: Expr -> Input_TrackerM AST_Type
 expr_to_outer_types' (IdN producer_e _) = expr_to_outer_types' producer_e
 expr_to_outer_types' consumer_e@(AbsN producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(NotN producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(AddN producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(SubN producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(MulN producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(DivN producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(EqN _ producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 
 -- generators
 expr_to_outer_types' consumer_e@(Lut_GenN _ _ producer_e _) = 
-  expr_to_outer_types_atom_operator consumer_e producer_e
-expr_to_outer_types' (Const_GenN _ t _) = return $ Expr_Types [] t
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' (Const_GenN _ t _) = return t
 
 -- sequence operators
 expr_to_outer_types' consumer_e@(ShiftN _ _ _ _ producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(Up_1dN _ _ _ producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(Down_1dN _ _ _ _ producer_e _) = 
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(PartitionN _ _ _ _ _ producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(UnpartitionN _ _ _ _ _ producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 
 -- higher order operators
 expr_to_outer_types' consumer_e@(MapN _ _ _ producer_e _) = do
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(Map2N _ _ _ producer0_e producer1_e _) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
 expr_to_outer_types' consumer_e@(ReduceN _ _ _ producer_e _) = do
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 
 -- tuple operators
 expr_to_outer_types' consumer_e@(FstN _ _ producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(SndN _ _ producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(ATupleN _ _ producer0_e producer1_e _) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
 expr_to_outer_types' consumer_e@(STupleN _ producer0_e producer1_e _) = do
@@ -168,35 +171,28 @@ expr_to_outer_types' consumer_e@(STupleAppendN _ _ producer0_e producer1_e _) = 
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
   
 expr_to_outer_types' consumer_e@(STupleToSeqN _ _ _ _ _ producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(SeqToSTupleN _ _ _ _ _ producer_e _) =
-  expr_to_outer_types_atom_operator consumer_e producer_e
+  expr_to_outer_types_unary_operator consumer_e producer_e
   
 expr_to_outer_types' (InputN t name _) = do
-  previous_names <- lift get
-  if S.member name previous_names
-    then return $ Expr_Types [] t
-    else do
-    let updated_names = S.insert name previous_names
-    lift $ put updated_names 
-    return $ Expr_Types [t] t
-expr_to_outer_types' (ErrorN _ _) = return $ Expr_Types [] UnitT
+  previous_inputs <- lift get
+  let updated_names = S.insert (name, t) previous_inputs
+  lift $ put updated_names 
+  return $ t
+expr_to_outer_types' (ErrorN _ _) = return UnitT
 
-expr_to_outer_types_atom_operator :: Expr -> Expr -> Input_TrackerM Expr_Types 
-expr_to_outer_types_atom_operator consumer_op producer_op = do
-  producer_outer_types <- memo consumer_op $ expr_to_outer_types' producer_op
-  let producer_input_types = e_in_types producer_outer_types
-  let consumer_output_type = e_out_type $ expr_to_types consumer_op
-  return $ Expr_Types producer_input_types consumer_output_type
+expr_to_outer_types_unary_operator :: Expr -> Expr -> Input_TrackerM AST_Type
+expr_to_outer_types_unary_operator consumer_op producer_op = do
+  -- this will add to the input types stored in the memoization
+  memo consumer_op $ expr_to_outer_types' producer_op
+  return $ e_out_type $ expr_to_types consumer_op
 
-expr_to_outer_types_binary_operator :: Expr -> Expr -> Expr -> Input_TrackerM Expr_Types
+expr_to_outer_types_binary_operator :: Expr -> Expr -> Expr -> Input_TrackerM AST_Type
 expr_to_outer_types_binary_operator consumer_op producer_op0 producer_op1 = do
-  producer0_outer_types <- memo producer_op0 $ expr_to_outer_types' producer_op0
-  let producer0_input_types = e_in_types producer0_outer_types
-  producer1_outer_types <- memo producer_op1 $ expr_to_outer_types' producer_op1
-  let producer1_input_types = e_in_types producer1_outer_types
-  let consumer_output_type = e_out_type $ expr_to_types consumer_op
-  return $ Expr_Types (producer0_input_types ++ producer1_input_types) consumer_output_type
+  memo producer_op0 $ expr_to_outer_types' producer_op0
+  memo producer_op1 $ expr_to_outer_types' producer_op1
+  return $ e_out_type $ expr_to_types consumer_op
 
 invalid_clocks_from_nested :: Int -> Int -> Int -> Int -> Int
 invalid_clocks_from_nested no ni io ii = (no * ii) + (io * (ni + ii))

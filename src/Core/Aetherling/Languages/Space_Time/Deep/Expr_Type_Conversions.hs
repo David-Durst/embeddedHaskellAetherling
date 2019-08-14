@@ -268,9 +268,3 @@ expr_to_outer_types_binary_operator consumer_op producer_op0 producer_op1 = do
   memo producer_op0 $ expr_to_outer_types' producer_op0
   memo producer_op1 $ expr_to_outer_types' producer_op1
   return $ e_out_type $ expr_to_types consumer_op
-
-data Expr_To_Type_Error = Expr_To_Type_Error {
-  consumer_input_types :: [AST_Type],
-  producer_output_type :: AST_Type,
-  consumer :: Expr
-  } deriving (Show, Eq)
