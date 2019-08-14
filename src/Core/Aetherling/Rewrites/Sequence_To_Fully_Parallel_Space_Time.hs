@@ -100,14 +100,14 @@ sequence_to_fully_parallel (SeqE.ATupleN t0 t1 producer_left producer_right _) =
 sequence_to_fully_parallel (SeqE.STupleN elem_t producer_left producer_right _) = do
   t_par <- lift $ parallelize_AST_type elem_t
   producer_left_par <- memo producer_left $ sequence_to_fully_parallel producer_left
-  producer_right_par <- memo producer_left $ sequence_to_fully_parallel producer_right
+  producer_right_par <- memo producer_right $ sequence_to_fully_parallel producer_right
   cur_idx <- get_cur_index
   return $ STE.STupleN t_par producer_left_par producer_right_par cur_idx
 
 sequence_to_fully_parallel (SeqE.STupleAppendN out_len elem_t producer_left producer_right _) = do
   t_par <- lift $ parallelize_AST_type elem_t
   producer_left_par <- memo producer_left $ sequence_to_fully_parallel producer_left
-  producer_right_par <- memo producer_left $ sequence_to_fully_parallel producer_right
+  producer_right_par <- memo producer_right $ sequence_to_fully_parallel producer_right
   cur_idx <- get_cur_index
   return $ STE.STupleAppendN out_len t_par producer_left_par producer_right_par cur_idx
   
