@@ -32,7 +32,7 @@ This flat `SSeq` represents six elements on one clock cycle.
 
 The second diagram shows the hardware perspective: what elements of the sequence will be emitted on which clock cycles. 
 It does this by flattening the `SSeq`s and `TSeq`s.
-The `SSeq 6 Int` materializes all six elements on the first clock cycle.
+The operator with output type `SSeq 6 Int` emits all six elements on the first clock cycle.
 Note that the `0` in the below table indicates the element with value `0`, not time `0`.
 The hardware perspective diagram does not have labels on the axes.
 
