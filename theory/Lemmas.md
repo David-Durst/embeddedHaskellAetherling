@@ -88,3 +88,76 @@ Select 4 0 (Seq 4 Int) >>> Map 1 (Select_1d 4 0 Int) >>> Unpartition 1 1 Int
 
 #### `Partition` and `Unpartition`
 
+# Lemmas About Slowing Down Types
+Structure of problem:
+1. Have a set of `Seq`'s is: `Seq n i_max`
+1. Each represents one `Seq` in the output type of an aetherling program
+1. Can convert each of the `Seq`'s into either:
+    1. `SSeq n`
+    1. `Tseq n i` s.t. `i == i_max`
+    1. `TSeq no io (SSeq ni)` s.t. `no*ni == n` and `io <= i_max`
+1. Have a periods property defined in [basic document](Basic.md#space-time-types)
+1. Need the product of the periods of the resulting `TSeq` and `SSeq` to equal slowdown factor `s`.
+
+## Why `TSeq n i` must have `i == i_max`
+Assume that `i` could be less than `i_max`.
+I will show that this will produce a rewrite for an expression that cannot be solved.
+The example program is `Down_1d 4 0 :: Seq 4 Int -> Seq 1 Int`.
+
+`i_max` for this program's output is `3` since the highest throughput of the minimum area programs: `Down_1d_t 4 0 0 :: TSeq 4 0 Int -> TSeq 1 3 Int`.
+
+If I rewrote the output type to `TSeq 1 1 Int`, I could not use the `Down_1d` rewrite rules to produce this type. The two options are
+1. Fully Sequential - `Down_1d_t 4 0 0 :: TSeq 4 0 Int -> TSeq 1 3 Int`
+1. Partially Parallel - `Map_t 1 (Down_1d_s 2 0 Int) . Down_1d_t 2 0 (Seq 2 Int) :: TSeq 2 0 (SSeq 2 Int) -> TSeq 1 1 (SSeq 1 Int)`
+
+Therefore, if I produce an output type that is partially parallel, it must be `TSeq no io (SSeq ni)`.
+
+## What Are The Options For Applying A Slowdown By A Prime
+I will look at primes as they they are the smallest subproblem.
+They can't be split into subfactors. 
+Therefore, in order to slowdown by a prime, it must be applied entirely to one `Seq`.
+I will first start by converting the `Seq n` to a `SSeq n` and then trying to slowdown the `SSeq n`.
+The ways to apply a prime slowdown `s_p` to `SSeq n` are:
+1. If `n == s_p`, then `TSeq n 0`
+1. If `n / s_p == 0`, then `TSeq s_p 0 (SSeq (n / s_p))`
+1. If `(n+i_max) / s_p == 0`, then need `s_p` clocks. There are multiple possible choices for the resulting `TSeq no io (SSeq ni)`. To find the best answer (least underutilization):
+    1. `no * ni == n`
+    1. `no + io == s_p`
+    1. `io <= i_max`
+    1. min `io` as want minimum underutilization
+    1. Solution
+        1. `no = n / ni`
+        1. `(n/ni) + io == s_p`
+            1. solve this by - trying all the divisors of n from smallest to largest. 
+            1. take smallest `ni` such that `io` is non-negative integer and `no` is a positive integer
+        1. `n + ni * io == ni * s_p`
+        1. `n == ni * s_p - ni * io`
+        1. `ni * s_p - ni * io == n`
+        1. `0*ni^2 - ni * io + 0 * io^2 + s_p * ni + 0 * io - n == 0`
+        1. `ni * (s_p - io) == n`
+        1. `ni * (-1 * io + s_p) == n`
+        1. If the above equation is solved
+
+## What Are The Options For Applying A Slowdown By A Non-Prime
+### Greedy Algorithm For Sets of Primes
+I propose a greedy algorithm that tries to apply a slowdown `s` to a sequence type `t = SSeq n_0 (SSeq n_1 (...))`. I refer to each `Seq`  as a layer of the type.
+1. Let `{s_i}` be the set of prime factors of `s`. Let `r` be an initially empty set.
+1. For each `s_j` in `{s_i}`:
+    1. Try to slowdown the `SSeq n` or `TSeq no 0 (SSeq ni)` from outer to inner layers without underutilization by only exploring options 1 and 2 above.
+    1. If not able to find a layer to apply the slowdown, add `s_j` to `r`
+1. For each `r_j` in `r`
+    1. Try to slowdown the `SSeq n` or `TSeq no io (SSeq ni)` from outer to inner layers with option 3.
+        1. How to slowdown a `TSeq no io (SSeq ni)` - convert it back to a `SSeq n` and then slowdown with `r_j*` all the factors already used to slowdown this layer. 
+            1. Let `t` be the amount that `SSeq n` is faster than `TSeq no io (SSeq ni)`down
+            1. If can slowdown `SSeq n` by `r*t`, return that. Otherwise, return `TSeq no io (SSeq ni)` and don't try to slow down this layer.
+
+### Will Greedy Approach Fail To Find Solutions?
+Greedy approach will first try to slowdown using a set of factors `{s_i}` of slowdown `s` across `Seq`'s using just `no` and `ni` without `io`.
+Greedy approach would miss potential solutions that use all factors in `{s_i}` if using a factor `s_j` from `{s_i}` for slowing down one layer means that later I cannot use the remaining factors of `{s_i}` to slow down another layer.
+This won't be an issue because:
+1. If I could slowdown `Seq n` and `i_max` with factors `{s_i}`, that means either:
+    1. `n` is divisible by s - `n+i_max`'s factors `{f_i}` are a superset of the factors in `{s_i}`.
+    1. `n+i_max` is divisible by s - `n+i_max`'s factors `{f_i}` are a superset of the factors in `{s_i}`.
+1. The greedy algorithm could miss this solution by due to having removed one or more factors from `{s_i}` by using them for slowing down other Seq's. The greedy algorithm will instead try to slowdown `Seq n` and `i_mux` with a subset `sub` of `{s_i}`. 
+1. Since `sub` is a subset of `{s_i}` and `{s_i}` is a subset of `{f_i}`, then `sub` is a subset of `{f_i}`
+1. Therefore, the greedy algorithm won't miss solutions. If a set of factors divides into `n+i_max` place where a larger set of factors is divisible, the smaller set of factors used by the greedy appraoch will also be divisible.
