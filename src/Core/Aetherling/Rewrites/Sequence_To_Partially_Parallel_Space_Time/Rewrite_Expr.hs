@@ -17,17 +17,19 @@ import Control.Monad.State
 import Data.Maybe
 import Data.Either
 import Data.List.Split (chunksOf)
-import Debug.Trace
 import qualified Data.Set as S
 import qualified Data.Map as M
+import Debug.Trace
+import Data.Time
+import System.IO.Unsafe
 
 rewrite_to_partially_parallel :: Int -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel s seq_expr = do
-  let expr_par = evalState (evalStateT
+  let (expr_par, state) = runState (evalStateT
                              (runExceptT $ rewrite_to_partially_parallel' s seq_expr)
                              empty_rewrite_data)
                  empty_ppar_state
-  if isLeft expr_par
+  trace ("num_calls : " ++ (show $ num_calls state)) $ if isLeft expr_par
     then STE.ErrorN (rw_msg $ fromLeft undefined expr_par) No_Index
     else fromRight undefined expr_par
 
@@ -53,10 +55,11 @@ data Partially_Parallel_State = Partially_Parallel_State {
   input_types_rewrites :: S.Set Input_Type_Rewrites,
   -- these are used to track the output type rewrites seen by each sequence node
   -- to detect a DAG where a single node may be rewritten multiple times
-  output_rewrites_per_st_index :: M.Map DAG_Index [Type_Rewrite]
+  output_rewrites_per_st_index :: M.Map DAG_Index [Type_Rewrite],
+  num_calls :: Int
   } deriving (Show, Eq)
 
-empty_ppar_state = Partially_Parallel_State S.empty M.empty
+empty_ppar_state = Partially_Parallel_State S.empty M.empty 0
   
 type Partially_ParallelM = ExceptT Rewrite_Failure (
   StateT Rewrite_Data (
@@ -66,6 +69,17 @@ type Partially_ParallelM = ExceptT Rewrite_Failure (
 
 type Partially_Parallel_MemoM v = DAG_MemoT v Partially_ParallelM
 
+incr_num_calls :: Partially_Parallel_MemoM STE.Expr ()
+incr_num_calls = do
+  cur_data <- lift $ lift $ lift get
+  lift $ lift $ lift $ modify
+    (\cur_data -> cur_data { num_calls = (num_calls cur_data + 1) })
+    
+get_num_calls :: Partially_Parallel_MemoM STE.Expr Int
+get_num_calls = do
+  cur_data <- lift $ lift $ lift get
+  return $ num_calls cur_data
+    
 get_input_types_rewrites :: Partially_Parallel_MemoM STE.Expr (S.Set Input_Type_Rewrites)
 get_input_types_rewrites = do
   cur_data <- lift $ lift $ lift get
@@ -159,7 +173,17 @@ sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrit
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   ppar_unary_seq_operator type_rewrites
     (STE.Shift_tN tr_n tr_i shift_amount elem_t_ppar) producer
-  
+
+-- if only parallelism 1, then just treat it as a TSeq with an SSeq 1 input wrapping
+-- the element type
+sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io 1) : type_rewrites_tl)
+  seq_e@(SeqE.ShiftN n i shift_amount elem_t producer _) |
+  parameters_match tr n i = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  ppar_unary_seq_operator type_rewrites
+    (STE.Shift_tN no io shift_amount (STT.SSeqT 1 elem_t_ppar)) producer
+
 sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io ni) : type_rewrites_tl)
   seq_e@(SeqE.ShiftN n i shift_amount elem_t producer _) |
   parameters_match tr n i = do
@@ -1521,6 +1545,10 @@ ppar_unary_seq_operator producer_output_type_rewrites unary_seq_op_gen producer 
 sequence_to_partially_parallel_with_reshape :: [Type_Rewrite] -> SeqE.Expr ->
                                             Partially_Parallel_MemoM STE.Expr STE.Expr
 sequence_to_partially_parallel_with_reshape cur_type_rewrites producer = do
+  incr_num_calls
+  nc <- get_num_calls
+  let time = unsafePerformIO $ getCurrentTime
+  traceM $ "cur call count: " ++ show nc ++ " with seq producer index: " ++ (show $ get_index producer) ++ (show time)
   producer_ppar <- memo producer $ sequence_to_partially_parallel cur_type_rewrites producer
   actual_type_rewrites <- get_output_rewrites_for_node producer
   if actual_type_rewrites == cur_type_rewrites
