@@ -119,8 +119,8 @@ Therefore, in order to slowdown by a prime, it must be applied entirely to one `
 I will first start by converting the `Seq n` to a `SSeq n` and then trying to slowdown the `SSeq n`.
 The ways to apply a prime slowdown `s_p` to `SSeq n` are:
 1. If `n == s_p`, then `TSeq n 0`
-1. If `n / s_p == 0`, then `TSeq s_p 0 (SSeq (n / s_p))`
-1. If `(n+i_max) / s_p == 0`, then need `s_p` clocks. There are multiple possible choices for the resulting `TSeq no io (SSeq ni)`. To find the best answer (least underutilization):
+1. If `n % s_p == 0`, then `TSeq s_p 0 (SSeq (n / s_p))`
+1. If `(n+i_max) % s_p == 0`, then need to slowdown so that takes `s_p` clocks. There are multiple possible choices for the resulting `TSeq no io (SSeq ni)`. To find the best answer (least underutilization):
     1. `no * ni == n`
     1. `no + io == s_p`
     1. `io <= i_max`
@@ -130,6 +130,7 @@ The ways to apply a prime slowdown `s_p` to `SSeq n` are:
         1. `(n/ni) + io == s_p`
             1. solve this by - trying all the divisors of n from smallest to largest. 
             1. take smallest `ni` such that `io` is non-negative integer and `no` is a positive integer
+            1. this will give least underutilization and area for the given throughput
         1. `n + ni * io == ni * s_p`
         1. `n == ni * s_p - ni * io`
         1. `ni * s_p - ni * io == n`
@@ -143,13 +144,13 @@ The ways to apply a prime slowdown `s_p` to `SSeq n` are:
 I propose a greedy algorithm that tries to apply a slowdown `s` to a sequence type `t = SSeq n_0 (SSeq n_1 (...))`. I refer to each `Seq`  as a layer of the type.
 1. Let `{s_i}` be the set of prime factors of `s`. Let `r` be an initially empty set.
 1. For each `s_j` in `{s_i}`:
-    1. Try to slowdown the `SSeq n` or `TSeq no 0 (SSeq ni)` from outer to inner layers without underutilization by only exploring options 1 and 2 above.
+    1. Try to slowdown the `SSeq n` or `TSeq no 0 (SSeq ni)` from outer to inner layers without underutilization by only trying options 1 and 2 above.
+        1. How to slowdown a `TSeq no io (SSeq ni)` - 
+            1. Let `t` be the amount that `SSeq n` is faster than `TSeq no io (SSeq ni)`down
+            1. If can slowdown `SSeq n` using by `r*t` with options 2 or 3 above described for primes, return that. Otherwise, return `TSeq no io (SSeq ni)` and don't try to slow down this layer.
     1. If not able to find a layer to apply the slowdown, add `s_j` to `r`
 1. For each `r_j` in `r`
     1. Try to slowdown the `SSeq n` or `TSeq no io (SSeq ni)` from outer to inner layers with option 3.
-        1. How to slowdown a `TSeq no io (SSeq ni)` - 
-            1. Let `t` be the amount that `SSeq n` is faster than `TSeq no io (SSeq ni)`down
-            1. If can slowdown `SSeq n` by `r*t`, return that. Otherwise, return `TSeq no io (SSeq ni)` and don't try to slow down this layer.
 
 ### Will Greedy Approach Fail To Find Solutions?
 Greedy approach will first try to slowdown using a set of factors `{s_i}` of slowdown `s` across `Seq`'s using just `no` and `ni` without `io`.
