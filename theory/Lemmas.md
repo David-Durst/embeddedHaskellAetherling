@@ -147,7 +147,7 @@ I propose a greedy algorithm that tries to apply a slowdown `s` to a sequence ty
     1. If not able to find a layer to apply the slowdown, add `s_j` to `r`
 1. For each `r_j` in `r`
     1. Try to slowdown the `SSeq n` or `TSeq no io (SSeq ni)` from outer to inner layers with option 3.
-        1. How to slowdown a `TSeq no io (SSeq ni)` - convert it back to a `SSeq n` and then slowdown with `r_j*` all the factors already used to slowdown this layer. 
+        1. How to slowdown a `TSeq no io (SSeq ni)` - 
             1. Let `t` be the amount that `SSeq n` is faster than `TSeq no io (SSeq ni)`down
             1. If can slowdown `SSeq n` by `r*t`, return that. Otherwise, return `TSeq no io (SSeq ni)` and don't try to slow down this layer.
 
@@ -156,8 +156,8 @@ Greedy approach will first try to slowdown using a set of factors `{s_i}` of slo
 Greedy approach would miss potential solutions that use all factors in `{s_i}` if using a factor `s_j` from `{s_i}` for slowing down one layer means that later I cannot use the remaining factors of `{s_i}` to slow down another layer.
 This won't be an issue because:
 1. If I could slowdown `Seq n` and `i_max` with factors `{s_i}`, that means either:
-    1. `n` is divisible by s - `n+i_max`'s factors `{f_i}` are a superset of the factors in `{s_i}`.
+    1. `n` is divisible by s - `n`'s factors `{f_i}` are a superset of the factors in `{s_i}`.
     1. `n+i_max` is divisible by s - `n+i_max`'s factors `{f_i}` are a superset of the factors in `{s_i}`.
-1. The greedy algorithm could miss this solution by due to having removed one or more factors from `{s_i}` by using them for slowing down other Seq's. The greedy algorithm will instead try to slowdown `Seq n` and `i_mux` with a subset `sub` of `{s_i}`. 
+1. The greedy algorithm could miss this solution by due to having removed one or more factors from `{s_i}` by using them for slowing down other layers. The greedy algorithm will instead try to slowdown `Seq n` and `i_max` with a subset `sub` of `{s_i}`. 
 1. Since `sub` is a subset of `{s_i}` and `{s_i}` is a subset of `{f_i}`, then `sub` is a subset of `{f_i}`
-1. Therefore, the greedy algorithm won't miss solutions. If a set of factors divides into `n+i_max` place where a larger set of factors is divisible, the smaller set of factors used by the greedy appraoch will also be divisible.
+1. Therefore, the greedy algorithm won't miss solutions. If a set of factors divides into `n+i_max` or `n`, the subset of factors used by the greedy appraoch will also divide into `n+i_max` or `n`.
