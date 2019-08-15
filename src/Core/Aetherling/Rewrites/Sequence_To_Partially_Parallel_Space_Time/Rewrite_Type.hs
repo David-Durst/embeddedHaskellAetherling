@@ -77,6 +77,8 @@ rewrite_AST_type_no_underutil s_remaining_factors _ = ([NonSeqR], s_remaining_fa
 rewrite_AST_type_add_underutil :: Factors -> [Type_Rewrite] -> SeqT.AST_Type -> ([Type_Rewrite], Factors)
 rewrite_AST_type_add_underutil s_remaining_factors (cur_tr_no_under : no_under_tl)
   (SeqT.SeqT n i t) = do
+  -- problem: n+i may not be divisible by n, so this max slowdown is invalid
+  -- 
   let max_slowdown = (n + i) `div` get_type_rewrite_periods cur_tr_no_under
   let max_slowdown_factors = ae_factorize max_slowdown
   if ae_factors_intersect max_slowdown_factors s_remaining_factors /= S.empty
@@ -171,3 +173,18 @@ ae_factors_intersect = S.intersection
 
 ae_factors_union :: Factors -> Factors -> Factors
 ae_factors_union = S.union
+
+ae_divisors :: Int -> S.Set Int
+ae_divisors n = do
+  let factors = ae_factorize n
+  ae_divisors_from_factors factors
+
+ae_divisors_from_factors :: Factors -> S.Set Int
+ae_divisors_from_factors factors = do
+  let factors_with_indices_powerset = ae_factors_powerset factors
+  S.map ae_factors_product factors_with_indices_powerset
+
+ae_factors_powerset :: Factors -> S.Set Factors
+ae_factors_powerset xs_set = do
+  let xs = S.toList xs_set
+  S.fromList $ fmap S.fromList $ filterM (const [True, False]) xs
