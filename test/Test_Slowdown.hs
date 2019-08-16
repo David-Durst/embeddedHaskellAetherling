@@ -302,9 +302,9 @@ stencil_2d_test_seq_idx = add_indexes stencil_2d_test
 stencil_2d_test_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s stencil_2d_test_seq_idx) [1,2,5,10,30]
 stencil_2d_test_ppar_result =
-  fmap check_type stencil_1d_test_ppar
+  fmap check_type stencil_2d_test_ppar
 stencil_2d_test_ppar_result' =
-  fmap check_type' stencil_1d_test_ppar
+  fmap check_type' stencil_2d_test_ppar
   
 -- END OF ACTUALLY TESTED THINGS
 -- multiple unpartitions into a multi-rate
