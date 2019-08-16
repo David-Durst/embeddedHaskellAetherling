@@ -117,10 +117,10 @@ I will look at primes as they they are the smallest subproblem.
 They can't be split into subfactors. 
 Therefore, in order to slowdown by a prime, it must be applied entirely to one `Seq`.
 I will first start by converting the `Seq n` to a `SSeq n` and then trying to slowdown the `SSeq n`.
-The ways to apply a prime slowdown `s_p` to `SSeq n` are:
-1. If `n == s_p`, then `TSeq n 0`
+The ways to apply a prime slowdown `s_p` to `SSeq n` with `i_max` are:
+1. If `(n+i_max) == s_p`, then `TSeq n i_max`
 1. If `n % s_p == 0`, then `TSeq s_p 0 (SSeq (n / s_p))`
-1. If `(n+i_max) % s_p == 0`, then need to slowdown so that takes `s_p` clocks. There are multiple possible choices for the resulting `TSeq no io (SSeq ni)`. To find the best answer (least underutilization):
+1. If `(n+i_max) >= s_p == 0`, then need to slowdown so that takes `s_p` clocks. There are multiple possible choices for the resulting `TSeq no io (SSeq ni)`. To find the best answer (least underutilization):
     1. `no * ni == n`
     1. `no + io == s_p`
     1. `io <= i_max`
@@ -159,7 +159,7 @@ Greedy approach would miss potential solutions that use all factors in `{s_i}` i
 This won't be an issue because:
 1. If I could slowdown `Seq n` and `i_max` with factors `{s_i}`, that means either:
     1. `n` is divisible by s - `n`'s factors `{f_i}` are a superset of the factors in `{s_i}`.
-    1. `n+i_max` is divisible by s - `n+i_max`'s factors `{f_i}` are a superset of the factors in `{s_i}`.
+    1. `n+i_max` is greater than s - `n+i_max`'s factors `{f_i}` are a superset of the factors in `{s_i}`.
 1. The greedy algorithm could miss this solution by due to having removed one or more factors from `{s_i}` by using them for slowing down other layers. The greedy algorithm will instead try to slowdown `Seq n` and `i_max` with a subset `sub` of `{s_i}`. 
 1. Since `sub` is a subset of `{s_i}` and `{s_i}` is a subset of `{f_i}`, then `sub` is a subset of `{f_i}`
-1. Therefore, the greedy algorithm won't miss solutions. If a set of factors divides into `n+i_max` or `n`, the subset of factors used by the greedy appraoch will also divide into `n+i_max` or `n`.
+1. Therefore, the greedy algorithm won't miss solutions. If a set of factors divides into `n` or is greater than `n+i_max`, the subset of factors used by the greedy approach will also satisfy those conditions.

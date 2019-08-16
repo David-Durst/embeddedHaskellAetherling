@@ -1547,8 +1547,8 @@ sequence_to_partially_parallel_with_reshape :: [Type_Rewrite] -> SeqE.Expr ->
 sequence_to_partially_parallel_with_reshape cur_type_rewrites producer = do
   incr_num_calls
   nc <- get_num_calls
-  let time = unsafePerformIO $ getCurrentTime
-  traceM $ "cur call count: " ++ show nc ++ " with seq producer index: " ++ (show $ get_index producer) ++ (show time)
+  --let time = unsafePerformIO $ getCurrentTime
+  --traceM $ "cur call count: " ++ show nc ++ " with seq producer index: " ++ (show $ get_index producer) ++ (show time)
   producer_ppar <- memo producer $ sequence_to_partially_parallel cur_type_rewrites producer
   actual_type_rewrites <- get_output_rewrites_for_node producer
   if actual_type_rewrites == cur_type_rewrites

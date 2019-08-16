@@ -22,7 +22,7 @@ import Aetherling.Image_Helper
 
 main = do
   print_seq_io $ deep_embedded_sub_pyramid
-  putStrLn $ show $ STE.index $ blur_sub_pyramid_ppar !! 1
+  putStrLn $ show $ STE.index $ blur_sub_pyramid_ppar !! 3
   {-
   args <- getArgs
   img <- load_image_as_ints (head args)
