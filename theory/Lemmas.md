@@ -148,6 +148,7 @@ I propose a greedy algorithm that tries to apply a slowdown `s` to a sequence ty
         1. How to slowdown a `TSeq no io (SSeq ni)` - 
             1. Let `t` be the amount that `SSeq n` is faster than `TSeq no io (SSeq ni)`down
             1. If can slowdown `SSeq n` using by `r*t` with options 2 or 3 above described for primes, return that. Otherwise, return `TSeq no io (SSeq ni)` and don't try to slow down this layer.
+        1. Don't need to worry about slowing down a `TSeq n i` as it is already slowed down as much as possible.
     1. If not able to find a layer to apply the slowdown, add `s_j` to `r`
 1. For each `r_j` in `r`
     1. Try to slowdown the `SSeq n` or `TSeq no io (SSeq ni)` from outer to inner layers with option 3.

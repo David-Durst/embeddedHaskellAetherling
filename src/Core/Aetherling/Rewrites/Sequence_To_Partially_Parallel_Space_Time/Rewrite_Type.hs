@@ -32,7 +32,7 @@ get_type_rewrite_periods (TimeR tr_n tr_i) = tr_n + tr_i
 get_type_rewrite_periods (SplitR tr_no tr_io _) = tr_no + tr_io
 get_type_rewrite_periods NonSeqR = -1
 
-data Layer_Rewrite_Info = Layer { l_tr :: Type_Rewrite, l_i_max :: Int, n_factors :: Factors }
+data Layer_Rewrite_Info = Layer { l_tr :: Type_Rewrite, l_i_max :: Int, n_divisors :: S.Set Int }
   deriving (Show, Eq)
 
 rewrite_AST_type :: (Monad m) => Int -> SeqT.AST_Type -> Rewrite_StateTM m [Type_Rewrite]
@@ -49,20 +49,20 @@ rewrite_AST_type s seq_t = do
 
 seq_to_sseq_tr :: SeqT.AST_Type -> [Layer_Rewrite_Info]
 seq_to_sseq_tr (SeqT.SeqT n i t) =
-  Layer (SpaceR n) i (ae_factorize n) : seq_to_sseq_tr t
+  Layer (SpaceR n) i (ae_divisors n) : seq_to_sseq_tr t
 seq_to_sseq_tr (SeqT.STupleT n t) =
   Layer NonSeqR 0 (S.empty) : seq_to_sseq_tr t
 seq_to_sseq_tr _ = [Layer NonSeqR 0 (S.empty)]
 
 rewrite_one_space_layer_no_underutil :: Int -> Layer_Rewrite_Info -> Maybe Layer_Rewrite_Info
-rewrite_one_space_layer_no_underutil s_p (Layer (SpaceR n) i_max factors) |
+rewrite_one_space_layer_no_underutil s_p (Layer (SpaceR n) i_max divisors) |
   n == s_p = do
-    return $ Layer (TimeR n 0) i_max factors 
-rewrite_one_space_layer_no_underutil s_p (Layer (SpaceR n) i_max factors) |
+    return $ Layer (TimeR n 0) i_max divisors 
+rewrite_one_space_layer_no_underutil s_p (Layer (SpaceR n) i_max divisors) |
   n `mod` s_p == 0 = do
     let no = s_p
     let ni = n `div` no
-    return $ Layer (SplitR no 0 ni) i_max factors
+    return $ Layer (SplitR no 0 ni) i_max divisors
 rewrite_one_space_layer_no_underutil _ _ = Nothing
     
 rewrite_no_underutil :: Int -> [Layer_Rewrite_Info] -> [Layer_Rewrite_Info]
@@ -71,26 +71,49 @@ rewrite_no_underutil s_p (cur_layer@(Layer (SpaceR n) _ _) : tl) = do
   if (isNothing rw_result)
     then cur_layer : rewrite_no_underutil s_p tl
     else (fromJust rw_result) : tl
-rewrite_no_underutil s_p (Layer (SpaceR n) i_max factors : tl) |
-  n `mod` s_p == 0 = do
-    let no = s_p
-    let ni = n `div` no
-    Layer (SplitR no 0 ni) i_max factors : tl
-rewrite_no_underutil s_p (Layer (SplitR no 0 ni) i_max factors : tl) |
-  n == s_p = do
-    Layer (TimeR n 0) i_max factors : tl
-    where n = no * ni
-rewrite_no_underutil s_p (Layer (SplitR no 0 ni) i_max factors : tl) |
-  -- no is the amount already slowed down
-  n `mod` (s_p * no) == 0 = do
-    let no_new = s_p * no
-    let ni_new = n `div` no_new
-    Layer (SplitR no_new 0 ni_new) i_max factors : tl
-    where n = no * ni
+rewrite_no_underutil s_p (cur_layer@(Layer (SplitR no 0 ni) i_max divisors) : tl) = do
+  let rw_result = rewrite_one_space_layer_no_underutil s_p
+                  (Layer (SpaceR (no*ni)) i_max divisors)
+  if (isNothing rw_result)
+    then cur_layer : rewrite_no_underutil s_p tl
+    else (fromJust rw_result) : tl
 -- can't slow down a fully spatial dimension any more without underutil
 -- nor any other types of dimensions without underutil
 rewrite_no_underutil s_p (l : tl) = l : rewrite_no_underutil s_p tl
 rewrite_no_underutil _ [] = []
+
+rewrite_one_space_layer_with_underutil :: Int -> Layer_Rewrite_Info -> Maybe Layer_Rewrite_Info
+rewrite_one_space_layer_with_underutil s_p (Layer (SpaceR n) i_max n_divisors) |
+  (n+i_max) `mod` s_p == 0 = do
+    -- get smallest valid ni
+    let ni = head $ filter io_and_no_valid $ S.toAscList n_divisors
+    let io = s_p - (n `div` ni)
+    let no = n `div` ni
+    return $ Layer (SplitR no io ni) i_max n_divisors
+    where
+      io_and_no_valid ni =
+        -- no is a positive integer
+        ((n `mod` ni) == 0) &&
+        -- io is a non-negative integer
+        (s_p - (n `div` ni) >= 0)
+rewrite_one_space_layer_with_underutil _ _ = Nothing
+
+rewrite_with_underutil :: Int -> [Layer_Rewrite_Info] -> [Layer_Rewrite_Info]
+rewrite_with_underutil s_p (cur_layer@(Layer (SpaceR n) _ _) : tl) = do
+  let rw_result = rewrite_one_space_layer_with_underutil s_p cur_layer
+  if (isNothing rw_result)
+    then cur_layer : rewrite_no_underutil s_p tl
+    else (fromJust rw_result) : tl
+rewrite_with_underutil s_p (cur_layer@(Layer (SplitR no io ni) i_max divisors) : tl) = do
+  let rw_result = rewrite_one_space_layer_with_underutil s_p
+                  (Layer (SpaceR (no*ni)) i_max divisors)
+  if (isNothing rw_result)
+    then cur_layer : rewrite_no_underutil s_p tl
+    else (fromJust rw_result) : tl
+-- can't slow down a fully spatial dimension any more without underutil
+-- nor any other types of dimensions without underutil
+rewrite_with_underutil s_p (l : tl) = l : rewrite_no_underutil s_p tl
+rewrite_with_underutil _ [] = []
 {-
 rewrite_for_underutil :: Int -> [Layer_Rewrite_Info] -> [Layer_Rewrite_Info]
 rewrite_for_underutil s_p (Layer (SpaceR n) i_max factors : tl) |
