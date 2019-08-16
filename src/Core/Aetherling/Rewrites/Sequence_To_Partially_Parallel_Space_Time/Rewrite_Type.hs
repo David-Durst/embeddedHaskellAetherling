@@ -47,8 +47,9 @@ rewrite_AST_type_debug s seq_t = do
                     then trace (show new_rw) $ (new_rw, not_used_s_factors)
                     else (new_rw, insert s_factor not_used_s_factors)
                   ) (all_space_rw, []) s_factors
-  --traceM $ show $ t_rewrites_no_underutil
-  --traceM $ show s_remaining_no_underutil
+  traceM "finished with no underutil calls"
+  traceM $ show t_rewrites_no_underutil
+  traceM $ show s_remaining_no_underutil
   let maybe_t_rewrites_with_underutil =
         foldM (\cur_rw_maybe s_factor -> rewrite_with_underutil s_factor cur_rw_maybe)
         t_rewrites_no_underutil s_remaining_no_underutil
@@ -129,16 +130,22 @@ rewrite_one_space_layer_with_underutil :: Int -> Layer_Rewrite_Info -> Maybe Lay
 rewrite_one_space_layer_with_underutil s_p (Layer (SpaceR n) i_max n_divisors) |
   (n+i_max) >= s_p = do
     -- get smallest valid ni
-    let ni = head $ filter io_and_no_valid $ S.toAscList n_divisors
-    let io = s_p - (n `div` ni)
-    let no = n `div` ni
-    return $ Layer (SplitR no io ni) i_max n_divisors
+    let ni_options = filter io_and_no_valid $ S.toAscList n_divisors
+    if length ni_options == 0
+      then Nothing
+      else do
+      let ni = head ni_options
+      let io = s_p - (n `div` ni)
+      let no = n `div` ni
+      return $ Layer (SplitR no io ni) i_max n_divisors
     where
       io_and_no_valid ni =
         -- no is a positive integer
         ((n `mod` ni) == 0) &&
         -- io is a non-negative integer
-        (s_p - (n `div` ni) >= 0)
+        (s_p - (n `div` ni) >= 0) &&
+        -- io less than or equal to i_max
+        (s_p - (n `div` ni) <= i_max)
 rewrite_one_space_layer_with_underutil _ _ = Nothing
 
 -- this fails if can't incorporate all factors

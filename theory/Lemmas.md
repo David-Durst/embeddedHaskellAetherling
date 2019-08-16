@@ -129,7 +129,7 @@ The ways to apply a prime slowdown `s_p` to `SSeq n` with `i_max` are:
         1. `no = n / ni`
         1. `(n/ni) + io == s_p`
             1. solve this by - trying all the divisors of n from smallest to largest. 
-            1. take smallest `ni` such that `io` is non-negative integer and `no` is a positive integer
+            1. take smallest `ni` such that `io` is non-negative integer less than or equal to `i_max` and `no` is a positive integer
             1. this will give least underutilization and area for the given throughput
         1. `n + ni * io == ni * s_p`
         1. `n == ni * s_p - ni * io`

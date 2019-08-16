@@ -54,16 +54,23 @@ fully_parallel_blur_pyramid = rewrite_to_fully_parallel deep_embedded_blur_pyram
 
 shallow_sub_pyramid = stencil_2dC (Proxy @3) (Proxy @3) (Proxy @320) $
                       com_input_seq "i" (Proxy :: Proxy ( (Seq (192 GHC.TypeLits.* 320) 583680 Atom_Int)) )
-                      
+
 deep_embedded_sub_pyramid = add_indexes $ compile $
                             stencil_2dC (Proxy @3) (Proxy @3) (Proxy @320) $
                             com_input_seq "i" (Proxy :: Proxy ( (Seq (192 GHC.TypeLits.* 320) 583680 Atom_Int)) )
-  
+
 blur_sub_pyramid_ppar = 
+  fmap (\s -> rewrite_to_partially_parallel s deep_embedded_sub_pyramid) [30720 `div`2 ,30720,61440,552960]
+
+deep_embedded_down_2d = add_indexes $ compile $
+                        down_2dC (Proxy @2) (Proxy @2) (Proxy @48) (Proxy @80) 0 0 $
+                        com_input_seq "i" (Proxy :: Proxy ( (Seq (48 GHC.TypeLits.* 80) 641280 Atom_Int)) )
+  
+down_2d_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s deep_embedded_sub_pyramid) [30720 `div`2 ,30720,61440,552960]
   
 blur_pyramid_ppar = 
-  fmap (\s -> rewrite_to_partially_parallel s deep_embedded_blur_pyramid) [1,2,4,61440,245760,983040]
+  fmap (\s -> rewrite_to_partially_parallel s deep_embedded_blur_pyramid) [30720 `div`2 ,30720,61440,552960]
   
 blur_pyramidC in_row in_col in_img = do
   let layer1 = blurC in_row in_col in_img
