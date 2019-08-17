@@ -305,7 +305,16 @@ stencil_2d_test_ppar_result =
   fmap check_type stencil_2d_test_ppar
 stencil_2d_test_ppar_result' =
   fmap check_type' stencil_2d_test_ppar
-  
+
+map_reduce_nested = compile $
+  mapC (mapC absC) >>>
+  mapC (reduceC addC) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 9 0 (Seq 9 0 Atom_Int)))
+map_reduce_seq_idx = add_indexes map_reduce_nested
+map_reduce_ppar = 
+  fmap (\s -> rewrite_to_partially_parallel s map_reduce_seq_idx) [1,3,9]
+map_reduce_ppar_result =
+  fmap check_type map_reduce_ppar
 -- END OF ACTUALLY TESTED THINGS
 -- multiple unpartitions into a multi-rate
 multi_unpartition_with_multi_rate = compile $

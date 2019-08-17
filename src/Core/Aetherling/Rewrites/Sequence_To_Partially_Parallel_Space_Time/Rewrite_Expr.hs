@@ -883,15 +883,30 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   seq_e@(SeqE.ReduceN n i f producer _) |
   parameters_match tr 1 (n+i-1) = do
   add_output_rewrite_for_node seq_e type_rewrites
+
+  -- clear the outer input type rewrites for subgraph f
+  outer_input_type_rewrites <- get_input_types_rewrites
+  set_input_types_rewrites $ S.empty
+
+  f_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl f
+  
   -- to compute how to slowed input, get the number of clocks the output takes
   let slowdown = get_type_rewrite_periods tr
 
-  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
-  let input_rewrite : _ = input_rewrites
+  -- this is input rewrite for reduce and not subgraph f
+  input_rewrite' <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
+  let input_rewrite : _ = input_rewrite'
 
-  let upstream_type_rewrites = input_rewrite : type_rewrites_tl
+  -- need to know what f_ppar's input type rewrites were
+  -- as those are the inner type rewrites that the map must propagate up
+  f_ppar_in_rewrites_tl_set <- get_input_types_rewrites
+  let f_ppar_in_rewrites_tl = input_rewrites $ head $ S.toList f_ppar_in_rewrites_tl_set
+  
+  -- reset the input type rewrites for the current graph
+  set_input_types_rewrites outer_input_type_rewrites
+  
+  let upstream_type_rewrites = input_rewrite : f_ppar_in_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
-  f_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites_tl f
 
   get_scheduled_partition input_rewrite f_ppar producer_ppar
   where
@@ -1548,7 +1563,7 @@ sequence_to_partially_parallel_with_reshape cur_type_rewrites producer = do
   incr_num_calls
   nc <- get_num_calls
   let time = unsafePerformIO $ getCurrentTime
-  traceM $ "cur call count: " ++ show nc ++ " with seq producer index: " ++ (show $ get_index producer) ++ (show time)
+  traceM $ "cur call count: " ++ show nc ++ " with seq producer index: " ++ (show $ get_index producer) ++ " and time: " ++ (show time)
   producer_ppar <- memo producer $ sequence_to_partially_parallel cur_type_rewrites producer
   actual_type_rewrites <- get_output_rewrites_for_node producer
   if actual_type_rewrites == cur_type_rewrites
