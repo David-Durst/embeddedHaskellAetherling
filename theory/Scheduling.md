@@ -19,20 +19,20 @@ The auto-scheduler accomplishes this goal by walking along the blue line in the 
 The auto-scheduler's algorithm is:
 1. Compile `pseq` to the program in the space-time IR with the greatest throughput. I will refer to this program as `pspace`
     1. This is determined by rewriting every operator in `pseq` to it's space version in the space-time IR.
+    1. This program will process the entire input in one clock cycle during steady-state.
 1. Compile `pseq` to the program in the space-time IR that is the greatest throughput of the minimum area programs. I will refer to this program as `ptime`.
     1. This is partially determined by rewriting every operator in `pseq` to it's time version in the space-time IR.
     1. There are an infinite number of least area programs because all operators can be arbitrarily underutilized with the same hardware resources.
         1. For example, `Map_t 2 0 Abs :: TSeq 2 0 Int -> TSeq 2 0` requires the same hardware and is three times higher throughput than `Map_t 2 4 Abs :: TSeq 2 4 Int -> TSeq 2 4`
         1. Adding more invalid clocks expresses the underutilized. In the above example, `Map_t 2 0` has 0 invalid clocks on its input and output. `Map_t 2 4` has 4 invalid clocks on its input and output.
-    1. We use integer linear optimization to find the least area program with the least underutilization, and thus the greatest throughput.
-        1. Each composition of two time operators in the space-time IR creates an equality between the producer's output valid and invalid clocks and the consumer's input valid and invalid clocks.
-        1. ILP solves for the minimum number of valid and invalid clocks that satisfies all equalities.
-            1. Some operators would appear to introduce non-linearity. 
-            1. For example, `partition no ni io ii Int :: TSeq (no*ni) (no*ii + io*(ni+ii)) Int -> TSeq no io (TSeq ni ii Int)` would create non-linear equations.
-            1. We address this issue by requiring that either `io = 0` or `ii = 0`.
-            1. We will show below that this does not restrict the expressiveness of the language.
-1. Let `max_slowdown = floor(throughput(Pspace) / throughput(Ptime))`. For each integer **s** from 1 to `max_slowdown`, schedule `pseq` with slowdown factor **s**. Stop at the first **s** that fits on the target chip.
+    1. This program is the one with the minimum number of invalids.
+1. Let `max_time = time(ptime))`. For each integer **s** from 1 to `max_time`, schedule `pseq` with slowdown factor **s**. 
+This program `pspace_time` will have a throuhgput **s** times less than that of `pspace`. 
+`pspace_time` will take **s** clock cycles to process an the input during steady-state. 
+Stop at the first **s** that fits on the target chip.
     1. Scheduling with a slowdown factor is converting a program from the sequence language to one in the space-time IR that has an output throughput that is **s** times less than `pspace`.
+    1. Note that throughput here is steady-state throughput. We are not considering delays.
+
 
 
 The code for the auto-scheduler is:
@@ -55,7 +55,19 @@ autoscheduler max_area pseq =
 
 The following sections will work through the implementation of the scheduling algorithm. 
 
+# Scheduling Problem Definition
+An Aetherling program is a DAG.
+The nodes `N` are the operators. A node from a higher-order operator, like a `Map`, may contain a sub-DAG.
+The edges `E` are the producer-consumer relationships between nodes.
+There is one output node `N_out`. This node is not composed with any consumers.
+The output type of the program is equal to the output type of the `N_out`.
+
+The goal of scheduling is: given a slowdown factor **s**, rewrite all of the nodes from the sequence language to the space-time IR so that:
+    1. `N_out` has the desired throughput that is **s** times slower than its output throuhgput in `pspace`
+    2. Minimize the compute and memory resources needed by the space-time IR nodes
+
 # Naive Scheduler
+
 The naive auto-scheduler is, for each operator, apply the slowdown factor if possible by applying the appropriate rewrite rules.
 If not possible or slowing down the operator is insufficient to reach the desired throughput, recur on nested operators. 
 
@@ -92,10 +104,10 @@ naive_schedule_op s op =
     
 ```
 
-The [motivating examples](#motivating_examples) show that this auto-scheduler does not correctly schedule programs that a user can be expected to write. 
+The [naive scheduler examples](#naive_scheduler_examples) show that this attempt fails to correctly schedule programs that compose multi-rate and nested operators. 
 
 
-# Motivating Examples
+# Naive Scheduler Examples
 There are five main issues that the scheduler will have to handle:
 1. **Individual Operator Rewrites** - scheduling individual, sequence operators by rewriting them to space-time operators with the desired throughput
 1. **Composition** - scheduling composed operators so that the produced space-time operators have matching type signatures 
@@ -232,8 +244,42 @@ Thus, the naive scheduler has failed to produce valid hardware.
 
 ![Scheduled Composition Of Multi-Rate and Nesting Manipulation](other_diagrams/scheduler_examples/nesting_multi_composition/nesting_multi_composition_st_s_2.png "Scheduled Composition Of Multi-Rate and Nesting Manipulation")
 
-# Scheduling Algorithm
+# Recursive Scheduling Algorithm
+The next attempt at a scheduling algorithm addresses the composition of multi-rate and nesting manipulation example by considering dependencies between composed operators.
+It walks the expression tree from output to input.
+During this walk, it schedules each operator so that the types of composed operators match.
 The scheduling algorithm is:
+```
+schedule :: Seq_Expr -> Space_Time_Expr -> Space_Time_Expr -> Int -> Space_Time_Expr
+schedule pseq pspace ptime s =
+    n_out = get_output_node pseq
+    n_out_st = rewrite_with_slowdown n_out pspace ptime s
+    n_out_st_input_types = get_input_types n_out_st
+    n_out_producers = get_producers n_out
+    set_producers n_out_st 
+        [schedule_op n_out_producers[i] n_out_st_input_types[i] | i < for i in 0..len(n_out_producers)]
+    return n_out_st
+
+schedule_op :: Seq_Expr -> Space_Time_Type -> Space_Time_Expr
+schedule_op n consumer_type =
+    n_st = rewrite_with_output_type n consumer_type
+    n_st_input_types = get_input_types n_st
+    n_producers = get_producers n
+    set_producers n_st 
+        [schedule_op n_producers[i] n_st_input_types[i] | i < for i in 0..len(n_producers)]
+    return n_st
+```
+
+This algorithm has two main limitations.
+First, it cannot handle DAGs. 
+It treats expressions as trees and so ignores dependencies between nodes that appear multiple times in a DAG.
+The [recursive scheduler examples](#recursive-scheduler-examples) will demonstrate this issue.
+Second, it only evaluates one of multiple possible schedules for a given **s** and `pseq`.
+For example, there are multiple possible ways to rewrite an operator to match a slowdown.
+`rewrite_with_slowdown` arbitrarily picks one.
+The recursive, DAG-aware scheduler will address both of these issues.
+Additionally, there are multiple ways to
+There are fewer 
 1. Given: 
     1. `pseq` - the program in the sequence language
     1. `pspace` - the program in the space-time IR with the greatest throughput
@@ -253,6 +299,16 @@ schedule :: Seq_Expr -> Space_Time_Expr -> Space_Time_Expr -> Int -> Space_Time_
 schedule pseq pspace ptime s =
     ot_slowed = compute_slowed_output_type pseq ptime s
     return (rewrite_to_match_output_type pseq ot_slowed)
+```
+
+# Recursive Scheduler Examples
+
+## Composition of Multi-Rate and Nesting Manipulation
+This example demonstrates the issue of scheduling both types of operators while ensuring that their types compose after applying the rewrite rules.
+Unlike the naive scheduler, the recursive scheduler can handle this example.
+The example sequence language program is:
+```
+Select_1d 2 0 (Seq 2 Int) >>> Unpartition 1 2 Int 
 ```
 
 ## Slowed Output Type Computation
