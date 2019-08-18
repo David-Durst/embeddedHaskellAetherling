@@ -108,16 +108,15 @@ The [naive scheduler examples](#naive_scheduler_examples) show that this attempt
 
 
 # Naive Scheduler Examples
-There are five main issues that the scheduler will have to handle:
+The below examples show four issues that the scheduler will have to handle:
 1. **Individual Operator Rewrites** - scheduling individual, sequence operators by rewriting them to space-time operators with the desired throughput
 1. **Composition** - scheduling composed operators so that the produced space-time operators have matching type signatures 
 1. **Multi-Rate** - scheduling operators that accept and emit different numbers of outputs, such as `Up_1d` and `Down_1d`
-1. **Nesting Manipulation** - scheduling operators that change that change the nesting of `Seq`s, such as `Partition` and `Unpartition`
-1. **Composition of Multi-Rate and Nesting Manipulation** - scheduling both types of operators. This is the example that the naive scheduler cannot handle.
+1. **Composition of Multi-Rate and Nesting Manipulation** - scheduling the composition of nested and multi-rate operators. This is the example that the naive scheduler cannot handle.
 
 ## Individual Operator Rewrites
 This example shows the simplest pipeline that can be scheduled.
-The example sequence language program is:
+The sequence language program is:
 ```
 Map 4 Abs
 ```
@@ -155,7 +154,7 @@ This throughput is two times smaller than the throughput of the `s=1` program wi
 
 ## Composition
 This example demonstrates the issue of rewriting composed operators while preserving the fact that all producers and consumers have matching type signatures.
-The example sequence language program is:
+The sequence language program is:
 ```
 Map 4 Abs >>> Map 4 Abs
 ```
@@ -176,7 +175,7 @@ The naive scheduler correctly handles this case for the same reasons as the [ind
 
 ## Multi-Rate
 This example demonstrates the issue of rewriting operators with different input and output invalid clocks and thus throughputs.
-The example sequence language program is:
+The sequence language program is:
 ```
 Select_1d 4 0 Int
 ```
@@ -196,53 +195,31 @@ The throughputs for this program are four `Int` inputs per two clocks and one `I
 
 ![Scheduled s=2 Multi-Rate](other_diagrams/scheduler_examples/multi_rate/multi_rate_st_s_2.png "Scheduled s=2 Multi-Rate")
 
-## Nesting Manipulation
-This example demonstrate the issue of rewriting operators where there are different amounts of nesting on the input and output.
-The example sequence language program is:
+## Composition of Multi-Rate and Nesting
+This example demonstrates the issue of scheduling multi-rate and nested operators while ensuring that their types compose after applying the rewrite rules.
+The naive scheduler cannot handle this example
+The sequence language program is:
 ```
-Unpartition 2 2 Int
-```
-
-Attainable s are `1, 2, 4`.
-The following diagrams shows the process of applying the naive scheduler.
-The first diagram is the program in the sequence language AST.
-
-![Unscheduled Nesting Manipulation](other_diagrams/scheduler_examples/nesting/nesting_seq.png "Unscheduled Nesting Manipulation")
-
-The second diagram is the program in the space-time IR AST after scheduling with `s=2`
-The naive scheduler has applied the sequence\_to\_nested\_time\_space rewrite rule.
-The result is an operator that does nothing.
-The sequence\_to\_nested\_time\_space rewrite rule normally converts an operator so that its input and output are nested with an outer `TSeq`s and inner `SSeq`. 
-Since the `Unpartition` has a nested input, the rewritten operator just propagates its inputs.
-The naive scheduler correctly handles this case for the same reasons as the [individual operator rewrites example.](#individual-operator-rewrites)
-
-![Scheduled s=2 Nesting Manipulation](other_diagrams/scheduler_examples/nesting/nesting_st_s_2.png "Scheduled s=2 Nesting Manipulation")
-
-## Composition of Multi-Rate and Nesting Manipulation
-This example demonstrates the issue of scheduling both types of operators while ensuring that their types compose after applying the rewrite rules.
-This is the example that the naive scheduler cannot handle.
-The example sequence language program is:
-```
-Select_1d 2 0 (Seq 2 Int) >>> Unpartition 1 2 Int 
+Select_1d 2 0 (Seq 2 Int) >>> Map 1 (Map 2 Abs)
 ```
 
 Attainable s are `1, 2, 4`.
 The following diagrams shows the process of applying the naive scheduler.
 The first diagram is the program in the sequence language AST.
 
-![Unscheduled Composition Of Multi-Rate and Nesting Manipulation](other_diagrams/scheduler_examples/nesting_multi_composition/nesting_multi_composition_seq.png "Unscheduled Composition Of Multi-Rate and Nesting Manipulation")
+![Unscheduled Composition Of Multi-Rate and Nesting](other_diagrams/scheduler_examples/nesting_multi_composition/nesting_multi_composition_seq.png "Unscheduled Composition Of Multi-Rate and Nesting")
 
 The second diagram is the program in the space-time IR AST after scheduling with `s=2`
 The naive scheduler has applied the sequence\_to\_time rewrite rule to `Select_1d 2 0 (Seq 2 Int)` while converting its `Seq 2 Int` to an `SSeq 2 Int`.
 This produces a `Select_1d_t 2 0 0 (SSeq 2 Int)` with a throughput that is two times less than the throughput of the fully parallel `Select_1d_s 2 0 (SSeq 2 Int)`
-The naive scheduler has applied the sequence\_to\_time rewrite rule to `Unpartition 1 2 Int`, producing a `Unpartition_t_tt 1 2 0 0 Int`.
-This operator has a throughput that is two times less than the throughput of the fully parallel `Unpartition_s_ss 1 2 Int`.
+The naive scheduler has applied the sequence\_to\_time rewrite rule to both `Map` in `Map 1 (Map 2 Abs)`, producing a `Map_t 1 0 (Map_t 2 0 Abs)`.
+This operator has a throughput that is two times less than the throughput of the fully parallel `Map_s 1 (Map_s 2 Abs)`.
 However, the operators' types don't match and the produced hardware cannot be composed.
 The `Select_1d_t` has an output of two `Int` every other clock. 
-The `Unparititon_t_tt` is expecting an `Int` input every clock.
+The `Map_t 1 0 (Map_t 2 0 Abs)` has an input of an `Int` input every clock.
 Thus, the naive scheduler has failed to produce valid hardware.
 
-![Scheduled Composition Of Multi-Rate and Nesting Manipulation](other_diagrams/scheduler_examples/nesting_multi_composition/nesting_multi_composition_st_s_2.png "Scheduled Composition Of Multi-Rate and Nesting Manipulation")
+![Scheduled Composition Of Multi-Rate and Nesting](other_diagrams/scheduler_examples/nesting_multi_composition/nesting_multi_composition_st_s_2.png "Scheduled Composition Of Multi-Rate and Nesting")
 
 # Recursive Scheduling Algorithm
 The next attempt at a scheduling algorithm addresses the composition of multi-rate and nesting manipulation example by considering dependencies between composed operators.
@@ -257,7 +234,7 @@ schedule pseq pspace ptime s =
     n_out_st_input_types = get_input_types n_out_st
     n_out_producers = get_producers n_out
     set_producers n_out_st 
-        [schedule_op n_out_producers[i] n_out_st_input_types[i] | i < for i in 0..len(n_out_producers)]
+        [schedule_op n_out_producers[i] n_out_st_input_types[i] | i <- 0..len(n_out_producers)]
     return n_out_st
 
 schedule_op :: Seq_Expr -> Space_Time_Type -> Space_Time_Expr
@@ -266,7 +243,7 @@ schedule_op n consumer_type =
     n_st_input_types = get_input_types n_st
     n_producers = get_producers n
     set_producers n_st 
-        [schedule_op n_producers[i] n_st_input_types[i] | i < for i in 0..len(n_producers)]
+        [schedule_op n_producers[i] n_st_input_types[i] | i <- 0..len(n_producers)]
     return n_st
 ```
 
@@ -278,37 +255,95 @@ Second, it only evaluates one of multiple possible schedules for a given **s** a
 For example, there are multiple possible ways to rewrite an operator to match a slowdown.
 `rewrite_with_slowdown` arbitrarily picks one.
 The recursive, DAG-aware scheduler will address both of these issues.
-Additionally, there are multiple ways to
-There are fewer 
-1. Given: 
-    1. `pseq` - the program in the sequence language
-    1. `pspace` - the program in the space-time IR with the greatest throughput
-    1. `ptime` - he program in the space-time IR that is the greatest throughput of the minimum area programs
-    1. `s` - the slowdown factor
-1. Compute a space-time IR output type for `pseq` that is `s` times slower than the output type of `pspace`. 
-1. Rewrite the `pseq` AST to produce the computed output type using the following visitor pattern. 
-The first node to visit is the last node in the `pseq` AST.
-   1. Rewrite the current operator `op_cur` to match it's slowed output type.
-   1. Compute `op_cur`'s input type after rewriting
-   1. Recur on all operators that produce input for `op_cur`.
-   The output types for those operators are the input types to `op_cur`.
-
-The code for the scheduler is:
-```
-schedule :: Seq_Expr -> Space_Time_Expr -> Space_Time_Expr -> Int -> Space_Time_Expr
-schedule pseq pspace ptime s =
-    ot_slowed = compute_slowed_output_type pseq ptime s
-    return (rewrite_to_match_output_type pseq ot_slowed)
-```
 
 # Recursive Scheduler Examples
 
 ## Composition of Multi-Rate and Nesting Manipulation
 This example demonstrates the issue of scheduling both types of operators while ensuring that their types compose after applying the rewrite rules.
 Unlike the naive scheduler, the recursive scheduler can handle this example.
-The example sequence language program is:
+The sequence program is:
 ```
-Select_1d 2 0 (Seq 2 Int) >>> Unpartition 1 2 Int 
+Select_1d 2 0 (Seq 2 Int) >>> Map 1 (Map 2 Abs)
+```
+
+The result from scheduling with the recursive algorithm is:
+
+![Scheduled Composition Of Multi-Rate and Nesting Recursive Algorithm](other_diagrams/scheduler_examples/nesting_multi_composition/nesting_multi_composition_st_s_2_recursive.png "Scheduled Composition Of Multi-Rate and Nesting Recursive Algorithm")
+
+The recursive scheduler first applies `rewrite_with_slowdown` to `Map 1 (Map 2 Abs)`, the output node of the program.
+This will try to slowdown the node without introducing invalids, so it produces `Map_s 1 (Map_t 2 0 Abs)`.
+`rewrite_with_slowdown` knows that slowing down the outer `Map 1` would require introducing invalids because `ptime` shows that the result of performing this slowdown is `Map_t 1 1`.
+Then, the algorithm applies `rewrite_with_output_type` to `Select_1d 2 0 (Seq 2 Int)` with output type `SSeq 1 (TSeq 2 0 Int)`.
+The result is `Select_1d_s 2 0 (TSeq 2 0 Int)`.
+The `Select_1d_s` has an output of an `Int` every clock.
+The `Map_s` has an input of an `Int` every clock.
+Thus, the recursive scheduler has produced valid hardware where the naive one failed.
+
+## Diamond
+This example demonstrates the issue of scheduling a DAG with a diamond pattern: the input is used on two separate branches which are later merged.
+The recursive scheduler cannot handle this example.
+The sequence language program is:
+```
+diamond input =
+    let prefix = Map 1 (Map 1 Abs) input
+    let branch1 = (Up_1d 2 (Seq 1 Int) >>> Unpartition 2 1 Int) prefix
+    let branch2 = (Map 1 (Up_1d 2 Int) >>> Unpartition 1 2 Int) prefix
+    Map2 2 Tuple branch1 branch2
+```
+
+Attainable s are `1, 2, 4`.
+The following diagrams shows the process of applying the naive scheduler.
+The first diagram is the program in the sequence language AST.
+
+![Unscheduled Diamond](other_diagrams/scheduler_examples/diamond/diamond_seq.png "Unscheduled Diamond")
+
+The second diagram is the program in the space-time IR AST after scheduling with `s=2`
+The recursive scheduler has scheduled each branch independently. 
+For each branch, `rewrite_with_output_type` slows the `Up_1d` because that minimizes underutilization. 
+As a result, `branch1` wants to rewrite `prefix` to `Map_t 1 1 (Map_s 1 Abs)` while `branch2` wants to rewrite prefix to `Map_s 1 (Map_t 1 1 Abs)`.
+This is invalid hardware as `prefix` can only be one implementation.
+
+![Scheduled Diamond](other_diagrams/scheduler_examples/diamond/diamond_st_s_2.png "Scheduled Diamond")
+
+
+# Recursive, Memoized, Branching Scheduling Algorithm
+The final scheduling algorithm addresses the diamond issue while also exploring multiple schedules.
+It performs the same walk of the expression tree as the above, recursive scheduling algorithm.
+However, it memoizes the calls to `schedule_op`.
+Therefore, if a node is scheduled once in one part of the expression tree, it will not be scheduled different in a different part of the expression tree.
+As a result, `schdule_op` will need to handle the case where a recursive call to `schedule_op` does not return a producer with the expected type.
+In this case, `Reshape`s are added where necessary to fix types.
+`Reshape`s are also used to explore multiple possible schedules.
+For each stage in the expression tree, rather than rewriting an operator to match the consumer's type, the operator may produce any other type of the same throuhgput and apply a `Reshape` to convert between the two.
+The `schedule_op` explores all such schedules by returning a list of Space_Time_Expr.
+Each element in the list is a different `Reshape`.
+The scheduling algorithm is:
+```
+schedule :: Seq_Expr -> Space_Time_Expr -> Space_Time_Expr -> Int -> Space_Time_Expr
+schedule pseq pspace ptime s =
+    n_out = get_output_node pseq
+    n_out_st_xs = rewrite_with_slowdown n_out pspace ptime s
+    n_out_st_input_type_xss = map get_input_types n_out_st_xs
+    n_out_producer_xs = get_producers n_out
+    n_out_st_producer_xss_maybe_wrong_type =
+        [[memo schedule_op n_out_producer_xs[j] n_out_st_input_types_xss[i][j] | j <- 0..len(n_out_producers)] 
+           | i <- 0..len(n_out_st_xs) ]
+    n_out_st_producers_xss = map2 (map2 (add_reshape_to_match)) n_out_st_producers_xss_maybe_wrong_type n_out_st_input_type_xss
+    map2 set_producers n_out_st_xs n_out_st_input_type_xss
+    return n_out_st_xs
+
+schedule_op :: Seq_Expr -> Space_Time_Type -> [Space_Time_Expr]
+schedule_op n consumer_type =
+    (reshapes, producer_types) = generate_all_possible_reshapes consumer_type
+    n_st_xs = map2 (rewrite_with_output_type n) producer_types reshapes
+    n_st_input_type_xss = map get_input_types n_st_xs
+    n_producer_xs = get_producers n
+    n_st_producer_xss_maybe_wrong_type =
+        [[memo schedule_op n_producer_xs[j] n_st_input_types_xss[i][j] | j <- 0..len(n_producers)] 
+           | i <- 0..len(n_st_xs) ]
+    n_st_producers_xss = map2 (map2 (add_reshape_to_match)) n_st_producers_xss_maybe_wrong_type n_st_input_type_xss
+    map2 set_producers n_st_xs n_st_input_type_xss
+    return n_st_xs
 ```
 
 ## Slowed Output Type Computation
@@ -883,7 +918,32 @@ The pattern of isomorphism construction is the same as above.
 
 ## Operator Rewrite Process
 1. Given a rewritten output type
+
 # Garbage
+
+## Nesting Manipulation
+This example demonstrate the issue of rewriting operators where there are different amounts of nesting on the input and output.
+The example sequence language program is:
+```
+Unpartition 2 2 Int
+```
+
+Attainable s are `1, 2, 4`.
+The following diagrams shows the process of applying the naive scheduler.
+The first diagram is the program in the sequence language AST.
+
+![Unscheduled Nesting Manipulation](other_diagrams/scheduler_examples/nesting/nesting_seq.png "Unscheduled Nesting Manipulation")
+
+The second diagram is the program in the space-time IR AST after scheduling with `s=2`
+The naive scheduler has applied the sequence\_to\_nested\_time\_space rewrite rule.
+The result is an operator that does nothing.
+The sequence\_to\_nested\_time\_space rewrite rule normally converts an operator so that its input and output are nested with an outer `TSeq`s and inner `SSeq`. 
+Since the `Unpartition` has a nested input, the rewritten operator just propagates its inputs.
+The naive scheduler correctly handles this case for the same reasons as the [individual operator rewrites example.](#individual-operator-rewrites)
+
+![Scheduled s=2 Nesting Manipulation](other_diagrams/scheduler_examples/nesting/nesting_st_s_2.png "Scheduled s=2 Nesting Manipulation")
+
+
 ## Composition of Multi-Rate With Nested Operators and Memories
 This example demonstrates the issue of scheduling multiple operators while preserving nesting and using memories.
 ```
