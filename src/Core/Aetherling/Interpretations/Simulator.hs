@@ -1,9 +1,9 @@
 module Aetherling.Interpretations.Simulator where
-import Aetherling.Interpretations.Monad_Helpers
-import Aetherling.ASTs.Sequence
-import Aetherling.Types.Declarations
-import Aetherling.Types.Functions
-import Aetherling.Types.Isomorphisms
+import Aetherling.Monad_Helpers
+import Aetherling.Languages.Sequence.Shallow.Expr
+import Aetherling.Languages.Sequence.Shallow.Types
+import Aetherling.Languages.Sequence.Shallow.Expr_Type_Conversions
+import Aetherling.Languages.Isomorphisms
 import Data.Typeable
 import Unsafe.Coerce
 import qualified Data.Vector.Sized as V
