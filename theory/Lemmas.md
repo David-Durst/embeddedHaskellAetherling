@@ -163,3 +163,25 @@ This won't be an issue because:
 1. The greedy algorithm could miss this solution by due to having removed one or more factors from `{s_i}` by using them for slowing down other layers. The greedy algorithm will instead try to slowdown `Seq n` and `i_max` with a subset `sub` of `{s_i}`. 
 1. Since `sub` is a subset of `{s_i}` and `{s_i}` is a subset of `{f_i}`, then `sub` is a subset of `{f_i}`
 1. Therefore, the greedy algorithm won't miss solutions. If a set of factors divides into `n` or is greater than `n+i_max`, the subset of factors used by the greedy approach will also satisfy those conditions.
+
+# Reshape
+Reshape type siganture:
+
+```
+Reshape :: T/SSeq ni_0 (T/SSeq ni_1 (...)) -> T/SSeq no_0 (T/SSeq no_1 (...))
+```
+
+The input and output types must have the same throughput. 
+
+## Input and Output Throughput
+The memory implementing the reshape must have input and output throughputs equal to the desired throuhgput.
+You cannot use delay to hide latency.
+This will be shown by contradiction.
+
+Assume that `Reshape` was implemented using a memory that had an input throuhgput less than the throuhgput indicated by the output type.
+1. By Aetherling type, get data at higher throuhgput than memory can handle
+1. Since no where to put it, drop data and lose it.
+
+## Memory Port Conflicts
+1. If banking memory to get parallelism, can't read multiple values from a single bank
+1. 
