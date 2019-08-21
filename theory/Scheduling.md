@@ -73,35 +73,10 @@ If not possible or slowing down the operator is insufficient to reach the desire
 
 The code for the naive scheduler is:
 ```
-naive_schedule :: Seq_Expr -> Int -> Space_Time_Expr
-naive_schedule pseq s =
-    map (naive_schedule_op s) (operators pseq)
-
-naive_schedule_op s op =
-    n = max (input_seq_len op) (output_seq_len op)
-    if s == 1:
-        sequence_to_space op
-        remaining_s = 1
-    else if (s % n) == 0:
-        sequence_to_time op
-        remaining_s = s / n
-    else if (n % s) == 0:
-        sequence_to_nested_time_space op s
-        remaining_s = 1
-    else:
-        sequence_to_space op
-        remaining_s = s
-    
-    # higher order op's include Map, Map2, and Reduce
-    if is_higher_order op:
-        inner = inner_op op 
-        return (naive_schedule_op remaining_s inner) 
-    # other operators, such as Shift, can operate on nested types
-    # Need to convert those nested Seq types to TSeqs or SSeqs
-    else:
-       inner = inner_type op
-       return (naive_schedule_type remaining_s inner)
-    
+schedule :: Seq_Expr -> Space_Time_Expr -> Space_Time_Expr -> Int -> Space_Time_Expr
+schedule pseq pspace ptime s =
+    n_xs = get_all_nodes pseq
+    map (\n -> rewrite_with_slowdown n pspace ptime s) n_xs
 ```
 
 The [naive scheduler examples](#naive_scheduler_examples) show that this attempt fails to correctly schedule programs that compose multi-rate and nested operators. 
@@ -221,7 +196,7 @@ Thus, the naive scheduler has failed to produce valid hardware.
 
 ![Scheduled Composition Of Multi-Rate and Nesting](other_diagrams/scheduler_examples/nesting_multi_composition/nesting_multi_composition_st_s_2.png "Scheduled Composition Of Multi-Rate and Nesting")
 
-# Recursive Scheduling Algorithm
+# Recursive Scheduler
 The next attempt at a scheduling algorithm addresses the composition of multi-rate and nesting manipulation example by considering dependencies between composed operators.
 It walks the expression tree from output to input.
 During this walk, it schedules each operator so that the types of composed operators match.
@@ -266,7 +241,7 @@ The sequence program is:
 Select_1d 2 0 (Seq 2 Int) >>> Map 1 (Map 2 Abs)
 ```
 
-The result from scheduling with the recursive algorithm is:
+The result from scheduling for `s=2` with the recursive algorithm is:
 
 ![Scheduled Composition Of Multi-Rate and Nesting Recursive Algorithm](other_diagrams/scheduler_examples/nesting_multi_composition/nesting_multi_composition_st_s_2_recursive.png "Scheduled Composition Of Multi-Rate and Nesting Recursive Algorithm")
 
@@ -306,7 +281,7 @@ This is invalid hardware as `prefix` can only be one implementation.
 ![Scheduled Diamond](other_diagrams/scheduler_examples/diamond/diamond_st_s_2.png "Scheduled Diamond")
 
 
-# Recursive, Memoized, Branching Scheduling Algorithm
+# Recursive, Memoized, Branching Scheduler
 The final scheduling algorithm addresses the diamond issue while also exploring multiple schedules.
 It performs the same walk of the expression tree as the above, recursive scheduling algorithm.
 However, it memoizes the calls to `schedule_op`.
@@ -335,7 +310,7 @@ schedule pseq pspace ptime s =
 schedule_op :: Seq_Expr -> Space_Time_Type -> [Space_Time_Expr]
 schedule_op n consumer_type =
     (reshapes, producer_types) = generate_all_possible_reshapes consumer_type
-    n_st_xs = map2 (rewrite_with_output_type n) producer_types reshapes
+    n_st_xs = map2 rewrite_with_output_type reshapes producer_types
     n_st_input_type_xss = map get_input_types n_st_xs
     n_producer_xs = get_producers n
     n_st_producer_xss_maybe_wrong_type =
@@ -346,6 +321,116 @@ schedule_op n consumer_type =
     return n_st_xs
 ```
 
+# Recursive, Memoized, Branching Scheduler
+## Diamond
+This example demonstrates the issue of scheduling a DAG with a diamond pattern: the input is used on two separate branches which are later merged.
+Unlike the recursive scheduler, the recursive, memoized, branching scheduler can handle this example.
+
+The sequence language program is:
+```
+diamond input =
+    let prefix = Map 1 (Map 1 Abs) input
+    let branch1 = (Up_1d 2 (Seq 1 Int) >>> Unpartition 2 1 Int) prefix
+    let branch2 = (Map 1 (Up_1d 2 Int) >>> Unpartition 1 2 Int) prefix
+    Map2 2 Tuple branch1 branch2
+```
+
+The result from scheduling for `s=2` with the recursive, memoized, branching algorithm is:
+
+![Scheduled Diamond With Memoization](other_diagrams/scheduler_examples/diamond/diamond_st_s_2_memo.png "Scheduled Diamond With Memoization")
+
+The algorithm schedules `branch1` first. 
+Therefore, it schedules `prefix` to match `branch1`'s nesting structure.
+When the algorithm schedules `branch2`, the memoization returns the prior scheduling of `prefix` to match `branch1`.
+The scheduler adds a `Reshape` to address the mismatch between the output type of `prefix` and the input type of `branch2`, 
+
+# Rewriting An Operation For An Output Type
+There are three ways to lower an operator from the sequence language to the space-time IR:
+1. Fully Sequential - the operator is rewritten using the sequence-to-time rewrite rules that it's input and output types are `TSeq`.
+1. Fully Parallel - the operator is rewritten using the sequence-to-space rewrite rules that it's input and output types are `SSeq`
+1. Partially Parallel - the operator is rewritten using the nesting, sequence-to-time, and sequence-to-space rewrite rules so that it's input and output types are `TSeq (SSeq)`
+
+These options are defined for each operator in [the basic document's rewrite section](Basic.md#rewrites).
+The implementation of `rewrite_with_output_type` must be able to handle all three of those cases:
+
+```
+rewrite_with_output_type :: Seq_Expr -> Space_Time_Type -> Space_Time_Expr
+rewrite_with_output_type n out_st_type =
+    hd_out_st_type : tl_out_st_type = out_st_type
+    if (is_sseq hd_out_st_type):
+        n_st = sequence_to_space n hd_out_st_type
+    if (is_tseq hd_out_st_type):
+        n_st = sequence_to_time n hd_out_st_type
+    if (is_tseq_sseq hd_out_st_type):
+        n_st = nest_then_to_space_time n hd_out_st_type
+    
+    -- schedule the sub-DAGs of higher order operators such as Map and Reduce
+    if (is_higher_order n):
+       subgraph = get_output_node (get_dag n)
+       subgraph_st = schedule_op subgraph tl_out_st_type
+       set_subgraph n_st subgraph_st
+    -- otherwise, if operator is parameterized by a type, rewrite that type
+    -- must be custom for each operator as the output type doesn't always equal
+    -- the input type
+    else if (is_parameterized_by_type n):
+       type_param = get_type_param n
+       type_param_st = rewrite_type type_param tl_out_st_type
+       set_type_param n_st type_param_st
+
+    return n_st
+```
+
+
+# Rewriting An Operation For A Slowdown
+As stated in the [above section](#rewriting-an-operation-for-an-output-type), there are three ways to lower an operator from the sequence language to the space-time IR.
+The version of `rewrite_with_slowdown` that provides all possible rewrites of an operation for a slowdown is implemented in two steps:
+1. Find all possible rewrites of the operator's output type with the desired throuhgput
+1. For each rewrite of the operator's output type, apply `rewrite_with_output_type`
+
+**NOTE:** Kayvon, I know you don't like this approach. 
+However, it is simpler than rewriting the operator. 
+The operators may have subgraphs. 
+Rewriting the output types avoids handling the subgraphs.
+
+```
+rewrite_with_slowdown :: Seq_Expr -> Space_Time_Expr -> Space_Time_Expr -> Int -> Space_Time_Expr
+rewrite_with_slowdown n pspace ptime s =
+    s_factors = factorize s
+    n_out_type = get_output_type n
+
+    -- all possible distributions of all factors of slowdown amongst the layers of n_out_type
+    type_factor_combinations_xs = get_all_distributions_of_factors n_out_type s_factors
+
+    -- only allow valid slowdowns
+    n_out_st_types_xs = rewrite_type_for_valid_slowdowns n_out_type type_factor_ccombinations_xs ptime
+
+    n_st_xs = map (rewrite_with_output_type n) n_out_st_types_xs
+    return n_st_xs
+```
+
+## Valid Slowdowns For a Layer
+The ways to slowdown a `Seq n` by `s_p` relative to the fully parallel `SSeq n` with `i_max` maximum invalid clocks are:
+1. If `1 == s_p`, then `SSeq n`
+1. If `(n+i_max) == s_p`, then `TSeq n i_max`
+1. If `n % s_p == 0`, then `TSeq s_p 0 (SSeq (n / s_p))`
+1. If `(n+i_max) >= s_p == 0`, then need to slowdown so that takes `s_p` clocks. There are multiple possible choices for the resulting `TSeq no io (SSeq ni)`. To find the best answer (least underutilization):
+    1. `no * ni == n`
+    1. `no + io == s_p`
+    1. `io <= i_max`
+    1. min `io` as want minimum underutilization
+    1. Solution
+        1. `no = n / ni`
+        1. `(n/ni) + io == s_p`
+            1. solve this by - trying all the divisors of n from smallest to largest. 
+            1. take smallest `ni` such that `io` is a non-negative integer and the other constraints hold.
+            1. this will give least underutilization for the given throughput
+
+If none of the above conditions hold, then `s_p` is not a valid slowdown. 
+Either it's too large or the divisibility conditions don't hold for applying the rewrite rules.
+
+
+
+# End Of Current Draft IGNORE BELOW
 ## Slowed Output Type Computation
 The algorithm for performing step 2 of the above scheduling algorithm is
 1. Let `ot_time` be the output type of `ptime`
