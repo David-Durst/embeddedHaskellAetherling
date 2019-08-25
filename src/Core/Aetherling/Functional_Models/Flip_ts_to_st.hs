@@ -25,13 +25,13 @@ ts_to_st t_len s_len = do
         map has_duplicates $ map (map bank_idx) $ transpose st_banked_data
   let st = map (map banked_elem) st_banked_data
   if bank_write_conflict
-    then Left ("Bank Conflict", banks) 
+    then Left ("Write Conflict", banks) 
     else if bank_read_conflict then Left ("Read Conflict", st_banked_data)
     else if (concat ts /= concat st) then Left ("Element Order Not Preserved", st_banked_data)
     else return st
 
 st_to_ts :: Int -> Int -> Either (String, [[Banked_Value]]) [[Int]]
-st_to_ts t_len s_len = do
+st_to_ts s_len t_len = do
   let st = [[ x*t_len + t | t <- [0 .. t_len - 1]] | x <- [0 .. s_len - 1]]
   let st_banked_data = add_buffer_data_for_st st
   let banks = reshape_to_banks st_banked_data
@@ -41,10 +41,10 @@ st_to_ts t_len s_len = do
   let ts_banked_data = read_data_from_banks_for_ts banks
   -- this ensures that parallel reads (same space index) don't share the same bank
   let bank_read_conflict = any id $
-        map has_duplicates $ map (map bank_idx) $ transpose ts_banked_data
+        map has_duplicates $ map (map bank_idx) ts_banked_data
   let ts = map (map banked_elem) ts_banked_data
   if bank_write_conflict
-    then Left ("Bank Conflict", banks) 
+    then Left ("Write Conflict", banks) 
     else if bank_read_conflict then Left ("Read Conflict", ts_banked_data)
     else if (concat ts /= concat st) then Left ("Element Order Not Preserved", ts_banked_data)
     else return ts
@@ -94,7 +94,7 @@ read_data_from_banks_for_ts banks =
 add_buffer_data_for_st :: [[Int]] -> [[Banked_Value]]
 add_buffer_data_for_st st | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0) =
   [
-    [ Banked_Value (st !! t !! x) t x
+    [ Banked_Value (st !! x !! t) t x
       (flat_idx x t `mod` s_len) (flat_idx x t `div` s_len)
     | t <- [0..(t_len - 1)]] | x <- [0..(s_len - 1)]]
   where
@@ -103,7 +103,7 @@ add_buffer_data_for_st st | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0)
     t_len = length (st !! 0)
 add_buffer_data_for_st st =
   [
-    [ Banked_Value (st !! t !! x) t x
+    [ Banked_Value (st !! x !! t) t x
       (((flat_idx x t `mod` s_len) + (flat_idx x t `div` s_len)) `mod` s_len)
       (flat_idx x t `div` s_len)
     | t <- [0..t_len - 1]] | x <- [0..s_len - 1]]
