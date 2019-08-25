@@ -2,6 +2,7 @@ module Aetherling.Functional_Models.Flip_ts_to_st where
 import Data.List
 import qualified Data.Set as S
 import Debug.Trace
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 
 data Banked_Value = Banked_Value {
   banked_elem :: Int,
@@ -53,11 +54,17 @@ st_to_ts s_len t_len = do
 has_duplicates :: (Ord a) => [a] -> Bool
 has_duplicates list = length list /= length set
   where set = S.fromList list
+
+coprime :: Int -> Int -> Bool
+coprime x y = do
+  let x_factors = ae_factorize x
+  let y_factors = ae_factorize y
+  S.size (ae_factors_intersect x_factors y_factors) == 0
   
 -- | given an [[Int]] represent an outer TSeq len and an inner SSeq len
 -- return the same structure where bank and indexes are assigned to each value
 add_buffer_data_for_ts :: [[Int]] -> [[Banked_Value]]
-add_buffer_data_for_ts ts | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0) =
+add_buffer_data_for_ts ts | coprime t_len s_len =
   [
     [ Banked_Value (ts !! t !! x) t x x t
     | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
@@ -76,7 +83,7 @@ add_buffer_data_for_ts ts =
 -- | given an [[Banked_Value]] representing a set of banks of memory
 -- return the same structure in the order of the TSeq (SSeq) read from the bank
 read_data_from_banks_for_ts :: [[Banked_Value]] -> [[Banked_Value]]
-read_data_from_banks_for_ts banks | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0) =
+read_data_from_banks_for_ts banks | coprime t_len s_len =
   [
     [ banks !! x !! t
     | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
@@ -95,7 +102,7 @@ read_data_from_banks_for_ts banks =
 -- | given an [[Int]] represent an outer SSeq len and an inner TSeq len
 -- return the same structure where bank and indexes are assigned to each value
 add_buffer_data_for_st :: [[Int]] -> [[Banked_Value]]
-add_buffer_data_for_st st | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0) =
+add_buffer_data_for_st st | coprime t_len s_len =
   [
     [ Banked_Value (st !! x !! t) t x
       (flat_idx x t `mod` s_len) (flat_idx x t `div` s_len)
@@ -118,7 +125,7 @@ add_buffer_data_for_st st =
 -- | given an [[Banked_Value]] representing a set of banks of memory
 -- return the same structure in the order of the TSeq (SSeq) read from the bank
 read_data_from_banks_for_st :: [[Banked_Value]] -> [[Banked_Value]]
-read_data_from_banks_for_st banks | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0) =
+read_data_from_banks_for_st banks | coprime t_len s_len =
   [
     [ banks !! (flat_idx x t `mod` s_len) !! (flat_idx x t `div` s_len)
     | t <- [0..(t_len - 1)]] | x <- [0..(s_len - 1)]]
