@@ -212,3 +212,5 @@ The rules for values that cannot be written to the same bank are:
 1. If inner num elements and outer num elements are not coprime,
     1. `bank = (x + t) % max_dim`
     1. `addr = t`
+    
+**Not sure if it's `max_dim` or `sseq_dim`?**

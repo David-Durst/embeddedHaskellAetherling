@@ -1,88 +1,147 @@
--- | A functional model of the Flip_ts_to_st operator.
--- This computes the amount of storage and the delay clock cycles
--- necessary to implement the operator
--- It shows that the model is extremely inefficient to implement.
--- For example, A TSeq 2 0 (SSeq 3) like [[1,2,3], [4,5,6]]
--- requires 3 integer sized registers and a delay of 1 clock.
--- The [1,2,3] appear on clk 0 and [4,5,6] appear on clk 1.
--- The output is [[1,2],[3,4],[5,6]].
--- Naively, 1,3, and 5 would be emitted on clk 0. But
--- 5 only is inputted on clk 1. To preserve causality,
--- the first output is delayed by 1.
--- That means that [1,2,3] must be stored for a clock.
--- Then, when 1, 3, and 5 are emitted, 2 is kept for the next
--- clock and 4 and 6 are stored.
--- Then, on clock 2, 2,4,6 are emitted.
--- This is more problematic for larger values as
---
--- λ: ts_to_st_max_buffer_size 120 1000
---delay119
---storage119000
---0
---λ: ts_to_st_max_buffer_size 1000 120
---delay991
---storage118920
---0
---
--- This shows that the flip ends up storing almost the entire input
 module Aetherling.Functional_Models.Flip_ts_to_st where
-import Data.List.Split
+import Data.List
+import qualified Data.Set as S
 import Debug.Trace
 
-data Input_Element_And_Clock = E_And_C { elem :: Int, clk :: Int} deriving (Show, Eq)
-data IO_Clk = IO_Clk {i_clk :: Int, o_clk :: Int} deriving (Show, Eq)
+data Banked_Value = Banked_Value {
+  banked_elem :: Int,
+  in_t_idx :: Int,
+  in_s_idx :: Int,
+  bank_idx :: Int,
+  addr_idx :: Int
+  } deriving (Show, Eq)
 
--- | given an outer TSeq len and an inner SSeq len
--- generate a the sequence where each element is combined
--- with it's arrival clock
-generate_ts :: Int -> Int -> [[Input_Element_And_Clock]]
-generate_ts t_len s_len =
-  [[E_And_C (s_len*o + i) o | i <- [0.. (s_len - 1)]] |o <- [0..(t_len - 1)]]
+ts_to_st :: Int -> Int -> Either (String, [[Banked_Value]]) [[Int]]
+ts_to_st t_len s_len = do
+  let ts = [[ t*s_len + x | x <- [0 .. s_len - 1]] | t <- [0 .. t_len - 1]]
+  let ts_banked_data = add_buffer_data_for_ts ts
+  let banks = reshape_to_banks ts_banked_data
+  -- this verifies that each bank is never written to on the same clock
+  let bank_write_conflict = any id $
+        map has_duplicates $ map (map in_t_idx) banks
+  let st_banked_data = read_data_from_banks_for_st banks
+  -- this ensures that parallel reads (same space index) don't share the same bank
+  let bank_read_conflict = any id $
+        map has_duplicates $ map (map bank_idx) $ transpose st_banked_data
+  let st = map (map banked_elem) st_banked_data
+  if bank_write_conflict
+    then Left ("Bank Conflict", banks) 
+    else if bank_read_conflict then Left ("Read Conflict", st_banked_data)
+    else if (concat ts /= concat st) then Left ("Element Order Not Preserved", st_banked_data)
+    else return st
 
--- | reorder a TSeq no io (SSeq ni) to SSeq ni (TSeq no io)
--- while preserving the order of elements
-flip_ts_to_st t_len ts = chunksOf t_len $ concat ts
+st_to_ts :: Int -> Int -> Either (String, [[Banked_Value]]) [[Int]]
+st_to_ts t_len s_len = do
+  let st = [[ x*t_len + t | t <- [0 .. t_len - 1]] | x <- [0 .. s_len - 1]]
+  let st_banked_data = add_buffer_data_for_st st
+  let banks = reshape_to_banks st_banked_data
+  -- this verifies that each bank is never written to on the same clock
+  let bank_write_conflict = any id $
+        map has_duplicates $ map (map in_t_idx) banks
+  let ts_banked_data = read_data_from_banks_for_ts banks
+  -- this ensures that parallel reads (same space index) don't share the same bank
+  let bank_read_conflict = any id $
+        map has_duplicates $ map (map bank_idx) $ transpose ts_banked_data
+  let ts = map (map banked_elem) ts_banked_data
+  if bank_write_conflict
+    then Left ("Bank Conflict", banks) 
+    else if bank_read_conflict then Left ("Read Conflict", ts_banked_data)
+    else if (concat ts /= concat st) then Left ("Element Order Not Preserved", ts_banked_data)
+    else return ts
 
--- | given an SSeq ni (TSeq no io) to output where each element is tupled
--- with when it was inputted, emit a flat list of the input and out times of each
--- element in the SSeq ni (TSeq no io)
--- Note that this may lead to elements that are emitted before they're accepted
-get_input_and_output_clks_for_st st = do
-  let st_with_output_clk = fmap (zip [0..]) st
-  concat $ fmap (\tseq -> fmap (\(out_clk, elem) -> IO_Clk (clk elem) out_clk) tseq) st_with_output_clk
+has_duplicates :: (Ord a) => [a] -> Bool
+has_duplicates list = length list /= length set
+  where set = S.fromList list
+  
+-- | given an [[Int]] represent an outer TSeq len and an inner SSeq len
+-- return the same structure where bank and indexes are assigned to each value
+add_buffer_data_for_ts :: [[Int]] -> [[Banked_Value]]
+add_buffer_data_for_ts ts | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0) =
+  [
+    [ Banked_Value (ts !! t !! x) t x x t
+    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
+  where
+    t_len = length ts
+    s_len = length (ts !! 0)
+add_buffer_data_for_ts ts =
+  [
+    [ Banked_Value (ts !! t !! x) t x ((x + t) `mod` s_len) t
+    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
+  where
+    t_len = length ts
+    s_len = length (ts !! 0)
 
--- | given a list elements where each element has it's input and output clocks
--- return the minimum delay necessary to ensure each element is emitted after it arrives
-get_delay_to_preserve_causality io_clk_list =
-  maximum $ fmap (\(IO_Clk i_clk o_clk) -> i_clk - o_clk) io_clk_list
+-- | given an [[Banked_Value]] representing a set of banks of memory
+-- return the same structure in the order of the TSeq (SSeq) read from the bank
+read_data_from_banks_for_ts :: [[Banked_Value]] -> [[Banked_Value]]
+read_data_from_banks_for_ts banks | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0) =
+  [
+    [ banks !! x !! t
+    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
+  where
+    s_len = length banks
+    t_len = length (banks !! 0)
+read_data_from_banks_for_ts banks =
+  [
+    [ banks !! ((x + t) `mod` s_len) !! t
+    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
+  where
+    s_len = length banks
+    t_len = length (banks !! 0)
 
--- | Given an element's input and outupt clks and a clock, determine if that element
--- must be stored during the clock tick leading into that clock cycle
-store_element_during_clk io_clk clk = (clk > i_clk io_clk) && (clk <= o_clk io_clk)
+-- | given an [[Int]] represent an outer SSeq len and an inner TSeq len
+-- return the same structure where bank and indexes are assigned to each value
+add_buffer_data_for_st :: [[Int]] -> [[Banked_Value]]
+add_buffer_data_for_st st | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0) =
+  [
+    [ Banked_Value (st !! t !! x) t x
+      (flat_idx x t `mod` s_len) (flat_idx x t `div` s_len)
+    | t <- [0..(t_len - 1)]] | x <- [0..(s_len - 1)]]
+  where
+    flat_idx x t = t_len * x + t
+    s_len = length st
+    t_len = length (st !! 0)
+add_buffer_data_for_st st =
+  [
+    [ Banked_Value (st !! t !! x) t x
+      (((flat_idx x t `mod` s_len) + (flat_idx x t `div` s_len)) `mod` s_len)
+      (flat_idx x t `div` s_len)
+    | t <- [0..t_len - 1]] | x <- [0..s_len - 1]]
+  where
+    flat_idx x t = t_len * x + t
+    s_len = length st
+    t_len = length (st !! 0)
 
--- | given a clock and list of the input and output clocks for an element,
--- determine the number of elements that must be buffered each clock
-num_elem_on_clk io_clk_list clk = length $
-  filter (\elem_io_clk -> store_element_during_clk elem_io_clk clk) io_clk_list
-
-update_io_clk_for_delay io_clk delay = IO_Clk (i_clk io_clk) (o_clk io_clk + delay)
-{-
-get_offset_ts ts_tracker emitted_clock = IO_Clk (clk ts_tracker) emitted_clock 
-
-
-get_input_and_output_clks_for_ts ts = do
-  let t_with_clk = zip [0..] ts
-  fmap (\(clk, xs) -> fmap (\elem -> get_offset_ts elem clk) xs) t_with_clk
- -} 
-ts_to_st_max_buffer_size t_len s_len = do
-  let ts = generate_ts t_len s_len
-  let st = flip_ts_to_st t_len ts
-  let io_clk_list = get_input_and_output_clks_for_st st
-  let delay = get_delay_to_preserve_causality io_clk_list
-  let io_clks_with_delay_list = fmap (\io_clk -> update_io_clk_for_delay io_clk delay) io_clk_list
-  let storage_per_clk = fmap (\clk -> num_elem_on_clk io_clks_with_delay_list clk) [0..delay+t_len-1]
-  --trace ("io_per_element" ++ (show $ io_clk_list)) $
-  --  trace ("storage_per_clk" ++ (show $ storage_per_clk))
-  trace ("delay" ++ show delay) $
-    trace ("storage" ++ (show $ maximum storage_per_clk)) $ 0
+-- | given an [[Banked_Value]] representing a set of banks of memory
+-- return the same structure in the order of the TSeq (SSeq) read from the bank
+read_data_from_banks_for_st :: [[Banked_Value]] -> [[Banked_Value]]
+read_data_from_banks_for_st banks | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0) =
+  [
+    [ banks !! (flat_idx x t `mod` s_len) !! (flat_idx x t `div` s_len)
+    | t <- [0..(t_len - 1)]] | x <- [0..(s_len - 1)]]
+  where
+    flat_idx x t = t_len * x + t
+    s_len = length banks
+    t_len = length (banks !! 0)
+read_data_from_banks_for_st banks =
+  [
+    [ banks !!
+      (((flat_idx x t `mod` s_len) + (flat_idx x t `div` s_len)) `mod` s_len) !!
+      (flat_idx x t `div` s_len)
+    | t <- [0..(t_len - 1)]] | x <- [0..(s_len - 1)]]
+  where
+    flat_idx x t = t_len * x + t
+    s_len = length banks
+    t_len = length (banks !! 0)
     
+-- | given an [[Banked_Value]] where still organized by input TSeq (SSeq) or SSeq (TSeq) format
+-- return a [[Input_Element_And_Clock]] where each outer array is a bank
+-- and each inner element of the array is an address in the bank
+reshape_to_banks :: [[Banked_Value]] -> [[Banked_Value]]
+reshape_to_banks input_ordered_data = do
+  let flattened_data = concat input_ordered_data
+  -- groupBy only joins adjacent values, so need to sort first to merge all values
+  -- that are same
+  let sorted_by_bank = sortBy (\x y -> compare (bank_idx x) (bank_idx y)) flattened_data
+  let grouped_by_bank = groupBy (\x y -> bank_idx x == bank_idx y) sorted_by_bank
+  map (sortBy (\x y -> compare (addr_idx x) (addr_idx y))) grouped_by_bank

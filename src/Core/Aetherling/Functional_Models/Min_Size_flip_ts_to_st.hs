@@ -25,7 +25,7 @@
 --0
 --
 -- This shows that the flip ends up storing almost the entire input
-module Aetherling.Functional_Models.Flip_ts_to_st where
+module Aetherling.Functional_Models.Min_Size_flip_ts_to_st where
 import Data.List.Split
 import Debug.Trace
 
