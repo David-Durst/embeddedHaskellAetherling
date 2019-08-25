@@ -104,7 +104,7 @@ add_buffer_data_for_st st | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0)
 add_buffer_data_for_st st =
   [
     [ Banked_Value (st !! x !! t) t x
-      (((flat_idx x t `mod` s_len) + (flat_idx x t `div` s_len)) `mod` s_len)
+      (((flat_idx x t `mod` s_len) + (flat_idx x t `div` (max t_len s_len))) `mod` s_len)
       (flat_idx x t `div` s_len)
     | t <- [0..t_len - 1]] | x <- [0..s_len - 1]]
   where
@@ -126,7 +126,7 @@ read_data_from_banks_for_st banks | (t_len `mod` s_len /= 0) && (s_len `mod` t_l
 read_data_from_banks_for_st banks =
   [
     [ banks !!
-      (((flat_idx x t `mod` s_len) + (flat_idx x t `div` s_len)) `mod` s_len) !!
+      (((flat_idx x t `mod` s_len) + (flat_idx x t `div` (max t_len s_len))) `mod` s_len) !!
       (flat_idx x t `div` s_len)
     | t <- [0..(t_len - 1)]] | x <- [0..(s_len - 1)]]
   where
