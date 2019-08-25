@@ -20,6 +20,9 @@ ts_to_st t_len s_len = do
   -- this verifies that each bank is never written to on the same clock
   let bank_write_conflict = any id $
         map has_duplicates $ map (map in_t_idx) banks
+  -- this verifies that each bank location is written to exactly once
+  let bank_overwrites = has_duplicates $
+        fmap (\elem -> (bank_idx elem, addr_idx elem)) $ concat ts_banked_data
   let st_banked_data = read_data_from_banks_for_st banks
   -- this ensures that parallel reads (same space index) don't share the same bank
   let bank_read_conflict = any id $
@@ -27,6 +30,7 @@ ts_to_st t_len s_len = do
   let st = map (map banked_elem) st_banked_data
   if bank_write_conflict
     then Left ("Write Conflict", banks) 
+    else if bank_overwrites then Left ("Bank Overwrites", ts_banked_data)
     else if bank_read_conflict then Left ("Read Conflict", st_banked_data)
     else if (concat ts /= concat st) then Left ("Element Order Not Preserved", st_banked_data)
     else return st
@@ -40,13 +44,17 @@ st_to_ts s_len t_len = do
   -- this verifies that each bank is never written to on the same clock
   let bank_write_conflict = any id $
         map has_duplicates $ map (map in_t_idx) banks
+  -- this verifies that each bank location is written to exactly once
+  let bank_overwrites = has_duplicates $
+        fmap (\elem -> (bank_idx elem, addr_idx elem)) $ concat st_banked_data
   let ts_banked_data = read_data_from_banks_for_ts banks
   -- this ensures that parallel reads (same space index) don't share the same bank
   let bank_read_conflict = any id $
         map has_duplicates $ map (map bank_idx) ts_banked_data
   let ts = map (map banked_elem) ts_banked_data
   if bank_write_conflict
-    then Left ("Write Conflict", banks) 
+    then Left ("Write Conflict", banks)
+    else if bank_overwrites then Left ("Bank Overwrites", st_banked_data)
     else if bank_read_conflict then Left ("Read Conflict", ts_banked_data)
     else if (concat ts /= concat st) then Left ("Element Order Not Preserved", ts_banked_data)
     else return ts
