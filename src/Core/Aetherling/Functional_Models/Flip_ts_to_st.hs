@@ -69,44 +69,6 @@ coprime x y = do
   let y_factors = ae_factorize y
   S.size (ae_factors_intersect x_factors y_factors) == 0
   
--- | given an [[Int]] represent an outer TSeq len and an inner SSeq len
--- return the same structure where bank and indexes are assigned to each value
-add_buffer_data_for_ts :: [[Int]] -> [[Banked_Value]]
-add_buffer_data_for_ts ts | coprime t_len s_len =
-  [
-    [ Banked_Value (ts !! t !! x) t x x t
-    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
-  where
-    t_len = length ts
-    s_len = length (ts !! 0)
-add_buffer_data_for_ts ts =
-  [
-    [ Banked_Value (ts !! t !! x) t x ((x + (flat_idx x t `div` max t_len s_len)) `mod` s_len) t
-    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
-  where
-    flat_idx x t = s_len * t + x
-    t_len = length ts
-    s_len = length (ts !! 0)
-
--- | given an [[Banked_Value]] representing a set of banks of memory
--- return the same structure in the order of the TSeq (SSeq) read from the bank
-read_data_from_banks_for_ts :: [[Banked_Value]] -> [[Banked_Value]]
-read_data_from_banks_for_ts banks | coprime t_len s_len =
-  [
-    [ banks !! x !! t
-    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
-  where
-    s_len = length banks
-    t_len = length (banks !! 0)
-read_data_from_banks_for_ts banks =
-  [
-    [ banks !! ((x + (flat_idx x t `div` max t_len s_len)) `mod` s_len) !! t
-    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
-  where
-    flat_idx x t = s_len * t + x
-    s_len = length banks
-    t_len = length (banks !! 0)
-
 -- | given an [[Int]] represent an outer SSeq len and an inner TSeq len
 -- return the same structure where bank and indexes are assigned to each value
 add_buffer_data_for_st :: [[Int]] -> [[Banked_Value]]
@@ -122,7 +84,7 @@ add_buffer_data_for_st st | coprime t_len s_len =
 add_buffer_data_for_st st =
   [
     [ Banked_Value (st !! x !! t) t x
-      (((flat_idx x t `mod` s_len) + (flat_idx x t `div` (max t_len s_len))) `mod` s_len)
+      (((flat_idx x t `mod` s_len) + (flat_idx x t `div` (lcm t_len s_len))) `mod` s_len)
       (flat_idx x t `div` s_len)
     | t <- [0..t_len - 1]] | x <- [0..s_len - 1]]
   where
@@ -144,14 +106,53 @@ read_data_from_banks_for_st banks | coprime t_len s_len =
 read_data_from_banks_for_st banks =
   [
     [ banks !!
-      (((flat_idx x t `mod` s_len) + (flat_idx x t `div` (max t_len s_len))) `mod` s_len) !!
+      (((flat_idx x t `mod` s_len) + (flat_idx x t `div` (lcm t_len s_len))) `mod` s_len) !!
       (flat_idx x t `div` s_len)
     | t <- [0..(t_len - 1)]] | x <- [0..(s_len - 1)]]
   where
     flat_idx x t = t_len * x + t
     s_len = length banks
     t_len = length (banks !! 0)
-    
+ 
+-- | given an [[Int]] represent an outer TSeq len and an inner SSeq len
+-- return the same structure where bank and indexes are assigned to each value
+add_buffer_data_for_ts :: [[Int]] -> [[Banked_Value]]
+add_buffer_data_for_ts ts | coprime t_len s_len =
+  [
+    [ Banked_Value (ts !! t !! x) t x x t
+    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
+  where
+    t_len = length ts
+    s_len = length (ts !! 0)
+add_buffer_data_for_ts ts =
+  [
+    [ Banked_Value (ts !! t !! x) t x ((x + (flat_idx x t `div` lcm t_len s_len)) `mod` s_len) t
+    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
+  where
+    flat_idx x t = s_len * t + x
+    t_len = length ts
+    s_len = length (ts !! 0)
+
+-- | given an [[Banked_Value]] representing a set of banks of memory
+-- return the same structure in the order of the TSeq (SSeq) read from the bank
+read_data_from_banks_for_ts :: [[Banked_Value]] -> [[Banked_Value]]
+read_data_from_banks_for_ts banks | coprime t_len s_len =
+  [
+    [ banks !! x !! t
+    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
+  where
+    s_len = length banks
+    t_len = length (banks !! 0)
+read_data_from_banks_for_ts banks =
+  [
+    [ banks !! ((x + (flat_idx x t `div` lcm t_len s_len)) `mod` s_len) !! t
+    | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
+  where
+    flat_idx x t = s_len * t + x
+    s_len = length banks
+    t_len = length (banks !! 0)
+
+ 
 -- | given an [[Banked_Value]] where still organized by input TSeq (SSeq) or SSeq (TSeq) format
 -- return a [[Input_Element_And_Clock]] where each outer array is a bank
 -- and each inner element of the array is an address in the bank
