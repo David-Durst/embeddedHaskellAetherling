@@ -199,7 +199,7 @@ The rules for values that cannot be written to the same bank are:
     1. `bank = flat_idx % sseq_dim`
     1. `addr = flat_idx / sseq_dim`
 1. If inner num elements and outer num elements are not coprime,
-    1. `bank = ((flat_idx % sseq_dim) + (flat_idx / max_dim)) % max_dim`
+    1. `bank = ((flat_idx % sseq_dim) + (flat_idx / max_dim)) % sseq_dim`
     1. `addr = flat_idx / sseq_dim`
     
 ## TSeq (SSeq) Index From Bank Index/Addr
@@ -210,9 +210,11 @@ The rules for values that cannot be written to the same bank are:
     1. `bank = x`
     1. `addr = t`
 1. If inner num elements and outer num elements are not coprime,
-    1. `bank = (x + t) % sseq_dim`
+    1. `bank = (x + (flat_idx / max_dim)) % sseq_dim`
         1. This rotates the elements around in the bank so that when going from
            bank to ST can read across diagonal in bank diagram, all different banks
+        1. more complex than `bank = (x + t) % sseq_dim` - need to handle case
+           where `t > s`, need to less frequently than each t in this case
     1. `addr = t`
     
 **Not sure if it's `max_dim` or `sseq_dim`?**

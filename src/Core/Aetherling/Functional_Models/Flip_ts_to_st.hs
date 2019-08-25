@@ -35,6 +35,7 @@ st_to_ts s_len t_len = do
   let st = [[ x*t_len + t | t <- [0 .. t_len - 1]] | x <- [0 .. s_len - 1]]
   let st_banked_data = add_buffer_data_for_st st
   let banks = reshape_to_banks st_banked_data
+  --traceM $ show $ fmap (fmap banked_elem) banks
   -- this verifies that each bank is never written to on the same clock
   let bank_write_conflict = any id $
         map has_duplicates $ map (map in_t_idx) banks
@@ -65,9 +66,10 @@ add_buffer_data_for_ts ts | (t_len `mod` s_len /= 0) && (s_len `mod` t_len /= 0)
     s_len = length (ts !! 0)
 add_buffer_data_for_ts ts =
   [
-    [ Banked_Value (ts !! t !! x) t x ((x + t) `mod` s_len) t
+    [ Banked_Value (ts !! t !! x) t x ((x + (flat_idx x t `div` max t_len s_len)) `mod` s_len) t
     | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
   where
+    flat_idx x t = s_len * t + x
     t_len = length ts
     s_len = length (ts !! 0)
 
@@ -83,9 +85,10 @@ read_data_from_banks_for_ts banks | (t_len `mod` s_len /= 0) && (s_len `mod` t_l
     t_len = length (banks !! 0)
 read_data_from_banks_for_ts banks =
   [
-    [ banks !! ((x + t) `mod` s_len) !! t
+    [ banks !! ((x + (flat_idx x t `div` max t_len s_len)) `mod` s_len) !! t
     | x <- [0..(s_len - 1)]] | t <- [0..(t_len - 1)]]
   where
+    flat_idx x t = s_len * t + x
     s_len = length banks
     t_len = length (banks !! 0)
 
