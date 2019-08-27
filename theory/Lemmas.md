@@ -327,34 +327,40 @@ Two cases
 ## TSeq (SSeq) Index From Bank Index/Addr
 1. Let `flat_idx` be the index of each element if sequences are flattened
 1. `bank = (s + (flat_idx / lcm_dim)) % sseq_dim`
-    1. This rotates the elements around in the bank so that when going from
-        bank to ST can read across diagonal in bank diagram, all different banks
-    1. more complex than `bank = (s + t) % sseq_dim` - need to handle case
-        where `t_len > s_len`, need to less frequently than each t in this case
-    1. `s` here is equivalent to `flat_idx % sseq_dim` above since both
-        correspond to rule #2 above - values in the same contiguous block of
-        length `sseq_dim`
 1. `addr = t`
-    1. Problem - if `s_len` and `t_len` share common factors but one is not
-        divisible by the other, then may need different address than `t` as
-        may write to same bank in same clock under my current formula. But no
-        point in fixing this until I fix bank issues. Can't write to bank
-        twice in same clock no matter which indexes.
-1. Why does `lcm_dim` instead of `max_dim` solve the problem for the case
-    where not coprime but not divisible?
-    1. This solves it as only rotate every time you would need to access the
-        same bank on the same index. The cycle repeats each time both `s_len`
-        and `t_len` resync, which is their `lcm`
-
-## Why Can Merge Coprime and Non-Coprime
-Because the adjustment is to add `flat_idx / lcm_dim`, which is 0 in the co-prime case
-for all values in the reshape.
-    
-**Not sure if it's `max_dim` or `sseq_dim`?**
 
 ## What Question Do I Need To Answer To Build Flip Hardware
+I don't think I need to do this.
+I can generate the addr and bank for each input and than select on those in the mux's on each bank's input and output.
+
 I have previously shown how to assign a bank to each value in a `SSeq (TSeq)` or `TSeq (SSeq)`.
 I can't use this to build hardware.
 To build hardware, I need to feed all inputs to each bank and have each bank decide which input to read/write
 and which address.
 Therefore, my problem is: **for each bank on each clock cycle, which input/output `s` and `t`**
+
+### TSeq (SSeq)
+1. TSeq (SSeq) input to flip - 
+    1. Bank - For the first `lcm_dim / sseq_dim` clocks, feed the ith element of
+    input SSeq to the ith bank, then each `lcm_dim / sseq_dim`, decrement the
+    SSeq index by 1 modulo number of banks.
+    1. Addr - the current TSeq index.
+1. TSeq (SSeq) output of flip - 
+    1. Bank - For the first `lcm_dim / sseq_dim` clocks, feed
+    the ith bank to the output SSeq, then each `lcm_dim / sseq_dim`, increment 
+    the bank index by 1 modulo number of banks.
+    1. Addr - the current TSeq index.
+   
+### SSeq (TSeq)
+1. SSeq (TSeq) input to flip - 
+    1. Bank - For bank i, start with input SSeq `((i*tseq_dim + (i*tseq_dim /
+       lcm_dim)) % sseq_dim)` decrement the SSeq index by 1 modulo number of banks.
+    1. Addr - start at `((i*tseq_dim + (i*tseq_dim /
+       lcm_dim)) / sseq_dim)`, start a counter at `((i*tseq_dim + (i*tseq_dim /
+       lcm_dim)) % sseq_dim)`. Each time the counter rolls over, increment addr.
+1. SSeq (TSeq) output to flip - 
+    1. Bank - For bank i, start with input SSeq `((i*tseq_dim + (i*tseq_dim /
+       lcm_dim)) % sseq_dim)`, then shift the SSeq index from bank i to bank i+1
+    1. Addr - start at `((i*tseq_dim + (i*tseq_dim /
+       lcm_dim)) / sseq_dim)`, start a counter at `((i*tseq_dim + (i*tseq_dim /
+       lcm_dim)) % sseq_dim)`. Each time the counter rolls over, increment addr.

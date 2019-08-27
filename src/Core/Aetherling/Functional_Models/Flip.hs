@@ -12,11 +12,16 @@ data Banked_Value = Banked_Value {
   addr_idx :: Int
   } deriving (Show, Eq)
 
+ts_lens_to_vals :: Int -> Int -> [[Int]]
+ts_lens_to_vals t_len s_len =
+  [[ t*s_len + x | x <- [0 .. s_len - 1]] | t <- [0 .. t_len - 1]]
+
 ts_to_st :: Int -> Int -> Either (String, [[Banked_Value]]) [[Int]]
 ts_to_st t_len s_len = do
-  let ts = [[ t*s_len + x | x <- [0 .. s_len - 1]] | t <- [0 .. t_len - 1]]
+  let ts = ts_lens_to_vals t_len s_len
   let ts_banked_data = add_buffer_data_for_ts ts
   let banks = reshape_to_banks ts_banked_data
+  traceM $ show $ fmap (fmap banked_elem) banks
   -- this verifies that each bank is never written to on the same clock
   let bank_write_conflict = any id $
         map has_duplicates $ map (map in_t_idx) banks
@@ -35,9 +40,13 @@ ts_to_st t_len s_len = do
     else if (concat ts /= concat st) then Left ("Element Order Not Preserved", st_banked_data)
     else return st
 
+st_lens_to_vals :: Int -> Int -> [[Int]]
+st_lens_to_vals s_len t_len =
+  [[ x*t_len + t | t <- [0 .. t_len - 1]] | x <- [0 .. s_len - 1]]
+
 st_to_ts :: Int -> Int -> Either (String, [[Banked_Value]]) [[Int]]
 st_to_ts s_len t_len = do
-  let st = [[ x*t_len + t | t <- [0 .. t_len - 1]] | x <- [0 .. s_len - 1]]
+  let st = st_lens_to_vals s_len t_len
   let st_banked_data = add_buffer_data_for_st st
   let banks = reshape_to_banks st_banked_data
   traceM $ show $ fmap (fmap banked_elem) banks
@@ -133,3 +142,29 @@ reshape_to_banks input_ordered_data = do
   let sorted_by_bank = sortBy (\x y -> compare (bank_idx x) (bank_idx y)) flattened_data
   let grouped_by_bank = groupBy (\x y -> bank_idx x == bank_idx y) sorted_by_bank
   map (sortBy (\x y -> compare (addr_idx x) (addr_idx y))) grouped_by_bank
+
+-- | given a [[Banked_Value]], return the input SSeq index that each bank should
+-- read from on each clock
+get_bank_input_sseq_index :: [[Banked_Value]] -> [[Int]]
+get_bank_input_sseq_index input_data = do
+  let flattened_data = concat input_data
+  let sorted_by_bank =
+        sortBy (\x y -> compare (bank_idx x) (bank_idx y)) flattened_data
+  let grouped_by_bank =
+        groupBy (\x y -> bank_idx x == bank_idx y) sorted_by_bank
+  let sorted_by_arrival_t =
+        map (sortBy (\x y -> compare (in_t_idx x) (in_t_idx y))) grouped_by_bank
+  map (map in_s_idx) sorted_by_arrival_t
+
+-- | given a input [[Banked_Value]], return the input addr that each bank should
+-- write to on each clock
+get_bank_input_addr :: [[Banked_Value]] -> [[Int]]
+get_bank_input_addr input_data = do
+  let flattened_data = concat input_data
+  let sorted_by_bank =
+        sortBy (\x y -> compare (bank_idx x) (bank_idx y)) flattened_data
+  let grouped_by_bank =
+        groupBy (\x y -> bank_idx x == bank_idx y) sorted_by_bank
+  let sorted_by_arrival_t =
+        map (sortBy (\x y -> compare (in_t_idx x) (in_t_idx y))) grouped_by_bank
+  map (map addr_idx) sorted_by_arrival_t
