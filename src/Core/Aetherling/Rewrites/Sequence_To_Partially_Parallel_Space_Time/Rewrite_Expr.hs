@@ -36,7 +36,9 @@ rewrite_to_partially_parallel s seq_expr = do
 rewrite_to_partially_parallel' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
 rewrite_to_partially_parallel' s seq_expr = do
   let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
-  output_type_slowdowns <- rewrite_AST_type s seq_expr_out_type
+  let sseq_tr_expr_out_type = fmap l_tr $ seq_to_sseq_tr seq_expr_out_type
+  let all_possible_par_factors = get_par_factors sseq_tr_expr_out_type 1
+  output_type_slowdowns <- rewrite_AST_type s all_possible_par_factors seq_expr_out_type
   trace ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n") $
     startEvalMemoT $ sequence_to_partially_parallel output_type_slowdowns seq_expr
 
@@ -295,7 +297,8 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   -- to compute how to slowed input, get the number of clocks the output takes
   let slowdown = get_type_rewrite_periods tr
 
-  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
+  let par_factors = get_par_factors [tr] 1
+  input_rewrites <- lift $ rewrite_AST_type slowdown par_factors (SeqT.SeqT n i SeqT.IntT)
   let input_rewrite : _ = input_rewrites
 
   let upstream_type_rewrites = input_rewrite : type_rewrites_tl
@@ -545,8 +548,9 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
 
   -- rewrite inputs to get same throuhgput of output,
   -- but this can be in whatever nesting structure rewrite_AST_type chooses
-  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io
-                                                      (SeqT.SeqT ni ii SeqT.IntT))
+  let par_factors = get_par_factors [tr] 1
+  input_rewrites <- lift $ rewrite_AST_type slowdown par_factors
+                    (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
   let input_rewrite_outer : input_rewrite_inner : _ = input_rewrites
   let upstream_type_rewrites = input_rewrite_outer : input_rewrite_inner : type_rewrites_tl
   in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
@@ -894,7 +898,8 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let slowdown = get_type_rewrite_periods tr
 
   -- this is input rewrite for reduce and not subgraph f
-  input_rewrite' <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
+  let par_factors = get_par_factors [tr] 1
+  input_rewrite' <- lift $ rewrite_AST_type slowdown par_factors (SeqT.SeqT n i SeqT.IntT)
   let input_rewrite : _ = input_rewrite'
 
   -- need to know what f_ppar's input type rewrites were
@@ -1018,7 +1023,8 @@ sequence_to_partially_parallel type_rewrites@(tr0 : tr1 : type_rewrites_tl)
   -- rewrite outer seq to get same throuhgput of output,
   -- but this can be in whatever nesting structure rewrite_AST_type chooses
   -- only modifying outer seq as inner will be the STuple that occurs on one clock cycle
-  input_rewrites <- lift $ rewrite_AST_type slowdown
+  let par_factors = get_par_factors [tr0, tr1] ni
+  input_rewrites <- lift $ rewrite_AST_type slowdown par_factors
                     (SeqT.SeqT no ((no * (ni - 1 + ii)) + (io * (ni + ii))) SeqT.IntT)
   let seq_input_rewrite : _ = input_rewrites
   -- the input is a seq of an stuple, and stuple rewrite is with NonSeqR
@@ -1299,8 +1305,9 @@ sequence_to_partially_parallel type_rewrites@(tr : NonSeqR : type_rewrites_tl)
  
   -- rewrite inputs to get same throuhgput of output,
   -- but this can be in whatever nesting structure rewrite_AST_type chooses
-  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io
-                                                      (SeqT.SeqT ni ii SeqT.IntT))
+  let par_factors = get_par_factors [tr, SpaceR ni] 1
+  input_rewrites <- lift $ rewrite_AST_type slowdown par_factors
+                    (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
   let input_rewrite_outer : input_rewrite_inner : _ = input_rewrites
   let upstream_type_rewrites = input_rewrite_outer : input_rewrite_inner : type_rewrites_tl
   in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)

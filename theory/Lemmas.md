@@ -165,6 +165,15 @@ This won't be an issue because:
 1. Therefore, the greedy algorithm won't miss solutions. If a set of factors divides into `n` or is greater than `n+i_max`, the subset of factors used by the greedy approach will also satisfy those conditions.
 
 # Reshape
+The central question for reshape is: given an input type and an output type of the same average throughput but potentially different number of pixels per active clock, what is the minimal amount of banking necessary to convert between the two access patterns?
+
+1. Simple lower bound on amount of banking - the greater of the two input sequences' number of pixels per active clock cycle.
+1. Can I generalize the lower approach 
+    1. Unique Coordinates Lemma generalizations - 
+        1. if same for N-1 of the axes, then two values must be different for the Nth axes. 
+        1. if same for N-i axes, then at least one of i other axes must be different
+
+
 Reshape type siganture:
 
 ```

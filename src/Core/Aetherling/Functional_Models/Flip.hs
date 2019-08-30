@@ -1,4 +1,4 @@
-module Aetherling.Functional_Models.Flip_ts_to_st where
+module Aetherling.Functional_Models.Flip where
 import Data.List
 import qualified Data.Set as S
 import Debug.Trace
