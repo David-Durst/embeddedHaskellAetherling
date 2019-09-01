@@ -164,6 +164,17 @@ This won't be an issue because:
 1. Since `sub` is a subset of `{s_i}` and `{s_i}` is a subset of `{f_i}`, then `sub` is a subset of `{f_i}`
 1. Therefore, the greedy algorithm won't miss solutions. If a set of factors divides into `n` or is greater than `n+i_max`, the subset of factors used by the greedy approach will also satisfy those conditions.
 
+## Why Is My Approach Failing To Maintain Same Number of Valids Per Active Clock?
+For the below example, input is 3 int's per clock but the output is 2 ints per clock
+```
+ReshapeN TSeqT 8 0 (SSeqT 3 (TSeqT 40 40 (SSeqT 1 IntT))) TSeqT 480 160 (SSeqT 2 IntT) n556
+```
+
+The issue is that I'm adding in extra factors from Seq that you can't actually slow down by.
+
+### Can't Apply Primve Factors Individually
+Applying prime factors (like my current approach) leads to partially parallel types that are invalid as they have parallel components that will be made temporal by later factors but not going to partially apply 
+
 # Reshape
 The central question for reshape is: given an input type and an output type of the same average throughput but potentially different number of pixels per active clock, what is the minimal amount of banking necessary to convert between the two access patterns?
 

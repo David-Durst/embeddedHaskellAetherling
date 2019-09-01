@@ -141,10 +141,8 @@ rewrite_one_space_layer_no_underutil _ _ _ = Nothing
 rewrite_no_underutil :: Int -> Factors -> [Layer_Rewrite_Info] ->
                         ([Layer_Rewrite_Info], Bool, Factors)
 rewrite_no_underutil s_p par_factors (cur_layer@(Layer (SpaceR n) _ _ cur_layer_par_factors) : tl) = do
-  -- need to add factors used for current SpaceR to par_factors when doing rewrite
-  -- as they can be used in current layer
   let rw_result = rewrite_one_space_layer_no_underutil s_p cur_layer_par_factors cur_layer
-  if (isNothing rw_result)
+  if (trace (show rw_result) $ isNothing rw_result)
     then do
     let (inner_l, inner_success, new_par_factors) = rewrite_no_underutil s_p par_factors tl
     (cur_layer : inner_l, inner_success, new_par_factors)
@@ -154,8 +152,11 @@ rewrite_no_underutil s_p par_factors (cur_layer@(Layer (SpaceR n) _ _ cur_layer_
 rewrite_no_underutil s_p par_factors (cur_layer@(Layer (SplitR no 0 ni) i_max divisors cur_layer_par_factors) : tl) = do
   -- need to add factors used for current par component of SplitR
   -- to par_factors when doing rewrite as they can be used in current layer
+  let factors_can_used_current_layer = ae_add_int_to_factors
+                                       (ae_factors_product cur_layer_par_factors)
+                                       par_factors
   let rw_result = rewrite_one_space_layer_no_underutil (s_p*no)
-                  cur_layer_par_factors
+                  factors_can_used_current_layer
                   (Layer (SpaceR (no*ni)) i_max divisors S.empty)
   if (isNothing rw_result)
     then do
@@ -202,8 +203,10 @@ rewrite_with_underutil :: Int -> Factors -> [Layer_Rewrite_Info] -> Maybe ([Laye
 rewrite_with_underutil s_p par_factors (cur_layer@(Layer (SpaceR n) _ _ cur_layer_par_factors) : tl) = do
   -- need to add factors used for current SpaceR to par_factors when doing rewrite
   -- as they can be used in current layer
-  let cur_layer_par_factors = ae_add_int_to_factors n par_factors
-  let rw_result = rewrite_one_space_layer_with_underutil s_p cur_layer_par_factors cur_layer
+  let factors_can_used_current_layer = ae_add_int_to_factors
+                                       (ae_factors_product cur_layer_par_factors)
+                                       par_factors
+  let rw_result = rewrite_one_space_layer_with_underutil s_p factors_can_used_current_layer cur_layer
   if (isNothing rw_result)
     then do
     (inner_l, new_par_factors) <- rewrite_with_underutil s_p par_factors tl
@@ -214,9 +217,11 @@ rewrite_with_underutil s_p par_factors (cur_layer@(Layer (SpaceR n) _ _ cur_laye
 rewrite_with_underutil s_p par_factors (cur_layer@(Layer (SplitR no io ni) i_max divisors cur_layer_par_factors) : tl) = do
   -- need to add factors used for current par component of SplitR
   -- to par_factors when doing rewrite as they can be used in current layer
-  let cur_layer_par_factors = ae_add_int_to_factors ni par_factors
+  let factors_can_used_current_layer = ae_add_int_to_factors
+                                       (ae_factors_product cur_layer_par_factors)
+                                       par_factors
   let rw_result = rewrite_one_space_layer_with_underutil ((no+io)*s_p)
-                  cur_layer_par_factors
+                  factors_can_used_current_layer
                   (Layer (SpaceR (no*ni)) i_max divisors S.empty)
   if (isNothing rw_result)
     then do
