@@ -167,10 +167,16 @@ This won't be an issue because:
 ## Why Is My Approach Failing To Maintain Same Number of Valids Per Active Clock?
 For the below example, input is 3 int's per clock but the output is 2 ints per clock
 ```
-ReshapeN TSeqT 8 0 (SSeqT 3 (TSeqT 40 40 (SSeqT 1 IntT))) TSeqT 480 160 (SSeqT 2 IntT) n556
+ReshapeN (TSeqT 8 0 (SSeqT 3 (TSeqT 40 40 (SSeqT 1 IntT)))) (TSeqT 480 160 (SSeqT 2 IntT)) n556
 ```
 
-The issue is that I'm adding in extra factors from Seq that you can't actually slow down by.
+The input and output ports are of different widths.
+The streaming permutations memories require input and output ports of the same width
+
+## Why Is It Not An Issue that I'm Not Maintaining Same Number Of Inalids Per Clock
+I can enable the streaming permutation memories to support different input and output port widths by adding invalid values.
+The wider port will write clocks where all inputs or outputs are invalid.
+The narrower port will read/write extra values from/to the memory each clock and then drop the invalid ones.
 
 ### Can't Apply Primve Factors Individually
 Applying prime factors (like my current approach) leads to partially parallel types that are invalid as they have parallel components that will be made temporal by later factors but not going to partially apply 

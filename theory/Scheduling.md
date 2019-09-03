@@ -427,3 +427,16 @@ The ways to slowdown a `Seq n` by `s_p` relative to the fully parallel `SSeq n` 
 
 If none of the above conditions hold, then `s_p` is not a valid slowdown. 
 Either it's too large or the divisibility conditions don't hold for applying the rewrite rules.
+
+## Problem with my curent approach:
+For the below example, input is 3 int's per clock but the output is 2 ints per clock
+```
+ReshapeN TSeqT 8 0 (SSeqT 3 (TSeqT 40 40 (SSeqT 1 IntT))) TSeqT 480 160 (SSeqT 2 IntT) n556
+```
+
+The issue is that I'm adding in extra factors from Seq that you can't actually slow down by.
+
+## Ways to fix a slowdown
+Remove all parallel factors that don't fit after the fact, introduce new parallel factors, then 
+1. Pros
+1. Cons - this is compilicated, need to do 4 passes to implement approximation
