@@ -1,8 +1,8 @@
 # Aetherling Language Theory
 Application developers and computer architects used to rely on Moore's Law and Dennard Scaling to 
-deliver more performant applications using smaller, cooler processors.
-Now that those trends are tapering off, the developers and architects need other approaches for improving
-performance while decreasing thermal requirements.
+deliver more performant applications using smaller, lower power, and cooler processors.
+Now that those trends are tapering off, developers and architects need other approaches for improving
+performance while increasing energy efficiency.
 One such technique is to compile the compute-intensive portions of applications to data flow pipelines running on 
 FPGA accelerators.
 Data flow pipelines can be more energy efficient since they limit memory accesses, the most energy intensive component of an application.
