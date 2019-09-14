@@ -364,3 +364,14 @@ Therefore, my problem is: **for each bank on each clock cycle, which input/outpu
     1. Addr - start at `((i*tseq_dim + (i*tseq_dim /
        lcm_dim)) / sseq_dim)`, start a counter at `((i*tseq_dim + (i*tseq_dim /
        lcm_dim)) % sseq_dim)`. Each time the counter rolls over, increment addr.
+
+# Permutation Memory
+## How To Handle Invalids
+Treat them as normal, valid data. Then the condition of firing every clock cycle still holds and it looks like the normal system.
+
+## How To Handle Mismatched Input/Output Port 
+Make the smaller port accept/emit an invalid every clock.
+Since invalids are treated as normal data and both input and output port run for same total number of clocks, this will mean still preseving the properties of same amount in every clock for same total number of clocks
+
+## How To Optimize So Don't Add Latency On Invalid Order
+Order the input edges so that they point to the first invalid not yet used, not that one they are related to by the flattened ordering.

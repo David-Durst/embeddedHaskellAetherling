@@ -37,19 +37,8 @@ This document covers the basic parts of the sequence language and the space-time
 
 The document also shows the rewrite rules between operators.
 
+### [Types.md](Types.md)
+This document provides illustrated examples that further explain the type systems of the sequence language and space-time IR.
+
 ### [Scheduling.md](Scheduling.md)
-This document explains how to schedule sequence language programs. **Scheduling**
-is the process of converting all operators in a program from the sequence
-language to the space-time IR such that the resulting program has a target
-parallelism.
-
-This document also explains the auto-scheduler, which finds the space-time IR
-version of a program with the maximum parallelism given resource constraints.
-
-### [Partition.md](Partition.md)
-This document adds the Partition operator to both the sequence language and the
-space-time IR.
-
-### [Stencil.md](Stencil.md)
-This document adds the `Stencil_1d` and `Stencil_2d` operators to both the
-sequence language and the space-time IR.
+This document explains how to auto-schedule sequence language programs to the space-time IR.
