@@ -30,6 +30,11 @@ data Print_State = Print_State {
 
 empty_print_state t = Print_State 0 False False (outer_tseq t) []
 
+get_cur_invalid :: State Print_State Bool
+get_cur_invalid = do
+  cur_state <- get
+  return $ cur_invalid cur_state 
+
 set_cur_invalid :: Bool -> State Print_State ()
 set_cur_invalid new_invalid = do
   cur_state <- get
@@ -69,10 +74,11 @@ print_st_type (TSeqT n i t) nesting = do
   valid_t_strs <- mapM (\_ -> print_st_type t (nesting + 1)) [1..n]
   -- end valids with newline only if no invalid clocks
   let valid_t_str = merge_with_vertical_lines (i == 0) valid_t_strs
+  out_invalid <- get_cur_invalid
   set_cur_invalid True
   invalid_t_strs <- mapM (\_ -> print_st_type t (nesting + 1)) [1..i]
   let invalid_t_str = merge_with_vertical_lines True $ map (\s -> "\\color{red} " ++ s) invalid_t_strs
-  set_cur_invalid False
+  set_cur_invalid out_invalid
   return $
     nesting_str nesting ++ start_tseq n i ++ "\n" ++
     valid_t_str ++ invalid_t_str ++
