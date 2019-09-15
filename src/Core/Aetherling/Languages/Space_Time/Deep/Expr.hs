@@ -250,3 +250,4 @@ is_error_node _ = False
 
 instance Indexible Expr where
   get_index e = index e
+  set_index e i = e { index = i }
