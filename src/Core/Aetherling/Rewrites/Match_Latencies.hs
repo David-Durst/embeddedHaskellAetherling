@@ -17,6 +17,15 @@ import System.IO
 import System.Process
 import System.Environment
 
+match_latencies :: Expr -> IO Expr
+match_latencies e = do
+  matched_latencies <- evalStateT
+                       (runExceptT $ startEvalMemoT $ match_latencies' e)
+                       empty_rewrite_data
+  if isLeft matched_latencies
+    then return $ ErrorN (rw_msg $ fromLeft undefined matched_latencies) No_Index
+    else return $ new_expr $ fromRight undefined matched_latencies
+
 data Matched_Latency_Result = Matched_Latency_Result {
   new_expr :: Expr,
   latency :: Int
@@ -194,7 +203,6 @@ match_map2 e f producer_left producer_right = do
   return $ e_update_except_f {
     latency = latency e_update_except_f + latency_f
     }
-  
 
 match_binary_op e producer_left producer_right = do
   Matched_Latency_Result new_producer_left latency_producer_left <-
