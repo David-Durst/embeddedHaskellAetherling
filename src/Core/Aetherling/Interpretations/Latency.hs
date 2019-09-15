@@ -10,10 +10,20 @@ import Aetherling.Monad_Helpers
 import Control.Monad.State as S
 import Control.Monad.Identity
 import Control.Monad.Except
+import Data.Either
 import System.IO.Temp
 import System.IO
 import System.Process
 import System.Environment
+
+-- | Return true if all latencies match when merging two paths
+check_latency :: Expr -> IO Bool
+check_latency e = do
+  computed_latency <- evalStateT
+                      (runExceptT $ startEvalMemoT $ compute_latency e)
+                      empty_rewrite_data
+  return $ isRight computed_latency
+
 
 type LatencyM = Memo_Rewrite_StateTM Int IO
 compute_latency :: Expr -> LatencyM Int
