@@ -40,6 +40,8 @@ dependencies:
 - arithmoi
 - sbv
 - time
+- temporary
+- process
 
 ghc-options:
 - -fconstraint-solver-iterations=0

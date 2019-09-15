@@ -70,3 +70,20 @@ periods_t (ATupleT t0 t1) = 1
 periods_t (STupleT n t) = periods_t t
 periods_t (SSeqT n t) = periods_t t
 periods_t (TSeqT n i t) = (n+i) * periods_t t
+
+type_to_python :: AST_Type -> String
+type_to_python UnitT = "undefined"
+type_to_python BitT = "ST_Bit()"
+type_to_python IntT = "ST_Int()"
+type_to_python (ATupleT t0 t1) =
+  "ST_Atom_Tuple(" ++
+  type_to_python t0 ++ ", " ++
+  type_to_python t1 ++
+  ")"
+type_to_python (STupleT n t) =
+  "ST_SSeq_Tuple(" ++ show n ++ ", " ++ type_to_python t ++ ")"
+type_to_python (SSeqT n t) =
+  "ST_SSeq(" ++ show n ++ ", " ++ type_to_python t ++ ")"
+type_to_python (TSeqT n i t) =
+  "ST_TSeq(" ++ show n ++ ", " ++ show i ++ ", " ++ type_to_python t ++ ")"
+  
