@@ -62,14 +62,14 @@ size_t (STupleT n t) = n * size_t t
 size_t (SSeqT n t) = n * size_t t
 size_t (TSeqT n _ t) = size_t t
 
-periods_t :: AST_Type -> Int
-periods_t UnitT = 1
-periods_t BitT = 1
-periods_t IntT = 1
-periods_t (ATupleT t0 t1) = 1
-periods_t (STupleT n t) = periods_t t
-periods_t (SSeqT n t) = periods_t t
-periods_t (TSeqT n i t) = (n+i) * periods_t t
+clocks_t :: AST_Type -> Int
+clocks_t UnitT = 1
+clocks_t BitT = 1
+clocks_t IntT = 1
+clocks_t (ATupleT t0 t1) = 1
+clocks_t (STupleT n t) = clocks_t t
+clocks_t (SSeqT n t) = clocks_t t
+clocks_t (TSeqT n i t) = (n+i) * clocks_t t
 
 type_to_python :: AST_Type -> String
 type_to_python UnitT = "undefined"

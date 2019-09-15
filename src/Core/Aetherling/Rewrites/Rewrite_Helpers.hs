@@ -35,6 +35,9 @@ type Rewrite_StateM = ExceptT Rewrite_Failure (State Rewrite_Data)
 type Memo_Rewrite_StateTM v m = DAG_MemoT v (ExceptT Rewrite_Failure (StateT Rewrite_Data m))
 type Memo_Rewrite_StateM v = DAG_MemoT v (ExceptT Rewrite_Failure (State Rewrite_Data))
 
+lift_memo_rewrite_state :: forall v m t . Monad m => m t -> Memo_Rewrite_StateTM v m t
+lift_memo_rewrite_state x = lift $ lift $ lift x
+
 type Rewrite_IO_StateM = ExceptT Rewrite_Failure IO
 
 data Rewrite_Failure = Expr_Failure {rw_msg :: String}
@@ -42,5 +45,6 @@ data Rewrite_Failure = Expr_Failure {rw_msg :: String}
                      | Value_Failure {rw_msg :: String}
                      | Input_Failure {rw_msg :: String}
                      | Module_Failure {rw_msg :: String}
+                     | Latency_Failure {rw_msg :: String}
                      | Slowdown_Failure {rw_msg :: String}
   deriving (Eq, Show)
