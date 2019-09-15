@@ -1,0 +1,215 @@
+module Aetherling.Rewrites.Match_Latencies where
+import Aetherling.Interpretations.Latency
+import Aetherling.Languages.Space_Time.Deep.Types
+import Aetherling.Languages.Space_Time.Deep.Expr
+import Aetherling.Languages.Space_Time.Deep.Expr_Builders
+import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions as ST_Conv
+import Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq_Conv
+import Aetherling.Interpretations.Space_Time_Printer
+import Aetherling.Rewrites.Rewrite_Helpers
+import Aetherling.Monad_Helpers
+import Control.Monad.State as S
+import Control.Monad.Identity
+import Control.Monad.Except
+import Data.Either
+import System.IO.Temp
+import System.IO
+import System.Process
+import System.Environment
+
+data Matched_Latency_Result = Matched_Latency_Result {
+  new_expr :: Expr,
+  latency :: Int
+  } deriving (Show, Eq)
+
+instance Ord Matched_Latency_Result where
+  (Matched_Latency_Result _ l0) <= (Matched_Latency_Result _ l1) = l0 <= l1
+
+match_latencies' :: Expr -> Memo_Rewrite_StateTM Matched_Latency_Result IO Matched_Latency_Result
+match_latencies' e@(IdN producer _) = match_combinational_op e producer
+match_latencies' e@(AbsN producer _) = match_combinational_op e producer
+match_latencies' e@(NotN producer _) = match_combinational_op e producer
+match_latencies' e@(AddN producer _) = match_combinational_op e producer
+match_latencies' e@(SubN producer _) = match_combinational_op e producer
+match_latencies' e@(MulN producer _) = match_combinational_op e producer
+match_latencies' e@(DivN producer _) = match_combinational_op e producer
+match_latencies' e@(EqN t producer _) = match_combinational_op e producer
+
+-- generators
+match_latencies' e@(Lut_GenN _ _ producer _) = match_combinational_op e producer
+match_latencies' e@(Const_GenN _ _ _) = do
+  e_new_idx <- update_index e
+  return $ Matched_Latency_Result e_new_idx 0
+
+-- sequence operators
+match_latencies' e@(Shift_sN _ _ _ producer _) = match_combinational_op e producer
+match_latencies' e@(Shift_tN _ _ _ _ producer _) = match_combinational_op e producer
+match_latencies' e@(Up_1d_sN _ _ producer _) = match_combinational_op e producer
+match_latencies' e@(Up_1d_tN _ _ _ producer _) = match_combinational_op e producer
+match_latencies' e@(Down_1d_sN _ _ _ producer _) = match_combinational_op e producer
+match_latencies' e@(Down_1d_tN _ _ _ _ producer _) = do
+  result_without_e_latency <- match_combinational_op e producer
+  cur_latency <- lift_memo_rewrite_state $ compute_latency' e
+  return $ result_without_e_latency {
+    latency = latency result_without_e_latency + cur_latency
+    }
+match_latencies' e@(Partition_s_ssN _ _ _ producer _) = memo producer $ match_latencies' producer
+match_latencies' e@(Partition_t_ttN _ _ _ 0 _ producer _) = memo producer $ match_latencies' producer
+match_latencies' e@(Partition_t_ttN _ _ _ _ _ producer _) = do
+  result_without_e_latency <- match_combinational_op e producer
+  let input_output_types = ST_Conv.expr_to_types e
+  let reshape =
+        ReshapeN
+        (head $ ST_Conv.e_in_types input_output_types)
+        (ST_Conv.e_out_type input_output_types)
+        producer No_Index
+  cur_latency <- lift_memo_rewrite_state $ compute_latency' e
+  return $ result_without_e_latency {
+    latency = latency result_without_e_latency + cur_latency
+    }
+match_latencies' e@(Unpartition_s_ssN _ _ _ producer _) = memo producer $ match_latencies' producer
+match_latencies' e@(Unpartition_t_ttN _ _ _ 0 _ producer _) = memo producer $ match_latencies' producer
+match_latencies' e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
+  result_without_e_latency <- match_combinational_op e producer
+  let input_output_types = ST_Conv.expr_to_types e
+  let reshape =
+        ReshapeN
+        (head $ ST_Conv.e_in_types input_output_types)
+        (ST_Conv.e_out_type input_output_types)
+        producer No_Index
+  cur_latency <- lift_memo_rewrite_state $ compute_latency' e
+  return $ result_without_e_latency {
+    latency = latency result_without_e_latency + cur_latency
+    }
+  
+-- these helpers shouldn't exist now that i've written reshape
+match_latencies' e@(SerializeN _ _ _ _ _) = undefined
+match_latencies' e@(DeserializeN _ _ _ _ _) = undefined
+match_latencies' e@(Add_1_sN _ _ _) = undefined
+match_latencies' e@(Add_1_0_tN _ _ _) = undefined
+match_latencies' e@(Remove_1_sN _ _ _) = undefined
+match_latencies' e@(Remove_1_0_tN _ _ _) = undefined
+
+-- higher order operators
+match_latencies' e@(Map_sN _ f producer _) = do
+  result_without_e_latency <- match_combinational_op e producer
+  inner_latency <- match_latencies' f
+  return $ producer_latency + inner_latency
+match_latencies' e@(Map_tN _ _ f producer _) = do
+  producer_latency <- memo producer $ match_latencies' producer
+  inner_latency <- match_latencies' f
+  return $ producer_latency + inner_latency
+{-
+match_latencies' e@(Map2_sN n f producer_left producer_right map2_idx) = do
+  producer_left_latency <- memo producer_left $ match_latencies' producer_left
+  producer_right_latency <- memo producer_right $ match_latencies' producer_right
+  inner_latency <- memo f $ match_latencies' f
+  if producer_left_latency == producer_right_latency
+    then do
+    return $ 
+    else if producer_left_latency < producer_right_latency
+    then do
+    let producer_left_types = ST_Conv.expr_to_types producer_left
+    fifo_idx <- get_cur_idx
+    let delayed_producer_left = FIFON
+                                (e_in_type producer_left_type)
+                                (producer_right_latency - producer_left_latency)
+                                fifo_idx
+    return $ Map2_sN n f delayed_producer_left producer_right map2_idx
+    else do
+    lift_memo_rewrite_state $ print_st e
+    throwError $ Latency_Failure $ "For Map2_sN" ++
+         "latency for producer_left " ++ show producer_left_latency ++
+         "doesn't equal latency for producer_left " ++ show producer_right_latency
+match_latencies' e@(Map2_tN _ _ f producer_left producer_right _) = do
+  producer_left_latency <- memo producer_left $ match_latencies' producer_left
+  producer_right_latency <- memo producer_right $ match_latencies' producer_right
+  inner_latency <- memo f $ match_latencies' f
+  if producer_left_latency == producer_right_latency
+    then return $ producer_left_latency + inner_latency
+    else do
+    lift_memo_rewrite_state $ print_st e
+    throwError $ Latency_Failure $ "For Map2_tN" ++
+         "latency for producer_left " ++ show producer_left_latency ++
+         "doesn't equal latency for producer_left " ++ show producer_right_latency
+match_latencies' e@(Reduce_sN _ f producer _) = do
+  producer_latency <- memo producer $ match_latencies' producer
+  inner_latency <- match_latencies' f
+  if inner_latency == 0
+    then return producer_latency
+    else do
+    lift_memo_rewrite_state $ print_st e
+    throwError $ Latency_Failure $
+         "latency for f " ++ show inner_latency ++
+         "inside reduce must be 0 for now "
+match_latencies' e@(Reduce_tN _ _ f producer _) = do
+  producer_latency <- memo producer $ match_latencies' producer
+  reduce_latency <- lift_memo_rewrite_state $ match_latencies'' e
+  inner_latency <- match_latencies' f
+  if inner_latency == 0
+    then return $ producer_latency + reduce_latency
+    else do
+    lift_memo_rewrite_state $ print_st e
+    throwError $ Latency_Failure $
+         "latency for f " ++ show inner_latency ++
+         "inside reduce must be 0 for now "
+
+-- tuple operators
+match_latencies' e@(FstN _ _ producer _) =
+  memo producer $ match_latencies' producer
+match_latencies' e@(SndN _ _ producer _) =
+  memo producer $ match_latencies' producer
+match_latencies' e@(ATupleN _ _ producer_left producer_right _) = do
+  producer_left_latency <- memo producer_left $ match_latencies' producer_left
+  producer_right_latency <- memo producer_right $ match_latencies' producer_right
+  inner_latency <- match_latencies' producer_left
+  if producer_left_latency == producer_right_latency
+    then return $ producer_left_latency + inner_latency
+    else do
+    lift_memo_rewrite_state $ print_st e
+    throwError $ Latency_Failure $ "For ATupleN " ++
+         "latency for producer_left " ++ show producer_left_latency ++
+         "doesn't equal latency for producer_left " ++ show producer_right_latency
+match_latencies' e@(STupleN _ producer_left producer_right _) = do
+  producer_left_latency <- memo producer_left $ match_latencies' producer_left
+  producer_right_latency <- memo producer_right $ match_latencies' producer_right
+  if producer_left_latency == producer_right_latency
+    then return $ producer_left_latency
+    else do
+    lift_memo_rewrite_state $ print_st e
+    throwError $ Latency_Failure $ "For STupleN " ++
+         "latency for producer_left " ++ show producer_left_latency ++
+         "doesn't equal latency for producer_left " ++ show producer_right_latency
+match_latencies' e@(STupleAppendN _ _ producer_left producer_right _) = do
+  producer_left_latency <- memo producer_left $ match_latencies' producer_left
+  producer_right_latency <- memo producer_right $ match_latencies' producer_right
+  if producer_left_latency == producer_right_latency
+    then return $ producer_left_latency
+    else do
+    lift_memo_rewrite_state $ print_st e
+    throwError $ Latency_Failure $ "For STupleN " ++
+         "latency for producer_left " ++ show producer_left_latency ++
+         "doesn't equal latency for producer_left " ++ show producer_right_latency
+match_latencies' e@(STupleToSSeqN _ _ producer _) = memo producer $ match_latencies' producer
+match_latencies' e@(SSeqToSTupleN _ _ producer _) = memo producer $ match_latencies' producer
+
+-- other operators
+match_latencies' e@(InputN _ _ _) = return $ 0
+match_latencies' e@(ErrorN error_msg _) = throwError $ Latency_Failure $
+  "Found error node with message: " ++ error_msg
+match_latencies' e@(FIFON _ _ _ _ producer _) = do
+  producer_latency <- memo producer $ match_latencies' producer
+  cur_latency <- lift_memo_rewrite_state $ compute_latency' e
+  return $ producer_latency + cur_latency
+match_latencies' e@(ReshapeN _ _ producer _) = do
+  producer_latency <- memo producer $ match_latencies' producer
+  cur_latency <- lift_memo_rewrite_state $ compute_latency' e
+  return $ producer_latency + cur_latency
+-}
+match_combinational_op :: Expr -> Expr ->
+                                  Memo_Rewrite_StateTM Matched_Latency_Result IO Matched_Latency_Result
+match_combinational_op op producer = do
+  Matched_Latency_Result new_producer producer_latency <- match_latencies' producer
+  op_new_idx <- update_index op
+  let new_op = op_new_idx { seq_in = new_producer }
+  return (Matched_Latency_Result new_op producer_latency)
