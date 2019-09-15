@@ -142,8 +142,8 @@ expr_to_types (SSeqToSTupleN tuple_len tuple_elem_t _ _) =
 expr_to_types (InputN t _ _) = Expr_Types [] t
 expr_to_types (ErrorN _ _) = Expr_Types [] UnitT
 
-expr_to_types (FIFON n i _ elem_t _ _) =
-  Expr_Types [TSeqT n i elem_t] (TSeqT n i elem_t)
+expr_to_types (FIFON t _ _ _) =
+  Expr_Types [t] t
 expr_to_types (ReshapeN in_t out_t _ _) =
   Expr_Types [in_t] (out_t)
 -- | get the input and output types of the entire expression,
@@ -252,7 +252,7 @@ expr_to_outer_types' (InputN t name _) = do
   return $ t
 expr_to_outer_types' (ErrorN _ _) = return UnitT
 
-expr_to_outer_types' consumer_e@(FIFON _ _ _ _ producer_e _) =
+expr_to_outer_types' consumer_e@(FIFON _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(ReshapeN _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e

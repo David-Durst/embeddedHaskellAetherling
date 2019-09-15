@@ -24,9 +24,7 @@ check_latency e = do
                       empty_rewrite_data
   return $ isRight computed_latency
 
-
-type LatencyM = Memo_Rewrite_StateTM Int IO
-compute_latency :: Expr -> LatencyM Int
+compute_latency :: Expr -> Memo_Rewrite_StateTM Int IO Int
 compute_latency e@(IdN producer _) = memo producer $ compute_latency producer
 compute_latency e@(AbsN producer _) = memo producer $ compute_latency producer
 compute_latency e@(NotN producer _) = memo producer $ compute_latency producer
@@ -179,7 +177,7 @@ compute_latency e@(SSeqToSTupleN _ _ producer _) = memo producer $ compute_laten
 compute_latency e@(InputN _ _ _) = return $ 0
 compute_latency e@(ErrorN error_msg _) = throwError $ Latency_Failure $
   "Found error node with message: " ++ error_msg
-compute_latency e@(FIFON _ _ _ _ producer _) = do
+compute_latency e@(FIFON _ _ producer _) = do
   producer_latency <- memo producer $ compute_latency producer
   cur_latency <- lift_memo_rewrite_state $ compute_latency' e
   return $ producer_latency + cur_latency
@@ -195,7 +193,7 @@ compute_latency' (Down_1d_tN _ _ sel_idx t _ _) =
 compute_latency' (Reduce_tN n _ f _ _) = do
   f_latency <- compute_latency' f
   return $ n * f_latency
-compute_latency' (FIFON _ _ delay_clks _ _ _) = return $ delay_clks
+compute_latency' (FIFON _ delay_clks _ _) = return $ delay_clks
 compute_latency' (ReshapeN in_t out_t _ _) = do
   let in_t_py_str = type_to_python in_t
   let out_t_py_str = type_to_python out_t

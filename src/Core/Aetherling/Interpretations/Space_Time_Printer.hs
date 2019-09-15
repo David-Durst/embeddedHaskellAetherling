@@ -329,11 +329,11 @@ print_inner e@(ErrorN msg cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module $ cur_ref_name ++ " = ErrorN " ++ msg
   return cur_ref_name
-print_inner consumer_e@(FIFON n i delay_clks elem_t producer_e cur_idx) = do
+print_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = FIFON " ++ show n ++ " " ++ show i ++
-    " " ++ show delay_clks ++ " " ++ show elem_t ++ " " ++ producer_ref
+  add_to_cur_module $ cur_ref_name ++ " = FIFON " ++ show t ++
+    " " ++ show delay_clks ++ " " ++ show producer_ref
   return cur_ref_name
 print_inner consumer_e@(ReshapeN in_t out_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e

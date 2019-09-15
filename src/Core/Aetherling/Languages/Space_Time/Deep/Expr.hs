@@ -231,10 +231,8 @@ data Expr =
   --   3. match delays - delay_clks used on a per clock cycle basis
   -- note that delay_clks is number of clks, not number of periods
   | FIFON {
-      n :: Int,
-      i :: Int,
+      t :: AST_Type,
       delay_clks :: Int,
-      elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index
       }

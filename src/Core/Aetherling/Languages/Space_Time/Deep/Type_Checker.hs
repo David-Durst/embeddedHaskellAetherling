@@ -115,7 +115,7 @@ check_type' consumer_e@(SSeqToSTupleN _ _ producer_e _) =
   
 check_type' (InputN t _ _) = return t
 check_type' e@(ErrorN _ _) = throwError $ Left $ show e
-check_type' consumer_e@(FIFON _ _ _ _ producer_e _) =
+check_type' consumer_e@(FIFON _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(ReshapeN _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
