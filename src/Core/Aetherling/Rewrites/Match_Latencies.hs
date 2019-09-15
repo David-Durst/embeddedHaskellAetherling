@@ -149,39 +149,14 @@ match_latencies' e@(FstN _ _ producer _) =
   match_combinational_op e producer
 match_latencies' e@(SndN _ _ producer _) =
   match_combinational_op e producer
-{-
+  
 match_latencies' e@(ATupleN _ _ producer_left producer_right _) = do
-  producer_left_latency <- memo producer_left $ match_latencies' producer_left
-  producer_right_latency <- memo producer_right $ match_latencies' producer_right
-  inner_latency <- match_latencies' producer_left
-  if producer_left_latency == producer_right_latency
-    then return $ producer_left_latency + inner_latency
-    else do
-    lift_memo_rewrite_state $ print_st e
-    throwError $ Latency_Failure $ "For ATupleN " ++
-         "latency for producer_left " ++ show producer_left_latency ++
-         "doesn't equal latency for producer_left " ++ show producer_right_latency
+  match_binary_op e producer_left producer_right
 match_latencies' e@(STupleN _ producer_left producer_right _) = do
-  producer_left_latency <- memo producer_left $ match_latencies' producer_left
-  producer_right_latency <- memo producer_right $ match_latencies' producer_right
-  if producer_left_latency == producer_right_latency
-    then return $ producer_left_latency
-    else do
-    lift_memo_rewrite_state $ print_st e
-    throwError $ Latency_Failure $ "For STupleN " ++
-         "latency for producer_left " ++ show producer_left_latency ++
-         "doesn't equal latency for producer_left " ++ show producer_right_latency
+  match_binary_op e producer_left producer_right
 match_latencies' e@(STupleAppendN _ _ producer_left producer_right _) = do
-  producer_left_latency <- memo producer_left $ match_latencies' producer_left
-  producer_right_latency <- memo producer_right $ match_latencies' producer_right
-  if producer_left_latency == producer_right_latency
-    then return $ producer_left_latency
-    else do
-    lift_memo_rewrite_state $ print_st e
-    throwError $ Latency_Failure $ "For STupleN " ++
-         "latency for producer_left " ++ show producer_left_latency ++
-         "doesn't equal latency for producer_left " ++ show producer_right_latency
--}
+  match_binary_op e producer_left producer_right
+
 match_latencies' e@(STupleToSSeqN _ _ producer _) = match_combinational_op e producer
 match_latencies' e@(SSeqToSTupleN _ _ producer _) = match_combinational_op e producer
 
@@ -214,18 +189,25 @@ match_combinational_op op producer = do
   return (Matched_Latency_Result new_op producer_latency)
 
 match_map2 e f producer_left producer_right = do
+  e_update_except_f <- match_binary_op e producer_left producer_right
+  Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
+  return $ e_update_except_f {
+    latency = latency e_update_except_f + latency_f
+    }
+  
+
+match_binary_op e producer_left producer_right = do
   Matched_Latency_Result new_producer_left latency_producer_left <-
     memo producer_left $ match_latencies' producer_left
   Matched_Latency_Result new_producer_right latency_producer_right <-
     memo producer_right $ match_latencies' producer_right
-  Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
   if latency_producer_left == latency_producer_right
     then do
     cur_idx <- get_cur_index
     return $ Matched_Latency_Result
-      (e {f = new_f, seq_in_left = new_producer_left,
+      (e {seq_in_left = new_producer_left,
           seq_in_right = new_producer_right, index = cur_idx} )
-      (latency_producer_left + latency_f)
+      latency_producer_left
     else if latency_producer_left < latency_producer_right
     then do
     let producer_left_types = ST_Conv.expr_to_types producer_left
@@ -237,9 +219,9 @@ match_map2 e f producer_left producer_right = do
                                 fifo_idx
     map2_idx <- get_cur_index
     return $ Matched_Latency_Result
-      (e {f = new_f, seq_in_left = delayed_producer_left,
+      (e {seq_in_left = delayed_producer_left,
           seq_in_right = new_producer_right, index = map2_idx})
-      (latency_producer_right + latency_f)
+      latency_producer_right
     else do
     let producer_right_types = ST_Conv.expr_to_types producer_right
     fifo_idx <- get_cur_index
@@ -250,6 +232,6 @@ match_map2 e f producer_left producer_right = do
                                 fifo_idx
     map2_idx <- get_cur_index
     return $ Matched_Latency_Result
-      (e {f = new_f, seq_in_left = new_producer_left,
+      (e {seq_in_left = new_producer_left,
           seq_in_right = delayed_producer_right, index = map2_idx})
-      (latency_producer_left + latency_f)
+      latency_producer_left
