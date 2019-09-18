@@ -307,26 +307,36 @@ print_inner consumer_e@(Remove_1_0_tN elem_t producer_e cur_idx) = do
 -- higher order operators
 print_inner consumer_e@(Map_sN n f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
-  f_ref <- memo f $ print_module f
+  Magma_Module_Ref f_name f_in_ports f_out_port <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "DefineMap_S(" ++ show n ++ ", " ++ f_ref ++ ")"
+  let gen_str = "DefineMap_S(" ++ show n ++ ", " ++ f_name ++ "())"
   print_unary_operator cur_ref_name gen_str producer_ref
-  get_output_port cur_ref_name
+  let map_in_ports =
+        map (\port -> port {port_type = SSeqT n (port_type port)}) f_in_ports
+  let map_out_port = f_out_port {output_type = SSeqT n (output_type f_out_port)}
+  let cur_ref = Magma_Module_Ref cur_ref_name map_in_ports map_out_port
+  print_unary_operator cur_ref gen_str
 print_inner consumer_e@(Map_tN n i f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
-  f_ref <- memo f $ print_module f
+  Magma_Module_Ref f_name f_in_ports f_out_port <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "DefineMap_T(" ++ show n ++ ", " ++ show i ++ ", " ++ f_ref ++ ")"
+  let gen_str = "DefineMap_T(" ++ show n ++ ", " ++ show i ++ ", " ++ f_name ++ "())"
   print_unary_operator cur_ref_name gen_str producer_ref
-  get_output_port cur_ref_name
+  let map_in_ports =
+        map (\port -> port {port_type = TSeqT n i (port_type port)}) f_in_ports
+  let map_out_port = f_out_port {output_type = TSeqT n i (output_type f_out_port)}
+  return $ Magma_Module_Ref cur_ref_name map_in_ports map_out_port
 print_inner consumer_e@(Map2_sN n f producer0_e producer1_e cur_idx) = do
   producer0_ref <- memo producer0_e $ print_inner producer0_e
   producer1_ref <- memo producer1_e $ print_inner producer1_e
-  f_ref <- memo f $ print_module f
+  Magma_Module_Ref f_name f_in_ports f_out_port <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "DefineMap2_S(" ++ show n ++ ", " ++ f_ref ++ ")"
+  let gen_str = "DefineMap2_S(" ++ show n ++ ", " ++ f_name ++ "())"
   print_binary_operator cur_ref_name gen_str producer0_ref producer1_ref
-  get_output_port cur_ref_name
+  let map_in_ports =
+        map (\port -> port {port_type = SSeqT n (port_type port)}) f_in_ports
+  let map_out_port = f_out_port {output_type = SSeqT n (output_type f_out_port)}
+  return $ Magma_Module_Ref cur_ref_name map_in_ports map_out_port
 print_inner consumer_e@(Map2_tN n i f producer0_e producer1_e cur_idx) = do
   producer0_ref <- memo producer0_e $ print_inner producer0_e
   producer1_ref <- memo producer1_e $ print_inner producer1_e
@@ -424,9 +434,11 @@ print_index (Index i) = show i
 print_unary_operator :: String -> String -> Magma_Module_Ref -> Memo_Print_StateM Magma_Module_Ref ()
 print_unary_operator cur_ref_name generator_name producer_ref = do
   add_to_cur_module $ cur_ref_name ++ " = " ++ generator_name ++ "()"
+  let producer_out_str = name producer_ref ++ (port_name $ in_ports producer_ref !! 0) 
+  let cur_ref_str = name producer_ref ++ (port_name $ in_ports producer_ref !! 0) 
   add_to_cur_module $ "wire(" ++ name producer_ref ++ ", " ++ cur_ref_name ++ ".I)"
 
-print_binary_operator :: String -> String -> String -> String -> Memo_Print_StateM Magma_Module_Ref ()
+print_binary_operator :: String -> String -> Magma_Module_Ref -> Magma_Module_Ref -> Memo_Print_StateM Magma_Module_Ref ()
 print_binary_operator cur_ref_name generator_name producer_ref_left producer_ref_right = do
   add_to_cur_module $ cur_ref_name ++ " = " ++ generator_name
   add_to_cur_module $ "wire(" ++ producer_ref_left ++ ", " ++ cur_ref_name ++ ".I[0])"
