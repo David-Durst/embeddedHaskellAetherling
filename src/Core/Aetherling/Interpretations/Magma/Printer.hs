@@ -1,4 +1,4 @@
-module Aetherling.Interpretations.Magma_Printer where
+module Aetherling.Interpretations.Magma.Printer where
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr
@@ -85,7 +85,7 @@ print_module new_module = do
                        (show $ head $ cur_inputs) (tail $ cur_inputs)
   let cur_output_str = ", 'O', " ++ "Out(" ++
                        ((type_to_python $ port_type $
-                         cur_module_output end_data) ++ ".magma_repr()") ++ ")"
+                         out_port cur_module_result_ref) ++ ".magma_repr()") ++ ")"
   let module_func_string = "@cache_definition \ndef " ++ cur_module_name ++ "() -> DefineCircuitKind:\n"
   let module_st_types =
         if length cur_inputs == 1 then
