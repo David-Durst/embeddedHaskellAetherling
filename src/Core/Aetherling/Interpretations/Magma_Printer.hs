@@ -7,6 +7,7 @@ import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Identity
 import Aetherling.Monad_Helpers
+import Debug.Trace
 
 data Module_Port = Module_Port {
   -- this is the port of the instance to wire
@@ -124,7 +125,10 @@ print_module new_module = do
     next_module_index = cur_module_index + 1,
     modules = modules end_data ++ [module_str]
     }
-  return $ Magma_Module_Ref (cur_module_name ++ "()") "" cur_inputs (cur_module_output end_data)
+  --traceShowM $ "module " ++ cur_module_name
+  --traceShowM $ show end_data
+  --traceShowM $ show cur_module_result_ref
+  return $ Magma_Module_Ref (cur_module_name ++ "()") "" cur_inputs (out_port cur_module_result_ref)
 
 data Magma_Module_Ref = Magma_Module_Ref {
   var_name :: String,
