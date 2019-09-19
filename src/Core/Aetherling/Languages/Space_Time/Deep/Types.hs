@@ -71,6 +71,15 @@ clocks_t (STupleT n t) = clocks_t t
 clocks_t (SSeqT n t) = clocks_t t
 clocks_t (TSeqT n i t) = (n+i) * clocks_t t
 
+valid_clocks_t :: AST_Type -> Int
+valid_clocks_t UnitT = 1
+valid_clocks_t BitT = 1
+valid_clocks_t IntT = 1
+valid_clocks_t (ATupleT t0 t1) = 1
+valid_clocks_t (STupleT n t) = clocks_t t
+valid_clocks_t (SSeqT n t) = clocks_t t
+valid_clocks_t (TSeqT n _ t) = n * clocks_t t
+
 type_to_python :: AST_Type -> String
 type_to_python UnitT = "undefined"
 type_to_python BitT = "ST_Bit()"
