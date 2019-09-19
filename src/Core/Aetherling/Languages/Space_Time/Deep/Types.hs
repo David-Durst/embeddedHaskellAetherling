@@ -62,6 +62,15 @@ size_t (STupleT n t) = n * size_t t
 size_t (SSeqT n t) = n * size_t t
 size_t (TSeqT n _ t) = size_t t
 
+num_atoms_t :: AST_Type -> Int
+num_atoms_t UnitT = 1
+num_atoms_t BitT = 1
+num_atoms_t IntT = 1
+num_atoms_t (ATupleT t0 t1) = 1
+num_atoms_t (STupleT n t) = n * num_atoms_t t
+num_atoms_t (SSeqT n t) = n * num_atoms_t t
+num_atoms_t (TSeqT n _ t) = num_atoms_t t
+
 clocks_t :: AST_Type -> Int
 clocks_t UnitT = 1
 clocks_t BitT = 1
