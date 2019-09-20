@@ -55,7 +55,8 @@ seq_rewrite' = do
 
 diamond_map_uncompiled input = do
   let branch = mapC absC input
-  map2C atom_tupleC branch branch
+  let tuple = map2C atom_tupleC branch input
+  mapC addC tuple
 diamond_map = compile $ diamond_map_uncompiled $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
 diamond_map_seq_idx = add_indexes diamond_map
