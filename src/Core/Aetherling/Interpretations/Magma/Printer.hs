@@ -60,7 +60,7 @@ print_magma e = do
   putStrLn $ foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
   putStrLn $ "Main = Module_" ++ (show $ next_module_index lines - 1) ++ "()"
   epilogue <- magma_epilogue
-  putStrLn epilogue
+  --putStrLn epilogue
 
 data Magma_String_Results = Magma_String_Results {
   module_str :: String,
@@ -81,9 +81,9 @@ module_to_magma_string e = do
     else do
     let mod_body = foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
     let mod_def = "Main = Module_" ++ (show $ next_module_index lines - 1) ++ "()"
-    epilogue <- magma_epilogue
+   -- epilogue <- magma_epilogue
     return $ Magma_String_Results
-      (prelude ++ "\n" ++ mod_body ++ mod_def ++ "\n" ++ epilogue)
+      (prelude ++ "\n" ++ mod_body ++ mod_def)
       (fromRight undefined outer_module_ref)
 
 tab_str = "    "
