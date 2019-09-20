@@ -7,6 +7,7 @@ import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Identity
 import Aetherling.Monad_Helpers
+import Data.Either
 import Debug.Trace
 
 data Module_Port = Module_Port {
@@ -40,24 +41,50 @@ add_to_cur_module new_string = do
   lift $ put $ cur_data { cur_module_output_lines = cur_output_lines ++ [new_string] }
   return ()
 
-print_magma_prelude :: IO ()
-print_magma_prelude = do
-  putStrLn "import fault"
-  putStrLn "import aetherling.helpers.fault_helpers as fault_helpers"
-  putStrLn "from aetherling.space_time import *"
-  putStrLn ""
+magma_prelude :: IO String
+magma_prelude = return $
+  "import fault\n" ++
+  "import aetherling.helpers.fault_helpers as fault_helpers\n" ++
+  "from aetherling.space_time import *\n" ++
+  "\n"
 
-print_magma_epilogue :: IO ()
-print_magma_epilogue = do
-  putStrLn "fault_helpers.compile(Main)"
+magma_epilogue :: IO String
+magma_epilogue = return $
+  "fault_helpers.compile(Main)\n"
 
 print_magma :: Expr -> IO ()
 print_magma e = do
-  print_magma_prelude
+  prelude <- magma_prelude
+  putStrLn prelude
   let lines = execState (runExceptT $ startEvalMemoT $ print_module e) empty_print_data
   putStrLn $ foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
   putStrLn $ "Main = Module_" ++ (show $ next_module_index lines - 1) ++ "()"
-  print_magma_epilogue
+  epilogue <- magma_epilogue
+  putStrLn epilogue
+
+data Magma_String_Results = Magma_String_Results {
+  module_str :: String,
+  module_outer_results :: Magma_Module_Ref
+  } deriving (Show, Eq)
+
+error_module_ref = Magma_Module_Ref "ERR_VAR_NAME" "ERR_GEN_CALL" []
+                   (Module_Port "ERR_OUT" IntT)
+                   
+module_to_magma_string :: Expr -> IO Magma_String_Results
+module_to_magma_string e = do
+  prelude <- magma_prelude
+  let (outer_module_ref, lines) = runState (runExceptT $ startEvalMemoT $ print_module e) empty_print_data
+  if isLeft outer_module_ref
+    then return $ Magma_String_Results
+         (RH.rw_msg $ fromLeft undefined outer_module_ref)
+         error_module_ref
+    else do
+    let mod_body = foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
+    let mod_def = "Main = Module_" ++ (show $ next_module_index lines - 1) ++ "()"
+    epilogue <- magma_epilogue
+    return $ Magma_String_Results
+      (prelude ++ "\n" ++ mod_body ++ mod_def ++ "\n" ++ epilogue)
+      (fromRight undefined outer_module_ref)
 
 tab_str = "    "
 -- this handles creating a module

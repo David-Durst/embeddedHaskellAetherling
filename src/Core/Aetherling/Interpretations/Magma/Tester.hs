@@ -1,4 +1,5 @@
 module Aetherling.Interpretations.Magma.Tester where
+import qualified Aetherling.Interpretations.Magma.Printer as P
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr
@@ -28,41 +29,82 @@ data Type_For_Magma =
 
 type Flat_Idx_To_Magma_Val = Int -> Type_For_Magma -> String
 
-class Convertible_To_Magma a where
-  convert_to_magma_list :: a -> [String]
+class Convertible_To_Atom_Strings a where
+  convert_to_flat_atom_list :: a -> [String]
 
-instance Convertible_To_Magma Int where
-  convert_to_magma_list x = [show x]
-
-instance Convertible_To_Magma Bool where
-  convert_to_magma_list x = [show x]
+instance Convertible_To_Atom_Strings Int where
+  convert_to_flat_atom_list x = [show x]
   
-instance (Convertible_To_Magma a, Convertible_To_Magma b) => Convertible_To_Magma (a, b) where
-  convert_to_magma_list (x, y) = [show $ (head $ convert_to_magma_list x,
-                                          head $ convert_to_magma_list y)]
+instance Convertible_To_Atom_Strings Integer where
+  convert_to_flat_atom_list x = [show x]
 
-instance (Convertible_To_Magma a) => Convertible_To_Magma [a] where
-  convert_to_magma_list xs = concat $ map convert_to_magma_list xs
+instance Convertible_To_Atom_Strings Bool where
+  convert_to_flat_atom_list x = [show x]
+  
+instance (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) => Convertible_To_Atom_Strings (a, b) where
+  convert_to_flat_atom_list (x, y) = [show_no_quotes $ (head $ convert_to_flat_atom_list x,
+                                          head $ convert_to_flat_atom_list y)]
+
+instance (Convertible_To_Atom_Strings a) => Convertible_To_Atom_Strings [a] where
+  convert_to_flat_atom_list xs = concat $ map convert_to_flat_atom_list xs
 
 data Fault_Testing_Code = Fault_Testing_Code {
   fault_data_setup :: String,
   fault_assertions :: String
   } deriving (Show, Eq)
 
+test_circuit_with_fault_print p inputs outputs = do 
+  str <- test_circuit_with_fault p inputs outputs
+  putStrLn str
+
+test_circuit_with_fault :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
+  Expr -> [a] -> b -> IO String
+test_circuit_with_fault p inputs output = do
+  module_str_data <- P.module_to_magma_string p
+  let num_ports = length $ P.in_ports $ P.module_outer_results $ module_str_data
+  let fault_io = generate_fault_input_output_for_st_program p inputs output
+  let f_inputs = foldl (++) "" $
+        map (\i -> "fault_inputs" ++ show i ++ " = " ++
+             show_no_quotes (fault_inputs fault_io !! i) ++ "\n")
+        [0..num_ports - 1]
+  let f_output = "fault_output = " ++ fault_output fault_io ++ "\n"
+  let test_start =
+        "if __name__ == '__main__':\n" ++
+        P.tab_str ++ "mod = Main()\n" ++
+        P.tab_str ++ "tester = fault.Tester(mod, mod.CLK)\n" ++
+        P.tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++ ")\n"
+  let test_inputs = foldl (++) "" $
+        map (\i -> (P.tab_str ++ P.tab_str ++ "tester.circuit." ++
+                     (P.port_name $ (P.in_ports $
+                                      P.module_outer_results module_str_data) !! i) ++
+                     " = fault_inputs" ++ show i ++ "[f_clk]\n"))
+                    [0..num_ports - 1]
+  let test_eval = P.tab_str ++ P.tab_str ++ "tester.eval()\n"
+  let test_output = P.tab_str ++ P.tab_str ++ "tester.circuit." ++
+                    (P.port_name $ P.out_port $
+                     P.module_outer_results module_str_data) ++
+                    ".expect(fault_output[f_clk])\n"
+  let test_step = P.tab_str ++ P.tab_str ++ "tester.step(2)\n"
+  let test_run = P.tab_str ++ "fault_helpers.compile_and_run(tester)\n"
+  return $ (P.module_str module_str_data) ++ f_inputs ++ f_output ++
+    test_start ++ test_inputs ++ test_eval ++ test_output ++
+    test_step ++ test_run
+  
 data Fault_IO = Fault_IO {
   fault_inputs :: [String],
   fault_output :: String,
-  fault_valid_out :: [Bool]
+  fault_valid_out :: [Bool],
+  fault_clocks :: Int
   } deriving (Show, Eq)
 
-generate_fault_input_output_for_st_program :: Convertible_To_Magma a => Expr ->
-                                              [a] -> a -> Fault_IO
+generate_fault_input_output_for_st_program ::
+  (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) => Expr -> [a] -> b -> Fault_IO
 generate_fault_input_output_for_st_program p inputs output = do
   -- get the mapping from flat_idx to value
-  let flat_input_strs_xs = map convert_to_magma_list inputs
+  let flat_input_strs_xs = map convert_to_flat_atom_list inputs
   let flat_input_idx_to_str_xs :: [M.Map Int String] =
         map (M.fromList . zip [0..]) flat_input_strs_xs
-  let flat_output_strs = convert_to_magma_list output
+  let flat_output_strs = convert_to_flat_atom_list output
   let flat_output_idx_to_str :: M.Map Int String =
         M.fromList $ zip [0..] flat_output_strs
 
@@ -78,7 +120,7 @@ generate_fault_input_output_for_st_program p inputs output = do
                          | i <- [0..length inputs - 1]]
   let p_out_st_vals = convert_st_val_idxs_to_vals flat_output_idx_to_str p_out_st_idxs
   Fault_IO (map show_no_quotes p_in_st_vals_xs) (show_no_quotes p_out_st_vals)
-    valid_out
+    valid_out (length p_out_st_idxs)
 
 show_no_quotes :: Show a => a -> String
 show_no_quotes = filter (\x -> x /= '\"') . show
