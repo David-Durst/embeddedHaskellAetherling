@@ -59,7 +59,7 @@ print_magma e = do
   let lines = execState (runExceptT $ startEvalMemoT $ print_module e) empty_print_data
   putStrLn $ foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
   putStrLn $ "Main = Module_" ++ (show $ next_module_index lines - 1) ++ "()"
-  epilogue <- magma_epilogue
+  --epilogue <- magma_epilogue
   --putStrLn epilogue
 
 data Magma_String_Results = Magma_String_Results {
