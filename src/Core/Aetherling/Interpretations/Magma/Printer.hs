@@ -368,7 +368,7 @@ print_inner consumer_e@(Map2_sN n f producer0_e producer1_e cur_idx) = do
   producer1_ref <- memo producer1_e $ print_inner producer1_e
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "DefineMap2_S(" ++ show n ++ ", " ++ f_name ++ "())"
+  let gen_str = "DefineMap2_S(" ++ show n ++ ", " ++ f_name ++ ")"
   let map_in_ports =
         map (\port -> port {port_type = SSeqT n (port_type port)}) f_in_ports
   let map_out_port = f_out_port {port_type = SSeqT n (port_type f_out_port)}

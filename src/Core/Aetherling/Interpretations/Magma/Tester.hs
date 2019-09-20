@@ -70,9 +70,9 @@ test_circuit_with_fault p inputs output = do
   let f_output = "fault_output = " ++ fault_output fault_io ++ "\n"
   let test_start =
         "if __name__ == '__main__':\n" ++
-        P.tab_str ++ "mod = Main()\n" ++
+        P.tab_str ++ "mod = Main\n" ++
         P.tab_str ++ "tester = fault.Tester(mod, mod.CLK)\n" ++
-        P.tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++ ")\n"
+        P.tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++ "):\n"
   let test_inputs = foldl (++) "" $
         map (\i -> (P.tab_str ++ P.tab_str ++ "tester.circuit." ++
                      (P.port_name $ (P.in_ports $
