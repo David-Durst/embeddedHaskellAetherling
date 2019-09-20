@@ -2,16 +2,19 @@ module Aetherling.Interpretations.Magma.Tester where
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr
+import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
 import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Identity
+import Control.Applicative
 import Aetherling.Monad_Helpers
 import Data.List
+import qualified Data.Map.Strict as M
 import Debug.Trace
 
-data Magma_Value_Element = Magma_Value_Element {
-  magma_value :: String,
+data ST_Val_Index = ST_Val_Index {
+  flat_idx :: Int,
   mv_valid :: Bool,
   flat_s :: Int,
   flat_t :: Int
@@ -25,71 +28,128 @@ data Type_For_Magma =
 
 type Flat_Idx_To_Magma_Val = Int -> Type_For_Magma -> String
 
-generate_fault_inputs_for_st_type :: AST_Type -> Flat_Idx_To_Magma_Val -> String
-generate_fault_inputs_for_st_type t conv_func = do
+class Convertible_To_Magma a where
+  convert_to_magma_list :: a -> [String]
+
+instance Convertible_To_Magma Int where
+  convert_to_magma_list x = [show x]
+
+instance Convertible_To_Magma Bool where
+  convert_to_magma_list x = [show x]
+  
+instance (Convertible_To_Magma a, Convertible_To_Magma b) => Convertible_To_Magma (a, b) where
+  convert_to_magma_list (x, y) = [show $ (head $ convert_to_magma_list x,
+                                          head $ convert_to_magma_list y)]
+
+instance (Convertible_To_Magma a) => Convertible_To_Magma [a] where
+  convert_to_magma_list xs = concat $ map convert_to_magma_list xs
+
+data Fault_Testing_Code = Fault_Testing_Code {
+  fault_data_setup :: String,
+  fault_assertions :: String
+  } deriving (Show, Eq)
+
+data Fault_IO = Fault_IO {
+  fault_inputs :: [String],
+  fault_output :: String,
+  fault_valid_out :: [Bool]
+  } deriving (Show, Eq)
+
+generate_fault_input_output_for_st_program :: Convertible_To_Magma a => Expr ->
+                                              [a] -> a -> Fault_IO
+generate_fault_input_output_for_st_program p inputs output = do
+  -- get the mapping from flat_idx to value
+  let flat_input_strs_xs = map convert_to_magma_list inputs
+  let flat_input_idx_to_str_xs :: [M.Map Int String] =
+        map (M.fromList . zip [0..]) flat_input_strs_xs
+  let flat_output_strs = convert_to_magma_list output
+  let flat_output_idx_to_str :: M.Map Int String =
+        M.fromList $ zip [0..] flat_output_strs
+
+  -- get the mapping from flat st to flat_idx
+  let p_types = expr_to_outer_types p
+  let p_in_st_idxs_xs = map generate_st_val_idxs_for_st_type (e_in_types p_types)
+  let p_out_st_idxs = generate_st_val_idxs_for_st_type (e_out_type p_types)
+  let valid_out = map mv_valid $ map head p_out_st_idxs
+
+  -- convert the st_idx double nested arrays to st double arrays with values
+  let p_in_st_vals_xs = [convert_st_val_idxs_to_vals
+                         (flat_input_idx_to_str_xs !! i) (p_in_st_idxs_xs !! i)
+                         | i <- [0..length inputs - 1]]
+  let p_out_st_vals = convert_st_val_idxs_to_vals flat_output_idx_to_str p_out_st_idxs
+  Fault_IO (map show_no_quotes p_in_st_vals_xs) (show_no_quotes p_out_st_vals)
+    valid_out
+
+show_no_quotes :: Show a => a -> String
+show_no_quotes = filter (\x -> x /= '\"') . show
+
+convert_st_val_idxs_to_vals :: M.Map Int String -> [[ST_Val_Index]] -> [[String]]
+convert_st_val_idxs_to_vals idx_to_str st_val_idxs =
+  map (map (\st_val_idx -> idx_to_str M.! flat_idx st_val_idx)) st_val_idxs
+
+generate_st_val_idxs_for_st_type :: AST_Type -> [[ST_Val_Index]]
+generate_st_val_idxs_for_st_type t = do
   let total_width = num_atoms_t t
   let total_time = clocks_t t
   let valid_time = valid_clocks_t t
   let flat_results =
-        generate_fault_inputs_for_st_type' t conv_func total_width total_time
+        generate_st_val_idxs_for_st_type' t total_width total_time
         valid_time 0 0 True 0
   let sorted_results = sortBy (\x y -> compare (flat_t x) (flat_t y)) flat_results
   let grouped_by_t = groupBy (\x y -> flat_t x == flat_t y) sorted_results
   let grouped_and_sorted_by_s =
         map (sortBy (\x y -> compare (flat_s x) (flat_s y))) grouped_by_t
   let invs_filtered = filter (mv_valid . head) grouped_and_sorted_by_s
-  let grouped_and_sorted_just_vals = map (map magma_value) grouped_and_sorted_by_s
+  grouped_and_sorted_by_s
+  --let grouped_and_sorted_just_vals = map (map magma_value) grouped_and_sorted_by_s
   -- need to filter out quotes from string printing
-  filter (\x -> x /= '\"') $ show grouped_and_sorted_just_vals
+  --filter (\x -> x /= '\"') $ show grouped_and_sorted_just_vals
 
-generate_fault_inputs_for_st_type' :: AST_Type -> Flat_Idx_To_Magma_Val ->
-                                      Int -> Int -> Int -> Int -> Int -> Bool ->
-                                      Int -> [Magma_Value_Element]
-generate_fault_inputs_for_st_type' UnitT conv_func _ _ _ cur_space cur_time
+generate_st_val_idxs_for_st_type' :: AST_Type -> Int -> Int -> Int ->
+                                      Int -> Int -> Bool ->
+                                      Int -> [ST_Val_Index]
+generate_st_val_idxs_for_st_type' UnitT _ _ _ cur_space cur_time
   valid cur_idx = do
-  [Magma_Value_Element "" valid cur_space cur_time]
-generate_fault_inputs_for_st_type' BitT conv_func _ _ _ cur_space cur_time
+  [ST_Val_Index cur_idx valid cur_space cur_time]
+generate_st_val_idxs_for_st_type' BitT _ _ _ cur_space cur_time
   valid cur_idx = do
-  [Magma_Value_Element (conv_func cur_idx Bit_For_Magma)
-    valid cur_space cur_time]
-generate_fault_inputs_for_st_type' IntT conv_func _ _ _ cur_space cur_time
+  [ST_Val_Index cur_idx valid cur_space cur_time]
+generate_st_val_idxs_for_st_type' IntT _ _ _ cur_space cur_time
   valid cur_idx = do
-  [Magma_Value_Element (conv_func cur_idx Int_For_Magma)
-    valid cur_space cur_time]
-generate_fault_inputs_for_st_type' (ATupleT t0 t1) conv_func _ _ _ cur_space
+  [ST_Val_Index cur_idx valid cur_space cur_time]
+generate_st_val_idxs_for_st_type' (ATupleT t0 t1) _ _ _ cur_space
   cur_time valid cur_idx = do
-  [Magma_Value_Element (conv_func cur_idx (ATuple_For_Magma t0 t1))
-    valid cur_space cur_time]
-generate_fault_inputs_for_st_type' (STupleT n t) conv_func total_width
+  [ST_Val_Index cur_idx valid cur_space cur_time]
+generate_st_val_idxs_for_st_type' (STupleT n t) total_width
   total_time valid_time cur_space cur_time valid cur_idx = do
   let element_width = total_width `div` n
   let element_time = total_time
   let element_valid_time = valid_time
-  let element_strs = [generate_fault_inputs_for_st_type' t conv_func
+  let element_strs = [generate_st_val_idxs_for_st_type' t
                       element_width element_time element_valid_time
                       (cur_space + j*element_width) cur_time
                       valid
                       (cur_idx + j*element_width*element_valid_time)
                      | j <- [0..n-1]]
   concat element_strs
-generate_fault_inputs_for_st_type' (SSeqT n t) conv_func total_width
+generate_st_val_idxs_for_st_type' (SSeqT n t) total_width
   total_time valid_time cur_space cur_time valid cur_idx = do
   let element_width = total_width `div` n
   let element_time = total_time
   let element_valid_time = valid_time
-  let element_strs = [generate_fault_inputs_for_st_type' t conv_func
+  let element_strs = [generate_st_val_idxs_for_st_type' t
                       element_width element_time element_valid_time
                       (cur_space + j*element_width) cur_time
                       valid
                       (cur_idx + j*element_width*element_valid_time)
                      | j <- [0..n-1]]
   concat element_strs
-generate_fault_inputs_for_st_type' (TSeqT n i t) conv_func total_width
+generate_st_val_idxs_for_st_type' (TSeqT n i t) total_width
   total_time valid_time cur_space cur_time valid cur_idx = do
   let element_width = total_width
   let element_time = total_time `div` (n+i)
   let element_valid_time = valid_time `div` n
-  let element_strs = [generate_fault_inputs_for_st_type' t conv_func
+  let element_strs = [generate_st_val_idxs_for_st_type' t
                       element_width element_time element_valid_time
                       cur_space (cur_time + j * element_time)
                       (valid && j < n)
