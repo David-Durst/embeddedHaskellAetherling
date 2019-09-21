@@ -26,14 +26,6 @@ data ST_Val_Index = ST_Val_Index {
   flat_t :: Int
   } deriving (Show, Eq)
 
-data Type_For_Magma =
-  Int_For_Magma
-  | Bit_For_Magma
-  | ATuple_For_Magma AST_Type AST_Type
-  deriving (Show, Eq)
-
-type Flat_Idx_To_Magma_Val = Int -> Type_For_Magma -> String
-
 class Convertible_To_Atom_Strings a where
   convert_to_flat_atom_list :: a -> [String]
 
