@@ -12,6 +12,11 @@ import Control.Applicative
 import Aetherling.Monad_Helpers
 import Data.List
 import qualified Data.Map.Strict as M
+import System.IO.Temp
+import System.IO
+import System.Process
+import System.Environment
+import System.Exit
 import Debug.Trace
 
 data ST_Val_Index = ST_Val_Index {
@@ -48,18 +53,53 @@ instance (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) => Conve
 instance (Convertible_To_Atom_Strings a) => Convertible_To_Atom_Strings [a] where
   convert_to_flat_atom_list xs = concat $ map convert_to_flat_atom_list xs
 
-data Fault_Testing_Code = Fault_Testing_Code {
-  fault_data_setup :: String,
-  fault_assertions :: String
-  } deriving (Show, Eq)
+data Fault_Result = Fault_Success
+                  | Fault_Failure {
+                      fault_stdout :: String,
+                      fault_stderr :: String,
+                      fault_exit_code :: Int
+                      } deriving (Show, Eq)
+
+test_circuit_with_fault p inputs output = do
+  result <- test_circuit_with_fault_no_io p inputs output
+  case result of
+    Fault_Success -> return ()
+    Fault_Failure stdout stderr exit_code -> do
+      putStrLn "Failure"
+      putStrLn stdout
+      putStrLn stderr
+      putStrLn $ "Exit Code: " ++ show exit_code
+  return result
+
+test_circuit_with_fault_no_io :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
+  Expr -> [a] -> b -> IO Fault_Result 
+test_circuit_with_fault_no_io p inputs output = do
+  p_str <- test_circuit_with_fault_string p inputs output
+  circuit_file <- emptySystemTempFile "ae_circuit.py"
+  writeFile circuit_file p_str
+  stdout_name <- emptySystemTempFile "ae_circuit_result_stdout.txt"
+  stdout_file <- openFile stdout_name WriteMode
+  stderr_name <- emptySystemTempFile "ae_circuit_result_stderr.txt"
+  stderr_file <- openFile stderr_name WriteMode
+  let process =
+        proc "python" [circuit_file]
+  (_ , _, _, phandle) <- createProcess process { std_out = UseHandle stdout_file,
+                                                std_err = UseHandle stderr_file}
+  exit_code <- waitForProcess phandle
+  case exit_code of
+    ExitSuccess -> return Fault_Success
+    ExitFailure c -> do
+      stdout_fault <- readFile stdout_name
+      stderr_fault <- readFile stderr_name
+      return $ Fault_Failure stdout_fault stderr_fault c
 
 test_circuit_with_fault_print p inputs outputs = do 
-  str <- test_circuit_with_fault p inputs outputs
+  str <- test_circuit_with_fault_string p inputs outputs
   putStrLn str
 
-test_circuit_with_fault :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
+test_circuit_with_fault_string :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr -> [a] -> b -> IO String
-test_circuit_with_fault p inputs output = do
+test_circuit_with_fault_string p inputs output = do
   module_str_data <- P.module_to_magma_string p
   let num_ports = length $ P.in_ports $ P.module_outer_results $ module_str_data
   let fault_io = generate_fault_input_output_for_st_program p inputs output
