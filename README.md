@@ -1,6 +1,6 @@
 # Aetherling Embedded In Haskell
 
-Please see [the theory section](theoru/README.md) for an overview of this repo.
+Please see [the theory section](theory/README.md) for an overview of this repo.
 
 Please see [the python repo](https://github.com/David-Durst/aetherling) for the Magma
 backend that compiles to CoreIR and Verilog.
