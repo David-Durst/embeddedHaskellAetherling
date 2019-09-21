@@ -80,7 +80,7 @@ module_to_magma_string e = do
          error_module_ref
     else do
     let mod_body = foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
-    let mod_def = "Main = Module_" ++ (show $ next_module_index lines - 1) ++ "()\n"
+    let mod_def = "Main = Module_" ++ (show $ next_module_index lines - 1) ++ "\n"
    -- epilogue <- magma_epilogue
     return $ Magma_String_Results
       (prelude ++ "\n" ++ mod_body ++ mod_def)

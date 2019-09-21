@@ -49,15 +49,16 @@ data Fault_Result = Fault_Success
                   | Fault_Failure {
                       fault_stdout :: String,
                       fault_stderr :: String,
-                      fault_exit_code :: Int
+                      fault_exit_code :: Int,
+                      python_file :: FilePath
                       } deriving (Show, Eq)
 
 test_circuit_with_fault p inputs output = do
   result <- test_circuit_with_fault_no_io p inputs output
   case result of
     Fault_Success -> return ()
-    Fault_Failure stdout stderr exit_code -> do
-      putStrLn "Failure"
+    Fault_Failure stdout stderr exit_code py_file -> do
+      putStrLn $ "Failure with file " ++ py_file
       putStrLn stdout
       putStrLn stderr
       putStrLn $ "Exit Code: " ++ show exit_code
@@ -83,7 +84,7 @@ test_circuit_with_fault_no_io p inputs output = do
     ExitFailure c -> do
       stdout_fault <- readFile stdout_name
       stderr_fault <- readFile stderr_name
-      return $ Fault_Failure stdout_fault stderr_fault c
+      return $ Fault_Failure stdout_fault stderr_fault c circuit_file
 
 test_circuit_with_fault_print p inputs outputs = do 
   str <- test_circuit_with_fault_string p inputs outputs
@@ -102,7 +103,7 @@ test_circuit_with_fault_string p inputs output = do
   let f_output = "fault_output = " ++ fault_output fault_io ++ "\n"
   let test_start =
         "if __name__ == '__main__':\n" ++
-        P.tab_str ++ "mod = Main\n" ++
+        P.tab_str ++ "mod = Main()\n" ++
         P.tab_str ++ "tester = fault.Tester(mod, mod.CLK)\n" ++
         P.tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++ "):\n"
   let test_inputs = foldl (++) "" $
