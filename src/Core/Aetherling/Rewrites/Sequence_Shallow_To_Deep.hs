@@ -20,8 +20,8 @@ import qualified Data.Vector.Sized as V
 import qualified Data.Map.Lazy as M
 import Util
 
-compile :: (Aetherling_Value a) => Rewrite_StateM a -> Expr
-compile shallow_programM = do
+seq_shallow_to_deep :: (Aetherling_Value a) => Rewrite_StateM a -> Expr
+seq_shallow_to_deep shallow_programM = do
   let shallow_program = fromRight undefined $
         evalState (runExceptT shallow_programM) empty_rewrite_data
   let expr_maybe = edge_to_maybe_expr shallow_program 
@@ -313,7 +313,7 @@ instance Sequence_Language Rewrite_StateM where
   zipC :: forall a l n i . (Aetherling_Value a, KnownNat l, KnownNat n, KnownNat i) =>
     Proxy l -> [Rewrite_StateM (Seq n i a)] -> Rewrite_StateM (Seq n i (Seq_Tuple l a))
   zipC len_proxy inputsM | natVal len_proxy > 2 = do
-    let inputs = fmap compile inputsM
+    let inputs = fmap seq_shallow_to_deep inputsM
     let a_type = get_AST_type (Proxy :: Proxy a)
     let n_val = fromInteger $ natVal (Proxy :: Proxy n)
     let i_val = fromInteger $ natVal (Proxy :: Proxy i)
