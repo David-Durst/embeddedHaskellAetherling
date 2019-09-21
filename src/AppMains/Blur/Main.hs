@@ -21,9 +21,6 @@ import Data.List
 import Aetherling.Image_Helper
 
 main = do
-  print_seq_io $ deep_embedded_sub_pyramid
-  putStrLn $ show $ STE.index $ blur_sub_pyramid_ppar !! 3
-  {-
   args <- getArgs
   img <- load_image_as_ints (head args)
   let img_width = Proxy @192
@@ -44,7 +41,6 @@ main = do
   let result_img_pyramid = Pixels (result_pyramid_list !! 0) (result_pyramid_list !! 1)
                    (result_pyramid_list !! 2) (192 `div` 8) (320 `div` 8)
   ints_to_image "blurred_pyramid_HalideParrot.png" result_img_pyramid
--}
 
 deep_embedded_blur_pyramid = add_indexes $ compile $
   blur_pyramidC (Proxy @192) (Proxy @320) $
