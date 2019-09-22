@@ -101,17 +101,17 @@ match_latencies' e@(Remove_1_0_tN _ _ _) = undefined
 
 -- higher order operators
 match_latencies' e@(Map_sN _ f producer _) = do
+  Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
   Matched_Latency_Result new_producer latency_producer <-
     memo producer $ match_latencies' producer
-  Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
   cur_idx <- get_cur_index
   return $ Matched_Latency_Result
     (e {f = new_f, seq_in = new_producer, index = cur_idx} )
     (latency_producer + latency_f)
 match_latencies' e@(Map_tN _ _ f producer _) = do
+  Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
   Matched_Latency_Result new_producer latency_producer <-
     memo producer $ match_latencies' producer
-  Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
   cur_idx <- get_cur_index
   return $ Matched_Latency_Result
     (e {f = new_f, seq_in = new_producer, index = cur_idx} )
@@ -198,8 +198,8 @@ match_combinational_op op producer = do
   return (Matched_Latency_Result new_op producer_latency)
 
 match_map2 e f producer_left producer_right = do
-  e_update_except_f <- match_binary_op e producer_left producer_right
   Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
+  e_update_except_f <- match_binary_op e producer_left producer_right
   return $ e_update_except_f {
     latency = latency e_update_except_f + latency_f
     }
