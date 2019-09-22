@@ -52,6 +52,12 @@ seq_rewrite' = do
   tr <- lift $ rewrite_AST_type 2 (SeqT 4 0 IntT)
   part_par_AST_type tr (SeqT 4 0 IntT)
 -}
+tuple_simple_no_input input0 input1 =
+  atom_tupleC input0 input1
+tuple_simple = tuple_simple_no_input
+               (com_input_int "l_int") 
+               (com_input_bit "r_bit") 
+tuple_simple_seq_idx = add_indexes $ seq_shallow_to_deep tuple_simple
 
 diamond_map_no_input input = do
   let branch = mapC absC input

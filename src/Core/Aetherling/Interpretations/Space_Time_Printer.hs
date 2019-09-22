@@ -7,6 +7,7 @@ import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Identity
 import Aetherling.Monad_Helpers
+import Debug.Trace
 
 data Print_Data = Print_Data {
   cur_module_output_lines :: [String],
@@ -327,6 +328,11 @@ print_inner (InputN t name cur_idx) = do
   return name
 print_inner e@(ErrorN msg cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
+  cur_data <- lift get
+  lift $ put $ cur_data {
+    cur_module_inputs = cur_module_inputs cur_data ++
+                        ["ERROR for node" ++ show cur_idx]
+    }
   add_to_cur_module $ cur_ref_name ++ " = ErrorN " ++ msg
   return cur_ref_name
 print_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
