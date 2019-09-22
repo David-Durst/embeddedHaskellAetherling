@@ -246,6 +246,11 @@ print_inner (InputN t name cur_idx) = do
   return name
 print_inner e@(ErrorN msg cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
+  cur_data <- lift get
+  lift $ put $ cur_data {
+    cur_module_inputs = cur_module_inputs cur_data ++
+                        ["ERROR for node" ++ show cur_idx]
+    }
   add_to_cur_module $ cur_ref_name ++ " = ErrorN " ++ msg
   return cur_ref_name
 
