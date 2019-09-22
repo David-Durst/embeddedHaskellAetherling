@@ -67,6 +67,14 @@ compile_with_slowdown_to_file shallow_seq_program s output_name = do
     print_st deep_st_program
     return $ Compile_Failure "invalid types for program" "" "" 0
 
+compile_and_test_with_slowdown :: (Shallow_Types.Aetherling_Value a,
+                                   Convertible_To_Atom_Strings a,
+                                   Convertible_To_Atom_Strings b) =>
+                                  RH.Rewrite_StateM a -> Int -> [a] -> b -> IO Fault_Result
+compile_and_test_with_slowdown shallow_seq_program s inputs output = do
+  deep_st_program <- compile_with_slowdown_to_expr shallow_seq_program s
+  test_circuit_with_fault deep_st_program inputs output
+
 compile_with_slowdown_to_expr :: (Shallow_Types.Aetherling_Value a) =>
                                  RH.Rewrite_StateM a -> Int -> IO STE.Expr
 compile_with_slowdown_to_expr shallow_seq_program s = do
@@ -76,4 +84,4 @@ compile_with_slowdown_to_expr shallow_seq_program s = do
   let deep_st_program =
         rewrite_to_partially_parallel s deep_seq_program_with_indexes
   return deep_st_program
-  --ML.match_latencies deep_st_program
+  ML.match_latencies deep_st_program
