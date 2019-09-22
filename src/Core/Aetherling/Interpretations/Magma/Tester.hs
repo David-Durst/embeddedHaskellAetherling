@@ -93,6 +93,8 @@ test_circuit_with_fault_string p inputs output = do
   module_str_data <- P.module_to_magma_string p
   let num_ports = length $ P.in_ports $ P.module_outer_results $ module_str_data
   let fault_io = generate_fault_input_output_for_st_program p inputs output
+  -- these are nested for both space and time
+  -- issue: if 1 input per clock, then need to remove the space dimension
   let f_inputs = foldl (++) "" $
         map (\i -> "fault_inputs" ++ show i ++ " = " ++
              show_no_quotes (fault_inputs fault_io !! i) ++ "\n")
@@ -152,17 +154,16 @@ generate_fault_input_output_for_st_program p inputs output = do
   -- these are nested for both space and time
   -- issue: if 1 input per clock, then need to remove the space dimension
   -- as each input port is not vectorized
-  let fault_inputs = [
-        if length (p_in_st_vals_xs !! i !! 0) == 1
-        then show_no_quotes $ p_in_st_vals_xs !! i !! 0
-        else show_no_quotes $ p_in_st_vals_xs !! i
-        | i <- [0..length inputs - 1]]
-  let fault_output =
-        if length (p_in_st_vals_xs !! 0) == 1
-        then show_no_quotes $ p_in_st_vals_xs !! 0
-        else show_no_quotes $ p_in_st_vals_xs
-  traceShow fault_inputs $ Fault_IO (map show_no_quotes p_in_st_vals_xs) (show_no_quotes p_out_st_vals)
-    valid_out (length p_out_st_idxs)
+  let fault_inputs = map (show_no_quotes . remove_sseq_length_one) p_in_st_vals_xs
+  let fault_output = show_no_quotes $ remove_sseq_length_one p_out_st_vals
+  Fault_IO (fault_inputs) (fault_output) valid_out (length p_out_st_idxs)
+
+remove_sseq_length_one :: [[String]] -> [String]
+remove_sseq_length_one ts_vals | length ts_vals == 0 = []
+remove_sseq_length_one ts_vals |
+  length (ts_vals !! 0) == 1 =
+  map (\sseq -> sseq !! 0) ts_vals
+remove_sseq_length_one ts_vals = map show_no_quotes ts_vals
 
 show_no_quotes :: Show a => a -> String
 show_no_quotes = filter (\x -> x /= '\"') . show
