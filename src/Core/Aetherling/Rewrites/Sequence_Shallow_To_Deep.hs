@@ -429,6 +429,9 @@ com_input_seq s a_proxy = do
 com_input_any :: Aetherling_Value a => String -> Rewrite_StateM a
 com_input_any s = do
   return $ get_input_edge s No_Index
+com_input :: Aetherling_Value a => String -> Proxy a -> Rewrite_StateM a
+com_input s _ = do
+  return $ get_input_edge s No_Index
 {-
 com_input_atom_tuple :: forall a b .
   (Aetherling_Value a, Aetherling_Value b) =>

@@ -199,9 +199,10 @@ match_combinational_op op producer = do
 
 match_map2 e f producer_left producer_right = do
   Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
-  e_update_except_f <- match_binary_op e producer_left producer_right
-  return $ e_update_except_f {
-    latency = latency e_update_except_f + latency_f
+  let e_replaced_f = e {f = new_f}
+  e_updated <- match_binary_op e_replaced_f producer_left producer_right
+  return $ e_updated {
+    latency = latency e_updated + latency_f
     }
 
 match_binary_op e producer_left producer_right = do

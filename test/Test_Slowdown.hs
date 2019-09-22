@@ -58,6 +58,17 @@ tuple_simple = tuple_simple_no_input
                (com_input_int "l_int") 
                (com_input_bit "r_bit") 
 tuple_simple_seq_idx = add_indexes $ seq_shallow_to_deep tuple_simple
+-- this should fail. Can't slow down an operator on just atoms
+tuple_simple_ppar = rewrite_to_partially_parallel 2 tuple_simple_seq_idx
+
+tuple_map_no_input input0 input1 =
+  map2C atom_tupleC input0 input1
+tuple_map = tuple_map_no_input
+               (com_input "l_int_seq" (Proxy :: Proxy (Seq 4 0 Atom_Int))) 
+               (com_input "l_bit_seq" (Proxy :: Proxy (Seq 4 0 Atom_Bit))) 
+tuple_map_seq_idx = add_indexes $ seq_shallow_to_deep tuple_map
+tuple_map_ppar = fmap (\s -> rewrite_to_partially_parallel s tuple_map_seq_idx) [1,2,4]
+tuple_map_ppar_type_check = fmap check_type tuple_map_ppar
 
 diamond_map_no_input input = do
   let branch = mapC absC input
