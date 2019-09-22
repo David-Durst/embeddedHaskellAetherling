@@ -70,9 +70,9 @@ test_circuit_with_fault_no_io p inputs output = do
   p_str <- test_circuit_with_fault_string p inputs output
   circuit_file <- emptySystemTempFile "ae_circuit.py"
   writeFile circuit_file p_str
-  stdout_name <- emptySystemTempFile "ae_circuit_result_stdout.txt"
+  stdout_name <- emptySystemTempFile "ae_circuit_fault_stdout.txt"
   stdout_file <- openFile stdout_name WriteMode
-  stderr_name <- emptySystemTempFile "ae_circuit_result_stderr.txt"
+  stderr_name <- emptySystemTempFile "ae_circuit_fault_stderr.txt"
   stderr_file <- openFile stderr_name WriteMode
   let process =
         proc "python" [circuit_file]

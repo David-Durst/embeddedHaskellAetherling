@@ -42,6 +42,8 @@ dependencies:
 - time
 - temporary
 - process
+- filepath
+- directory
 
 ghc-options:
 - -fconstraint-solver-iterations=0

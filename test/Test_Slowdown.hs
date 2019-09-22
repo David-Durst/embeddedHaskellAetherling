@@ -27,18 +27,18 @@ import Control.Monad.State
 -- (layer is in ops, not seqs)
 
 -- two most basic examples
-single_map = seq_shallow_to_deep $
+single_map = 
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
-single_map_seq_idx = add_indexes single_map
+single_map_seq_idx = add_indexes $ seq_shallow_to_deep single_map
 single_map_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map_seq_idx) [1,2,4]
 single_map_ppar_results = fmap check_type single_map_ppar
 
-two_maps = seq_shallow_to_deep $
+two_maps = 
   mapC' (Proxy @4) absC >>>
   mapC absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
-two_maps_seq_idx = add_indexes two_maps
+two_maps_seq_idx = add_indexes $ seq_shallow_to_deep two_maps
 two_maps_ppar = fmap (\s -> rewrite_to_partially_parallel s two_maps_seq_idx) [1,2,4]
 two_maps_ppar_type_check = fmap check_type two_maps_ppar
 {-
@@ -53,31 +53,31 @@ seq_rewrite' = do
   part_par_AST_type tr (SeqT 4 0 IntT)
 -}
 
-diamond_map_unseq_shallow_to_deepd input = do
+diamond_map_no_input input = do
   let branch = mapC absC input
   let tuple = map2C atom_tupleC branch input
   mapC addC tuple
-diamond_map = seq_shallow_to_deep $ diamond_map_unseq_shallow_to_deepd $
+diamond_map = diamond_map_no_input $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
-diamond_map_seq_idx = add_indexes diamond_map
+diamond_map_seq_idx = add_indexes $ seq_shallow_to_deep diamond_map
 diamond_map_ppar = fmap
   (\s -> rewrite_to_partially_parallel s diamond_map_seq_idx) [1,2,4]
 diamond_map_ppar_results = fmap check_type diamond_map_ppar
 
-single_map_underutil = seq_shallow_to_deep $
+single_map_underutil = 
   mapC' (Proxy @4) absC $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 4 Atom_Int))
-single_map_underutil_seq_idx = add_indexes single_map_underutil
+single_map_underutil_seq_idx = add_indexes $ seq_shallow_to_deep single_map_underutil
 single_map_underutil_ppar = fmap
   (\s -> rewrite_to_partially_parallel s single_map_underutil_seq_idx) [1,2,4,8]
 single_map_underutil_ppar_results = fmap check_type single_map_underutil_ppar
 
 -- tests basic multi-rate
-map_to_up = seq_shallow_to_deep $
+map_to_up = 
   mapC' (Proxy @1) absC >>> -- [1]
   up_1dC (Proxy @4) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 1 3 Atom_Int))
-map_to_up_seq_idx = add_indexes map_to_up
+map_to_up_seq_idx = add_indexes $ seq_shallow_to_deep map_to_up
 map_to_up_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_up_seq_idx) [1,2,4]
 map_to_up_ppar_result = fmap check_type map_to_up_ppar
 

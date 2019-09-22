@@ -20,3 +20,4 @@ GTAGS
 TAGS
 .dir-locals.el
 *.graffle
+vBuild/
