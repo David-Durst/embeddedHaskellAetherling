@@ -29,9 +29,6 @@ data ST_Val_Index = ST_Val_Index {
 class Convertible_To_Atom_Strings a where
   convert_to_flat_atom_list :: a -> [String]
 
-instance Convertible_To_Atom_Strings Int where
-  convert_to_flat_atom_list x = [show x]
-  
 instance Convertible_To_Atom_Strings Integer where
   convert_to_flat_atom_list x = [show x]
 
@@ -152,7 +149,19 @@ generate_fault_input_output_for_st_program p inputs output = do
                          (flat_input_idx_to_str_xs !! i) (p_in_st_idxs_xs !! i)
                          | i <- [0..length inputs - 1]]
   let p_out_st_vals = convert_st_val_idxs_to_vals flat_output_idx_to_str p_out_st_idxs
-  Fault_IO (map show_no_quotes p_in_st_vals_xs) (show_no_quotes p_out_st_vals)
+  -- these are nested for both space and time
+  -- issue: if 1 input per clock, then need to remove the space dimension
+  -- as each input port is not vectorized
+  let fault_inputs = [
+        if length (p_in_st_vals_xs !! i !! 0) == 1
+        then show_no_quotes $ p_in_st_vals_xs !! i !! 0
+        else show_no_quotes $ p_in_st_vals_xs !! i
+        | i <- [0..length inputs - 1]]
+  let fault_output =
+        if length (p_in_st_vals_xs !! 0) == 1
+        then show_no_quotes $ p_in_st_vals_xs !! 0
+        else show_no_quotes $ p_in_st_vals_xs
+  traceShow fault_inputs $ Fault_IO (map show_no_quotes p_in_st_vals_xs) (show_no_quotes p_out_st_vals)
     valid_out (length p_out_st_idxs)
 
 show_no_quotes :: Show a => a -> String

@@ -12,6 +12,8 @@ import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Exp
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
+import Aetherling.Interpretations.Magma.Compile
+import Aetherling.Interpretations.Magma.Tester
 import Data.Proxy
 import GHC.TypeLits
 import GHC.TypeLits.Extra
@@ -32,7 +34,15 @@ single_map =
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
 single_map_seq_idx = add_indexes $ seq_shallow_to_deep single_map
 single_map_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map_seq_idx) [1,2,4]
-single_map_ppar_results = fmap check_type single_map_ppar
+single_map_ppar_typechecked = fmap check_type single_map_ppar
+single_map_inputs :: [[Integer]] = [[0,-1,2,3]]
+single_map_output :: [Integer] = [0,1,2,3]
+-- sequence used to flip [] and IO so can print from command line
+single_map_ppar_results = sequence $ fmap (\s -> compile_and_test_with_slowdown single_map s
+                                            single_map_inputs single_map_output) [1,2,4]
+x = test_circuit_with_fault (single_map_ppar !! 0) single_map_inputs single_map_output
+print123 :: (Num a, Show a) => a -> String
+print123 = show
 
 two_maps = 
   mapC' (Proxy @4) absC >>>
@@ -40,7 +50,7 @@ two_maps =
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
 two_maps_seq_idx = add_indexes $ seq_shallow_to_deep two_maps
 two_maps_ppar = fmap (\s -> rewrite_to_partially_parallel s two_maps_seq_idx) [1,2,4]
-two_maps_ppar_type_check = fmap check_type two_maps_ppar
+two_maps_ppar_typechecked = fmap check_type two_maps_ppar
 {-
 input_rewrite = rewrite_to_partially_parallel 2 (InputN (SeqT 4 0 IntT) "hi")
 input_rewrite' :: Partially_Parallel_StateM STE.Expr
@@ -79,7 +89,7 @@ diamond_map = diamond_map_no_input $
 diamond_map_seq_idx = add_indexes $ seq_shallow_to_deep diamond_map
 diamond_map_ppar = fmap
   (\s -> rewrite_to_partially_parallel s diamond_map_seq_idx) [1,2,4]
-diamond_map_ppar_results = fmap check_type diamond_map_ppar
+diamond_map_ppar_typecheckeds = fmap check_type diamond_map_ppar
 
 single_map_underutil = 
   mapC' (Proxy @4) absC $ -- [4]
@@ -87,7 +97,7 @@ single_map_underutil =
 single_map_underutil_seq_idx = add_indexes $ seq_shallow_to_deep single_map_underutil
 single_map_underutil_ppar = fmap
   (\s -> rewrite_to_partially_parallel s single_map_underutil_seq_idx) [1,2,4,8]
-single_map_underutil_ppar_results = fmap check_type single_map_underutil_ppar
+single_map_underutil_ppar_typecheckeds = fmap check_type single_map_underutil_ppar
 
 -- tests basic multi-rate
 map_to_up = 
@@ -96,7 +106,7 @@ map_to_up =
   com_input_seq "hi" (Proxy :: Proxy (Seq 1 3 Atom_Int))
 map_to_up_seq_idx = add_indexes $ seq_shallow_to_deep map_to_up
 map_to_up_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_up_seq_idx) [1,2,4]
-map_to_up_ppar_result = fmap check_type map_to_up_ppar
+map_to_up_ppar_typechecked = fmap check_type map_to_up_ppar
 
 -- test two multi-rates of different rates
 up_to_down = seq_shallow_to_deep $
@@ -105,7 +115,7 @@ up_to_down = seq_shallow_to_deep $
   com_input_seq "hi" (Proxy :: Proxy (Seq 5 0 Atom_Int))
 up_to_down_seq_idx = add_indexes up_to_down
 up_to_down_ppar = fmap (\s -> rewrite_to_partially_parallel s up_to_down_seq_idx) [1,5]
-up_to_down_ppar_result = fmap check_type up_to_down_ppar
+up_to_down_ppar_typechecked = fmap check_type up_to_down_ppar
 
 -- next two test how to distribute slowdown correctly when multi-rate is nested
 nested_map_to_top_level_up = seq_shallow_to_deep $
@@ -117,7 +127,7 @@ nested_map_to_top_level_up = seq_shallow_to_deep $
 -- and I say partially parallel for those, becuase not fully slowed down
 nested_map_to_top_level_up_seq_idx = add_indexes nested_map_to_top_level_up
 nested_map_to_top_level_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_top_level_up_seq_idx) [1,2,4,8,16]
-nested_map_to_top_level_up_ppar_result = fmap check_type nested_map_to_top_level_up_ppar
+nested_map_to_top_level_up_ppar_typechecked = fmap check_type nested_map_to_top_level_up_ppar
 
 nested_map_to_nested_up = seq_shallow_to_deep $
   mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
@@ -125,7 +135,7 @@ nested_map_to_nested_up = seq_shallow_to_deep $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 1 5 Atom_Int)))
 nested_map_to_nested_up_seq_idx = add_indexes nested_map_to_nested_up
 nested_map_to_nested_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_nested_up_seq_idx) [1,2,3,4,8,16]
-nested_map_to_nested_up_ppar_result = fmap check_type nested_map_to_nested_up_ppar
+nested_map_to_nested_up_ppar_typechecked = fmap check_type nested_map_to_nested_up_ppar
 
 -- testing basic partitioning
 partition_to_flat_map = seq_shallow_to_deep $
@@ -134,7 +144,7 @@ partition_to_flat_map = seq_shallow_to_deep $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 12 Atom_Int))
 partition_to_flat_map_seq_idx = add_indexes partition_to_flat_map
 partition_to_flat_map_ppar = fmap (\s -> rewrite_to_partially_parallel s partition_to_flat_map_seq_idx) [1,2,4,8,16]
-partition_to_flat_map_ppar_result = fmap check_type partition_to_flat_map_ppar
+partition_to_flat_map_ppar_typechecked = fmap check_type partition_to_flat_map_ppar
 
 map_to_unpartition = seq_shallow_to_deep $
   mapC (mapC absC) >>>
@@ -143,7 +153,7 @@ map_to_unpartition = seq_shallow_to_deep $
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 6 (Seq 2 0 Atom_Int)))
 map_to_unpartition_seq_idx = add_indexes map_to_unpartition
 map_to_unpartition_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_unpartition_seq_idx) [1,2,4,8,16]
-map_to_unpartition_ppar_result = fmap check_type map_to_unpartition_ppar
+map_to_unpartition_ppar_typechecked = fmap check_type map_to_unpartition_ppar
 
 -- combining multi-rate with partitioning
 double_up = seq_shallow_to_deep $
@@ -155,8 +165,8 @@ double_up = seq_shallow_to_deep $
 double_up_seq_idx = add_indexes double_up
 double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up_seq_idx) [1,2,3,5,6,10,15,30]
 --double_up_ppar_no_errors = filter (not . STE.is_error_node) double_up_ppar
-double_up_ppar_result = fmap check_type double_up_ppar
-double_up_ppar_result' = fmap check_type' double_up_ppar
+double_up_ppar_typechecked = fmap check_type double_up_ppar
+double_up_ppar_typechecked' = fmap check_type' double_up_ppar
 double_up_slow_6 = rewrite_to_partially_parallel 6 double_up_seq_idx
 -- the problem with this case is that, for the output Seq 5 (Seq 6 Int)
 -- with s = 6, the 5 is fully utilized and the 6 is fully underutilized.
@@ -165,8 +175,8 @@ double_up_slow_6 = rewrite_to_partially_parallel 6 double_up_seq_idx
 -- However, when unpartitioning, the unpartition 2 3 have lots of
 -- potentially empty clocks from all of 5 that got rolled into them.
 -- So unpartition creates an extra 1.
-double_up_slow_6_result = check_type double_up_slow_6
-double_up_slow_6_result' = check_type' double_up_slow_6
+double_up_slow_6_typechecked = check_type double_up_slow_6
+double_up_slow_6_typechecked' = check_type' double_up_slow_6
 
 down_over_nested_to_down_over_flattened = seq_shallow_to_deep $
   (down_1dC' (Proxy @4) 0 >>>
@@ -177,9 +187,9 @@ down_over_nested_to_down_over_flattened_seq_idx = add_indexes down_over_nested_t
 down_over_nested_to_down_over_flattened_ppar =
   fmap (\s -> rewrite_to_partially_parallel s down_over_nested_to_down_over_flattened_seq_idx)
   [1,2,4,8,16]
-down_over_nested_to_down_over_flattened_ppar_result =
+down_over_nested_to_down_over_flattened_ppar_typechecked =
   fmap check_type down_over_nested_to_down_over_flattened_ppar
-down_over_nested_to_down_over_flattened_ppar_result' =
+down_over_nested_to_down_over_flattened_ppar_typechecked' =
   fmap check_type' down_over_nested_to_down_over_flattened_ppar
 
 
@@ -194,11 +204,11 @@ tuple_sum = seq_shallow_to_deep $
 tuple_sum_seq_idx = add_indexes tuple_sum
 tuple_sum_ppar =
   fmap (\s -> rewrite_to_partially_parallel s tuple_sum_seq_idx) [1,2,4]
-tuple_sum_ppar_result =
+tuple_sum_ppar_typechecked =
   fmap check_type tuple_sum_ppar
-tuple_sum_ppar_result' =
+tuple_sum_ppar_typechecked' =
   fmap check_type' tuple_sum_ppar
-tuple_sum_ppar_result_s_2 = check_type' $ rewrite_to_partially_parallel 2 tuple_sum
+tuple_sum_ppar_typechecked_s_2 = check_type' $ rewrite_to_partially_parallel 2 tuple_sum
 
 tuple_reduce_shallow in_seq = do
   let kernel_list = fmap Atom_Int [1,2,3,4,5,6,7,8]
@@ -212,9 +222,9 @@ tuple_reduce = seq_shallow_to_deep $
 tuple_reduce_seq_idx = add_indexes tuple_reduce
 tuple_reduce_ppar =
   fmap (\s -> rewrite_to_partially_parallel s tuple_reduce_seq_idx) [1,2,4,8]
-tuple_reduce_ppar_result =
+tuple_reduce_ppar_typechecked =
   fmap check_type tuple_reduce_ppar
-tuple_reduce_ppar_result' =
+tuple_reduce_ppar_typechecked' =
   fmap check_type' tuple_reduce_ppar
 
 
@@ -232,9 +242,9 @@ fst_snd_sum = seq_shallow_to_deep $
 fst_snd_sum_seq_idx = add_indexes fst_snd_sum
 fst_snd_sum_ppar =
   fmap (\s -> rewrite_to_partially_parallel s fst_snd_sum_seq_idx) [1,2,4,8]
-fst_snd_sum_ppar_result =
+fst_snd_sum_ppar_typechecked =
   fmap check_type fst_snd_sum_ppar
-fst_snd_sum_ppar_result' =
+fst_snd_sum_ppar_typechecked' =
   fmap check_type' fst_snd_sum_ppar
 
 striple_shallow in_seq = do
@@ -246,9 +256,9 @@ striple = seq_shallow_to_deep $
 striple_seq_idx = add_indexes striple
 striple_ppar =
   fmap (\s -> rewrite_to_partially_parallel s striple_seq_idx) [1,2,4,8]
-striple_ppar_result =
+striple_ppar_typechecked =
   fmap check_type striple_ppar
-striple_ppar_result' =
+striple_ppar_typechecked' =
   fmap check_type' striple_ppar
 
 seq_to_stuple_basic = seq_shallow_to_deep $
@@ -257,7 +267,7 @@ seq_to_stuple_basic = seq_shallow_to_deep $
 seq_to_stuple_basic_seq_idx = add_indexes seq_to_stuple_basic
 seq_to_stuple_basic_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s seq_to_stuple_basic_seq_idx) [1,2,4,8,16]
-seq_to_stuple_basic_ppar_result =
+seq_to_stuple_basic_ppar_typechecked =
   fmap check_type seq_to_stuple_basic_ppar
 
 
@@ -267,7 +277,7 @@ stuple_to_seq_basic = seq_shallow_to_deep $
 stuple_to_seq_basic_seq_idx = add_indexes stuple_to_seq_basic
 stuple_to_seq_basic_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s stuple_to_seq_basic_seq_idx) [1,2,4,8,16]
-stuple_to_seq_basic_ppar_result =
+stuple_to_seq_basic_ppar_typechecked =
   fmap check_type stuple_to_seq_basic_ppar
 
 
@@ -281,9 +291,9 @@ striple_to_seq = seq_shallow_to_deep $
 striple_to_seq_seq_idx = add_indexes striple_to_seq
 striple_to_seq_ppar =
   fmap (\s -> rewrite_to_partially_parallel s striple_to_seq_seq_idx) [1,2,4,8]
-striple_to_seq_ppar_result =
+striple_to_seq_ppar_typechecked =
   fmap check_type striple_to_seq_ppar
-striple_to_seq_ppar_result' =
+striple_to_seq_ppar_typechecked' =
   fmap check_type' striple_to_seq_ppar
 
 
@@ -300,9 +310,9 @@ stencil_1d_test = seq_shallow_to_deep $
 stencil_1d_test_seq_idx = add_indexes stencil_1d_test
 stencil_1d_test_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s stencil_1d_test_seq_idx) [1,2,5,10,30]
-stencil_1d_test_ppar_result =
+stencil_1d_test_ppar_typechecked =
   fmap check_type stencil_1d_test_ppar
-stencil_1d_test_ppar_result' =
+stencil_1d_test_ppar_typechecked' =
   fmap check_type' stencil_1d_test_ppar
 
 stencil_2dC_test window_size_row window_size_col in_col in_img = do
@@ -319,9 +329,9 @@ stencil_2d_test = seq_shallow_to_deep $
 stencil_2d_test_seq_idx = add_indexes stencil_2d_test
 stencil_2d_test_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s stencil_2d_test_seq_idx) [1,2,5,10,30]
-stencil_2d_test_ppar_result =
+stencil_2d_test_ppar_typechecked =
   fmap check_type stencil_2d_test_ppar
-stencil_2d_test_ppar_result' =
+stencil_2d_test_ppar_typechecked' =
   fmap check_type' stencil_2d_test_ppar
 
 map_reduce_nested = seq_shallow_to_deep $
@@ -331,7 +341,7 @@ map_reduce_nested = seq_shallow_to_deep $
 map_reduce_seq_idx = add_indexes map_reduce_nested
 map_reduce_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s map_reduce_seq_idx) [1,3,9]
-map_reduce_ppar_result =
+map_reduce_ppar_typechecked =
   fmap check_type map_reduce_ppar
 -- END OF ACTUALLY TESTED THINGS
 -- multiple unpartitions into a multi-rate

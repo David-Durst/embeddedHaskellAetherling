@@ -29,7 +29,8 @@ rewrite_to_partially_parallel s seq_expr = do
                              (runExceptT $ rewrite_to_partially_parallel' s seq_expr)
                              empty_rewrite_data)
                  empty_ppar_state
-  trace ("num_calls : " ++ (show $ num_calls state)) $ if isLeft expr_par
+  --trace ("num_calls : " ++ (show $ num_calls state)) $
+  if isLeft expr_par
     then STE.ErrorN (rw_msg $ fromLeft undefined expr_par) No_Index
     else fromRight undefined expr_par
 
@@ -37,8 +38,8 @@ rewrite_to_partially_parallel' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Ex
 rewrite_to_partially_parallel' s seq_expr = do
   let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
   output_type_slowdowns <- rewrite_AST_type s seq_expr_out_type
-  trace ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n") $
-    startEvalMemoT $ sequence_to_partially_parallel output_type_slowdowns seq_expr
+  --trace ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
+  startEvalMemoT $ sequence_to_partially_parallel output_type_slowdowns seq_expr
 
 data Input_Type_Rewrites = Input_Type_Rewrites {
   input_rewrites :: [Type_Rewrite],
@@ -1565,7 +1566,7 @@ sequence_to_partially_parallel_with_reshape cur_type_rewrites producer = do
   incr_num_calls
   nc <- get_num_calls
   let time = unsafePerformIO $ getCurrentTime
-  traceM $ "cur call count: " ++ show nc ++ " with seq producer index: " ++ (show $ get_index producer) ++ " and time: " ++ (show time)
+  --traceM $ "cur call count: " ++ show nc ++ " with seq producer index: " ++ (show $ get_index producer) ++ " and time: " ++ (show time)
   producer_ppar <- memo producer $ sequence_to_partially_parallel cur_type_rewrites producer
   actual_type_rewrites <- get_output_rewrites_for_node producer
   if actual_type_rewrites == cur_type_rewrites

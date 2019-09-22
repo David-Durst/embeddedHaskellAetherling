@@ -68,9 +68,9 @@ compile_with_slowdown_to_file shallow_seq_program s output_name = do
     return $ Compile_Failure "invalid types for program" "" "" 0
 
 compile_and_test_with_slowdown :: (Shallow_Types.Aetherling_Value a,
-                                   Convertible_To_Atom_Strings a,
-                                   Convertible_To_Atom_Strings b) =>
-                                  RH.Rewrite_StateM a -> Int -> [a] -> b -> IO Fault_Result
+                                   Convertible_To_Atom_Strings b,
+                                   Convertible_To_Atom_Strings c) =>
+                                  RH.Rewrite_StateM a -> Int -> [b] -> c -> IO Fault_Result
 compile_and_test_with_slowdown shallow_seq_program s inputs output = do
   deep_st_program <- compile_with_slowdown_to_expr shallow_seq_program s
   test_circuit_with_fault deep_st_program inputs output
