@@ -60,12 +60,12 @@ add_input_to_expr_for_map :: Monad m => (Expr -> DAG_Index -> Expr) ->
                              Memo_Rewrite_StateTM Expr m Expr
 add_input_to_expr_for_map expr_gen = do
   input_idx <- get_cur_index
-  let expr_idx_gen = add_index expr_gen
-  expr_with_error_input <- expr_idx_gen $ ErrorN "not an error" input_idx
-  let expr_types = expr_to_types expr_with_error_input
+  map_idx <- get_cur_index
+  let expr_types = expr_to_types
+                   (expr_gen (ErrorN "not an error" input_idx) map_idx)
   let expr_in_type = head $ e_in_types expr_types
-  expr_idx_gen $ InputN expr_in_type "f_in" input_idx
-  
+  return $ expr_gen (InputN expr_in_type "f_in" input_idx) map_idx
+
 add_input_to_expr_for_map2 :: Monad m => (Expr -> Expr -> DAG_Index -> Expr) ->
                               Memo_Rewrite_StateTM Expr m Expr
 add_input_to_expr_for_map2 expr_gen = do

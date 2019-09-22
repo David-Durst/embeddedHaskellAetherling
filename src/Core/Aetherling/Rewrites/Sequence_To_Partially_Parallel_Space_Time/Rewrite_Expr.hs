@@ -804,9 +804,11 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : ty
   let f_ppar_in_rewrites_tl = input_rewrites $ head $ S.toList f_ppar_in_rewrites_tl_set
   -- reset the input type rewrites for the current graph
   set_input_types_rewrites outer_input_type_rewrites
+  map_st_wrong_producer <- STB.make_map_t tr_no tr_io (STE.Map_sN tr_ni f_ppar)
+                           (STE.ErrorN "tmp" No_Index) 
   producer_ppar <- sequence_to_partially_parallel_with_reshape
                    (tr : f_ppar_in_rewrites_tl) producer
-  STB.make_map_t tr_no tr_io (STE.Map_sN tr_ni f_ppar) producer_ppar
+  return $ map_st_wrong_producer {STE.seq_in = producer_ppar}
 
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
   seq_e@(SeqE.Map2N n i f producer_left producer_right _) |
