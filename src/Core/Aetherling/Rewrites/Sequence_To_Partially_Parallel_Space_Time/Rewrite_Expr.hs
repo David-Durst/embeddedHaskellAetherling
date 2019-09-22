@@ -868,13 +868,13 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr_no tr_io tr_ni) : ty
   let f_ppar_in_rewrites_tl_list = S.toList f_ppar_in_rewrites_tl_set
   let f_ppar_in_rewrites_tl_l = input_rewrites $ head f_ppar_in_rewrites_tl_list
   let f_ppar_in_rewrites_tl_r = input_rewrites $ (f_ppar_in_rewrites_tl_list !! 1)
+  inner_map_s <- STB.add_input_to_expr_for_map2 $ STE.Map2_sN tr_ni f_ppar
   -- reset the input type rewrites for the current graph
   set_input_types_rewrites outer_input_type_rewrites
   producer_left_ppar <- sequence_to_partially_parallel_with_reshape
                         (tr : f_ppar_in_rewrites_tl_l) producer_left
   producer_right_ppar <- sequence_to_partially_parallel_with_reshape
                         (tr : f_ppar_in_rewrites_tl_r) producer_right
-  inner_map_s <- STB.add_input_to_expr_for_map2 $ STE.Map2_sN tr_ni f_ppar
   outer_map2_idx <- get_cur_index
   return $ STE.Map2_tN tr_no tr_io inner_map_s
     producer_left_ppar producer_right_ppar outer_map2_idx
