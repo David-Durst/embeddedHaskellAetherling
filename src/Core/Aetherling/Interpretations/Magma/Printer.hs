@@ -277,31 +277,32 @@ print_inner consumer_e@(Shift_tN n i shift_amount elem_t producer_e cur_idx) = d
                 [Module_Port "I" (TSeqT n i elem_t)] (Module_Port "O" (TSeqT n i elem_t))
   print_unary_operator cur_ref producer_ref
   return cur_ref
-{-
 print_inner consumer_e@(Up_1d_sN n elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Up_1d_sN " ++ show n ++
-    " " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  let gen_str = "DefineUp_S(" ++ show n ++ ", " ++ type_to_python elem_t ++
+                ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT 1 elem_t)] (Module_Port "O" (SSeqT n elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 print_inner consumer_e@(Up_1d_tN n i elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Up_1d_tN " ++ show n ++ " " ++ show i ++
-    " " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  let gen_str = "DefineUp_T(" ++ show n ++ ", " ++ show i ++ ", " ++
+                type_to_python elem_t ++ ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (TSeqT 1 (i+n-1) elem_t)] (Module_Port "O" (TSeqT n i elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+-- no need for downsample module. This doesn't do anything with current clock approach
 print_inner consumer_e@(Down_1d_sN n sel_idx elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Down_1d_sN " ++ show n ++ 
-    " " ++ show sel_idx ++ " " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  return producer_ref
 print_inner consumer_e@(Down_1d_tN n i sel_idx elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Down_1d_tN " ++ show n ++ " " ++ show i ++
-    " " ++ show sel_idx ++ " " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  return producer_ref
+{-
 print_inner consumer_e@(Partition_s_ssN no ni elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
