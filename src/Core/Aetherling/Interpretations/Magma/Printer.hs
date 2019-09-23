@@ -302,36 +302,21 @@ print_inner consumer_e@(Down_1d_sN n sel_idx elem_t producer_e cur_idx) = do
 print_inner consumer_e@(Down_1d_tN n i sel_idx elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   return producer_ref
-{-
 print_inner consumer_e@(Partition_s_ssN no ni elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Partition_s_ssN " ++
-    show no ++ " " ++ show ni ++ " " ++
-    show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
-print_inner consumer_e@(Partition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
+  return producer_ref
+print_inner consumer_e@(Partition_t_ttN no ni io 0 elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Partition_t_ttN " ++
-    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show ii ++ " " ++
-    show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  return producer_ref
+print_inner consumer_e@(Partition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
+  print_inner (ReshapeN (TSeqT (no*ni) (io*ii) elem_t)
+               (TSeqT no io (TSeqT ni ii elem_t)) producer_e cur_idx)
 print_inner consumer_e@(Unpartition_s_ssN no ni elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Unpartition_s_ssN " ++
-    show no ++ " " ++ show ni ++ " " ++ 
-    show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  return producer_ref
 print_inner consumer_e@(Unpartition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Unpartition_t_ttN " ++
-    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show ii ++ " " ++
-    show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
--}
+  print_inner (ReshapeN (TSeqT no io (TSeqT ni ii elem_t))
+               (TSeqT (no*ni) (io*ii) elem_t) producer_e cur_idx)
 print_inner consumer_e@(SerializeN n i elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Serialize not printable"
 print_inner consumer_e@(DeserializeN n i elem_t producer_e cur_idx) = do
