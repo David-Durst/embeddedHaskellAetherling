@@ -26,11 +26,12 @@ data Magma_Data = Magma_Data {
   modules :: [String],
   cur_module_inputs :: [Module_Port],
   cur_module_output :: Module_Port,
-  cur_valid :: String,
+  -- all modules other than reduce use valid
+  cur_module_valid :: Bool,
   next_module_index :: Int
   } deriving (Show, Eq)
 
-empty_print_data = Magma_Data [] [] [] (Module_Port "ERROR" IntT) "cls.valid_in" 0
+empty_print_data = Magma_Data [] [] [] (Module_Port "ERROR" IntT) True 0
 
 type Memo_Print_StateM v = DAG_MemoT v (ExceptT RH.Rewrite_Failure (State Magma_Data))
 
@@ -40,6 +41,21 @@ add_to_cur_module new_string = do
   let cur_output_lines = cur_module_output_lines cur_data
   lift $ put $ cur_data { cur_module_output_lines = cur_output_lines ++ [new_string] }
   return ()
+
+use_valid_port :: Memo_Print_StateM Magma_Module_Ref Bool
+use_valid_port = do
+  cur_data <- lift get
+  return $ cur_module_valid cur_data
+
+enable_valid :: Memo_Print_StateM Magma_Module_Ref ()
+enable_valid = do
+  cur_data <- lift get
+  lift $ put $ cur_data { cur_module_valid = True }
+  
+disable_valid :: Memo_Print_StateM Magma_Module_Ref ()
+disable_valid = do
+  cur_data <- lift get
+  lift $ put $ cur_data { cur_module_valid = False }
 
 magma_prelude :: IO String
 magma_prelude = return $
@@ -96,8 +112,7 @@ print_module new_module = do
   -- setup state for inside module
   let inner_data = start_data {
         cur_module_output_lines = [],
-        cur_module_inputs = [],
-        cur_valid = "cls.valid_up"
+        cur_module_inputs = []
         }
   lift $ put inner_data
   
@@ -133,7 +148,7 @@ print_module new_module = do
         tab_str ++ "class _" ++ cur_module_name ++ "(Circuit):\n" ++
         tab_str ++ tab_str ++ "name = \"" ++ cur_module_name ++ "\"\n" ++
         tab_str ++ tab_str ++ "IO = [" ++ cur_inputs_str ++ cur_output_str ++ "]" ++
-        " + ClockInterface(has_ce=False,has_reset=False)\n" ++
+        " + ClockInterface(has_ce=False,has_reset=False) + valid_ports\n" ++
         module_st_types ++
         tab_str ++ tab_str ++ "@classmethod\n" ++
         tab_str ++ tab_str ++ "def definition(cls):\n"
@@ -143,9 +158,13 @@ print_module new_module = do
                               (port_name $ out_port cur_module_result_ref)
   let module_wire_output = tab_str ++ tab_str ++ tab_str ++
                            "wire(" ++ cur_module_result_str ++ ", cls.O)\n"
+  let cur_module_valid_str = var_name cur_module_result_ref ++ ".valid_down"
+  let module_valid_output = tab_str ++ tab_str ++ tab_str ++
+                           "wire(" ++ cur_module_valid_str ++ ", cls.valid_down)\n"
   let module_end = tab_str ++ "return _" ++ cur_module_name ++ "\n"
   let module_str = module_func_string ++ module_class_decl_string ++
-                   module_body ++ module_wire_output ++ module_end
+                   module_body ++ module_wire_output ++ module_valid_output ++
+                   module_end
 
   -- setup for outer module
   lift $ put $ start_data {
@@ -175,49 +194,50 @@ print_inner (IdN producer_e cur_idx) = do
 print_inner consumer_e@(AbsN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineAbs_Atom()"
+  let cur_ref = Magma_Module_Ref cur_ref_name "DefineAbs_Atom(True)"
                 [Module_Port "I" IntT] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 print_inner consumer_e@(NotN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineNot_Atom()"
+  let cur_ref = Magma_Module_Ref cur_ref_name "DefineNot_Atom(True)"
                 [Module_Port "I" BitT] (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 print_inner consumer_e@(AddN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineAdd_Atom()"
+  let cur_ref = Magma_Module_Ref cur_ref_name "DefineAdd_Atom(True)"
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 print_inner consumer_e@(SubN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineSub_Atom()"
+  let cur_ref = Magma_Module_Ref cur_ref_name "DefineSub_Atom(True)"
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 print_inner consumer_e@(MulN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineMul_Atom()"
+  let cur_ref = Magma_Module_Ref cur_ref_name "DefineMul_Atom(True)"
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 print_inner consumer_e@(DivN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineDiv_Atom()"
+  let cur_ref = Magma_Module_Ref cur_ref_name "DefineDiv_Atom(True)"
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 print_inner consumer_e@(EqN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineDiv_Atom()"
+  let cur_ref = Magma_Module_Ref cur_ref_name
+                ("DefineEq_Atom(" ++ type_to_python t ++ ", True)")
                 [Module_Port "I" (port_type $ out_port producer_ref)]
                 (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
@@ -391,7 +411,9 @@ print_inner consumer_e@(Map2_tN n i f producer0_e producer1_e cur_idx) = do
 
 print_inner consumer_e@(Reduce_sN n f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
+  disable_valid
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  enable_valid
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineReduce_S(" ++ show n ++ ", " ++ f_name ++ ")"
   let red_in_ports = [Module_Port "I"
@@ -408,7 +430,9 @@ print_inner consumer_e@(Reduce_sN n f producer_e cur_idx) = do
 
 print_inner consumer_e@(Reduce_tN n i f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
+  disable_valid
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  enable_valid
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineReduce_T(" ++ show n ++ ", " ++ show i ++ ", " ++ f_name ++ ")"
   let red_in_ports = [Module_Port "I"
@@ -525,6 +549,16 @@ print_unary_operator cur_ref producer_ref = do
   let cur_ref_in_str = var_name cur_ref ++ "." ++
                        (port_name $ in_ports cur_ref !! 0) 
   add_to_cur_module $ "wire(" ++ producer_out_str ++ ", " ++ cur_ref_in_str ++ ")"
+  valid_bool <- use_valid_port
+  if valid_bool
+    then do
+    let producer_valid_str =
+          if var_name producer_ref == "cls"
+          then "cls.valid_up"
+          else var_name producer_ref ++ ".valid_down"
+    let cur_ref_valid_str = var_name cur_ref ++ ".valid_up"
+    add_to_cur_module $ "wire(" ++ producer_valid_str ++ ", " ++ cur_ref_valid_str ++ ")"
+    else return ()
 
 print_binary_operator :: Magma_Module_Ref -> Magma_Module_Ref -> Magma_Module_Ref -> Memo_Print_StateM Magma_Module_Ref ()
 print_binary_operator cur_ref producer_ref_left producer_ref_right = do
@@ -539,5 +573,20 @@ print_binary_operator cur_ref producer_ref_left producer_ref_right = do
                              (port_name $ in_ports cur_ref !! 1) 
   add_to_cur_module $ "wire(" ++ producer_out_str_left ++ ", " ++ cur_ref_in_str_left ++ ")"
   add_to_cur_module $ "wire(" ++ producer_out_str_right ++ ", " ++ cur_ref_in_str_right ++ ")"
+  valid_bool <- use_valid_port
+  if valid_bool
+    then do
+    let producer_valid_str_left =
+          if var_name producer_ref_left == "cls"
+          then "cls.valid_up"
+          else var_name producer_ref_left ++ ".valid_down"
+    let producer_valid_str_right =
+          if var_name producer_ref_right == "cls"
+          then "cls.valid_up"
+          else var_name producer_ref_right ++ ".valid_down"
+    let producer_valid_str = producer_valid_str_left ++ " & " ++ producer_valid_str_right
+    let cur_ref_valid_str = var_name cur_ref ++ ".valid_up"
+    add_to_cur_module $ "wire(" ++ producer_valid_str ++ ", " ++ cur_ref_valid_str ++ ")"
+    else return ()
 
 get_output_port cur_ref_name = return $ cur_ref_name ++ ".O"
