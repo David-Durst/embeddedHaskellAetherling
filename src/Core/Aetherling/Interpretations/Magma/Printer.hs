@@ -255,20 +255,29 @@ print_inner consumer_e@(Const_GenN constant constant_type cur_idx) = do
   add_to_cur_module $ cur_ref_name ++ " = Const_GenN " ++ show constant ++ " " ++
     show constant_type
   return cur_ref_name
+-}
 
 -- sequence operators
 print_inner consumer_e@(Shift_sN n shift_amount elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Shift_sN " ++ show n ++
-    " " ++ show shift_amount ++ " " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  let gen_str = "DefineShift_S(" ++ show n ++ ", " ++ show shift_amount ++
+                ", " ++ type_to_python elem_t ++ ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT n elem_t)] (Module_Port "O" (SSeqT n elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 print_inner consumer_e@(Shift_tN n i shift_amount elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Shift_tN " ++ show n ++ " " ++ show i ++
-    " " ++ show shift_amount ++ " " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  let gen_str = "DefineShift_T(" ++ show n ++ ", " ++ show i ++ ", " ++
+                show shift_amount ++ ", " ++ type_to_python elem_t ++
+                ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (TSeqT n i elem_t)] (Module_Port "O" (TSeqT n i elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+{-
 print_inner consumer_e@(Up_1d_sN n elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
@@ -334,7 +343,7 @@ print_inner consumer_e@(Remove_1_sN elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Remove_1_s not printable"
 print_inner consumer_e@(Remove_1_0_tN elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Remove_1_0_t not printable"
-  
+
 -- higher order operators
 print_inner consumer_e@(Map_sN n f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
