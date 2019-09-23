@@ -185,8 +185,6 @@ data Magma_Module_Ref = Magma_Module_Ref {
 
 int_width = "8"
 -- this handles the strings inside a module
--- the strings here are the variables in the SSA that the producer's
--- outputs were assigned to
 print_inner :: Expr -> Memo_Print_StateM Magma_Module_Ref Magma_Module_Ref
 print_inner (IdN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
@@ -324,40 +322,19 @@ print_inner consumer_e@(Unpartition_t_ttN no ni io ii elem_t producer_e cur_idx)
     show elem_t ++ " " ++ producer_ref
   return cur_ref_name
 -}
-{-
 print_inner consumer_e@(SerializeN n i elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = SerializeN " ++ show n ++ " " ++ show i ++
-    " " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  throwError $ RH.Print_Failure "Serialize not printable"
 print_inner consumer_e@(DeserializeN n i elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = DeserializeN " ++ show n ++ " " ++ show i ++
-    " " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  throwError $ RH.Print_Failure "Deserialize not printable"
 print_inner consumer_e@(Add_1_sN elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Add_1_sN " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  throwError $ RH.Print_Failure "Add_1_s not printable"
 print_inner consumer_e@(Add_1_0_tN elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Add_1_0_tN " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  throwError $ RH.Print_Failure "Add_1_0_t not printable"
 print_inner consumer_e@(Remove_1_sN elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Remove_1_sN " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
+  throwError $ RH.Print_Failure "Remove_1_s not printable"
 print_inner consumer_e@(Remove_1_0_tN elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Remove_1_0_tN " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
--}
+  throwError $ RH.Print_Failure "Remove_1_0_t not printable"
+  
 -- higher order operators
 print_inner consumer_e@(Map_sN n f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e

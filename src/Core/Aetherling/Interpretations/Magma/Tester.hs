@@ -104,6 +104,7 @@ test_circuit_with_fault_string p inputs output = do
         "if __name__ == '__main__':\n" ++
         P.tab_str ++ "mod = Main()\n" ++
         P.tab_str ++ "tester = fault.Tester(mod, mod.CLK)\n" ++
+        P.tab_str ++ "tester.circuit.valid_in = 1\n" ++
         P.tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++ "):\n"
   let test_inputs = foldl (++) "" $
         map (\i -> (P.tab_str ++ P.tab_str ++ "tester.circuit." ++

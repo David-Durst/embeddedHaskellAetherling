@@ -53,4 +53,5 @@ data Rewrite_Failure = Expr_Failure {rw_msg :: String}
                      | Latency_Failure {rw_msg :: String}
                      | Slowdown_Failure {rw_msg :: String}
                      | Magma_Failure {rw_msg :: String}
+                     | Print_Failure {rw_msg :: String}
   deriving (Eq, Show)
