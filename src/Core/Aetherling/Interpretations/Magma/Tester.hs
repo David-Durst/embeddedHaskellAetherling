@@ -171,7 +171,7 @@ show_no_quotes = filter (\x -> x /= '\"') . show
 
 convert_st_val_idxs_to_vals :: M.Map Int String -> [[ST_Val_Index]] -> [[String]]
 convert_st_val_idxs_to_vals idx_to_str st_val_idxs =
-  map (map (\st_val_idx -> idx_to_str M.! flat_idx st_val_idx)) st_val_idxs
+  map (map (\st_val_idx -> M.findWithDefault "0" (flat_idx st_val_idx) idx_to_str)) st_val_idxs
 
 generate_st_val_idxs_for_st_type :: AST_Type -> [[ST_Val_Index]]
 generate_st_val_idxs_for_st_type t = do
