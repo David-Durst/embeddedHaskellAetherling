@@ -4,6 +4,7 @@ import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
 import qualified Data.Map.Strict as M
 import Data.List
+import Debug.Trace
 
 data ST_Val_String = ST_Val_String {
   st_values :: String,

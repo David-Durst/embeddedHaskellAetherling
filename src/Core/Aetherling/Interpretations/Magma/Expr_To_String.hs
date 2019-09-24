@@ -314,7 +314,13 @@ module_to_string_inner consumer_e@(Up_1d_tN n i elem_t producer_e cur_idx) = do
 -- no need for downsample module. This doesn't do anything with current clock approach
 module_to_string_inner consumer_e@(Down_1d_sN n sel_idx elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
-  return producer_ref
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "DefineDown_S(" ++ show n ++ ", " ++ show sel_idx ++ ", " ++
+                type_to_python elem_t ++ ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT n elem_t)] (Module_Port "O" (SSeqT 1 elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(Down_1d_tN n i sel_idx elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   return producer_ref

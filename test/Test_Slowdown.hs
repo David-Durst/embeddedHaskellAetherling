@@ -135,25 +135,36 @@ map_to_up_results = sequence $ fmap (\s -> compile_and_test_with_slowdown map_to
                                             map_to_up_inputs map_to_up_output) [1,2,4]
 
 -- test two multi-rates of different rates
-up_to_down = seq_shallow_to_deep $
+up_to_down = 
   down_1dC' (Proxy @5) 0 >>>
   up_1dC (Proxy @4) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 5 0 Atom_Int))
-up_to_down_seq_idx = add_indexes up_to_down
+up_to_down_seq_idx = add_indexes $ seq_shallow_to_deep up_to_down
 up_to_down_ppar = fmap (\s -> rewrite_to_partially_parallel s up_to_down_seq_idx) [1,5]
 up_to_down_ppar_typechecked = fmap check_type up_to_down_ppar
+up_to_down_inputs :: [[Integer]] = [[1,2,3,4,5]]
+up_to_down_output :: [Integer] = [1,1,1,1]
+up_to_down_results = sequence $ fmap (\s -> compile_and_test_with_slowdown up_to_down s
+                                            up_to_down_inputs up_to_down_output) [1,5]
 
 -- next two test how to distribute slowdown correctly when multi-rate is nested
-nested_map_to_top_level_up = seq_shallow_to_deep $
+nested_map_to_top_level_up = 
   mapC' (Proxy @1) (mapC' (Proxy @4) absC) >>> -- [1]
   up_1dC (Proxy @4) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 1 5 (Seq 4 0 Atom_Int)))
 -- note: the reason the output is a seminly unecessary split on the outer seq
 -- for the slowest schedule is that there are still 2 invalid clocks not used
 -- and I say partially parallel for those, becuase not fully slowed down
-nested_map_to_top_level_up_seq_idx = add_indexes nested_map_to_top_level_up
+nested_map_to_top_level_up_seq_idx = add_indexes $ seq_shallow_to_deep nested_map_to_top_level_up
 nested_map_to_top_level_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_top_level_up_seq_idx) [1,2,4,8,16]
 nested_map_to_top_level_up_ppar_typechecked = fmap check_type nested_map_to_top_level_up_ppar
+nested_map_to_top_level_up_inputs :: [[[Integer]]] = [[[2,3,4,5]]]
+nested_map_to_top_level_up_output :: [[Integer]] = [[2,3,4,5], [2,3,4,5],
+                                                    [2,3,4,5], [2,3,4,5]]
+nested_map_to_top_level_up_results = sequence $
+  fmap (\s -> compile_and_test_with_slowdown nested_map_to_top_level_up s
+              nested_map_to_top_level_up_inputs nested_map_to_top_level_up_output) [1,2,4,8,16]
+                                                   
 
 nested_map_to_nested_up = seq_shallow_to_deep $
   mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
