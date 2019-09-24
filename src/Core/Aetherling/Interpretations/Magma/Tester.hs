@@ -84,8 +84,9 @@ test_circuit_with_fault_string p inputs output = do
         "if __name__ == '__main__':\n" ++
         tab_str ++ "mod = Main()\n" ++
         tab_str ++ "tester = fault.Tester(mod, mod.CLK)\n" ++
-        tab_str ++ "tester.circuit.valid_in = 1\n" ++
-        tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++ "):\n"
+        tab_str ++ "tester.circuit.valid_up = 1\n" ++
+        tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++ "):\n" ++
+        tab_str ++ tab_str ++ "tester.print('clk: {}\\n'.format(f_clk))\n"
   let test_inputs = foldl (++) "" $
         map (\i -> (tab_str ++ tab_str ++ "tester.circuit." ++
                      (port_name $ (in_ports $
