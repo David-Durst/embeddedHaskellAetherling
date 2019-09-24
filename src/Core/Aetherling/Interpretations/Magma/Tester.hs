@@ -185,8 +185,8 @@ generate_st_val_idxs_for_st_type t = do
   let grouped_by_t = groupBy (\x y -> flat_t x == flat_t y) sorted_results
   let grouped_and_sorted_by_s =
         map (sortBy (\x y -> compare (flat_s x) (flat_s y))) grouped_by_t
-  let invs_filtered = filter (mv_valid . head) grouped_and_sorted_by_s
   grouped_and_sorted_by_s
+  -- let invs_filtered = filter (mv_valid . head) grouped_and_sorted_by_s
   --let grouped_and_sorted_just_vals = map (map magma_value) grouped_and_sorted_by_s
   -- need to filter out quotes from string printing
   --filter (\x -> x /= '\"') $ show grouped_and_sorted_just_vals
