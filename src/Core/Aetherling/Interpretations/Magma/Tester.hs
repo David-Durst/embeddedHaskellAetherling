@@ -1,5 +1,5 @@
 module Aetherling.Interpretations.Magma.Tester where
-import qualified Aetherling.Interpretations.Magma.Printer as P
+import Aetherling.Interpretations.Magma.Expr_To_String
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr
@@ -90,8 +90,8 @@ test_circuit_with_fault_print p inputs outputs = do
 test_circuit_with_fault_string :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr -> [a] -> b -> IO String
 test_circuit_with_fault_string p inputs output = do
-  module_str_data <- P.module_to_magma_string p
-  let num_ports = length $ P.in_ports $ P.module_outer_results $ module_str_data
+  module_str_data <- module_to_magma_string p
+  let num_ports = length $ in_ports $ module_outer_results $ module_str_data
   let fault_io = generate_fault_input_output_for_st_program p inputs output
   -- these are nested for both space and time
   -- issue: if 1 input per clock, then need to remove the space dimension
@@ -102,24 +102,24 @@ test_circuit_with_fault_string p inputs output = do
   let f_output = "fault_output = " ++ fault_output fault_io ++ "\n"
   let test_start =
         "if __name__ == '__main__':\n" ++
-        P.tab_str ++ "mod = Main()\n" ++
-        P.tab_str ++ "tester = fault.Tester(mod, mod.CLK)\n" ++
-        P.tab_str ++ "tester.circuit.valid_in = 1\n" ++
-        P.tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++ "):\n"
+        tab_str ++ "mod = Main()\n" ++
+        tab_str ++ "tester = fault.Tester(mod, mod.CLK)\n" ++
+        tab_str ++ "tester.circuit.valid_in = 1\n" ++
+        tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++ "):\n"
   let test_inputs = foldl (++) "" $
-        map (\i -> (P.tab_str ++ P.tab_str ++ "tester.circuit." ++
-                     (P.port_name $ (P.in_ports $
-                                      P.module_outer_results module_str_data) !! i) ++
+        map (\i -> (tab_str ++ tab_str ++ "tester.circuit." ++
+                     (port_name $ (in_ports $
+                                      module_outer_results module_str_data) !! i) ++
                      " = fault_inputs" ++ show i ++ "[f_clk]\n"))
                     [0..num_ports - 1]
-  let test_eval = P.tab_str ++ P.tab_str ++ "tester.eval()\n"
-  let test_output = P.tab_str ++ P.tab_str ++ "tester.circuit." ++
-                    (P.port_name $ P.out_port $
-                     P.module_outer_results module_str_data) ++
+  let test_eval = tab_str ++ tab_str ++ "tester.eval()\n"
+  let test_output = tab_str ++ tab_str ++ "tester.circuit." ++
+                    (port_name $ out_port $
+                     module_outer_results module_str_data) ++
                     ".expect(fault_output[f_clk])\n"
-  let test_step = P.tab_str ++ P.tab_str ++ "tester.step(2)\n"
-  let test_run = P.tab_str ++ "fault_helpers.compile_and_run(tester)\n"
-  return $ (P.module_str module_str_data) ++ f_inputs ++ f_output ++
+  let test_step = tab_str ++ tab_str ++ "tester.step(2)\n"
+  let test_run = tab_str ++ "fault_helpers.compile_and_run(tester)\n"
+  return $ (module_str module_str_data) ++ f_inputs ++ f_output ++
     test_start ++ test_inputs ++ test_eval ++ test_output ++
     test_step ++ test_run
   

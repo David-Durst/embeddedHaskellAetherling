@@ -1,4 +1,4 @@
-module Aetherling.Interpretations.Magma.Printer where
+module Aetherling.Interpretations.Magma.Expr_To_String where
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr
@@ -116,7 +116,7 @@ print_module new_module = do
         }
   lift $ put inner_data
   
-  cur_module_result_ref <- print_inner new_module
+  cur_module_result_ref <- module_to_string_inner new_module
 
   -- get state after executing inside module
   end_data <- lift get
@@ -185,54 +185,54 @@ data Magma_Module_Ref = Magma_Module_Ref {
 
 int_width = "8"
 -- this handles the strings inside a module
-print_inner :: Expr -> Memo_Print_StateM Magma_Module_Ref Magma_Module_Ref
-print_inner (IdN producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner :: Expr -> Memo_Print_StateM Magma_Module_Ref Magma_Module_Ref
+module_to_string_inner (IdN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   return producer_ref
-print_inner consumer_e@(AbsN producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(AbsN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let cur_ref = Magma_Module_Ref cur_ref_name "DefineAbs_Atom(True)"
                 [Module_Port "I" IntT] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-print_inner consumer_e@(NotN producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let cur_ref = Magma_Module_Ref cur_ref_name "DefineNot_Atom(True)"
                 [Module_Port "I" BitT] (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-print_inner consumer_e@(AddN producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(AddN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let cur_ref = Magma_Module_Ref cur_ref_name "DefineAdd_Atom(True)"
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-print_inner consumer_e@(SubN producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(SubN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let cur_ref = Magma_Module_Ref cur_ref_name "DefineSub_Atom(True)"
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-print_inner consumer_e@(MulN producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(MulN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let cur_ref = Magma_Module_Ref cur_ref_name "DefineMul_Atom(True)"
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-print_inner consumer_e@(DivN producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(DivN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let cur_ref = Magma_Module_Ref cur_ref_name "DefineDiv_Atom(True)"
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-print_inner consumer_e@(EqN t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let cur_ref = Magma_Module_Ref cur_ref_name
                 ("DefineEq_Atom(" ++ type_to_python t ++ ", True)")
@@ -243,10 +243,10 @@ print_inner consumer_e@(EqN t producer_e cur_idx) = do
 
 -- need to fix from here until map
 -- generators
-print_inner consumer_e@(Lut_GenN lut_table lut_type producer_e cur_idx) = do
+module_to_string_inner consumer_e@(Lut_GenN lut_table lut_type producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Lut_GenN not printable"
 {-
-print_inner consumer_e@(Const_GenN constant constant_type cur_idx) = do
+module_to_string_inner consumer_e@(Const_GenN constant constant_type cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module $ cur_ref_name ++ " = Const_GenN " ++ show constant ++ " " ++
     show constant_type
@@ -254,8 +254,8 @@ print_inner consumer_e@(Const_GenN constant constant_type cur_idx) = do
 -}
 
 -- sequence operators
-print_inner consumer_e@(Shift_sN n shift_amount elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Shift_sN n shift_amount elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineShift_S(" ++ show n ++ ", " ++ show shift_amount ++
                 ", " ++ type_to_python elem_t ++ ", has_valid=True)"
@@ -263,8 +263,8 @@ print_inner consumer_e@(Shift_sN n shift_amount elem_t producer_e cur_idx) = do
                 [Module_Port "I" (SSeqT n elem_t)] (Module_Port "O" (SSeqT n elem_t))
   print_unary_operator cur_ref producer_ref
   return cur_ref
-print_inner consumer_e@(Shift_tN n i shift_amount elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Shift_tN n i shift_amount elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineShift_T(" ++ show n ++ ", " ++ show i ++ ", " ++
                 show shift_amount ++ ", " ++ type_to_python elem_t ++
@@ -273,8 +273,8 @@ print_inner consumer_e@(Shift_tN n i shift_amount elem_t producer_e cur_idx) = d
                 [Module_Port "I" (TSeqT n i elem_t)] (Module_Port "O" (TSeqT n i elem_t))
   print_unary_operator cur_ref producer_ref
   return cur_ref
-print_inner consumer_e@(Up_1d_sN n elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Up_1d_sN n elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineUp_S(" ++ show n ++ ", " ++ type_to_python elem_t ++
                 ", has_valid=True)"
@@ -282,8 +282,8 @@ print_inner consumer_e@(Up_1d_sN n elem_t producer_e cur_idx) = do
                 [Module_Port "I" (SSeqT 1 elem_t)] (Module_Port "O" (SSeqT n elem_t))
   print_unary_operator cur_ref producer_ref
   return cur_ref
-print_inner consumer_e@(Up_1d_tN n i elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Up_1d_tN n i elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineUp_T(" ++ show n ++ ", " ++ show i ++ ", " ++
                 type_to_python elem_t ++ ", has_valid=True)"
@@ -292,43 +292,43 @@ print_inner consumer_e@(Up_1d_tN n i elem_t producer_e cur_idx) = do
   print_unary_operator cur_ref producer_ref
   return cur_ref
 -- no need for downsample module. This doesn't do anything with current clock approach
-print_inner consumer_e@(Down_1d_sN n sel_idx elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Down_1d_sN n sel_idx elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   return producer_ref
-print_inner consumer_e@(Down_1d_tN n i sel_idx elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Down_1d_tN n i sel_idx elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   return producer_ref
-print_inner consumer_e@(Partition_s_ssN no ni elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Partition_s_ssN no ni elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   return producer_ref
-print_inner consumer_e@(Partition_t_ttN no ni io 0 elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Partition_t_ttN no ni io 0 elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   return producer_ref
-print_inner consumer_e@(Partition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
-  print_inner (ReshapeN (TSeqT (no*ni) (io*ii) elem_t)
+module_to_string_inner consumer_e@(Partition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
+  module_to_string_inner (ReshapeN (TSeqT (no*ni) (io*ii) elem_t)
                (TSeqT no io (TSeqT ni ii elem_t)) producer_e cur_idx)
-print_inner consumer_e@(Unpartition_s_ssN no ni elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Unpartition_s_ssN no ni elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   return producer_ref
-print_inner consumer_e@(Unpartition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
-  print_inner (ReshapeN (TSeqT no io (TSeqT ni ii elem_t))
+module_to_string_inner consumer_e@(Unpartition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
+  module_to_string_inner (ReshapeN (TSeqT no io (TSeqT ni ii elem_t))
                (TSeqT (no*ni) (io*ii) elem_t) producer_e cur_idx)
-print_inner consumer_e@(SerializeN n i elem_t producer_e cur_idx) = do
+module_to_string_inner consumer_e@(SerializeN n i elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Serialize not printable"
-print_inner consumer_e@(DeserializeN n i elem_t producer_e cur_idx) = do
+module_to_string_inner consumer_e@(DeserializeN n i elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Deserialize not printable"
-print_inner consumer_e@(Add_1_sN elem_t producer_e cur_idx) = do
+module_to_string_inner consumer_e@(Add_1_sN elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Add_1_s not printable"
-print_inner consumer_e@(Add_1_0_tN elem_t producer_e cur_idx) = do
+module_to_string_inner consumer_e@(Add_1_0_tN elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Add_1_0_t not printable"
-print_inner consumer_e@(Remove_1_sN elem_t producer_e cur_idx) = do
+module_to_string_inner consumer_e@(Remove_1_sN elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Remove_1_s not printable"
-print_inner consumer_e@(Remove_1_0_tN elem_t producer_e cur_idx) = do
+module_to_string_inner consumer_e@(Remove_1_0_tN elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Remove_1_0_t not printable"
 
 -- higher order operators
-print_inner consumer_e@(Map_sN n f producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Map_sN n f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineMap_S(" ++ show n ++ ", " ++ f_name ++ ")"
@@ -339,8 +339,8 @@ print_inner consumer_e@(Map_sN n f producer_e cur_idx) = do
   print_unary_operator cur_ref producer_ref
   return cur_ref
 
-print_inner consumer_e@(Map_tN n i f producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Map_tN n i f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineMap_T(" ++ show n ++ ", " ++ show i ++ ", " ++ f_name ++ ")"
@@ -351,9 +351,9 @@ print_inner consumer_e@(Map_tN n i f producer_e cur_idx) = do
   print_unary_operator cur_ref producer_ref
   return cur_ref
 
-print_inner consumer_e@(Map2_sN n f producer0_e producer1_e cur_idx) = do
-  producer0_ref <- memo producer0_e $ print_inner producer0_e
-  producer1_ref <- memo producer1_e $ print_inner producer1_e
+module_to_string_inner consumer_e@(Map2_sN n f producer0_e producer1_e cur_idx) = do
+  producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
+  producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineMap2_S(" ++ show n ++ ", " ++ f_name ++ ")"
@@ -364,9 +364,9 @@ print_inner consumer_e@(Map2_sN n f producer0_e producer1_e cur_idx) = do
   print_binary_operator cur_ref producer0_ref producer1_ref
   return cur_ref
 
-print_inner consumer_e@(Map2_tN n i f producer0_e producer1_e cur_idx) = do
-  producer0_ref <- memo producer0_e $ print_inner producer0_e
-  producer1_ref <- memo producer1_e $ print_inner producer1_e
+module_to_string_inner consumer_e@(Map2_tN n i f producer0_e producer1_e cur_idx) = do
+  producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
+  producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineMap2_T(" ++ show n ++ ", " ++ show i ++ ", " ++ f_name ++ ")"
@@ -377,8 +377,8 @@ print_inner consumer_e@(Map2_tN n i f producer0_e producer1_e cur_idx) = do
   print_binary_operator cur_ref producer0_ref producer1_ref
   return cur_ref
 
-print_inner consumer_e@(Reduce_sN n f producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Reduce_sN n f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   disable_valid
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   enable_valid
@@ -396,8 +396,8 @@ print_inner consumer_e@(Reduce_sN n f producer_e cur_idx) = do
     extract_tuple_element (ATupleT t0 _) = t0
     extract_tuple_element _ = undefined
 
-print_inner consumer_e@(Reduce_tN n i f producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(Reduce_tN n i f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   disable_valid
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   enable_valid
@@ -416,8 +416,8 @@ print_inner consumer_e@(Reduce_tN n i f producer_e cur_idx) = do
     extract_tuple_element _ = undefined
     
 -- tuple operators
-print_inner consumer_e@(FstN t0 t1 producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(FstN t0 t1 producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let producer_out_str = var_name producer_ref ++ "." ++
                          (port_name $ out_port producer_ref) 
@@ -426,8 +426,8 @@ print_inner consumer_e@(FstN t0 t1 producer_e cur_idx) = do
                 [Module_Port "I" (ATupleT t0 t1)] (Module_Port "O" t0)
   return cur_ref
   
-print_inner consumer_e@(SndN t0 t1 producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(SndN t0 t1 producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let producer_out_str = var_name producer_ref ++ "." ++
                          (port_name $ out_port producer_ref) 
@@ -436,9 +436,9 @@ print_inner consumer_e@(SndN t0 t1 producer_e cur_idx) = do
                 [Module_Port "I" (ATupleT t0 t1)] (Module_Port "O" t1)
   return cur_ref
   
-print_inner consumer_e@(ATupleN t0 t1 producer0_e producer1_e cur_idx) = do
-  producer0_ref <- memo producer0_e $ print_inner producer0_e
-  producer1_ref <- memo producer1_e $ print_inner producer1_e
+module_to_string_inner consumer_e@(ATupleN t0 t1 producer0_e producer1_e cur_idx) = do
+  producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
+  producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineAtomTupleCreator(" ++ type_to_python t0 ++ ", " ++ type_to_python t1 ++ ")"
   let tup_in_ports = [Module_Port "I0" t0, Module_Port "I1" t1]
@@ -447,9 +447,9 @@ print_inner consumer_e@(ATupleN t0 t1 producer0_e producer1_e cur_idx) = do
   print_binary_operator cur_ref producer0_ref producer1_ref
   return cur_ref
   
-print_inner consumer_e@(STupleN elem_t producer0_e producer1_e cur_idx) = do
-  producer0_ref <- memo producer0_e $ print_inner producer0_e
-  producer1_ref <- memo producer1_e $ print_inner producer1_e
+module_to_string_inner consumer_e@(STupleN elem_t producer0_e producer1_e cur_idx) = do
+  producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
+  producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineSSeqTupleCreator(" ++ type_to_python elem_t ++ ")"
   let tup_in_ports = [Module_Port "I0" elem_t, Module_Port "I1" elem_t]
@@ -458,9 +458,9 @@ print_inner consumer_e@(STupleN elem_t producer0_e producer1_e cur_idx) = do
   print_binary_operator cur_ref producer0_ref producer1_ref
   return cur_ref
  
-print_inner consumer_e@(STupleAppendN out_len elem_t producer0_e producer1_e cur_idx) = do
-  producer0_ref <- memo producer0_e $ print_inner producer0_e
-  producer1_ref <- memo producer1_e $ print_inner producer1_e
+module_to_string_inner consumer_e@(STupleAppendN out_len elem_t producer0_e producer1_e cur_idx) = do
+  producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
+  producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineSSeqTupleAppender(" ++ type_to_python elem_t ++ ", " ++ (show $ out_len - 1) ++ ")"
   let tup_in_ports = [Module_Port "I0" (SSeqT (out_len - 1) elem_t), Module_Port "I1" elem_t]
@@ -469,26 +469,26 @@ print_inner consumer_e@(STupleAppendN out_len elem_t producer0_e producer1_e cur
   print_binary_operator cur_ref producer0_ref producer1_ref
   return cur_ref
   
-print_inner consumer_e@(STupleToSSeqN tuple_len elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(STupleToSSeqN tuple_len elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   return producer_ref
-print_inner consumer_e@(SSeqToSTupleN tuple_len elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(SSeqToSTupleN tuple_len elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   return producer_ref
   
-print_inner (InputN t name cur_idx) = do
+module_to_string_inner (InputN t name cur_idx) = do
   cur_data <- lift get
   lift $ put $ cur_data {
     cur_module_inputs = cur_module_inputs cur_data ++ [Module_Port name t]
     }
   return $ Magma_Module_Ref "cls" "" [] (Module_Port name t)
-print_inner e@(ErrorN msg cur_idx) = do
+module_to_string_inner e@(ErrorN msg cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module $ "ERROR " ++ msg
   return $ Magma_Module_Ref cur_ref_name "" [Module_Port "error" BitT]
     (Module_Port "error" BitT)
-print_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineFIFO(" ++ type_to_python t ++
                 ", " ++ show delay_clks ++ ", has_valid=True)"
@@ -496,8 +496,8 @@ print_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
                 [Module_Port "I" t] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-print_inner consumer_e@(ReshapeN in_t out_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
+module_to_string_inner consumer_e@(ReshapeN in_t out_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineReshape_st(" ++ type_to_python in_t ++
                 ", " ++ type_to_python out_t ++ ")"
