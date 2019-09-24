@@ -129,6 +129,10 @@ map_to_up =
 map_to_up_seq_idx = add_indexes $ seq_shallow_to_deep map_to_up
 map_to_up_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_up_seq_idx) [1,2,4]
 map_to_up_ppar_typechecked = fmap check_type map_to_up_ppar
+map_to_up_inputs :: [[Integer]] = [[2]]
+map_to_up_output :: [Integer] = [2,2,2,2]
+map_to_up_results = sequence $ fmap (\s -> compile_and_test_with_slowdown map_to_up s
+                                            map_to_up_inputs map_to_up_output) [1,2,4]
 
 -- test two multi-rates of different rates
 up_to_down = seq_shallow_to_deep $
