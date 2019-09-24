@@ -243,13 +243,9 @@ print_inner consumer_e@(EqN t producer_e cur_idx) = do
 
 -- need to fix from here until map
 -- generators
-{-
 print_inner consumer_e@(Lut_GenN lut_table lut_type producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ print_inner producer_e
-  let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Lut_GenN " ++ show lut_table ++ " " ++
-    show lut_type ++ " " ++ producer_ref
-  return cur_ref_name
+  throwError $ RH.Print_Failure "Lut_GenN not printable"
+{-
 print_inner consumer_e@(Const_GenN constant constant_type cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module $ cur_ref_name ++ " = Const_GenN " ++ show constant ++ " " ++
@@ -491,14 +487,15 @@ print_inner e@(ErrorN msg cur_idx) = do
   add_to_cur_module $ "ERROR " ++ msg
   return $ Magma_Module_Ref cur_ref_name "" [Module_Port "error" BitT]
     (Module_Port "error" BitT)
-{-
-print_inner consumer_e@(FIFON n i delay_clks elem_t producer_e cur_idx) = do
+print_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = FIFON " ++ show n ++ " " ++ show i ++
-    " " ++ show delay_clks ++ " " ++ show elem_t ++ " " ++ producer_ref
-  return cur_ref_name
--}
+  let gen_str = "DefineFIFO(" ++ type_to_python t ++
+                ", " ++ show delay_clks ++ ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" t] (Module_Port "O" t)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 print_inner consumer_e@(ReshapeN in_t out_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
