@@ -46,6 +46,30 @@ instance (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) => Conve
 instance (Convertible_To_Atom_Strings a) => Convertible_To_Atom_Strings [a] where
   convert_to_flat_atom_list xs = concat $ map convert_to_flat_atom_list xs
 
+instance Convertible_To_Atom_Strings AST_Atoms where
+  convert_to_flat_atom_list (BitA b) = [show b]
+  convert_to_flat_atom_list (IntA i) = [show i]
+  convert_to_flat_atom_list (ATupleA x y) =
+    [show_no_quotes $ (head $ convert_to_flat_atom_list x,
+                        head $ convert_to_flat_atom_list y)]
+
+-- these atoms are just used to convert between
+-- the atoms in AST_Value and the string representations from Convertible_To_Atom_Strings
+-- when printing an AST_Value to magma
+data AST_Atoms = BitA Bool | IntA Integer | ATupleA AST_Atoms AST_Atoms
+               deriving (Show, Eq)
+
+flatten_ast_value :: AST_Value -> [AST_Atoms]
+flatten_ast_value UnitV = undefined
+flatten_ast_value (BitV b) = [BitA b]
+flatten_ast_value (IntV i) = [IntA $ toInteger i]
+flatten_ast_value (ATupleV l r) = [ATupleA
+                                   (head $ flatten_ast_value l)
+                                   (head $ flatten_ast_value r)]
+flatten_ast_value (STupleV vals) = concatMap flatten_ast_value vals
+flatten_ast_value (SSeqV vals) = concatMap flatten_ast_value vals
+flatten_ast_value (TSeqV vals _) = concatMap flatten_ast_value vals
+
 data ST_Val_Index = ST_Val_Index {
   flat_idx :: Int,
   mv_valid :: Bool,

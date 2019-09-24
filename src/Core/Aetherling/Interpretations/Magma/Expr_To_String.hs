@@ -124,14 +124,22 @@ print_module new_module = do
   let cur_module_index = next_module_index end_data
   let cur_module_name = "Module_" ++ show cur_module_index
   let cur_inputs = cur_module_inputs end_data
-  let cur_inputs_str = foldl (\x y -> x ++ ", " ++ show y)
-                       (show $ head $ cur_inputs) (tail $ cur_inputs)
-  let cur_output_str = ", 'O', " ++ "Out(" ++
+  let cur_inputs_str =
+        if length cur_inputs >= 1
+        then foldl (\x y -> x ++ ", " ++ show y)
+             (show $ head $ cur_inputs) (tail $ cur_inputs) ++
+             ", "
+        else ""
+  let cur_output_str = "'O', " ++ "Out(" ++
                        ((type_to_python $ port_type $
                          out_port cur_module_result_ref) ++ ".magma_repr()") ++ ")"
   let module_func_string = "@cache_definition \ndef " ++ cur_module_name ++ "() -> DefineCircuitKind:\n"
   let module_st_types =
-        if length cur_inputs == 1 then
+        if length cur_inputs == 0 then
+          tab_str ++ tab_str ++ "st_out_t = " ++
+          (type_to_python $ port_type $ cur_module_output end_data) ++ "\n" ++
+          tab_str ++ tab_str ++ "binary_op = False\n"
+        else if length cur_inputs == 1 then
           tab_str ++ tab_str ++ "st_in_t = " ++
           (type_to_python $ port_type $ head cur_inputs) ++ "\n" ++
           tab_str ++ tab_str ++ "st_out_t = " ++
@@ -246,13 +254,24 @@ module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do
 -- generators
 module_to_string_inner consumer_e@(Lut_GenN lut_table lut_type producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Lut_GenN not printable"
-{-
-module_to_string_inner consumer_e@(Const_GenN constant constant_type cur_idx) = do
+module_to_string_inner consumer_e@(Const_GenN constant t cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = Const_GenN " ++ show constant ++ " " ++
-    show constant_type
-  return cur_ref_name
--}
+  let const_values_str =
+        convert_seq_val_to_st_val_string (flatten_ast_value constant) t
+  let replace_brackets x =
+        let
+          repl '[' = "("
+          repl ']' = ",)"
+          repl x = [x]
+        in concatMap repl x
+  let gen_str = "DefineConst(" ++ type_to_python t ++
+                ", " ++ replace_brackets (st_values const_values_str) ++ ",has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [] (Module_Port "O" t)
+  add_to_cur_module $ var_name cur_ref ++ " = " ++ gen_call cur_ref ++ "()"
+  let cur_ref_valid_str = var_name cur_ref ++ ".valid_up"
+  add_to_cur_module $ "wire(cls.valid_up, " ++ cur_ref_valid_str ++ ")"
+  return cur_ref
 
 -- sequence operators
 module_to_string_inner consumer_e@(Shift_sN n shift_amount elem_t producer_e cur_idx) = do

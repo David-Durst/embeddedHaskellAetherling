@@ -130,6 +130,9 @@ instance Iso (Seq no io (Seq ni ii a)) (Seq no io (TSeq ni ii a))
 listToVector :: KnownNat n => Proxy n -> [a] -> Vector n a
 listToVector p xs | fromIntegral (L.length xs) == natVal p  = fromJust $ fromList xs
 
+list_to_seq :: KnownNat n => Proxy n -> [a] -> Seq n i a
+list_to_seq proxy xs = Seq $ listToVector proxy xs 
+
 vectorToList :: KnownNat n => Vector n a -> [a]
 vectorToList = toList
 

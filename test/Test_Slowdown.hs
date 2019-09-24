@@ -109,6 +109,18 @@ single_map_underutil_output :: [Integer] = [0,1,2,3]
 single_map_underutil_results = sequence $ fmap (\s -> compile_and_test_with_slowdown single_map_underutil s
                                             single_map_underutil_inputs single_map_underutil_output) [1,2,4,8]
 
+const_test =
+  const_genC (list_to_seq (Proxy @9) $ fmap Atom_Int [0..8] :: Seq 9 0 Atom_Int) $
+  com_input "not_used" (Proxy :: Proxy Atom_Int)
+const_test_seq_idx = add_indexes $ seq_shallow_to_deep const_test
+const_test_ppar = fmap
+  (\s -> rewrite_to_partially_parallel s const_test_seq_idx) [1,3,9]
+const_test_ppar_typechecked = fmap check_type const_test_ppar
+const_test_inputs :: [[Integer]] = []
+const_test_outputs :: [Integer] = [0..9]
+const_test_results = sequence $ fmap (\s -> compile_and_test_with_slowdown const_test s
+                                     const_test_inputs const_test_outputs) [1,3,9]
+
 -- tests basic multi-rate
 map_to_up = 
   mapC' (Proxy @1) absC >>> -- [1]
