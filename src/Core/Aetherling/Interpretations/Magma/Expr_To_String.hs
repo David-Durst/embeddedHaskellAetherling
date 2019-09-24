@@ -440,7 +440,8 @@ module_to_string_inner consumer_e@(ATupleN t0 t1 producer0_e producer1_e cur_idx
   producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
   producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "DefineAtomTupleCreator(" ++ type_to_python t0 ++ ", " ++ type_to_python t1 ++ ")"
+  let gen_str = "DefineAtomTupleCreator(" ++ type_to_python t0 ++ ", " ++
+                type_to_python t1 ++ ", has_valid=True)"
   let tup_in_ports = [Module_Port "I0" t0, Module_Port "I1" t1]
   let tup_out_port = Module_Port "O" (ATupleT t0 t1)
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str tup_in_ports tup_out_port
@@ -451,7 +452,8 @@ module_to_string_inner consumer_e@(STupleN elem_t producer0_e producer1_e cur_id
   producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
   producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "DefineSSeqTupleCreator(" ++ type_to_python elem_t ++ ")"
+  let gen_str = "DefineSSeqTupleCreator(" ++ type_to_python elem_t ++
+                ", has_valid=True)"
   let tup_in_ports = [Module_Port "I0" elem_t, Module_Port "I1" elem_t]
   let tup_out_port = Module_Port "O" (STupleT 2 elem_t)
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str tup_in_ports tup_out_port
@@ -462,7 +464,8 @@ module_to_string_inner consumer_e@(STupleAppendN out_len elem_t producer0_e prod
   producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
   producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "DefineSSeqTupleAppender(" ++ type_to_python elem_t ++ ", " ++ (show $ out_len - 1) ++ ")"
+  let gen_str = "DefineSSeqTupleAppender(" ++ type_to_python elem_t ++ ", " ++
+                (show $ out_len - 1) ++ ", has_valid=True)"
   let tup_in_ports = [Module_Port "I0" (SSeqT (out_len - 1) elem_t), Module_Port "I1" elem_t]
   let tup_out_port = Module_Port "O" (STupleT 2 elem_t)
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str tup_in_ports tup_out_port
