@@ -68,6 +68,7 @@ test_circuit_with_fault_print p inputs outputs = do
 test_circuit_with_fault_string :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr -> [a] -> b -> IO String
 test_circuit_with_fault_string p inputs output = do
+  let p_types = expr_to_outer_types p
   module_str_data <- module_to_magma_string p
   let num_ports = length $ in_ports $ module_outer_results $ module_str_data
   let fault_io = generate_fault_input_output_for_st_program p inputs output
@@ -75,7 +76,10 @@ test_circuit_with_fault_string p inputs output = do
   -- issue: if 1 input per clock, then need to remove the space dimension
   let f_inputs = foldl (++) "" $
         map (\i -> "fault_inputs" ++ show i ++ " = " ++
-             show_no_quotes (fault_inputs fault_io !! i) ++ "\n")
+              show_no_quotes (fault_inputs fault_io !! i) ++ "\n" ++
+              "fault_inputs" ++ show i ++ "_valid = " ++
+              show_no_quotes (fault_valid_in fault_io !! i) ++ "\n"
+            )
         [0..num_ports - 1]
   let f_output = "fault_output = " ++ fault_output fault_io ++ "\n"
   let f_output_valid = "fault_output_valid = " ++
@@ -88,17 +92,22 @@ test_circuit_with_fault_string p inputs output = do
         tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++ "):\n" ++
         tab_str ++ tab_str ++ "tester.print('clk: {}\\n'.format(f_clk))\n"
   let test_inputs = foldl (++) "" $
-        map (\i -> (tab_str ++ tab_str ++ "tester.circuit." ++
-                     (port_name $ (in_ports $
-                                      module_outer_results module_str_data) !! i) ++
-                     " = fault_inputs" ++ show i ++ "[f_clk]\n"))
-                    [0..num_ports - 1]
+        map (\i ->
+               tab_str ++ tab_str ++ "if fault_inputs" ++ show i ++ "_valid[f_clk]:\n" ++
+               tab_str ++ tab_str ++ tab_str ++
+               "fault_helpers.wire_nested_port(tester, tester.circuit." ++
+               (port_name $ (in_ports $ module_outer_results module_str_data) !! i) ++
+               ", fault_inputs" ++ show i ++ "[f_clk], " ++
+               "num_nested_space_layers(" ++ (type_to_python $ e_in_types p_types !! i) ++ "), 0)\n")
+        [0..num_ports - 1]
   let test_eval = tab_str ++ tab_str ++ "tester.eval()\n"
   let test_output_if_valid = tab_str ++ tab_str ++ "if fault_output_valid[f_clk]:\n"
-  let test_output = tab_str ++ tab_str ++ tab_str ++ "tester.circuit." ++
+  let test_output = tab_str ++ tab_str ++ tab_str ++
+                    "fault_helpers.expect_nested_port(tester, tester.circuit." ++
                     (port_name $ out_port $
                      module_outer_results module_str_data) ++
-                    ".expect(fault_output[f_clk])\n"
+                    ", fault_output[f_clk], num_nested_space_layers(" ++
+                    (type_to_python $ e_out_type p_types)  ++ "), 0)\n"
   let test_step = tab_str ++ tab_str ++ "tester.step(2)\n"
   let test_run = tab_str ++ "fault_helpers.compile_and_run(tester)\n"
   return $ (module_str module_str_data) ++ f_inputs ++ f_output ++
@@ -107,6 +116,7 @@ test_circuit_with_fault_string p inputs output = do
   
 data Fault_IO = Fault_IO {
   fault_inputs :: [String],
+  fault_valid_in :: [[Bool]],
   fault_output :: String,
   fault_valid_out :: [Bool],
   fault_clocks :: Int
@@ -119,10 +129,11 @@ generate_fault_input_output_for_st_program p inputs output = do
   let p_types = expr_to_outer_types p
   let in_types_and_values = zip (e_in_types p_types) inputs
   
-  let fault_inputs = map (\(t, v) -> st_values $
+  let fault_inputs = map (\(t, v) ->
                            convert_seq_val_to_st_val_string v t)
                      in_types_and_values
   let ST_Val_String fault_output valid_out =
         convert_seq_val_to_st_val_string output (e_out_type p_types)
-  Fault_IO (fault_inputs) (fault_output) valid_out (length valid_out)
+  Fault_IO (map st_values fault_inputs) (map st_valids fault_inputs)
+    fault_output valid_out (length valid_out)
 
