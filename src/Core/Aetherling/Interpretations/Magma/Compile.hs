@@ -1,6 +1,7 @@
 module Aetherling.Interpretations.Magma.Compile where
 import Aetherling.Interpretations.Magma.Tester
 import Aetherling.Interpretations.Magma.Expr_To_String
+import Aetherling.Interpretations.Magma.Value_To_String
 import Aetherling.Interpretations.Space_Time_Printer
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
