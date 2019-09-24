@@ -78,6 +78,8 @@ test_circuit_with_fault_string p inputs output = do
              show_no_quotes (fault_inputs fault_io !! i) ++ "\n")
         [0..num_ports - 1]
   let f_output = "fault_output = " ++ fault_output fault_io ++ "\n"
+  let f_output_valid = "fault_output_valid = " ++
+                       show_no_quotes (fault_valid_out fault_io) ++ "\n"
   let test_start =
         "if __name__ == '__main__':\n" ++
         tab_str ++ "mod = Main()\n" ++
@@ -91,15 +93,16 @@ test_circuit_with_fault_string p inputs output = do
                      " = fault_inputs" ++ show i ++ "[f_clk]\n"))
                     [0..num_ports - 1]
   let test_eval = tab_str ++ tab_str ++ "tester.eval()\n"
-  let test_output = tab_str ++ tab_str ++ "tester.circuit." ++
+  let test_output_if_valid = tab_str ++ tab_str ++ "if fault_output_valid[f_clk]:\n"
+  let test_output = tab_str ++ tab_str ++ tab_str ++ "tester.circuit." ++
                     (port_name $ out_port $
                      module_outer_results module_str_data) ++
                     ".expect(fault_output[f_clk])\n"
   let test_step = tab_str ++ tab_str ++ "tester.step(2)\n"
   let test_run = tab_str ++ "fault_helpers.compile_and_run(tester)\n"
   return $ (module_str module_str_data) ++ f_inputs ++ f_output ++
-    test_start ++ test_inputs ++ test_eval ++ test_output ++
-    test_step ++ test_run
+    f_output_valid ++ test_start ++ test_inputs ++ test_eval ++
+    test_output_if_valid ++ test_output ++ test_step ++ test_run
   
 data Fault_IO = Fault_IO {
   fault_inputs :: [String],

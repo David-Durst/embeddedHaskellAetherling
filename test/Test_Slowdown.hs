@@ -104,6 +104,10 @@ single_map_underutil_seq_idx = add_indexes $ seq_shallow_to_deep single_map_unde
 single_map_underutil_ppar = fmap
   (\s -> rewrite_to_partially_parallel s single_map_underutil_seq_idx) [1,2,4,8]
 single_map_underutil_ppar_typechecked = fmap check_type single_map_underutil_ppar
+single_map_underutil_inputs :: [[Integer]] = [[0,-1,2,3]]
+single_map_underutil_output :: [Integer] = [0,1,2,3]
+single_map_underutil_results = sequence $ fmap (\s -> compile_and_test_with_slowdown single_map_underutil s
+                                            single_map_underutil_inputs single_map_underutil_output) [1,2,4,8]
 
 -- tests basic multi-rate
 map_to_up = 
