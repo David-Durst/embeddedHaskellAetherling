@@ -28,8 +28,8 @@ data Fault_Result = Fault_Success
                       python_file :: FilePath
                       } deriving (Show, Eq)
 
-test_circuit_with_fault p inputs output = do
-  result <- test_circuit_with_fault_no_io p inputs output
+test_circuit_with_fault p inputs output output_latency = do
+  result <- test_circuit_with_fault_no_io p inputs output output_latency
   case result of
     Fault_Success -> return ()
     Fault_Failure stdout stderr exit_code py_file -> do
@@ -40,9 +40,9 @@ test_circuit_with_fault p inputs output = do
   return result
 
 test_circuit_with_fault_no_io :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
-  Expr -> [a] -> b -> IO Fault_Result 
-test_circuit_with_fault_no_io p inputs output = do
-  p_str <- test_circuit_with_fault_string p inputs output
+  Expr -> [a] -> b -> Int -> IO Fault_Result 
+test_circuit_with_fault_no_io p inputs output output_latency = do
+  p_str <- test_circuit_with_fault_string p inputs output output_latency
   circuit_file <- emptySystemTempFile "ae_circuit.py"
   writeFile circuit_file p_str
   stdout_name <- emptySystemTempFile "ae_circuit_fault_stdout.txt"
@@ -61,13 +61,13 @@ test_circuit_with_fault_no_io p inputs output = do
       stderr_fault <- readFile stderr_name
       return $ Fault_Failure stdout_fault stderr_fault c circuit_file
 
-test_circuit_with_fault_print p inputs outputs = do 
-  str <- test_circuit_with_fault_string p inputs outputs
+test_circuit_with_fault_print p inputs outputs output_latency = do 
+  str <- test_circuit_with_fault_string p inputs outputs output_latency
   putStrLn str
 
 test_circuit_with_fault_string :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
-  Expr -> [a] -> b -> IO String
-test_circuit_with_fault_string p inputs output = do
+  Expr -> [a] -> b -> Int -> IO String
+test_circuit_with_fault_string p inputs output output_latency = do
   let p_types = expr_to_outer_types p
   module_str_data <- module_to_magma_string p
   let num_ports = length $ in_ports $ module_outer_results $ module_str_data
@@ -89,11 +89,14 @@ test_circuit_with_fault_string p inputs output = do
         tab_str ++ "mod = Main()\n" ++
         tab_str ++ "tester = fault.Tester(mod, mod.CLK)\n" ++
         tab_str ++ "tester.circuit.valid_up = 1\n" ++
-        tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++ "):\n" ++
+        tab_str ++ "output_counter = 0\n" ++
+        tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++
+        " + " ++ show output_latency ++ "):\n" ++
         tab_str ++ tab_str ++ "tester.print('clk: {}\\n'.format(f_clk))\n"
   let test_inputs = foldl (++) "" $
         map (\i ->
-               tab_str ++ tab_str ++ "if fault_inputs" ++ show i ++ "_valid[f_clk]:\n" ++
+               tab_str ++ tab_str ++ "if f_clk < " ++ show (fault_clocks fault_io) ++
+               " and fault_inputs" ++ show i ++ "_valid[f_clk]:\n" ++
                tab_str ++ tab_str ++ tab_str ++
                "fault_helpers.wire_nested_port(tester, tester.circuit." ++
                (port_name $ (in_ports $ module_outer_results module_str_data) !! i) ++
@@ -101,17 +104,23 @@ test_circuit_with_fault_string p inputs output = do
                "num_nested_space_layers(" ++ (type_to_python $ e_in_types p_types !! i) ++ "), 0)\n")
         [0..num_ports - 1]
   let test_eval = tab_str ++ tab_str ++ "tester.eval()\n"
-  let test_output_if_valid = tab_str ++ tab_str ++ "if fault_output_valid[f_clk]:\n"
+  let test_output_counter_incr =
+        tab_str ++ tab_str ++ "if f_clk > " ++ show output_latency ++ ":\n" ++
+        tab_str ++ tab_str ++ tab_str ++ "output_counter += 1\n"
+  let test_output_if_valid = tab_str ++ tab_str ++ "if f_clk >= " ++
+                             show output_latency ++
+                             " and fault_output_valid[output_counter]:\n"
   let test_output = tab_str ++ tab_str ++ tab_str ++
                     "fault_helpers.expect_nested_port(tester, tester.circuit." ++
                     (port_name $ out_port $
                      module_outer_results module_str_data) ++
-                    ", fault_output[f_clk], num_nested_space_layers(" ++
+                    ", fault_output[output_counter], num_nested_space_layers(" ++
                     (type_to_python $ e_out_type p_types)  ++ "), 0)\n"
   let test_step = tab_str ++ tab_str ++ "tester.step(2)\n"
   let test_run = tab_str ++ "fault_helpers.compile_and_run(tester)\n"
   return $ (module_str module_str_data) ++ f_inputs ++ f_output ++
     f_output_valid ++ test_start ++ test_inputs ++ test_eval ++
+    test_output_counter_incr ++
     test_output_if_valid ++ test_output ++ test_step ++ test_run
   
 data Fault_IO = Fault_IO {

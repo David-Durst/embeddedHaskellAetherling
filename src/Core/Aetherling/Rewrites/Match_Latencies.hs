@@ -17,14 +17,16 @@ import System.IO
 import System.Process
 import System.Environment
 
-match_latencies :: Expr -> IO Expr
+match_latencies :: Expr -> IO Matched_Latency_Result 
 match_latencies e = do
   matched_latencies <- evalStateT
                        (runExceptT $ startEvalMemoT $ match_latencies' e)
                        empty_rewrite_data
   if isLeft matched_latencies
-    then return $ ErrorN (rw_msg $ fromLeft undefined matched_latencies) No_Index
-    else return $ new_expr $ fromRight undefined matched_latencies
+    then return $ Matched_Latency_Result
+         (ErrorN (rw_msg $ fromLeft undefined matched_latencies) No_Index)
+         (-1)
+    else return $ fromRight undefined matched_latencies
 
 data Matched_Latency_Result = Matched_Latency_Result {
   new_expr :: Expr,
@@ -72,7 +74,7 @@ match_latencies' e@(Partition_t_ttN _ _ _ _ _ producer _) = do
         (head $ ST_Conv.e_in_types input_output_types)
         (ST_Conv.e_out_type input_output_types)
         producer No_Index
-  cur_latency <- lift_memo_rewrite_state $ compute_latency' e
+  cur_latency <- lift_memo_rewrite_state $ compute_latency' reshape
   return $ result_without_e_latency {
     latency = latency result_without_e_latency + cur_latency
     }
@@ -86,7 +88,7 @@ match_latencies' e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
         (head $ ST_Conv.e_in_types input_output_types)
         (ST_Conv.e_out_type input_output_types)
         producer No_Index
-  cur_latency <- lift_memo_rewrite_state $ compute_latency' e
+  cur_latency <- lift_memo_rewrite_state $ compute_latency' reshape
   return $ result_without_e_latency {
     latency = latency result_without_e_latency + cur_latency
     }

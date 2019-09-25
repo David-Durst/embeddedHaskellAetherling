@@ -64,6 +64,7 @@ magma_prelude = return $
   "import fault\n" ++
   "import aetherling.helpers.fault_helpers as fault_helpers\n" ++
   "from aetherling.space_time import *\n" ++
+  "from aetherling.space_time.reshape_st import DefineReshape_ST" ++
   "\n"
 
 magma_epilogue :: IO String
@@ -546,7 +547,7 @@ module_to_string_inner consumer_e@(ReshapeN in_t out_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineReshape_ST(" ++ type_to_python in_t ++
-                ", " ++ type_to_python out_t ++ ")"
+                ", " ++ type_to_python out_t ++ ", has_valid=True)"
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str
                 [Module_Port "I" in_t] (Module_Port "O" out_t)
   print_unary_operator cur_ref producer_ref

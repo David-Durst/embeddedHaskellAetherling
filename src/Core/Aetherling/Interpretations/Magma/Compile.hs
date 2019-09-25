@@ -33,7 +33,8 @@ data Compile_Result = Compile_Success { verilog_file :: FilePath }
 compile_with_slowdown_to_file :: (Shallow_Types.Aetherling_Value a) =>
                          RH.Rewrite_StateM a -> Int -> String -> IO Compile_Result
 compile_with_slowdown_to_file shallow_seq_program s output_name = do
-  deep_st_program <- compile_with_slowdown_to_expr shallow_seq_program s
+  ML.Matched_Latency_Result deep_st_program _ <-
+    compile_with_slowdown_to_expr shallow_seq_program s
   if check_type deep_st_program
     then do
     correct_latencies <- CL.check_latency deep_st_program
@@ -73,16 +74,16 @@ compile_and_test_with_slowdown :: (Shallow_Types.Aetherling_Value a,
                                    Convertible_To_Atom_Strings c) =>
                                   RH.Rewrite_StateM a -> Int -> [b] -> c -> IO Fault_Result
 compile_and_test_with_slowdown shallow_seq_program s inputs output = do
-  deep_st_program <- compile_with_slowdown_to_expr shallow_seq_program s
-  test_circuit_with_fault deep_st_program inputs output
+  ML.Matched_Latency_Result deep_st_program output_latency <-
+    compile_with_slowdown_to_expr shallow_seq_program s
+  test_circuit_with_fault deep_st_program inputs output output_latency
 
 compile_with_slowdown_to_expr :: (Shallow_Types.Aetherling_Value a) =>
-                                 RH.Rewrite_StateM a -> Int -> IO STE.Expr
+                                 RH.Rewrite_StateM a -> Int -> IO ML.Matched_Latency_Result
 compile_with_slowdown_to_expr shallow_seq_program s = do
   let deep_seq_program_no_indexes =
         Seq_SToD.seq_shallow_to_deep shallow_seq_program
   let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
   let deep_st_program =
         rewrite_to_partially_parallel s deep_seq_program_with_indexes
-  return deep_st_program
   ML.match_latencies deep_st_program
