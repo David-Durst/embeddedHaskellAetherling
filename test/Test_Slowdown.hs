@@ -166,22 +166,32 @@ nested_map_to_top_level_up_results = sequence $
               nested_map_to_top_level_up_inputs nested_map_to_top_level_up_output) [1,2,4,8,16]
                                                    
 
-nested_map_to_nested_up = seq_shallow_to_deep $
+nested_map_to_nested_up =
   mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
   mapC' (Proxy @4) (up_1dC (Proxy @4)) $ -- [4]
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 1 5 Atom_Int)))
-nested_map_to_nested_up_seq_idx = add_indexes nested_map_to_nested_up
+nested_map_to_nested_up_seq_idx = add_indexes $ seq_shallow_to_deep nested_map_to_nested_up
 nested_map_to_nested_up_ppar = fmap (\s -> rewrite_to_partially_parallel s nested_map_to_nested_up_seq_idx) [1,2,3,4,8,16]
 nested_map_to_nested_up_ppar_typechecked = fmap check_type nested_map_to_nested_up_ppar
+nested_map_to_nested_up_inputs :: [[[Integer]]] = [[[2],[3],[4],[5]]]
+nested_map_to_nested_up_output :: [[Integer]] = [[2,2,2,2], [3,3,3,3],
+                                                  [4,4,4,4], [5,5,5,5]]
+nested_map_to_nested_up_results = sequence $
+  fmap (\s -> compile_and_test_with_slowdown nested_map_to_nested_up s
+              nested_map_to_nested_up_inputs nested_map_to_nested_up_output) [1,2,4,8,16]
 
 -- testing basic partitioning
-partition_to_flat_map = seq_shallow_to_deep $
+partition_to_flat_map = 
   partitionC (Proxy @2) (Proxy @2) (Proxy @2) (Proxy @2) >>>
   mapC (mapC absC) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 12 Atom_Int))
-partition_to_flat_map_seq_idx = add_indexes partition_to_flat_map
+partition_to_flat_map_seq_idx = add_indexes $ seq_shallow_to_deep partition_to_flat_map
 partition_to_flat_map_ppar = fmap (\s -> rewrite_to_partially_parallel s partition_to_flat_map_seq_idx) [1,2,4,8,16]
 partition_to_flat_map_ppar_typechecked = fmap check_type partition_to_flat_map_ppar
+partition_to_flat_inputs :: [[Integer]] = [[1,-2,3,4]]
+partition_to_flat_output :: [[Integer]] = [[1,2],[3,4]]
+partition_to_flat_results = sequence $ fmap (\s -> compile_and_test_with_slowdown partition_to_flat_map s
+                                            partition_to_flat_inputs partition_to_flat_output) [1,2,4,8,16]
 
 map_to_unpartition = seq_shallow_to_deep $
   mapC (mapC absC) >>>
