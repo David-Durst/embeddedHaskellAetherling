@@ -193,37 +193,36 @@ partition_to_flat_output :: [[Integer]] = [[1,2],[3,4]]
 partition_to_flat_results = sequence $ fmap (\s -> compile_and_test_with_slowdown partition_to_flat_map s
                                             partition_to_flat_inputs partition_to_flat_output) [1,2,4,8,16]
 
-map_to_unpartition = seq_shallow_to_deep $
+map_to_unpartition =
   mapC (mapC absC) >>>
   unpartitionC' (Proxy @2) (Proxy @2) >>>
   mapC absC $
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 6 (Seq 2 0 Atom_Int)))
-map_to_unpartition_seq_idx = add_indexes map_to_unpartition
+map_to_unpartition_seq_idx = add_indexes $ seq_shallow_to_deep map_to_unpartition
 map_to_unpartition_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_unpartition_seq_idx) [1,2,4,8,16]
 map_to_unpartition_ppar_typechecked = fmap check_type map_to_unpartition_ppar
+map_to_unpartition_inputs :: [[[Integer]]] = [[[1,-2],[3,4]]]
+map_to_unpartition_output :: [Integer] = [1,2,3,4]
+map_to_unpartition_results = sequence $ fmap (\s -> compile_and_test_with_slowdown map_to_unpartition s
+                                            map_to_unpartition_inputs map_to_unpartition_output) [1,2,4,8,16]
 
 -- combining multi-rate with partitioning
-double_up = seq_shallow_to_deep $
+double_up =
   (mapC' (Proxy @2) (up_1dC (Proxy @3)) >>> -- [2, 3]
-   unpartitionC >>> -- in : [2, 3], out : [6] (or [[2, 3]] if not splitting here)
+   unpartitionC >>> -- in : [2, 3], out : [6]
    partitionC (Proxy @1) (Proxy @6) Proxy (Proxy @0) >>> -- in : [6], out : [1, 6] or in : [[2, 3]] out : [1, [2, 3]] (this doesn't work as can't slow input down by 5, so must not be able to slow output down by 5) or in : [[2, 3]] out : []
-   up_1dC (Proxy @5)) $ -- [5, [2, 3]]
+   up_1dC (Proxy @5)) $ -- [5, 6]
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 1 14 Atom_Int)) )
-double_up_seq_idx = add_indexes double_up
+double_up_seq_idx = add_indexes $ seq_shallow_to_deep double_up
 double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up_seq_idx) [1,2,3,5,6,10,15,30]
 --double_up_ppar_no_errors = filter (not . STE.is_error_node) double_up_ppar
 double_up_ppar_typechecked = fmap check_type double_up_ppar
-double_up_ppar_typechecked' = fmap check_type' double_up_ppar
-double_up_slow_6 = rewrite_to_partially_parallel 6 double_up_seq_idx
--- the problem with this case is that, for the output Seq 5 (Seq 6 Int)
--- with s = 6, the 5 is fully utilized and the 6 is fully underutilized.
--- so the up and add don't put an extra sseq below the TSeq 6 0 Int.
--- The add is the only thing necessary for the partition to work
--- However, when unpartitioning, the unpartition 2 3 have lots of
--- potentially empty clocks from all of 5 that got rolled into them.
--- So unpartition creates an extra 1.
-double_up_slow_6_typechecked = check_type double_up_slow_6
-double_up_slow_6_typechecked' = check_type' double_up_slow_6
+double_up_inputs :: [[[Integer]]] = [[[1],[2]]]
+double_up_output :: [[Integer]] = [[1,1,1,2,2,2], [1,1,1,2,2,2], [1,1,1,2,2,2],
+                                        [1,1,1,2,2,2], [1,1,1,2,2,2], [1,1,1,2,2,2]]
+double_up_results = sequence $ fmap (\s -> compile_and_test_with_slowdown double_up s
+                                      double_up_inputs double_up_output) [1,2,3,5,6,10,15,30]
+
 
 down_over_nested_to_down_over_flattened = seq_shallow_to_deep $
   (down_1dC' (Proxy @4) 0 >>>
