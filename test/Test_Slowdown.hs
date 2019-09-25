@@ -164,7 +164,7 @@ nested_map_to_top_level_up_output :: [[Integer]] = [[2,3,4,5], [2,3,4,5],
 nested_map_to_top_level_up_results = sequence $
   fmap (\s -> compile_and_test_with_slowdown nested_map_to_top_level_up s
               nested_map_to_top_level_up_inputs nested_map_to_top_level_up_output) [1,2,4,8,16]
-                                                   
+
 
 nested_map_to_nested_up =
   mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]

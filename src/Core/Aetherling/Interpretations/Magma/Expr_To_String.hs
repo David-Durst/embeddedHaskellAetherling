@@ -4,6 +4,7 @@ import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Types
+import qualified Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq_Conv
 import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Identity
@@ -326,19 +327,35 @@ module_to_string_inner consumer_e@(Down_1d_tN n i sel_idx elem_t producer_e cur_
   return producer_ref
 module_to_string_inner consumer_e@(Partition_s_ssN no ni elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
-  return producer_ref
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "DefinePartition_S(" ++ show no ++ ", " ++ show ni ++ ", " ++
+                type_to_python elem_t ++ ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT (no*ni) elem_t)]
+                (Module_Port "O" (SSeqT no (SSeqT ni elem_t)))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(Partition_t_ttN no ni io 0 elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   return producer_ref
 module_to_string_inner consumer_e@(Partition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
-  module_to_string_inner (ReshapeN (TSeqT (no*ni) (io*ii) elem_t)
-               (TSeqT no io (TSeqT ni ii elem_t)) producer_e cur_idx)
+  module_to_string_inner
+    (ReshapeN (TSeqT (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) elem_t)
+     (TSeqT no io (TSeqT ni ii elem_t)) producer_e cur_idx)
 module_to_string_inner consumer_e@(Unpartition_s_ssN no ni elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
-  return producer_ref
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "DefineUnpartition_S(" ++ show no ++ ", " ++ show ni ++ ", " ++
+                type_to_python elem_t ++ ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT no (SSeqT ni elem_t))]
+                (Module_Port "O" (SSeqT (no*ni) elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(Unpartition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
   module_to_string_inner (ReshapeN (TSeqT no io (TSeqT ni ii elem_t))
-               (TSeqT (no*ni) (io*ii) elem_t) producer_e cur_idx)
+                          (TSeqT (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) elem_t)
+                          producer_e cur_idx)
 module_to_string_inner consumer_e@(SerializeN n i elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Serialize not printable"
 module_to_string_inner consumer_e@(DeserializeN n i elem_t producer_e cur_idx) = do
@@ -528,7 +545,7 @@ module_to_string_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
 module_to_string_inner consumer_e@(ReshapeN in_t out_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "DefineReshape_st(" ++ type_to_python in_t ++
+  let gen_str = "DefineReshape_ST(" ++ type_to_python in_t ++
                 ", " ++ type_to_python out_t ++ ")"
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str
                 [Module_Port "I" in_t] (Module_Port "O" out_t)
