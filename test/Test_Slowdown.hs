@@ -138,7 +138,7 @@ map_to_up_results = sequence $ fmap (\s -> compile_and_test_with_slowdown map_to
 up_to_down = 
   down_1dC' (Proxy @5) 0 >>>
   up_1dC (Proxy @4) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 5 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 5 0 Atom_Int))
 up_to_down_seq_idx = add_indexes $ seq_shallow_to_deep up_to_down
 up_to_down_ppar = fmap (\s -> rewrite_to_partially_parallel s up_to_down_seq_idx) [1,5]
 up_to_down_ppar_typechecked = fmap check_type up_to_down_ppar
@@ -146,6 +146,8 @@ up_to_down_inputs :: [[Integer]] = [[1,2,3,4,5]]
 up_to_down_output :: [Integer] = [1,1,1,1]
 up_to_down_results = sequence $ fmap (\s -> compile_and_test_with_slowdown up_to_down s
                                             up_to_down_inputs up_to_down_output) [1,5]
+up_to_down_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown up_to_down s
+                                            up_to_down_inputs up_to_down_output) [1]
 
 -- next two test how to distribute slowdown correctly when multi-rate is nested
 nested_map_to_top_level_up = 
