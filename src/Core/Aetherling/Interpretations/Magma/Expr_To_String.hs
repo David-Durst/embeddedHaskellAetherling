@@ -154,12 +154,15 @@ print_module new_module = do
           tab_str ++ tab_str ++ "st_out_t = " ++
           (type_to_python $ port_type $ cur_module_output end_data) ++ "\n" ++
           tab_str ++ tab_str ++ "binary_op = True\n"
-          
+
+  use_valids <- use_valid_port
+  let valid_ports_str = if use_valids then "+ valid_ports" else ""
   let module_class_decl_string =
         tab_str ++ "class _" ++ cur_module_name ++ "(Circuit):\n" ++
         tab_str ++ tab_str ++ "name = \"" ++ cur_module_name ++ "\"\n" ++
         tab_str ++ tab_str ++ "IO = [" ++ cur_inputs_str ++ cur_output_str ++ "]" ++
-        " + ClockInterface(has_ce=False,has_reset=False) + valid_ports\n" ++
+        " + ClockInterface(has_ce=False,has_reset=False) " ++
+        valid_ports_str ++ "\n" ++
         module_st_types ++
         tab_str ++ tab_str ++ "@classmethod\n" ++
         tab_str ++ tab_str ++ "def definition(cls):\n"
@@ -170,8 +173,11 @@ print_module new_module = do
   let module_wire_output = tab_str ++ tab_str ++ tab_str ++
                            "wire(" ++ cur_module_result_str ++ ", cls.O)\n"
   let cur_module_valid_str = var_name cur_module_result_ref ++ ".valid_down"
-  let module_valid_output = tab_str ++ tab_str ++ tab_str ++
-                           "wire(" ++ cur_module_valid_str ++ ", cls.valid_down)\n"
+  let module_valid_output =
+        if use_valids
+        then tab_str ++ tab_str ++ tab_str ++
+             "wire(" ++ cur_module_valid_str ++ ", cls.valid_down)\n"
+        else ""
   let module_end = tab_str ++ "return _" ++ cur_module_name ++ "\n"
   let module_str = module_func_string ++ module_class_decl_string ++
                    module_body ++ module_wire_output ++ module_valid_output ++
@@ -203,50 +209,64 @@ module_to_string_inner (IdN producer_e cur_idx) = do
 module_to_string_inner consumer_e@(AbsN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineAbs_Atom(True)"
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name ("DefineAbs_Atom(" ++ valid_str ++ ")")
                 [Module_Port "I" IntT] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineNot_Atom(True)"
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name ("DefineNot_Atom(" ++ valid_str ++ ")")
                 [Module_Port "I" BitT] (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(AddN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineAdd_Atom(True)"
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name ("DefineAdd_Atom(" ++ valid_str ++ ")")
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(SubN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineSub_Atom(True)"
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name ("DefineSub_Atom(" ++ valid_str ++ ")")
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(MulN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineMul_Atom(True)"
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name ("DefineMul_Atom(" ++ valid_str ++ ")")
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(DivN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let cur_ref = Magma_Module_Ref cur_ref_name "DefineDiv_Atom(True)"
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name ("DefineDiv_Atom(" ++ valid_str ++ ")")
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
   let cur_ref = Magma_Module_Ref cur_ref_name
-                ("DefineEq_Atom(" ++ type_to_python t ++ ", True)")
+                ("DefineEq_Atom(" ++ type_to_python t ++ ", " ++ valid_str ++ ")")
                 [Module_Port "I" (port_type $ out_port producer_ref)]
                 (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
@@ -427,11 +447,11 @@ module_to_string_inner consumer_e@(Reduce_sN n f producer_e cur_idx) = do
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   enable_valid
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "DefineReduce_S(" ++ show n ++ ", " ++ f_name ++ ")"
+  let gen_str = "DefineReduce_S(" ++ show n ++ ", " ++ f_name ++ ", has_valid=True)"
   let red_in_ports = [Module_Port "I"
                       (SSeqT n $ extract_tuple_element $ port_type $
                        head f_in_ports)]
-  let red_out_port = f_out_port {port_type = SSeqT n (port_type f_out_port)}
+  let red_out_port = f_out_port {port_type = SSeqT 1 (port_type f_out_port)}
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str red_in_ports red_out_port
   print_unary_operator cur_ref producer_ref
   return cur_ref
@@ -450,7 +470,7 @@ module_to_string_inner consumer_e@(Reduce_tN n i f producer_e cur_idx) = do
   let red_in_ports = [Module_Port "I"
                       (TSeqT n i $ extract_tuple_element $ port_type $
                        head f_in_ports)]
-  let red_out_port = f_out_port {port_type = TSeqT n i (port_type f_out_port)}
+  let red_out_port = f_out_port {port_type = TSeqT 1 (n+i-1) (port_type f_out_port)}
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str red_in_ports red_out_port
   print_unary_operator cur_ref producer_ref
   return cur_ref

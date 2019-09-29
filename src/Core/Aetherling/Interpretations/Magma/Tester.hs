@@ -22,17 +22,17 @@ import Debug.Trace
 
 data Fault_Result = Fault_Success
                   | Fault_Failure {
+                      python_file :: FilePath,
                       fault_stdout :: String,
                       fault_stderr :: String,
-                      fault_exit_code :: Int,
-                      python_file :: FilePath
+                      fault_exit_code :: Int
                       } deriving (Show, Eq)
 
 test_circuit_with_fault p inputs output output_latency = do
   result <- test_circuit_with_fault_no_io p inputs output output_latency
   case result of
     Fault_Success -> return ()
-    Fault_Failure stdout stderr exit_code py_file -> do
+    Fault_Failure py_file stdout stderr exit_code -> do
       putStrLn $ "Failure with file " ++ py_file
       putStrLn stdout
       putStrLn stderr
@@ -59,7 +59,7 @@ test_circuit_with_fault_no_io p inputs output output_latency = do
     ExitFailure c -> do
       stdout_fault <- readFile stdout_name
       stderr_fault <- readFile stderr_name
-      return $ Fault_Failure stdout_fault stderr_fault c circuit_file
+      return $ Fault_Failure circuit_file stdout_fault stderr_fault c
 
 test_circuit_with_fault_print p inputs outputs output_latency = do 
   str <- test_circuit_with_fault_string p inputs outputs output_latency

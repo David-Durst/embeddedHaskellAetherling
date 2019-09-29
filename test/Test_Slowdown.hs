@@ -215,7 +215,6 @@ double_up =
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 1 14 Atom_Int)) )
 double_up_seq_idx = add_indexes $ seq_shallow_to_deep double_up
 double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up_seq_idx) [1,2,3,5,6,10,15,30]
---double_up_ppar_no_errors = filter (not . STE.is_error_node) double_up_ppar
 double_up_ppar_typechecked = fmap check_type double_up_ppar
 double_up_inputs :: [[[Integer]]] = [[[1],[2]]]
 double_up_output :: [[Integer]] = [[1,1,1,2,2,2], [1,1,1,2,2,2], [1,1,1,2,2,2],
@@ -224,12 +223,13 @@ double_up_results = sequence $ fmap (\s -> compile_and_test_with_slowdown double
                                       double_up_inputs double_up_output) [1,2,3,5,6,10,15,30]
 
 
-down_over_nested_to_down_over_flattened = seq_shallow_to_deep $
+down_over_nested_to_down_over_flattened = 
   (down_1dC' (Proxy @4) 0 >>>
    unpartitionC' (Proxy @1) (Proxy @4) >>>
    down_1dC' (Proxy @4) 0) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
-down_over_nested_to_down_over_flattened_seq_idx = add_indexes down_over_nested_to_down_over_flattened
+down_over_nested_to_down_over_flattened_seq_idx = add_indexes $
+  seq_shallow_to_deep down_over_nested_to_down_over_flattened
 down_over_nested_to_down_over_flattened_ppar =
   fmap (\s -> rewrite_to_partially_parallel s down_over_nested_to_down_over_flattened_seq_idx)
   [1,2,4,8,16]
@@ -237,41 +237,54 @@ down_over_nested_to_down_over_flattened_ppar_typechecked =
   fmap check_type down_over_nested_to_down_over_flattened_ppar
 down_over_nested_to_down_over_flattened_ppar_typechecked' =
   fmap check_type' down_over_nested_to_down_over_flattened_ppar
+down_over_nested_to_down_over_flattened_inputs :: [[[Integer]]] =
+  [[[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]]
+down_over_nested_to_down_over_flattened_output :: [Integer] = [1]
+down_over_nested_to_down_over_flattened_results =
+  sequence $ fmap (\s -> compile_and_test_with_slowdown
+                         down_over_nested_to_down_over_flattened s
+                         down_over_nested_to_down_over_flattened_inputs
+                         down_over_nested_to_down_over_flattened_output) [1,2,4,8,16]
 
 
-tuple_sum_shallow in_seq = do
+tuple_sum_shallow_no_input in_seq = do
   let kernel_list = fmap Atom_Int [1,2,3,4]
   let kernel = const_genC (Seq $ listToVector (Proxy @4) kernel_list) in_seq
   let kernel_and_values = map2C atom_tupleC kernel in_seq
   mapC addC kernel_and_values
-tuple_sum = seq_shallow_to_deep $
-  tuple_sum_shallow $
+tuple_sum = tuple_sum_shallow_no_input $ 
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
-tuple_sum_seq_idx = add_indexes tuple_sum
+tuple_sum_seq_idx = add_indexes $ seq_shallow_to_deep tuple_sum
 tuple_sum_ppar =
   fmap (\s -> rewrite_to_partially_parallel s tuple_sum_seq_idx) [1,2,4]
 tuple_sum_ppar_typechecked =
   fmap check_type tuple_sum_ppar
 tuple_sum_ppar_typechecked' =
   fmap check_type' tuple_sum_ppar
-tuple_sum_ppar_typechecked_s_2 = check_type' $ rewrite_to_partially_parallel 2 tuple_sum
+tuple_sum_inputs :: [[Integer]] = [[4,2,8,10]]
+tuple_sum_output :: [Integer] = [5,4,11,14]
+tuple_sum_results = sequence $ fmap (\s -> compile_and_test_with_slowdown tuple_sum s
+                                      tuple_sum_inputs tuple_sum_output) [1,2,4]
 
-tuple_reduce_shallow in_seq = do
-  let kernel_list = fmap Atom_Int [1,2,3,4,5,6,7,8]
+tuple_reduce_no_input in_seq = do
+  let kernel_list = fmap Atom_Int [1,2,3,4,2,1,2,3]
   let kernel = const_genC (Seq $ listToVector (Proxy @8) kernel_list) in_seq
   let kernel_and_values = map2C atom_tupleC kernel in_seq
   let summed_pairs = mapC addC kernel_and_values
   reduceC addC summed_pairs
-tuple_reduce = seq_shallow_to_deep $
-  tuple_reduce_shallow $
+tuple_reduce = tuple_reduce_no_input $
   com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 Atom_Int))
-tuple_reduce_seq_idx = add_indexes tuple_reduce
+tuple_reduce_seq_idx = add_indexes $ seq_shallow_to_deep tuple_reduce
 tuple_reduce_ppar =
   fmap (\s -> rewrite_to_partially_parallel s tuple_reduce_seq_idx) [1,2,4,8]
 tuple_reduce_ppar_typechecked =
   fmap check_type tuple_reduce_ppar
 tuple_reduce_ppar_typechecked' =
   fmap check_type' tuple_reduce_ppar
+tuple_reduce_inputs :: [[Integer]] = [[10,8,9,3,4,2,2,2]]
+tuple_reduce_output :: [Integer] = [85]
+tuple_reduce_results = sequence $ fmap (\s -> compile_and_test_with_slowdown tuple_reduce s
+                                      tuple_reduce_inputs tuple_reduce_output) [1,2,4,8]
 
 
 fst_snd_sum_shallow in_seq = do
