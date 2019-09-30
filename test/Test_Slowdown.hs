@@ -270,8 +270,8 @@ tuple_reduce_no_input in_seq = do
   let kernel_list = fmap Atom_Int [1,2,3,4,2,1,2,3]
   let kernel = const_genC (Seq $ listToVector (Proxy @8) kernel_list) in_seq
   let kernel_and_values = map2C atom_tupleC kernel in_seq
-  let summed_pairs = mapC addC kernel_and_values
-  reduceC addC summed_pairs
+  let muled_pairs = mapC mulC kernel_and_values
+  reduceC addC muled_pairs
 tuple_reduce = tuple_reduce_no_input $
   com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 Atom_Int))
 tuple_reduce_seq_idx = add_indexes $ seq_shallow_to_deep tuple_reduce
@@ -283,6 +283,7 @@ tuple_reduce_ppar_typechecked' =
   fmap check_type' tuple_reduce_ppar
 tuple_reduce_inputs :: [[Integer]] = [[10,8,9,3,4,2,2,2]]
 tuple_reduce_output :: [Integer] = [85]
+-- need to come back and check why slowest version uses a reduce_s
 tuple_reduce_results = sequence $ fmap (\s -> compile_and_test_with_slowdown tuple_reduce s
                                       tuple_reduce_inputs tuple_reduce_output) [1,2,4,8]
 

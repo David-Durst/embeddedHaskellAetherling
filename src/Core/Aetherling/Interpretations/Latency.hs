@@ -192,7 +192,7 @@ compute_latency' (Down_1d_tN _ _ sel_idx t _ _) =
   return $ sel_idx * clocks_t t
 compute_latency' (Reduce_tN n _ f _ _) = do
   f_latency <- compute_latency' f
-  return $ n * f_latency
+  return $ (n - 1) * (max f_latency 1)
 compute_latency' (FIFON _ delay_clks _ _) = return $ delay_clks
 compute_latency' (ReshapeN in_t out_t _ _) = do
   let in_t_py_str = type_to_python in_t

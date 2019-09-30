@@ -54,10 +54,16 @@ enable_valid = do
   cur_data <- lift get
   lift $ put $ cur_data { cur_module_valid = True }
   
-disable_valid :: Memo_Print_StateM Magma_Module_Ref ()
+set_valid :: Bool -> Memo_Print_StateM Magma_Module_Ref ()
+set_valid new_val = do
+  cur_data <- lift get
+  lift $ put $ cur_data { cur_module_valid = new_val }
+  
+disable_valid :: Memo_Print_StateM Magma_Module_Ref Bool
 disable_valid = do
   cur_data <- lift get
   lift $ put $ cur_data { cur_module_valid = False }
+  return $ cur_module_valid cur_data
 
 magma_prelude :: IO String
 magma_prelude = return $
@@ -395,7 +401,9 @@ module_to_string_inner consumer_e@(Map_sN n f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "DefineMap_S(" ++ show n ++ ", " ++ f_name ++ ")"
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let gen_str = "DefineMap_S(" ++ show n ++ ", " ++ f_name ++ "," ++ valid_str ++ ")"
   let map_in_ports =
         map (\port -> port {port_type = SSeqT n (port_type port)}) f_in_ports
   let map_out_port = f_out_port {port_type = SSeqT n (port_type f_out_port)}
@@ -420,7 +428,10 @@ module_to_string_inner consumer_e@(Map2_sN n f producer0_e producer1_e cur_idx) 
   producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "DefineMap2_S(" ++ show n ++ ", " ++ f_name ++ ")"
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let gen_str = "DefineMap2_S(" ++ show n ++ ", " ++ f_name ++ "," ++
+                valid_str ++ ")"
   let map_in_ports =
         map (\port -> port {port_type = SSeqT n (port_type port)}) f_in_ports
   let map_out_port = f_out_port {port_type = SSeqT n (port_type f_out_port)}
@@ -433,6 +444,8 @@ module_to_string_inner consumer_e@(Map2_tN n i f producer0_e producer1_e cur_idx
   producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
   let gen_str = "DefineMap2_T(" ++ show n ++ ", " ++ show i ++ ", " ++ f_name ++ ")"
   let map_in_ports =
         map (\port -> port {port_type = TSeqT n i (port_type port)}) f_in_ports
@@ -443,9 +456,9 @@ module_to_string_inner consumer_e@(Map2_tN n i f producer0_e producer1_e cur_idx
 
 module_to_string_inner consumer_e@(Reduce_sN n f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
-  disable_valid
+  old_valid <- disable_valid
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
-  enable_valid
+  set_valid old_valid
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineReduce_S(" ++ show n ++ ", " ++ f_name ++ ", has_valid=True)"
   let red_in_ports = [Module_Port "I"
@@ -462,9 +475,9 @@ module_to_string_inner consumer_e@(Reduce_sN n f producer_e cur_idx) = do
 
 module_to_string_inner consumer_e@(Reduce_tN n i f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
-  disable_valid
+  old_valid <- disable_valid
   Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
-  enable_valid
+  set_valid old_valid
   let cur_ref_name = "n" ++ print_index cur_idx
   let gen_str = "DefineReduce_T(" ++ show n ++ ", " ++ show i ++ ", " ++ f_name ++ ")"
   let red_in_ports = [Module_Port "I"
