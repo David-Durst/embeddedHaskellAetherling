@@ -496,21 +496,23 @@ module_to_string_inner consumer_e@(Reduce_tN n i f producer_e cur_idx) = do
 module_to_string_inner consumer_e@(FstN t0 t1 producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let producer_out_str = var_name producer_ref ++ "." ++
-                         (port_name $ out_port producer_ref) 
-  add_to_cur_module $ cur_ref_name ++ " = " ++ producer_out_str
-  let cur_ref = Magma_Module_Ref cur_ref_name ""
-                [Module_Port "I" (ATupleT t0 t1)] (Module_Port "O" t0)
+  let tuple_type = ATupleT t0 t1
+  let gen_str = "DefineFst(" ++ type_to_python tuple_type ++
+                ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" tuple_type] (Module_Port "O" t0)
+  print_unary_operator cur_ref producer_ref
   return cur_ref
   
 module_to_string_inner consumer_e@(SndN t0 t1 producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let producer_out_str = var_name producer_ref ++ "." ++
-                         (port_name $ out_port producer_ref) 
-  add_to_cur_module $ cur_ref_name ++ " = " ++ producer_out_str
-  let cur_ref = Magma_Module_Ref cur_ref_name ""
-                [Module_Port "I" (ATupleT t0 t1)] (Module_Port "O" t1)
+  let tuple_type = ATupleT t0 t1
+  let gen_str = "DefineSnd(" ++ type_to_python tuple_type ++
+                ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" tuple_type] (Module_Port "O" t1)
+  print_unary_operator cur_ref producer_ref
   return cur_ref
   
 module_to_string_inner consumer_e@(ATupleN t0 t1 producer0_e producer1_e cur_idx) = do

@@ -290,7 +290,7 @@ tuple_reduce_results = sequence $ fmap (\s -> compile_and_test_with_slowdown tup
                                       tuple_reduce_inputs tuple_reduce_output) [1,2,4,8]
 
 
-fst_snd_sum_shallow in_seq = do
+fst_snd_sum_no_input in_seq = do
   let kernel_list = fmap Atom_Int [1,2,3,4,5,6,7,8]
   let kernel = const_genC (Seq $ listToVector (Proxy @8) kernel_list) in_seq
   let kernel_and_values = map2C atom_tupleC kernel in_seq
@@ -298,16 +298,21 @@ fst_snd_sum_shallow in_seq = do
   let in_seq_again = mapC sndC kernel_and_values
   let kernel_and_values_again = map2C atom_tupleC kernel_again in_seq_again
   mapC addC kernel_and_values_again
-fst_snd_sum = seq_shallow_to_deep $
-  fst_snd_sum_shallow $
+fst_snd_sum = fst_snd_sum_no_input $
   com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 Atom_Int))
-fst_snd_sum_seq_idx = add_indexes fst_snd_sum
+fst_snd_sum_seq_idx = add_indexes $ seq_shallow_to_deep fst_snd_sum
 fst_snd_sum_ppar =
   fmap (\s -> rewrite_to_partially_parallel s fst_snd_sum_seq_idx) [1,2,4,8]
 fst_snd_sum_ppar_typechecked =
   fmap check_type fst_snd_sum_ppar
 fst_snd_sum_ppar_typechecked' =
   fmap check_type' fst_snd_sum_ppar
+fst_snd_sum_inputs :: [[Integer]] = [[6,7,8,9,10,11,12,13]]
+fst_snd_sum_output :: [Integer] = [7,9,11,13,15,17,19,21]
+-- need to come back and check why slowest version uses a reduce_s
+fst_snd_sum_results = sequence $ fmap (\s -> compile_and_test_with_slowdown fst_snd_sum s
+                                      fst_snd_sum_inputs fst_snd_sum_output) [1,2,4,8]
+
 
 striple_shallow in_seq = do
   let pair = map2C seq_tupleC in_seq in_seq
