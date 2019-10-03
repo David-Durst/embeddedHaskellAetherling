@@ -146,9 +146,10 @@ match_latencies' e@(Reduce_tN _ _ f producer _) = do
   if latency_f == 0
     then do
     cur_idx <- get_cur_index
+    reduce_latency <- lift $ lift $ lift $ compute_latency' e
     return $ Matched_Latency_Result
       (e {f = new_f, seq_in = new_producer, index = cur_idx} )
-      (latency_producer + latency_f)
+      (latency_producer + reduce_latency)
     else do
     lift_memo_rewrite_state $ print_st e
     throwError $ Latency_Failure $
