@@ -325,14 +325,20 @@ seq_to_stuple_basic_ppar_typechecked =
   fmap check_type seq_to_stuple_basic_ppar
 
 
-stuple_to_seq_basic = seq_shallow_to_deep $
+stuple_to_seq = 
   seq_tuple_to_seqC Proxy (Proxy @0) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 12 (Seq_Tuple 4 Atom_Int)))
-stuple_to_seq_basic_seq_idx = add_indexes stuple_to_seq_basic
-stuple_to_seq_basic_ppar = 
-  fmap (\s -> rewrite_to_partially_parallel s stuple_to_seq_basic_seq_idx) [1,2,4,8,16]
-stuple_to_seq_basic_ppar_typechecked =
-  fmap check_type stuple_to_seq_basic_ppar
+stuple_to_seq_seq_idx = add_indexes $ seq_shallow_to_deep stuple_to_seq
+stuple_to_seq_ppar = 
+  fmap (\s -> rewrite_to_partially_parallel s stuple_to_seq_seq_idx) [1,2,4,8,16]
+stuple_to_seq_ppar_typechecked =
+  fmap check_type stuple_to_seq_ppar
+stuple_to_seq_inputs :: [[Integer]] = [[1..16]]
+--stuple_to_seq_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
+stuple_to_seq_output :: [Integer] = [1..16]
+-- need to come back and check why slowest version uses a reduce_s
+stuple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown stuple_to_seq s
+                                      stuple_to_seq_inputs stuple_to_seq_output) [1,2,4,8]
   
 seq_and_stuple_basic_no_input = 
   seq_to_seq_tupleC >>>
