@@ -97,14 +97,11 @@ compile_and_test_with_slowdown shallow_seq_program s inputs output = do
         then do
         test_circuit_with_fault deep_st_program inputs output output_latency
         else do
-        print_st deep_st_program
         return $ Fault_Failure ("program not slowed correctly for target" ++
           " slowdown " ++ show s ++ " with actual slowdown " ++ show actual_s) "" "" 0
       else do
-      print_st deep_st_program
       return $ Fault_Failure "invalid latencies for program" "" "" 0
     else do
-    print_st deep_st_program
     return $ Fault_Failure "invalid types for program" "" "" 0
 
 compile_with_slowdown_to_expr :: (Shallow_Types.Aetherling_Value a) =>
