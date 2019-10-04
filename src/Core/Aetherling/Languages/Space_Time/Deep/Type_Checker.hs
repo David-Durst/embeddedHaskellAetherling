@@ -8,11 +8,17 @@ import Data.Either
 
 type Type_Checker_Error = DAG_MemoT AST_Type (Except (Either String Type_Error))
 
-data Type_Error = Type_Error {
+data Type_Error = Producer_Consumer_Type_Error {
   consumer_input_type :: AST_Type,
   producer_output_type :: AST_Type,
   consumer :: Expr
-  } deriving (Show, Eq)
+  }
+  | Reshape_Type_Error {
+      reshape_input_type :: AST_Type,
+      reshape_output_type :: AST_Type,
+      reshape_op :: Expr
+      }
+  deriving (Show, Eq)
 
 check_type :: Expr -> Bool
 check_type e = do
@@ -117,8 +123,11 @@ check_type' (InputN t _ _) = return t
 check_type' e@(ErrorN _ _) = throwError $ Left $ show e
 check_type' consumer_e@(FIFON _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(ReshapeN _ _ producer_e _) =
-  check_unary_operator consumer_e producer_e
+check_type' consumer_e@(ReshapeN in_t out_t producer_e _) =
+  if (clocks_t in_t == clocks_t out_t) &&
+     (num_atoms_t in_t == num_atoms_t out_t)
+  then check_unary_operator consumer_e producer_e
+  else throwError $ Right $ Reshape_Type_Error in_t out_t consumer_e
   
 check_unary_operator :: Expr -> Expr -> Type_Checker_Error AST_Type
 check_unary_operator consumer_op producer_op = do
@@ -129,7 +138,8 @@ check_unary_operator consumer_op producer_op = do
     (head consumer_input_types == producer_output_type)
     then return consumer_output_type
     else throwError $ Right $
-         Type_Error (head consumer_input_types) producer_output_type consumer_op
+         Producer_Consumer_Type_Error (head consumer_input_types)
+         producer_output_type consumer_op
 
 check_binary_operator :: Expr -> Expr -> Expr -> Type_Checker_Error AST_Type
 check_binary_operator consumer_op producer_op0 producer_op1 = do
@@ -141,8 +151,10 @@ check_binary_operator consumer_op producer_op0 producer_op1 = do
     then throwError $ Left ("no two inputs for " ++ show consumer_op)
     else if (consumer_input_types !! 0 /= producer0_output_type)
     then throwError $ Right $
-         Type_Error (head consumer_input_types) producer0_output_type consumer_op
+         Producer_Consumer_Type_Error (head consumer_input_types)
+         producer0_output_type consumer_op
     else if (consumer_input_types !! 1 /= producer1_output_type)
     then throwError $ Right $
-         Type_Error (consumer_input_types !! 1) producer0_output_type consumer_op
+         Producer_Consumer_Type_Error (consumer_input_types !! 1)
+         producer0_output_type consumer_op
     else return consumer_output_type
