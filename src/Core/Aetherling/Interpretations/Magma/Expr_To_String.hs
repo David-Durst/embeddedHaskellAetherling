@@ -44,6 +44,12 @@ add_to_cur_module new_string = do
   lift $ put $ cur_data { cur_module_output_lines = cur_output_lines ++ [new_string] }
   return ()
 
+update_output :: Module_Port -> Memo_Print_StateM Magma_Module_Ref ()
+update_output new_output = do
+  cur_data <- lift get
+  lift $ put $ cur_data { cur_module_output = new_output }
+  return ()
+
 use_valid_port :: Memo_Print_StateM Magma_Module_Ref Bool
 use_valid_port = do
   cur_data <- lift get
@@ -126,6 +132,7 @@ print_module new_module = do
   lift $ put inner_data
   
   cur_module_result_ref <- module_to_string_inner new_module
+  traceShowM cur_module_result_ref
 
   -- get state after executing inside module
   end_data <- lift get
@@ -297,6 +304,7 @@ module_to_string_inner consumer_e@(Const_GenN constant t cur_idx) = do
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str
                 [] (Module_Port "O" t)
   add_to_cur_module $ var_name cur_ref ++ " = " ++ gen_call cur_ref ++ "()"
+  update_output $ Module_Port "O" t
   let cur_ref_valid_str = var_name cur_ref ++ ".valid_up"
   add_to_cur_module $ "wire(cls.valid_up, " ++ cur_ref_valid_str ++ ")"
   return cur_ref
@@ -553,10 +561,27 @@ module_to_string_inner consumer_e@(STupleAppendN out_len elem_t producer0_e prod
   
 module_to_string_inner consumer_e@(STupleToSSeqN tuple_len elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
-  return producer_ref
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "DefineSTupleToSSeq(" ++ type_to_python elem_t ++ ", " ++ show tuple_len ++
+                ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (STupleT tuple_len elem_t)]
+                (Module_Port "O" (SSeqT tuple_len elem_t))
+  print_unary_operator cur_ref producer_ref
+  cur_data <- lift get
+  traceShowM cur_data
+  return cur_ref
+
 module_to_string_inner consumer_e@(SSeqToSTupleN tuple_len elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
-  return producer_ref
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "DefineSSeqToSTuple(" ++ type_to_python elem_t ++ ", " ++ show tuple_len ++
+                ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT tuple_len elem_t)]
+                (Module_Port "O" (STupleT tuple_len elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
   
 module_to_string_inner (InputN t name cur_idx) = do
   cur_data <- lift get
@@ -595,6 +620,7 @@ print_index (Index i) = show i
 print_unary_operator :: Magma_Module_Ref -> Magma_Module_Ref -> Memo_Print_StateM Magma_Module_Ref ()
 print_unary_operator cur_ref producer_ref = do
   add_to_cur_module $ var_name cur_ref ++ " = " ++ gen_call cur_ref ++ "()"
+  update_output $ out_port cur_ref
   let producer_out_str = var_name producer_ref ++ "." ++
                          (port_name $ out_port producer_ref) 
   let cur_ref_in_str = var_name cur_ref ++ "." ++
@@ -614,6 +640,7 @@ print_unary_operator cur_ref producer_ref = do
 print_binary_operator :: Magma_Module_Ref -> Magma_Module_Ref -> Magma_Module_Ref -> Memo_Print_StateM Magma_Module_Ref ()
 print_binary_operator cur_ref producer_ref_left producer_ref_right = do
   add_to_cur_module $ var_name cur_ref ++ " = " ++ gen_call cur_ref ++ "()"
+  update_output $ out_port cur_ref
   let producer_out_str_left = var_name producer_ref_left ++ "." ++
                               (port_name $ out_port producer_ref_left) 
   let producer_out_str_right = var_name producer_ref_right ++ "." ++
