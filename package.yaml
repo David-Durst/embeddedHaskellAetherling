@@ -78,6 +78,7 @@ library:
     - ConstraintKinds
     - Rank2Types
     - InstanceSigs
+    - BangPatterns
 
 executables:
   Aetherling-Blur-exe:

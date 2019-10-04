@@ -22,3 +22,9 @@ Please be patient the first time `stack ghci` is run on a computer.
 It will install all the dependencies in a virtual environment just for this project.
 
 
+# How To Run Tests
+```
+stack test --test-arguments '--num-threads 1'
+```
+
+
