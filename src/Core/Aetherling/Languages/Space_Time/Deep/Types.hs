@@ -62,14 +62,23 @@ size_t (STupleT n t) = n * size_t t
 size_t (SSeqT n t) = n * size_t t
 size_t (TSeqT n _ t) = size_t t
 
-num_atoms_t :: AST_Type -> Int
-num_atoms_t UnitT = 1
-num_atoms_t BitT = 1
-num_atoms_t IntT = 1
-num_atoms_t (ATupleT t0 t1) = 1
-num_atoms_t (STupleT n t) = n * num_atoms_t t
-num_atoms_t (SSeqT n t) = n * num_atoms_t t
-num_atoms_t (TSeqT n _ t) = n * num_atoms_t t
+num_atoms_total_t :: AST_Type -> Int
+num_atoms_total_t UnitT = 1
+num_atoms_total_t BitT = 1
+num_atoms_total_t IntT = 1
+num_atoms_total_t (ATupleT t0 t1) = 1
+num_atoms_total_t (STupleT n t) = n * num_atoms_total_t t
+num_atoms_total_t (SSeqT n t) = n * num_atoms_total_t t
+num_atoms_total_t (TSeqT n _ t) = num_atoms_total_t t
+
+num_atoms_per_valid_t :: AST_Type -> Int
+num_atoms_per_valid_t UnitT = 1
+num_atoms_per_valid_t BitT = 1
+num_atoms_per_valid_t IntT = 1
+num_atoms_per_valid_t (ATupleT t0 t1) = 1
+num_atoms_per_valid_t (STupleT n t) = n * num_atoms_per_valid_t t
+num_atoms_per_valid_t (SSeqT n t) = n * num_atoms_per_valid_t t
+num_atoms_per_valid_t (TSeqT n _ t) = num_atoms_per_valid_t t
 
 clocks_t :: AST_Type -> Int
 clocks_t UnitT = 1

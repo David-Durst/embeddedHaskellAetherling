@@ -94,7 +94,7 @@ convert_st_val_idxs_to_vals idx_to_str st_val_idxs =
 
 generate_st_val_idxs_for_st_type :: AST_Type -> [[ST_Val_Index]]
 generate_st_val_idxs_for_st_type t = do
-  let total_width = num_atoms_t t
+  let total_width = num_atoms_per_valid_t t
   let total_time = clocks_t t
   let valid_time = valid_clocks_t t
   let flat_results =

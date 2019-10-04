@@ -164,7 +164,7 @@ const_test_ppar = fmap
   (\s -> rewrite_to_partially_parallel s const_test_seq_idx) [1,3,9]
 const_test_ppar_typechecked = fmap check_type const_test_ppar
 const_test_inputs :: [[Integer]] = []
-const_test_outputs :: [Integer] = [0..9]
+const_test_outputs :: [Integer] = [0..8]
 const_test_results = sequence $ fmap (\s -> compile_and_test_with_slowdown const_test s
                                      const_test_inputs const_test_outputs) [1,3,9]
 
