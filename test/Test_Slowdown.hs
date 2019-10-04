@@ -313,21 +313,8 @@ fst_snd_sum_output :: [Integer] = [7,9,11,13,15,17,19,21]
 fst_snd_sum_results = sequence $ fmap (\s -> compile_and_test_with_slowdown fst_snd_sum s
                                       fst_snd_sum_inputs fst_snd_sum_output) [1,2,4,8]
 
-
-striple_shallow in_seq = do
-  let pair = map2C seq_tupleC in_seq in_seq
-  map2C seq_tuple_appendC pair in_seq
-striple = seq_shallow_to_deep $
-  striple_shallow $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 Atom_Int))
-striple_seq_idx = add_indexes striple
-striple_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s striple_seq_idx) [1,2,4,8]
-striple_ppar_typechecked =
-  fmap check_type striple_ppar
-striple_ppar_typechecked' =
-  fmap check_type' striple_ppar
-
+-- not going to test outputing or inputting an stuple
+-- since it only exists for converting to a seq
 seq_to_stuple_basic = seq_shallow_to_deep $
   seq_to_seq_tupleC $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
@@ -346,7 +333,37 @@ stuple_to_seq_basic_ppar =
   fmap (\s -> rewrite_to_partially_parallel s stuple_to_seq_basic_seq_idx) [1,2,4,8,16]
 stuple_to_seq_basic_ppar_typechecked =
   fmap check_type stuple_to_seq_basic_ppar
+  
+seq_and_stuple_basic_no_input = 
+  seq_to_seq_tupleC >>>
+  seq_tuple_to_seqC Proxy (Proxy @0)
+seq_and_stuple_basic = seq_and_stuple_basic_no_input $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
+seq_and_stuple_basic_seq_idx = add_indexes $ seq_shallow_to_deep $seq_and_stuple_basic
+seq_and_stuple_basic_ppar = 
+  fmap (\s -> rewrite_to_partially_parallel s seq_and_stuple_basic_seq_idx) [1,2,4,8,16]
+seq_and_stuple_basic_ppar_typechecked =
+  fmap check_type seq_and_stuple_basic_ppar
 
+striple_no_input in_seq = do
+  let pair = map2C seq_tupleC in_seq in_seq
+  let triple = map2C seq_tuple_appendC pair in_seq
+  seq_tuple_to_seqC Proxy (Proxy @0) triple
+striple = striple_no_input $
+          com_input_seq "hi" (Proxy :: Proxy (Seq 8 16 Atom_Int))
+striple_seq_idx = add_indexes $ seq_shallow_to_deep striple
+striple_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s striple_seq_idx) [1,2,4,8]
+striple_ppar_typechecked =
+  fmap check_type striple_ppar
+striple_ppar_typechecked' =
+  fmap check_type' striple_ppar
+striple_inputs :: [[Integer]] = [[1..8]]
+--striple_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
+striple_output :: [[Integer]] = [[i, i, i] | i <- [1 .. 8]]
+-- need to come back and check why slowest version uses a reduce_s
+striple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown striple s
+                                      striple_inputs striple_output) [1,2,4,8]
 
 striple_to_seq_shallow in_seq = do
   let pair = map2C seq_tupleC in_seq in_seq
