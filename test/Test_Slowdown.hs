@@ -1,4 +1,6 @@
 module Test_Slowdown where
+import Test.Tasty
+import Test.Tasty.HUnit
 import Aetherling.Languages.Sequence.Shallow.Expr
 import Aetherling.Languages.Sequence.Shallow.Types
 import Aetherling.Languages.Sequence.Deep.Expr
@@ -20,6 +22,51 @@ import GHC.TypeLits.Extra
 import Data.SBV
 import Control.Monad.State
 
+slowdown_tests = testGroup "Verifying Space-Time Shallow To Deep Embeddings"
+  [
+    testCase "slowing a single map" $
+    (all_success =<< single_map_results) @? "single map slowdowns failed",
+    testCase "slowing two maps" $
+    (all_success =<< two_maps_results) @? "two maps slowdowns failed",
+    testCase "slowing a diamond" $
+    (all_success =<< diamond_map_results) @? "diamond slowdowns failed",
+    testCase "slowing a map with underutilization" $
+    (all_success =<< single_map_underutil_results) @? "map with underutilization slowdowns failed",
+    testCase "slowing a constant generator" $
+    (all_success =<< const_test_results) @? "constant generator slowdowns failed",
+    testCase "slowing a map to an upsample" $
+    (all_success =<< map_to_up_results) @? "map to up slowdowns failed",
+    testCase "slowing up to down" $
+    (all_success =<< map_to_up_results) @? "up to down slowdowns failed",
+    testCase "slowing nested map to top level up" $
+    (all_success =<< nested_map_to_top_level_up_results) @? "nested map to top level up slowdowns failed",
+    testCase "slowing nested map to nested up" $
+    (all_success =<< nested_map_to_nested_up_results) @? "nested map to nested up slowdowns failed",
+    testCase "slowing partition to flat map" $
+    (all_success =<< partition_to_flat_map_results) @? "partition to flat map slowdowns failed",
+    testCase "slowing map to unpartition" $
+    (all_success =<< map_to_unpartition_results) @? "map to unpartition slowdowns failed",
+    testCase "slowing double up" $
+    (all_success =<< double_up_results) @? "double_up slowdowns failed",
+    testCase "slowing down over nested to down over flattened" $
+    (all_success =<< down_over_nested_to_down_over_flattened_results) @? "down over nested to down over flattened slowdowns failed",
+    testCase "slowing tuple sum" $
+    (all_success =<< tuple_sum_results) @? "tuple_sum slowdowns failed",
+    testCase "slowing tuple reduce" $
+    (all_success =<< tuple_reduce_results) @? "tuple_reduce slowdowns failed",
+    testCase "slowing fst snd sum" $
+    (all_success =<< fst_snd_sum_results) @? "fst snd sum slowdowns failed",
+    testCase "slowing stuple to seq" $
+    (all_success =<< stuple_to_seq_results) @? "stuple to seq slowdowns failed",
+    testCase "slowing seq to stuple" $
+    (all_success =<< seq_to_stuple_results) @? "seq to stuple slowdowns failed"
+  ]
+
+all_success :: [Fault_Result] -> IO Bool
+all_success results = do
+  let checked_results = all (\x -> x == Fault_Success) results
+  return checked_results
+  
 -- input to scheduling algorithm: expr tree
 -- output to scheduling algorithm: amount to slow down each node
 -- must slow down by same amount, potentially to different layers depending on partition/unpartition
@@ -192,7 +239,7 @@ partition_to_flat_map_ppar = fmap (\s -> rewrite_to_partially_parallel s partiti
 partition_to_flat_map_ppar_typechecked = fmap check_type partition_to_flat_map_ppar
 partition_to_flat_inputs :: [[Integer]] = [[1,-2,3,4]]
 partition_to_flat_output :: [[Integer]] = [[1,2],[3,4]]
-partition_to_flat_results = sequence $ fmap (\s -> compile_and_test_with_slowdown partition_to_flat_map s
+partition_to_flat_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown partition_to_flat_map s
                                             partition_to_flat_inputs partition_to_flat_output) [1,2,4,8,16]
 
 map_to_unpartition =
