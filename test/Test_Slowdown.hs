@@ -313,17 +313,20 @@ fst_snd_sum_output :: [Integer] = [7,9,11,13,15,17,19,21]
 fst_snd_sum_results = sequence $ fmap (\s -> compile_and_test_with_slowdown fst_snd_sum s
                                       fst_snd_sum_inputs fst_snd_sum_output) [1,2,4,8]
 
--- not going to test outputing or inputting an stuple
--- since it only exists for converting to a seq
-seq_to_stuple_basic = seq_shallow_to_deep $
+seq_to_stuple = 
   seq_to_seq_tupleC $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
-seq_to_stuple_basic_seq_idx = add_indexes seq_to_stuple_basic
-seq_to_stuple_basic_ppar = 
-  fmap (\s -> rewrite_to_partially_parallel s seq_to_stuple_basic_seq_idx) [1,2,4,8,16]
-seq_to_stuple_basic_ppar_typechecked =
-  fmap check_type seq_to_stuple_basic_ppar
-
+seq_to_stuple_seq_idx = add_indexes $ seq_shallow_to_deep seq_to_stuple
+seq_to_stuple_ppar = 
+  fmap (\s -> rewrite_to_partially_parallel s seq_to_stuple_seq_idx) [1,2,4,8,16]
+seq_to_stuple_ppar_typechecked =
+  fmap check_type seq_to_stuple_ppar
+seq_to_stuple_inputs :: [[Integer]] = [[1..16]]
+--seq_to_stuple_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
+seq_to_stuple_output :: [Integer] = [1..16]
+-- need to come back and check why slowest version uses a reduce_s
+seq_to_stuple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown seq_to_stuple s
+                                      seq_to_stuple_inputs seq_to_stuple_output) [1,2,4,8,16]
 
 stuple_to_seq = 
   seq_tuple_to_seqC Proxy (Proxy @0) $
@@ -338,7 +341,7 @@ stuple_to_seq_inputs :: [[Integer]] = [[1..16]]
 stuple_to_seq_output :: [Integer] = [1..16]
 -- need to come back and check why slowest version uses a reduce_s
 stuple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown stuple_to_seq s
-                                      stuple_to_seq_inputs stuple_to_seq_output) [1,2,4,8]
+                                      stuple_to_seq_inputs stuple_to_seq_output) [1,2,4,8,16]
   
 seq_and_stuple_basic_no_input = 
   seq_to_seq_tupleC >>>

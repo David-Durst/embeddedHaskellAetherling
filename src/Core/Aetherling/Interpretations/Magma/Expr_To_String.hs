@@ -132,7 +132,6 @@ print_module new_module = do
   lift $ put inner_data
   
   cur_module_result_ref <- module_to_string_inner new_module
-  traceShowM cur_module_result_ref
 
   -- get state after executing inside module
   end_data <- lift get
@@ -569,7 +568,6 @@ module_to_string_inner consumer_e@(STupleToSSeqN tuple_len elem_t producer_e cur
                 (Module_Port "O" (SSeqT tuple_len elem_t))
   print_unary_operator cur_ref producer_ref
   cur_data <- lift get
-  traceShowM cur_data
   return cur_ref
 
 module_to_string_inner consumer_e@(SSeqToSTupleN tuple_len elem_t producer_e cur_idx) = do
