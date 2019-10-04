@@ -86,7 +86,26 @@ compile_and_test_with_slowdown :: (Shallow_Types.Aetherling_Value a,
 compile_and_test_with_slowdown shallow_seq_program s inputs output = do
   ML.Matched_Latency_Result deep_st_program output_latency <-
     compile_with_slowdown_to_expr shallow_seq_program s
-  test_circuit_with_fault deep_st_program inputs output output_latency
+  if check_type deep_st_program
+    then do
+    correct_latencies <- CL.check_latency deep_st_program
+    if correct_latencies
+      then do
+      let outer_types = ST_Conv.expr_to_outer_types deep_st_program
+      let actual_s = type_to_slowdown $ ST_Conv.e_out_type outer_types
+      if actual_s == s
+        then do
+        test_circuit_with_fault deep_st_program inputs output output_latency
+        else do
+        print_st deep_st_program
+        return $ Fault_Failure ("program not slowed correctly for target" ++
+          " slowdown " ++ show s ++ " with actual slowdown " ++ show actual_s) "" "" 0
+      else do
+      print_st deep_st_program
+      return $ Fault_Failure "invalid latencies for program" "" "" 0
+    else do
+    print_st deep_st_program
+    return $ Fault_Failure "invalid types for program" "" "" 0
 
 compile_with_slowdown_to_expr :: (Shallow_Types.Aetherling_Value a) =>
                                  RH.Rewrite_StateM a -> Int -> IO ML.Matched_Latency_Result
