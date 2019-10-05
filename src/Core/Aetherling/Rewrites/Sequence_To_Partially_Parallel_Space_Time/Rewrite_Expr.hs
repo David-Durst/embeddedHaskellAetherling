@@ -37,8 +37,9 @@ rewrite_to_partially_parallel s seq_expr = do
 rewrite_to_partially_parallel' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
 rewrite_to_partially_parallel' s seq_expr = do
   let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
+  --traceShowM $ rewrite_AST_type_debug s seq_expr_out_type
   output_type_slowdowns <- rewrite_AST_type s seq_expr_out_type
-  --trace ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
+  --traceM ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
   startEvalMemoT $ sequence_to_partially_parallel output_type_slowdowns seq_expr
 
 data Input_Type_Rewrites = Input_Type_Rewrites {
@@ -724,6 +725,7 @@ sequence_to_partially_parallel type_rewrites@(tr : NonSeqR : type_rewrites_tl)
 
   -- to compute how to slowed input, get the number of clocks the output takes
   let slowdown = get_type_rewrite_periods tr
+  --traceM $ "slowdown: " ++ show slowdown
  
   -- rewrite inputs to get same throuhgput of output,
   -- but this can be in whatever nesting structure rewrite_AST_type chooses

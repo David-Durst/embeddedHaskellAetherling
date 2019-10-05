@@ -69,7 +69,7 @@ num_atoms_total_t IntT = 1
 num_atoms_total_t (ATupleT t0 t1) = 1
 num_atoms_total_t (STupleT n t) = n * num_atoms_total_t t
 num_atoms_total_t (SSeqT n t) = n * num_atoms_total_t t
-num_atoms_total_t (TSeqT n _ t) = num_atoms_total_t t
+num_atoms_total_t (TSeqT n _ t) = n * num_atoms_total_t t
 
 num_atoms_per_valid_t :: AST_Type -> Int
 num_atoms_per_valid_t UnitT = 1
