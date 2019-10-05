@@ -63,8 +63,8 @@ rewrite_AST_type s seq_t = do
                   let (new_rw, success) = rewrite_no_underutil s_factor cur_rw
                   if success
                     then (new_rw, not_used_s_factors)
-                    else (new_rw, S.insert s_factor not_used_s_factors)
-                  ) (all_space_rw, S.empty) s_factors
+                    else (new_rw, insert s_factor not_used_s_factors)
+                  ) (all_space_rw, []) s_factors
   let maybe_t_rewrites_with_underutil =
         foldM (\cur_rw_maybe s_factor -> rewrite_with_underutil s_factor cur_rw_maybe)
         t_rewrites_no_underutil s_remaining_no_underutil
