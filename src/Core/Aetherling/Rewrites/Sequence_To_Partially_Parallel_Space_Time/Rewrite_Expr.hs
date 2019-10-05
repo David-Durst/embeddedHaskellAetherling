@@ -247,6 +247,11 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
 
   input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
   let input_rewrite : _ = input_rewrites
+  --traceShowM $ "down"
+  --traceShowM $ "i " ++ show i
+  --traceShowM $ "tr " ++ show tr
+  --traceShowM $ "in seq t slowed: " ++ show (SeqT.SeqT n i SeqT.IntT)
+  --traceShowM $ "input_rewrite " ++ show input_rewrites
 
   let upstream_type_rewrites = input_rewrite : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
@@ -425,6 +430,13 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let input_rewrite_outer : input_rewrite_inner : _ = input_rewrites
   let upstream_type_rewrites = input_rewrite_outer : input_rewrite_inner : type_rewrites_tl
   in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
+  --traceShowM "unpartition"
+  --traceShowM $ "tr: " ++ show tr
+  --traceShowM $ "out_t: " ++ show out_t_ppar
+  --traceShowM $ "slowdown: " ++ show slowdown
+  --traceShowM $ "in seq t slowed: " ++ show (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
+  --traceShowM $ "input_rewrites: " ++ show input_rewrites
+  --traceShowM $ "in_t_ppar: " ++ show in_t_ppar
   
   ppar_unary_seq_operator upstream_type_rewrites
     (STE.ReshapeN in_t_ppar out_t_ppar) producer

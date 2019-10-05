@@ -22,7 +22,7 @@ import GHC.TypeLits.Extra
 import Data.SBV
 import Control.Monad.State
 
-slowdown_tests = testGroup "Verifying Space-Time Shallow To Deep Embeddings"
+slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
   [
     testCase "slowing a single map" $
     (all_success =<< single_map_results) @? "single map slowdowns failed",
