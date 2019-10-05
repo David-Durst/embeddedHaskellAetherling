@@ -472,10 +472,17 @@ stencil_1d_test_ppar_typechecked' =
   fmap check_type' stencil_1d_test_ppar
 stencil_1d_inputs :: [[Integer]] = [[1..100]]
 --stencil_1d_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
-stencil_1d_output :: [[Integer]] = [[max (i-2) 0, max (i-1) 0, i] | i <- [1 .. 100]]
+stencil_1d_output :: [[Integer]] = [
+  [
+    if i > 2 then i-2 else int_to_ignore,
+    if i > 1 then i-1 else int_to_ignore,
+    i
+  ] | i <- [1 .. 100]]
 -- need to come back and check why slowest version uses a reduce_s
 stencil_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown stencil_1d_test s
                                       stencil_1d_inputs stencil_1d_output) [1,2,5,10,30,100,300]
+stencil_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown stencil_1d_test s
+                                      stencil_1d_inputs stencil_1d_output) [1]
 
 stencil_2dC_test window_size_row window_size_col in_col in_img = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
