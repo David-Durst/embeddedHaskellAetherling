@@ -65,7 +65,7 @@ match_latencies' e@(Down_1d_tN _ _ _ _ producer _) = do
     latency = latency result_without_e_latency + cur_latency
     }
 match_latencies' e@(Partition_s_ssN _ _ _ producer _) = match_combinational_op e producer
-match_latencies' e@(Partition_t_ttN _ _ _ 0 _ producer _) = memo producer $ match_latencies' producer
+match_latencies' e@(Partition_t_ttN _ _ _ 0 _ producer _) = match_combinational_op e producer
 match_latencies' e@(Partition_t_ttN _ _ _ _ _ producer _) = do
   result_without_e_latency <- match_combinational_op e producer
   let input_output_types = ST_Conv.expr_to_types e

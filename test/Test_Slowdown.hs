@@ -59,7 +59,13 @@ slowdown_tests = testGroup "Verifying Space-Time Shallow To Deep Embeddings"
     testCase "slowing stuple to seq" $
     (all_success =<< stuple_to_seq_results) @? "stuple to seq slowdowns failed",
     testCase "slowing seq to stuple" $
-    (all_success =<< seq_to_stuple_results) @? "seq to stuple slowdowns failed"
+    (all_success =<< seq_to_stuple_results) @? "seq to stuple slowdowns failed",
+    testCase "slowing seq and stuple" $
+    (all_success =<< seq_and_stuple_results) @? "seq and stuple slowdowns failed",
+    testCase "slowing striple" $
+    (all_success =<< striple_results) @? "striple slowdowns failed",
+    testCase "slowing striple to seq" $
+    (all_success =<< striple_to_seq_results) @? "striple to seq slowdowns failed"
   ]
 
 all_success :: [Fault_Result] -> IO Bool
@@ -455,16 +461,21 @@ stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   let tuple = zipC window_size shifted_seqs
   seq_tuple_to_seqC Proxy (Proxy @0) tuple
 stencil_1dC_test _ _ = undefined
-stencil_1d_test = seq_shallow_to_deep $
-  stencil_1dC_test (Proxy @3) $
+stencil_1d_test = stencil_1dC_test (Proxy @3) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 100 200 Atom_Int))
-stencil_1d_test_seq_idx = add_indexes stencil_1d_test
+stencil_1d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_test
 stencil_1d_test_ppar = 
-  fmap (\s -> rewrite_to_partially_parallel s stencil_1d_test_seq_idx) [1,2,5,10,30]
+  fmap (\s -> rewrite_to_partially_parallel s stencil_1d_test_seq_idx) [1,2,5,10,30,100,300]
 stencil_1d_test_ppar_typechecked =
   fmap check_type stencil_1d_test_ppar
 stencil_1d_test_ppar_typechecked' =
   fmap check_type' stencil_1d_test_ppar
+stencil_1d_inputs :: [[Integer]] = [[1..100]]
+--stencil_1d_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
+stencil_1d_output :: [[Integer]] = [[max (i-2) 0, max (i-1) 0, i] | i <- [1 .. 100]]
+-- need to come back and check why slowest version uses a reduce_s
+stencil_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown stencil_1d_test s
+                                      stencil_1d_inputs stencil_1d_output) [1,2,5,10,30,100,300]
 
 stencil_2dC_test window_size_row window_size_col in_col in_img = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
