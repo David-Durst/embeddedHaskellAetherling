@@ -44,7 +44,7 @@ rewrite_AST_type_debug s seq_t = do
         foldl (\(cur_rw,not_used_s_factors) s_factor -> do
                   let (new_rw, success) = rewrite_no_underutil s_factor cur_rw
                   if success
-                    then trace (show new_rw) $ (new_rw, not_used_s_factors)
+                    then (new_rw, not_used_s_factors)
                     else (new_rw, insert s_factor not_used_s_factors)
                   ) (all_space_rw, []) s_factors
   traceM "finished with no underutil calls"
@@ -127,7 +127,9 @@ rewrite_one_space_layer_with_underutil s_p (Layer (SpaceR n) i_max n_divisors) |
       let ni = head ni_options
       let io = s_p - (n `div` ni)
       let no = n `div` ni
-      return $ Layer (SplitR no io ni) i_max n_divisors
+      if io == i_max && ni == 1
+        then return $ Layer (TimeR no io) i_max n_divisors
+        else return $ Layer (SplitR no io ni) i_max n_divisors
     where
       io_and_no_valid ni =
         -- no is a positive integer
