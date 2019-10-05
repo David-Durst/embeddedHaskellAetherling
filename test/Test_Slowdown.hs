@@ -415,7 +415,7 @@ striple = striple_no_input $
           com_input_seq "hi" (Proxy :: Proxy (Seq 8 16 Atom_Int))
 striple_seq_idx = add_indexes $ seq_shallow_to_deep striple
 striple_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s striple_seq_idx) [1,2,4,8]
+  fmap (\s -> rewrite_to_partially_parallel s striple_seq_idx) [1,2,4,8,24]
 striple_ppar_typechecked =
   fmap check_type striple_ppar
 striple_ppar_typechecked' =
@@ -425,22 +425,27 @@ striple_inputs :: [[Integer]] = [[1..8]]
 striple_output :: [[Integer]] = [[i, i, i] | i <- [1 .. 8]]
 -- need to come back and check why slowest version uses a reduce_s
 striple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown striple s
-                                      striple_inputs striple_output) [1,2,4,8]
+                                      striple_inputs striple_output) [1,2,4,8,24]
 
 striple_to_seq_shallow in_seq = do
   let pair = map2C seq_tupleC in_seq in_seq
   let triple = map2C seq_tuple_appendC pair in_seq
   seq_tuple_to_seqC Proxy (Proxy @0) triple
-striple_to_seq = seq_shallow_to_deep $
-  striple_to_seq_shallow $
+striple_to_seq = striple_to_seq_shallow $
   com_input_seq "hi" (Proxy :: Proxy (Seq 8 16 Atom_Int))
-striple_to_seq_seq_idx = add_indexes striple_to_seq
+striple_to_seq_seq_idx = add_indexes $ seq_shallow_to_deep striple_to_seq
 striple_to_seq_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s striple_to_seq_seq_idx) [1,2,4,8]
+  fmap (\s -> rewrite_to_partially_parallel s striple_to_seq_seq_idx) [1,2,4,8,24]
 striple_to_seq_ppar_typechecked =
   fmap check_type striple_to_seq_ppar
 striple_to_seq_ppar_typechecked' =
   fmap check_type' striple_to_seq_ppar
+striple_to_seq_inputs :: [[Integer]] = [[1..8]]
+--striple_to_seq_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
+striple_to_seq_output :: [[Integer]] = [[i, i, i] | i <- [1 .. 8]]
+-- need to come back and check why slowest version uses a reduce_s
+striple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown striple_to_seq s
+                                      striple_to_seq_inputs striple_to_seq_output) [1,2,4,8,24]
 
 
 stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
