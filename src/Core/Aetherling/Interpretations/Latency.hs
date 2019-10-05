@@ -49,7 +49,6 @@ compute_latency e@(Down_1d_tN _ _ _ _ producer _) = do
   cur_latency <- lift_memo_rewrite_state $ compute_latency' e
   return $ producer_latency + cur_latency
 compute_latency e@(Partition_s_ssN _ _ _ producer _) = memo producer $ compute_latency producer
-compute_latency e@(Partition_t_ttN _ _ _ 0 _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Partition_t_ttN _ _ _ _ _ producer _) = do
   producer_latency <- memo producer $ compute_latency producer
   let input_output_types = ST_Conv.expr_to_types e
@@ -61,7 +60,6 @@ compute_latency e@(Partition_t_ttN _ _ _ _ _ producer _) = do
   cur_latency <- lift_memo_rewrite_state $ compute_latency' reshape
   return $ producer_latency + cur_latency
 compute_latency e@(Unpartition_s_ssN _ _ _ producer _) = memo producer $ compute_latency producer
-compute_latency e@(Unpartition_t_ttN _ _ _ 0 _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
   producer_latency <- memo producer $ compute_latency producer
   let input_output_types = ST_Conv.expr_to_types e
