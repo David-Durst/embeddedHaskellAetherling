@@ -37,7 +37,7 @@ slowdown_tests = testGroup "Verifying Space-Time Shallow To Deep Embeddings"
     testCase "slowing a map to an upsample" $
     (all_success =<< map_to_up_results) @? "map to up slowdowns failed",
     testCase "slowing up to down" $
-    (all_success =<< map_to_up_results) @? "up to down slowdowns failed",
+    (all_success =<< up_to_down_results) @? "up to down slowdowns failed",
     testCase "slowing nested map to top level up" $
     (all_success =<< nested_map_to_top_level_up_results) @? "nested map to top level up slowdowns failed",
     testCase "slowing nested map to nested up" $

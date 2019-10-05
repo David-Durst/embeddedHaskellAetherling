@@ -215,9 +215,7 @@ data Magma_Module_Ref = Magma_Module_Ref {
 int_width = "8"
 -- this handles the strings inside a module
 module_to_string_inner :: Expr -> Memo_Print_StateM Magma_Module_Ref Magma_Module_Ref
-module_to_string_inner (IdN producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ module_to_string_inner producer_e
-  return producer_ref
+module_to_string_inner (IdN producer_e cur_idx) = throwError $ RH.Print_Failure "id not supported to magma"
 module_to_string_inner consumer_e@(AbsN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
@@ -358,7 +356,13 @@ module_to_string_inner consumer_e@(Down_1d_sN n sel_idx elem_t producer_e cur_id
   return cur_ref
 module_to_string_inner consumer_e@(Down_1d_tN n i sel_idx elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
-  return producer_ref
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "DefineDown_T(" ++ show n ++ ", " ++ show i ++ ", " ++ show sel_idx ++ ", " ++
+                type_to_python elem_t ++ ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (TSeqT n i elem_t)] (Module_Port "O" (TSeqT 1 (n+i-1) elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(Partition_s_ssN no ni elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
@@ -369,9 +373,11 @@ module_to_string_inner consumer_e@(Partition_s_ssN no ni elem_t producer_e cur_i
                 (Module_Port "O" (SSeqT no (SSeqT ni elem_t)))
   print_unary_operator cur_ref producer_ref
   return cur_ref
+{-
 module_to_string_inner consumer_e@(Partition_t_ttN no ni io 0 elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   return producer_ref
+-}
 module_to_string_inner consumer_e@(Partition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
   module_to_string_inner
     (ReshapeN (TSeqT (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) elem_t)

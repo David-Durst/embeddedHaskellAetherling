@@ -8,8 +8,8 @@ data AST_Type =
   | STupleT Int AST_Type
   | SSeqT Int AST_Type
   | TSeqT Int Int AST_Type
-  deriving (Show, Ord)
-
+  deriving (Show, Ord, Eq)
+{-
 instance Eq AST_Type where
   UnitT == UnitT = True
   BitT == BitT = True
@@ -33,7 +33,7 @@ instance Eq AST_Type where
   l == (TSeqT 1 0 r_t) = l == r_t
   (TSeqT l_n l_i l_t) == (TSeqT r_n r_i r_t) = (l_n == r_n) && (l_i == r_i) && (l_t == r_t)
   _ == _ = False
-
+-}
 -- these exist only because it's easier to have a value that is an Aetherling value
 -- rather than a value that's a member of a type class of aetherling values,
 -- like the above data types
