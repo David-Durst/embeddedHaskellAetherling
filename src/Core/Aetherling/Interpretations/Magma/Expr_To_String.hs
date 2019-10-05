@@ -553,7 +553,7 @@ module_to_string_inner consumer_e@(STupleAppendN out_len elem_t producer0_e prod
   let gen_str = "DefineSSeqTupleAppender(" ++ type_to_python elem_t ++ ", " ++
                 (show $ out_len - 1) ++ ", has_valid=True)"
   let tup_in_ports = [Module_Port "I0" (SSeqT (out_len - 1) elem_t), Module_Port "I1" elem_t]
-  let tup_out_port = Module_Port "O" (STupleT 2 elem_t)
+  let tup_out_port = Module_Port "O" (STupleT out_len elem_t)
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str tup_in_ports tup_out_port
   print_binary_operator cur_ref producer0_ref producer1_ref
   return cur_ref
