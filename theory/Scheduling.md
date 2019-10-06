@@ -280,6 +280,137 @@ This is invalid hardware as `prefix` can only be one implementation.
 
 ![Scheduled Diamond](other_diagrams/scheduler_examples/diamond/diamond_st_s_2.png "Scheduled Diamond")
 
+# Recursive, Memoized Scheduler
+The next scheduling algorithm addresses the diamond issue.
+It performs the same walk of the expression tree as the above, recursive scheduling algorithm.
+However, it memoizes the calls to `schedule_op`.
+Therefore, if a node is scheduled once in one part of the expression tree, it will not be scheduled different in a different part of the expression tree.
+As a result, `schdule_op` will need to handle the case where a recursive call to `schedule_op` does not return a producer with the expected type.
+In this case, `Reshape`s are added where necessary to fix types.
+The scheduling algorithm is:
+```
+schedule :: Seq_Expr -> Space_Time_Expr -> Space_Time_Expr -> Int -> Space_Time_Expr
+schedule pseq pspace ptime s =
+    n_out = get_output_node pseq
+    n_out_st = rewrite_with_slowdown n_out pspace ptime s
+    n_out_st_input_types = get_input_types n_out_st
+    n_out_producers = get_producers n_out
+    n_out_st_producers_maybe_wrong_type = 
+        [memo schedule_op n_out_producers[i] n_out_st_input_types[i] | i <- 0..len(n_out_producers)]
+    n_out_st_producers = map2 (add_reshape_to_match) n_out_st_producers_maybe_wrong_type n_out_st_input_types
+    map2 set_producers n_out_st n_out_st_input_types
+    return n_out_st
+
+schedule_op :: Seq_Expr -> Space_Time_Type -> Space_Time_Expr
+schedule_op n consumer_type =
+    n_st = rewrite_with_output_type n consumer_type
+    n_st_input_types = get_input_types n_st
+    n_producers = get_producers n
+    n_st_producers_maybe_wrong_type = 
+        [memo schedule_op n_out_producers[i] n_out_st_input_types[i] | i <- 0..len(n_out_producers)]
+    n_st_producers = map2 (add_reshape_to_match) n_out_st_producers_maybe_wrong_type n_out_st_input_types
+    map2 set_producers n_st n_st_input_types
+    return n_st
+```
+
+An imperative version of the scheduling algorithm is:
+
+```
+Input:
+    pseq - the sequence language program. A program is an expression tree
+    s - the slowdown factor. This is the number of clock cycles for the output type.
+
+Output:
+    psched - the scheduled program in the space-time IR that 
+
+Algorithm:
+    // Rewrites From Sequence Language To Space-Time IR:
+    function rewrite_op(cur_seq_node, produced_st_type, memo_map)
+        if cur_seq_node in memo_map:
+            return memo_map[cur_seq_node]
+
+        cur_st_node = rewrite_with_slowdown cur_seq_node produced_st_type
+        consumed_st_types = get_input_types cur_st_nodes
+        producers_seq = get_producers cur_seq_node
+        producers_st = List()
+
+        for i in range(len(producers_seq)):
+            producer_st = rewrite_op(producers_seq[i], consumed_st_types[i], memo_map)
+            producer_type = get_output_type producer_st
+            if producer_type != consumed_st_types[i]:
+                producers_st.append(add_reshape(producer_st, consumed_st_types[i]))
+            else:
+                producers_st.append(producer_st)
+                
+        set_producers(cur_st_node, producers_st)
+        memo_map.add(cur_seq_node, cur_st_node)
+        return cur_st_node
+    
+
+    // Insertion of FIFOs to Match Latencies
+    function match_latencies(cur_st_node, memo_map)
+        if cur_seq_node in memo_map:
+            return memo_map[cur_seq_node]
+
+        producers_seq = get_producers cur_st_node
+        consumed_st_types = get_input_types cur_st_nodes
+        producers_seq = get_producers cur_seq_node
+        producers_st = List()
+
+        // only two cases since all ops in Aetherling have at most 2 inputs 
+        // and only binary operators can have two inputs with different latencies
+        if len(producers_seq) == 2:
+            (matched_left_producer_st, left_latency) = match_latencies(prodcuers_st[0], memo_map)
+            (matched_right_producer_st, right_latency) = match_latencies(prodcuers_st[1], memo_map)
+            if left_latency == right_latency:
+                producers_st.append(matched_left_producer_st)
+                producers_st.append(matched_right_producer_st)
+            else if left_latency > right_latency:
+                producers_st.append(matched_left_producer_st)
+                producers_st.append(add_fifo(matched_right_producer_st, left_latency - right_latency))
+            else:
+                producers_st.append(add_fifo(matched_left_producer_st, right_latency - left_latency))
+                producers_st.append(matched_right_producer_st)
+
+        memo_map.add(cur_seq_node, cur_st_node)
+        return cur_st_node
+
+    
+    output_seq_type = get_output_type pseq
+    output_st_type = rewrite_type_with_slowdown output_seq_type s
+    memo_rewrites = Map()
+    psched_mismatched_latencies = rewrite_op(pseq, output_st_type, memo_rewrites)
+    memo_latencies = Map()
+    (psched, _) = match_latencies(psched_mismatched_latencies, memo_latencies)
+    return psched
+```
+
+# Recursive, Memoized Scheduler Example
+## Diamond
+This example demonstrates the issue of scheduling a DAG with a diamond pattern: the input is used on two separate branches which are later merged.
+Unlike the recursive scheduler, the recursive, memoized, branching scheduler can handle this example.
+
+The sequence language program is:
+```
+diamond input =
+    let prefix = Map 1 (Map 1 Abs) input
+    let branch1 = (Up_1d 2 (Seq 1 Int) >>> Unpartition 2 1 Int) prefix
+    let branch2 = (Map 1 (Up_1d 2 Int) >>> Unpartition 1 2 Int) prefix
+    Map2 2 Tuple branch1 branch2
+```
+
+The result from scheduling for `s=2` with the recursive, memoized, branching algorithm is:
+
+![Scheduled Diamond With Memoization](other_diagrams/scheduler_examples/diamond/diamond_st_s_2_memo.png "Scheduled Diamond With Memoization")
+
+The algorithm schedules `branch1` first. 
+Therefore, it schedules `prefix` to match `branch1`'s nesting structure.
+When the algorithm schedules `branch2`, the memoization returns the prior scheduling of `prefix` to match `branch1`.
+The scheduler adds a `Reshape` to address the mismatch between the output type of `prefix` and the input type of `branch2`, 
+
+While the types match, the produced hardware will not match the semantics of the sequence language program.
+The top branch has less latency than the bottom branch. 
+Therefore, the tuple in hardware will combine different elements than the tuple in the sequence language.
 
 # Recursive, Memoized, Branching Scheduler
 The final scheduling algorithm addresses the diamond issue while also exploring multiple schedules.
@@ -320,29 +451,6 @@ schedule_op n consumer_type =
     map2 set_producers n_st_xs n_st_input_type_xss
     return n_st_xs
 ```
-
-# Recursive, Memoized, Branching Scheduler
-## Diamond
-This example demonstrates the issue of scheduling a DAG with a diamond pattern: the input is used on two separate branches which are later merged.
-Unlike the recursive scheduler, the recursive, memoized, branching scheduler can handle this example.
-
-The sequence language program is:
-```
-diamond input =
-    let prefix = Map 1 (Map 1 Abs) input
-    let branch1 = (Up_1d 2 (Seq 1 Int) >>> Unpartition 2 1 Int) prefix
-    let branch2 = (Map 1 (Up_1d 2 Int) >>> Unpartition 1 2 Int) prefix
-    Map2 2 Tuple branch1 branch2
-```
-
-The result from scheduling for `s=2` with the recursive, memoized, branching algorithm is:
-
-![Scheduled Diamond With Memoization](other_diagrams/scheduler_examples/diamond/diamond_st_s_2_memo.png "Scheduled Diamond With Memoization")
-
-The algorithm schedules `branch1` first. 
-Therefore, it schedules `prefix` to match `branch1`'s nesting structure.
-When the algorithm schedules `branch2`, the memoization returns the prior scheduling of `prefix` to match `branch1`.
-The scheduler adds a `Reshape` to address the mismatch between the output type of `prefix` and the input type of `branch2`, 
 
 # Rewriting An Operation For An Output Type
 There are three ways to lower an operator from the sequence language to the space-time IR:
