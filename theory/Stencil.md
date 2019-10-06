@@ -2,34 +2,15 @@
 This document extends [the basic sequence language and space-time IR](Basic.md) to support stencils.
 It adds:
 1. a sequence language primitive for shift registers 
-1. definitions of sequence language stencils using other primitives
 1. space-time primitives for shift registers
-1. rewrite rules for converting the shift registers and stencils between sequence and space-time versions
+1. rewrite rules for converting the shifts between sequence and space-time versions
+1. definitions of sequence language stencils using other primitives
 
 # Sequence Language
 ## Sequence Operators
 1. `Shift n s :: Seq n t -> Seq n t`
     1. `Shift` translates a sequence by s elements.
     For `y <- Shift n 1 x`, the item at index `n+1` in `y` is equal to the item at index `n` in `x`.
-1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
-```
-Stencil_1d n w in_seq = 
-Tuple_To_Seq .
-    foldl1 (\accum next -> Map2 n Tuple accum next) .
-    foldl (\l@(last_shifted_seq:_) _ -> (Shift n 1 last_shifted_seq) : l)
-        [in_seq] [0 ..w-2]
-```
-
-1. `Stencil_2d n_row n_col w_row w_col init :: Seq (n_row*n_col) t -> Seq (n_row*n_col) (Seq w_row (Seq w_col t))`
-```
-Stencil_2d n_row n_col w_row w_col init = 
-Map (n_row*n_col) (Unpartition w_row w_col) .
-    Tuple_To_Seq .
-    foldl1 (\accum next -> Map2 (n_row*n_col) Tuple accum next) .
-    fmap (Stencil_1d (n_row*n_col) w_col) .
-    foldl (\l@(last_shifted_seq:_) _ -> (Shift (n_row*n_col) n_col init last_shifted_seq) : l)
-        [in_seq] [0 .. w_row - 2]
-```
 
 ## Nesting Rewrite Rules
 ### `Shift`
@@ -231,9 +212,28 @@ Unpartition no ni .
 
 ```
 
-# Examples
+# Stencils
+1. `Stencil_1d n w :: Seq n t -> Seq n (Seq w t)`
+```
+Stencil_1d n w in_seq = 
+Tuple_To_Seq .
+    foldl1 (\accum next -> Map2 n Tuple accum next) .
+    foldl (\l@(last_shifted_seq:_) _ -> (Shift n 1 last_shifted_seq) : l)
+        [in_seq] [0 ..w-2]
+```
 
-## Sequence
+1. `Stencil_2d n_row n_col w_row w_col init :: Seq (n_row*n_col) t -> Seq (n_row*n_col) (Seq w_row (Seq w_col t))`
+```
+Stencil_2d n_row n_col w_row w_col init = 
+Map (n_row*n_col) (Unpartition w_row w_col) .
+    Tuple_To_Seq .
+    foldl1 (\accum next -> Map2 (n_row*n_col) Tuple accum next) .
+    fmap (Stencil_1d (n_row*n_col) w_col) .
+    foldl (\l@(last_shifted_seq:_) _ -> (Shift (n_row*n_col) n_col init last_shifted_seq) : l)
+        [in_seq] [0 .. w_row - 2]
+```
+
+## Stencil Examples
 
 ### Example 1: 3x1 Sum
 ```
