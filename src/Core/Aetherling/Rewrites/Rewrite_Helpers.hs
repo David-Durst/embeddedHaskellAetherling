@@ -19,6 +19,11 @@ get_cur_index = do
       lift $ put $ Rewrite_Data $ Index (cur_idx + 1)
       return $ Index cur_idx
     _ -> return No_Index
+    
+get_cur_index_no_increment :: (Monad m) => DAG_MemoT v (Rewrite_StateTM m) DAG_Index
+get_cur_index_no_increment = do
+  cur_data <- lift get
+  return $ cur_index cur_data
 
 set_next_index :: (Monad m) => DAG_Index -> DAG_MemoT v (Rewrite_StateTM m) ()
 set_next_index next_index = do

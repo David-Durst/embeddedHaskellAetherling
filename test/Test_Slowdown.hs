@@ -482,7 +482,7 @@ stencil_1d_output :: [[Integer]] = [
 stencil_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown stencil_1d_test s
                                       stencil_1d_inputs stencil_1d_output) [1,2,5,10,30,100,300]
 stencil_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown stencil_1d_test s
-                                      stencil_1d_inputs stencil_1d_output) [1]
+                                      stencil_1d_inputs stencil_1d_output) [2]
 
 stencil_2dC_test window_size_row window_size_col in_col in_img = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
