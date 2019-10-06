@@ -8,8 +8,8 @@ It adds:
 
 # Sequence Language
 ## Sequence Operators
-1. `Shift n s :: Seq n t -> Seq n t`
-    1. `Shift` translates a sequence by s elements.
+1. `Shift :: (n: Int) -> (s: Int) -> Seq n t -> Seq n t`
+    1. `Shift` translates a sequence by `s` elements.
     For `y <- Shift n 1 x`, the item at index `n+1` in `y` is equal to the item at index `n` in `x`.
 
 ## Nesting Rewrite Rules
@@ -34,8 +34,8 @@ Let `Shift_Nested no ni init` be the above nested composition of operators witho
 
 # Space-Time IR
 ## Space-Time Operators
-1. `Shift_s n init :: SSeq n t -> SSeq n t`
-1. `Shift_t n init :: TSeq n v t -> TSeq n v t`
+1. `Shift_s :: (n: Int) -> SSeq n t -> SSeq n t`
+1. `Shift_t :: (n: Int) -> (v: Int) -> TSeq n v t -> TSeq n v t`
 
 The stencil operators don't need Space-Time versions because they are composed
 of more basic Aetherling operators. The more basic Aetherling operators

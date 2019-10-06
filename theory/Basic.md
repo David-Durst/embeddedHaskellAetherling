@@ -57,40 +57,24 @@ What do the output wires for the `TSeq n v t` do for the extra `n` clocks needed
 We avoid this issue by removing such tuples from the type system.
 
 ## Sequence Operators
-1. `Map (Config n) :: (t -> t') -> Seq n t -> Seq n t'`
-1. `Map2 (Config n) :: (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
-1. `Reduce (Config n) :: (t -> t -> t) -> Seq n t -> Seq 1 t`
-3. `Up_1d (Config n) :: Seq 1 t -> Seq n t`
-4. `Select_1d (Config n) (Config idx) :: Seq n t -> Seq 1 t`
-    1. The output `Seq` contains the `idx`th entry of the input `Seq`.
-7. `Partition (Config no) (Config ni) :: Seq (no*ni) t -> Seq no (Seq ni t)`
-7. `Unpartition (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq (no*ni) t`
-1. `Tuple_To_Seq (Config no) (Config ni) :: Seq no (NTuple ni t) -> Seq no (Seq ni t)`
-1. `Seq_To_Tuple (Config no) (Config ni) :: Seq no (Seq ni t) -> Seq no (NTuple ni t)`
+1. `Map :: (n: Int) -> (t -> t') -> Seq n t -> Seq n t'`
+1. `Map2 :: (n: Int) -> (t -> t' -> t'') -> Seq n t -> Seq n t' -> Seq n t''`
+1. `Reduce :: (n: Int) -> (t -> t -> t) -> Seq n t -> Seq 1 t`
+3. `Up_1d :: (n: Int) -> Seq 1 t -> Seq n t`
+4. `Select_1d :: (n: Int) -> (idx: Int) -> Seq n t -> Seq 1 t`
+1. `Shift :: (n: Int) -> (s: Int) -> Seq n t -> Seq n t`
+7. `Partition :: (no: Int) -> (ni: Int) -> Seq (no*ni) t -> Seq no (Seq ni t)`
+7. `Unpartition :: (no: Int) -> (ni: Int) -> Seq no (Seq ni t) -> Seq (no*ni) t`
+1. `Tuple_To_Seq :: (no: Int) -> (ni: Int) -> Seq no (NTuple ni t) -> Seq no (Seq ni t)`
+1. `Seq_To_Tuple :: (no: Int) -> (ni: Int) -> Seq no (Seq ni t) -> Seq no (NTuple ni t)`
 
+Note: `n: Int` is a dependent type signature. 
+`Map :: (n: Int) -> (t -> t') -> Seq n t -> Seq n t'` means `n` is the name of the first argument of type int.
+The value of that argument is then used in the types of the third argument, `Seq n t`, and fourth argument, `Seq n t'`.
 
 Note: Reduce's inner operator must be on atoms or sequences of length one. This ensures that resulting space-time reduce's f only takes one clock. I'm not sure how to handle partially parallel reduces at this time where the operator is pipelined over multiple clocks.
 
 Note: Seq is also an applicative functor. Aetherling's `Map2` is equivalent to Haskell's `\f x -> f <*> x` for applicative functors. I will not put this note in final paper. This note is here to justify to Pat and Kayvon why `Map2` is a standard Haskell function.
-
-### Configuration Parameters
-In addition to Aetherling's operators and types that form the sequence language, developers 
-need a way to pass values that configure the types of the operators.
-**Configuration parameters** are values whose types determine the types of the
-configured operators.
-Above, we labeled the types-as-values with `Config`.
-For example, `Map` requires a configuration parameter to set the length of sequences it operates on.
-1. `Config 2 :: Config 2`
-1. `Map (Config 2) :: (t -> t') -> Seq 2 t -> Seq 2 t'`
-   
-All of the types and values can be used as type parameters for `Config`. 
-As shown above `Config 2` uses the integer `2` in a configuration parameter's type. 
-`Config (Seq 2 Int)` uses `Seq 2 Int` in a configuration parameter's type.
-
-For shorthand throughout the rest of the document, we drop the `Config` label.
-It obfuscates the meaning of the code.
-We provide the configuration parameters with the operator name. 
-Operators' type signatures assume that the configuration parameter has already been provided.
 
 ## Properties
 ### Input and Output Types
@@ -147,8 +131,13 @@ The following are the rules for each operator on sequences in the sequence langu
 ### `Select_1d` Nesting
 `Select_1d (no*ni) idx ===  Unpartition 1 1 . Map 1 (Select_1d ni (idx % no)) . Select_1d no (idx // no) . Partition no ni`
 
+### `Shift` Nesting
+[See the shift and stencil document.](Stencil.md)
+
 ### `Partition` and `Unpartition` Nesting
-Please see [the partition document](Partition.md).
+These don't have rewrite rules. 
+When they are lowered to the space-time IR, they become buffers (`Reshape`) if they involve any changes in time. 
+Otherwise, they become nothing.
 
 ### `Tuple_To_Seq` Nesting
 `Tuple_To_Seq (ni*nj) nk === Unpartition ni nj . Map ni (Tuple_To_Seq nj nk) . Partition ni nj`
@@ -207,23 +196,23 @@ An operator `TSeq 5 1 (TSeq 3 0 Int) -> TSeq 2 4 (TSeq 2 1 Int)` accepts `TSeq 3
 1. `Fst :: (t x t') -> t`
 1. `Snd :: (t x t') -> t'`
 5. `Tuple :: t1 -> t2 -> t1 x t2`
-1. `Map_s n :: (t -> t') -> SSeq n t -> SSeq n t'`
-2. `Map_t n v :: (t -> t') -> TSeq n v t -> TSeq n v t'`
-2. `Map2_s n :: (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
-2. `Map2_t n v :: (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
-1. `Reduce_s n :: (t -> t -> t) -> SSeq n t -> SSeq 1 t`
-2. `Reduce_t n v :: (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
-1. `Up_1d_s n :: SSeq 1 t -> SSeq n t`
-3. `Up_1d_t n v :: TSeq 1 (n+v-1) t -> TSeq n v t`
-4. `Select_1d_s n idx :: SSeq n t -> SSeq 1 t`
-1. `Select_1d_t n v idx :: TSeq n v t -> TSeq 1 (n+v-1) t`
-1. `Tuple_To_SSeq n :: NTuple n t -> SSeq n t`
-1. `Serialize no ni vo vi :: TSeq no ((no * ((ni - 1) + vi)) + (vo * (ni + vi))) (SSeq ni t) -> TSeq no vo (TSeq ni vi t)`
-1. `SSeq_To_Tuple n :: SSeq n t -> NTuple n t`
-1. `Deserialize no ni vo vi :: TSeq no vo (TSeq ni vi t) -> TSeq no ((no * ((ni - 1) + vi)) + (vo * (ni + vi))) (SSeq ni t)`
+1. `Map_s :: (n: Int) -> (t -> t') -> SSeq n t -> SSeq n t'`
+2. `Map_t :: (n: Int) -> (v: Int) -> (t -> t') -> TSeq n v t -> TSeq n v t'`
+2. `Map2_s :: (n: Int) -> (t -> t' -> t'') -> SSeq n t -> SSeq n t' -> SSeq n t''`
+2. `Map2_t :: (n: Int) -> (v: Int) -> (t -> t' -> t'') -> TSeq n v t -> TSeq n v t' -> TSeq n v t''`
+1. `Reduce_s :: (n: Int) -> (t -> t -> t) -> SSeq n t -> SSeq 1 t`
+2. `Reduce_t :: (n: Int) -> (v: Int) -> (t -> t -> t) -> TSeq n v t -> TSeq 1 (n+v-1) 1`
+1. `Up_1d_s :: (n: Int) -> SSeq 1 t -> SSeq n t`
+3. `Up_1d_t :: (n: Int) -> (v: Int) -> TSeq 1 (n+v-1) t -> TSeq n v t`
+4. `Select_1d_s :: (n: Int) -> (idx: Int) -> SSeq n t -> SSeq 1 t`
+1. `Select_1d_t :: (n: Int) -> (v: Int) -> (idx: Int) -> TSeq n v t -> TSeq 1 (n+v-1) t`
+1. `Shift_s :: (n: Int) -> SSeq n t -> SSeq n t`
+1. `Shift_t :: (n: Int) -> (v: Int) -> TSeq n v t -> TSeq n v t`
+1. `Tuple_To_SSeq :: (n: Int) -> NTuple n t -> SSeq n t`
+1. `SSeq_To_Tuple :: (n: Int) -> SSeq n t -> NTuple n t`
+1. `Reshape :: t -> t'`
 
 **Note: reduce's type signature will need to be modified to handle pipelined operators.**
-**Note: typically, the `v` parameters are implicit**
 
 ## Operator Properties
 We can compute the following properties for all programs in the space-time IR: 
@@ -303,9 +292,8 @@ The area vector supports `+`, `*` by a scalar, and `*` by a scalar.
 1. `area(Select_1d_s n idx) = {0, 0, n * num_bits(t)}`
 1. `area(Select_1d_t n idx) = {0, 0, num_bits(t)} + area(counter)`
 1. `area(Tuple_To_SSeq n) = {0, 0, 0}`
-1. `area(Serialize no ni) = {0, (ni-1)*num_bits(t), ni*num_bits(t)} + area(counter)`
 1. `area(SSeq_To_Tuple n) = {0, 0, 0}`
-1. `area(Deserialize no ni) = {0, (ni-1)*num_bits(t), num_bits(t)} + area(counter)`
+1. `area(Reshape t t') = ?` - this is complicated. I need to develop a closed form formula.
 1. `area(g.f) = area(g) + area(f)`
 
 Many of the sequential operators require a counter to track clock cycles and muxes to select outputs.
