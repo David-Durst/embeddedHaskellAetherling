@@ -171,11 +171,6 @@ sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_t
 sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrites_tl)
   seq_e@(SeqE.ShiftN n i shift_amount elem_t producer _) |
   parameters_match tr n i = do
-  out_idx_debug <- get_cur_index_no_increment
-  if out_idx_debug == Index 18
-    then do
-    traceShowM $ "shift0: " ++ show seq_e
-    else return ()
   add_output_rewrite_for_node seq_e type_rewrites
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   ppar_unary_seq_operator type_rewrites
@@ -187,10 +182,6 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io 1) : type_rewrite
   seq_e@(SeqE.ShiftN n i shift_amount elem_t producer _) |
   parameters_match tr n i = do
   out_idx_debug <- get_cur_index_no_increment
-  if out_idx_debug == Index 18
-    then do
-    traceShowM $ "shift1: " ++ show seq_e
-    else return ()
   add_output_rewrite_for_node seq_e type_rewrites
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   ppar_unary_seq_operator type_rewrites
@@ -199,42 +190,11 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io 1) : type_rewrite
 sequence_to_partially_parallel type_rewrites@(tr@(SplitR no io ni) : type_rewrites_tl)
   seq_e@(SeqE.ShiftN n i shift_amount elem_t producer _) |
   parameters_match tr n i = do
-  out_idx_debug <- get_cur_index_no_increment
-  if out_idx_debug == Index 18
-    then do
-    traceShowM $ "shift2: " ++ show seq_e
-    else do
-    traceShowM $ "shift2: " ++ show seq_e
   add_output_rewrite_for_node seq_e type_rewrites
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   producer_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites producer
   ppar_unary_seq_operator type_rewrites
     (STE.Shift_tsN no io ni shift_amount elem_t_ppar) producer
-  
-  {-
-  let repeated_inputs_with_index = zip [0..] $ replicate ni producer_ppar
-  let inner_sseqs_shifted = fmap (
-        \(i, in_seq) -> do
-          (add_index $ STE.Shift_tN no io ((ni - i + shift_amount - 1) `div` ni) (STT.SSeqT 1 elem_t_ppar)) =<<
-            (STB.make_map_t no io (
-                STE.Down_1d_sN ni ((i - shift_amount) `mod` ni) elem_t_ppar
-                ) $
-              in_seq)
-        ) repeated_inputs_with_index
-  nested_stuple_of_shifted_rows <-
-        STB.repeated_stuple (STE.Map2_tN no io) inner_sseqs_shifted (STT.SSeqT 1 elem_t_ppar)
-
-  -- since added extra sseq 1, need to remove it after tuple to sseq
-  unpartition_idx <- get_cur_index
-  map_t_idx <- get_cur_index
-  stuple_to_sseq <- STB.add_input_to_expr_for_map $ STE.STupleToSSeqN ni elem_t_ppar
-  stuple_to_sseq_map <- STB.add_input_to_expr_for_map $ STE.Map_sN 1 stuple_to_sseq
-  let stuple_to_sseq_and_unpartition =
-        STE.Unpartition_s_ssN 1 ni elem_t_ppar stuple_to_sseq_map unpartition_idx
-  return $ STE.Map_tN no io stuple_to_sseq_and_unpartition  nested_stuple_of_shifted_rows map_t_idx
- -}
-
-
 
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
   seq_e@(SeqE.Up_1dN n i elem_t producer _) |
