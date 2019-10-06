@@ -281,7 +281,7 @@ This is invalid hardware as `prefix` can only be one implementation.
 ![Scheduled Diamond](other_diagrams/scheduler_examples/diamond/diamond_st_s_2.png "Scheduled Diamond")
 
 # Recursive, Memoized Scheduler
-The next scheduling algorithm addresses the diamond issue.
+The next scheduling algorithm addresses the diamond type mismatch issue.
 It performs the same walk of the expression tree as the above, recursive scheduling algorithm.
 However, it memoizes the calls to `schedule_op`.
 Therefore, if a node is scheduled once in one part of the expression tree, it will not be scheduled different in a different part of the expression tree.
@@ -346,36 +346,6 @@ Algorithm:
         memo_map.add(cur_seq_node, cur_st_node)
         return cur_st_node
     
-
-    // Insertion of FIFOs to Match Latencies
-    function match_latencies(cur_st_node, memo_map)
-        if cur_seq_node in memo_map:
-            return memo_map[cur_seq_node]
-
-        producers_seq = get_producers cur_st_node
-        consumed_st_types = get_input_types cur_st_nodes
-        producers_seq = get_producers cur_seq_node
-        producers_st = List()
-
-        // only two cases since all ops in Aetherling have at most 2 inputs 
-        // and only binary operators can have two inputs with different latencies
-        if len(producers_seq) == 2:
-            (matched_left_producer_st, left_latency) = match_latencies(prodcuers_st[0], memo_map)
-            (matched_right_producer_st, right_latency) = match_latencies(prodcuers_st[1], memo_map)
-            if left_latency == right_latency:
-                producers_st.append(matched_left_producer_st)
-                producers_st.append(matched_right_producer_st)
-            else if left_latency > right_latency:
-                producers_st.append(matched_left_producer_st)
-                producers_st.append(add_fifo(matched_right_producer_st, left_latency - right_latency))
-            else:
-                producers_st.append(add_fifo(matched_left_producer_st, right_latency - left_latency))
-                producers_st.append(matched_right_producer_st)
-
-        memo_map.add(cur_seq_node, cur_st_node)
-        return cur_st_node
-
-    
     output_seq_type = get_output_type pseq
     output_st_type = rewrite_type_with_slowdown output_seq_type s
     memo_rewrites = Map()
@@ -411,6 +381,89 @@ The scheduler adds a `Reshape` to address the mismatch between the output type o
 While the types match, the produced hardware will not match the semantics of the sequence language program.
 The top branch has less latency than the bottom branch. 
 Therefore, the tuple in hardware will combine different elements than the tuple in the sequence language.
+
+# Recursive, Memoized Scheduler With Latency Matching
+The next scheduling algorithm addresses the diamond latency issue.
+It performs the same walk of the expression tree as the above, recursive, memoized scheduling algorithm.
+However, it has a second pass that inserts FIFOs when there are mismatched latencies.
+The FIFOs will match the latencies. 
+The scheduling algorithm is (note that no functional version is provided because the list comprehensions become unreadable):
+
+```
+Input:
+    pseq - the sequence language program. A program is an expression tree
+    s - the slowdown factor. This is the number of clock cycles for the output type.
+
+Output:
+    psched - the scheduled program in the space-time IR that 
+
+Algorithm:
+    // Rewrites From Sequence Language To Space-Time IR:
+    function rewrite_op(cur_seq_node, produced_st_type, memo_map)
+        if cur_seq_node in memo_map:
+            return memo_map[cur_seq_node]
+
+        cur_st_node = rewrite_with_slowdown cur_seq_node produced_st_type
+        consumed_st_types = get_input_types cur_st_nodes
+        producers_seq = get_producers cur_seq_node
+        producers_st = List()
+
+        for i in range(len(producers_seq)):
+            producer_st = rewrite_op(producers_seq[i], consumed_st_types[i], memo_map)
+            producer_type = get_output_type producer_st
+            if producer_type != consumed_st_types[i]:
+                producers_st.append(add_reshape(producer_st, consumed_st_types[i]))
+            else:
+                producers_st.append(producer_st)
+                
+        set_producers(cur_st_node, producers_st)
+        memo_map.add(cur_seq_node, cur_st_node)
+        return cur_st_node
+    
+
+    // Insertion of FIFOs to Match Latencies
+    function match_latencies(cur_st_node, memo_map)
+        if cur_seq_node in memo_map:
+            return memo_map[cur_seq_node]
+
+        producers_seq = get_producers cur_st_node
+        consumed_st_types = get_input_types cur_st_nodes
+        producers_seq = get_producers cur_seq_node
+        producers_st = List()
+
+        // only two cases since all ops in Aetherling have at most 2 inputs 
+        // and only binary operators can have two inputs with different latencies
+        if len(producers_seq) == 0:
+            cur_latency = get_latency(cur_st_node)
+        else if len(producers_seq) == 1:
+            (matched_producer_st, producer_latency) = 
+            cur_latency = producer_latency + get_latency(cur_st_node)
+        else if len(producers_seq) == 2:
+            (matched_left_producer_st, left_latency) = match_latencies(producers_st[0], memo_map)
+            (matched_right_producer_st, right_latency) = match_latencies(producers_st[1], memo_map)
+            cur_latency = max(producer_left_latency, producer_right_latency) + get_latency(cur_st_node)
+            if left_latency == right_latency:
+                producers_st.append(matched_left_producer_st)
+                producers_st.append(matched_right_producer_st)
+            else if left_latency > right_latency:
+                producers_st.append(matched_left_producer_st)
+                producers_st.append(add_fifo(matched_right_producer_st, left_latency - right_latency))
+            else:
+                producers_st.append(add_fifo(matched_left_producer_st, right_latency - left_latency))
+                producers_st.append(matched_right_producer_st)
+
+        memo_map.add(cur_seq_node, cur_st_node)
+        return (cur_st_node, cur_latency)
+
+    
+    output_seq_type = get_output_type pseq
+    output_st_type = rewrite_type_with_slowdown output_seq_type s
+    memo_rewrites = Map()
+    psched_mismatched_latencies = rewrite_op(pseq, output_st_type, memo_rewrites)
+    memo_latencies = Map()
+    (psched, _) = match_latencies(psched_mismatched_latencies, memo_latencies)
+    return psched
+```
 
 # Recursive, Memoized, Branching Scheduler
 The final scheduling algorithm addresses the diamond issue while also exploring multiple schedules.
