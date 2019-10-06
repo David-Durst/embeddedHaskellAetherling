@@ -55,6 +55,7 @@ match_latencies' e@(Const_GenN _ _ _) = do
 -- sequence operators
 match_latencies' e@(Shift_sN _ _ _ producer _) = match_combinational_op e producer
 match_latencies' e@(Shift_tN _ _ _ _ producer _) = match_combinational_op e producer
+match_latencies' e@(Shift_tsN _ _ _ _ _ producer _) = match_combinational_op e producer
 match_latencies' e@(Up_1d_sN _ _ producer _) = match_combinational_op e producer
 match_latencies' e@(Up_1d_tN _ _ _ producer _) = match_combinational_op e producer
 match_latencies' e@(Down_1d_sN _ _ _ producer _) = match_combinational_op e producer

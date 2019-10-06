@@ -137,6 +137,13 @@ print_inner consumer_e@(Shift_tN n i shift_amount elem_t producer_e cur_idx) = d
   add_to_cur_module $ cur_ref_name ++ " = Shift_tN " ++ show n ++ " " ++ show i ++
     " " ++ show shift_amount ++ " " ++ show elem_t ++ " " ++ producer_ref
   return cur_ref_name
+print_inner consumer_e@(Shift_tsN no io ni shift_amount elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ print_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module $ cur_ref_name ++ " = Shift_tsN " ++ show no ++ " " ++ show io ++
+    " " ++ show ni ++ " " ++ show shift_amount ++ " " ++
+    show elem_t ++ " " ++ producer_ref
+  return cur_ref_name
 print_inner consumer_e@(Up_1d_sN n elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
@@ -344,8 +351,8 @@ print_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
 print_inner consumer_e@(ReshapeN in_t out_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module $ cur_ref_name ++ " = ReshapeN " ++ show in_t ++ " " ++ show out_t ++
-    " " ++ producer_ref
+  add_to_cur_module $ cur_ref_name ++ " = ReshapeN (" ++ show in_t ++ ") (" ++ show out_t ++
+    ") " ++ producer_ref
   return cur_ref_name
 
 print_index :: DAG_Index -> String

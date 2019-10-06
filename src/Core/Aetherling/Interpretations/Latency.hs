@@ -41,6 +41,7 @@ compute_latency e@(Const_GenN _ _ _) = return 0
 -- sequence operators
 compute_latency e@(Shift_sN _ _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Shift_tN _ _ _ _ producer _) = memo producer $ compute_latency producer
+compute_latency e@(Shift_tsN _ _ _ _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Up_1d_sN _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Up_1d_tN _ _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Down_1d_sN _ _ _ producer _) = memo producer $ compute_latency producer
