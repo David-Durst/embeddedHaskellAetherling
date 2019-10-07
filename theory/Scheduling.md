@@ -387,7 +387,7 @@ The next scheduling algorithm addresses the diamond latency issue.
 It performs the same walk of the expression tree as the above, recursive, memoized scheduling algorithm.
 However, it has a second pass that inserts FIFOs when there are mismatched latencies.
 The FIFOs will match the latencies. 
-The scheduling algorithm is (note that no functional version is provided because the list comprehensions become unreadable):
+The scheduling algorithm is below. Note: no functional version is provided because the list comprehensions become unreadable.
 
 ```
 Input:
