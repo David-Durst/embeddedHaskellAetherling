@@ -671,7 +671,7 @@ The fourth point describes how to implement of `is_valid_tsseqsseq`
 1. If `(n+i_max) >= s_p == 0`, then need to slowdown so that takes `s_p` clocks. 
 There are multiple possible choices for the resulting `TSeq no io (SSeq ni)`. 
 To find the best answer (least underutilization so smallest `io`):
-    1. A solution must satisfy four constraints:
+    1. A solution must satisfy the following constraints:
         1. `no * ni == n`
         1. `no + io == s_p`
         1. `io <= i_max`
