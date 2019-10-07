@@ -358,7 +358,7 @@ Algorithm:
 # Recursive, Memoized Scheduler Example
 ## Diamond
 This example demonstrates the issue of scheduling a DAG with a diamond pattern: the input is used on two separate branches which are later merged.
-Unlike the recursive scheduler, the recursive, memoized, branching scheduler can handle this example.
+Unlike the recursive scheduler, the recursive, memoized scheduler can successfully match types in this example.
 
 The sequence language program is:
 ```
@@ -464,6 +464,27 @@ Algorithm:
     (psched, _) = match_latencies(psched_mismatched_latencies, memo_latencies)
     return psched
 ```
+
+# Recursive, Memoized Scheduler With Latency Matching Example
+## Diamond
+This example demonstrates the issue of scheduling a DAG with a diamond pattern: the input is used on two separate branches which are later merged.
+Unlike the recursive scheduler, the recursive, memoized scheduler can successfully match types in this example.
+
+The sequence language program is:
+```
+diamond input =
+    let prefix = Map 1 (Map 1 Abs) input
+    let branch1 = (Up_1d 2 (Seq 1 Int) >>> Unpartition 2 1 Int) prefix
+    let branch2 = (Map 1 (Up_1d 2 Int) >>> Unpartition 1 2 Int) prefix
+    Map2 2 Tuple branch1 branch2
+```
+
+The result from scheduling for `s=2` with the recursive, memoized, branching algorithm is:
+
+![Scheduled Diamond With Latency Matching](other_diagrams/scheduler_examples/diamond/diamond_st_s_2_memo_fifo.png "Scheduled Diamond With Latency Matching")
+
+This is the same as the output of the prior algorithm except that a FIFO has been added to match latencies.
+The extra reshape at the start of the lower branch adds 1 cycle of extra latency to that branch.
 
 # Recursive, Memoized, Branching Scheduler
 The final scheduling algorithm addresses the diamond issue while also exploring multiple schedules.
