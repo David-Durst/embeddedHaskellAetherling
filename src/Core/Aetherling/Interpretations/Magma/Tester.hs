@@ -47,6 +47,7 @@ test_circuit_with_fault_no_io :: (Convertible_To_Atom_Strings a, Convertible_To_
 test_circuit_with_fault_no_io p inputs output output_latency = do
   p_str <- test_circuit_with_fault_string p inputs output output_latency
   circuit_file <- emptySystemTempFile "ae_circuit.py"
+  --traceShowM circuit_file
   writeFile circuit_file p_str
   stdout_name <- emptySystemTempFile "ae_circuit_fault_stdout.txt"
   stdout_file <- openFile stdout_name WriteMode

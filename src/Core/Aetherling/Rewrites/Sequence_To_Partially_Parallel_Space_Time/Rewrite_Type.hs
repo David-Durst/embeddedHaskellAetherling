@@ -83,8 +83,8 @@ seq_to_sseq_tr _ = [Layer NonSeqR 0 (S.empty)]
 
 rewrite_one_space_layer_no_underutil :: Int -> Layer_Rewrite_Info -> Maybe Layer_Rewrite_Info
 rewrite_one_space_layer_no_underutil s_p (Layer (SpaceR n) i_max divisors) |
-  (n+i_max) == s_p = do
-    return $ Layer (TimeR n i_max) i_max divisors 
+  n == s_p = do
+    return $ Layer (TimeR n 0) i_max divisors 
 rewrite_one_space_layer_no_underutil s_p (Layer (SpaceR n) i_max divisors) |
   n `mod` s_p == 0 = do
     let no = s_p
@@ -152,6 +152,14 @@ rewrite_with_underutil s_p (cur_layer@(Layer (SpaceR n) _ _) : tl) = do
 rewrite_with_underutil s_p (cur_layer@(Layer (SplitR no io ni) i_max divisors) : tl) = do
   let rw_result = rewrite_one_space_layer_with_underutil ((no+io)*s_p)
                   (Layer (SpaceR (no*ni)) i_max divisors)
+  if (isNothing rw_result)
+    then do
+    inner_l <- rewrite_with_underutil s_p tl
+    return $ cur_layer : inner_l
+    else return $ (fromJust rw_result) : tl
+rewrite_with_underutil s_p (cur_layer@(Layer (TimeR n 0) i_max divisors) : tl) = do
+  let rw_result = rewrite_one_space_layer_with_underutil (n*s_p)
+                  (Layer (SpaceR n) i_max divisors)
   if (isNothing rw_result)
     then do
     inner_l <- rewrite_with_underutil s_p tl

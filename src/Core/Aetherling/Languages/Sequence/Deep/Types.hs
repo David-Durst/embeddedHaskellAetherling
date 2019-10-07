@@ -15,6 +15,8 @@ data AST_Type =
   | SeqT Int Int AST_Type
   deriving (Show, Eq, Ord)
 
+seq_int = IntT
+
 -- these exist only because it's easier to have a value that is an Aetherling value
 -- rather than a value that's a member of a type class of aetherling values,
 -- like the above data types

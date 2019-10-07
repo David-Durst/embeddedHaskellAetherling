@@ -9,6 +9,9 @@ data AST_Type =
   | SSeqT Int AST_Type
   | TSeqT Int Int AST_Type
   deriving (Show, Ord, Eq)
+
+st_int = IntT
+
 {-
 instance Eq AST_Type where
   UnitT == UnitT = True
