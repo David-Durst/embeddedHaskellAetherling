@@ -292,7 +292,9 @@ The scheduling algorithm is:
 schedule :: Seq_Expr -> Space_Time_Expr -> Space_Time_Expr -> Int -> Space_Time_Expr
 schedule pseq pspace ptime s =
     n_out = get_output_node pseq
-    n_out_st = rewrite_with_slowdown n_out pspace ptime s
+    n_out_seq_type = get_output_type pseq
+    n_out_st_type = rewrite_type_with_slowdown output_seq_type s
+    n_out_st = rewrite_with_output_type n_out n_out_st_type 
     n_out_st_input_types = get_input_types n_out_st
     n_out_producers = get_producers n_out
     n_out_st_producers_maybe_wrong_type = 
@@ -321,7 +323,7 @@ Input:
     s - the slowdown factor. This is the number of clock cycles for the output type.
 
 Output:
-    psched - the scheduled program in the space-time IR that 
+    psched - the scheduled program in the space-time IR
 
 Algorithm:
     // Rewrites From Sequence Language To Space-Time IR:
@@ -329,7 +331,7 @@ Algorithm:
         if cur_seq_node in memo_map:
             return memo_map[cur_seq_node]
 
-        cur_st_node = rewrite_with_slowdown cur_seq_node produced_st_type
+        cur_st_node = rewrite_with_output_type cur_seq_node produced_st_type
         consumed_st_types = get_input_types cur_st_nodes
         producers_seq = get_producers cur_seq_node
         producers_st = List()
@@ -395,7 +397,7 @@ Input:
     s - the slowdown factor. This is the number of clock cycles for the output type.
 
 Output:
-    psched - the scheduled program in the space-time IR that 
+    psched - the scheduled program in the space-time IR 
 
 Algorithm:
     // Rewrites From Sequence Language To Space-Time IR:
@@ -403,7 +405,7 @@ Algorithm:
         if cur_seq_node in memo_map:
             return memo_map[cur_seq_node]
 
-        cur_st_node = rewrite_with_slowdown cur_seq_node produced_st_type
+        cur_st_node = rewrite_with_output_type cur_seq_node produced_st_type
         consumed_st_types = get_input_types cur_st_nodes
         producers_seq = get_producers cur_seq_node
         producers_st = List()
@@ -502,7 +504,9 @@ The scheduling algorithm is:
 schedule :: Seq_Expr -> Space_Time_Expr -> Space_Time_Expr -> Int -> Space_Time_Expr
 schedule pseq pspace ptime s =
     n_out = get_output_node pseq
-    n_out_st_xs = rewrite_with_slowdown n_out pspace ptime s
+    n_out_seq_type = get_output_type pseq
+    n_out_st_type_xs = rewrite_type_with_slowdown output_seq_type s
+    n_out_st_xs = map (rewrite_with_output_type n_out) n_out_st_type_xs
     n_out_st_input_type_xss = map get_input_types n_out_st_xs
     n_out_producer_xs = get_producers n_out
     n_out_st_producer_xss_maybe_wrong_type =
@@ -563,49 +567,133 @@ rewrite_with_output_type n out_st_type =
 ```
 
 
-# Rewriting An Operation For A Slowdown
-As stated in the [above section](#rewriting-an-operation-for-an-output-type), there are three ways to lower an operator from the sequence language to the space-time IR.
-The version of `rewrite_with_slowdown` that provides all possible rewrites of an operation for a slowdown is implemented in two steps:
-1. Find all possible rewrites of the operator's output type with the desired throuhgput
-1. For each rewrite of the operator's output type, apply `rewrite_with_output_type`
+# Rewriting A Type For A Slowdown
+There are many options for rewriting a type with a slowdown. 
+This section describes both an algorithm the finds one, reasonable choice and an algorithm that finds all options.
 
-**NOTE:** Kayvon, I know you don't like this approach. 
-However, it is simpler than rewriting the operator. 
-The operators may have subgraphs. 
-Rewriting the output types avoids handling the subgraphs.
+## One Option
+A reasonable option for picking a type is to try nest `SSeq`s as much as possible. 
+This will produced non-strided reads and writes. 
+This means producing a type like `TSeq (TSeq (SSeq (SSeq)))` where the `SSeq` are nested
+A type such as `SSeq (TSeq)` produces strided accesses. 
+Strided accesses should be avoided as they require more complex memory access patterns.
+
+![Parallelism Nesting](other_diagrams/types/tseq4_0sseq4_vs_sseq4tseq4_0.svg "Parallelism Nesting")
+
+The below type rewriting algorithm produces attempts to nest the `SSeq` as deeply as possible.
 
 ```
-rewrite_with_slowdown :: Seq_Expr -> Space_Time_Expr -> Space_Time_Expr -> Int -> Space_Time_Expr
-rewrite_with_slowdown n pspace ptime s =
-    s_factors = factorize s
-    n_out_type = get_output_type n
+Input:
+    seq_type - the sequence language type
+    s - the slowdown factor. This is the number of clock cycles for the space-time type
 
+Output:
+    st_type - the type in the space-time IR
+
+Algorithm:
+    // These indicate whether to convert a Seq to space, time, split time-space
+    // or nothing if an atom and not a seq
+    data Type_Rewrite = 
+        SpaceR (n: Int) (inner_type_rewrite: Type_Rewrite)
+        | TimeR (n: Int) (i: Int) (inner_type_rewrite: Type_Rewrite)
+        | TimeSpaceR (no: Int) (io: Int) (ni: Int) (inner_type_rewrite: Type_Rewrite)
+        | AtomR
+    
+    function get_all_spacer(seq_type)
+       if is_atom(seq_type):
+           return AtomR
+       else: 
+           inner_type_rewrite = get_all_spacer(seq_type.inner_type)
+           return SpaceR seq_type.n inner_type_rewrite
+
+    function rewrite_type_no_underutil(cur_type_rewrite, s_factor)
+        if cur_type_rewrite is SpaceR:
+            n = cur_type_rewrite.n
+        else if cur_type_rewrite is TimeR:
+            (cur_type_rewrite.inner_type_rewrite, used_s) = rewrite_type_no_underutil(cur_type_rewrite.inner_type_rewrite, s_factor)
+            return (cur_type_rewrite, used_s)
+        else if cur_type_rewrite is TimeSpaceR:
+            n = cur_type_rewrite.no * cur_type_rewrite.ni
+        else if cur_type_rewrite is AtomR:
+            return (AtomR, False)
+           
+        if (n == s_factor):
+            return (TimeR n 0 cur_type_rewrite.inner_type_rewrite, True)
+        else if (n % s_factor == 0):
+            no = s_factor
+            ni = get_n(cur_seq_type) // no
+            return (TimeSpaceR no 0 ni cur_type_rewrite.inner_type_rewrite, True)
+        else:
+            (cur_type_rewrite.inner_type_rewrite, used_s) = rewrite_type_no_underutil(cur_type_rewrite.inner_type_rewrite, s_factor)
+            return (cur_type_rewrite, used_s)
+
+    function rewrite_type_with_underutil(cur_type_rewrite, s_factor)
+        if cur_type_rewrite is SpaceR:
+            n = cur_type_rewrite.n
+        else if cur_type_rewrite is TimeR:
+            (cur_type_rewrite.inner_type_rewrite, used_s) = rewrite_type_with_underutil(cur_type_rewrite.inner_type_rewrite, s_factor)
+            return (cur_type_rewrite, used_s)
+        else if cur_type_rewrite is TimeSpaceR:
+            n = cur_type_rewrite.no * cur_type_rewrite.ni
+        else if cur_type_rewrite is AtomR:
+            return (AtomR, False)
+        
+        valid_check_result = is_valid_tseqsseq(s, n)
+        if valid_check_result.is_valid
+            return (TimeSpaceR valid_check_result.no valid_check_result.io valid_check_result.ni cur_type_rewrite.inner_type_rewrite, True)
+        else 
+            (cur_type_rewrite.inner_type_rewrite, used_s) = rewrite_type_with_underutil(cur_type_rewrite.inner_type_rewrite, s_factor)
+            return (cur_type_rewrite, used_s)
+    
+    cur_type_rewrite = get_all_spacer(seq_type)
+    s_factors = factorize s
+    unused_s = List[] 
+    for s_factor in s_factors:
+        (cur_type_rewrite, used_cur_s) = rewrite_type_no_underutil(cur_type_rewrite, s_factor)
+        if not used_cur_s:
+            unused_s.append(s_factor)
+    for s_factor in unused_s:
+        (cur_type_rewrite, used_cur_s) = rewrite_type_no_underutil(cur_type_rewrite, s_factor)
+        if not used_cur_s:
+            throw Exception("Cannot slow type by s")
+    return convert_type_rewrites_to_types(cur_type_rewrite)
+    
+```
+
+### Valid Slowdowns For a Layer and `is_valid_tseqsseq`
+There are four ways ways to apply a prime slowdown `s_p` to `SSeq n` with `i_max`. 
+The first three are handled by `rewrite_type_no_underutil`.
+The fourth is handled by `rewrite_type_with_underutil`. 
+The fourth point describes how to implement of `is_valid_tsseqsseq`
+1. If `1 == s_p`, then `SSeq n`
+1. If `(n+i_max) == s_p`, then `TSeq n i_max`
+1. If `n % s_p == 0`, then `TSeq s_p 0 (SSeq (n / s_p))`
+1. If `(n+i_max) >= s_p == 0`, then need to slowdown so that takes `s_p` clocks. 
+There are multiple possible choices for the resulting `TSeq no io (SSeq ni)`. 
+To find the best answer (least underutilization so smallest `io`):
+    1. A solution must satisfy four constraints:
+        1. `no * ni == n`
+        1. `no + io == s_p`
+        1. `io <= i_max`
+        1. `io >= 0`
+        1. `no >= 0`
+        1. `ni >= 0`
+    1. min `io` as want minimum underutilization
+    1. Algorithm - try all possible `ni` (all divisors of `n`) until you find one that satisfies all constraints
+
+## All Options
+This version of `rewrite_with_slowdown` provides all possible rewrites of a type for a slowdown.
+
+```
+rewrite_with_output_type :: Seq_Type -> Int -> Space_Time_Type
+rewrite_with_output_type n pspace ptime s =
+    s_factors = factorize s
+    
     -- all possible distributions of all factors of slowdown amongst the layers of n_out_type
     type_factor_combinations_xs = get_all_distributions_of_factors n_out_type s_factors
 
     -- only allow valid slowdowns
     n_out_st_types_xs = rewrite_type_for_valid_slowdowns n_out_type type_factor_ccombinations_xs ptime
 
-    n_st_xs = map (rewrite_with_output_type n) n_out_st_types_xs
-    return n_st_xs
+    return n_out_st_types_xs
 ```
-
-## Valid Slowdowns For a Layer
-The ways to slowdown a `Seq n` by `s_p` relative to the fully parallel `SSeq n` with `i_max` maximum invalid clocks are:
-1. If `1 == s_p`, then `SSeq n`
-1. If `(n+i_max) == s_p`, then `TSeq n i_max`
-1. If `n % s_p == 0`, then `TSeq s_p 0 (SSeq (n / s_p))`
-1. If `(n+i_max) >= s_p == 0`, then need to slowdown so that takes `s_p` clocks. There are multiple possible choices for the resulting `TSeq no io (SSeq ni)`. To find the best answer (least underutilization):
-    1. `no * ni == n`
-    1. `no + io == s_p`
-    1. `io <= i_max`
-    1. min `io` as want minimum underutilization
-    1. Solution
-        1. `no = n / ni`
-        1. `(n/ni) + io == s_p`
-            1. solve this by - trying all the divisors of n from smallest to largest. 
-            1. take smallest `ni` such that `io` is a non-negative integer and the other constraints hold.
-            1. this will give least underutilization for the given throughput
-
-If none of the above conditions hold, then `s_p` is not a valid slowdown. 
-Either it's too large or the divisibility conditions don't hold for applying the rewrite rules.
