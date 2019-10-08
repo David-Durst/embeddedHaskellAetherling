@@ -716,7 +716,7 @@ The hardware is efficient because the `reshape` must buffer data on order of the
 
 ![Incorrect Underutilized ST Program](stencil_1d/problems/stencil_1_2_px_per_clk_incorrect.svg "Incorrect Underutilized ST Program")
 
-The scheduler produces this hardware because:
+The scheduler produces this space-time IR program because:
 1. `seq` must be converted to either `tseq`, `sseq`, or `tseq (sseq)`
 1. When lowering the `tuple_to_seq` to a `reshape`, the correct input type is `tseq 6 (tseq 1 1 (int x int))` because that evenly spaces out the invalids. 
 The evenly spaced out invalids allow the `reshape` to buffer only 1 `int` for emitting on the next clock.
@@ -743,3 +743,5 @@ The scheduler actually produces the below schedule.
 The hardware is efficient because the `reshape` must buffer data on order of the size of the whole image.
 
 ![Incorrect Underutilized ST Program](stencil_1d/problems/stencil_3_px_per_clk_incorrect.svg "Incorrect Underutilized ST Program")
+
+The scheduler produces this space-time IR program for the same reason: the limited space of space-time types that a `Seq` can be converted into.
