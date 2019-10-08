@@ -697,3 +697,25 @@ rewrite_with_output_type n pspace ptime s =
 
     return n_out_st_types_xs
 ```
+
+# Underutilization Causes Scheduler To Produce Inefficient Hardware
+The [recursive, memoized scheduler](#recursive-memoized-scheduler-with-latency-matching) can produce suboptimal hardware for common schedules that have underutilization.
+Scheduling the sequence language program will demonstrate this issue:
+
+![Problematic Underutilized Seq Program](stencil_1d/problems/stencil_seq.svg "Problematic Underutilized Seq Program")
+
+The schduler should be able to produce a space-time IR program that emits pixel out every clock. 
+Since the output is 12 ints and the input is 6 ints, such as schedule must have 6 invalid inputs.
+The below space-time IR is an efficient schedule.
+The hardware is efficient because the `Reshape` only requires a buffer of 1 Int.
+
+![Correct Underutilized ST Program](stencil_1d/problems/stencil_1_2_px_per_clk_correct.svg "Correct Underutilized ST Program")
+
+The scheduler actually produces the below schedule.
+The hardware is efficient because the `Reshape` must buffer data on order of the size of the whole image.
+
+![Incorrect Underutilized ST Program](stencil_1d/problems/stencil_1_2_px_per_clk_incorrect.svg "Incorrect Underutilized ST Program")
+
+The scheduler produces this hardware because:
+1. `seq` must be converted to either `tseq`, `sseq`, or `tseq (sseq)`
+2. The input to the the types can only be rewt
