@@ -704,18 +704,42 @@ Scheduling the sequence language program will demonstrate this issue:
 
 ![Problematic Underutilized Seq Program](stencil_1d/problems/stencil_seq.svg "Problematic Underutilized Seq Program")
 
-The schduler should be able to produce a space-time IR program that emits pixel out every clock. 
+The schduler should be able to produce a space-time IR program that emits 1 pixel out every clock. 
 Since the output is 12 ints and the input is 6 ints, such as schedule must have 6 invalid inputs.
 The below space-time IR is an efficient schedule.
-The hardware is efficient because the `Reshape` only requires a buffer of 1 Int.
+The hardware is efficient because the `reshape` only requires a buffer of 1 Int.
 
 ![Correct Underutilized ST Program](stencil_1d/problems/stencil_1_2_px_per_clk_correct.svg "Correct Underutilized ST Program")
 
 The scheduler actually produces the below schedule.
-The hardware is efficient because the `Reshape` must buffer data on order of the size of the whole image.
+The hardware is efficient because the `reshape` must buffer data on order of the size of the whole image.
 
 ![Incorrect Underutilized ST Program](stencil_1d/problems/stencil_1_2_px_per_clk_incorrect.svg "Incorrect Underutilized ST Program")
 
 The scheduler produces this hardware because:
 1. `seq` must be converted to either `tseq`, `sseq`, or `tseq (sseq)`
-2. The input to the the types can only be rewt
+1. When lowering the `tuple_to_seq` to a `reshape`, the correct input type is `tseq 6 (tseq 1 1 (int x int))` because that evenly spaces out the invalids. 
+The evenly spaced out invalids allow the `reshape` to buffer only 1 `int` for emitting on the next clock.
+    1. The input type `tseq 6 6 (int x int)` has all the valids before the valids. 
+    The`reshape` must buffer multiple `int` in order to evenly space valids and invalids on the output.
+2. The input type to the `tuple_to_seq` is a `seq 6 (int x int)`, so the algorithm for lowering that type to space-time cannot produce the input type `tseq 6 0 (tseq 1 1 (int x int))`.
+The conversion would require converting `seq 6` to `tseq 6 0 (tseq 1 1)` which is not one of the three allowed space-time types.
+    1. Since nested `tseq` aren't allowed, the algorithm must produce the type `tseq 6 6 (int x int)`.
+
+## Underutilization And Parallelism Case
+The same issue can appear when the circuit both is paralellized and has underutilization.
+This example schedules the same sequence language program as before.
+
+![Problematic Underutilized Seq Program](stencil_1d/problems/stencil_seq.svg "Problematic Underutilized Seq Program")
+
+In this case, the schduler should be able to produce a space-time IR program that emits 3 ints out every clock. 
+This is a reasonable throughput as 3 is a factor of both the input length, 6 ints, and the output length, 12 ints.
+The below space-time IR is an efficient schedule.
+The hardware is efficient because the `reshape` only requires a buffer of 1 Int.
+
+![Correct Underutilized ST Program](stencil_1d/problems/stencil_3_px_per_clk_correct.svg "Correct Underutilized ST Program")
+
+The scheduler actually produces the below schedule.
+The hardware is efficient because the `reshape` must buffer data on order of the size of the whole image.
+
+![Incorrect Underutilized ST Program](stencil_1d/problems/stencil_3_px_per_clk_incorrect.svg "Incorrect Underutilized ST Program")
