@@ -263,20 +263,19 @@ map_to_unpartition_results = sequence $ fmap (\s -> compile_and_test_with_slowdo
 
 -- combining multi-rate with partitioning
 double_up =
-  partitionC (Proxy @2) (Proxy @1) (Proxy @0) (Proxy @14) >>>
-  (mapC' (Proxy @2) (up_1dC (Proxy @3)) >>> -- [2, 3]
+  partitionC (Proxy @2) (Proxy @1) (Proxy @0) (Proxy @15) >>>
+  (mapC' (Proxy @2) (up_1dC (Proxy @4)) >>> -- [2, 3]
    unpartitionC >>> -- in : [2, 3], out : [6]
-   partitionC (Proxy @1) (Proxy @6) Proxy (Proxy @0) >>> -- in : [6], out : [1, 6] or in : [[2, 3]] out : [1, [2, 3]] (this doesn't work as can't slow input down by 5, so must not be able to slow output down by 5) or in : [[2, 3]] out : []
-   up_1dC (Proxy @5)) $ -- [5, 6]
-  com_input_seq "hi" (Proxy :: Proxy (Seq 2 28 Atom_Int))
+   partitionC (Proxy @1) (Proxy @8) Proxy (Proxy @0) >>> -- in : [6], out : [1, 6] or in : [[2, 3]] out : [1, [2, 3]] (this doesn't work as can't slow input down by 5, so must not be able to slow output down by 5) or in : [[2, 3]] out : []
+   up_1dC (Proxy @4)) $ -- [5, 6]
+  com_input_seq "hi" (Proxy :: Proxy (Seq 2 30 Atom_Int))
 double_up_seq_idx = add_indexes $ seq_shallow_to_deep double_up
-double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up_seq_idx) [1,2,3,5,6,10,15,30]
+double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up_seq_idx) [1,2,4,8,16,32]
 double_up_ppar_typechecked = fmap check_type double_up_ppar
 double_up_inputs :: [[Integer]] = [[1,2]]
-double_up_output :: [[Integer]] = [[1,1,1,2,2,2], [1,1,1,2,2,2], [1,1,1,2,2,2],
-                                        [1,1,1,2,2,2], [1,1,1,2,2,2], [1,1,1,2,2,2]]
+double_up_output :: [[Integer]] = [[1,1,1,1,2,2,2,2] | _ <- [1..4]]
 double_up_results = sequence $ fmap (\s -> compile_and_test_with_slowdown double_up s
-                                      double_up_inputs double_up_output) [1,2,3,5,6,10,15,30]
+                                      double_up_inputs double_up_output) [1,2,4,8,16,32]
 
 
 down_over_nested_to_down_over_flattened = 
