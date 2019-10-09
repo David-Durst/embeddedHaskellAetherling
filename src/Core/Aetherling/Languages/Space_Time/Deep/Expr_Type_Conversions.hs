@@ -153,6 +153,7 @@ expr_to_types (ReshapeN in_t out_t _ _) =
 
 type Input_TrackerM = DAG_MemoT AST_Type (State (S.Set (String, AST_Type)))
 
+expr_to_outer_types_st = expr_to_outer_types
 expr_to_outer_types :: Expr -> Expr_Types
 expr_to_outer_types e = do
   let (out_t, in_t_set) = runState (startEvalMemoT $ expr_to_outer_types' e) S.empty
