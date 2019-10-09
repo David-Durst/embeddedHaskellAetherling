@@ -749,6 +749,8 @@ The scheduler produces this space-time IR program for the same reason: the limit
 
 # Flat Interfaces and Nested Multi-Rates Cause Scheduler To Produce Inefficient Hardware
 The [recursive, memoized scheduler](#recursive-memoized-scheduler-with-latency-matching) can produce suboptimal hardware for common schedules that have flat interfaces but must perform nesting inside the circuit in order to do upsampling or downsampling.
+Programs are often written with flat interfaces as this provides a canonical interface to a module that makes it more composable.
+For example, the gaussian pyramid example would be more complicated to write if the number of layers of nesting changed with the number of layers in the pyramid.
 Scheduling the following sequence language program will demonstrate this issue. 
 This example is a 2D upsample by 4 pixels in both x and y on a row of 2 pixels.
 
