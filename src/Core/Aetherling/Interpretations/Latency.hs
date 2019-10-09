@@ -131,7 +131,7 @@ compute_latency e@(Map2_sN _ f producer_left producer_right _) = do
   update_latency_state producer_left_latency
   inner_latency <- memo f $ compute_latency f
   if producer_left_latency == producer_right_latency
-    then return $ producer_left_latency + inner_latency
+    then return $ inner_latency
     else do
     lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $ "For Map2_sN" ++
@@ -143,7 +143,7 @@ compute_latency e@(Map2_tN _ _ f producer_left producer_right _) = do
   update_latency_state producer_left_latency
   inner_latency <- memo f $ compute_latency f
   if producer_left_latency == producer_right_latency
-    then return $ producer_left_latency + inner_latency
+    then return $ inner_latency
     else do
     lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $ "For Map2_tN" ++

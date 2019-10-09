@@ -114,16 +114,18 @@ match_latencies' e@(Map_sN _ f producer _) = do
   cur_idx <- get_cur_index
   return $ Matched_Latency_Result
     (e {f = new_f, seq_in = new_producer, index = cur_idx} )
-    (latency_producer + latency_f)
+    latency_f
 match_latencies' e@(Map_tN _ _ f producer _) = do
   Matched_Latency_Result new_producer latency_producer <-
     memo producer $ match_latencies' producer
   update_latency_state latency_producer
   Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
+  traceShowM $ "map_t producer latency: " ++ show latency_producer
+  traceShowM $ "map_T f latency: " ++ show latency_f
   cur_idx <- get_cur_index
   return $ Matched_Latency_Result
     (e {f = new_f, seq_in = new_producer, index = cur_idx} )
-    (latency_producer + latency_f)
+    latency_f
 match_latencies' e@(Map2_sN _ f producer_left producer_right _) = do
   match_map2 e f producer_left producer_right
 match_latencies' e@(Map2_tN _ _ f producer_left producer_right _) = do
@@ -150,6 +152,7 @@ match_latencies' e@(Reduce_sN _ f producer _) = do
 match_latencies' e@(Reduce_tN _ _ f producer _) = do
   Matched_Latency_Result new_producer latency_producer <-
     memo producer $ match_latencies' producer
+  traceShowM $ "reduce_t producer_latency: " ++ show latency_producer
   cur_lat <- get_cur_latency
   update_latency_state 0
   Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
@@ -200,6 +203,7 @@ match_latencies' e@(FIFON _ _ producer _) = do
 match_latencies' e@(ReshapeN _ _ producer _) = do
   result_without_e_latency <- match_combinational_op e producer
   cur_latency <- lift_memo_rewrite_state $ lift $ compute_latency' e
+  traceShowM $ "reshape latency " ++ show cur_latency
   return $ result_without_e_latency {
     latency = latency result_without_e_latency + cur_latency
     }
@@ -217,6 +221,8 @@ match_map2 e f producer_left producer_right = do
   Matched_Latency_Result e_updated latency_producers <- match_binary_op e producer_left producer_right
   update_latency_state latency_producers
   Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
+  traceShowM $ "map2 producer latency: " ++ show latency_producers
+  traceShowM $ "map2 f latency: " ++ show latency_f
   let e_replaced_f = e_updated {f = new_f}
   return $ Matched_Latency_Result e_replaced_f latency_f
 
