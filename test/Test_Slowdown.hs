@@ -267,7 +267,8 @@ double_up =
   (mapC' (Proxy @2) (up_1dC (Proxy @4)) >>> -- [2, 3]
    unpartitionC >>> -- in : [2, 3], out : [6]
    partitionC (Proxy @1) (Proxy @8) Proxy (Proxy @0) >>> -- in : [6], out : [1, 6] or in : [[2, 3]] out : [1, [2, 3]] (this doesn't work as can't slow input down by 5, so must not be able to slow output down by 5) or in : [[2, 3]] out : []
-   up_1dC (Proxy @4)) $ -- [5, 6]
+   up_1dC (Proxy @4)) >>>
+   unpartitionC $ -- [5, 6]
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 30 Atom_Int))
 double_up_seq_idx = add_indexes $ seq_shallow_to_deep double_up
 double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up_seq_idx) [1,2,4,8,16,32]

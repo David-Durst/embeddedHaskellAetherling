@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="-15 316 4674 214" width="4674" height="214">
+  <defs>
+    <font-face font-family="Courier New" font-size="30" panose-1="2 7 3 9 2 2 5 2 4 4" units-per-em="1000" underline-position="-232.91016" underline-thickness="41.015625" slope="0" x-height="422.85156" cap-height="571.28906" ascent="832.5195" descent="-300.29297" font-weight="400">
+      <font-face-src>
+        <font-face-name name="CourierNewPSMT"/>
+      </font-face-src>
+    </font-face>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 6 6" markerWidth="6" markerHeight="6" color="black">
+      <g>
+        <path d="M 3.2 0 L 0 -1.2 L 0 1.2 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <font-face font-family="Courier New" font-size="24" panose-1="2 7 3 9 2 2 5 2 4 4" units-per-em="1000" underline-position="-232.91016" underline-thickness="41.015625" slope="0" x-height="422.85156" cap-height="571.28906" ascent="832.5195" descent="-300.29297" font-weight="400">
+      <font-face-src>
+        <font-face-name name="CourierNewPSMT"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.11.3 
+    <dc:date>2019-10-09 21:21:43 +0000</dc:date>
+  </metadata>
+  <g id="Canvas_1" stroke-dasharray="none" fill="none" fill-opacity="1" stroke="none" stroke-opacity="1">
+    <title>Canvas 1</title>
+    <rect fill="white" x="-15" y="316" width="4674" height="214"/>
+    <g id="Canvas_1: Layer 1">
+      <title>Layer 1</title>
+      <g id="Graphic_2">
+        <path d="M 219.5 411 L 457 411 C 479.0914 411 497 428.9086 497 451 L 497 484.5 C 497 506.5914 479.0914 524.5 457 524.5 L 219.5 524.5 C 197.4086 524.5 179.5 506.5914 179.5 484.5 L 179.5 451 C 179.5 428.9086 197.4086 411 219.5 411 Z" fill="#ccc"/>
+        <path d="M 219.5 411 L 457 411 C 479.0914 411 497 428.9086 497 451 L 497 484.5 C 497 506.5914 479.0914 524.5 457 524.5 L 219.5 524.5 C 197.4086 524.5 179.5 506.5914 179.5 484.5 L 179.5 451 C 179.5 428.9086 197.4086 411 219.5 411 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+        <text transform="translate(184.5 450.75)" fill="black">
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="135.74707" y="25">id</tspan>
+        </text>
+      </g>
+      <g id="Line_6">
+        <line x1="4" y1="467.75" x2="157.6" y2="467.75" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+      </g>
+      <g id="Line_8">
+        <line x1="500" y1="467.75" x2="663.1" y2="467.75" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+      </g>
+      <g id="Line_9">
+        <line x1="974" y1="468.02163" x2="1095.35" y2="468.2474" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+      </g>
+      <g id="Graphic_10">
+        <path d="M 725 411 L 931 411 C 953.0914 411 971 428.9086 971 451 L 971 484.5 C 971 506.5914 953.0914 524.5 931 524.5 L 725 524.5 C 702.9086 524.5 685 506.5914 685 484.5 L 685 451 C 685 428.9086 702.9086 411 725 411 Z" fill="#ccc"/>
+        <path d="M 725 411 L 931 411 C 953.0914 411 971 428.9086 971 451 L 971 484.5 C 971 506.5914 953.0914 524.5 931 524.5 L 725 524.5 C 702.9086 524.5 685 506.5914 685 484.5 L 685 451 C 685 428.9086 702.9086 411 725 411 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+        <text transform="translate(690 433.75)" fill="black">
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="56.986816" y="25">map_t 2 0 </tspan>
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="2.9780273" y="59">(up_1d_s 4 int)</tspan>
+        </text>
+      </g>
+      <g id="Graphic_11">
+        <text transform="translate(-9.603516 332)" fill="black">
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="28.804688" y="20">tseq 2 0</tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="0" y="47">(sseq 1 int)</tspan>
+        </text>
+      </g>
+      <g id="Graphic_12">
+        <text transform="translate(515.3965 333)" fill="black">
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="28.804688" y="20">tseq 2 0</tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="0" y="47">(sseq 1 int)</tspan>
+        </text>
+      </g>
+      <g id="Graphic_13">
+        <text transform="translate(1575.747 335)" fill="black">
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="28.804688" y="20">tseq 1 1</tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="0" y="47">(sseq 8 int)</tspan>
+        </text>
+      </g>
+      <g id="Graphic_15">
+        <path d="M 1157.25 412 L 1573.75 412 C 1595.8414 412 1613.75 429.9086 1613.75 452 L 1613.75 485.5 C 1613.75 507.5914 1595.8414 525.5 1573.75 525.5 L 1157.25 525.5 C 1135.1586 525.5 1117.25 507.5914 1117.25 485.5 L 1117.25 452 C 1117.25 429.9086 1135.1586 412 1157.25 412 Z" fill="#ccc"/>
+        <path d="M 1157.25 412 L 1573.75 412 C 1595.8414 412 1613.75 429.9086 1613.75 452 L 1613.75 485.5 C 1613.75 507.5914 1595.8414 525.5 1573.75 525.5 L 1157.25 525.5 C 1135.1586 525.5 1117.25 507.5914 1117.25 485.5 L 1117.25 452 C 1117.25 429.9086 1135.1586 412 1157.25 412 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+        <text transform="translate(1122.25 417.75)" fill="black">
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="180.23975" y="25">reshape </tspan>
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="27.214844" y="59">(tseq 2 0 (sseq 4 IntT)) </tspan>
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="27.214844" y="93">(tseq 1 1 (sseq 8 IntT))</tspan>
+        </text>
+      </g>
+      <g id="Graphic_16">
+        <text transform="translate(974.8965 335)" fill="black">
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="28.804688" y="20">tseq 2 0</tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="0" y="47">(sseq 4 int)</tspan>
+        </text>
+      </g>
+      <g id="Line_17">
+        <line x1="1616.75" y1="469.16495" x2="1738.1" y2="469.36536" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+      </g>
+      <g id="Graphic_19">
+        <path d="M 1800 413 L 2142 413 C 2164.0914 413 2182 430.9086 2182 453 L 2182 486.5 C 2182 508.5914 2164.0914 526.5 2142 526.5 L 1800 526.5 C 1777.9086 526.5 1760 508.5914 1760 486.5 L 1760 453 C 1760 430.9086 1777.9086 413 1800 413 Z" fill="#ccc"/>
+        <path d="M 1800 413 L 2142 413 C 2164.0914 413 2182 430.9086 2182 453 L 2182 486.5 C 2182 508.5914 2164.0914 526.5 2142 526.5 L 1800 526.5 C 1777.9086 526.5 1760 508.5914 1760 486.5 L 1760 453 C 1760 430.9086 1777.9086 413 1800 413 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+        <text transform="translate(1765 435.75)" fill="black">
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="124.98682" y="25">map_t 1 1</tspan>
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="7.967773" y="59">(partition_s 1 8 IntT)</tspan>
+        </text>
+      </g>
+      <g id="Line_18">
+        <line x1="2185" y1="469.37896" x2="2340.1" y2="469.11003" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+      </g>
+      <g id="Line_21">
+        <line x1="2736.5" y1="469.0554" x2="2958.1" y2="469.414" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+      </g>
+      <g id="Graphic_20">
+        <path d="M 2402 412 L 2693.5 412 C 2715.5914 412 2733.5 429.9086 2733.5 452 L 2733.5 485.5 C 2733.5 507.5914 2715.5914 525.5 2693.5 525.5 L 2402 525.5 C 2379.9086 525.5 2362 507.5914 2362 485.5 L 2362 452 C 2362 429.9086 2379.9086 412 2402 412 Z" fill="#ccc"/>
+        <path d="M 2402 412 L 2693.5 412 C 2715.5914 412 2733.5 429.9086 2733.5 452 L 2733.5 485.5 C 2733.5 507.5914 2715.5914 525.5 2693.5 525.5 L 2402 525.5 C 2379.9086 525.5 2362 507.5914 2362 485.5 L 2362 452 C 2362 429.9086 2379.9086 412 2402 412 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+        <text transform="translate(2367 434.75)" fill="black">
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="81.73389" y="25">up_1d_t 2 0 </tspan>
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="9.722168" y="59">sseq 1 (sseq 8 int)</tspan>
+        </text>
+      </g>
+      <g id="Graphic_22">
+        <text transform="translate(2166.5977 321.5)" fill="black">
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="36.00586" y="20">tseq 1 1</tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="43.20703" y="47">(sseq 1 </tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="0" y="74">(sseq 8 int))</tspan>
+        </text>
+      </g>
+      <g id="Graphic_23">
+        <text transform="translate(2762 321.5)" fill="black">
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="36.00586" y="20">tseq 2 0</tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="43.20703" y="47">(sseq 1 </tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="0" y="74">(sseq 8 int))</tspan>
+        </text>
+      </g>
+      <g id="Graphic_26">
+        <path d="M 3020 413 L 3311.5 413 C 3333.5914 413 3351.5 430.9086 3351.5 453 L 3351.5 486.5 C 3351.5 508.5914 3333.5914 526.5 3311.5 526.5 L 3020 526.5 C 2997.9086 526.5 2980 508.5914 2980 486.5 L 2980 453 C 2980 430.9086 2997.9086 413 3020 413 Z" fill="#ccc"/>
+        <path d="M 3020 413 L 3311.5 413 C 3333.5914 413 3351.5 430.9086 3351.5 453 L 3351.5 486.5 C 3351.5 508.5914 3333.5914 526.5 3311.5 526.5 L 3020 526.5 C 2997.9086 526.5 2980 508.5914 2980 486.5 L 2980 453 C 2980 430.9086 2997.9086 413 3020 413 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+        <text transform="translate(2985 435.75)" fill="black">
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="99.73682" y="25">map_t 2 0 </tspan>
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="9.722168" y="59">up_s 2 (sseq 8 int)</tspan>
+        </text>
+      </g>
+      <g id="Line_27">
+        <line x1="3354.5" y1="469.5137" x2="3639.1" y2="469.1574" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+      </g>
+      <g id="Graphic_28">
+        <text transform="translate(4360 335)" fill="black">
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="36.00586" y="20">tseq 2 0</tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="0" y="47">(sseq 16 int)</tspan>
+        </text>
+      </g>
+      <g id="Graphic_29">
+        <path d="M 3701 412 L 4228 412 C 4250.0914 412 4268 429.9086 4268 452 L 4268 485.5 C 4268 507.5914 4250.0914 525.5 4228 525.5 L 3701 525.5 C 3678.9086 525.5 3661 507.5914 3661 485.5 L 3661 452 C 3661 429.9086 3678.9086 412 3701 412 Z" fill="#ccc"/>
+        <path d="M 3701 412 L 4228 412 C 4250.0914 412 4268 429.9086 4268 452 L 4268 485.5 C 4268 507.5914 4250.0914 525.5 4228 525.5 L 3701 525.5 C 3678.9086 525.5 3661 507.5914 3661 485.5 L 3661 452 C 3661 429.9086 3678.9086 412 3701 412 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+        <text transform="translate(3666 417.75)" fill="black">
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="235.48975" y="25">reshape </tspan>
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="10.453125" y="59">(tseq 2 0 (sseq 2 (sseq 8 int))) </tspan>
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="82.46484" y="93">(tseq 2 0 (sseq 16 int))</tspan>
+        </text>
+      </g>
+      <g id="Line_31">
+        <line x1="4271" y1="468.9714" x2="4637.85" y2="469.23635" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+      </g>
+      <g id="Graphic_30">
+        <text transform="translate(3415.56 322.06)" fill="black">
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="36.00586" y="20">tseq 2 0</tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="43.20703" y="47">(sseq 2 </tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="0" y="74">(sseq 8 int))</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -700,7 +700,8 @@ rewrite_with_output_type n pspace ptime s =
 
 # Underutilization Causes Scheduler To Produce Inefficient Hardware
 The [recursive, memoized scheduler](#recursive-memoized-scheduler-with-latency-matching) can produce suboptimal hardware for common schedules that have underutilization.
-Scheduling the sequence language program will demonstrate this issue:
+Scheduling the sequence language program will demonstrate this issue.
+This example is a 1D stencil with a width of 2 pixels.
 
 ![Problematic Underutilized Seq Program](stencil_1d/problems/stencil_seq.svg "Problematic Underutilized Seq Program")
 
@@ -745,3 +746,37 @@ The hardware is efficient because the `reshape` must buffer data on order of the
 ![Incorrect Underutilized ST Program](stencil_1d/problems/stencil_3_px_per_clk_incorrect.svg "Incorrect Underutilized ST Program")
 
 The scheduler produces this space-time IR program for the same reason: the limited space of space-time types that a `Seq` can be converted into.
+
+# Flat Interfaces and Nested Multi-Rates Cause Scheduler To Produce Inefficient Hardware
+The [recursive, memoized scheduler](#recursive-memoized-scheduler-with-latency-matching) can produce suboptimal hardware for common schedules that have flat interfaces but must perform nesting inside the circuit in order to do upsampling or downsampling.
+Scheduling the following sequence language program will demonstrate this issue. 
+This example is a 2D upsample by 4 pixels in both x and y on a row of 2 pixels.
+
+![Up 4 4 Seq Nested Program](other_diagrams/up_4_4/up_4_4_seq.svg "Up 4 4 Seq Nested Program") 
+
+The schduler should be able to produce a space-time IR program that emits 16 pixel out every clock. 
+The correct space-time IR program would be the following.
+The input and output have the correct nesting of `Seq`s so that the upsamples can operate without any `reshape`s.
+
+![Correct Up 4 4 ST Nested Program](other_diagrams/up_4_4/up_4_4_s_2_better.svg "Correct Up 4 4 ST Nested Program")
+
+However, the scheduler cannot produce this hardware.
+The scheduler only has access to local rewrite rules per node in the sequence langauge program.
+Therefore, the produced space-time IR program must perform the nesting and unnesting.
+The resulting hardware requires a `reshape` to before buffering during the nesting and unnesting.
+
+![Incorrect Up 4 4 ST Nested Program](other_diagrams/up_4_4/up_4_4_s_2.svg "Incorrect Up 4 4 ST Nested Program")
+
+## Solution For Flat Interfaces and Nested Multi-Rates
+The scheduler could produce the correct hardware in this case if there was a prepass that moved all `partition` to the front of the pipeline and all `unpartition` to the back.
+This pass would convert 
+
+![Up 4 4 Seq Nested Program](other_diagrams/up_4_4/up_4_4_seq.svg "Up 4 4 Seq Nested Program") 
+
+into
+
+![Better Up 4 4 Seq Nested Program](other_diagrams/up_4_4/up_4_4_seq_better.svg "Better Up 4 4 Seq Nested Program") 
+
+The standard scheduler could then use the normal rewrite rules to produce the correct space-time IR schedule.
+
+![Correct Up 4 4 ST Nested Program](other_diagrams/up_4_4/up_4_4_s_2_better.svg "Correct Up 4 4 ST Nested Program")
