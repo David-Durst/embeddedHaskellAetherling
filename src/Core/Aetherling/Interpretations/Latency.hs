@@ -20,11 +20,45 @@ import System.Environment
 check_latency :: Expr -> IO Bool
 check_latency e = do
   computed_latency <- evalStateT
-                      (runExceptT $ startEvalMemoT $ compute_latency e)
-                      empty_rewrite_data
+                      (
+                        evalStateT
+                        (runExceptT $ startEvalMemoT $ compute_latency e)
+                        empty_rewrite_data
+                      )
+                      empty_latency_state
   return $ isRight computed_latency
+  
+print_latency :: Expr -> IO Int
+print_latency e = do
+  computed_latency <- evalStateT
+                      (
+                        evalStateT
+                        (runExceptT $ startEvalMemoT $ compute_latency e)
+                        empty_rewrite_data
+                      )
+                      empty_latency_state
+  return $ fromRight undefined computed_latency
 
-compute_latency :: Expr -> Memo_Rewrite_StateTM Int IO Int
+-- need to track cur_latency so that map inputs can check they latency of input
+-- to outer map
+type Latency_StateTM = StateT Latency_State IO
+
+data Latency_State = Latency_State {
+  cur_latency :: Int
+  } deriving (Show, Eq, Ord)
+
+empty_latency_state = Latency_State 0
+
+update_latency_state :: Int -> Memo_Rewrite_StateTM v Latency_StateTM ()
+update_latency_state new_latency = do
+  lift_memo_rewrite_state $ put $ Latency_State new_latency
+
+get_cur_latency :: Memo_Rewrite_StateTM v Latency_StateTM Int
+get_cur_latency = do
+  latency_state <- lift_memo_rewrite_state $ get
+  return $ cur_latency latency_state
+
+compute_latency :: Expr -> Memo_Rewrite_StateTM Int Latency_StateTM Int
 compute_latency e@(IdN producer _) = memo producer $ compute_latency producer
 compute_latency e@(AbsN producer _) = memo producer $ compute_latency producer
 compute_latency e@(NotN producer _) = memo producer $ compute_latency producer
@@ -47,7 +81,7 @@ compute_latency e@(Up_1d_tN _ _ _ producer _) = memo producer $ compute_latency 
 compute_latency e@(Down_1d_sN _ _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Down_1d_tN _ _ _ _ producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  cur_latency <- lift_memo_rewrite_state $ compute_latency' e
+  cur_latency <- lift_memo_rewrite_state $ lift $ compute_latency' e
   return $ producer_latency + cur_latency
 compute_latency e@(Partition_s_ssN _ _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Partition_t_ttN _ _ _ _ _ producer _) = do
@@ -58,7 +92,7 @@ compute_latency e@(Partition_t_ttN _ _ _ _ _ producer _) = do
         (head $ ST_Conv.e_in_types input_output_types)
         (ST_Conv.e_out_type input_output_types)
         producer No_Index
-  cur_latency <- lift_memo_rewrite_state $ compute_latency' reshape
+  cur_latency <- lift_memo_rewrite_state $ lift $ compute_latency' reshape
   return $ producer_latency + cur_latency
 compute_latency e@(Unpartition_s_ssN _ _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
@@ -69,7 +103,7 @@ compute_latency e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
         (head $ ST_Conv.e_in_types input_output_types)
         (ST_Conv.e_out_type input_output_types)
         producer No_Index
-  cur_latency <- lift_memo_rewrite_state $ compute_latency' reshape
+  cur_latency <- lift_memo_rewrite_state $ lift $ compute_latency' reshape
   return $ producer_latency + cur_latency
   
 -- these helpers shouldn't exist now that i've written reshape
@@ -83,52 +117,62 @@ compute_latency e@(Remove_1_0_tN _ _ _) = undefined
 -- higher order operators
 compute_latency e@(Map_sN _ f producer _) = do
   producer_latency <- memo producer $ compute_latency producer
+  update_latency_state producer_latency
   inner_latency <- compute_latency f
   return $ producer_latency + inner_latency
 compute_latency e@(Map_tN _ _ f producer _) = do
   producer_latency <- memo producer $ compute_latency producer
+  update_latency_state producer_latency
   inner_latency <- compute_latency f
   return $ producer_latency + inner_latency
 compute_latency e@(Map2_sN _ f producer_left producer_right _) = do
   producer_left_latency <- memo producer_left $ compute_latency producer_left
   producer_right_latency <- memo producer_right $ compute_latency producer_right
+  update_latency_state producer_left_latency
   inner_latency <- memo f $ compute_latency f
   if producer_left_latency == producer_right_latency
     then return $ producer_left_latency + inner_latency
     else do
-    lift_memo_rewrite_state $ print_st e
+    lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $ "For Map2_sN" ++
          "latency for producer_left " ++ show producer_left_latency ++
          "doesn't equal latency for producer_left " ++ show producer_right_latency
 compute_latency e@(Map2_tN _ _ f producer_left producer_right _) = do
   producer_left_latency <- memo producer_left $ compute_latency producer_left
   producer_right_latency <- memo producer_right $ compute_latency producer_right
+  update_latency_state producer_left_latency
   inner_latency <- memo f $ compute_latency f
   if producer_left_latency == producer_right_latency
     then return $ producer_left_latency + inner_latency
     else do
-    lift_memo_rewrite_state $ print_st e
+    lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $ "For Map2_tN" ++
          "latency for producer_left " ++ show producer_left_latency ++
          "doesn't equal latency for producer_left " ++ show producer_right_latency
 compute_latency e@(Reduce_sN _ f producer _) = do
   producer_latency <- memo producer $ compute_latency producer
+  cur_lat <- get_cur_latency
+  update_latency_state 0
   inner_latency <- compute_latency f
+  update_latency_state cur_lat
   if inner_latency == 0
     then return producer_latency
     else do
-    lift_memo_rewrite_state $ print_st e
+    lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $
          "latency for f " ++ show inner_latency ++
          "inside reduce must be 0 for now "
 compute_latency e@(Reduce_tN _ _ f producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  reduce_latency <- lift_memo_rewrite_state $ compute_latency' e
+  reduce_latency <- lift_memo_rewrite_state $ lift $ compute_latency' e
+  cur_lat <- get_cur_latency
+  update_latency_state 0
   inner_latency <- compute_latency f
-  if inner_latency == 0
+  update_latency_state cur_lat
+  if inner_latency == producer_latency
     then return $ producer_latency + reduce_latency
     else do
-    lift_memo_rewrite_state $ print_st e
+    lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $
          "latency for f " ++ show inner_latency ++
          "inside reduce must be 0 for now "
@@ -145,7 +189,7 @@ compute_latency e@(ATupleN _ _ producer_left producer_right _) = do
   if producer_left_latency == producer_right_latency
     then return $ producer_left_latency + inner_latency
     else do
-    lift_memo_rewrite_state $ print_st e
+    lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $ "For ATupleN " ++
          "latency for producer_left " ++ show producer_left_latency ++
          "doesn't equal latency for producer_left " ++ show producer_right_latency
@@ -155,7 +199,7 @@ compute_latency e@(STupleN _ producer_left producer_right _) = do
   if producer_left_latency == producer_right_latency
     then return $ producer_left_latency
     else do
-    lift_memo_rewrite_state $ print_st e
+    lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $ "For STupleN " ++
          "latency for producer_left " ++ show producer_left_latency ++
          "doesn't equal latency for producer_left " ++ show producer_right_latency
@@ -165,7 +209,7 @@ compute_latency e@(STupleAppendN _ _ producer_left producer_right _) = do
   if producer_left_latency == producer_right_latency
     then return $ producer_left_latency
     else do
-    lift_memo_rewrite_state $ print_st e
+    lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $ "For STupleN " ++
          "latency for producer_left " ++ show producer_left_latency ++
          "doesn't equal latency for producer_left " ++ show producer_right_latency
@@ -173,16 +217,17 @@ compute_latency e@(STupleToSSeqN _ _ producer _) = memo producer $ compute_laten
 compute_latency e@(SSeqToSTupleN _ _ producer _) = memo producer $ compute_latency producer
 
 -- other operators
-compute_latency e@(InputN _ _ _) = return $ 0
+compute_latency e@(InputN _ _ _) = do
+  get_cur_latency
 compute_latency e@(ErrorN error_msg _) = throwError $ Latency_Failure $
   "Found error node with message: " ++ error_msg
 compute_latency e@(FIFON _ _ producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  cur_latency <- lift_memo_rewrite_state $ compute_latency' e
+  cur_latency <- lift_memo_rewrite_state $ lift $ compute_latency' e
   return $ producer_latency + cur_latency
 compute_latency e@(ReshapeN _ _ producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  cur_latency <- lift_memo_rewrite_state $ compute_latency' e
+  cur_latency <- lift_memo_rewrite_state $ lift $ compute_latency' e
   return $ producer_latency + cur_latency
 
 

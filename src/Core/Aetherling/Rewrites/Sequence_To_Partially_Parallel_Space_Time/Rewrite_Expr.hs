@@ -694,9 +694,9 @@ sequence_to_partially_parallel type_rewrites@(tr0 : tr1 : type_rewrites_tl)
   seq_e@(SeqE.STupleToSeqN no ni io ii elem_t producer _) |
   parameters_match tr0 no io && parameters_match tr1 ni ii = do
   add_output_rewrite_for_node seq_e type_rewrites
-  traceShowM $ "t0"
-  traceShowM $ "tr0: " ++ show tr0
-  traceShowM $ "tr1: " ++ show tr1
+  --traceShowM $ "t0"
+  --traceShowM $ "tr0: " ++ show tr0
+  --traceShowM $ "tr1: " ++ show tr1
   let types = Seq_Conv.expr_to_types seq_e
   -- ppar_AST_type applies the type_rewrites to match downstream
   out_t_ppar <- ppar_AST_type type_rewrites (Seq_Conv.e_out_type types)
@@ -717,7 +717,7 @@ sequence_to_partially_parallel type_rewrites@(tr0 : tr1 : type_rewrites_tl)
 
   x <- ppar_unary_seq_operator upstream_type_rewrites
     (STE.ReshapeN in_t_ppar out_t_ppar) producer
-  traceShowM x
+  --traceShowM x
   return x
 
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : NonSeqR : type_rewrites_tl)

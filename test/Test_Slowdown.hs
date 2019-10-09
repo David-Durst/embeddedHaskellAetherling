@@ -485,6 +485,33 @@ stencil_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown stenc
 stencil_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown stencil_1d_test s
                                       stencil_1d_inputs stencil_1d_output) [30]
 
+tuple_mul_shallow_no_input in_seq = do
+  let kernel_list = fmap Atom_Int [1,1,1]
+  let kernel = const_genC (Seq $ listToVector (Proxy @3) kernel_list) in_seq
+  let kernel_and_values = map2C atom_tupleC kernel in_seq
+  let mul_result = mapC mulC kernel_and_values
+  let sum = reduceC addC mul_result
+  let norm_list = fmap Atom_Int [3]
+  let norm = const_genC (Seq $ listToVector (Proxy @1) norm_list) in_seq
+  let sum_and_norm = map2C atom_tupleC sum norm
+  mapC divC sum_and_norm
+conv_1d_shallow_no_input in_seq = do
+  let stencil = stencil_1dC_test (Proxy @3) in_seq
+  mapC tuple_mul_shallow_no_input stencil
+conv_1d = conv_1d_shallow_no_input $ 
+  com_input_seq "hi" (Proxy :: Proxy (Seq 5 10 Atom_Int))
+conv_1d_seq_idx = add_indexes $ seq_shallow_to_deep conv_1d
+conv_1d_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s conv_1d_seq_idx) [1,3,5,15]
+conv_1d_ppar_typechecked =
+  fmap check_type conv_1d_ppar
+conv_1d_ppar_typechecked' =
+  fmap check_type' conv_1d_ppar
+conv_1d_inputs :: [[Integer]] = [[1,2,3,4,5]]
+conv_1d_output :: [Integer] = [int_to_ignore,int_to_ignore,2,3,4]
+conv_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown conv_1d s
+                                      conv_1d_inputs conv_1d_output) [1,3,5,15]
+                    
 stencil_2dC_test window_size_row window_size_col in_col in_img = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC in_col last_shifted_seq) : l)
