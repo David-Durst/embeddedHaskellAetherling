@@ -15,6 +15,7 @@ import System.IO.Temp
 import System.IO
 import System.Process
 import System.Environment
+import Debug.Trace
 
 -- | Return true if all latencies match when merging two paths
 check_latency :: Expr -> IO Bool
@@ -26,6 +27,9 @@ check_latency e = do
                         empty_rewrite_data
                       )
                       empty_latency_state
+  if isLeft computed_latency
+    then putStrLn $ show $ fromLeft undefined computed_latency
+    else return ()
   return $ isRight computed_latency
   
 print_latency :: Expr -> IO Int
@@ -185,9 +189,8 @@ compute_latency e@(SndN _ _ producer _) =
 compute_latency e@(ATupleN _ _ producer_left producer_right _) = do
   producer_left_latency <- memo producer_left $ compute_latency producer_left
   producer_right_latency <- memo producer_right $ compute_latency producer_right
-  inner_latency <- compute_latency producer_left
   if producer_left_latency == producer_right_latency
-    then return $ producer_left_latency + inner_latency
+    then return $ producer_left_latency 
     else do
     lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $ "For ATupleN " ++
