@@ -119,12 +119,12 @@ compute_latency e@(Map_sN _ f producer _) = do
   producer_latency <- memo producer $ compute_latency producer
   update_latency_state producer_latency
   inner_latency <- compute_latency f
-  return $ producer_latency + inner_latency
+  return $ inner_latency
 compute_latency e@(Map_tN _ _ f producer _) = do
   producer_latency <- memo producer $ compute_latency producer
   update_latency_state producer_latency
   inner_latency <- compute_latency f
-  return $ producer_latency + inner_latency
+  return $ inner_latency
 compute_latency e@(Map2_sN _ f producer_left producer_right _) = do
   producer_left_latency <- memo producer_left $ compute_latency producer_left
   producer_right_latency <- memo producer_right $ compute_latency producer_right
@@ -169,7 +169,7 @@ compute_latency e@(Reduce_tN _ _ f producer _) = do
   update_latency_state 0
   inner_latency <- compute_latency f
   update_latency_state cur_lat
-  if inner_latency == producer_latency
+  if inner_latency == 0
     then return $ producer_latency + reduce_latency
     else do
     lift_memo_rewrite_state $ lift $ print_st e
