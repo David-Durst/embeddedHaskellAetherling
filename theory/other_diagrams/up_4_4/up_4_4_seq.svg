@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="2 328 3002 202" width="3002" height="202">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="2 328 3571 202" width="3571" height="202">
   <defs>
     <font-face font-family="Courier New" font-size="30" panose-1="2 7 3 9 2 2 5 2 4 4" units-per-em="1000" underline-position="-232.91016" underline-thickness="41.015625" slope="0" x-height="422.85156" cap-height="571.28906" ascent="832.5195" descent="-300.29297" font-weight="400">
       <font-face-src>
@@ -19,11 +19,11 @@
     </font-face>
   </defs>
   <metadata> Produced by OmniGraffle 7.11.3 
-    <dc:date>2019-10-09 20:43:29 +0000</dc:date>
+    <dc:date>2019-10-09 21:54:07 +0000</dc:date>
   </metadata>
   <g id="Canvas_1" stroke-dasharray="none" fill="none" fill-opacity="1" stroke="none" stroke-opacity="1">
     <title>Canvas 1</title>
-    <rect fill="white" x="2" y="328" width="3002" height="202"/>
+    <rect fill="white" x="2" y="328" width="3571" height="202"/>
     <g id="Canvas_1: Layer 1">
       <title>Layer 1</title>
       <g id="Graphic_2">
@@ -93,7 +93,7 @@
         <line x1="2132.5" y1="469.4131" x2="2347.6" y2="469.0271" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
       </g>
       <g id="Line_21">
-        <line x1="2637.5" y1="469.02114" x2="2982.85" y2="469.7122" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+        <line x1="2637.5" y1="468.9722" x2="2905.1" y2="469.4111" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
       </g>
       <g id="Graphic_20">
         <path d="M 2409.5 412 L 2594.5 412 C 2616.5914 412 2634.5 429.9086 2634.5 452 L 2634.5 485.5 C 2634.5 507.5914 2616.5914 525.5 2594.5 525.5 L 2409.5 525.5 C 2387.4086 525.5 2369.5 507.5914 2369.5 485.5 L 2369.5 452 C 2369.5 429.9086 2387.4086 412 2409.5 412 Z" fill="#ccc"/>
@@ -110,10 +110,20 @@
         </text>
       </g>
       <g id="Graphic_23">
-        <text transform="translate(2729 336)" fill="black">
+        <text transform="translate(2705 335)" fill="black">
           <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="43.20703" y="20">seq 4 </tspan>
           <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="0" y="47">(seq 8 int)</tspan>
         </text>
+      </g>
+      <g id="Graphic_24">
+        <path d="M 2967 413 L 3256.5 413 C 3278.5914 413 3296.5 430.9086 3296.5 453 L 3296.5 486.5 C 3296.5 508.5914 3278.5914 526.5 3256.5 526.5 L 2967 526.5 C 2944.9086 526.5 2927 508.5914 2927 486.5 L 2927 453 C 2927 430.9086 2944.9086 413 2967 413 Z" fill="#ccc"/>
+        <path d="M 2967 413 L 3256.5 413 C 3278.5914 413 3296.5 430.9086 3296.5 453 L 3296.5 486.5 C 3296.5 508.5914 3278.5914 526.5 3256.5 526.5 L 2967 526.5 C 2944.9086 526.5 2927 508.5914 2927 486.5 L 2927 453 C 2927 430.9086 2944.9086 413 2967 413 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+        <text transform="translate(2932 452.75)" fill="black">
+          <tspan font-family="Courier New" font-size="30" font-weight="400" fill="black" x="8.722168" y="25">unpartition 4 8 int</tspan>
+        </text>
+      </g>
+      <g id="Line_25">
+        <line x1="3299.5" y1="469.75" x2="3552.0302" y2="469.75" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
       </g>
     </g>
   </g>
