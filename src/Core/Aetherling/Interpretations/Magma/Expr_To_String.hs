@@ -76,7 +76,8 @@ magma_prelude = return $
   "import fault\n" ++
   "import aetherling.helpers.fault_helpers as fault_helpers\n" ++
   "from aetherling.space_time import *\n" ++
-  "from aetherling.space_time.reshape_st import DefineReshape_ST" ++
+  "from aetherling.space_time.reshape_st import DefineReshape_ST\n" ++
+  "import magma as m" ++
   "\n"
 
 magma_epilogue :: IO String
