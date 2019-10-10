@@ -499,7 +499,8 @@ tuple_mul_shallow_no_input in_seq = do
   mapC divC sum_and_norm
 conv_1d_shallow_no_input in_seq = do
   let stencil = stencil_1dC_test (Proxy @3) in_seq
-  mapC tuple_mul_shallow_no_input stencil
+  let conv_nested = mapC tuple_mul_shallow_no_input stencil
+  unpartitionC conv_nested
 conv_1d = conv_1d_shallow_no_input $ 
   com_input_seq "hi" (Proxy :: Proxy (Seq 5 10 Atom_Int))
 conv_1d_seq_idx = add_indexes $ seq_shallow_to_deep conv_1d
@@ -513,7 +514,26 @@ conv_1d_inputs :: [[Integer]] = [[1,2,3,4,5]]
 conv_1d_output :: [Integer] = [int_to_ignore,int_to_ignore,2,3,4]
 conv_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown conv_1d s
                                       conv_1d_inputs conv_1d_output) [1,3,5,15]
-                    
+pyramid_1d_shallow_no_input in_seq = do
+  let layer1_blurred = conv_1d_shallow_no_input in_seq
+  let layer2_input = unpartitionC $ down_1dC 1 $
+        partitionC (Proxy @3) (Proxy @3) Proxy (Proxy @0) layer1_blurred
+  let layer2_blurred = conv_1d_shallow_no_input layer2_input
+  down_1dC 1 layer2_blurred
+pyramid_1d = pyramid_1d_shallow_no_input $ 
+  com_input_seq "hi" (Proxy :: Proxy (Seq 9 18 Atom_Int))
+pyramid_1d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_1d
+pyramid_1d_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s pyramid_1d_seq_idx) [1,3,9,27]
+pyramid_1d_ppar_typechecked =
+  fmap check_type pyramid_1d_ppar
+pyramid_1d_ppar_typechecked' =
+  fmap check_type' pyramid_1d_ppar
+pyramid_1d_inputs :: [[Integer]] = [[1..9]]
+pyramid_1d_output :: [Integer] = [5]
+pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown pyramid_1d s
+                                      pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
+
 stencil_2dC_test window_size_row window_size_col in_col in_img = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC in_col last_shifted_seq) : l)
