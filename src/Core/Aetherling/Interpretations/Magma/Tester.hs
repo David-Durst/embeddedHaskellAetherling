@@ -110,21 +110,24 @@ test_verilog_for_circuit_with_fault_string p verilog_path inputs output output_l
   magma_prelude_str <- magma_prelude
   let verilog_str_data = module_str_data {
         module_str = magma_prelude_str ++ 
-                     "Main = lambda : m.DefineFromVerilog(" ++
+                     "Main = lambda : m.DefineFromVerilogFile(" ++
                      show verilog_path ++
                      ", target_modules=[\"top\"])[0]\n"
         }
-  test_circuit_given_str_with_fault p verilog_str_data inputs output output_latency
+  test_circuit_given_str_with_fault p verilog_str_data inputs output
+    output_latency True
 
 test_circuit_with_fault_string :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr -> [a] -> b -> Int -> IO String
 test_circuit_with_fault_string p inputs output output_latency = do
   module_str_data <- module_to_magma_string p
-  test_circuit_given_str_with_fault p module_str_data inputs output output_latency
+  test_circuit_given_str_with_fault p module_str_data inputs output
+    output_latency False
 
 test_circuit_given_str_with_fault :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
-  Expr -> Magma_String_Results -> [a] -> b -> Int -> IO String
-test_circuit_given_str_with_fault p module_str_data inputs output output_latency = do
+  Expr -> Magma_String_Results -> [a] -> b -> Int -> Bool -> IO String
+test_circuit_given_str_with_fault p module_str_data inputs output output_latency
+  is_verilog = do
   let p_types = expr_to_outer_types p
   let num_ports = length $ in_ports $ module_outer_results $ module_str_data
   let fault_io = generate_fault_input_output_for_st_program p inputs output
@@ -143,7 +146,7 @@ test_circuit_given_str_with_fault p module_str_data inputs output output_latency
   let test_start =
         "if __name__ == '__main__':\n" ++
         tab_str ++ "mod = Main()\n" ++
-        tab_str ++ "tester = fault.Tester(mod, mod.CLK)\n" ++
+        tab_str ++ "tester = fault.Tester(mod, clock(mod.CLK))\n" ++
         tab_str ++ "tester.circuit.valid_up = 1\n" ++
         tab_str ++ "output_counter = 0\n" ++
         tab_str ++ "for f_clk in range(" ++ show (fault_clocks fault_io) ++
@@ -196,7 +199,9 @@ test_circuit_given_str_with_fault p module_str_data inputs output output_latency
                     ", fault_output[output_counter], num_nested_space_layers(" ++
                     (type_to_python $ e_out_type p_types)  ++ "), 0)\n"
   let test_step = tab_str ++ tab_str ++ "tester.step(2)\n"
-  let test_run = tab_str ++ "fault_helpers.compile_and_run(tester)\n"
+  let test_run = if is_verilog
+        then tab_str ++ "fault_helpers.compile_and_run_verilog(tester)\n"
+        else tab_str ++ "fault_helpers.compile_and_run(tester)\n"
   return $ (module_str module_str_data) ++ f_inputs ++ f_output ++
     f_output_valid ++ test_start ++ test_inputs ++ test_eval ++
     test_output_counter_incr ++

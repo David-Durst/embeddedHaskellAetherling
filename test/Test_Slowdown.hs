@@ -26,6 +26,8 @@ slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
   [
     testCase "slowing a single map" $
     (all_success =<< single_map_results) @? "single map slowdowns failed",
+    testCase "slowing a single map applied to 200 elements" $
+    (all_success =<< single_map_200_results) @? "single map 200 slowdowns failed",
     testCase "slowing two maps" $
     (all_success =<< two_maps_results) @? "two maps slowdowns failed",
     testCase "slowing a diamond" $
@@ -96,6 +98,22 @@ single_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown singl
 single_map_ae_verilog = sequence $ fmap (\s -> compile_and_test_verilog single_map s
                                             single_map_inputs single_map_output
                                             "test/verilog_examples/aetherling_copies/map_s_4.v") [4]
+
+add_5 atom_in = do
+  let const = const_genC (Atom_Int 5) atom_in
+  let tupled = atom_tupleC atom_in const
+  addC tupled
+single_map_200 = 
+  mapC' (Proxy @200) add_5 $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 200 0 Atom_Int))
+single_map_200_seq_idx = add_indexes $ seq_shallow_to_deep single_map_200
+single_map_200_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map_200_seq_idx) [1,5,10,20,25,40,50,100,200]
+single_map_200_ppar_typechecked = fmap check_type single_map_200_ppar
+single_map_200_inputs :: [[Integer]] = [[1..200]]
+single_map_200_output :: [Integer] = [6..205]
+-- sequence used to flip [] and IO so can print from command line
+single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown single_map_200 s
+                                            single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
 
 two_maps = 
   mapC' (Proxy @4) absC >>>
