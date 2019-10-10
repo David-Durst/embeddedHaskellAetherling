@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="-22 330 1798 259" width="1798" height="259">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" viewBox="-22 330 1813 259" width="1813" height="259">
   <defs>
     <font-face font-family="Courier New" font-size="30" panose-1="2 7 3 9 2 2 5 2 4 4" units-per-em="1000" underline-position="-232.91016" underline-thickness="41.015625" slope="0" x-height="422.85156" cap-height="571.28906" ascent="832.5195" descent="-300.29297" font-weight="400">
       <font-face-src>
@@ -18,12 +18,12 @@
       </font-face-src>
     </font-face>
   </defs>
-  <metadata> Produced by OmniGraffle 7.11.3 
-    <dc:date>2019-10-08 07:57:07 +0000</dc:date>
+  <metadata> Produced by OmniGraffle 7.11.4 
+    <dc:date>2019-10-10 04:02:08 +0000</dc:date>
   </metadata>
-  <g id="Canvas_1" stroke-dasharray="none" fill="none" fill-opacity="1" stroke="none" stroke-opacity="1">
+  <g id="Canvas_1" fill="none" fill-opacity="1" stroke-dasharray="none" stroke="none" stroke-opacity="1">
     <title>Canvas 1</title>
-    <rect fill="white" x="-22" y="330" width="1798" height="259"/>
+    <rect fill="white" x="-22" y="330" width="1813" height="259"/>
     <g id="Canvas_1: Layer 1">
       <title>Layer 1</title>
       <g id="Graphic_2">
@@ -61,9 +61,9 @@
         </text>
       </g>
       <g id="Graphic_13">
-        <text transform="translate(1583.5 335)" fill="black">
-          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="36.00586" y="20">tseq 6 0</tspan>
-          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="0" y="47"> (tseq 2 int)</tspan>
+        <text transform="translate(1569.0977 335)" fill="black">
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="50.408203" y="20">tseq 6 0</tspan>
+          <tspan font-family="Courier New" font-size="24" font-weight="400" fill="black" x="0" y="47"> (tseq 2 0 int)</tspan>
         </text>
       </g>
       <g id="Line_14">
