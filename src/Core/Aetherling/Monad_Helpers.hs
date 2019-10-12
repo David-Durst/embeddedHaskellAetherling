@@ -17,6 +17,10 @@ data DAG_Index = No_Index
   | Index Int
   deriving (Show, Eq, Ord)
 
+incr_DAG_index :: DAG_Index -> DAG_Index
+incr_DAG_index No_Index = No_Index
+incr_DAG_index (Index n) = Index $ n+1
+
 class Indexible a where
   get_index :: a -> DAG_Index
   set_index :: a -> DAG_Index -> a
