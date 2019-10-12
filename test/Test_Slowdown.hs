@@ -95,6 +95,8 @@ single_map_output :: [Integer] = [0,1,2,3]
 -- sequence used to flip [] and IO so can print from command line
 single_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown single_map s
                                             single_map_inputs single_map_output) [1,2,4]
+single_map_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown single_map s
+                                            single_map_inputs single_map_output) [4]
 single_map_ae_verilog = sequence $ fmap (\s -> compile_and_test_verilog single_map s
                                             single_map_inputs single_map_output
                                             "test/verilog_examples/aetherling_copies/map_s_4.v") [4]
