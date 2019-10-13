@@ -26,8 +26,6 @@ slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
   [
     testCase "slowing a single map" $
     (all_success =<< single_map_results) @? "single map slowdowns failed",
-    testCase "slowing a single map applied to 200 elements" $
-    (all_success =<< single_map_200_results) @? "single map 200 slowdowns failed",
     testCase "slowing two maps" $
     (all_success =<< two_maps_results) @? "two maps slowdowns failed",
     testCase "slowing a diamond" $

@@ -205,7 +205,7 @@ instance Sequence_Language Rewrite_StateM where
     Rewrite_StateM (Seq n i a) -> Rewrite_StateM (Seq n i b)
   mapC' len_proxy f inputM = do
     input <- inputM
-    f_ast <- f (com_input_any "f_in")
+    f_ast <- f (com_input_any "I")
     let f_edge_maybe = edge_to_maybe_expr f_ast
     case (input, f_edge_maybe) of
       (Seq_Edge x, Just f_ast_edge) -> return $ Seq_Edge $ MapN len_val i_val f_ast_edge x No_Index
@@ -226,7 +226,7 @@ instance Sequence_Language Rewrite_StateM where
   map2C' len_proxy f input1M input2M = do
     input1 <- input1M
     input2 <- input2M
-    f_ast <- f (com_input_any "f_in1") (com_input_any "f_in2")
+    f_ast <- f (com_input_any "I0") (com_input_any "I1")
     let f_edge_maybe = edge_to_maybe_expr f_ast
     case (input1, input2, f_edge_maybe) of
       (Seq_Edge x, Seq_Edge y, Just f_edge) -> return $ Seq_Edge $ Map2N len_val i_val f_edge x y No_Index
@@ -243,7 +243,7 @@ instance Sequence_Language Rewrite_StateM where
     Rewrite_StateM (Seq (1+n) i a) -> Rewrite_StateM (Seq 1 (n + i) a)
   reduceC' len_proxy f inputM = do
     input <- inputM
-    f_ast <- f (com_input_any "f_in")
+    f_ast <- f (com_input_any "I")
     let f_edge_maybe = edge_to_maybe_expr f_ast
     case (input, f_edge_maybe) of
       (Seq_Edge x, Just f_edge) -> return $ Seq_Edge $ ReduceN len_val i_val f_edge x No_Index

@@ -64,7 +64,7 @@ add_input_to_expr_for_map expr_gen = do
   let expr_types = expr_to_types
                    (expr_gen (ErrorN "not an error" input_idx) map_idx)
   let expr_in_type = head $ e_in_types expr_types
-  return $ expr_gen (InputN expr_in_type "f_in" input_idx) map_idx
+  return $ expr_gen (InputN expr_in_type "I" input_idx) map_idx
 
 add_input_to_expr_for_map2 :: Monad m => (Expr -> Expr -> DAG_Index -> Expr) ->
                               Memo_Rewrite_StateTM Expr m Expr
@@ -78,8 +78,8 @@ add_input_to_expr_for_map2 expr_gen = do
   let expr_in_type0 = head $ e_in_types expr_types
   let expr_in_type1 = (e_in_types expr_types) !! 1
   return $
-    expr_gen (InputN expr_in_type0 "f_in1" input1_idx)
-    (InputN expr_in_type1 "f_in2" input2_idx) map2_idx
+    expr_gen (InputN expr_in_type0 "I0" input1_idx)
+    (InputN expr_in_type1 "I1" input2_idx) map2_idx
   
 make_map_t :: Monad m => Int -> Int -> (Expr -> DAG_Index -> Expr) ->
              Expr -> Memo_Rewrite_StateTM Expr m Expr

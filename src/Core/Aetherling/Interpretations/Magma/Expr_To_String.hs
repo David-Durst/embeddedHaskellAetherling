@@ -146,6 +146,7 @@ print_module new_module = do
   let inner_data = start_data {
         cur_module_output_lines = [],
         cur_module_inputs = [],
+        cur_module_num_non_inputs = 0,
         is_top_module = False
         }
   lift $ put inner_data
