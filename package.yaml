@@ -51,7 +51,7 @@ ghc-options:
 - -fplugin GHC.TypeLits.KnownNat.Solver
 - -fplugin GHC.TypeLits.Extra.Solver
 - -fplugin GHC.TypeLits.Normalise
-- -fbreak-on-exception
+# - -fbreak-on-exception
     #- -Wall - comeback to this, too many warnings right now to handle
     #- -fplugin GHC.TypeLits.KnownNat.Solver
 

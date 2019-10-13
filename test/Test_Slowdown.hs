@@ -539,10 +539,10 @@ conv_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown conv_1d 
                                       conv_1d_inputs conv_1d_output) [1,3,5,15]
 pyramid_1d_shallow_no_input in_seq = do
   let layer1_blurred = conv_1d_shallow_no_input in_seq
-  let layer2_input = unpartitionC $ down_1dC 1 $
+  let layer2_input = unpartitionC $ down_1dC 2 $
         partitionC (Proxy @3) (Proxy @3) Proxy (Proxy @0) layer1_blurred
   let layer2_blurred = conv_1d_shallow_no_input layer2_input
-  down_1dC 1 layer2_blurred
+  down_1dC 2 layer2_blurred
 pyramid_1d = pyramid_1d_shallow_no_input $ 
   com_input_seq "hi" (Proxy :: Proxy (Seq 9 18 Atom_Int))
 pyramid_1d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_1d
