@@ -38,6 +38,10 @@ add_pipeline_registers' e@(InputN t _ _) maybe_num_end_registers = do
   reg_idx <- get_cur_index
   add_pipeline_registers_if_last maybe_num_end_registers $
     FIFON t 1 e reg_idx
+add_pipeline_registers' e@(Const_GenN _ t _) maybe_num_end_registers = do
+  reg_idx <- get_cur_index
+  add_pipeline_registers_if_last maybe_num_end_registers $
+    FIFON t 1 e reg_idx
 add_pipeline_registers' e@(Map2_sN _ _ producer_left producer_right _)
   maybe_num_end_registers = do
   producer_left_pipelined <- memo producer_left $
@@ -45,7 +49,7 @@ add_pipeline_registers' e@(Map2_sN _ _ producer_left producer_right _)
   producer_right_pipelined <- memo producer_right $
                              add_pipeline_registers' producer_right Nothing
   add_pipeline_registers_if_last maybe_num_end_registers $
-    e { seq_in_left = producer_right_pipelined, seq_in_right = producer_right_pipelined }
+    e { seq_in_left = producer_left_pipelined, seq_in_right = producer_right_pipelined }
 add_pipeline_registers' e@(Map2_tN _ _ _ producer_left producer_right _)
   maybe_num_end_registers = do
   producer_left_pipelined <- memo producer_left $
@@ -53,7 +57,7 @@ add_pipeline_registers' e@(Map2_tN _ _ _ producer_left producer_right _)
   producer_right_pipelined <- memo producer_right $
                              add_pipeline_registers' producer_right Nothing
   add_pipeline_registers_if_last maybe_num_end_registers $
-    e { seq_in_left = producer_right_pipelined, seq_in_right = producer_right_pipelined }
+    e { seq_in_left = producer_left_pipelined, seq_in_right = producer_right_pipelined }
 add_pipeline_registers' e@(ATupleN _ _ producer_left producer_right _)
   maybe_num_end_registers = do
   producer_left_pipelined <- memo producer_left $
@@ -61,7 +65,7 @@ add_pipeline_registers' e@(ATupleN _ _ producer_left producer_right _)
   producer_right_pipelined <- memo producer_right $
                              add_pipeline_registers' producer_right Nothing
   add_pipeline_registers_if_last maybe_num_end_registers $
-    e { seq_in_left = producer_right_pipelined, seq_in_right = producer_right_pipelined }
+    e { seq_in_left = producer_left_pipelined, seq_in_right = producer_right_pipelined }
 add_pipeline_registers' e@(STupleN _ producer_left producer_right _)
   maybe_num_end_registers = do
   producer_left_pipelined <- memo producer_left $
@@ -69,7 +73,7 @@ add_pipeline_registers' e@(STupleN _ producer_left producer_right _)
   producer_right_pipelined <- memo producer_right $
                              add_pipeline_registers' producer_right Nothing
   add_pipeline_registers_if_last maybe_num_end_registers $
-    e { seq_in_left = producer_right_pipelined, seq_in_right = producer_right_pipelined }
+    e { seq_in_left = producer_left_pipelined, seq_in_right = producer_right_pipelined }
 add_pipeline_registers' e@(STupleAppendN _ _ producer_left producer_right _)
   maybe_num_end_registers = do
   producer_left_pipelined <- memo producer_left $
@@ -77,7 +81,7 @@ add_pipeline_registers' e@(STupleAppendN _ _ producer_left producer_right _)
   producer_right_pipelined <- memo producer_right $
                              add_pipeline_registers' producer_right Nothing
   add_pipeline_registers_if_last maybe_num_end_registers $
-    e { seq_in_left = producer_right_pipelined, seq_in_right = producer_right_pipelined }
+    e { seq_in_left = producer_left_pipelined, seq_in_right = producer_right_pipelined }
 -- all other expressions are unary
 add_pipeline_registers' e maybe_num_end_registers = do
   let producer = seq_in e

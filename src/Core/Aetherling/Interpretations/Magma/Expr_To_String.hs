@@ -30,10 +30,12 @@ data Magma_Data = Magma_Data {
   cur_module_output :: Module_Port,
   -- all modules other than reduce use valid
   cur_module_valid :: Bool,
-  next_module_index :: Int
+  next_module_index :: Int,
+  -- first module's name is top
+  is_top_module :: Bool
   } deriving (Show, Eq)
 
-empty_print_data = Magma_Data [] [] [] (Module_Port "ERROR" IntT) True 0
+empty_print_data = Magma_Data [] [] [] (Module_Port "ERROR" IntT) True 0 True
 
 type Memo_Print_StateM v = DAG_MemoT v (ExceptT RH.Rewrite_Failure (State Magma_Data))
 
@@ -128,7 +130,8 @@ print_module new_module = do
   -- setup state for inside module
   let inner_data = start_data {
         cur_module_output_lines = [],
-        cur_module_inputs = []
+        cur_module_inputs = [],
+        is_top_module = False
         }
   lift $ put inner_data
   
@@ -138,6 +141,12 @@ print_module new_module = do
   end_data <- lift get
   let cur_module_index = next_module_index end_data
   let cur_module_name = "Module_" ++ show cur_module_index
+  -- this is the name used for the interface that is produced in verilog
+  -- not the variable name used in magma
+  let cur_module_verilog_name =
+        if is_top_module start_data
+        then "top"
+        else cur_module_name
   let cur_inputs = cur_module_inputs end_data
   let cur_inputs_str =
         if length cur_inputs >= 1
@@ -172,7 +181,7 @@ print_module new_module = do
   let valid_ports_str = if use_valids then "+ valid_ports" else ""
   let module_class_decl_string =
         tab_str ++ "class _" ++ cur_module_name ++ "(Circuit):\n" ++
-        tab_str ++ tab_str ++ "name = \"" ++ cur_module_name ++ "\"\n" ++
+        tab_str ++ tab_str ++ "name = \"" ++ cur_module_verilog_name ++ "\"\n" ++
         tab_str ++ tab_str ++ "IO = [" ++ cur_inputs_str ++ cur_output_str ++ "]" ++
         " + ClockInterface(has_ce=False,has_reset=False) " ++
         valid_ports_str ++ "\n" ++
