@@ -14,6 +14,8 @@ data Print_Data = Print_Data {
   modules :: [String],
   cur_module_inputs :: [String],
   next_module_index :: Int,
+  -- first module can't be embedded in other modules
+  is_top_module :: Bool,
   -- don't create a separate module if only 1 operator before inputs
   cur_module_num_non_inputs :: Int,
   -- the string to use if this module is just 1 operator, has the string without
@@ -21,7 +23,7 @@ data Print_Data = Print_Data {
   cur_module_last_op_no_assign :: String
   } deriving (Show, Eq)
 
-empty_print_data = Print_Data [] [] [] 0 0 ""
+empty_print_data = Print_Data [] [] [] 0 True 0 ""
 
 type Memo_Print_StateM v = DAG_MemoT v (ExceptT RH.Rewrite_Failure (State Print_Data))
 
@@ -53,7 +55,8 @@ print_module new_module = do
   let inner_data = start_data {
         cur_module_output_lines = [],
         cur_module_inputs = [],
-        cur_module_num_non_inputs = 0
+        cur_module_num_non_inputs = 0,
+        is_top_module = False
         }
   lift $ put inner_data
   
@@ -62,7 +65,7 @@ print_module new_module = do
   -- get state after executing inside module
   end_data <- lift get
 
-  if cur_module_num_non_inputs end_data == 1
+  if cur_module_num_non_inputs end_data == 1 && (not $ is_top_module start_data)
     then do
     -- setup for outer module
     lift $ put $ start_data {

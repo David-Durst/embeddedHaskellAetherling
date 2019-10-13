@@ -32,10 +32,15 @@ data Magma_Data = Magma_Data {
   cur_module_valid :: Bool,
   next_module_index :: Int,
   -- first module's name is top
-  is_top_module :: Bool
+  is_top_module :: Bool,
+  -- don't create a separate module if only 1 operator before inputs
+  cur_module_num_non_inputs :: Int,
+  -- the string to use if this module is just 1 operator, has the string without
+  -- operator assignment
+  cur_module_last_op_no_assign :: String
   } deriving (Show, Eq)
 
-empty_print_data = Magma_Data [] [] [] (Module_Port "ERROR" IntT) True 0 True
+empty_print_data = Magma_Data [] [] [] (Module_Port "ERROR" IntT) True 0 True 0 ""
 
 type Memo_Print_StateM v = DAG_MemoT v (ExceptT RH.Rewrite_Failure (State Magma_Data))
 
@@ -44,6 +49,16 @@ add_to_cur_module new_string = do
   cur_data <- lift get
   let cur_output_lines = cur_module_output_lines cur_data
   lift $ put $ cur_data { cur_module_output_lines = cur_output_lines ++ [new_string] }
+  return ()
+
+incr_num_non_inputs_cur_module :: String -> Memo_Print_StateM Magma_Module_Ref ()
+incr_num_non_inputs_cur_module new_string = do
+  cur_data <- lift get
+  let cur_num_non_inputs = cur_module_num_non_inputs cur_data
+  lift $ put $ cur_data {
+    cur_module_num_non_inputs = cur_num_non_inputs + 1,
+    cur_module_last_op_no_assign = new_string
+    }
   return ()
 
 update_output :: Module_Port -> Memo_Print_StateM Magma_Module_Ref ()
@@ -139,81 +154,89 @@ print_module new_module = do
 
   -- get state after executing inside module
   end_data <- lift get
-  let cur_module_index = next_module_index end_data
-  let cur_module_name = "Module_" ++ show cur_module_index
-  -- this is the name used for the interface that is produced in verilog
-  -- not the variable name used in magma
-  let cur_module_verilog_name =
-        if is_top_module start_data
-        then "top"
-        else cur_module_name
   let cur_inputs = cur_module_inputs end_data
-  let cur_inputs_str =
-        if length cur_inputs >= 1
-        then foldl (\x y -> x ++ ", " ++ show y)
-             (show $ head $ cur_inputs) (tail $ cur_inputs) ++
-             ", "
-        else ""
-  let cur_output_str = "'O', " ++ "Out(" ++
-                       ((type_to_python $ port_type $
-                         out_port cur_module_result_ref) ++ ".magma_repr()") ++ ")"
-  let module_func_string = "@cache_definition \ndef " ++ cur_module_name ++ "() -> DefineCircuitKind:\n"
-  let module_st_types =
-        if length cur_inputs == 0 then
-          tab_str ++ tab_str ++ "st_out_t = " ++
-          (type_to_python $ port_type $ cur_module_output end_data) ++ "\n" ++
-          tab_str ++ tab_str ++ "binary_op = False\n"
-        else if length cur_inputs == 1 then
-          tab_str ++ tab_str ++ "st_in_t = " ++
-          (type_to_python $ port_type $ head cur_inputs) ++ "\n" ++
-          tab_str ++ tab_str ++ "st_out_t = " ++
-          (type_to_python $ port_type $ cur_module_output end_data) ++ "\n" ++
-          tab_str ++ tab_str ++ "binary_op = False\n"
-        else
-          tab_str ++ tab_str ++ "st_in_t = [" ++
-          (type_to_python $ port_type $ head cur_inputs) ++ ", " ++
-          (type_to_python $ port_type $ head $ tail cur_inputs) ++ "]\n" ++
-          tab_str ++ tab_str ++ "st_out_t = " ++
-          (type_to_python $ port_type $ cur_module_output end_data) ++ "\n" ++
-          tab_str ++ tab_str ++ "binary_op = True\n"
+  if cur_module_num_non_inputs end_data == 1 && (not $ is_top_module start_data)
+    then do
+    -- setup for outer module
+    lift $ put $ start_data {
+      modules = modules end_data
+      }
+    return $ Magma_Module_Ref (cur_module_last_op_no_assign end_data) "" cur_inputs (out_port cur_module_result_ref)
+    else do
+    let cur_module_index = next_module_index end_data
+    let cur_module_name = "Module_" ++ show cur_module_index
+    -- this is the name used for the interface that is produced in verilog
+    -- not the variable name used in magma
+    let cur_module_verilog_name =
+          if is_top_module start_data
+          then "top"
+          else cur_module_name
+    let cur_inputs_str =
+          if length cur_inputs >= 1
+          then foldl (\x y -> x ++ ", " ++ show y)
+              (show $ head $ cur_inputs) (tail $ cur_inputs) ++
+              ", "
+          else ""
+    let cur_output_str = "'O', " ++ "Out(" ++
+                        ((type_to_python $ port_type $
+                          out_port cur_module_result_ref) ++ ".magma_repr()") ++ ")"
+    let module_func_string = "@cache_definition \ndef " ++ cur_module_name ++ "() -> DefineCircuitKind:\n"
+    let module_st_types =
+          if length cur_inputs == 0 then
+            tab_str ++ tab_str ++ "st_out_t = " ++
+            (type_to_python $ port_type $ cur_module_output end_data) ++ "\n" ++
+            tab_str ++ tab_str ++ "binary_op = False\n"
+          else if length cur_inputs == 1 then
+            tab_str ++ tab_str ++ "st_in_t = " ++
+            (type_to_python $ port_type $ head cur_inputs) ++ "\n" ++
+            tab_str ++ tab_str ++ "st_out_t = " ++
+            (type_to_python $ port_type $ cur_module_output end_data) ++ "\n" ++
+            tab_str ++ tab_str ++ "binary_op = False\n"
+          else
+            tab_str ++ tab_str ++ "st_in_t = [" ++
+            (type_to_python $ port_type $ head cur_inputs) ++ ", " ++
+            (type_to_python $ port_type $ head $ tail cur_inputs) ++ "]\n" ++
+            tab_str ++ tab_str ++ "st_out_t = " ++
+            (type_to_python $ port_type $ cur_module_output end_data) ++ "\n" ++
+            tab_str ++ tab_str ++ "binary_op = True\n"
 
-  use_valids <- use_valid_port
-  let valid_ports_str = if use_valids then "+ valid_ports" else ""
-  let module_class_decl_string =
-        tab_str ++ "class _" ++ cur_module_name ++ "(Circuit):\n" ++
-        tab_str ++ tab_str ++ "name = \"" ++ cur_module_verilog_name ++ "\"\n" ++
-        tab_str ++ tab_str ++ "IO = [" ++ cur_inputs_str ++ cur_output_str ++ "]" ++
-        " + ClockInterface(has_ce=False,has_reset=False) " ++
-        valid_ports_str ++ "\n" ++
-        module_st_types ++
-        tab_str ++ tab_str ++ "@classmethod\n" ++
-        tab_str ++ tab_str ++ "def definition(cls):\n"
-  let module_body = foldl (++) "" $ fmap (\b -> tab_str ++ tab_str ++ tab_str ++ b ++ "\n") $
-                    cur_module_output_lines end_data
-  let cur_module_result_str = var_name cur_module_result_ref ++ "." ++
-                              (port_name $ out_port cur_module_result_ref)
-  let module_wire_output = tab_str ++ tab_str ++ tab_str ++
-                           "wire(" ++ cur_module_result_str ++ ", cls.O)\n"
-  let cur_module_valid_str = var_name cur_module_result_ref ++ ".valid_down"
-  let module_valid_output =
-        if use_valids
-        then tab_str ++ tab_str ++ tab_str ++
-             "wire(" ++ cur_module_valid_str ++ ", cls.valid_down)\n"
-        else ""
-  let module_end = tab_str ++ "return _" ++ cur_module_name ++ "\n"
-  let module_str = module_func_string ++ module_class_decl_string ++
-                   module_body ++ module_wire_output ++ module_valid_output ++
-                   module_end
+    use_valids <- use_valid_port
+    let valid_ports_str = if use_valids then "+ valid_ports" else ""
+    let module_class_decl_string =
+          tab_str ++ "class _" ++ cur_module_name ++ "(Circuit):\n" ++
+          tab_str ++ tab_str ++ "name = \"" ++ cur_module_verilog_name ++ "\"\n" ++
+          tab_str ++ tab_str ++ "IO = [" ++ cur_inputs_str ++ cur_output_str ++ "]" ++
+          " + ClockInterface(has_ce=False,has_reset=False) " ++
+          valid_ports_str ++ "\n" ++
+          module_st_types ++
+          tab_str ++ tab_str ++ "@classmethod\n" ++
+          tab_str ++ tab_str ++ "def definition(cls):\n"
+    let module_body = foldl (++) "" $ fmap (\b -> tab_str ++ tab_str ++ tab_str ++ b ++ "\n") $
+                      cur_module_output_lines end_data
+    let cur_module_result_str = var_name cur_module_result_ref ++ "." ++
+                                (port_name $ out_port cur_module_result_ref)
+    let module_wire_output = tab_str ++ tab_str ++ tab_str ++
+                            "wire(" ++ cur_module_result_str ++ ", cls.O)\n"
+    let cur_module_valid_str = var_name cur_module_result_ref ++ ".valid_down"
+    let module_valid_output =
+          if use_valids
+          then tab_str ++ tab_str ++ tab_str ++
+              "wire(" ++ cur_module_valid_str ++ ", cls.valid_down)\n"
+          else ""
+    let module_end = tab_str ++ "return _" ++ cur_module_name ++ "\n"
+    let module_str = module_func_string ++ module_class_decl_string ++
+                    module_body ++ module_wire_output ++ module_valid_output ++
+                    module_end
 
-  -- setup for outer module
-  lift $ put $ start_data {
-    next_module_index = cur_module_index + 1,
-    modules = modules end_data ++ [module_str]
-    }
-  --traceShowM $ "module " ++ cur_module_name
-  --traceShowM $ show end_data
-  --traceShowM $ show cur_module_result_ref
-  return $ Magma_Module_Ref (cur_module_name ++ "()") "" cur_inputs (out_port cur_module_result_ref)
+    -- setup for outer module
+    lift $ put $ start_data {
+      next_module_index = cur_module_index + 1,
+      modules = modules end_data ++ [module_str]
+      }
+    --traceShowM $ "module " ++ cur_module_name
+    --traceShowM $ show end_data
+    --traceShowM $ show cur_module_result_ref
+    return $ Magma_Module_Ref (cur_module_name ++ "()") "" cur_inputs (out_port cur_module_result_ref)
 
 data Magma_Module_Ref = Magma_Module_Ref {
   var_name :: String,
@@ -617,6 +640,7 @@ module_to_string_inner (InputN t name cur_idx) = do
 module_to_string_inner e@(ErrorN msg cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module $ "ERROR " ++ msg
+  incr_num_non_inputs_cur_module $ "ERROR " ++ msg
   return $ Magma_Module_Ref cur_ref_name "" [Module_Port "error" BitT]
     (Module_Port "error" BitT)
 module_to_string_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
@@ -651,6 +675,7 @@ print_unary_operator cur_ref producer_ref = do
   let cur_ref_in_str = var_name cur_ref ++ "." ++
                        (port_name $ in_ports cur_ref !! 0) 
   add_to_cur_module $ "wire(" ++ producer_out_str ++ ", " ++ cur_ref_in_str ++ ")"
+  incr_num_non_inputs_cur_module $ gen_call cur_ref
   valid_bool <- use_valid_port
   if valid_bool
     then do
@@ -676,6 +701,7 @@ print_binary_operator cur_ref producer_ref_left producer_ref_right = do
                              (port_name $ in_ports cur_ref !! 1) 
   add_to_cur_module $ "wire(" ++ producer_out_str_left ++ ", " ++ cur_ref_in_str_left ++ ")"
   add_to_cur_module $ "wire(" ++ producer_out_str_right ++ ", " ++ cur_ref_in_str_right ++ ")"
+  incr_num_non_inputs_cur_module $ gen_call cur_ref
   valid_bool <- use_valid_port
   if valid_bool
     then do
