@@ -82,6 +82,7 @@ print_module new_module = do
     then do
     -- setup for outer module
     lift $ put $ start_data {
+      next_module_index = next_module_index end_data,
       modules = modules end_data
       }
     return $ "(" ++ cur_module_last_op_no_assign end_data ++ ")"
