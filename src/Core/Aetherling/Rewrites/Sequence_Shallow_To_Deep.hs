@@ -323,8 +323,8 @@ instance Sequence_Language Rewrite_StateM where
             Map2N n_val i_val
             (STupleAppendN out_len
               a_type
-              (InputN (STupleT (out_len - 1) a_type) "tuple_in_1" No_Index)
-              (InputN a_type "tuple_in_2" No_Index)
+              (InputN (STupleT (out_len - 1) a_type) "I0" No_Index)
+              (InputN a_type "I1" No_Index)
               No_Index)
             in_left in_right No_Index
     -- the initial step in the fold
@@ -332,8 +332,8 @@ instance Sequence_Language Rewrite_StateM where
           return $
             Map2N n_val i_val
             (STupleN a_type 
-              (InputN a_type "tuple_in_1" No_Index)
-              (InputN a_type "tuple_in_2" No_Index)
+              (InputN a_type "I0" No_Index)
+              (InputN a_type "I1" No_Index)
               No_Index)
             (inputs !! 0) (inputs !! 1) No_Index
     tupled_expr <- foldl (\prior_tuplesM cur_len -> do

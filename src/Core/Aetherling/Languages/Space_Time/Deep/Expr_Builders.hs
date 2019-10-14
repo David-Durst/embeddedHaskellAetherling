@@ -26,8 +26,8 @@ repeated_stuple map_gen input_exprs elem_t = do
           map_gen 
           (STupleAppendN out_len
             elem_t
-            (InputN (STupleT (out_len - 1) elem_t) "tuple_in_1" input1_idx)
-            (InputN elem_t "tuple_in_2" input2_idx)
+            (InputN (STupleT (out_len - 1) elem_t) "I0" input1_idx)
+            (InputN elem_t "I1" input2_idx)
             stuple_append_idx)
           in_left in_right map2_idx
   -- the initial step in the fold
@@ -41,8 +41,8 @@ repeated_stuple map_gen input_exprs elem_t = do
         return $
           map_gen
           (STupleN elem_t 
-           (InputN elem_t "tuple_in_1" input1_idx)
-           (InputN elem_t "tuple_in_2" input2_idx)
+           (InputN elem_t "I0" input1_idx)
+           (InputN elem_t "I1" input2_idx)
            stuple_idx)
           input1 input2 map2_idx
   
