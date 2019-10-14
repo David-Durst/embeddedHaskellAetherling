@@ -260,7 +260,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
         STE.Down_1d_sN in_ni (sel_idx `mod` in_ni) elem_t_ppar
         ) =<<
         (add_index
-         (STE.Down_1d_tN in_no in_io (sel_idx `div` in_no) (STT.SSeqT in_ni elem_t_ppar))
+         (STE.Down_1d_tN in_no in_io (sel_idx `div` in_ni) (STT.SSeqT in_ni elem_t_ppar))
          producer_ppar)
     get_scheduled_down NonSeqR _ _ = throwError $
       Slowdown_Failure "can't get nonseq for down_1d input"
