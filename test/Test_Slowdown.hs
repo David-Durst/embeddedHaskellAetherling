@@ -99,7 +99,7 @@ single_map_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                              single_map_inputs single_map_output) [4]
 single_map_ae_verilog = sequence $ fmap (\s -> compile_and_test_verilog single_map s
                                             single_map_inputs single_map_output
-                                            "test/verilog_examples/aetherling_copies/map_s_4.v") [4]
+                                            "test/verilog_examples/aetherling_copies/single_map/single_map_4.v") [4]
 
 add_5 atom_in = do
   let const = const_genC (Atom_Int 5) atom_in
