@@ -175,24 +175,29 @@ test_circuit_given_str_with_fault p module_str_data inputs output output_latency
                   "tester.print(\"\\n\")\n")
         [0..num_ports - 1]
   let test_eval = tab_str ++ tab_str ++ "tester.eval()\n"
+  let output_port_name = (port_name $ out_port $ module_outer_results module_str_data)
   let test_output_counter_incr =
         tab_str ++ tab_str ++ "if f_clk > " ++ show output_latency ++ ":\n" ++
         tab_str ++ tab_str ++ tab_str ++ "output_counter += 1\n"
-  let test_output_if_valid = tab_str ++ tab_str ++ "if f_clk >= " ++
-                             show output_latency ++
-                             " and fault_output_valid[output_counter]:\n"
-  let output_port_name = (port_name $ out_port $ module_outer_results module_str_data)
   let test_output_print =
-        tab_str ++ tab_str ++ tab_str ++
+        tab_str ++ tab_str ++
         "tester.print(\"" ++ output_port_name ++ ": \")\n" ++
 
-        tab_str ++ tab_str ++ tab_str ++
+        tab_str ++ tab_str ++
         "fault_helpers.print_nested_port(tester, tester.circuit." ++
         output_port_name ++ ", num_nested_space_layers(" ++
         (type_to_python $ e_out_type p_types) ++ "))\n" ++
 
-        tab_str ++ tab_str ++ tab_str ++
+        tab_str ++ tab_str ++
         "tester.print(\"\\n\")\n"
+  let test_valid_down_check =
+        tab_str ++ tab_str ++ "if f_clk >= " ++ show output_latency ++ ":\n" ++
+        -- circuit will always emit valid once started valid
+        -- the valid/invalid clocks on types aren't refleceted by valid wire
+        tab_str ++ tab_str ++ tab_str ++ "tester.circuit.valid_down.expect(1)\n"
+  let test_output_if_valid = tab_str ++ tab_str ++ "if f_clk >= " ++
+                             show output_latency ++
+                             " and fault_output_valid[output_counter]:\n"
   let test_output = tab_str ++ tab_str ++ tab_str ++
                     "fault_helpers.expect_nested_port(tester, tester.circuit." ++
                     output_port_name ++
@@ -204,8 +209,8 @@ test_circuit_given_str_with_fault p module_str_data inputs output output_latency
         else tab_str ++ "fault_helpers.compile_and_run(tester)\n"
   return $ (module_str module_str_data) ++ f_inputs ++ f_output ++
     f_output_valid ++ test_start ++ test_inputs ++ test_eval ++
-    test_output_counter_incr ++
-    test_output_if_valid ++ test_output_print ++ test_output ++ test_step ++ test_run
+    test_output_counter_incr ++ test_output_print ++ test_valid_down_check ++
+    test_output_if_valid ++ test_output ++ test_step ++ test_run
   
 data Fault_IO = Fault_IO {
   fault_inputs :: [String],
