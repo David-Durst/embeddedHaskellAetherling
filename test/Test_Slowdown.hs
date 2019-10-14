@@ -91,10 +91,12 @@ single_map_ppar_typechecked = fmap check_type single_map_ppar
 single_map_inputs :: [[Integer]] = [[0,-1,2,3]]
 single_map_output :: [Integer] = [0,1,2,3]
 -- sequence used to flip [] and IO so can print from command line
-single_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown single_map s
+single_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                            single_map s (Just "single_map")
                                             single_map_inputs single_map_output) [1,2,4]
-single_map_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown single_map s
-                                            single_map_inputs single_map_output) [4]
+single_map_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                             single_map s (Just "single_map")
+                                             single_map_inputs single_map_output) [4]
 single_map_ae_verilog = sequence $ fmap (\s -> compile_and_test_verilog single_map s
                                             single_map_inputs single_map_output
                                             "test/verilog_examples/aetherling_copies/map_s_4.v") [4]
@@ -112,8 +114,9 @@ single_map_200_ppar_typechecked = fmap check_type single_map_200_ppar
 single_map_200_inputs :: [[Integer]] = [[1..200]]
 single_map_200_output :: [Integer] = [6..205]
 -- sequence used to flip [] and IO so can print from command line
-single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown single_map_200 s
-                                            single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
+single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                                single_map_200 s (Just "single_map_200")
+                                                single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
 
 two_maps = 
   mapC' (Proxy @4) absC >>>
@@ -125,7 +128,8 @@ two_maps_ppar_typechecked = fmap check_type two_maps_ppar
 two_maps_inputs :: [[Integer]] = [[0,-1,2,3]]
 two_maps_output :: [Integer] = [0,1,2,3]
 -- sequence used to flip [] and IO so can print from command line
-two_maps_results = sequence $ fmap (\s -> compile_and_test_with_slowdown two_maps s
+two_maps_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      two_maps s Nothing
                                             two_maps_inputs two_maps_output) [1,2,4]
 {-
 input_rewrite = rewrite_to_partially_parallel 2 (InputN (SeqT 4 0 IntT) "hi")
@@ -168,7 +172,8 @@ diamond_map_ppar = fmap
 diamond_map_ppar_typechecked = fmap check_type diamond_map_ppar
 diamond_map_inputs :: [[Integer]] = [[0,-1,2,3]]
 diamond_map_output :: [Integer] = [0,0,4,6]
-diamond_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown diamond_map s
+diamond_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      diamond_map s Nothing
                                             diamond_map_inputs diamond_map_output) [1,2,4]
 
 single_map_underutil = 
@@ -180,8 +185,9 @@ single_map_underutil_ppar = fmap
 single_map_underutil_ppar_typechecked = fmap check_type single_map_underutil_ppar
 single_map_underutil_inputs :: [[Integer]] = [[0,-1,2,3]]
 single_map_underutil_output :: [Integer] = [0,1,2,3]
-single_map_underutil_results = sequence $ fmap (\s -> compile_and_test_with_slowdown single_map_underutil s
-                                            single_map_underutil_inputs single_map_underutil_output) [1,2,4,8]
+single_map_underutil_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                           single_map_underutil s Nothing
+                                           single_map_underutil_inputs single_map_underutil_output) [1,2,4,8]
 
 const_test =
   const_genC (list_to_seq (Proxy @9) $ fmap Atom_Int [0..8] :: Seq 9 0 Atom_Int) $
@@ -192,8 +198,9 @@ const_test_ppar = fmap
 const_test_ppar_typechecked = fmap check_type const_test_ppar
 const_test_inputs :: [[Integer]] = []
 const_test_outputs :: [Integer] = [0..8]
-const_test_results = sequence $ fmap (\s -> compile_and_test_with_slowdown const_test s
-                                     const_test_inputs const_test_outputs) [1,3,9]
+const_test_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                       const_test s Nothing
+                                       const_test_inputs const_test_outputs) [1,3,9]
 
 -- tests basic multi-rate
 map_to_up = 
@@ -205,8 +212,9 @@ map_to_up_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_up_seq_idx) 
 map_to_up_ppar_typechecked = fmap check_type map_to_up_ppar
 map_to_up_inputs :: [[Integer]] = [[2]]
 map_to_up_output :: [Integer] = [2,2,2,2]
-map_to_up_results = sequence $ fmap (\s -> compile_and_test_with_slowdown map_to_up s
-                                            map_to_up_inputs map_to_up_output) [1,2,4]
+map_to_up_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      map_to_up s Nothing
+                                      map_to_up_inputs map_to_up_output) [1,2,4]
 
 -- test two multi-rates of different rates
 up_to_down = 
@@ -218,10 +226,12 @@ up_to_down_ppar = fmap (\s -> rewrite_to_partially_parallel s up_to_down_seq_idx
 up_to_down_ppar_typechecked = fmap check_type up_to_down_ppar
 up_to_down_inputs :: [[Integer]] = [[1,2,3,4,5]]
 up_to_down_output :: [Integer] = [1,1,1,1]
-up_to_down_results = sequence $ fmap (\s -> compile_and_test_with_slowdown up_to_down s
-                                            up_to_down_inputs up_to_down_output) [1,5]
-up_to_down_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown up_to_down s
-                                            up_to_down_inputs up_to_down_output) [1]
+up_to_down_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                       up_to_down s Nothing
+                                       up_to_down_inputs up_to_down_output) [1,5]
+up_to_down_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                        up_to_down s Nothing
+                                        up_to_down_inputs up_to_down_output) [1]
 
 -- next two test how to distribute slowdown correctly when multi-rate is nested
 nested_map_to_top_level_up = 
@@ -238,7 +248,8 @@ nested_map_to_top_level_up_inputs :: [[[Integer]]] = [[[2,3,4,5]]]
 nested_map_to_top_level_up_output :: [[Integer]] = [[2,3,4,5], [2,3,4,5],
                                                     [2,3,4,5], [2,3,4,5]]
 nested_map_to_top_level_up_results = sequence $
-  fmap (\s -> compile_and_test_with_slowdown nested_map_to_top_level_up s
+  fmap (\s -> compile_and_test_with_slowdown
+              nested_map_to_top_level_up s Nothing
               nested_map_to_top_level_up_inputs nested_map_to_top_level_up_output) [1,2,4,8,16]
 
 
@@ -253,7 +264,8 @@ nested_map_to_nested_up_inputs :: [[[Integer]]] = [[[2],[3],[4],[5]]]
 nested_map_to_nested_up_output :: [[Integer]] = [[2,2,2,2], [3,3,3,3],
                                                   [4,4,4,4], [5,5,5,5]]
 nested_map_to_nested_up_results = sequence $
-  fmap (\s -> compile_and_test_with_slowdown nested_map_to_nested_up s
+  fmap (\s -> compile_and_test_with_slowdown
+              nested_map_to_nested_up s Nothing
               nested_map_to_nested_up_inputs nested_map_to_nested_up_output) [1,2,4,8,16]
 
 -- testing basic partitioning
@@ -266,8 +278,9 @@ partition_to_flat_map_ppar = fmap (\s -> rewrite_to_partially_parallel s partiti
 partition_to_flat_map_ppar_typechecked = fmap check_type partition_to_flat_map_ppar
 partition_to_flat_inputs :: [[Integer]] = [[1,-2,3,4]]
 partition_to_flat_output :: [[Integer]] = [[1,2],[3,4]]
-partition_to_flat_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown partition_to_flat_map s
-                                            partition_to_flat_inputs partition_to_flat_output) [1,2,4,8,16]
+partition_to_flat_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                                  partition_to_flat_map s Nothing
+                                                  partition_to_flat_inputs partition_to_flat_output) [1,2,4,8,16]
 
 map_to_unpartition =
   mapC (mapC absC) >>>
@@ -279,8 +292,9 @@ map_to_unpartition_ppar = fmap (\s -> rewrite_to_partially_parallel s map_to_unp
 map_to_unpartition_ppar_typechecked = fmap check_type map_to_unpartition_ppar
 map_to_unpartition_inputs :: [[[Integer]]] = [[[1,-2],[3,4]]]
 map_to_unpartition_output :: [Integer] = [1,2,3,4]
-map_to_unpartition_results = sequence $ fmap (\s -> compile_and_test_with_slowdown map_to_unpartition s
-                                            map_to_unpartition_inputs map_to_unpartition_output) [1,2,4,8,16]
+map_to_unpartition_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                               map_to_unpartition s Nothing
+                                               map_to_unpartition_inputs map_to_unpartition_output) [1,2,4,8,16]
 
 -- combining multi-rate with partitioning
 double_up =
@@ -296,7 +310,8 @@ double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up_seq_idx) 
 double_up_ppar_typechecked = fmap check_type double_up_ppar
 double_up_inputs :: [[Integer]] = [[1,2]]
 double_up_output :: [[Integer]] = [[1,1,1,1,2,2,2,2] | _ <- [1..4]]
-double_up_results = sequence $ fmap (\s -> compile_and_test_with_slowdown double_up s
+double_up_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      double_up s Nothing
                                       double_up_inputs double_up_output) [1,2,4,8,16,32]
 
 
@@ -320,7 +335,7 @@ down_over_nested_to_down_over_flattened_inputs :: [[Integer]] =
 down_over_nested_to_down_over_flattened_output :: [Integer] = [1]
 down_over_nested_to_down_over_flattened_results =
   sequence $ fmap (\s -> compile_and_test_with_slowdown
-                         down_over_nested_to_down_over_flattened s
+                         down_over_nested_to_down_over_flattened s Nothing
                          down_over_nested_to_down_over_flattened_inputs
                          down_over_nested_to_down_over_flattened_output) [1,2,4,8,16]
 
@@ -341,7 +356,8 @@ tuple_sum_ppar_typechecked' =
   fmap check_type' tuple_sum_ppar
 tuple_sum_inputs :: [[Integer]] = [[4,2,8,10]]
 tuple_sum_output :: [Integer] = [5,4,11,14]
-tuple_sum_results = sequence $ fmap (\s -> compile_and_test_with_slowdown tuple_sum s
+tuple_sum_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      tuple_sum s Nothing
                                       tuple_sum_inputs tuple_sum_output) [1,2,4]
 
 tuple_reduce_no_input in_seq = do
@@ -362,7 +378,8 @@ tuple_reduce_ppar_typechecked' =
 tuple_reduce_inputs :: [[Integer]] = [[10,8,9,3,4,2,2,2]]
 tuple_reduce_output :: [Integer] = [85]
 -- need to come back and check why slowest version uses a reduce_s
-tuple_reduce_results = sequence $ fmap (\s -> compile_and_test_with_slowdown tuple_reduce s
+tuple_reduce_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      tuple_reduce s Nothing
                                       tuple_reduce_inputs tuple_reduce_output) [1,2,4,8]
 
 
@@ -386,7 +403,8 @@ fst_snd_sum_ppar_typechecked' =
 fst_snd_sum_inputs :: [[Integer]] = [[6,7,8,9,10,11,12,13]]
 fst_snd_sum_output :: [Integer] = [7,9,11,13,15,17,19,21]
 -- need to come back and check why slowest version uses a reduce_s
-fst_snd_sum_results = sequence $ fmap (\s -> compile_and_test_with_slowdown fst_snd_sum s
+fst_snd_sum_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      fst_snd_sum s Nothing
                                       fst_snd_sum_inputs fst_snd_sum_output) [1,2,4,8]
 
 seq_to_stuple = 
@@ -401,7 +419,8 @@ seq_to_stuple_inputs :: [[Integer]] = [[1..16]]
 --seq_to_stuple_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
 seq_to_stuple_output :: [Integer] = [1..16]
 -- need to come back and check why slowest version uses a reduce_s
-seq_to_stuple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown seq_to_stuple s
+seq_to_stuple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      seq_to_stuple s Nothing
                                       seq_to_stuple_inputs seq_to_stuple_output) [1,2,4,8,16]
 
 stuple_to_seq = 
@@ -416,7 +435,8 @@ stuple_to_seq_inputs :: [[Integer]] = [[1..16]]
 --stuple_to_seq_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
 stuple_to_seq_output :: [Integer] = [1..16]
 -- need to come back and check why slowest version uses a reduce_s
-stuple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown stuple_to_seq s
+stuple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      stuple_to_seq s Nothing
                                       stuple_to_seq_inputs stuple_to_seq_output) [1,2,4,8,16]
   
 seq_and_stuple_no_input = 
@@ -433,7 +453,8 @@ seq_and_stuple_inputs :: [[Integer]] = [[1..16]]
 --seq_and_stuple_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
 seq_and_stuple_output :: [Integer] = [1..16]
 -- need to come back and check why slowest version uses a reduce_s
-seq_and_stuple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown seq_and_stuple s
+seq_and_stuple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      seq_and_stuple s Nothing
                                       seq_and_stuple_inputs seq_and_stuple_output) [1,2,4,8,16]
 
 striple_no_input in_seq = do
@@ -453,7 +474,8 @@ striple_inputs :: [[Integer]] = [[1..8]]
 --striple_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
 striple_output :: [[Integer]] = [[i, i, i] | i <- [1 .. 8]]
 -- need to come back and check why slowest version uses a reduce_s
-striple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown striple s
+striple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      striple s Nothing
                                       striple_inputs striple_output) [1,2,4,8,24]
 
 striple_to_seq_shallow in_seq = do
@@ -473,7 +495,8 @@ striple_to_seq_inputs :: [[Integer]] = [[1..8]]
 --striple_to_seq_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
 striple_to_seq_output :: [[Integer]] = [[i, i, i] | i <- [1 .. 8]]
 -- need to come back and check why slowest version uses a reduce_s
-striple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown striple_to_seq s
+striple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      striple_to_seq s Nothing
                                       striple_to_seq_inputs striple_to_seq_output) [1,2,4,8,24]
 
 
@@ -502,10 +525,12 @@ stencil_1d_output :: [[Integer]] = [
     i
   ] | i <- [1 .. 100]]
 -- need to come back and check why slowest version uses a reduce_s
-stencil_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown stencil_1d_test s
+stencil_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      stencil_1d_test s Nothing
                                       stencil_1d_inputs stencil_1d_output) [1,2,5,10,30,100,300]
                     -- 30 really bad case
-stencil_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown stencil_1d_test s
+stencil_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      stencil_1d_test s Nothing
                                       stencil_1d_inputs stencil_1d_output) [30]
 
 tuple_mul_shallow_no_input in_seq = do
@@ -533,7 +558,8 @@ conv_1d_ppar_typechecked' =
   fmap check_type' conv_1d_ppar
 conv_1d_inputs :: [[Integer]] = [[1,2,3,4,5]]
 conv_1d_output :: [Integer] = [int_to_ignore,int_to_ignore,2,3,4]
-conv_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown conv_1d s
+conv_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      conv_1d s Nothing
                                       conv_1d_inputs conv_1d_output) [1,3,5,15]
 pyramid_1d_shallow_no_input in_seq = do
   let layer1_blurred = conv_1d_shallow_no_input in_seq
@@ -552,7 +578,8 @@ pyramid_1d_ppar_typechecked' =
   fmap check_type' pyramid_1d_ppar
 pyramid_1d_inputs :: [[Integer]] = [[1..9]]
 pyramid_1d_output :: [Integer] = [5]
-pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown pyramid_1d s
+pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      pyramid_1d s Nothing
                                       pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
 
 stencil_2dC_test window_size_row window_size_col in_col in_img = do

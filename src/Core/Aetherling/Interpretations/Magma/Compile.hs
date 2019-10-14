@@ -24,6 +24,7 @@ import System.Environment
 import System.Exit
 import System.Directory
 import System.FilePath
+import Data.Maybe
 import Debug.Trace
 
 data Compile_Result = Compile_Success { verilog_file :: FilePath }
@@ -84,8 +85,9 @@ compile_with_slowdown_to_file shallow_seq_program s output_name = do
 compile_and_test_with_slowdown :: (Shallow_Types.Aetherling_Value a,
                                    Convertible_To_Atom_Strings b,
                                    Convertible_To_Atom_Strings c) =>
-                                  RH.Rewrite_StateM a -> Int -> [b] -> c -> IO Fault_Result
-compile_and_test_with_slowdown shallow_seq_program s inputs output = do
+                                  RH.Rewrite_StateM a -> Int -> Maybe String -> [b] ->
+                                  c -> IO Fault_Result
+compile_and_test_with_slowdown shallow_seq_program s base_name inputs output = do
   ML.Matched_Latency_Result deep_st_program output_latency <-
     compile_with_slowdown_to_expr shallow_seq_program s
   if check_type deep_st_program
@@ -97,7 +99,17 @@ compile_and_test_with_slowdown shallow_seq_program s inputs output = do
       let actual_s = type_to_slowdown $ ST_Conv.e_out_type outer_types
       if actual_s == s
         then do
-        test_circuit_with_fault deep_st_program inputs output output_latency
+        result <- test_circuit_with_fault deep_st_program inputs output output_latency
+        if isJust base_name
+          then do
+          let test_verilog_dir = root_dir ++
+                "/test/verilog_examples/aetherling_copies/" ++
+                fromJust base_name
+          createDirectoryIfMissing True test_verilog_dir
+          copyFile "vBuild/top.v"
+            (test_verilog_dir ++ "/" ++ fromJust base_name ++ "_" ++ show s ++ ".v")
+          else return ()
+        return result
         else do
         return $ Fault_Failure ("program not slowed correctly for target" ++
           " slowdown " ++ show s ++ " with actual slowdown " ++ show actual_s) "" "" 0
