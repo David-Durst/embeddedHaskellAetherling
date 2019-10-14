@@ -1,1 +1,2 @@
 verilator --top-module vhls_target vhls_target.v -Wno-STMTDLY --cc -Wno-WIDTH -Wno-UNSIGNED -Wno-SYMRSVDWORD -Wno-warnings
+verilator --top-module vhls_target vhls_target.v -Wno-STMTDLY --cc -Wno-WIDTH -Wno-UNSIGNED -Wno-SYMRSVDWORD -Wno-lint
