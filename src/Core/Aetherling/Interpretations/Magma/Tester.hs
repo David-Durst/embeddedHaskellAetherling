@@ -18,6 +18,7 @@ import System.IO
 import System.Process
 import System.Environment
 import System.Exit
+import System.Directory
 import Debug.Trace
 
 -- a helper int for stencil values that should be ignored
@@ -81,6 +82,7 @@ test_verilog_with_fault_no_io :: (Convertible_To_Atom_Strings a, Convertible_To_
 test_verilog_with_fault_no_io p verilog_path inputs output output_latency = do
   p_str <- test_verilog_for_circuit_with_fault_string p verilog_path inputs output output_latency
   circuit_file <- emptySystemTempFile "ae_circuit.py"
+  copyFile verilog_path ("vBuild/top.v")
   --traceShowM circuit_file
   writeFile circuit_file p_str
   stdout_name <- emptySystemTempFile "ae_circuit_fault_stdout.txt"
