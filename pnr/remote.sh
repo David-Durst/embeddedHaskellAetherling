@@ -25,6 +25,7 @@ echo -n "$slices_results" >> ${results_temp}
 echo -n "$slicel_results" >> ${results_temp}
 echo -n "$slicem_results" >> ${results_temp}
 echo -n "$timing_results" >> ${results_temp}
+echo "|" >> ${results_temp}
 tr -d [:blank:] < $results_temp >> $results
 sed -i -s 's/|/,/g' $results
 rm $results_temp
