@@ -9,8 +9,7 @@ echo "| Circuit Name | Parallelism | Total LUTs | Logic LUTs | LUTRAMs | SRLs | 
 for circuit_path in ${circuit_dir_path}/*/*/*.v; do
 	  echo "Processing ${circuit_path}"
     circuit_basename=$(basename $circuit_path)
-    circuit_name_=`sed -n -E "s/(.*)_[^_]*/\1/p" <<< $circuit_basename`
-    circuit_name=${circuit_name_::-1}
+    circuit_name=`sed -n -E "s/(.*)_[^_]*/\1/p" <<< $circuit_basename`
     circuit_par=`sed -n -E "s/.*_([^_]*).v$/\1/p" <<< $circuit_basename`
 
     ./compile.sh $circuit_path constraints.xdc build
