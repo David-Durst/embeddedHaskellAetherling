@@ -24,6 +24,7 @@ import Control.Monad.State
 
 slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
   [
+    {-
     testCase "slowing a single map" $
     (all_success =<< single_map_results) @? "single map slowdowns failed",
     testCase "slowing two maps" $
@@ -66,6 +67,7 @@ slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
     (all_success =<< striple_results) @? "striple slowdowns failed",
     testCase "slowing striple to seq" $
     (all_success =<< striple_to_seq_results) @? "striple to seq slowdowns failed"
+-}
   ]
 
 all_success :: [Fault_Result] -> IO Bool
@@ -411,7 +413,7 @@ fst_snd_sum_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       fst_snd_sum_inputs fst_snd_sum_output) [1,2,4,8]
 
 seq_to_stuple = 
-  seq_to_seq_tupleC $
+  mapC seq_to_seq_tupleC $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
 seq_to_stuple_seq_idx = add_indexes $ seq_shallow_to_deep seq_to_stuple
 seq_to_stuple_ppar = 
@@ -426,9 +428,10 @@ seq_to_stuple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       seq_to_stuple s Nothing
                                       seq_to_stuple_inputs seq_to_stuple_output) [1,2,4,8,16]
 
+ {- 
 stuple_to_seq = 
-  seq_tuple_to_seqC Proxy (Proxy @0) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 4 12 (Seq_Tuple 4 Atom_Int)))
+  mapC 4 seq_tuple_to_seqC $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 1 0 (Seq 1 3 (Seq_Tuple 4 Atom_Int))))
 stuple_to_seq_seq_idx = add_indexes $ seq_shallow_to_deep stuple_to_seq
 stuple_to_seq_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s stuple_to_seq_seq_idx) [1,2,4,8,16]
@@ -441,7 +444,6 @@ stuple_to_seq_output :: [Integer] = [1..16]
 stuple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stuple_to_seq s Nothing
                                       stuple_to_seq_inputs stuple_to_seq_output) [1,2,4,8,16]
-  
 seq_and_stuple_no_input = 
   seq_to_seq_tupleC >>>
   seq_tuple_to_seqC Proxy (Proxy @0)
@@ -616,6 +618,7 @@ map_reduce_ppar =
   fmap (\s -> rewrite_to_partially_parallel s map_reduce_seq_idx) [1,3,9]
 map_reduce_ppar_typechecked =
   fmap check_type map_reduce_ppar
+-}
 -- END OF ACTUALLY TESTED THINGS
 -- multiple unpartitions into a multi-rate
 multi_unpartition_with_multi_rate = seq_shallow_to_deep $

@@ -233,25 +233,29 @@ print_inner consumer_e@(DeserializeN n i elem_t producer_e cur_idx) = do
   add_to_cur_module cur_ref_name $ "DeserializeN " ++ show n ++ " " ++ show i ++
     " " ++ show elem_t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(Add_1_sN elem_t producer_e cur_idx) = do
+print_inner consumer_e@(Add_1_sN f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
+  f_ref <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "Add_1_sN " ++ show elem_t ++ " " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "Add_1_sN " ++ f_ref ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(Add_1_0_tN elem_t producer_e cur_idx) = do
+print_inner consumer_e@(Add_1_0_tN f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
+  f_ref <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "Add_1_0_tN " ++ show elem_t ++ " " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "Add_1_0_tN " ++ f_ref ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(Remove_1_sN elem_t producer_e cur_idx) = do
+print_inner consumer_e@(Remove_1_sN f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
+  f_ref <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "Remove_1_sN " ++ show elem_t ++ " " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "Remove_1_sN " ++ f_ref ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(Remove_1_0_tN elem_t producer_e cur_idx) = do
+print_inner consumer_e@(Remove_1_0_tN f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
+  f_ref <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "Remove_1_0_tN " ++ show elem_t ++ " " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "Remove_1_0_tN " ++ f_ref ++ " " ++ producer_ref
   return cur_ref_name
 
 -- higher order operators
