@@ -661,7 +661,6 @@ sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_t
   seq_e@(SeqE.STupleToSeqN n i elem_t producer _) |
   parameters_match tr n i = do
   add_output_rewrite_for_node seq_e type_rewrites
-  traceM "ii0"
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
   let upstream_type_rewrites = SpaceR 1 : NonSeqR : type_rewrites_tl
@@ -677,15 +676,14 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   --traceShowM $ "tr1: " ++ show tr1
   let types = Seq_Conv.expr_to_types seq_e
   -- ppar_AST_type applies the type_rewrites to match downstream
-  traceM "ii1"
   out_t_ppar <- ppar_AST_type type_rewrites (Seq_Conv.e_out_type types)
 
   -- to compute how to slowed input, get the number of clocks the output takes
   let slowdown = get_type_rewrite_periods tr
   -- rewrite input seq to get same throuhgput of output,
   -- but this can be in whatever nesting structure rewrite_AST_type chooses
-  -- only modifying seq as STuple has no timing options
-  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
+  -- only modifying seq 1 (n-1+i) as STuple has no timing options
+  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT 1 (n-1+i) SeqT.IntT)
   let seq_input_rewrite : _ = input_rewrites
   -- the input is a seq of an stuple, and stuple rewrite is with NonSeqR
   let upstream_type_rewrites = seq_input_rewrite : NonSeqR : type_rewrites_tl
@@ -720,7 +718,8 @@ sequence_to_partially_parallel type_rewrites@(tr : NonSeqR : type_rewrites_tl)
   --traceM $ "slowdown: " ++ show slowdown
  
   -- rewrite inputs to get same throuhgput of output,
-  -- but this can be in whatever nesting structure rewrite_AST_type chooses
+  -- have seq n i here instead of seq 1 (n-1+i) because upstream seq
+  -- not bound to fully parallel
   input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
   let input_rewrite : _ = input_rewrites
   let upstream_type_rewrites = input_rewrite : type_rewrites_tl

@@ -93,13 +93,13 @@ expr_to_types (Add_1_0_tN elem_t f _) = Expr_Types in_types out_type
 expr_to_types (Remove_1_sN elem_t f _) = Expr_Types in_types out_type
   where
     inner_types = expr_to_outer_types f
-    in_types = fmap (SSeqT 1) $ e_in_types inner_types
-    out_type = e_out_type inner_types
+    in_types = e_in_types inner_types
+    (SSeqT _ out_type) = e_out_type inner_types
 expr_to_types (Remove_1_0_tN elem_t f _) = Expr_Types in_types out_type
   where
     inner_types = expr_to_outer_types f
     in_types = fmap (TSeqT 1 0) $ e_in_types inner_types
-    out_type = e_out_type inner_types
+    (TSeqT _ _ out_type) = e_out_type inner_types
 
 -- higher order operators
 expr_to_types (Map_sN n f _ _) = Expr_Types in_types out_type

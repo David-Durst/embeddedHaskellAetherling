@@ -428,15 +428,16 @@ seq_to_stuple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       seq_to_stuple s Nothing
                                       seq_to_stuple_inputs seq_to_stuple_output) [1,2,4,8,16]
 
- {- 
 stuple_to_seq = 
-  mapC 4 seq_tuple_to_seqC $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 1 0 (Seq 1 3 (Seq_Tuple 4 Atom_Int))))
+  mapC seq_tuple_to_seqC $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 1 3 (Seq_Tuple 4 Atom_Int))))
 stuple_to_seq_seq_idx = add_indexes $ seq_shallow_to_deep stuple_to_seq
 stuple_to_seq_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s stuple_to_seq_seq_idx) [1,2,4,8,16]
 stuple_to_seq_ppar_typechecked =
   fmap check_type stuple_to_seq_ppar
+stuple_to_seq_ppar_typechecked' =
+  fmap check_type_get_error stuple_to_seq_ppar
 stuple_to_seq_inputs :: [[Integer]] = [[1..16]]
 --stuple_to_seq_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
 stuple_to_seq_output :: [Integer] = [1..16]
@@ -445,8 +446,7 @@ stuple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stuple_to_seq s Nothing
                                       stuple_to_seq_inputs stuple_to_seq_output) [1,2,4,8,16]
 seq_and_stuple_no_input = 
-  seq_to_seq_tupleC >>>
-  seq_tuple_to_seqC Proxy (Proxy @0)
+  mapC (seq_to_seq_tupleC >>> seq_tuple_to_seqC)
 seq_and_stuple = seq_and_stuple_no_input $
   com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
 seq_and_stuple_seq_idx = add_indexes $ seq_shallow_to_deep $ seq_and_stuple
@@ -454,6 +454,8 @@ seq_and_stuple_ppar =
   fmap (\s -> rewrite_to_partially_parallel s seq_and_stuple_seq_idx) [1,2,4,8,16]
 seq_and_stuple_ppar_typechecked =
   fmap check_type seq_and_stuple_ppar
+seq_and_stuple_ppar_typechecked' =
+  fmap check_type' seq_and_stuple_ppar
 seq_and_stuple_inputs :: [[Integer]] = [[1..16]]
 --seq_and_stuple_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
 seq_and_stuple_output :: [Integer] = [1..16]
@@ -462,6 +464,7 @@ seq_and_stuple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       seq_and_stuple s Nothing
                                       seq_and_stuple_inputs seq_and_stuple_output) [1,2,4,8,16]
 
+ {- 
 striple_no_input in_seq = do
   let pair = map2C seq_tupleC in_seq in_seq
   let triple = map2C seq_tuple_appendC pair in_seq
