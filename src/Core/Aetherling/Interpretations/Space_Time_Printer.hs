@@ -338,17 +338,17 @@ print_inner consumer_e@(STupleAppendN out_len elem_t producer0_e producer1_e cur
     show elem_t ++ " " ++ producer0_ref ++ " " ++ producer1_ref
   return cur_ref_name
   
-print_inner consumer_e@(STupleToSSeqN tuple_len elem_t producer_e cur_idx) = do
+print_inner consumer_e@(STupleToSSeqN tuple_len ii elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "STupleToSSeqN " ++
-    show tuple_len ++ show elem_t ++ " " ++ producer_ref
+    show tuple_len ++ " " ++ show ii ++ " (" ++ show elem_t ++ ") " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(SSeqToSTupleN tuple_len elem_t producer_e cur_idx) = do
+print_inner consumer_e@(SSeqToSTupleN tuple_len ii elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "SSeqToSTupleN " ++
-    show tuple_len ++ " " ++ show elem_t ++ " " ++ producer_ref
+    show tuple_len ++ " " ++ show ii ++ " (" ++ show elem_t ++ ") " ++ producer_ref
   return cur_ref_name
   
 print_inner (InputN t name cur_idx) = do

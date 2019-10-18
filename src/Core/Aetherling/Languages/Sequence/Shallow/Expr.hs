@@ -132,17 +132,14 @@ class Monad m => Sequence_Language m where
   seq_tuple_to_seqC :: (KnownNat no, KnownNat ni,
                         KnownNat io, KnownNat ii,
                         Aetherling_Value a) =>
-    Proxy io -> Proxy ii ->
-    m (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
-       (Seq_Tuple ni a)) ->
+    m (Seq no io (Seq 1 (ni-1+ii) (Seq_Tuple ni a))) ->
     m (Seq no io (Seq ni ii a))
 
   seq_to_seq_tupleC :: (KnownNat no, KnownNat ni,
                         KnownNat io, KnownNat ii,
                         Aetherling_Value a) =>
     m (Seq no io (Seq ni ii a)) ->
-    m (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
-       (Seq_Tuple ni a))
+    m (Seq no io (Seq 1 (ni-1+ii) (Seq_Tuple ni a)))
 
   -- composition operators
   (>>>) :: (m a -> m b) -> (m b -> m c) -> (m a -> m c)

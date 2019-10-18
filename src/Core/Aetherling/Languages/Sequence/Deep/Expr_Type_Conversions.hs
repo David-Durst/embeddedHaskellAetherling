@@ -95,11 +95,11 @@ expr_to_types (STupleAppendN out_len elem_t _ _ _) =
   Expr_Types [STupleT (out_len - 1) elem_t, elem_t] (STupleT out_len elem_t)
   
 expr_to_types (STupleToSeqN no ni io ii tuple_elem_t _ _) =
-  Expr_Types [SeqT no ((no * ((ni - 1) + ii)) + (io * (ni + ii))) (STupleT ni tuple_elem_t)]
+  Expr_Types [SeqT no io (SeqT 1 (ni-1+ii) (STupleT ni tuple_elem_t))]
   (SeqT no io (SeqT ni ii tuple_elem_t))
 expr_to_types (SeqToSTupleN no ni io ii tuple_elem_t _ _) =
   Expr_Types [SeqT no io (SeqT ni ii tuple_elem_t)]
-  (SeqT no ((no * ((ni - 1) + ii)) + (io * (ni + ii))) (STupleT ni tuple_elem_t))
+  (SeqT no io (SeqT 1 (ni-1+ii) (STupleT ni tuple_elem_t)))
   
 expr_to_types (InputN t _ _) = Expr_Types [] t
 expr_to_types (ErrorN _ _) = Expr_Types [] UnitT

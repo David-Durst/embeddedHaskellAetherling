@@ -125,9 +125,9 @@ check_type' consumer_e@(STupleN _ producer0_e producer1_e _) = do
 check_type' consumer_e@(STupleAppendN _ _ producer0_e producer1_e _) = do
   check_binary_operator consumer_e producer0_e producer1_e
   
-check_type' consumer_e@(STupleToSSeqN _ _ producer_e _) =
+check_type' consumer_e@(STupleToSSeqN _ _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(SSeqToSTupleN _ _ producer_e _) =
+check_type' consumer_e@(SSeqToSTupleN _ _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
   
 check_type' (InputN t _ _) = return t

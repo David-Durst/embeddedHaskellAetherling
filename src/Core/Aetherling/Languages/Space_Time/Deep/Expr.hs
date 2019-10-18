@@ -222,12 +222,14 @@ data Expr =
       }
   | STupleToSSeqN {
       tuple_len :: Int,
+      ii :: Int,
       tuple_elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index
       }
   | SSeqToSTupleN {
       tuple_len :: Int,
+      ii :: Int,
       tuple_elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index
