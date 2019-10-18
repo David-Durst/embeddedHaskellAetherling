@@ -657,47 +657,19 @@ sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
 
 
   
-sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr0_n) : tr1@(SpaceR tr1_n) :
-                                              type_rewrites_tl)
-  seq_e@(SeqE.STupleToSeqN no ni io ii elem_t producer _) |
-  parameters_match tr0 no io && parameters_match tr1 ni ii = do
+sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
+  seq_e@(SeqE.STupleToSeqN n i elem_t producer _) |
+  parameters_match tr n i = do
   add_output_rewrite_for_node seq_e type_rewrites
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
-  let upstream_type_rewrites = tr0 : SpaceR 1 : NonSeqR : type_rewrites_tl
+  let upstream_type_rewrites = SpaceR 1 : NonSeqR : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
-  remove_idx <- get_cur_index
-  STB.make_map_s tr0_n (\inner_input stuple_idx ->
-                          STE.Remove_1_sN (STT.STupleT tr1_n elem_t_ppar)
-                          (STE.STupleToSSeqN tr1_n elem_t_ppar inner_input stuple_idx)
-                         remove_idx)
-    producer_ppar
+  STB.make_remove_1_s (STE.STupleToSSeqN tr_n elem_t_ppar) producer_ppar
 
-sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr0_n tr0_i) : tr1@(SpaceR tr1_n) :
-                                              type_rewrites_tl)
-  seq_e@(SeqE.STupleToSeqN no ni io ii elem_t producer _) |
-  parameters_match tr0 no io && parameters_match tr1 ni ii = do
-  add_output_rewrite_for_node seq_e type_rewrites
-  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
-  -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
-  let upstream_type_rewrites = tr0 : NonSeqR : type_rewrites_tl
-  producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
-  STB.make_map_t tr0_n tr0_i (STE.STupleToSSeqN tr1_n elem_t_ppar) producer_ppar
-  
-sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) : tr1@(SpaceR tr1_n) :
-                                              type_rewrites_tl)
-  seq_e@(SeqE.STupleToSeqN no ni io ii elem_t producer _) |
-  parameters_match tr0 no io && parameters_match tr1 ni ii = do
-  add_output_rewrite_for_node seq_e type_rewrites
-  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
-  -- the stuple input is not a seq, so no type rewrite, so its a NonSeqR
-  let upstream_type_rewrites = tr0 : NonSeqR : type_rewrites_tl
-  producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
-  STB.make_map_ts tr0_no tr0_io tr0_ni (STE.STupleToSSeqN tr1_n elem_t_ppar) producer_ppar
-
-sequence_to_partially_parallel type_rewrites@(tr0 : tr1 : type_rewrites_tl)
-  seq_e@(SeqE.STupleToSeqN no ni io ii elem_t producer _) |
-  parameters_match tr0 no io && parameters_match tr1 ni ii = do
+sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
+  seq_e@(SeqE.STupleToSeqN n i elem_t producer _) |
+  parameters_match tr n i = do
   add_output_rewrite_for_node seq_e type_rewrites
   --traceShowM $ "t0"
   --traceShowM $ "tr0: " ++ show tr0
@@ -707,14 +679,11 @@ sequence_to_partially_parallel type_rewrites@(tr0 : tr1 : type_rewrites_tl)
   out_t_ppar <- ppar_AST_type type_rewrites (Seq_Conv.e_out_type types)
 
   -- to compute how to slowed input, get the number of clocks the output takes
-  -- this is a product of outer and inner periods as repeat the inner seq for
-  -- each element of the outer seq
-  let slowdown = get_type_rewrite_periods tr0 * get_type_rewrite_periods tr1
-  -- rewrite outer seq to get same throuhgput of output,
+  let slowdown = get_type_rewrite_periods tr
+  -- rewrite input seq to get same throuhgput of output,
   -- but this can be in whatever nesting structure rewrite_AST_type chooses
-  -- only modifying outer seq as inner will be the STuple that occurs on one clock cycle
-  input_rewrites <- lift $ rewrite_AST_type slowdown
-                    (SeqT.SeqT no ((no * (ni - 1 + ii)) + (io * (ni + ii))) SeqT.IntT)
+  -- only modifying seq as STuple has no timing options
+  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
   let seq_input_rewrite : _ = input_rewrites
   -- the input is a seq of an stuple, and stuple rewrite is with NonSeqR
   let upstream_type_rewrites = seq_input_rewrite : NonSeqR : type_rewrites_tl
@@ -726,18 +695,18 @@ sequence_to_partially_parallel type_rewrites@(tr0 : tr1 : type_rewrites_tl)
   return x
 
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : NonSeqR : type_rewrites_tl)
-  seq_e@(SeqE.SeqToSTupleN no ni io ii elem_t producer _) = do
+  seq_e@(SeqE.SeqToSTupleN n i elem_t producer _) = do
   -- can't check parameters as NonSeqR carries no information
   add_output_rewrite_for_node seq_e type_rewrites
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   -- this works as parameters_match makes sure no*ni equals tr_no
   -- and unpartition must accept same no and ni regardless of invalid clocks
-  let upstream_type_rewrites = SpaceR no : SpaceR ni : type_rewrites_tl
+  let upstream_type_rewrites = SpaceR 1 : SpaceR n : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
-  STB.make_map_s no (STE.SSeqToSTupleN ni elem_t_ppar) producer_ppar
+  STB.make_add_1_s (STE.SSeqToSTupleN n elem_t_ppar) producer_ppar
   
 sequence_to_partially_parallel type_rewrites@(tr : NonSeqR : type_rewrites_tl)
-  seq_e@(SeqE.SeqToSTupleN no ni io ii elem_t producer _) = do
+  seq_e@(SeqE.SeqToSTupleN n i elem_t producer _) = do
   -- can't check parameters as NonSeqR carries no information
   add_output_rewrite_for_node seq_e type_rewrites
   let types = Seq_Conv.expr_to_types seq_e
@@ -750,10 +719,9 @@ sequence_to_partially_parallel type_rewrites@(tr : NonSeqR : type_rewrites_tl)
  
   -- rewrite inputs to get same throuhgput of output,
   -- but this can be in whatever nesting structure rewrite_AST_type chooses
-  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io
-                                                      (SeqT.SeqT ni ii SeqT.IntT))
-  let input_rewrite_outer : input_rewrite_inner : _ = input_rewrites
-  let upstream_type_rewrites = input_rewrite_outer : input_rewrite_inner : type_rewrites_tl
+  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
+  let input_rewrite : _ = input_rewrites
+  let upstream_type_rewrites = input_rewrite : type_rewrites_tl
   in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
 
   ppar_unary_seq_operator upstream_type_rewrites
