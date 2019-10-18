@@ -52,8 +52,8 @@ rewrite_AST_type_debug s seq_t = do
   traceM $ show s_remaining_no_underutil
   let maybe_t_rewrites_with_underutil =
         foldM (\cur_rw_maybe s_factor -> rewrite_with_underutil s_factor cur_rw_maybe)
-        t_rewrites_no_underutil s_remaining_no_underutil
-  fmap l_tr $ fromJust maybe_t_rewrites_with_underutil
+        (reverse t_rewrites_no_underutil) s_remaining_no_underutil
+  fmap l_tr $ reverse $ fromJust maybe_t_rewrites_with_underutil
 rewrite_AST_type :: (Monad m) => Int -> SeqT.AST_Type -> Rewrite_StateTM m [Type_Rewrite]
 rewrite_AST_type s seq_t = do
   let s_factors = ae_factors_to_int_list $ ae_factorize s
@@ -67,9 +67,9 @@ rewrite_AST_type s seq_t = do
                   ) (all_space_rw, []) s_factors
   let maybe_t_rewrites_with_underutil =
         foldM (\cur_rw_maybe s_factor -> rewrite_with_underutil s_factor cur_rw_maybe)
-        t_rewrites_no_underutil s_remaining_no_underutil
+        (reverse t_rewrites_no_underutil) s_remaining_no_underutil
   if isJust maybe_t_rewrites_with_underutil
-    then return $ fmap l_tr $ fromJust maybe_t_rewrites_with_underutil
+    then return $ fmap l_tr $ reverse $ fromJust maybe_t_rewrites_with_underutil
     else throwError $ Slowdown_Failure $ show s_remaining_no_underutil ++ " slowdown not 1 " ++
          "with t_rewrites " ++ show t_rewrites_no_underutil ++ " for initial type " ++ show seq_t ++
          " and initial slowdown factor " ++ show s
