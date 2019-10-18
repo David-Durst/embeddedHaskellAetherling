@@ -257,18 +257,18 @@ print_inner consumer_e@(STupleAppendN out_len elem_t producer0_e producer1_e cur
     show elem_t ++ " " ++ producer0_ref ++ " " ++ producer1_ref
   return cur_ref_name
   
-print_inner consumer_e@(STupleToSeqN no ni io ii elem_t producer_e cur_idx) = do
+print_inner consumer_e@(STupleToSeqN n i elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "STupleToSeqN " ++
-    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show ii ++ " " ++
+    show n ++ " " ++ show i ++ " " ++
     show elem_t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(SeqToSTupleN no ni io ii elem_t producer_e cur_idx) = do
+print_inner consumer_e@(SeqToSTupleN n i elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "SeqToSTupleN " ++
-    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show ii ++ " " ++
+    show n ++ " " ++ show i ++ " " ++
     show elem_t ++ " " ++ producer_ref
   return cur_ref_name
   

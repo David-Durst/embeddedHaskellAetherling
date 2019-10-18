@@ -81,9 +81,9 @@ add_indexes' consumer_e@(STupleN _ producer0_e producer1_e _) = do
 add_indexes' consumer_e@(STupleAppendN _ _ producer0_e producer1_e _) = do
   add_index_to_binary_operator consumer_e producer0_e producer1_e
   
-add_indexes' consumer_e@(STupleToSeqN _ _ _ _ _ producer_e _) =
+add_indexes' consumer_e@(STupleToSeqN _ _ _ producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
-add_indexes' consumer_e@(SeqToSTupleN _ _ _ _ _ producer_e _) =
+add_indexes' consumer_e@(SeqToSTupleN _ _ _ producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
   
 add_indexes' (InputN t n _) = do

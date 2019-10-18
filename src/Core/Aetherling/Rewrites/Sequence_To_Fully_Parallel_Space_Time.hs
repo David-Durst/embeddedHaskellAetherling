@@ -111,28 +111,28 @@ sequence_to_fully_parallel (SeqE.STupleAppendN out_len elem_t producer_left prod
   cur_idx <- get_cur_index
   return $ STE.STupleAppendN out_len t_par producer_left_par producer_right_par cur_idx
   
-sequence_to_fully_parallel (SeqE.STupleToSeqN no ni io ii elem_t producer _) = do
+sequence_to_fully_parallel (SeqE.STupleToSeqN n i elem_t producer _) = do
   t_par <- lift $ parallelize_AST_type elem_t
   producer_par <- memo producer $ sequence_to_fully_parallel producer
   input_idx <- get_cur_index
   stuple_idx <- get_cur_index
   map_idx <- get_cur_index
-  return $ STE.Map_sN no (STE.STupleToSSeqN ni t_par
+  return $ STE.Remove_1_sN (STE.STupleToSSeqN n t_par
                           -- need to wrap t_par for input as STuple takes
                           -- in an stuple of elements
-                          (STE.InputN (STT.STupleT ni t_par) "seq_in" input_idx)
+                          (STE.InputN (STT.STupleT n t_par) "seq_in" input_idx)
                           stuple_idx) producer_par map_idx
   
-sequence_to_fully_parallel (SeqE.SeqToSTupleN no ni io ii elem_t producer _) = do
+sequence_to_fully_parallel (SeqE.SeqToSTupleN n i elem_t producer _) = do
   t_par <- lift $ parallelize_AST_type elem_t
   producer_par <- memo producer $ sequence_to_fully_parallel producer
   input_idx <- get_cur_index
   stuple_idx <- get_cur_index
   map_idx <- get_cur_index
-  return $ STE.Map_sN no (STE.SSeqToSTupleN ni t_par
-                          -- need to wrap t_par for input as STuple takes
-                          -- in an stuple of elements
-                          (STE.InputN (STT.SSeqT ni t_par) "seq_in" input_idx)
+  return $ STE.Add_1_sN (STE.SSeqToSTupleN n t_par
+                         -- need to wrap t_par for input as STuple takes
+                         -- in an stuple of elements
+                         (STE.InputN (STT.SSeqT n t_par) "seq_in" input_idx)
                          stuple_idx) producer_par map_idx
 
 sequence_to_fully_parallel (SeqE.InputN t input_name _) = do

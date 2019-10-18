@@ -367,40 +367,34 @@ instance Sequence_Language Rewrite_StateM where
       return $ Seq_Tuple_Edge $ STupleAppendN out_len a_type input1_expr input2_expr No_Index
       else throwError $ Expr_Failure $ fail_message "seq_tuple_appendC" "inputs must be edges"
   
-  seq_tuple_to_seqC :: forall no ni io ii a .
-                       (KnownNat no, KnownNat ni,
-                        KnownNat io, KnownNat ii,
+  seq_tuple_to_seqC :: forall n i a .
+                       (KnownNat n, KnownNat i,
                         Aetherling_Value a) =>
-    Rewrite_StateM (Seq no io (Seq 1 (ni-1+ii) (Seq_Tuple ni a))) ->
-    Rewrite_StateM (Seq no io (Seq ni ii a))
+    Rewrite_StateM (Seq 1 (n-1+i) (Seq_Tuple n a)) ->
+    Rewrite_StateM (Seq n i a)
   seq_tuple_to_seqC inputM = do
     input <- inputM
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ STupleToSeqN no_val ni_val io_val ii_val a_type x No_Index
+      Seq_Edge x -> return $ Seq_Edge $ STupleToSeqN n_val i_val a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "seq_tuple_to_seqC" "seq_tuple"
     where
-      no_val = fromInteger $ natVal (Proxy :: Proxy no)
-      ni_val = fromInteger $ natVal (Proxy :: Proxy ni)
-      io_val = fromInteger $ natVal (Proxy :: Proxy io)
-      ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
+      n_val = fromInteger $ natVal (Proxy :: Proxy n)
+      i_val = fromInteger $ natVal (Proxy :: Proxy i)
       a_type = get_AST_type (Proxy :: Proxy a)
 
-  seq_to_seq_tupleC :: forall no ni io ii a .
-                       (KnownNat no, KnownNat ni, 
-                        KnownNat io, KnownNat ii,
+  seq_to_seq_tupleC :: forall n i a .
+                       (KnownNat n, KnownNat i,
                         Aetherling_Value a) =>
-    Rewrite_StateM (Seq no io (Seq ni ii a)) ->
-    Rewrite_StateM (Seq no io (Seq 1 (ni-1+ii) (Seq_Tuple ni a)))
+    Rewrite_StateM (Seq n i a) ->
+    Rewrite_StateM (Seq 1 (n-1+i) (Seq_Tuple n a))
   seq_to_seq_tupleC inputM = do
     input <- inputM
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ SeqToSTupleN no_val ni_val io_val ii_val a_type x No_Index
+      Seq_Edge x -> return $ Seq_Edge $ SeqToSTupleN n_val i_val a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "seq_to_seq_tupleC" "seq"
     where
-      no_val = fromInteger $ natVal (Proxy :: Proxy no)
-      ni_val = fromInteger $ natVal (Proxy :: Proxy ni)
-      io_val = fromInteger $ natVal (Proxy :: Proxy io)
-      ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
+      n_val = fromInteger $ natVal (Proxy :: Proxy n)
+      i_val = fromInteger $ natVal (Proxy :: Proxy i)
       a_type = get_AST_type (Proxy :: Proxy a)
 
   -- composition operators
