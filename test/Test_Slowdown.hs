@@ -92,10 +92,10 @@ single_map_inputs :: [[Integer]] = [[0,-1,2,3]]
 single_map_output :: [Integer] = [0,1,2,3]
 -- sequence used to flip [] and IO so can print from command line
 single_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                            single_map s (Just "single_map")
+                                            single_map s Nothing
                                             single_map_inputs single_map_output) [1,2,4]
 single_map_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                             single_map s (Just "single_map")
+                                             single_map s Nothing
                                              single_map_inputs single_map_output) [4]
 single_map_ae_verilog = sequence $ fmap (\s -> compile_and_test_verilog single_map s
                                             single_map_inputs single_map_output
@@ -115,8 +115,11 @@ single_map_200_inputs :: [[Integer]] = [[1..200]]
 single_map_200_output :: [Integer] = [6..205]
 -- sequence used to flip [] and IO so can print from command line
 single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                                single_map_200 s (Just "single_map_200")
+                                                single_map_200 s (Just "map")
                                                 single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
+single_map_200_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                                single_map_200 s (Just "map")
+                                                single_map_200_inputs single_map_200_output) [1]
 
 two_maps = 
   mapC' (Proxy @4) absC >>>
@@ -531,7 +534,7 @@ stencil_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                     -- 30 really bad case
 stencil_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stencil_1d_test s Nothing
-                                      stencil_1d_inputs stencil_1d_output) [30]
+                                      stencil_1d_inputs stencil_1d_output) [2]
 
 tuple_mul_shallow_no_input in_seq = do
   let kernel_list = fmap Atom_Int [1,1,1]
@@ -561,6 +564,9 @@ conv_1d_output :: [Integer] = [int_to_ignore,int_to_ignore,2,3,4]
 conv_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_1d s Nothing
                                       conv_1d_inputs conv_1d_output) [1,3,5,15]
+conv_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      conv_1d s Nothing
+                                      conv_1d_inputs conv_1d_output) [3]
 pyramid_1d_shallow_no_input in_seq = do
   let layer1_blurred = conv_1d_shallow_no_input in_seq
   let layer2_input = unpartitionC $ mapC (down_1dC 2) $
