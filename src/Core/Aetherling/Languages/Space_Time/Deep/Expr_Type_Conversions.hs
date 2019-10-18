@@ -80,14 +80,26 @@ expr_to_types (DeserializeN n i tuple_elem_t _ _) =
   Expr_Types [(TSeqT n i tuple_elem_t)]
   (TSeqT 1 ((n - 1) + i) (SSeqT n tuple_elem_t))
 
-expr_to_types (Add_1_sN elem_t _ _) =
-  Expr_Types [elem_t] (SSeqT 1 elem_t)
-expr_to_types (Add_1_0_tN elem_t _ _) =
-  Expr_Types [elem_t] (TSeqT 1 0 elem_t)
-expr_to_types (Remove_1_sN elem_t _ _) =
-  Expr_Types [SSeqT 1 elem_t] elem_t
-expr_to_types (Remove_1_0_tN elem_t _ _) =
-  Expr_Types [TSeqT 1 0 elem_t] elem_t
+expr_to_types (Add_1_sN elem_t f _) = Expr_Types in_types out_type
+  where
+    inner_types = expr_to_outer_types f
+    in_types = e_in_types inner_types
+    out_type = SSeqT 1 $ e_out_type inner_types
+expr_to_types (Add_1_0_tN elem_t f _) = Expr_Types in_types out_type
+  where
+    inner_types = expr_to_outer_types f
+    in_types = e_in_types inner_types
+    out_type = TSeqT 1 0 $ e_out_type inner_types
+expr_to_types (Remove_1_sN elem_t f _) = Expr_Types in_types out_type
+  where
+    inner_types = expr_to_outer_types f
+    in_types = fmap (SSeqT 1) $ e_in_types inner_types
+    out_type = e_out_type inner_types
+expr_to_types (Remove_1_0_tN elem_t f _) = Expr_Types in_types out_type
+  where
+    inner_types = expr_to_outer_types f
+    in_types = fmap (TSeqT 1 0) $ e_in_types inner_types
+    out_type = e_out_type inner_types
 
 -- higher order operators
 expr_to_types (Map_sN n f _ _) = Expr_Types in_types out_type
@@ -136,10 +148,10 @@ expr_to_types (STupleN elem_t _ _ _) =
 expr_to_types (STupleAppendN out_len elem_t _ _ _) =
   Expr_Types [STupleT (out_len - 1) elem_t, elem_t] (STupleT out_len elem_t)
   
-expr_to_types (STupleToSSeqN tuple_len ii tuple_elem_t _ _) =
-  Expr_Types [TSeqT 1 ii (STupleT tuple_len tuple_elem_t)] (SSeqT tuple_len tuple_elem_t)
-expr_to_types (SSeqToSTupleN tuple_len ii tuple_elem_t _ _) =
-  Expr_Types [SSeqT tuple_len tuple_elem_t] (TSeqT 1 ii (STupleT tuple_len tuple_elem_t))
+expr_to_types (STupleToSSeqN tuple_len tuple_elem_t _ _) =
+  Expr_Types [STupleT tuple_len tuple_elem_t] (SSeqT tuple_len tuple_elem_t)
+expr_to_types (SSeqToSTupleN tuple_len tuple_elem_t _ _) =
+  Expr_Types [SSeqT tuple_len tuple_elem_t] (STupleT tuple_len tuple_elem_t)
   
 expr_to_types (InputN t _ _) = Expr_Types [] t
 expr_to_types (ErrorN _ _) = Expr_Types [] UnitT
@@ -245,9 +257,9 @@ expr_to_outer_types' consumer_e@(STupleN _ producer0_e producer1_e _) = do
 expr_to_outer_types' consumer_e@(STupleAppendN _ _ producer0_e producer1_e _) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
   
-expr_to_outer_types' consumer_e@(STupleToSSeqN _ _ _ producer_e _) =
+expr_to_outer_types' consumer_e@(STupleToSSeqN _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(SSeqToSTupleN _ _ _ producer_e _) =
+expr_to_outer_types' consumer_e@(SSeqToSTupleN _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
   
 expr_to_outer_types' (InputN t name _) = do

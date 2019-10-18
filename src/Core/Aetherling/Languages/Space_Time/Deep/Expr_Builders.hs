@@ -87,11 +87,33 @@ make_map_t n i inner_expr_gen producer = do
   inner_expr <- add_input_to_expr_for_map inner_expr_gen
   (add_index $ Map_tN n i inner_expr) producer
 
+make_map_t_nested :: Monad m => Int -> Int -> (Expr -> Memo_Rewrite_StateTM Expr m Expr) ->
+                     Expr -> Memo_Rewrite_StateTM Expr m Expr
+make_map_t_nested n i expr_gen producer = do
+  input_idx <- get_cur_index
+  map_idx <- get_cur_index
+  expr_with_error <- expr_gen (ErrorN "not an error" input_idx)
+  let expr_types = expr_to_types expr_with_error
+  let expr_in_type = head $ e_in_types expr_types
+  expr_with_input <- expr_gen (InputN expr_in_type "I" input_idx)
+  return $ Map_tN n i expr_with_input producer map_idx
+  
 make_map_s :: Monad m => Int -> (Expr -> DAG_Index -> Expr) ->
              Expr -> Memo_Rewrite_StateTM Expr m Expr
 make_map_s n inner_expr_gen producer = do
   inner_expr <- add_input_to_expr_for_map inner_expr_gen
   (add_index $ Map_sN n inner_expr) producer
+  
+make_map_s_nested :: Monad m => Int -> (Expr -> Memo_Rewrite_StateTM Expr m Expr) ->
+                     Expr -> Memo_Rewrite_StateTM Expr m Expr
+make_map_s_nested n expr_gen producer = do
+  input_idx <- get_cur_index
+  map_idx <- get_cur_index
+  expr_with_error <- expr_gen (ErrorN "not an error" input_idx)
+  let expr_types = expr_to_types expr_with_error
+  let expr_in_type = head $ e_in_types expr_types
+  expr_with_input <- expr_gen (InputN expr_in_type "I" input_idx)
+  return $ Map_sN n expr_with_input producer map_idx
 
 make_map_ts :: Monad m => Int -> Int -> Int -> (Expr -> DAG_Index -> Expr) ->
              Expr -> Memo_Rewrite_StateTM Expr m Expr
@@ -111,3 +133,15 @@ make_reduce_t :: Monad m => Int -> Int -> (Expr -> DAG_Index -> Expr) ->
 make_reduce_t n i inner_expr_gen producer = do
   inner_expr <- add_input_to_expr_for_map inner_expr_gen
   (add_index $ Reduce_tN n i inner_expr) producer
+
+make_remove_1_s :: Monad m => (Expr -> DAG_Index -> Expr) ->
+                   Expr -> Memo_Rewrite_StateTM Expr m Expr
+make_remove_1_s inner_expr_gen producer = do
+  inner_expr <- add_input_to_expr_for_map inner_expr_gen
+  (add_index $ Remove_1_sN inner_expr) producer
+  
+make_add_1_s :: Monad m => (Expr -> DAG_Index -> Expr) ->
+                   Expr -> Memo_Rewrite_StateTM Expr m Expr
+make_add_1_s inner_expr_gen producer = do
+  inner_expr <- add_input_to_expr_for_map inner_expr_gen
+  (add_index $ Add_1_sN inner_expr) producer

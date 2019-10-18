@@ -371,11 +371,9 @@ instance Sequence_Language Rewrite_StateM where
                        (KnownNat no, KnownNat ni,
                         KnownNat io, KnownNat ii,
                         Aetherling_Value a) =>
-    Proxy io -> Proxy ii ->
-    Rewrite_StateM (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
-       (Seq_Tuple ni a)) ->
+    Rewrite_StateM (Seq no io (Seq 1 (ni-1+ii) (Seq_Tuple ni a))) ->
     Rewrite_StateM (Seq no io (Seq ni ii a))
-  seq_tuple_to_seqC proxyIO proxyII inputM = do
+  seq_tuple_to_seqC inputM = do
     input <- inputM
     case input of
       Seq_Edge x -> return $ Seq_Edge $ STupleToSeqN no_val ni_val io_val ii_val a_type x No_Index
@@ -383,8 +381,8 @@ instance Sequence_Language Rewrite_StateM where
     where
       no_val = fromInteger $ natVal (Proxy :: Proxy no)
       ni_val = fromInteger $ natVal (Proxy :: Proxy ni)
-      io_val = fromInteger $ natVal proxyIO
-      ii_val = fromInteger $ natVal proxyII
+      io_val = fromInteger $ natVal (Proxy :: Proxy io)
+      ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
       a_type = get_AST_type (Proxy :: Proxy a)
 
   seq_to_seq_tupleC :: forall no ni io ii a .
@@ -392,8 +390,7 @@ instance Sequence_Language Rewrite_StateM where
                         KnownNat io, KnownNat ii,
                         Aetherling_Value a) =>
     Rewrite_StateM (Seq no io (Seq ni ii a)) ->
-    Rewrite_StateM (Seq no ((no GHC.TypeLits.* ((ni - 1) + ii)) + (io GHC.TypeLits.* (ni + ii)))
-       (Seq_Tuple ni a))
+    Rewrite_StateM (Seq no io (Seq 1 (ni-1+ii) (Seq_Tuple ni a)))
   seq_to_seq_tupleC inputM = do
     input <- inputM
     case input of

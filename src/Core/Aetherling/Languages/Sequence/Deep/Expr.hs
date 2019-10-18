@@ -126,19 +126,15 @@ data Expr =
       index :: DAG_Index
       }
   | STupleToSeqN {
-      no :: Int,
-      ni :: Int,
-      io :: Int,
-      ii :: Int,
+      n :: Int,
+      i :: Int,
       tuple_elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index
       }
   | SeqToSTupleN {
-      no :: Int,
-      ni :: Int,
-      io :: Int,
-      ii :: Int,
+      n :: Int,
+      i :: Int,
       tuple_elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index

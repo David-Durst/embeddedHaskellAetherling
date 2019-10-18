@@ -125,22 +125,22 @@ data Expr =
       index :: DAG_Index
       }
   | Add_1_sN {
-      elem_t :: AST_Type,
+      f :: Expr,
       seq_in :: Expr,
       index :: DAG_Index
       }
   | Add_1_0_tN {
-      elem_t :: AST_Type,
+      f :: Expr,
       seq_in :: Expr,
       index :: DAG_Index
       }
   | Remove_1_sN {
-      elem_t :: AST_Type,
+      f :: Expr,
       seq_in :: Expr,
       index :: DAG_Index
       }
   | Remove_1_0_tN {
-      elem_t :: AST_Type,
+      f :: Expr,
       seq_in :: Expr,
       index :: DAG_Index
       }
@@ -222,14 +222,12 @@ data Expr =
       }
   | STupleToSSeqN {
       tuple_len :: Int,
-      ii :: Int,
       tuple_elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index
       }
   | SSeqToSTupleN {
       tuple_len :: Int,
-      ii :: Int,
       tuple_elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index

@@ -94,12 +94,12 @@ expr_to_types (STupleN elem_t _ _ _) =
 expr_to_types (STupleAppendN out_len elem_t _ _ _) =
   Expr_Types [STupleT (out_len - 1) elem_t, elem_t] (STupleT out_len elem_t)
   
-expr_to_types (STupleToSeqN no ni io ii tuple_elem_t _ _) =
-  Expr_Types [SeqT no io (SeqT 1 (ni-1+ii) (STupleT ni tuple_elem_t))]
-  (SeqT no io (SeqT ni ii tuple_elem_t))
-expr_to_types (SeqToSTupleN no ni io ii tuple_elem_t _ _) =
-  Expr_Types [SeqT no io (SeqT ni ii tuple_elem_t)]
-  (SeqT no io (SeqT 1 (ni-1+ii) (STupleT ni tuple_elem_t)))
+expr_to_types (STupleToSeqN n i tuple_elem_t _ _) =
+  Expr_Types [SeqT 1 (n-1+i) (STupleT n tuple_elem_t)]
+  (SeqT n i tuple_elem_t)
+expr_to_types (SeqToSTupleN n i tuple_elem_t _ _) =
+  Expr_Types [SeqT n i tuple_elem_t]
+  (SeqT 1 (n-1+i) (STupleT n tuple_elem_t))
   
 expr_to_types (InputN t _ _) = Expr_Types [] t
 expr_to_types (ErrorN _ _) = Expr_Types [] UnitT
@@ -171,9 +171,9 @@ expr_to_outer_types' consumer_e@(STupleN _ producer0_e producer1_e _) = do
 expr_to_outer_types' consumer_e@(STupleAppendN _ _ producer0_e producer1_e _) = do
   expr_to_outer_types_binary_operator consumer_e producer0_e producer1_e
   
-expr_to_outer_types' consumer_e@(STupleToSeqN _ _ _ _ _ producer_e _) =
+expr_to_outer_types' consumer_e@(STupleToSeqN _ _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(SeqToSTupleN _ _ _ _ _ producer_e _) =
+expr_to_outer_types' consumer_e@(SeqToSTupleN _ _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
   
 expr_to_outer_types' (InputN t name _) = do
