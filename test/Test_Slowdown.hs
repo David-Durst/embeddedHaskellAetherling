@@ -334,7 +334,7 @@ down_over_nested_to_down_over_flattened_ppar =
 down_over_nested_to_down_over_flattened_ppar_typechecked =
   fmap check_type down_over_nested_to_down_over_flattened_ppar
 down_over_nested_to_down_over_flattened_ppar_typechecked' =
-  fmap check_type' down_over_nested_to_down_over_flattened_ppar
+  fmap check_type_get_result down_over_nested_to_down_over_flattened_ppar
 down_over_nested_to_down_over_flattened_inputs :: [[Integer]] =
   [[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]]
 down_over_nested_to_down_over_flattened_output :: [Integer] = [1]
@@ -358,7 +358,7 @@ tuple_sum_ppar =
 tuple_sum_ppar_typechecked =
   fmap check_type tuple_sum_ppar
 tuple_sum_ppar_typechecked' =
-  fmap check_type' tuple_sum_ppar
+  fmap check_type_get_result tuple_sum_ppar
 tuple_sum_inputs :: [[Integer]] = [[4,2,8,10]]
 tuple_sum_output :: [Integer] = [5,4,11,14]
 tuple_sum_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
@@ -379,7 +379,7 @@ tuple_reduce_ppar =
 tuple_reduce_ppar_typechecked =
   fmap check_type tuple_reduce_ppar
 tuple_reduce_ppar_typechecked' =
-  fmap check_type' tuple_reduce_ppar
+  fmap check_type_get_result tuple_reduce_ppar
 tuple_reduce_inputs :: [[Integer]] = [[10,8,9,3,4,2,2,2]]
 tuple_reduce_output :: [Integer] = [85]
 -- need to come back and check why slowest version uses a reduce_s
@@ -404,7 +404,7 @@ fst_snd_sum_ppar =
 fst_snd_sum_ppar_typechecked =
   fmap check_type fst_snd_sum_ppar
 fst_snd_sum_ppar_typechecked' =
-  fmap check_type' fst_snd_sum_ppar
+  fmap check_type_get_result fst_snd_sum_ppar
 fst_snd_sum_inputs :: [[Integer]] = [[6,7,8,9,10,11,12,13]]
 fst_snd_sum_output :: [Integer] = [7,9,11,13,15,17,19,21]
 -- need to come back and check why slowest version uses a reduce_s
@@ -455,7 +455,7 @@ seq_and_stuple_ppar =
 seq_and_stuple_ppar_typechecked =
   fmap check_type seq_and_stuple_ppar
 seq_and_stuple_ppar_typechecked' =
-  fmap check_type' seq_and_stuple_ppar
+  fmap check_type_get_error seq_and_stuple_ppar
 seq_and_stuple_inputs :: [[Integer]] = [[1..16]]
 --seq_and_stuple_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
 seq_and_stuple_output :: [Integer] = [1..16]
@@ -477,7 +477,7 @@ striple_ppar =
 striple_ppar_typechecked =
   fmap check_type striple_ppar
 striple_ppar_typechecked' =
-  fmap check_type' striple_ppar
+  fmap check_type_get_result striple_ppar
 striple_inputs :: [[Integer]] = [[1..8]]
 --striple_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
 striple_output :: [[Integer]] = [[i, i, i] | i <- [1 .. 8]]
@@ -498,7 +498,7 @@ striple_to_seq_ppar =
 striple_to_seq_ppar_typechecked =
   fmap check_type striple_to_seq_ppar
 striple_to_seq_ppar_typechecked' =
-  fmap check_type' striple_to_seq_ppar
+  fmap check_type_get_result striple_to_seq_ppar
 striple_to_seq_inputs :: [[Integer]] = [[1..8]]
 --striple_to_seq_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
 striple_to_seq_output :: [[Integer]] = [[i, i, i] | i <- [1 .. 8]]
@@ -523,7 +523,7 @@ stencil_1d_test_ppar =
 stencil_1d_test_ppar_typechecked =
   fmap check_type stencil_1d_test_ppar
 stencil_1d_test_ppar_typechecked' =
-  fmap check_type' stencil_1d_test_ppar
+  fmap check_type_get_result stencil_1d_test_ppar
 stencil_1d_inputs :: [[Integer]] = [[1..100]]
 --stencil_1d_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
 stencil_1d_output :: [[Integer]] = [
@@ -563,7 +563,7 @@ conv_1d_ppar =
 conv_1d_ppar_typechecked =
   fmap check_type conv_1d_ppar
 conv_1d_ppar_typechecked' =
-  fmap check_type' conv_1d_ppar
+  fmap check_type_get_result conv_1d_ppar
 conv_1d_inputs :: [[Integer]] = [[1,2,3,4,5]]
 conv_1d_output :: [Integer] = [int_to_ignore,int_to_ignore,2,3,4]
 conv_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
@@ -586,7 +586,7 @@ pyramid_1d_ppar =
 pyramid_1d_ppar_typechecked =
   fmap check_type pyramid_1d_ppar
 pyramid_1d_ppar_typechecked' =
-  fmap check_type' pyramid_1d_ppar
+  fmap check_type_get_result pyramid_1d_ppar
 pyramid_1d_inputs :: [[Integer]] = [[1..9]]
 pyramid_1d_output :: [Integer] = [5]
 pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
@@ -610,7 +610,7 @@ stencil_2d_test_ppar =
 stencil_2d_test_ppar_typechecked =
   fmap check_type stencil_2d_test_ppar
 stencil_2d_test_ppar_typechecked' =
-  fmap check_type' stencil_2d_test_ppar
+  fmap check_type_get_result stencil_2d_test_ppar
 
 map_reduce_nested = seq_shallow_to_deep $
   mapC (mapC absC) >>>
