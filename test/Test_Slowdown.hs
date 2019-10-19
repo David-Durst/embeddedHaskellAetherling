@@ -63,8 +63,6 @@ slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
     (all_success =<< seq_to_stuple_results) @? "seq to stuple slowdowns failed",
     testCase "slowing seq and stuple" $
     (all_success =<< seq_and_stuple_results) @? "seq and stuple slowdowns failed",
-    testCase "slowing striple" $
-    (all_success =<< striple_results) @? "striple slowdowns failed",
     testCase "slowing striple to seq" $
     (all_success =<< striple_to_seq_results) @? "striple to seq slowdowns failed"
 -}
@@ -464,34 +462,12 @@ seq_and_stuple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       seq_and_stuple s Nothing
                                       seq_and_stuple_inputs seq_and_stuple_output) [1,2,4,8,16]
 
- {- 
-striple_no_input in_seq = do
-  let pair = map2C seq_tupleC in_seq in_seq
-  let triple = map2C seq_tuple_appendC pair in_seq
-  seq_tuple_to_seqC Proxy (Proxy @0) triple
-striple = striple_no_input $
-          com_input_seq "hi" (Proxy :: Proxy (Seq 8 16 Atom_Int))
-striple_seq_idx = add_indexes $ seq_shallow_to_deep striple
-striple_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s striple_seq_idx) [1,2,4,8,24]
-striple_ppar_typechecked =
-  fmap check_type striple_ppar
-striple_ppar_typechecked' =
-  fmap check_type_get_error striple_ppar
-striple_inputs :: [[Integer]] = [[1..8]]
---striple_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
-striple_output :: [[Integer]] = [[i, i, i] | i <- [1 .. 8]]
--- need to come back and check why slowest version uses a reduce_s
-striple_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      striple s Nothing
-                                      striple_inputs striple_output) [1,2,4,8,24]
-
 striple_to_seq_shallow in_seq = do
-  let pair = map2C seq_tupleC in_seq in_seq
-  let triple = map2C seq_tuple_appendC pair in_seq
-  seq_tuple_to_seqC Proxy (Proxy @0) triple
+  let pair = map2C (map2C seq_tupleC) in_seq in_seq
+  let triple = map2C (map2C seq_tuple_appendC) pair in_seq
+  mapC seq_tuple_to_seqC triple
 striple_to_seq = striple_to_seq_shallow $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 8 16 Atom_Int))
+  com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 (Seq 1 2 Atom_Int)))
 striple_to_seq_seq_idx = add_indexes $ seq_shallow_to_deep striple_to_seq
 striple_to_seq_ppar =
   fmap (\s -> rewrite_to_partially_parallel s striple_to_seq_seq_idx) [1,2,4,8,24]
@@ -507,6 +483,7 @@ striple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       striple_to_seq s Nothing
                                       striple_to_seq_inputs striple_to_seq_output) [1,2,4,8,24]
 
+ {- 
 
 stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
