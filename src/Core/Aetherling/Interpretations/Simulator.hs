@@ -133,23 +133,24 @@ instance Sequence_Language Simulation_Env where
     
   zipC :: forall no io ii a l . (Aetherling_Value a, KnownNat l,
                                  KnownNat no, KnownNat io, KnownNat ii) =>
-    Proxy l -> Simulation_Env (Seq no io (Seq 1 ii [a])) ->
+    Proxy l -> [Simulation_Env (Seq no io (Seq 1 ii a))] ->
     Simulation_Env (Seq no io (Seq 1 ii (Seq_Tuple l a)))
-  zipC proxyL xs = do
-    let list_xss = fmap seq_to_list $ seq_to_list $ simulate xs
-    if all (\x -> length x == l_val) (concat list_xss)
-      then do
-      let tuple_xss = fmap (fmap $ Seq_Tuple . listToVector proxyL) list_xss
-      return $ list_to_seq Proxy $ (fmap $ list_to_seq Proxy) tuple_xss
-      else fail $
-           printf "zipC where length proxy %d doesn't match length of input"
-           (natVal proxyL)
+  zipC proxyL xs | length xs == (fromInteger $ natVal proxyL) = do
+    let list_xss = fmap (fmap seq_to_list . seq_to_list) $ fmap simulate xs
+    let zipped_lists = fmap transpose $ transpose list_xss
+    let zipped_tuple = fmap (fmap $ Seq_Tuple . listToVector proxyL) list_xss
+    return $ list_to_seq Proxy $ (fmap $ list_to_seq Proxy) zipped_tuple
     --let tuple_xss = fmap (fmap (list_to_seq (Proxy :: Proxy l))) list_xss
     --let zipped_lists = transpose xs_lists
     --return $ Seq $ listToVector proxyN $ fmap (Seq_Tuple . listToVector proxyL) zipped_lists
+    --let xs_vals = fmap simulate xs
+    --undefined
     where
       proxyN = Proxy :: Proxy n
-      l_val = fromInteger $ natVal proxyL
+  zipC proxyL xs = fail $
+    printf "zipC where length proxy %d doesn't match length of input %d"
+    (natVal proxyL) (length xs)
+
 
   seq_tuple_appendC (Simulation_Env (Seq_Tuple input_vec)) (Simulation_Env x) =
     return $ Seq_Tuple $ V.snoc input_vec x

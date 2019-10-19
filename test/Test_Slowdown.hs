@@ -496,7 +496,6 @@ stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
 stencil_1dC_test _ _ = undefined
 stencil_1d_test = stencil_1dC_test (Proxy @3) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 100 0 (Seq 1 2 Atom_Int)))
-{-
 stencil_1d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_test
 stencil_1d_test_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s stencil_1d_test_seq_idx) [1,2,5,10,30,100,300]
@@ -520,7 +519,6 @@ stencil_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
 stencil_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stencil_1d_test s Nothing
                                       stencil_1d_inputs stencil_1d_output) [2]
--}
  {- 
 tuple_mul_shallow_no_input in_seq = do
   let kernel_list = fmap Atom_Int [1,1,1]

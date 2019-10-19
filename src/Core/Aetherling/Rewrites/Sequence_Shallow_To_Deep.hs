@@ -309,32 +309,45 @@ instance Sequence_Language Rewrite_StateM where
            STupleN a_type (fromJust input1_expr_maybe) (fromJust input2_expr_maybe)
            No_Index
       else throwError $ Expr_Failure $ fail_message_edge "seq_tupleC" "any"
-{-
-  zipC :: forall a l n i . (Aetherling_Value a, KnownNat l, KnownNat n, KnownNat i) =>
-    Proxy l -> [Rewrite_StateM (Seq n i a)] -> Rewrite_StateM (Seq n i (Seq_Tuple l a))
+
+  zipC :: forall no io ii a l . (Aetherling_Value a, KnownNat l,
+                                 KnownNat no, KnownNat io, KnownNat ii) =>
+    Proxy l -> [Rewrite_StateM (Seq no io (Seq 1 ii a))] ->
+    Rewrite_StateM (Seq no io (Seq 1 ii (Seq_Tuple l a)))
   zipC len_proxy inputsM | natVal len_proxy > 2 = do
     let inputs = fmap seq_shallow_to_deep inputsM
     let a_type = get_AST_type (Proxy :: Proxy a)
-    let n_val = fromInteger $ natVal (Proxy :: Proxy n)
-    let i_val = fromInteger $ natVal (Proxy :: Proxy i)
+    let no_val = fromInteger $ natVal (Proxy :: Proxy no)
+    let io_val = fromInteger $ natVal (Proxy :: Proxy io)
+    let ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
     -- this will be used after initial step in the fold
     let map_stuple_append out_len in_left in_right = do
           return $
-            Map2N n_val i_val
-            (STupleAppendN out_len
-              a_type
-              (InputN (STupleT (out_len - 1) a_type) "I0" No_Index)
-              (InputN a_type "I1" No_Index)
-              No_Index)
+            Map2N no_val io_val
+            (Map2N 1 ii_val
+             (STupleAppendN out_len
+               a_type
+               (InputN (STupleT (out_len - 1) a_type) "I0" No_Index)
+               (InputN a_type "I1" No_Index)
+               No_Index)
+             (InputN (SeqT 1 ii_val (STupleT (out_len - 1) a_type)) "I0" No_Index)
+             (InputN (SeqT 1 ii_val a_type) "I1" No_Index)
+             No_Index
+              )
             in_left in_right No_Index
     -- the initial step in the fold
     let map_stuple_initial = do
           return $
-            Map2N n_val i_val
-            (STupleN a_type 
-              (InputN a_type "I0" No_Index)
-              (InputN a_type "I1" No_Index)
-              No_Index)
+            Map2N no_val io_val
+            (Map2N 1 ii_val
+             (STupleN a_type 
+               (InputN a_type "I0" No_Index)
+               (InputN a_type "I1" No_Index)
+               No_Index)
+             (InputN (SeqT 1 ii_val a_type) "I0" No_Index)
+             (InputN (SeqT 1 ii_val a_type) "I1" No_Index)
+             No_Index
+            )
             (inputs !! 0) (inputs !! 1) No_Index
     tupled_expr <- foldl (\prior_tuplesM cur_len -> do
                              prior_tuples <- prior_tuplesM
@@ -346,7 +359,7 @@ instance Sequence_Language Rewrite_StateM where
                    map_stuple_initial [3 .. length inputs]
     return $ Seq_Edge tupled_expr
   zipC _ _ = throwError $ Expr_Failure "zipC must have at least 3 inputs, otherwise use seq_tupleC"
--}
+
   
   seq_tuple_appendC :: forall n a . (KnownNat n, Aetherling_Value (Seq_Tuple n a),
                                      Aetherling_Value a,
