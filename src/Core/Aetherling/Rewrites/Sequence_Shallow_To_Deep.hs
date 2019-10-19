@@ -309,7 +309,7 @@ instance Sequence_Language Rewrite_StateM where
            STupleN a_type (fromJust input1_expr_maybe) (fromJust input2_expr_maybe)
            No_Index
       else throwError $ Expr_Failure $ fail_message_edge "seq_tupleC" "any"
-
+{-
   zipC :: forall a l n i . (Aetherling_Value a, KnownNat l, KnownNat n, KnownNat i) =>
     Proxy l -> [Rewrite_StateM (Seq n i a)] -> Rewrite_StateM (Seq n i (Seq_Tuple l a))
   zipC len_proxy inputsM | natVal len_proxy > 2 = do
@@ -346,7 +346,7 @@ instance Sequence_Language Rewrite_StateM where
                    map_stuple_initial [3 .. length inputs]
     return $ Seq_Edge tupled_expr
   zipC _ _ = throwError $ Expr_Failure "zipC must have at least 3 inputs, otherwise use seq_tupleC"
-
+-}
   
   seq_tuple_appendC :: forall n a . (KnownNat n, Aetherling_Value (Seq_Tuple n a),
                                      Aetherling_Value a,

@@ -17,6 +17,7 @@ import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import Aetherling.Interpretations.Magma.Compile
 import Aetherling.Interpretations.Magma.Tester
 import Data.Proxy
+import Data.Traversable
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.SBV
@@ -483,17 +484,19 @@ striple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       striple_to_seq s Nothing
                                       striple_to_seq_inputs striple_to_seq_output) [1,2,4,8,24]
 
- {- 
 
 stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC (Proxy @1) last_shifted_seq) : l)
                      [in_seq] [0 .. natVal window_size - 2]
+  let list_inside = fmap (fmap sequenceA) $ fmap sequenceA $ sequence shifted_seqs
   let tuple = zipC window_size shifted_seqs
-  seq_tuple_to_seqC Proxy (Proxy @0) tuple
+  --let tuple = mapC (mapC (zipC window_size)) z -- window_size $ fmap sequence $ sequence shifted_seqs
+  mapC seq_tuple_to_seqC tuple
 stencil_1dC_test _ _ = undefined
 stencil_1d_test = stencil_1dC_test (Proxy @3) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 100 200 Atom_Int))
+  com_input_seq "hi" (Proxy :: Proxy (Seq 100 0 (Seq 1 2 Atom_Int)))
+{-
 stencil_1d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_test
 stencil_1d_test_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s stencil_1d_test_seq_idx) [1,2,5,10,30,100,300]
@@ -517,7 +520,8 @@ stencil_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
 stencil_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stencil_1d_test s Nothing
                                       stencil_1d_inputs stencil_1d_output) [2]
-
+-}
+ {- 
 tuple_mul_shallow_no_input in_seq = do
   let kernel_list = fmap Atom_Int [1,1,1]
   let kernel = const_genC (Seq $ listToVector (Proxy @3) kernel_list) in_seq
