@@ -489,9 +489,7 @@ stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC (Proxy @1) last_shifted_seq) : l)
                      [in_seq] [0 .. natVal window_size - 2]
-  let list_inside = fmap (fmap sequenceA) $ fmap sequenceA $ sequence shifted_seqs
   let tuple = zipC window_size shifted_seqs
-  --let tuple = mapC (mapC (zipC window_size)) z -- window_size $ fmap sequence $ sequence shifted_seqs
   mapC seq_tuple_to_seqC tuple
 stencil_1dC_test _ _ = undefined
 stencil_1d_test = stencil_1dC_test (Proxy @3) $
@@ -571,18 +569,18 @@ pyramid_1d_output :: [Integer] = [5]
 pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_1d s Nothing
                                       pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
-{-
+
 stencil_2dC_test window_size_row window_size_col in_col in_img = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC in_col last_shifted_seq) : l)
                      [in_img] [0 .. natVal window_size_row - 2]
   let stenciled_seqs = fmap (stencil_1dC_test window_size_col) shifted_seqs
   let tupled_seqs = zipC window_size_row stenciled_seqs
-  let unflattened_windows = seq_tuple_to_seqC Proxy (Proxy @0) tupled_seqs
-  mapC unpartitionC unflattened_windows
+  mapC seq_tuple_to_seqC tupled_seqs
 stencil_2d_test = seq_shallow_to_deep $
+  -- why the proxy 1 and not 3?
   stencil_2dC_test (Proxy @3) (Proxy @3) (Proxy @10) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 100 800 Atom_Int))
+  com_input_seq "hi" (Proxy :: Proxy (Seq 100 0 (Seq 1 8 Atom_Int)))
 stencil_2d_test_seq_idx = add_indexes stencil_2d_test
 stencil_2d_test_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s stencil_2d_test_seq_idx) [1,2,5,10,30]
@@ -590,7 +588,9 @@ stencil_2d_test_ppar_typechecked =
   fmap check_type stencil_2d_test_ppar
 stencil_2d_test_ppar_typechecked' =
   fmap check_type_get_error stencil_2d_test_ppar
-
+{-
+  let tuple = zipC window_size shifted_seqs
+  mapC seq_tuple_to_seqC tuple
 map_reduce_nested = seq_shallow_to_deep $
   mapC (mapC absC) >>>
   mapC (reduceC addC) $
