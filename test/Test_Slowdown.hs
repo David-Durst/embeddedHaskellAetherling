@@ -25,7 +25,6 @@ import Control.Monad.State
 
 slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
   [
-    {-
     testCase "slowing a single map" $
     (all_success =<< single_map_results) @? "single map slowdowns failed",
     testCase "slowing two maps" $
@@ -66,7 +65,6 @@ slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
     (all_success =<< seq_and_stuple_results) @? "seq and stuple slowdowns failed",
     testCase "slowing striple to seq" $
     (all_success =<< striple_to_seq_results) @? "striple to seq slowdowns failed"
--}
   ]
 
 all_success :: [Fault_Result] -> IO Bool
@@ -621,10 +619,50 @@ stencil_2d_output :: [[[Integer]]] = [
 -- need to come back and check why slowest version uses a reduce_s
 stencil_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stencil_2d_test s Nothing
-                                      stencil_2d_inputs stencil_2d_output) [32,64,192,576]
+                                      stencil_2d_inputs stencil_2d_output) [1,2,4,8,16,48,144]
 stencil_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stencil_2d_test s Nothing
                                       stencil_2d_inputs stencil_2d_output) [16]
+-- need thse for Integer and Int versions
+hask_kernel :: [Int] = [1,2,1,2,4,2,1,2,1]
+hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
+tuple_2d_mul_shallow_no_input in_seq = do
+  let kernel_list = list_to_seq (Proxy @9) $ fmap Atom_Int hask_kernel
+  let kernel = const_genC kernel_list in_seq
+  let in_flattened = unpartitionC in_seq
+  let kernel_and_values = map2C atom_tupleC kernel in_flattened
+  let mul_result = mapC mulC kernel_and_values
+  let sum = reduceC addC mul_result
+  let norm_list = list_to_seq (Proxy @1) $ fmap Atom_Int [16]
+  let norm = const_genC norm_list in_seq
+  let sum_and_norm = map2C atom_tupleC sum norm
+  mapC divC sum_and_norm
+conv_2d_shallow_no_input in_col in_seq = do
+  let stencil = stencil_2dC_test (Proxy @3) in_col in_seq
+  mapC tuple_2d_mul_shallow_no_input stencil
+conv_2d = conv_2d_shallow_no_input (Proxy @4) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d
+conv_2d_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s conv_2d_seq_idx) [1,3,5,15]
+conv_2d_ppar_typechecked =
+  fmap check_type conv_2d_ppar
+conv_2d_ppar_typechecked' =
+  fmap check_type_get_error conv_2d_ppar
+conv_2d_inputs :: [[Integer]] = stencil_2d_inputs
+conv_2d_output :: [Integer] = [
+  if window_valid
+  then (sum $ zipWith (*) window_flat hask_kernel') `mod` 255 `div` 16
+  else int_to_ignore
+  | window <- stencil_2d_output,
+    let window_flat = concat window,
+    let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
+conv_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      conv_2d s Nothing
+                                      conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
+conv_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      conv_2d s Nothing
+                                      conv_2d_inputs conv_2d_output) [16]
 {-
   let tuple = zipC window_size shifted_seqs
   mapC seq_tuple_to_seqC tuple
