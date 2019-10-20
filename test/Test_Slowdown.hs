@@ -571,16 +571,25 @@ pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
 
 stencil_2dC_test window_size_row window_size_col in_col in_img = do
-  let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
+  {-let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC in_col last_shifted_seq) : l)
                      [in_img] [0 .. natVal window_size_row - 2]
-  let stenciled_seqs = fmap (stencil_1dC_test window_size_col) shifted_seqs
-  let tupled_seqs = zipC window_size_row stenciled_seqs
-  mapC seq_tuple_to_seqC tupled_seqs
+-}
+  let first_row = in_img
+  let second_row = shiftC in_col in_img
+  let third_row = shiftC in_col second_row
+  let first_row_shifted = stencil_1dC_test window_size_col first_row
+  let second_row_shifted = stencil_1dC_test window_size_col second_row
+  let third_row_shifted = stencil_1dC_test window_size_col third_row
+  let tuple = map2C (map2C $ map2C seq_tupleC) first_row_shifted second_row_shifted
+  let triple = map2C (map2C $ map2C seq_tuple_appendC) tuple third_row_shifted
+  --let stenciled_seqs = fmap (stencil_1dC_test window_size_col) shifted_seqs
+  --let tupled_seqs = zipC window_size_row stenciled_seqs
+  mapC (mapC seq_tuple_to_seqC) triple
 stencil_2d_test = seq_shallow_to_deep $
   -- why the proxy 1 and not 3?
-  stencil_2dC_test (Proxy @3) (Proxy @3) (Proxy @10) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 100 0 (Seq 1 8 Atom_Int)))
+  stencil_2dC_test (Proxy @3) (Proxy @3) (Proxy @8) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 stencil_2d_test_seq_idx = add_indexes stencil_2d_test
 stencil_2d_test_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s stencil_2d_test_seq_idx) [1,2,5,10,30]
