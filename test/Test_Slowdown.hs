@@ -518,8 +518,8 @@ stencil_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                     -- 30 really bad case
 stencil_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stencil_1d_test s Nothing
-                                      stencil_1d_inputs stencil_1d_output) [2]
- {- 
+                                      stencil_1d_inputs stencil_1d_output) [1]
+ 
 tuple_mul_shallow_no_input in_seq = do
   let kernel_list = fmap Atom_Int [1,1,1]
   let kernel = const_genC (Seq $ listToVector (Proxy @3) kernel_list) in_seq
@@ -532,10 +532,9 @@ tuple_mul_shallow_no_input in_seq = do
   mapC divC sum_and_norm
 conv_1d_shallow_no_input in_seq = do
   let stencil = stencil_1dC_test (Proxy @3) in_seq
-  let conv_nested = mapC tuple_mul_shallow_no_input stencil
-  unpartitionC conv_nested
+  mapC tuple_mul_shallow_no_input stencil
 conv_1d = conv_1d_shallow_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 5 10 Atom_Int))
+  com_input_seq "hi" (Proxy :: Proxy (Seq 5 0 (Seq 1 2 Atom_Int)))
 conv_1d_seq_idx = add_indexes $ seq_shallow_to_deep conv_1d
 conv_1d_ppar =
   fmap (\s -> rewrite_to_partially_parallel s conv_1d_seq_idx) [1,3,5,15]
@@ -551,6 +550,7 @@ conv_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
 conv_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_1d s Nothing
                                       conv_1d_inputs conv_1d_output) [3]
+
 pyramid_1d_shallow_no_input in_seq = do
   let layer1_blurred = conv_1d_shallow_no_input in_seq
   let layer2_input = unpartitionC $ mapC (down_1dC 2) $
@@ -558,7 +558,7 @@ pyramid_1d_shallow_no_input in_seq = do
   let layer2_blurred = conv_1d_shallow_no_input layer2_input
   down_1dC 2 layer2_blurred
 pyramid_1d = pyramid_1d_shallow_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 9 18 Atom_Int))
+  com_input_seq "hi" (Proxy :: Proxy (Seq 9 0 (Seq 1 2 Atom_Int)))
 pyramid_1d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_1d
 pyramid_1d_ppar =
   fmap (\s -> rewrite_to_partially_parallel s pyramid_1d_seq_idx) [1,3,9,27]
@@ -571,7 +571,7 @@ pyramid_1d_output :: [Integer] = [5]
 pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_1d s Nothing
                                       pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
-
+{-
 stencil_2dC_test window_size_row window_size_col in_col in_img = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC in_col last_shifted_seq) : l)
