@@ -612,8 +612,8 @@ stencil_2d_output :: [[[Integer]]] = [
     then 
       [
         if c > 2 then (r-k-1) * row_size + (c-2) else int_to_ignore,
-        if c > 1 then (r-k-1) * row_size + (c-1) else int_to_ignore,
-        (r-k-1) * row_size + c
+        if (c > 1) && (c <= row_size + 1) then (r-k-1) * row_size + (c-1) else int_to_ignore,
+        if c <= row_size then (r-k-1) * row_size + c else int_to_ignore
       ]
     else [int_to_ignore, int_to_ignore, int_to_ignore]
   | k <- reverse $ [0..2]
