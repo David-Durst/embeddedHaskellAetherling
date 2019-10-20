@@ -100,30 +100,14 @@ match_latencies' e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
 -- these helpers shouldn't exist now that i've written reshape
 match_latencies' e@(SerializeN _ _ _ _ _) = undefined
 match_latencies' e@(DeserializeN _ _ _ _ _) = undefined
-match_latencies' e@(Add_1_sN _ _ _) = undefined
-match_latencies' e@(Add_1_0_tN _ _ _) = undefined
-match_latencies' e@(Remove_1_sN _ _ _) = undefined
-match_latencies' e@(Remove_1_0_tN _ _ _) = undefined
+match_latencies' e@(Add_1_sN f producer _) = match_map e f producer
+match_latencies' e@(Add_1_0_tN f producer _) = match_map e f producer
+match_latencies' e@(Remove_1_sN f producer _) = match_map e f producer
+match_latencies' e@(Remove_1_0_tN f producer _) = match_map e f producer
 
 -- higher order operators
-match_latencies' e@(Map_sN _ f producer _) = do
-  Matched_Latency_Result new_producer latency_producer <-
-    memo producer $ match_latencies' producer
-  update_latency_state latency_producer
-  Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
-  cur_idx <- get_cur_index
-  return $ Matched_Latency_Result
-    (e {f = new_f, seq_in = new_producer, index = cur_idx} )
-    latency_f
-match_latencies' e@(Map_tN _ _ f producer _) = do
-  Matched_Latency_Result new_producer latency_producer <-
-    memo producer $ match_latencies' producer
-  update_latency_state latency_producer
-  Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
-  cur_idx <- get_cur_index
-  return $ Matched_Latency_Result
-    (e {f = new_f, seq_in = new_producer, index = cur_idx} )
-    latency_f
+match_latencies' e@(Map_sN _ f producer _) = match_map e f producer
+match_latencies' e@(Map_tN _ _ f producer _) = match_map e f producer
 match_latencies' e@(Map2_sN _ f producer_left producer_right _) = do
   match_map2 e f producer_left producer_right
 match_latencies' e@(Map2_tN _ _ f producer_left producer_right _) = do
@@ -212,6 +196,16 @@ match_combinational_op op producer = do
   op_new_idx <- update_index op
   let new_op = op_new_idx { seq_in = new_producer }
   return (Matched_Latency_Result new_op producer_latency)
+
+match_map e f producer = do
+  Matched_Latency_Result new_producer latency_producer <-
+    memo producer $ match_latencies' producer
+  update_latency_state latency_producer
+  Matched_Latency_Result new_f latency_f <- memo f $ match_latencies' f
+  cur_idx <- get_cur_index
+  return $ Matched_Latency_Result
+    (e {f = new_f, seq_in = new_producer, index = cur_idx} )
+    latency_f
 
 match_map2 e f producer_left producer_right = do
   Matched_Latency_Result e_updated latency_producers <- match_binary_op e producer_left producer_right

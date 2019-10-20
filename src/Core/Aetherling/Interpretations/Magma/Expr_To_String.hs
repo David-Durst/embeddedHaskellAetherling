@@ -189,8 +189,8 @@ print_module new_module = do
             (type_to_python $ port_type $ cur_module_output end_data) ++ "\n" ++
             tab_str ++ tab_str ++ "binary_op = False\n"
           else if length cur_inputs == 1 then
-            tab_str ++ tab_str ++ "st_in_t = " ++
-            (type_to_python $ port_type $ head cur_inputs) ++ "\n" ++
+            tab_str ++ tab_str ++ "st_in_t = [" ++
+            (type_to_python $ port_type $ head cur_inputs) ++ "]\n" ++
             tab_str ++ tab_str ++ "st_out_t = " ++
             (type_to_python $ port_type $ cur_module_output end_data) ++ "\n" ++
             tab_str ++ tab_str ++ "binary_op = False\n"
@@ -446,14 +446,52 @@ module_to_string_inner consumer_e@(SerializeN n i elem_t producer_e cur_idx) = d
   throwError $ RH.Print_Failure "Serialize not printable"
 module_to_string_inner consumer_e@(DeserializeN n i elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Deserialize not printable"
-module_to_string_inner consumer_e@(Add_1_sN elem_t producer_e cur_idx) = do
-  throwError $ RH.Print_Failure "Add_1_s not printable"
-module_to_string_inner consumer_e@(Add_1_0_tN elem_t producer_e cur_idx) = do
-  throwError $ RH.Print_Failure "Add_1_0_t not printable"
-module_to_string_inner consumer_e@(Remove_1_sN elem_t producer_e cur_idx) = do
-  throwError $ RH.Print_Failure "Remove_1_s not printable"
-module_to_string_inner consumer_e@(Remove_1_0_tN elem_t producer_e cur_idx) = do
-  throwError $ RH.Print_Failure "Remove_1_0_t not printable"
+module_to_string_inner consumer_e@(Add_1_sN f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let gen_str = "DefineAdd_1_S(" ++ f_name ++ "," ++ valid_str ++ ")"
+  let add_out_port = f_out_port {port_type = SSeqT 1 (port_type f_out_port)}
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str f_in_ports add_out_port
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Add_1_0_tN f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let gen_str = "DefineAdd_1_S(" ++ f_name ++ "," ++ valid_str ++ ")"
+  let add_out_port = f_out_port {port_type = TSeqT 1 0 (port_type f_out_port)}
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str f_in_ports add_out_port
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Remove_1_sN f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let gen_str = "DefineRemove_1_S(" ++ f_name ++ "," ++ valid_str ++ ")"
+  let remove_in_ports =
+        map (\port -> port {port_type = SSeqT 1 (port_type port)}) f_in_ports
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str remove_in_ports f_out_port
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Remove_1_0_tN f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  Magma_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let gen_str = "DefineRemove_1_S(" ++ f_name ++ "," ++ valid_str ++ ")"
+  let remove_in_ports =
+        map (\port -> port {port_type = TSeqT 1 0 (port_type port)}) f_in_ports
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str remove_in_ports f_out_port
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 
 -- higher order operators
 module_to_string_inner consumer_e@(Map_sN n f producer_e cur_idx) = do

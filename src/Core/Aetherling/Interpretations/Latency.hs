@@ -113,22 +113,14 @@ compute_latency e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
 -- these helpers shouldn't exist now that i've written reshape
 compute_latency e@(SerializeN _ _ _ _ _) = undefined
 compute_latency e@(DeserializeN _ _ _ _ _) = undefined
-compute_latency e@(Add_1_sN _ _ _) = undefined
-compute_latency e@(Add_1_0_tN _ _ _) = undefined
-compute_latency e@(Remove_1_sN _ _ _) = undefined
-compute_latency e@(Remove_1_0_tN _ _ _) = undefined
+compute_latency e@(Add_1_sN f producer _) = compute_latency_map e f producer
+compute_latency e@(Add_1_0_tN f producer _) = compute_latency_map e f producer
+compute_latency e@(Remove_1_sN f producer _) = compute_latency_map e f producer
+compute_latency e@(Remove_1_0_tN f producer _) = compute_latency_map e f producer
 
 -- higher order operators
-compute_latency e@(Map_sN _ f producer _) = do
-  producer_latency <- memo producer $ compute_latency producer
-  update_latency_state producer_latency
-  inner_latency <- compute_latency f
-  return $ inner_latency
-compute_latency e@(Map_tN _ _ f producer _) = do
-  producer_latency <- memo producer $ compute_latency producer
-  update_latency_state producer_latency
-  inner_latency <- compute_latency f
-  return $ inner_latency
+compute_latency e@(Map_sN _ f producer _) = compute_latency_map e f producer
+compute_latency e@(Map_tN _ _ f producer _) = compute_latency_map e f producer 
 compute_latency e@(Map2_sN _ f producer_left producer_right _) = do
   producer_left_latency <- memo producer_left $ compute_latency producer_left
   producer_right_latency <- memo producer_right $ compute_latency producer_right
@@ -233,6 +225,11 @@ compute_latency e@(ReshapeN _ _ producer _) = do
   cur_latency <- lift_memo_rewrite_state $ lift $ compute_latency' e
   return $ producer_latency + cur_latency
 
+compute_latency_map e f producer = do
+  producer_latency <- memo producer $ compute_latency producer
+  update_latency_state producer_latency
+  inner_latency <- compute_latency f
+  return $ inner_latency
 
 compute_latency' :: Expr -> IO Int
 compute_latency' (Down_1d_tN _ _ sel_idx t _ _) =
