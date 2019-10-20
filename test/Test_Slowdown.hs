@@ -574,8 +574,8 @@ stencil_1dC_nested in_seq = do
   let first_el = in_seq
   let second_el = shiftC (Proxy @1) first_el
   let third_el = shiftC (Proxy @1) second_el
-  let tuple = map2C (map2C $ map2C seq_tupleC) first_el second_el 
-  let triple = map2C (map2C $ map2C seq_tuple_appendC) tuple third_el 
+  let tuple = map2C (map2C $ map2C seq_tupleC) third_el second_el 
+  let triple = map2C (map2C $ map2C seq_tuple_appendC) tuple first_el 
   mapC (mapC seq_tuple_to_seqC) triple
   
 stencil_2dC_test window_size_col in_col in_img = do
@@ -586,14 +586,14 @@ stencil_2dC_test window_size_col in_col in_img = do
   let first_row = in_img
   let second_row = shiftC in_col in_img
   let third_row = shiftC in_col second_row
-  let first_row_shifted = stencil_1dC_test window_size_col first_row
-  let second_row_shifted = stencil_1dC_test window_size_col second_row
-  let third_row_shifted = stencil_1dC_test window_size_col third_row
-  let tuple = map2C (map2C $ map2C seq_tupleC) first_row_shifted second_row_shifted
-  let triple = map2C (map2C $ map2C seq_tuple_appendC) tuple third_row_shifted
+  let first_row_shifted = stencil_1dC_nested first_row
+  let second_row_shifted = stencil_1dC_nested second_row
+  let third_row_shifted = stencil_1dC_nested third_row
+  let tuple = map2C (map2C seq_tupleC) third_row_shifted second_row_shifted
+  let triple = map2C (map2C seq_tuple_appendC) tuple first_row_shifted
   --let stenciled_seqs = fmap (stencil_1dC_test window_size_col) shifted_seqs
   --let tupled_seqs = zipC window_size_row stenciled_seqs
-  mapC (mapC seq_tuple_to_seqC) triple
+  mapC seq_tuple_to_seqC triple
 stencil_2d_test = stencil_2dC_test (Proxy @3) (Proxy @4) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 stencil_2d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_2d_test
@@ -617,7 +617,7 @@ stencil_2d_output :: [[[Integer]]] = [
       ]
     else [int_to_ignore, int_to_ignore, int_to_ignore]
   | k <- reverse $ [0..2]
-  ] | r <- [1..row_size], c <- [1..8]]
+  ] | r <- [1..row_size], c <- [1..row_size]]
 -- need to come back and check why slowest version uses a reduce_s
 stencil_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stencil_2d_test s Nothing
