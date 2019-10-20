@@ -570,7 +570,15 @@ pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_1d s Nothing
                                       pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
 
-stencil_2dC_test window_size_row window_size_col in_col in_img = do
+stencil_1dC_nested in_seq = do
+  let first_el = in_seq
+  let second_el = shiftC (Proxy @1) first_el
+  let third_el = shiftC (Proxy @1) second_el
+  let tuple = map2C (map2C $ map2C seq_tupleC) first_el second_el 
+  let triple = map2C (map2C $ map2C seq_tuple_appendC) tuple third_el 
+  mapC (mapC seq_tuple_to_seqC) triple
+  
+stencil_2dC_test window_size_col in_col in_img = do
   {-let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC in_col last_shifted_seq) : l)
                      [in_img] [0 .. natVal window_size_row - 2]
@@ -586,17 +594,37 @@ stencil_2dC_test window_size_row window_size_col in_col in_img = do
   --let stenciled_seqs = fmap (stencil_1dC_test window_size_col) shifted_seqs
   --let tupled_seqs = zipC window_size_row stenciled_seqs
   mapC (mapC seq_tuple_to_seqC) triple
-stencil_2d_test = seq_shallow_to_deep $
-  -- why the proxy 1 and not 3?
-  stencil_2dC_test (Proxy @3) (Proxy @3) (Proxy @8) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
-stencil_2d_test_seq_idx = add_indexes stencil_2d_test
+stencil_2d_test = stencil_2dC_test (Proxy @3) (Proxy @4) $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+stencil_2d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_2d_test
 stencil_2d_test_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s stencil_2d_test_seq_idx) [1,2,5,10,30]
 stencil_2d_test_ppar_typechecked =
   fmap check_type stencil_2d_test_ppar
 stencil_2d_test_ppar_typechecked' =
   fmap check_type_get_error stencil_2d_test_ppar
+row_size = 4
+stencil_2d_inputs :: [[Integer]] = [[1..row_size*row_size]]
+offset_if_valid offset i = if i > offset then i - offset else int_to_ignore
+stencil_2d_output :: [[[Integer]]] = [
+  [
+    if r - k > 0
+    then 
+      [
+        if c > 2 then (r-k-1) * row_size + (c-2) else int_to_ignore,
+        if c > 1 then (r-k-1) * row_size + (c-1) else int_to_ignore,
+        (r-k-1) * row_size + c
+      ]
+    else [int_to_ignore, int_to_ignore, int_to_ignore]
+  | k <- reverse $ [0..2]
+  ] | r <- [1..row_size], c <- [1..8]]
+-- need to come back and check why slowest version uses a reduce_s
+stencil_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      stencil_2d_test s Nothing
+                                      stencil_2d_inputs stencil_2d_output) [32,64,192,576]
+stencil_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      stencil_2d_test s Nothing
+                                      stencil_2d_inputs stencil_2d_output) [16]
 {-
   let tuple = zipC window_size shifted_seqs
   mapC seq_tuple_to_seqC tuple
