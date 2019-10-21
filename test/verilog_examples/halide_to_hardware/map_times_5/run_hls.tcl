@@ -5,7 +5,9 @@ add_files -cflags -std=c++11 hls_target.cpp
 #add_files -tb test.cpp
 
 open_solution -reset "hls_target"
-set_part {xc7k160tfbg484-2}
+set_part {xc7z020clg484-1}
+#set_part {xc7k160}
+#set_part {xc7k160tfbg484-2}
 
 list_core
 

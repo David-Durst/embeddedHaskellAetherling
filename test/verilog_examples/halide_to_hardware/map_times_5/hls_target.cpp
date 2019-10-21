@@ -8,9 +8,9 @@ hls::stream<AxiPackedStencil<uint8_t, 8, 1> > &hw_output)
 {
 #pragma HLS DATAFLOW
 #pragma HLS INLINE region
-#pragma HLS INTERFACE s_axilite port=return bundle=config
-#pragma HLS INTERFACE axis register port=hw_input
-#pragma HLS INTERFACE axis register port=hw_output
+//#pragma HLS INTERFACE s_axilite port=return bundle=config
+#pragma HLS INTERFACE ap_hs port=hw_input
+#pragma HLS INTERFACE ap_hs port=hw_output
 
  // alias the arguments
  hls::stream<AxiPackedStencil<uint8_t, 8, 1> > &_hw_input_stencil_stream = hw_input;
