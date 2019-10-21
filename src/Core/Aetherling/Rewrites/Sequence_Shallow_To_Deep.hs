@@ -252,6 +252,21 @@ instance Sequence_Language Rewrite_StateM where
       len_val = fromInteger $ natVal len_proxy
       i_val = fromInteger $ natVal (Proxy :: Proxy i)
 
+  reduceC'' :: forall no io ii a . (KnownNat no, KnownNat io, KnownNat ii,
+              Aetherling_Value a) =>
+    (Rewrite_StateM (Seq 1 ii (Atom_Tuple a a)) -> Rewrite_StateM (Seq 1 ii a)) ->
+    Rewrite_StateM (Seq (1+no) io (Seq 1 ii a)) -> Rewrite_StateM (Seq 1 (no + io) (Seq 1 ii a))
+  reduceC'' f inputM = do
+    input <- inputM
+    f_ast <- f (com_input_any "I")
+    let f_edge_maybe = edge_to_maybe_expr f_ast
+    case (input, f_edge_maybe) of
+      (Seq_Edge x, Just f_edge) -> return $ Seq_Edge $ ReduceN len_val io_val f_edge x No_Index
+      _ -> throwError $ Expr_Failure $ fail_message_edge "reduceC" "Seq"
+    where
+      len_val = fromInteger $ natVal (Proxy :: Proxy (1+no))
+      io_val = fromInteger $ natVal (Proxy :: Proxy io)
+
   fstC :: forall a b . (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
                         Aetherling_Value a,
                         Aetherling_Value b) =>

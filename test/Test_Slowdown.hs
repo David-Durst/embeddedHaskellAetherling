@@ -596,7 +596,7 @@ stencil_2d_test = stencil_2dC_test (Proxy @3) (Proxy @4) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 stencil_2d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_2d_test
 stencil_2d_test_ppar = 
-  fmap (\s -> rewrite_to_partially_parallel s stencil_2d_test_seq_idx) [1,2,5,10,30]
+  fmap (\s -> rewrite_to_partially_parallel s stencil_2d_test_seq_idx) [1,2,4,8,16,48,144]
 stencil_2d_test_ppar_typechecked =
   fmap check_type stencil_2d_test_ppar
 stencil_2d_test_ppar_typechecked' =
@@ -645,7 +645,7 @@ conv_2d = conv_2d_shallow_no_input (Proxy @4) $
   com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d
 conv_2d_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s conv_2d_seq_idx) [1,3,5,15]
+  fmap (\s -> rewrite_to_partially_parallel s conv_2d_seq_idx) [1,2,4,8,16,48,144]
 conv_2d_ppar_typechecked =
   fmap check_type conv_2d_ppar
 conv_2d_ppar_typechecked' =
@@ -682,6 +682,7 @@ pyramid_2d_shallow_no_input in_seq = do
         partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) layer2_drop_cols
 pyramid_2d = pyramid_2d_shallow_no_input $ 
   com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  
 {-
 pyramid_2d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_2d
 pyramid_2d_ppar =
