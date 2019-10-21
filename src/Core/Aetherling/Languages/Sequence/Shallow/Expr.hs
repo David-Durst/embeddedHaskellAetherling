@@ -101,6 +101,11 @@ class Monad m => Sequence_Language m where
   reduceC' :: (KnownNat n, KnownNat i,
               Aetherling_Value a) =>
     Proxy (1+n) -> (m (Atom_Tuple a a) -> m a) -> m (Seq (1+n) i a) -> m (Seq 1 (n + i) a)
+    
+  reduceC'' :: (KnownNat no, KnownNat io, KnownNat ii,
+              Aetherling_Value a) =>
+    (m (Seq 1 ii (Atom_Tuple a a)) -> m (Seq 1 ii a)) ->
+    m (Seq (1+no) io (Seq 1 ii a)) -> m (Seq 1 (no + io) (Seq 1 ii a))
 
   -- tuple operations
   fstC :: (Check_Type_Is_Atom a, Check_Type_Is_Atom b,

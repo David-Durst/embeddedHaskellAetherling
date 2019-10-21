@@ -624,19 +624,20 @@ stencil_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stencil_2d_test s Nothing
                                       stencil_2d_inputs stencil_2d_output) [16]
 -- need thse for Integer and Int versions
-hask_kernel :: [Int] = [1,2,1,2,4,2,1,2,1]
+hask_kernel :: [[Int]] = [[1,2,1],[2,4,2],[1,2,1]]
 hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
 tuple_2d_mul_shallow_no_input in_seq = do
-  let kernel_list = list_to_seq (Proxy @9) $ fmap Atom_Int hask_kernel
+  let kernel_list = list_to_seq (Proxy @3) $
+                    fmap (list_to_seq (Proxy @3)) $
+                    fmap (fmap Atom_Int) hask_kernel
   let kernel = const_genC kernel_list in_seq
-  let in_flattened = unpartitionC in_seq
-  let kernel_and_values = map2C atom_tupleC kernel in_flattened
-  let mul_result = mapC mulC kernel_and_values
-  let sum = reduceC addC mul_result
-  let norm_list = list_to_seq (Proxy @1) $ fmap Atom_Int [16]
+  let kernel_and_values = map2C (map2C atom_tupleC) kernel in_seq
+  let mul_result = mapC (mapC mulC) kernel_and_values
+  let sum = reduceC'' (mapC addC) $ mapC (reduceC addC) mul_result
+  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_Int 16]]
   let norm = const_genC norm_list in_seq
-  let sum_and_norm = map2C atom_tupleC sum norm
-  mapC divC sum_and_norm
+  let sum_and_norm = map2C (map2C atom_tupleC) sum norm
+  mapC (mapC divC) sum_and_norm
 conv_2d_shallow_no_input in_col in_seq = do
   let stencil = stencil_2dC_test (Proxy @3) in_col in_seq
   mapC tuple_2d_mul_shallow_no_input stencil
@@ -663,6 +664,38 @@ conv_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
 conv_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_2d s Nothing
                                       conv_2d_inputs conv_2d_output) [16]
+
+pyramid_2d_shallow_no_input in_seq = do
+  let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq
+  let layer1_drop_cols = unpartitionC $ mapC (down_1dC 1) $
+        partitionC (Proxy @32) (Proxy @2) Proxy (Proxy @0) layer1_blurred
+  let layer2_input = unpartitionC $ unpartitionC $
+        mapC (down_1dC 1) $
+        partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) $
+        partitionC (Proxy @8) (Proxy @4) Proxy (Proxy @0) layer1_drop_cols
+  let layer2_blurred = conv_2d_shallow_no_input (Proxy @4) layer2_input
+  let layer2_drop_cols = unpartitionC $ mapC (down_1dC 1) $
+        partitionC (Proxy @8) (Proxy @2) Proxy (Proxy @0) layer2_blurred
+  unpartitionC $ unpartitionC $
+        mapC (down_1dC 1) $
+        partitionC (Proxy @2) (Proxy @2) Proxy (Proxy @0) $
+        partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) layer2_drop_cols
+pyramid_2d = pyramid_2d_shallow_no_input $ 
+  com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+{-
+pyramid_2d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_2d
+pyramid_2d_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s pyramid_2d_seq_idx) [1,3,9,27]
+pyramid_2d_ppar_typechecked =
+  fmap check_type pyramid_2d_ppar
+pyramid_2d_ppar_typechecked' =
+  fmap check_type_get_error pyramid_2d_ppar
+pyramid_2d_inputs :: [[Integer]] = [[1..9]]
+pyramid_2d_output :: [Integer] = [5]
+pyramid_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      pyramid_2d s Nothing
+                                      pyramid_2d_inputs pyramid_2d_output) [1,3,9,27]
+-}
 {-
   let tuple = zipC window_size shifted_seqs
   mapC seq_tuple_to_seqC tuple
