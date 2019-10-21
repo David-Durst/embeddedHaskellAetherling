@@ -697,21 +697,22 @@ pyramid_2d_shallow_no_input in_seq = do
         partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) layer2_drop_cols
 pyramid_2d = pyramid_2d_shallow_no_input $ 
   com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
-  
-{-
 pyramid_2d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_2d
 pyramid_2d_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s pyramid_2d_seq_idx) [1,3,9,27]
+  fmap (\s -> rewrite_to_partially_parallel s pyramid_2d_seq_idx) [1,2,4,8,16,32,64,192,576]
 pyramid_2d_ppar_typechecked =
   fmap check_type pyramid_2d_ppar
 pyramid_2d_ppar_typechecked' =
   fmap check_type_get_error pyramid_2d_ppar
-pyramid_2d_inputs :: [[Integer]] = [[1..9]]
-pyramid_2d_output :: [Integer] = [5]
+row_size_pyramid = 8
+pyramid_2d_inputs :: [[Integer]] = [[1..row_size_pyramid*row_size_pyramid]]
+pyramid_2d_output :: [Integer] = [8]
 pyramid_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_2d s Nothing
-                                      pyramid_2d_inputs pyramid_2d_output) [1,3,9,27]
--}
+                                      pyramid_2d_inputs pyramid_2d_output) [1,2,4,8,16,32,64,192,576]
+pyramid_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      pyramid_2d s Nothing
+                                      pyramid_2d_inputs pyramid_2d_output) [4]
 {-
   let tuple = zipC window_size shifted_seqs
   mapC seq_tuple_to_seqC tuple
