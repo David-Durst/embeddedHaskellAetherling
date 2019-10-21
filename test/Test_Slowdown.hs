@@ -622,7 +622,7 @@ stencil_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stencil_2d_inputs stencil_2d_output) [1,2,4,8,16,48,144]
 stencil_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stencil_2d_test s Nothing
-                                      stencil_2d_inputs stencil_2d_output) [16]
+                                      stencil_2d_inputs stencil_2d_output) [144]
 -- need thse for Integer and Int versions
 hask_kernel :: [[Int]] = [[1,2,1],[2,4,2],[1,2,1]]
 hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
@@ -638,6 +638,21 @@ tuple_2d_mul_shallow_no_input in_seq = do
   let norm = const_genC norm_list in_seq
   let sum_and_norm = map2C (map2C atom_tupleC) sum norm
   mapC (mapC divC) sum_and_norm
+tuple_2d_mul = tuple_2d_mul_shallow_no_input $
+  com_input_seq "I" (Proxy :: Proxy (Seq 3 0 (Seq 3 0 Atom_Int)))
+tuple_2d_mul_seq_idx = add_indexes $ seq_shallow_to_deep tuple_2d_mul
+tuple_2d_mul_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s tuple_2d_mul_seq_idx) [1,3,9]
+tuple_2d_mul_ppar_typechecked =
+  fmap check_type tuple_2d_mul_ppar
+tuple_2d_mul_ppar_typechecked' =
+  fmap check_type_get_error tuple_2d_mul_ppar
+tuple_2d_mul_inputs :: [[[Integer]]] = [[[1,2,3],[4,5,6],[7,8,9]]]
+tuple_2d_mul_output :: [Integer] = [5]
+tuple_2d_mul_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      tuple_2d_mul s Nothing
+                                      tuple_2d_mul_inputs tuple_2d_mul_output) [1,3,9]
+
 conv_2d_shallow_no_input in_col in_seq = do
   let stencil = stencil_2dC_test (Proxy @3) in_col in_seq
   mapC tuple_2d_mul_shallow_no_input stencil
@@ -663,7 +678,7 @@ conv_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
 conv_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_2d s Nothing
-                                      conv_2d_inputs conv_2d_output) [16]
+                                      conv_2d_inputs conv_2d_output) [144]
 
 pyramid_2d_shallow_no_input in_seq = do
   let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq

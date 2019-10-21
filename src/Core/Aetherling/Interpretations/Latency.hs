@@ -235,8 +235,8 @@ compute_latency' :: Expr -> IO Int
 compute_latency' (Down_1d_tN _ _ sel_idx t _ _) =
   return $ sel_idx * clocks_t t
 compute_latency' (Reduce_tN n _ f _ _) = do
-  f_latency <- compute_latency' f
-  return $ (n - 1) * (max f_latency 1)
+  let f_out_type = ST_Conv.e_out_type $ ST_Conv.expr_to_types f
+  return $ (n - 1) * (clocks_t f_out_type)
 compute_latency' (FIFON _ delay_clks _ _) = return $ delay_clks
 compute_latency' (ReshapeN in_t out_t _ _) = do
   let in_t_py_str = type_to_python in_t
