@@ -701,6 +701,23 @@ conv_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_2d s Nothing
                                       conv_2d_inputs conv_2d_output) [144]
 
+down_from_pyramid_2d_no_input in_seq = do
+  let layer1_drop_cols = unpartitionC $ mapC (down_1dC 1) $
+        partitionC (Proxy @32) (Proxy @2) Proxy (Proxy @0) in_seq
+  unpartitionC $ unpartitionC $
+        mapC (down_1dC 1) $
+        partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) $
+        partitionC (Proxy @8) (Proxy @4) Proxy (Proxy @0) layer1_drop_cols
+down_from_pyramid_2d = down_from_pyramid_2d_no_input $ 
+  com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+down_from_pyramid_2d_seq_idx = add_indexes $ seq_shallow_to_deep down_from_pyramid_2d
+down_from_pyramid_2d_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s down_from_pyramid_2d_seq_idx) [1,2,4,8,16,32,64]
+down_from_pyramid_2d_ppar_typechecked =
+  fmap check_type down_from_pyramid_2d_ppar
+down_from_pyramid_2d_ppar_typechecked' =
+  fmap check_type_get_error down_from_pyramid_2d_ppar
+  
 pyramid_2d_shallow_no_input in_seq = do
   let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq
   let layer1_drop_cols = unpartitionC $ mapC (down_1dC 1) $
