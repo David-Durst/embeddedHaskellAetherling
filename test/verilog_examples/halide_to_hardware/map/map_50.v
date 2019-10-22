@@ -540,8 +540,7 @@ endmodule //Loop_1_proc
 
 (* CORE_GENERATION_INFO="hls_target,hls_ip_2017_2,{HLS_INPUT_TYPE=cxx,HLS_INPUT_FLOAT=0,HLS_INPUT_FIXED=0,HLS_INPUT_PART=xc7z020clg484-1,HLS_INPUT_CLOCK=10.000000,HLS_INPUT_ARCH=dataflow,HLS_SYN_CLOCK=5.952333,HLS_SYN_LAT=28,HLS_SYN_TPT=28,HLS_SYN_MEM=0,HLS_SYN_DSP=0,HLS_SYN_FF=378,HLS_SYN_LUT=373}" *)
 
-module hls_target (
-        hw_input_V_value_V,
+module top (        hw_input_V_value_V,
         hw_input_V_last_V,
         hw_output_V_value_V,
         hw_output_V_last_V,
