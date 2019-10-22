@@ -604,6 +604,19 @@ stencil_2d_test_ppar_typechecked' =
 row_size = 4
 stencil_2d_inputs :: [[Integer]] = [[1..row_size*row_size]]
 offset_if_valid offset i = if i > offset then i - offset else int_to_ignore
+stencil_generator :: Integer -> [Integer] -> [[[Integer]]]
+stencil_generator row_size inputs = [
+  [
+    if r - k > 0
+    then 
+      [
+        if c > 2 then inputs !! ((fromIntegral $ (r-k-1) * row_size + (c-2)) -1) else int_to_ignore,
+        if (c > 1) && (c <= row_size + 1) then inputs !! ((fromIntegral $ (r-k-1) * row_size + (c-1)) -1) else int_to_ignore,
+        if c <= row_size then inputs !! ((fromIntegral $ (r-k-1) * row_size + c) - 1) else int_to_ignore
+      ]
+    else [int_to_ignore, int_to_ignore, int_to_ignore]
+  | k <- reverse $ [0..2]
+  ] | r <- [1..row_size], c <- [1..row_size]]
 stencil_2d_output :: [[[Integer]]] = [
   [
     if r - k > 0
@@ -666,6 +679,14 @@ conv_2d_ppar_typechecked =
 conv_2d_ppar_typechecked' =
   fmap check_type_get_error conv_2d_ppar
 conv_2d_inputs :: [[Integer]] = stencil_2d_inputs
+conv_generator :: [[[Integer]]] -> [Integer]
+conv_generator stencil_2d_output = [
+  if window_valid
+  then (sum $ zipWith (*) window_flat hask_kernel') `mod` 255 `div` 16
+  else int_to_ignore
+  | window <- stencil_2d_output,
+    let window_flat = concat window,
+    let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
 conv_2d_output :: [Integer] = [
   if window_valid
   then (sum $ zipWith (*) window_flat hask_kernel') `mod` 255 `div` 16
@@ -705,8 +726,16 @@ pyramid_2d_ppar_typechecked =
 pyramid_2d_ppar_typechecked' =
   fmap check_type_get_error pyramid_2d_ppar
 row_size_pyramid = 8
+down_generator :: [Integer] -> [Integer]
+down_generator conv_output =
+  [conv_output !! i
+  | i <- [0..length conv_output-1],
+    i `mod` 2 == 1 && (i `div` round (sqrt $ fromIntegral (length conv_output))) `mod` 2 == 1
+   ]
 pyramid_2d_inputs :: [[Integer]] = [[1..row_size_pyramid*row_size_pyramid]]
-pyramid_2d_output :: [Integer] = [8]
+pyramid_2d_output :: [Integer] =
+  down_generator $ conv_generator $ stencil_generator 4 $
+  down_generator  $ conv_generator $ stencil_generator 8 [1..] 
 pyramid_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_2d s Nothing
                                       pyramid_2d_inputs pyramid_2d_output) [1,2,4,8,16,32,64,192,576]
