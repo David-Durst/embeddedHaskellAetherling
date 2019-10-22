@@ -743,7 +743,7 @@ sequence_to_partially_parallel type_rewrites seq_e@(SeqE.ErrorN s _) = do
 sequence_to_partially_parallel tr e =
   throwError $ Slowdown_Failure $
   "can't handle type_rewrites: " ++ show tr ++ "\n and expr: \n" ++ show e ++
-  " note its printed out form " ++ Seq_Print.print_seq e
+  " note its printed out form " ++ Seq_Print.print_seq_str e
 
 -- | Verifies that Type_Rewrite matches the output Seq that is being rewritten
 parameters_match :: Type_Rewrite -> Int -> Int -> Bool

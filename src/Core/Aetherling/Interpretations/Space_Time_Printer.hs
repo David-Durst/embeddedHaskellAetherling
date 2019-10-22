@@ -42,8 +42,12 @@ add_to_cur_module cur_ref_name new_string = do
 
 print_st :: Expr -> IO ()
 print_st e = do
+  putStrLn $ print_st_str e
+  
+print_st_str :: Expr -> String
+print_st_str e = do
   let lines = execState (runExceptT $ startEvalMemoT $ print_module e) empty_print_data
-  putStrLn $ foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
+  foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
 
 -- this handles creating a module
 print_module :: Expr -> Memo_Print_StateM String String

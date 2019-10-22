@@ -49,14 +49,14 @@ incr_num_non_inputs_cur_module new_string = do
     }
   return ()
 
-print_seq :: Expr -> String
-print_seq e = do
+print_seq_str :: Expr -> String
+print_seq_str e = do
   let lines = execState (runExceptT $ startEvalMemoT $ print_module e) empty_print_data
   foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
   
-print_seq_io :: Expr -> IO ()
-print_seq_io e = do
-  putStrLn $ print_seq e
+print_seq :: Expr -> IO ()
+print_seq e = do
+  putStrLn $ print_seq_str e
 
 -- this handles creating a module
 print_module :: Expr -> Memo_Print_StateM String String

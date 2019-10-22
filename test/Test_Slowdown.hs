@@ -577,10 +577,6 @@ stencil_1dC_nested in_seq = do
   mapC (mapC seq_tuple_to_seqC) triple
   
 stencil_2dC_test window_size_col in_col in_img = do
-  {-let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
-                               (shiftC in_col last_shifted_seq) : l)
-                     [in_img] [0 .. natVal window_size_row - 2]
--}
   let first_row = in_img
   let second_row = shiftC in_col in_img
   let third_row = shiftC in_col second_row
@@ -589,8 +585,6 @@ stencil_2dC_test window_size_col in_col in_img = do
   let third_row_shifted = stencil_1dC_nested third_row
   let tuple = map2C (map2C seq_tupleC) third_row_shifted second_row_shifted
   let triple = map2C (map2C seq_tuple_appendC) tuple first_row_shifted
-  --let stenciled_seqs = fmap (stencil_1dC_test window_size_col) shifted_seqs
-  --let tupled_seqs = zipC window_size_row stenciled_seqs
   mapC seq_tuple_to_seqC triple
 stencil_2d_test = stencil_2dC_test (Proxy @3) (Proxy @4) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
@@ -700,6 +694,8 @@ conv_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
 conv_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_2d s Nothing
                                       conv_2d_inputs conv_2d_output) [144]
+conv_2d_st_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
+                                      conv_2d s "conv2d") [1,2,4,8,16,48,144]
 
 down_from_pyramid_2d_no_input in_seq = do
   let layer1_drop_cols = unpartitionC $ mapC (down_1dC 1) $
