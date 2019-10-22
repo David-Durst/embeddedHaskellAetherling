@@ -260,3 +260,5 @@ is_error_node _ = False
 instance Indexible Expr where
   get_index e = index e
   set_index e i = e { index = i }
+
+seq_in_st = seq_in

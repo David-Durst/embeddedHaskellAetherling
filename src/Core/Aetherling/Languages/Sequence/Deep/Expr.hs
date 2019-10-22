@@ -146,3 +146,5 @@ data Expr =
 instance Indexible Expr where
   get_index e = index e
   set_index e i = e { index = i }
+
+seq_in_seq = seq_in

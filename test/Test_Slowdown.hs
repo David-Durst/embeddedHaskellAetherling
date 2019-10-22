@@ -1,11 +1,13 @@
 module Test_Slowdown where
 import Test.Tasty
 import Test.Tasty.HUnit
+import Aetherling.Monad_Helpers
 import Aetherling.Languages.Sequence.Shallow.Expr
 import Aetherling.Languages.Sequence.Shallow.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Isomorphisms
+import Aetherling.Interpretations.Latency
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
@@ -698,22 +700,43 @@ conv_2d_st_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
                                       conv_2d s "conv2d") [1,2,4,8,16,48,144]
 
 down_from_pyramid_2d_no_input in_seq = do
-  let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq
+  --let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq
   let layer1_drop_cols = unpartitionC $ mapC (down_1dC 1) $
-        partitionC (Proxy @32) (Proxy @2) Proxy (Proxy @0) layer1_blurred
+        partitionC (Proxy @32) (Proxy @2) Proxy (Proxy @0) in_seq  --layer1_blurred
   unpartitionC $ unpartitionC $
         mapC (down_1dC 1) $
         partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) $
         partitionC (Proxy @8) (Proxy @4) Proxy (Proxy @0) layer1_drop_cols
+  --layer1_blurred
 down_from_pyramid_2d = down_from_pyramid_2d_no_input $ 
   com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 down_from_pyramid_2d_seq_idx = add_indexes $ seq_shallow_to_deep down_from_pyramid_2d
 down_from_pyramid_2d_ppar =
   fmap (\s -> rewrite_to_partially_parallel s down_from_pyramid_2d_seq_idx) [1,2,4,8,16,32,64]
+down_and_upstream = STE.seq_in_st $ STE.seq_in_st $ down_from_pyramid_2d_ppar !! 5
+just_down = down_and_upstream {
+  STE.seq_in = STE.InputN (STT.TSeqT 4 0 (STT.TSeqT 2 0 (
+                                     STT.TSeqT 4 0 (STT.SSeqT 1 (STT.SSeqT 1 STT.IntT)))))
+           "I" (Index 37) }
+just_down_latency = print_latency just_down
+big_reshape_and_upstream = STE.seq_in_st $ down_from_pyramid_2d_ppar !! 5
+just_big_reshape = big_reshape_and_upstream {
+  STE.seq_in = STE.InputN (STT.TSeqT 4 0 (STT.TSeqT 1 1 (
+                                     STT.TSeqT 4 0 (STT.SSeqT 1 (STT.SSeqT 1 STT.IntT)))))
+           "I" (Index 37) }
+just_big_reshape_latency = print_latency just_big_reshape
 down_from_pyramid_2d_ppar_typechecked =
   fmap check_type down_from_pyramid_2d_ppar
 down_from_pyramid_2d_ppar_typechecked' =
   fmap check_type_get_error down_from_pyramid_2d_ppar
+down_from_pyramid_2d_inputs :: [[Integer]] = [[1..row_size_pyramid*row_size_pyramid]]
+down_from_pyramid_2d_output :: [Integer] =
+  down_generator [1..64]
+  --conv_generator $ stencil_generator 8 [1..]
+  --down_generator  $ conv_generator $ stencil_generator 8 [1..] 
+down_from_pyramid_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      down_from_pyramid_2d s Nothing 
+                                      down_from_pyramid_2d_inputs down_from_pyramid_2d_output) [32]
   
 pyramid_2d_shallow_no_input in_seq = do
   let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq
@@ -755,7 +778,7 @@ pyramid_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_2d_inputs pyramid_2d_output) [1,2,4,8,16,32,64,192,576]
 pyramid_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_2d s Nothing
-                                      pyramid_2d_inputs pyramid_2d_output) [4,8,16,32]
+                                      pyramid_2d_inputs pyramid_2d_output) [2,4,8,16,32,64,192,576]
 {-
   let tuple = zipC window_size shifted_seqs
   mapC seq_tuple_to_seqC tuple
