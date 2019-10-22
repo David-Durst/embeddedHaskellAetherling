@@ -689,7 +689,7 @@ conv_2d_output :: [Integer] = [
     let window_flat = concat window,
     let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
 conv_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      conv_2d s Nothing
+                                      conv_2d s (Just "conv2d")
                                       conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
 conv_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_2d s Nothing
@@ -698,8 +698,9 @@ conv_2d_st_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
                                       conv_2d s "conv2d") [1,2,4,8,16,48,144]
 
 down_from_pyramid_2d_no_input in_seq = do
+  let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq
   let layer1_drop_cols = unpartitionC $ mapC (down_1dC 1) $
-        partitionC (Proxy @32) (Proxy @2) Proxy (Proxy @0) in_seq
+        partitionC (Proxy @32) (Proxy @2) Proxy (Proxy @0) layer1_blurred
   unpartitionC $ unpartitionC $
         mapC (down_1dC 1) $
         partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) $
@@ -750,11 +751,11 @@ pyramid_2d_output :: [Integer] =
   down_generator $ conv_generator $ stencil_generator 4 $
   down_generator  $ conv_generator $ stencil_generator 8 [1..] 
 pyramid_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      pyramid_2d s Nothing
+                                      pyramid_2d s (Just "pyramid")
                                       pyramid_2d_inputs pyramid_2d_output) [1,2,4,8,16,32,64,192,576]
 pyramid_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_2d s Nothing
-                                      pyramid_2d_inputs pyramid_2d_output) [4]
+                                      pyramid_2d_inputs pyramid_2d_output) [4,8,16,32]
 {-
   let tuple = zipC window_size shifted_seqs
   mapC seq_tuple_to_seqC tuple
