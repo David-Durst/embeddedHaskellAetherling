@@ -118,6 +118,35 @@ compile_and_test_with_slowdown shallow_seq_program s base_name inputs output = d
     else do
     return $ Fault_Failure "invalid types for program" "" "" 0
     
+compile_with_slowdown :: (Shallow_Types.Aetherling_Value a) =>
+                         RH.Rewrite_StateM a -> Int -> String -> IO String
+compile_with_slowdown shallow_seq_program s base_name = do
+  ML.Matched_Latency_Result deep_st_program output_latency <-
+    compile_with_slowdown_to_expr shallow_seq_program s
+  if check_type deep_st_program
+    then do
+    correct_latencies <- CL.check_latency deep_st_program
+    if correct_latencies
+      then do
+      let outer_types = ST_Conv.expr_to_outer_types deep_st_program
+      let actual_s = type_to_slowdown $ ST_Conv.e_out_type outer_types
+      if actual_s == s
+        then do
+        let test_verilog_dir = root_dir ++
+              "/test/verilog_examples/aetherling_copies/" ++
+              base_name
+        createDirectoryIfMissing True test_verilog_dir
+        let file_path = (test_verilog_dir ++ "/" ++ base_name ++ "_" ++ show s ++ ".v")
+        copyFile "vBuild/top.v" file_path
+        return file_path
+        else do
+        return $ "program not slowed correctly for target" ++
+          " slowdown " ++ show s ++ " with actual slowdown " ++ show actual_s
+      else do
+      return $ "invalid latencies for program"
+    else do
+    return $ "invalid types for program"
+    
 compile_and_write_st_with_slowdown :: (Shallow_Types.Aetherling_Value a) =>
                                   RH.Rewrite_StateM a -> Int -> String -> IO String 
 compile_and_write_st_with_slowdown shallow_seq_program s base_name = do
