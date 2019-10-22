@@ -10,7 +10,7 @@ for circuit_path in ${circuit_dir_path}/*/*/*.v; do
 	  echo "Processing ${circuit_path}"
     circuit_dir_path_length=$(expr length $circuit_dir_path)
     circuit_path_relative=${circuit_path:$circuit_dir_path_length}
-    system=`cut -d "/" -f2 <<< <<< $circuit_path_relative`
+    system=`cut -d "/" -f2 <<< $circuit_path_relative`
     circuit_basename=$(basename $circuit_path)
     circuit_name=`sed -n -E "s/(.*)_[^_]*/\1/p" <<< $circuit_basename`
     circuit_par=`sed -n -E "s/.*_([^_]*).v$/\1/p" <<< $circuit_basename`
