@@ -118,7 +118,7 @@ rewrite_no_underutil _ [] = ([], False)
 
 rewrite_one_space_layer_with_underutil :: Int -> Layer_Rewrite_Info -> Maybe Layer_Rewrite_Info
 rewrite_one_space_layer_with_underutil s_p (Layer (SpaceR n) i_max n_divisors) |
-  (n+i_max) >= s_p = do
+  ((n+i_max) >= s_p) && ((n+i_max) `mod` s_p == 0)  = do
     -- get smallest valid ni
     let ni_options = filter io_and_no_valid $ S.toAscList n_divisors
     if length ni_options == 0
