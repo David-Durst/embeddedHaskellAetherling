@@ -108,7 +108,7 @@ add_5 atom_in = do
   addC tupled
 single_map_200 = 
   mapC' (Proxy @200) add_5 $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 200 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 200 0 Atom_Int))
 single_map_200_seq_idx = add_indexes $ seq_shallow_to_deep single_map_200
 single_map_200_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map_200_seq_idx) [1,5,10,20,25,40,50,100,200]
 single_map_200_ppar_typechecked = fmap check_type single_map_200_ppar
@@ -118,9 +118,9 @@ single_map_200_output :: [Integer] = [6..205]
 single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                                 single_map_200 s (Just "map")
                                                 single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
-single_map_200_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                                single_map_200 s (Just "map")
-                                                single_map_200_inputs single_map_200_output) [1]
+single_map_200_spatial_verilog = sequence $ fmap (\s -> compile_and_test_verilog single_map_200 s
+                                            single_map_200_inputs single_map_200_output
+                                            "test/verilog_examples/spatial/spatial_map_1_in_per_clk.v") [200] 
 
 two_maps = 
   mapC' (Proxy @4) absC >>>
