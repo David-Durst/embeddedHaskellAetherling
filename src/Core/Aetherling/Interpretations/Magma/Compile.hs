@@ -181,9 +181,11 @@ compile_and_write_st_with_slowdown shallow_seq_program s base_name = do
 compile_and_test_verilog :: (Shallow_Types.Aetherling_Value a,
                                    Convertible_To_Atom_Strings b,
                                    Convertible_To_Atom_Strings c) =>
-                                  RH.Rewrite_StateM a -> Int -> [b] -> c -> String -> IO Fault_Result
-compile_and_test_verilog shallow_seq_program s inputs output verilog_path = do
-  ML.Matched_Latency_Result deep_st_program output_latency <-
+                                  RH.Rewrite_StateM a -> Int -> [b] -> c ->
+                                  String -> Int -> IO Fault_Result
+compile_and_test_verilog shallow_seq_program s inputs output verilog_template
+  output_latency = do
+  ML.Matched_Latency_Result deep_st_program _ <-
     compile_with_slowdown_to_expr shallow_seq_program s
   if check_type deep_st_program
     then do
@@ -194,6 +196,7 @@ compile_and_test_verilog shallow_seq_program s inputs output verilog_path = do
       let actual_s = type_to_slowdown $ ST_Conv.e_out_type outer_types
       if actual_s == s
         then do
+        let verilog_path = verilog_template ++ show s ++ ".v"
         test_verilog_with_fault deep_st_program (root_dir ++ verilog_path) inputs output output_latency
         else do
         return $ Fault_Failure ("program not slowed correctly for target" ++

@@ -118,9 +118,10 @@ single_map_200_output :: [Integer] = [6..205]
 single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                                 single_map_200 s (Just "map")
                                                 single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
-single_map_200_spatial_verilog = sequence $ fmap (\s -> compile_and_test_verilog single_map_200 s
-                                            single_map_200_inputs single_map_200_output
-                                            "test/verilog_examples/spatial/spatial_map_1_in_per_clk.v") [200] 
+single_map_200_spatial_verilog = sequence $ fmap (\(s, d) -> compile_and_test_verilog single_map_200 s
+                                                   single_map_200_inputs single_map_200_output
+                                                   "test/verilog_examples/spatial/map/map_" d)
+                                 [(50, 2), (100, 1), (200, 1)] 
 
 two_maps = 
   mapC' (Proxy @4) absC >>>
