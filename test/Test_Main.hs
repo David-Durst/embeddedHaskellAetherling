@@ -4,6 +4,8 @@ import Test_Seq_Simulator
 import Test_Seq_Embedding
 import Test_ST_Embedding
 import Test_Slowdown
+import Test_Apps
+import Test_Spatial
 
 main :: IO ()
 main = defaultMain tests
