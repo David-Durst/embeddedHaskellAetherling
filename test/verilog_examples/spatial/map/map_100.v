@@ -33,10 +33,10 @@ module RetimeShiftRegister
     input flow,
     input [WIDTH-1:0] init,
     input [WIDTH-1:0] in,
-    output logic [WIDTH-1:0] out
+    output [WIDTH-1:0] out
 );
   integer i;
-  reg [WIDTH-1:0] sr[STAGES]; // Create 'STAGES' number of register, each 'WIDTH' bits wide
+  reg [WIDTH-1:0] sr[STAGES:0]; // Create 'STAGES' number of register, each 'WIDTH' bits wide
 
    /* synopsys dc_tcl_script_begin
     set_ungroup [current_design] true
