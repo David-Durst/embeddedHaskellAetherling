@@ -1,4 +1,4 @@
-// Latency = 2
+// Latency = 1
 module top(
   input CLK/*verilator public*/, 
   input [7:0] I_0/*verilator public*/, 
@@ -36,7 +36,7 @@ module RetimeShiftRegister
     input flow,
     input [WIDTH-1:0] init,
     input [WIDTH-1:0] in,
-    output [WIDTH-1:0] out
+    output reg [WIDTH-1:0] out
 );
   integer i;
   reg [WIDTH-1:0] sr[STAGES:0]; // Create 'STAGES' number of register, each 'WIDTH' bits wide
