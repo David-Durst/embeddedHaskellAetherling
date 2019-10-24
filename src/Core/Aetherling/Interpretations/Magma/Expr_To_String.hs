@@ -443,7 +443,15 @@ module_to_string_inner consumer_e@(Unpartition_t_ttN no ni io ii elem_t producer
                           (TSeqT (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) elem_t)
                           producer_e cur_idx)
 module_to_string_inner consumer_e@(SerializeN n i elem_t producer_e cur_idx) = do
-  throwError $ RH.Print_Failure "Serialize not printable"
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "DefineSerialize(" ++ show n ++ ", " ++ show i ++ ", " ++
+                type_to_python elem_t ++ ")"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (TSeqT 1 ((n - 1) + i) (STupleT n elem_t))]
+                (Module_Port "O" (TSeqT n i elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(DeserializeN n i elem_t producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Deserialize not printable"
 module_to_string_inner consumer_e@(Add_1_sN f producer_e cur_idx) = do

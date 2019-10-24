@@ -75,11 +75,11 @@ expr_to_types (Unpartition_t_ttN no ni io ii elem_t _ _) =
     out_type = TSeqT (no * ni) ((no * ii) + (io * (ni + ii))) elem_t
 
 expr_to_types (SerializeN n i tuple_elem_t _ _) =
-  Expr_Types [TSeqT 1 ((n - 1) + i) (SSeqT n tuple_elem_t)]
+  Expr_Types [TSeqT 1 ((n - 1) + i) (STupleT n tuple_elem_t)]
   (TSeqT n i tuple_elem_t)
 expr_to_types (DeserializeN n i tuple_elem_t _ _) =
   Expr_Types [(TSeqT n i tuple_elem_t)]
-  (TSeqT 1 ((n - 1) + i) (SSeqT n tuple_elem_t))
+  (TSeqT 1 ((n - 1) + i) (STupleT n tuple_elem_t))
 
 expr_to_types (Add_1_sN f _ _) = Expr_Types in_types out_type
   where

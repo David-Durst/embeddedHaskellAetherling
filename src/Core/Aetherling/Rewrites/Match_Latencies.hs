@@ -98,7 +98,7 @@ match_latencies' e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
     }
   
 -- these helpers shouldn't exist now that i've written reshape
-match_latencies' e@(SerializeN _ _ _ _ _) = undefined
+match_latencies' e@(SerializeN _ _ _ producer _) = match_combinational_op e producer
 match_latencies' e@(DeserializeN _ _ _ _ _) = undefined
 match_latencies' e@(Add_1_sN f producer _) = match_map e f producer
 match_latencies' e@(Add_1_0_tN f producer _) = match_map e f producer
