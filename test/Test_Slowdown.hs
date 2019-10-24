@@ -425,6 +425,10 @@ stuple_to_seq_output :: [Integer] = [1..16]
 stuple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stuple_to_seq s Nothing
                                       stuple_to_seq_inputs stuple_to_seq_output) [1,2,4,8,16]
+stuple_to_seq_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      stuple_to_seq s Nothing
+                                      stuple_to_seq_inputs stuple_to_seq_output) [16]
+                        
 seq_and_stuple_no_input = 
   mapC (seq_to_seq_tupleC >>> seq_tuple_to_seqC)
 seq_and_stuple = seq_and_stuple_no_input $

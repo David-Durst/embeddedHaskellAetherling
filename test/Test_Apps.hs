@@ -40,7 +40,7 @@ single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                                 single_map_200 s (Just "map")
                                                 single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
 
-stencil_1dC_nested in_seq = do
+stencil_3_1dC_nested in_seq = do
   let first_el = in_seq
   let second_el = shiftC (Proxy @1) first_el
   let third_el = shiftC (Proxy @1) second_el
@@ -48,17 +48,17 @@ stencil_1dC_nested in_seq = do
   let triple = map2C (map2C $ map2C seq_tuple_appendC) tuple first_el 
   mapC (mapC seq_tuple_to_seqC) triple
   
-stencil_2dC_test window_size_col in_col in_img = do
+stencil_3x3_2dC_test in_col in_img = do
   let first_row = in_img
   let second_row = shiftC in_col in_img
   let third_row = shiftC in_col second_row
-  let first_row_shifted = stencil_1dC_nested first_row
-  let second_row_shifted = stencil_1dC_nested second_row
-  let third_row_shifted = stencil_1dC_nested third_row
+  let first_row_shifted = stencil_3_1dC_nested first_row
+  let second_row_shifted = stencil_3_1dC_nested second_row
+  let third_row_shifted = stencil_3_1dC_nested third_row
   let tuple = map2C (map2C seq_tupleC) third_row_shifted second_row_shifted
   let triple = map2C (map2C seq_tuple_appendC) tuple first_row_shifted
   mapC seq_tuple_to_seqC triple
-stencil_2d_test = stencil_2dC_test (Proxy @3) (Proxy @4) $
+stencil_2d_test = stencil_3x3_2dC_test (Proxy @4) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 stencil_2d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_2d_test
 stencil_2d_test_ppar = 
@@ -102,6 +102,8 @@ stencil_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
 stencil_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       stencil_2d_test s Nothing
                                       stencil_2d_inputs stencil_2d_output) [144]
+
+                     
 -- need thse for Integer and Int versions
 hask_kernel :: [[Int]] = [[1,2,1],[2,4,2],[1,2,1]]
 hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
@@ -133,7 +135,7 @@ tuple_2d_mul_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       tuple_2d_mul_inputs tuple_2d_mul_output) [1,3,9]
 
 conv_2d_shallow_no_input in_col in_seq = do
-  let stencil = stencil_2dC_test (Proxy @3) in_col in_seq
+  let stencil = stencil_3x3_2dC_test in_col in_seq
   mapC tuple_2d_mul_shallow_no_input stencil
 conv_2d = conv_2d_shallow_no_input (Proxy @4) $ 
   com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
@@ -168,6 +170,10 @@ conv_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_2d_inputs conv_2d_output) [144]
 conv_2d_st_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
                                       conv_2d s "conv2d") [1,2,4,8,16,48,144]
+conv_2d_verilog_prints = sequence $ fmap (\s -> compile_with_slowdown
+                                      conv_2d s "conv2d") [1,2,4,8,16,48,144]
+
+
 
 down_from_pyramid_2d_no_input in_seq = do
   --let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq
@@ -207,6 +213,8 @@ down_from_pyramid_2d_output :: [Integer] =
 down_from_pyramid_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       down_from_pyramid_2d s Nothing 
                                       down_from_pyramid_2d_inputs down_from_pyramid_2d_output) [32]
+
+
   
 pyramid_2d_shallow_no_input in_seq = do
   let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq
@@ -251,3 +259,108 @@ pyramid_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_2d_inputs pyramid_2d_output) [2,4,8,16,32,64,192,576]
 pyramid_2d_results'' = sequence $ fmap (\s -> compile_with_slowdown
                                       pyramid_2d s "pyramid") [1]
+
+
+  
+stencil_2_1dC_nested in_seq = do
+  let first_el = in_seq
+  let second_el = shiftC (Proxy @1) first_el
+  let tuple = map2C (map2C $ map2C seq_tupleC) second_el first_el
+  mapC (mapC seq_tuple_to_seqC) tuple
+  
+stencil_2x2_2dC_test in_col in_img = do
+  let first_row = in_img
+  let second_row = shiftC in_col in_img
+  let third_row = shiftC in_col second_row
+  let first_row_shifted = stencil_2_1dC_nested first_row
+  let second_row_shifted = stencil_2_1dC_nested second_row
+  let tuple = map2C (map2C $ seq_tupleC) second_row_shifted first_row_shifted
+  mapC seq_tuple_to_seqC tuple
+stencil_2x2_generator :: Integer -> [Integer] -> [[[Integer]]]
+stencil_2x2_generator row_size inputs = [
+  [
+    if r - k > 0
+    then 
+      [
+        if c > 1 then inputs !! ((fromIntegral $ (r-k-1) * row_size + (c-1)) -1) else int_to_ignore,
+        if c <= row_size then inputs !! ((fromIntegral $ (r-k-1) * row_size + c) - 1) else int_to_ignore
+      ]
+    else [int_to_ignore, int_to_ignore]
+  | k <- reverse $ [0..1]
+  ] | r <- [1..row_size], c <- [1..row_size]]
+
+-- need thse for Integer and Int versions
+hask_kernel_2x2 :: [[Int]] = [[1,2],[2,1]]
+hask_kernel'_2x2 :: [Integer] = [1,2,2,1]
+tuple_2d_2x2_mul_shallow_no_input in_seq = do
+  let kernel_list = list_to_seq (Proxy @2) $
+                    fmap (list_to_seq (Proxy @2)) $
+                    fmap (fmap Atom_Int) hask_kernel_2x2
+  let kernel = const_genC kernel_list in_seq
+  let kernel_and_values = map2C (map2C atom_tupleC) kernel in_seq
+  let mul_result = mapC (mapC mulC) kernel_and_values
+  let sum = reduceC'' (mapC addC) $ mapC (reduceC addC) mul_result
+  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_Int 6]]
+  let norm = const_genC norm_list in_seq
+  let sum_and_norm = map2C (map2C atom_tupleC) sum norm
+  mapC (mapC divC) sum_and_norm
+  
+conv_2d_b2b_shallow_no_input in_col in_seq = do
+  let first_stencil = stencil_3x3_2dC_test in_col in_seq
+  let first_conv = mapC tuple_2d_mul_shallow_no_input first_stencil
+  let second_stencil = stencil_2x2_2dC_test in_col first_conv
+  mapC tuple_2d_2x2_mul_shallow_no_input second_stencil
+conv_2d_b2b = conv_2d_b2b_shallow_no_input (Proxy @4) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+conv_2d_b2b_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d_b2b
+conv_2d_b2b_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s conv_2d_b2b_seq_idx) [1,2,4,8,16,48,144]
+conv_2d_b2b_ppar_typechecked =
+  fmap check_type conv_2d_b2b_ppar
+conv_2d_b2b_ppar_typechecked' =
+  fmap check_type_get_error conv_2d_b2b_ppar
+
+conv_2x2_generator :: [[[Integer]]] -> [Integer]
+conv_2x2_generator stencil_2d_output = [
+  if window_valid
+  then (sum $ zipWith (*) window_flat hask_kernel'_2x2) `mod` 255 `div` 6
+  else int_to_ignore
+  | window <- stencil_2d_output,
+    let window_flat = concat window,
+    let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
+conv_2d_b2b_inputs :: [[Integer]] = stencil_2d_inputs
+conv_2d_b2b_output :: [Integer] =
+  conv_2x2_generator $ stencil_2x2_generator 4 $
+  conv_generator $ stencil_generator 4 [1.. row_size*row_size]
+conv_2d_b2b_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      conv_2d_b2b s (Just "conv2d_b2b")
+                                      conv_2d_b2b_inputs conv_2d_b2b_output) [1,2,4,8,16,48,144]
+
+conv_2d_b2b_print_st = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
+                                      conv_2d_b2b s "conv2d_b2b") [1,2,4,8,16,48,144]
+
+
+conv_2d_3x3_repeat_b2b_shallow_no_input in_col in_seq = do
+  let first_stencil = stencil_3x3_2dC_test in_col in_seq
+  let first_conv = mapC tuple_2d_mul_shallow_no_input first_stencil
+  let second_stencil = stencil_3x3_2dC_test in_col first_conv
+  mapC tuple_2d_mul_shallow_no_input second_stencil
+conv_2d_3x3_repeat_b2b = conv_2d_3x3_repeat_b2b_shallow_no_input (Proxy @4) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+conv_2d_3x3_repeat_b2b_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d_3x3_repeat_b2b
+conv_2d_3x3_repeat_b2b_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s conv_2d_3x3_repeat_b2b_seq_idx) [1,2,4,8,16,48,144]
+conv_2d_3x3_repeat_b2b_ppar_typechecked =
+  fmap check_type conv_2d_3x3_repeat_b2b_ppar
+conv_2d_3x3_repeat_b2b_ppar_typechecked' =
+  fmap check_type_get_error conv_2d_3x3_repeat_b2b_ppar
+conv_2d_3x3_repeat_b2b_inputs :: [[Integer]] = stencil_2d_inputs
+conv_2d_3x3_repeat_b2b_output :: [Integer] =
+  conv_generator $ stencil_generator 4 $
+  conv_generator $ stencil_generator 4 [1.. row_size*row_size]
+conv_2d_3x3_repeat_b2b_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      conv_2d_3x3_repeat_b2b s (Just "conv2d_b2b_3x3_repeat")
+                                      conv_2d_3x3_repeat_b2b_inputs conv_2d_3x3_repeat_b2b_output) [1,2,4,8,16,48,144]
+
+conv_2d_3x3_repeat_b2b_print_st = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
+                                      conv_2d_3x3_repeat_b2b s "conv2d_b2b_3x3_repeat") [1,2,4,8,16,48,144]

@@ -16502,7 +16502,11 @@ module RetimeShiftRegister
     input flow,
     input [WIDTH-1:0] init,
     input [WIDTH-1:0] in,
+<<<<<<< HEAD
     output reg [WIDTH-1:0] out
+=======
+    output [WIDTH-1:0] out
+>>>>>>> aad00cb4cfd5670fd82d7a71b29ab2fd17d4d8e3
 );
   integer i;
   reg [WIDTH-1:0] sr[STAGES:0]; // Create 'STAGES' number of register, each 'WIDTH' bits wide
