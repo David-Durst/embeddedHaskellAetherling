@@ -338,3 +338,29 @@ conv_2d_b2b_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
 
 conv_2d_b2b_print_st = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
                                       conv_2d_b2b s "conv2d_b2b") [1,2,4,8,16,48,144]
+
+
+conv_2d_3x3_repeat_b2b_shallow_no_input in_col in_seq = do
+  let first_stencil = stencil_3x3_2dC_test in_col in_seq
+  let first_conv = mapC tuple_2d_mul_shallow_no_input first_stencil
+  let second_stencil = stencil_3x3_2dC_test in_col first_conv
+  mapC tuple_2d_mul_shallow_no_input second_stencil
+conv_2d_3x3_repeat_b2b = conv_2d_3x3_repeat_b2b_shallow_no_input (Proxy @4) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+conv_2d_3x3_repeat_b2b_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d_3x3_repeat_b2b
+conv_2d_3x3_repeat_b2b_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s conv_2d_3x3_repeat_b2b_seq_idx) [1,2,4,8,16,48,144]
+conv_2d_3x3_repeat_b2b_ppar_typechecked =
+  fmap check_type conv_2d_3x3_repeat_b2b_ppar
+conv_2d_3x3_repeat_b2b_ppar_typechecked' =
+  fmap check_type_get_error conv_2d_3x3_repeat_b2b_ppar
+conv_2d_3x3_repeat_b2b_inputs :: [[Integer]] = stencil_2d_inputs
+conv_2d_3x3_repeat_b2b_output :: [Integer] =
+  conv_generator $ stencil_generator 4 $
+  conv_generator $ stencil_generator 4 [1.. row_size*row_size]
+conv_2d_3x3_repeat_b2b_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      conv_2d_3x3_repeat_b2b s (Just "conv2d_b2b_3x3_repeat")
+                                      conv_2d_3x3_repeat_b2b_inputs conv_2d_3x3_repeat_b2b_output) [1,2,4,8,16,48,144]
+
+conv_2d_3x3_repeat_b2b_print_st = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
+                                      conv_2d_3x3_repeat_b2b s "conv2d_b2b_3x3_repeat") [1,2,4,8,16,48,144]
