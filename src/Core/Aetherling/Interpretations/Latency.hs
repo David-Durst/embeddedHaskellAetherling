@@ -74,7 +74,7 @@ compute_latency e@(EqN t producer _) = memo producer $ compute_latency producer
 
 -- generators
 compute_latency e@(Lut_GenN _ _ producer _) = memo producer $ compute_latency producer
-compute_latency e@(Const_GenN _ _ _) = return 0
+compute_latency e@(Const_GenN _ _ delay _) = return delay
 
 -- sequence operators
 compute_latency e@(Shift_sN _ _ _ producer _) = memo producer $ compute_latency producer

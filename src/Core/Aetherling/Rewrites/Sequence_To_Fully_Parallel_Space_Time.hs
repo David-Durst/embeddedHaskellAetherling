@@ -42,7 +42,7 @@ sequence_to_fully_parallel (SeqE.Const_GenN constant_val constant_type _) = do
   t_par <- lift $ parallelize_AST_type constant_type
   v_par <- lift $ parallelize_AST_value constant_val
   cur_idx <- get_cur_index
-  return $ STE.Const_GenN v_par t_par cur_idx
+  return $ STE.Const_GenN v_par t_par 0 cur_idx
 
 -- sequence operators
 sequence_to_fully_parallel (SeqE.ShiftN n _ shift_amount elem_t producer _) =

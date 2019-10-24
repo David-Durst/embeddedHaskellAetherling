@@ -321,7 +321,7 @@ module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do
 -- generators
 module_to_string_inner consumer_e@(Lut_GenN lut_table lut_type producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Lut_GenN not printable"
-module_to_string_inner consumer_e@(Const_GenN constant t cur_idx) = do
+module_to_string_inner consumer_e@(Const_GenN constant t delay cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   let const_values_str =
         convert_seq_val_to_st_val_string (flatten_ast_value constant) t
@@ -332,7 +332,8 @@ module_to_string_inner consumer_e@(Const_GenN constant t cur_idx) = do
           repl x = [x]
         in concatMap repl x
   let gen_str = "DefineConst(" ++ type_to_python t ++
-                ", " ++ replace_brackets (st_values const_values_str) ++ ",has_valid=True)"
+                ", " ++ replace_brackets (st_values const_values_str) ++
+                ", has_valid=True, delay=" ++ show delay ++ ")"
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str
                 [] (Module_Port "O" t)
   add_to_cur_module $ var_name cur_ref ++ " = " ++ gen_call cur_ref ++ "()"

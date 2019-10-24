@@ -22,6 +22,7 @@ data Expr =
   | Const_GenN {
       constant :: AST_Value,
       constant_type :: AST_Type,
+      delay :: Int,
       index :: DAG_Index
       }
 

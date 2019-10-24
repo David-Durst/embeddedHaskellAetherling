@@ -54,7 +54,7 @@ check_type' consumer_e@(EqN _ producer_e _) =
 -- generators
 check_type' consumer_e@(Lut_GenN _ _ producer_e _) = 
   check_unary_operator consumer_e producer_e
-check_type' (Const_GenN _ t _) = return t
+check_type' (Const_GenN _ t _ _) = return t
 
 -- sequence operators
 check_type' consumer_e@(Shift_sN _ _ _ producer_e _) =

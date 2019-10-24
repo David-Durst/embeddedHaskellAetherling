@@ -28,7 +28,7 @@ expr_to_types (EqN t _ _) = Expr_Types [ATupleT t t] BitT
 
 -- generators
 expr_to_types (Lut_GenN _ t _ _) = Expr_Types [IntT] t
-expr_to_types (Const_GenN _ t _) = Expr_Types [] t
+expr_to_types (Const_GenN _ t _ _) = Expr_Types [] t
 
 -- sequence operators
 expr_to_types (Shift_sN n _ elem_t _ _) = Expr_Types [seq_type] seq_type
@@ -193,7 +193,7 @@ expr_to_outer_types' consumer_e@(EqN _ producer_e _) =
 -- generators
 expr_to_outer_types' consumer_e@(Lut_GenN _ _ producer_e _) = 
   expr_to_outer_types_unary_operator consumer_e producer_e
-expr_to_outer_types' (Const_GenN _ t _) = return t
+expr_to_outer_types' (Const_GenN _ t _ _) = return t
 
 -- sequence operators
 expr_to_outer_types' consumer_e@(Shift_sN _ _ _ producer_e _) =

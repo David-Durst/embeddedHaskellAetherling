@@ -6,6 +6,7 @@ import Aetherling.Interpretations.Magma.Value_To_String
 import Aetherling.Interpretations.Space_Time_Printer
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Rewrites.Add_Pipeline_Registers as APR
+import qualified Aetherling.Rewrites.Merge_Const_FIFOs as MCF
 import qualified Aetherling.Monad_Helpers as MH
 import qualified Aetherling.Rewrites.Sequence_Shallow_To_Deep as Seq_SToD
 import qualified Aetherling.Rewrites.Match_Latencies as ML
@@ -215,4 +216,7 @@ compile_with_slowdown_to_expr shallow_seq_program s = do
   let deep_st_program =
         rewrite_to_partially_parallel s deep_seq_program_with_indexes
   let pipelined_program = APR.add_pipeline_registers deep_st_program 3
-  ML.match_latencies pipelined_program
+  matched_latencies <- ML.match_latencies pipelined_program
+  return $ matched_latencies {
+    ML.new_expr = MCF.merge_consts_and_fifos $ ML.new_expr matched_latencies
+    }

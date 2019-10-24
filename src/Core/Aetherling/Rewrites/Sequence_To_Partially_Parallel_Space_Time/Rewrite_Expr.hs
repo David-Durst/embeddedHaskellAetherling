@@ -157,7 +157,7 @@ sequence_to_partially_parallel type_rewrites seq_e@(SeqE.Const_GenN constant_val
   t_par <- ppar_AST_type type_rewrites constant_type
   v_par <- ppar_AST_value type_rewrites constant_val
   cur_idx <- get_cur_index
-  return $ STE.Const_GenN v_par t_par cur_idx
+  return $ STE.Const_GenN v_par t_par 0 cur_idx
 
 -- sequence operators
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)

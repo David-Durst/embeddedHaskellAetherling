@@ -38,7 +38,7 @@ add_pipeline_registers' e@(InputN t _ _) maybe_num_end_registers = do
   reg_idx <- get_cur_index
   add_pipeline_registers_if_last maybe_num_end_registers $
     FIFON t 1 e reg_idx
-add_pipeline_registers' e@(Const_GenN _ t _) maybe_num_end_registers = do
+add_pipeline_registers' e@(Const_GenN _ t _ _) maybe_num_end_registers = do
   reg_idx <- get_cur_index
   add_pipeline_registers_if_last maybe_num_end_registers $
     FIFON t 1 e reg_idx

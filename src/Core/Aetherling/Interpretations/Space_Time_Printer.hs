@@ -147,10 +147,10 @@ print_inner consumer_e@(Lut_GenN lut_table lut_type producer_e cur_idx) = do
   add_to_cur_module cur_ref_name $ "Lut_GenN " ++ show lut_table ++ " " ++
     show lut_type ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(Const_GenN constant constant_type cur_idx) = do
+print_inner consumer_e@(Const_GenN constant constant_type delay cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "Const_GenN " ++ show constant ++ " " ++
-    show constant_type
+    show delay ++ " " ++ show constant_type
   return cur_ref_name
 
 -- sequence operators

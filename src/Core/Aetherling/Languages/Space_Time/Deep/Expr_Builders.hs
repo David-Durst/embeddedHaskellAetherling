@@ -145,3 +145,28 @@ make_add_1_s :: Monad m => (Expr -> DAG_Index -> Expr) ->
 make_add_1_s inner_expr_gen producer = do
   inner_expr <- add_input_to_expr_for_map inner_expr_gen
   (add_index $ Add_1_sN inner_expr) producer
+
+get_producers :: Expr -> [Expr]
+get_producers (Const_GenN _ _ _ _) = []
+get_producers (InputN _ _ _) = []
+get_producers (ErrorN _ _) = []
+get_producers (Map2_sN _ _ producer0 producer1 _) = [producer0, producer1]
+get_producers (Map2_tN _ _ _ producer0 producer1 _) = [producer0, producer1]
+get_producers (ATupleN _ _ producer0 producer1 _) = [producer0, producer1]
+get_producers (STupleN _ producer0 producer1 _) = [producer0, producer1]
+get_producers (STupleAppendN _ _ producer0 producer1 _) = [producer0, producer1]
+-- every other operator is unary
+get_producers op = [seq_in op]
+
+get_f :: Expr -> Maybe Expr
+get_f (Add_1_sN f _ _) = Just f
+get_f (Add_1_0_tN f _ _) = Just f
+get_f (Remove_1_sN f _ _) = Just f
+get_f (Remove_1_0_tN f _ _) = Just f
+get_f (Map_sN _ f _ _) = Just f
+get_f (Map_tN _ _ f _ _) = Just f
+get_f (Map2_sN _ f _ _ _) = Just f
+get_f (Map2_tN _ _ f _ _ _) = Just f
+get_f (Reduce_sN _ f _ _) = Just f
+get_f (Reduce_tN _ _ f _ _) = Just f
+get_f _ = Nothing

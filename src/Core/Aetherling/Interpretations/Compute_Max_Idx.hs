@@ -53,7 +53,7 @@ compute_max_idx' consumer_e@(EqN t producer_e cur_idx) = do
 compute_max_idx' consumer_e@(Lut_GenN lut_table lut_type producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
-compute_max_idx' consumer_e@(Const_GenN constant constant_type cur_idx) = do
+compute_max_idx' consumer_e@(Const_GenN constant constant_type _ cur_idx) = do
   return cur_idx
 
 -- sequence operators
