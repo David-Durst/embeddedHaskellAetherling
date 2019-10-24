@@ -6,7 +6,7 @@ circuit_dir_path=$1
 
 echo "System | Application | Parallelism | Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 | DSP48 Blocks | Slices | SLICEL | SLICEM | Slack (VIOLATED) |" > ${results_temp}
 
-for circuit_path in ${circuit_dir_path}/*/conv2d/*.v; do
+for circuit_path in ${circuit_dir_path}/*/*/*.v; do
 	  echo "Processing ${circuit_path}"
     circuit_dir_path_length=$(expr length $circuit_dir_path)
     circuit_path_relative=${circuit_path:$circuit_dir_path_length}
