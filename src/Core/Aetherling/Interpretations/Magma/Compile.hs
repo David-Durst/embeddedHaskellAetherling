@@ -251,3 +251,19 @@ compile_with_slowdown_to_expr shallow_seq_program s = do
   return $ matched_latencies {
     ML.new_expr = MCF.merge_consts_and_fifos $ ML.new_expr matched_latencies
     }
+
+tst_compile_with_slowdown_to_expr shallow_seq_program s = do
+  let deep_seq_program_no_indexes =
+        Seq_SToD.seq_shallow_to_deep shallow_seq_program
+  let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
+  let deep_st_program =
+        rewrite_to_partially_parallel s deep_seq_program_with_indexes
+  let pipelined_program = APR.add_pipeline_registers deep_st_program 3
+  putStr "pipelined: "
+  print_st pipelined_program
+  matched_latencies <- ML.match_latencies pipelined_program
+  putStr "matched_latencies: "
+  print_st $ ML.new_expr matched_latencies
+  return $ matched_latencies {
+    ML.new_expr = MCF.merge_consts_and_fifos $ ML.new_expr matched_latencies
+    }

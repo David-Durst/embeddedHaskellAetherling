@@ -134,6 +134,11 @@ print_inner consumer_e@(DivN producer_e cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "DivN " ++ producer_ref
   return cur_ref_name
+print_inner consumer_e@(LtN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ print_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "LtN " ++ producer_ref
+  return cur_ref_name
 print_inner consumer_e@(EqN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx

@@ -69,6 +69,12 @@ instance Sequence_Language Rewrite_StateM where
     case input of
       Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ DivN x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "divC" "Atom_Tuple Atom_Int Atom_Int"
+      
+  ltC inputM = do
+    input <- inputM
+    case input of
+      Atom_Tuple_Edge x -> return $ Atom_Bit_Edge $ LtN x No_Index
+      _ -> throwError $ Expr_Failure $ fail_message_edge "divC" "Atom_Tuple Atom_Int Atom_Int"
 
   eqC :: forall a . (Aetherling_Value a, Check_Type_Is_Atom a, Eq a) =>
     Rewrite_StateM (Atom_Tuple a a) -> Rewrite_StateM Atom_Bit

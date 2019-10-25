@@ -35,6 +35,8 @@ add_indexes' consumer_e@(MulN producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
 add_indexes' consumer_e@(DivN producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
+add_indexes' consumer_e@(LtN producer_e _) =
+  add_index_to_unary_operator consumer_e producer_e
 add_indexes' consumer_e@(EqN _ producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
 add_indexes' consumer_e@(IfN _ producer_e _) =

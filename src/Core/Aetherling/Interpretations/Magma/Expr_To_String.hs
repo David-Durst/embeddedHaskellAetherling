@@ -305,6 +305,15 @@ module_to_string_inner consumer_e@(DivN producer_e cur_idx) = do
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
+module_to_string_inner consumer_e@(LtN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name ("DefineLt_Atom(" ++ valid_str ++ ")")
+                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" BitT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx

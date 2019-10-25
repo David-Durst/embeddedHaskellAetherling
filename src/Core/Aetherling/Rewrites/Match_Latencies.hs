@@ -49,6 +49,7 @@ match_latencies' e@(AddN producer _) = match_combinational_op e producer
 match_latencies' e@(SubN producer _) = match_combinational_op e producer
 match_latencies' e@(MulN producer _) = match_combinational_op e producer
 match_latencies' e@(DivN producer _) = match_combinational_op e producer
+match_latencies' e@(LtN producer _) = match_combinational_op e producer
 match_latencies' e@(EqN t producer _) = match_combinational_op e producer
 match_latencies' e@(IfN t producer _) = match_combinational_op e producer
 

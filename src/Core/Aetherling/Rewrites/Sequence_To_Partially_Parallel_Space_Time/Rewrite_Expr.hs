@@ -142,6 +142,9 @@ sequence_to_partially_parallel type_rewrites seq_e@(SeqE.MulN producer _) = do
 sequence_to_partially_parallel type_rewrites seq_e@(SeqE.DivN producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   ppar_atom_operator type_rewrites STE.DivN producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.LtN producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  ppar_atom_operator type_rewrites STE.LtN producer
 sequence_to_partially_parallel type_rewrites seq_e@(SeqE.EqN t producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   -- can reuse all of type_rewrites in these calls as atom tuples

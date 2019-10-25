@@ -45,6 +45,9 @@ compute_max_idx' consumer_e@(MulN producer_e cur_idx) = do
 compute_max_idx' consumer_e@(DivN producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
+compute_max_idx' consumer_e@(LtN producer_e cur_idx) = do
+  max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
+  return $ max cur_idx max_idx_producer
 compute_max_idx' consumer_e@(EqN t producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer

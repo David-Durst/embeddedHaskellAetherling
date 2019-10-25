@@ -48,6 +48,8 @@ check_type' consumer_e@(MulN producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(DivN producer_e _) =
   check_unary_operator consumer_e producer_e
+check_type' consumer_e@(LtN producer_e _) =
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(EqN _ producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(IfN _ producer_e _) =
