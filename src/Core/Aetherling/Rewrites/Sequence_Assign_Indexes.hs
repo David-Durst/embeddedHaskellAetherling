@@ -37,6 +37,8 @@ add_indexes' consumer_e@(DivN producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
 add_indexes' consumer_e@(EqN _ producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
+add_indexes' consumer_e@(IfN _ producer_e _) =
+  add_index_to_unary_operator consumer_e producer_e
 
 -- generators
 add_indexes' consumer_e@(Lut_GenN _ _ producer_e _) = 

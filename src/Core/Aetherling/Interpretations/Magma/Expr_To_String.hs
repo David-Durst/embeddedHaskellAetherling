@@ -316,6 +316,17 @@ module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do
                 (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
+module_to_string_inner consumer_e@(IfN t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name
+                ("DefineIf_Atom(" ++ type_to_python t ++ ", " ++ valid_str ++ ")")
+                [Module_Port "I" (ATupleT BitT (ATupleT t t))]
+                (Module_Port "O" t)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 
 -- need to fix from here until map
 -- generators

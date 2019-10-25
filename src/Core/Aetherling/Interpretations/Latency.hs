@@ -71,6 +71,7 @@ compute_latency e@(SubN producer _) = memo producer $ compute_latency producer
 compute_latency e@(MulN producer _) = memo producer $ compute_latency producer
 compute_latency e@(DivN producer _) = memo producer $ compute_latency producer
 compute_latency e@(EqN t producer _) = memo producer $ compute_latency producer
+compute_latency e@(IfN t producer _) = memo producer $ compute_latency producer
 
 -- generators
 compute_latency e@(Lut_GenN _ _ producer _) = memo producer $ compute_latency producer

@@ -139,6 +139,11 @@ print_inner consumer_e@(EqN t producer_e cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "EqN " ++ show t ++ " " ++ producer_ref
   return cur_ref_name
+print_inner consumer_e@(IfN t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ print_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "IfN " ++ show t ++ " " ++ producer_ref
+  return cur_ref_name
 
 -- generators
 print_inner consumer_e@(Lut_GenN lut_table lut_type producer_e cur_idx) = do

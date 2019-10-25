@@ -25,6 +25,7 @@ expr_to_types (SubN _ _) = Expr_Types [ATupleT IntT IntT] IntT
 expr_to_types (MulN _ _) = Expr_Types [ATupleT IntT IntT] IntT
 expr_to_types (DivN _ _) = Expr_Types [ATupleT IntT IntT] IntT
 expr_to_types (EqN t _ _) = Expr_Types [ATupleT t t] BitT
+expr_to_types (IfN t _ _) = Expr_Types [ATupleT BitT (ATupleT t t)] t
 
 -- generators
 expr_to_types (Lut_GenN _ t _ _) = Expr_Types [IntT] t
@@ -188,6 +189,8 @@ expr_to_outer_types' consumer_e@(MulN producer_e _) =
 expr_to_outer_types' consumer_e@(DivN producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(EqN _ producer_e _) =
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' consumer_e@(IfN _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 
 -- generators

@@ -148,6 +148,10 @@ sequence_to_partially_parallel type_rewrites seq_e@(SeqE.EqN t producer _) = do
   -- and other atoms all have same Type_Rewrite object - NonSeqR
   t_ppar <- ppar_AST_type type_rewrites t
   ppar_atom_operator type_rewrites (STE.EqN t_ppar) producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.IfN t producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  t_ppar <- ppar_AST_type type_rewrites t
+  ppar_atom_operator type_rewrites (STE.IfN t_ppar) producer
 
 -- generators
 sequence_to_partially_parallel _ node@(SeqE.Lut_GenN _ _ producer _) =

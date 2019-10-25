@@ -34,6 +34,11 @@ sequence_to_fully_parallel (SeqE.EqN t producer _) = do
   t_par <- lift $ parallelize_AST_type t
   cur_idx <- get_cur_index
   return $ STE.EqN t_par producer_par cur_idx
+sequence_to_fully_parallel (SeqE.IfN t producer _) = do
+  producer_par <- memo producer $ sequence_to_fully_parallel producer
+  t_par <- lift $ parallelize_AST_type t
+  cur_idx <- get_cur_index
+  return $ STE.IfN t_par producer_par cur_idx
 
 -- generators
 sequence_to_fully_parallel node@(SeqE.Lut_GenN _ _ producer _) =

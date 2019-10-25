@@ -11,6 +11,7 @@ data Expr =
   | MulN {seq_in :: Expr, index :: DAG_Index}
   | DivN {seq_in :: Expr, index :: DAG_Index}
   | EqN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
+  | IfN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
 
   -- generators
   | Lut_GenN {

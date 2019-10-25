@@ -78,6 +78,15 @@ instance Sequence_Language Rewrite_StateM where
       Atom_Tuple_Edge x -> return $ Atom_Bit_Edge $
         EqN (get_AST_type (Proxy :: Proxy a)) x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "eqC" "Atom_Tuple any_type any_type"
+
+  ifC :: forall a . (Aetherling_Value a, Check_Type_Is_Atom a) =>
+         Rewrite_StateM (Atom_Tuple Atom_Bit (Atom_Tuple a a)) -> Rewrite_StateM a
+  ifC inputM = do
+    input <- inputM
+    case input of
+      Atom_Tuple_Edge x -> return $ expr_to_edge $
+        IfN (get_AST_type (Proxy :: Proxy a)) x No_Index
+      _ -> throwError $ Expr_Failure $ fail_message_edge "ifC" "Atom_Tuple"
       
   -- generators
   lut_genC :: forall a . Aetherling_Value a => [a] -> Rewrite_StateM Atom_Int ->
