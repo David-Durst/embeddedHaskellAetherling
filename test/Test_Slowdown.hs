@@ -208,8 +208,7 @@ if_lt_atom_test x = do
   let one = const_genC (Atom_Int 1) x
   let two = const_genC (Atom_Int 2) x
   let bool = ltC $ atom_tupleC x one
-  --ifC (atom_tupleC bool (atom_tupleC one two))
-  atom_tupleC bool (atom_tupleC one two)
+  ifC (atom_tupleC bool (atom_tupleC one two))
 if_lt_test =
   mapC' (Proxy @4) if_lt_atom_test $
   com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
