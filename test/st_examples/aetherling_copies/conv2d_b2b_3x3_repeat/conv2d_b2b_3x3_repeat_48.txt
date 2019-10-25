@@ -1,25 +1,21 @@
 module0 (I :: SSeqT 3 (TSeqT 3 0 IntT)) =
-    n104 = Const_GenN SSeqV [TSeqV {vals = [IntV 1,IntV 2,IntV 1], i_v = 0},TSeqV {vals = [IntV 2,IntV 4,IntV 2], i_v = 0},TSeqV {vals = [IntV 1,IntV 2,IntV 1], i_v = 0}] SSeqT 3 (TSeqT 3 0 IntT)
-    n106 = FIFON SSeqT 3 (TSeqT 3 0 IntT) 1 "n104"
-    n107 = Map2_sN 3 (Map2_tN 3 0 (ATupleN IntT IntT I0 I1) I0 I1) n106 I
+    n104 = Const_GenN SSeqV [TSeqV {vals = [IntV 1,IntV 2,IntV 1], i_v = 0},TSeqV {vals = [IntV 2,IntV 4,IntV 2], i_v = 0},TSeqV {vals = [IntV 1,IntV 2,IntV 1], i_v = 0}] 1 SSeqT 3 (TSeqT 3 0 IntT)
+    n107 = Map2_sN 3 (Map2_tN 3 0 (ATupleN IntT IntT I0 I1) I0 I1) n104 I
     n118 = Map_sN 3 (Map_tN 3 0 (MulN I) I) n107
     n123 = Map_sN 3 (Reduce_tN 3 0 (AddN I) I) n118
     n128 = Reduce_sN 3 (Map_tN 1 2 (AddN I) I) n123
-    n129 = Const_GenN SSeqV [TSeqV {vals = [IntV 16], i_v = 2}] SSeqT 1 (TSeqT 1 2 IntT)
-    n130 = FIFON SSeqT 1 (TSeqT 1 2 IntT) 3 "n129"
-    n131 = Map2_sN 1 (Map2_tN 1 2 (ATupleN IntT IntT I0 I1) I0 I1) n128 n130
+    n129 = Const_GenN SSeqV [TSeqV {vals = [IntV 16], i_v = 2}] 3 SSeqT 1 (TSeqT 1 2 IntT)
+    n131 = Map2_sN 1 (Map2_tN 1 2 (ATupleN IntT IntT I0 I1) I0 I1) n128 n129
     n142 = Map_sN 1 (Map_tN 1 2 (DivN I) I) n131
 
 module1 (I :: SSeqT 3 (TSeqT 3 0 IntT)) =
-    n246 = Const_GenN SSeqV [TSeqV {vals = [IntV 1,IntV 2,IntV 1], i_v = 0},TSeqV {vals = [IntV 2,IntV 4,IntV 2], i_v = 0},TSeqV {vals = [IntV 1,IntV 2,IntV 1], i_v = 0}] SSeqT 3 (TSeqT 3 0 IntT)
-    n248 = FIFON SSeqT 3 (TSeqT 3 0 IntT) 3 "n246"
-    n249 = Map2_sN 3 (Map2_tN 3 0 (ATupleN IntT IntT I0 I1) I0 I1) n248 I
+    n246 = Const_GenN SSeqV [TSeqV {vals = [IntV 1,IntV 2,IntV 1], i_v = 0},TSeqV {vals = [IntV 2,IntV 4,IntV 2], i_v = 0},TSeqV {vals = [IntV 1,IntV 2,IntV 1], i_v = 0}] 3 SSeqT 3 (TSeqT 3 0 IntT)
+    n249 = Map2_sN 3 (Map2_tN 3 0 (ATupleN IntT IntT I0 I1) I0 I1) n246 I
     n260 = Map_sN 3 (Map_tN 3 0 (MulN I) I) n249
     n265 = Map_sN 3 (Reduce_tN 3 0 (AddN I) I) n260
     n270 = Reduce_sN 3 (Map_tN 1 2 (AddN I) I) n265
-    n271 = Const_GenN SSeqV [TSeqV {vals = [IntV 16], i_v = 2}] SSeqT 1 (TSeqT 1 2 IntT)
-    n272 = FIFON SSeqT 1 (TSeqT 1 2 IntT) 5 "n271"
-    n273 = Map2_sN 1 (Map2_tN 1 2 (ATupleN IntT IntT I0 I1) I0 I1) n270 n272
+    n271 = Const_GenN SSeqV [TSeqV {vals = [IntV 16], i_v = 2}] 5 SSeqT 1 (TSeqT 1 2 IntT)
+    n273 = Map2_sN 1 (Map2_tN 1 2 (ATupleN IntT IntT I0 I1) I0 I1) n270 n271
     n284 = Map_sN 1 (Map_tN 1 2 (DivN I) I) n273
 
 module2 (I :: TSeqT 16 0 (SSeqT 1 (TSeqT 1 2 IntT))) =

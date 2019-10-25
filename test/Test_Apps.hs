@@ -338,6 +338,8 @@ conv_2d_b2b_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
 
 conv_2d_b2b_print_st = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
                                       conv_2d_b2b s "conv2d_b2b") [1,2,4,8,16,48,144]
+conv_2d_b2b_compile = sequence $ fmap (\s -> compile_with_slowdown
+                                      conv_2d_b2b s "conv2d_b2b") [1,2,4,8,16,48,144]
 
 
 conv_2d_3x3_repeat_b2b_shallow_no_input in_col in_seq = do

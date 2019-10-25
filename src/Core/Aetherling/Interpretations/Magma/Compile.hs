@@ -133,12 +133,22 @@ compile_with_slowdown shallow_seq_program s base_name = do
       let actual_s = type_to_slowdown $ ST_Conv.e_out_type outer_types
       if actual_s == s
         then do
+        compile_no_test deep_st_program 
+        -- do verilog
         let test_verilog_dir = root_dir ++
               "/test/verilog_examples/aetherling_copies/" ++
               base_name
         createDirectoryIfMissing True test_verilog_dir
         let file_path = (test_verilog_dir ++ "/" ++ base_name ++ "_" ++ show s ++ ".v")
         copyFile "vBuild/top.v" file_path
+
+        -- copy coreir json to own directory
+        let test_coreir_dir = root_dir ++
+              "/test/coreir_examples/aetherling_copies/" ++
+              base_name
+        createDirectoryIfMissing True test_coreir_dir
+        let json_path = (test_coreir_dir ++ "/" ++ base_name ++ "_" ++ show s ++ ".json")
+        copyFile "vBuild/top.json" json_path
         return file_path
         else do
         return $ "program not slowed correctly for target" ++
@@ -147,7 +157,28 @@ compile_with_slowdown shallow_seq_program s base_name = do
       return $ "invalid latencies for program"
     else do
     return $ "invalid types for program"
-    
+
+compile_no_test p = do
+  p_module_str <- module_to_magma_string p
+  let p_str = module_str p_module_str ++ "\ncompile(Main())"
+  circuit_file <- emptySystemTempFile "ae_circuit.py"
+  writeFile circuit_file p_str
+  stdout_name <- emptySystemTempFile "ae_circuit_fault_stdout.txt"
+  stdout_file <- openFile stdout_name WriteMode
+  stderr_name <- emptySystemTempFile "ae_circuit_fault_stderr.txt"
+  stderr_file <- openFile stderr_name WriteMode
+  let process =
+        proc "python" [circuit_file]
+  (_ , _, _, phandle) <- createProcess process { std_out = UseHandle stdout_file,
+                                                std_err = UseHandle stderr_file}
+  exit_code <- waitForProcess phandle
+  case exit_code of
+    ExitSuccess -> return Fault_Success
+    ExitFailure c -> do
+      stdout_fault <- readFile stdout_name
+      stderr_fault <- readFile stderr_name
+      return $ Fault_Failure circuit_file stdout_fault stderr_fault c
+
 compile_and_write_st_with_slowdown :: (Shallow_Types.Aetherling_Value a) =>
                                   RH.Rewrite_StateM a -> Int -> String -> IO String 
 compile_and_write_st_with_slowdown shallow_seq_program s base_name = do

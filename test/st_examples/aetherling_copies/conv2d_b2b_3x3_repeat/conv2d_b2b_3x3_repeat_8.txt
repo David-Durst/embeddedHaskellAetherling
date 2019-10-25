@@ -1,25 +1,21 @@
 module0 (I :: SSeqT 3 (SSeqT 3 IntT)) =
-    n143 = Const_GenN SSeqV [SSeqV [IntV 1,IntV 2,IntV 1],SSeqV [IntV 2,IntV 4,IntV 2],SSeqV [IntV 1,IntV 2,IntV 1]] SSeqT 3 (SSeqT 3 IntT)
-    n145 = FIFON SSeqT 3 (SSeqT 3 IntT) 1 "n143"
-    n146 = Map2_sN 3 (Map2_sN 3 (ATupleN IntT IntT I0 I1) I0 I1) n145 I
+    n143 = Const_GenN SSeqV [SSeqV [IntV 1,IntV 2,IntV 1],SSeqV [IntV 2,IntV 4,IntV 2],SSeqV [IntV 1,IntV 2,IntV 1]] 1 SSeqT 3 (SSeqT 3 IntT)
+    n146 = Map2_sN 3 (Map2_sN 3 (ATupleN IntT IntT I0 I1) I0 I1) n143 I
     n157 = Map_sN 3 (Map_sN 3 (MulN I) I) n146
     n162 = Map_sN 3 (Reduce_sN 3 (AddN I) I) n157
     n167 = Reduce_sN 3 (Map_sN 1 (AddN I) I) n162
-    n168 = Const_GenN SSeqV [SSeqV [IntV 16]] SSeqT 1 (SSeqT 1 IntT)
-    n169 = FIFON SSeqT 1 (SSeqT 1 IntT) 1 "n168"
-    n170 = Map2_sN 1 (Map2_sN 1 (ATupleN IntT IntT I0 I1) I0 I1) n167 n169
+    n168 = Const_GenN SSeqV [SSeqV [IntV 16]] 1 SSeqT 1 (SSeqT 1 IntT)
+    n170 = Map2_sN 1 (Map2_sN 1 (ATupleN IntT IntT I0 I1) I0 I1) n167 n168
     n181 = Map_sN 1 (Map_sN 1 (DivN I) I) n170
 
 module1 (I :: SSeqT 3 (SSeqT 3 IntT)) =
-    n325 = Const_GenN SSeqV [SSeqV [IntV 1,IntV 2,IntV 1],SSeqV [IntV 2,IntV 4,IntV 2],SSeqV [IntV 1,IntV 2,IntV 1]] SSeqT 3 (SSeqT 3 IntT)
-    n327 = FIFON SSeqT 3 (SSeqT 3 IntT) 1 "n325"
-    n328 = Map2_sN 3 (Map2_sN 3 (ATupleN IntT IntT I0 I1) I0 I1) n327 I
+    n325 = Const_GenN SSeqV [SSeqV [IntV 1,IntV 2,IntV 1],SSeqV [IntV 2,IntV 4,IntV 2],SSeqV [IntV 1,IntV 2,IntV 1]] 1 SSeqT 3 (SSeqT 3 IntT)
+    n328 = Map2_sN 3 (Map2_sN 3 (ATupleN IntT IntT I0 I1) I0 I1) n325 I
     n339 = Map_sN 3 (Map_sN 3 (MulN I) I) n328
     n344 = Map_sN 3 (Reduce_sN 3 (AddN I) I) n339
     n349 = Reduce_sN 3 (Map_sN 1 (AddN I) I) n344
-    n350 = Const_GenN SSeqV [SSeqV [IntV 16]] SSeqT 1 (SSeqT 1 IntT)
-    n351 = FIFON SSeqT 1 (SSeqT 1 IntT) 1 "n350"
-    n352 = Map2_sN 1 (Map2_sN 1 (ATupleN IntT IntT I0 I1) I0 I1) n349 n351
+    n350 = Const_GenN SSeqV [SSeqV [IntV 16]] 1 SSeqT 1 (SSeqT 1 IntT)
+    n352 = Map2_sN 1 (Map2_sN 1 (ATupleN IntT IntT I0 I1) I0 I1) n349 n350
     n363 = Map_sN 1 (Map_sN 1 (DivN I) I) n352
 
 module2 (I :: TSeqT 8 0 (SSeqT 2 (SSeqT 1 (SSeqT 1 IntT)))) =
