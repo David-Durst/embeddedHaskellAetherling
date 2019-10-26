@@ -207,8 +207,9 @@ lt_test_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
 if_lt_atom_test x = do
   let one = const_genC (Atom_Int 1) x
   let two = const_genC (Atom_Int 2) x
+  let three = const_genC (Atom_Int 3) x
   let bool = ltC $ atom_tupleC x one
-  ifC (atom_tupleC bool (atom_tupleC one two))
+  ifC (atom_tupleC bool (atom_tupleC three two))
 if_lt_test =
   mapC' (Proxy @4) if_lt_atom_test $
   com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
@@ -218,10 +219,10 @@ if_lt_test_ppar = fmap
 if_lt_test_ppar_typechecked = fmap check_type if_lt_test_ppar
 if_lt_test_ppar_typechecked' = fmap check_type_get_error if_lt_test_ppar
 if_lt_test_inputs :: [[Integer]] = [[0..3]]
-if_lt_test_outputs :: [Integer] = [1,2,2,2]
+if_lt_test_outputs :: [Integer] = [3,2,2,2]
 if_lt_test_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                        if_lt_test s Nothing
-                                       if_lt_test_inputs if_lt_test_outputs) [1]
+                                       if_lt_test_inputs if_lt_test_outputs) [1,2,4]
 -- tests basic multi-rate
 map_to_up = 
   mapC' (Proxy @1) absC >>> -- [1]
