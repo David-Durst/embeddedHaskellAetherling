@@ -18,6 +18,7 @@ import Aetherling.Rewrites.Sequence_Assign_Indexes
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import Aetherling.Interpretations.Magma.Compile
 import Aetherling.Interpretations.Magma.Tester
+import Control.Applicative
 import Data.Proxy
 import Data.Traversable
 import GHC.TypeLits
@@ -366,3 +367,48 @@ conv_2d_3x3_repeat_b2b_results = sequence $ fmap (\s -> compile_and_test_with_sl
 
 conv_2d_3x3_repeat_b2b_print_st = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
                                       conv_2d_3x3_repeat_b2b s "conv2d_b2b_3x3_repeat") [1,2,4,8,16,48,144]
+t_const :: Integer
+t_const = 15
+t_const' = 15
+sharpen_one_pixel a_pixel b_pixel = do
+  let b_sub_a = subC $ atom_tupleC b_pixel a_pixel 
+  let abs_b_sub_a = absC b_sub_a
+  let t_constC = const_genC (Atom_Int t_const') a_pixel
+  let passed_threshold = ltC $ atom_tupleC t_constC abs_b_sub_a
+  let const_0 = (const_genC (Atom_Int 0) a_pixel)
+  let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a const_0))
+  let alpha_h = divC $ atom_tupleC h (const_genC (Atom_Int 5) a_pixel)
+  addC $ atom_tupleC b_pixel alpha_h
+sharpen_one_pixel' :: Integer -> Integer -> Integer
+sharpen_one_pixel' a b = do
+  let h = if (abs $ b - a) > t_const then b - a else 0
+  b + (h `div` 5)
+
+sharpen_shallow_no_input in_col in_seq = do
+  let first_stencil = stencil_3x3_2dC_test in_col in_seq
+  let branch_a = mapC tuple_2d_mul_shallow_no_input first_stencil
+  let branch_b = in_seq
+  {-
+  let b_sub_a = map2C (map2C $ map2C $ \x y -> (subC $ atom_tupleC x y)) branch_b branch_a
+  let abs_b_sub_a = mapC (mapC $ mapC $ absC) b_sub_a
+  let t_const = const_genC (Atom_Int 15) in_seq
+  let passed_threshold = mapC (mapC $ mapC $ (\x -> ltC $ atom_tupleC t_const x)) abs_b_sub_a
+   -}
+  --let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a (const_genC (Atom_Int 0) in_seq)))
+  map2C (map2C $ map2C sharpen_one_pixel) branch_a branch_b
+sharpen = sharpen_shallow_no_input (Proxy @4) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+sharpen_seq_idx = add_indexes $ seq_shallow_to_deep sharpen
+sharpen_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s sharpen_seq_idx) [1,2,4,8,16,48,144]
+sharpen_ppar_typechecked =
+  fmap check_type sharpen_ppar
+sharpen_ppar_typechecked' =
+  fmap check_type_get_error sharpen_ppar
+sharpen_inputs :: [[Integer]] = [[i * 5 | i <- [1..row_size * row_size]]]
+sharpen_output :: [Integer] =
+  liftA2 sharpen_one_pixel' (sharpen_inputs !! 0) $
+  conv_generator $ stencil_generator 4 (sharpen_inputs !! 0)
+sharpen_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      sharpen s (Just "conv2d_b2b_3x3_repeat")
+                                      sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
