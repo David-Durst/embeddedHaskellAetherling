@@ -16,6 +16,7 @@ import System.IO
 import System.Process
 import System.Environment
 import Debug.Trace
+import Data.Map as M
 
 -- | Return true if all latencies match when merging two paths
 check_latency :: Expr -> IO Bool
@@ -31,6 +32,20 @@ check_latency e = do
     then putStrLn $ show $ fromLeft undefined computed_latency
     else return ()
   return $ isRight computed_latency
+  
+get_ops_latencies :: Expr -> IO (M.Map DAG_Index Int)
+get_ops_latencies e = do
+  computed_latencies <- evalStateT
+                      (
+                        evalStateT
+                        (runExceptT $ startExecMemoT $ compute_latency e)
+                        empty_rewrite_data
+                      )
+                      empty_latency_state
+  if isLeft computed_latencies
+    then putStrLn $ show $ fromLeft undefined computed_latencies
+    else return ()
+  return $ fromRight M.empty computed_latencies
   
 print_latency :: Expr -> IO Int
 print_latency e = do

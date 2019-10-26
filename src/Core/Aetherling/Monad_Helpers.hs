@@ -48,3 +48,6 @@ empty_memo_state = M.empty
 
 startEvalMemoT :: Monad m => DAG_MemoT v m a -> m a
 startEvalMemoT f = S.evalStateT f M.empty
+
+startExecMemoT :: Monad m => DAG_MemoT v m a -> m (M.Map DAG_Index v)
+startExecMemoT f = S.execStateT f M.empty
