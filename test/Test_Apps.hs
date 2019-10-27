@@ -399,7 +399,7 @@ sharpen_one_pixel a_pixel b_pixel = do
 sharpen_one_pixel' :: Integer -> Integer -> Integer
 sharpen_one_pixel' a b = do
   let h = if (abs $ b - a) > t_const then b - a else 0
-  if b == int_to_ignore then b else b + (h `div` 5)
+  if a == int_to_ignore then a else b + (h `div` 5)
 sharpen_one_pixel_map_no_input a_pixel b_pixel = do
   map2C sharpen_one_pixel a_pixel b_pixel 
 sharpen_one_pixel_map = sharpen_one_pixel_map_no_input
@@ -445,8 +445,9 @@ sharpen_ppar_typechecked' =
   fmap check_type_get_error sharpen_ppar
 sharpen_inputs :: [[Integer]] = [[i * 5 | i <- [1..row_size * row_size]]]
 sharpen_output :: [Integer] =
-  liftA2 sharpen_one_pixel' (sharpen_inputs !! 0) $
-  conv_generator $ stencil_generator 4 (sharpen_inputs !! 0)
+  zipWith sharpen_one_pixel' 
+  (conv_generator $ stencil_generator 4 (sharpen_inputs !! 0))
+  (sharpen_inputs !! 0)
 sharpen_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       sharpen s (Just "sharpen")
-                                      sharpen_inputs sharpen_output) [16]
+                                      sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
