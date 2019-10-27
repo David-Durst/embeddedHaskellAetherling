@@ -361,6 +361,24 @@ down_over_nested_to_down_over_flattened_results =
                          down_over_nested_to_down_over_flattened_output) [1,2,4,8,16]
 
 
+tuple_reverse_shallow_no_input in_seq0 in_seq1 = do
+  map2C (\x y -> sndC $ atom_tupleC y x) in_seq0 in_seq1
+tuple_reverse = tuple_reverse_shallow_no_input
+  (com_input_seq "I0" (Proxy :: Proxy (Seq 4 0 Atom_Int)))
+  (com_input_seq "I1" (Proxy :: Proxy (Seq 4 0 Atom_Int)))
+tuple_reverse_seq_idx = add_indexes $ seq_shallow_to_deep tuple_reverse
+tuple_reverse_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s tuple_reverse_seq_idx) [1,2,4]
+tuple_reverse_ppar_typechecked =
+  fmap check_type tuple_reverse_ppar
+tuple_reverse_ppar_typechecked' =
+  fmap check_type_get_error tuple_reverse_ppar
+tuple_reverse_inputs :: [[Integer]] = [[1,2,3,4], [5,6,7,8]]
+tuple_reverse_output :: [Integer] = [1,2,3,4]
+tuple_reverse_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      tuple_reverse s Nothing
+                                      tuple_reverse_inputs tuple_reverse_output) [1,2,4]
+                    
 tuple_sum_shallow_no_input in_seq = do
   let kernel_list = fmap Atom_Int [1,2,3,4]
   let kernel = const_genC (Seq $ listToVector (Proxy @4) kernel_list) in_seq

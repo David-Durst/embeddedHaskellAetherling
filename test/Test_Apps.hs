@@ -371,18 +371,56 @@ t_const :: Integer
 t_const = 15
 t_const' = 15
 sharpen_one_pixel a_pixel b_pixel = do
-  let b_sub_a = subC $ atom_tupleC b_pixel a_pixel 
+  let b_sub_a = subC $ atom_tupleC b_pixel a_pixel
+  let const_0 = (const_genC (Atom_Int 0) a_pixel)
   let abs_b_sub_a = absC b_sub_a
   let t_constC = const_genC (Atom_Int t_const') a_pixel
   let passed_threshold = ltC $ atom_tupleC t_constC abs_b_sub_a
-  let const_0 = (const_genC (Atom_Int 0) a_pixel)
   let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a const_0))
   let alpha_h = divC $ atom_tupleC h (const_genC (Atom_Int 5) a_pixel)
   addC $ atom_tupleC b_pixel alpha_h
+{-
+sharpen_one_pixel a_pixel b_pixel = do
+  let b_sub_a = subC $ atom_tupleC b_pixel a_pixel
+  --let const_0 = (const_genC (Atom_Int 0) a_pixel)
+  let const_t = (const_genC (Atom_Bit True) a_pixel)
+  {-
+  let abs_b_sub_a = absC b_sub_a
+  let t_constC = const_genC (Atom_Int t_const') a_pixel
+  let passed_threshold = ltC $ atom_tupleC t_constC abs_b_sub_a
+  let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a const_0))
+-}
+  let h = ifC (atom_tupleC const_t (atom_tupleC b_sub_a b_pixel))
+  --let alpha_h = divC $ atom_tupleC h (const_genC (Atom_Int 5) a_pixel)
+  --addC $ atom_tupleC b_pixel alpha_h
+  --addC $ atom_tupleC h b_sub_a
+  b_sub_a
+-}
 sharpen_one_pixel' :: Integer -> Integer -> Integer
 sharpen_one_pixel' a b = do
   let h = if (abs $ b - a) > t_const then b - a else 0
-  b + (h `div` 5)
+  if b == int_to_ignore then b else b + (h `div` 5)
+sharpen_one_pixel_map_no_input a_pixel b_pixel = do
+  map2C sharpen_one_pixel a_pixel b_pixel 
+sharpen_one_pixel_map = sharpen_one_pixel_map_no_input
+  (com_input_seq "I0" (Proxy :: Proxy (Seq 2 0 Atom_Int)))
+  (com_input_seq "I1" (Proxy :: Proxy (Seq 2 0 Atom_Int)))
+sharpen_one_pixel_map_deep = seq_shallow_to_deep sharpen_one_pixel_map
+sharpen_one_pixel_map_seq_idx = add_indexes $ seq_shallow_to_deep sharpen_one_pixel_map
+sharpen_one_pixel_map_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s sharpen_one_pixel_map_seq_idx) [1,2]
+sharpen_one_pixel_map_ppar_typechecked =
+  fmap check_type sharpen_one_pixel_map_ppar
+sharpen_one_pixel_map_ppar_typechecked' =
+  fmap check_type_get_error sharpen_one_pixel_map_ppar
+sharpen_one_pixel_map_inputs :: [[Integer]] = [[1,2],[2,30]]
+sharpen_one_pixel_map_output :: [Integer] =
+  zipWith sharpen_one_pixel'
+  (sharpen_one_pixel_map_inputs !! 0) 
+  (sharpen_one_pixel_map_inputs !! 1)
+sharpen_one_pixel_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      sharpen_one_pixel_map s Nothing
+                                      sharpen_one_pixel_map_inputs sharpen_one_pixel_map_output) [1,2]
 
 sharpen_shallow_no_input in_col in_seq = do
   let first_stencil = stencil_3x3_2dC_test in_col in_seq
@@ -410,5 +448,5 @@ sharpen_output :: [Integer] =
   liftA2 sharpen_one_pixel' (sharpen_inputs !! 0) $
   conv_generator $ stencil_generator 4 (sharpen_inputs !! 0)
 sharpen_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      sharpen s (Just "conv2d_b2b_3x3_repeat")
-                                      sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
+                                      sharpen s (Just "sharpen")
+                                      sharpen_inputs sharpen_output) [16]

@@ -11,6 +11,7 @@ import Control.Monad.Identity
 import Aetherling.Monad_Helpers
 import Data.Either
 import Debug.Trace
+import Data.List
 
 data Module_Port = Module_Port {
   -- this is the port of the instance to wire
@@ -155,7 +156,7 @@ print_module new_module = do
 
   -- get state after executing inside module
   end_data <- lift get
-  let cur_inputs = cur_module_inputs end_data
+  let cur_inputs = sortBy (\x y -> compare (port_name x) (port_name y)) $ cur_module_inputs end_data
   if cur_module_num_non_inputs end_data == 1 && (not $ is_top_module start_data)
     then do
     -- setup for outer module
@@ -236,7 +237,7 @@ print_module new_module = do
       modules = modules end_data ++ [module_str]
       }
     --traceShowM $ "module " ++ cur_module_name
-    --traceShowM $ show end_data
+    --traceShowM $ show cur_inputs
     --traceShowM $ show cur_module_result_ref
     return $ Magma_Module_Ref (cur_module_name ++ "()") "" cur_inputs (out_port cur_module_result_ref)
 

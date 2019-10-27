@@ -7,6 +7,7 @@ import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Identity
 import Aetherling.Monad_Helpers
+import Data.List
 
 data Print_Data = Print_Data {
   cur_module_output_lines :: [String],
@@ -89,7 +90,7 @@ print_module new_module = do
     else do
     let cur_module_index = next_module_index end_data
     let cur_module_ref = "module" ++ show cur_module_index
-    let cur_inputs = cur_module_inputs end_data
+    let cur_inputs = sort $ cur_module_inputs end_data
     let cur_inputs_str = foldl (\x y -> x ++ " " ++ y)
                         (head $ cur_inputs) (tail $ cur_inputs)
     let module_start_string = cur_module_ref ++ " " ++ cur_inputs_str ++ " =\n"
