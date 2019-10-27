@@ -37,6 +37,10 @@ slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
     (all_success =<< single_map_underutil_results) @? "map with underutilization slowdowns failed",
     testCase "slowing a constant generator" $
     (all_success =<< const_test_results) @? "constant generator slowdowns failed",
+    testCase "slowing a less than" $
+    (all_success =<< lt_test_results) @? "less than slowdowns failed",
+    testCase "slowing an if and less than" $
+    (all_success =<< if_lt_test_results) @? "if and less than slowdowns failed",
     testCase "slowing a map to an upsample" $
     (all_success =<< map_to_up_results) @? "map to up slowdowns failed",
     testCase "slowing up to down" $

@@ -24,6 +24,27 @@ import Data.Traversable
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 
+apps_tests = testGroup "Full Application Tests"
+  [
+    testCase "map" $
+    (all_success =<< single_map_200_results) @? "map failed",
+    testCase "single 3x3 convolution" $
+    (all_success =<< conv_2d_results) @? "single 3x3 convolution failed",
+    testCase "pyramid" $
+    (all_success =<< pyramid_2d_results) @? "pyramid failed",
+    testCase "conv 3x3 to 2x2" $
+    (all_success =<< conv_2d_b2b_results) @? "conv 3x3 to 2x2 failed",
+    testCase "conv 3x3 to 3x3" $
+    (all_success =<< conv_2d_3x3_repeat_b2b_results) @? "conv 3x3 to 3x3 failed",
+    testCase "sharpen" $
+    (all_success =<< sharpen_results) @? "sharpen failed"
+  ]
+  
+all_success :: [Fault_Result] -> IO Bool
+all_success results = do
+  let checked_results = all (\x -> x == Fault_Success) results
+  return checked_results
+  
 add_5 atom_in = do
   let const = const_genC (Atom_Int 5) atom_in
   let tupled = atom_tupleC atom_in const
