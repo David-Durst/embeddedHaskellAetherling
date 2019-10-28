@@ -17,30 +17,34 @@ import System.Process
 import System.Environment
 import Debug.Trace
 import Data.Map as M
+import Data.List
 
 compute_consumers :: Expr -> M.Map DAG_Index [DAG_Index]
 compute_consumers st_expr_in = do
-  let expr_par = evalState
-                 (runExceptT $ startExecMemoT $ compute_consumers' st_expr_in)
-                 empty_rewrite_data
-  if isLeft expr_par
+  let producers_map_maybe = evalState
+                            (runExceptT $ startExecMemoT $ compute_producers' st_expr_in)
+                            empty_rewrite_data
+  if isLeft producers_map_maybe
     then M.empty
-    else fromRight undefined expr_par
+    else do
+    let producers_map = fromRight undefined producers_map_maybe
+    let consumer_producer_pairs = concatMap (\(x,ys) -> fmap (\y -> (y,x)) ys) $
+                                  M.toList producers_map
+    let cosumer_map =
+          --fmap (\l ->   ) - need to convert list of tuples to tuple of one and list of others
+          groupBy (\x y -> fst x == fst y) $
+          sortBy (\x y -> compare (fst x) (fst y)) consumer_producer_pairs
+    undefined
     
-compute_consumers' :: Expr -> Memo_Rewrite_StateM [DAG_Index] Expr
-compute_consumers' = undefined
-{-
-compute_consumers' fifo_e@(FIFON _ fifo_delay
-                                const_e@(Const_GenN _ _ const_delay _)
-                                _) = do
-  return $ const_e { delay = fifo_delay + const_delay }
-compute_consumers' consumer_e = do
+compute_producers' :: Expr -> Memo_Rewrite_StateM [DAG_Index] [DAG_Index]
+compute_producers' consumer_e = do
   let f_e_maybe = get_f consumer_e
-  merged_f <- mapM (\f_e -> memo f_e $ compute_consumers' f_e) f_e_maybe
+  mapM (\f_e -> memo f_e $ compute_producers' f_e) f_e_maybe
   let producers_e = get_producers consumer_e
-  merged_producers <- mapM (\producer_e ->
-                             memo producer_e $ compute_consumers' producer_e)
-                     producers_e
+  mapM (\producer_e -> memo producer_e $ compute_producers' producer_e)
+    producers_e
+  undefined
+  {-
   --return $ consumer_e { seq_in = merged_producer }
   let consumer_e_producers_replaced =
         if length producers_e == 0
