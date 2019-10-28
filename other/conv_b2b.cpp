@@ -3,7 +3,7 @@
 #define ROW_SIZE 4
 #define KERNEL_3_SIZE 3
 #define KERNEL_2_SIZE 3
-#define INT_TO_IGNORE -23451
+#define INT_TO_IGNORE 253
 
 
 // this makes one window of the stencil
