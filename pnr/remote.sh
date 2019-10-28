@@ -16,7 +16,7 @@ for circuit_path in ${circuit_dir_path}/*/*/*.v; do
     circuit_name=`sed -n -E "s/(.*)_[^_]*/\1/p" <<< $circuit_basename`
     circuit_par=`sed -n -E "s/.*_([^_]*).v$/\1/p" <<< $circuit_basename`
 
-    ./compile.sh $circuit_path constraints.xdc build $CURRENT_TIME "${circuit_name}_${circuit_par}"
+    ./compile.sh $circuit_path constraints.xdc build $CURRENT_TIME "${system}/${circuit_name}_${circuit_par}"
     last_build_dir=$(<last_builddir.log)
     
     echo -n "${system}" >> ${results_temp}
