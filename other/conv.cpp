@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
       inputs[i][j] = i*ROW_SIZE + j + 1;
     }
   }
+  #ifdef DEBUG
   for (int i = 0; i < ROW_SIZE; i++){
     printf("[");
     for (int j = 0; j < ROW_SIZE; j++){
@@ -59,13 +60,17 @@ int main(int argc, char** argv) {
     printf("]\n");
   }
   printf("done initializing\n");
+  #endif
   std::array< std::array<
     std::array< std::array< int, KERNEL_SIZE > , KERNEL_SIZE >
       , ROW_SIZE > , ROW_SIZE > stencil_result;
   for (int i = 0; i < ROW_SIZE; i++){
     for (int j = 0; j < ROW_SIZE; j++){
+      #ifdef DEBUG
       printf("starting %d,%d stencil\n", i, j);
+      #endif
       stencil_result[i][j] = stencil(inputs, i, j);
+      #ifdef DEBUG
       for (int k = 0; k < KERNEL_SIZE; k++){
         printf("[");
         for (int l = 0; l < KERNEL_SIZE; l++){
@@ -74,16 +79,21 @@ int main(int argc, char** argv) {
         printf("]\n");
       }
       printf("done %d,%d stencil\n", i, j);
+      #endif
     }
   }
+  #ifdef DEBUG
   printf("done generating stencil windows\n");
+  #endif
   std::array< std::array< int, ROW_SIZE >, ROW_SIZE > conv_result;
   for (int i = 0; i < ROW_SIZE; i++){
     for (int j = 0; j < ROW_SIZE; j++){
       conv_result[i][j] = conv(stencil_result[i][j]);
     }
   }
+  #ifdef DEBUG
   printf("done convolving blur\n");
+  #endif
   for (int i = 0; i < ROW_SIZE; i++){
     printf("[");
     for (int j = 0; j < ROW_SIZE; j++){
