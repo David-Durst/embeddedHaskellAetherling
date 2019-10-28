@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
   }
   printf("done initializing\n");
   #endif
+
   std::array< std::array<
     std::array< std::array< int, KERNEL_SIZE > , KERNEL_SIZE >
       , ROW_SIZE > , ROW_SIZE > stencil_result;
@@ -85,6 +86,7 @@ int main(int argc, char** argv) {
   #ifdef DEBUG
   printf("done generating stencil windows\n");
   #endif
+
   std::array< std::array< int, ROW_SIZE >, ROW_SIZE > conv_result;
   for (int i = 0; i < ROW_SIZE; i++){
     for (int j = 0; j < ROW_SIZE; j++){
@@ -94,6 +96,7 @@ int main(int argc, char** argv) {
   #ifdef DEBUG
   printf("done convolving blur\n");
   #endif
+
   for (int i = 0; i < ROW_SIZE; i++){
     printf("[");
     for (int j = 0; j < ROW_SIZE; j++){
