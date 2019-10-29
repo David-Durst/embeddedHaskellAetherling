@@ -134,7 +134,7 @@ tuple_2d_mul_shallow_no_input in_seq = do
                     fmap (list_to_seq (Proxy @3)) $
                     fmap (fmap Atom_Int) hask_kernel
   let kernel = const_genC kernel_list in_seq
-  let kernel_and_values = map2C (map2C atom_tupleC) kernel in_seq
+  let kernel_and_values = map2C (map2C atom_tupleC) in_seq kernel 
   let mul_result = mapC (mapC lslC) kernel_and_values
   let sum = reduceC'' (mapC addC) $ mapC (reduceC addC) mul_result
   let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_Int 4]]
@@ -312,15 +312,15 @@ stencil_2x2_generator row_size inputs = [
   ] | r <- [1..row_size], c <- [1..row_size]]
 
 -- need thse for Integer and Int versions
-hask_kernel_2x2 :: [[Int]] = [[1,3],[3,1]]
-hask_kernel'_2x2 :: [Integer] = [1,3,3,1]
+hask_kernel_2x2 :: [[Int]] = [[0,2],[1,0]]
+hask_kernel'_2x2 :: [Integer] = [1,4,2,1]
 tuple_2d_2x2_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @2) $
                     fmap (list_to_seq (Proxy @2)) $
                     fmap (fmap Atom_Int) hask_kernel_2x2
   let kernel = const_genC kernel_list in_seq
-  let kernel_and_values = map2C (map2C atom_tupleC) kernel in_seq
-  let mul_result = mapC (mapC mulC) kernel_and_values
+  let kernel_and_values = map2C (map2C atom_tupleC) in_seq kernel
+  let mul_result = mapC (mapC lslC) kernel_and_values
   let sum = reduceC'' (mapC addC) $ mapC (reduceC addC) mul_result
   let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_Int 3]]
   let norm = const_genC norm_list in_seq
