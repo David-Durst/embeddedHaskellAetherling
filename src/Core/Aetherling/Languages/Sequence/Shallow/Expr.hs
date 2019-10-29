@@ -18,6 +18,8 @@ class Monad m => Sequence_Language m where
   subC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int
   mulC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int
   divC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int
+  lsrC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int
+  lslC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int
   ltC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Bit
   eqC :: (Aetherling_Value a, Check_Type_Is_Atom a, Eq a) =>
     m (Atom_Tuple a a) -> m Atom_Bit

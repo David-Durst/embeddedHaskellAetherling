@@ -70,6 +70,18 @@ instance Sequence_Language Rewrite_StateM where
       Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ DivN x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "divC" "Atom_Tuple Atom_Int Atom_Int"
       
+  lsrC inputM = do
+    input <- inputM
+    case input of
+      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ LSRN x No_Index
+      _ -> throwError $ Expr_Failure $ fail_message_edge "lsrC" "Atom_Tuple Atom_Int Atom_Int"
+      
+  lslC inputM = do
+    input <- inputM
+    case input of
+      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ LSLN x No_Index
+      _ -> throwError $ Expr_Failure $ fail_message_edge "lslC" "Atom_Tuple Atom_Int Atom_Int"
+      
   ltC inputM = do
     input <- inputM
     case input of

@@ -87,6 +87,8 @@ compute_latency e@(MulN producer _) = memo producer $ compute_latency producer
 compute_latency e@(DivN producer _) = do
   producer_latency <- memo producer $ compute_latency producer
   return $ producer_latency + 1
+compute_latency e@(LSRN producer _) = memo producer $ compute_latency producer
+compute_latency e@(LSLN producer _) = memo producer $ compute_latency producer
 compute_latency e@(LtN producer _) = memo producer $ compute_latency producer
 compute_latency e@(EqN t producer _) = memo producer $ compute_latency producer
 compute_latency e@(IfN t producer _) = memo producer $ compute_latency producer

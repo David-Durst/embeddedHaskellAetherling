@@ -53,6 +53,8 @@ match_latencies' e@(DivN producer _) = do
   return $ this_comb_latency {
     latency = latency this_comb_latency + 1
     }
+match_latencies' e@(LSRN producer _) = match_combinational_op e producer
+match_latencies' e@(LSLN producer _) = match_combinational_op e producer
 match_latencies' e@(LtN producer _) = match_combinational_op e producer
 match_latencies' e@(EqN t producer _) = match_combinational_op e producer
 match_latencies' e@(IfN t producer _) = match_combinational_op e producer

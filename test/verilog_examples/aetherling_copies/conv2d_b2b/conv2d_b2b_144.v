@@ -68,10 +68,6 @@ module coreir_ult #(parameter width = 1) (input [width-1:0] in0/*verilator publi
   assign out = in0 < in1;
 endmodule
 
-module coreir_udiv #(parameter width = 1) (input [width-1:0] in0/*verilator public*/, input [width-1:0] in1/*verilator public*/, output [width-1:0] out/*verilator public*/);
-  assign out = in0 / in1;
-endmodule
-
 module coreir_term #(parameter width = 1) (input [width-1:0] in/*verilator public*/);
 
 endmodule
@@ -106,6 +102,10 @@ module coreir_mem #(parameter has_init = 0, parameter depth = 1, parameter width
     end
   end
   assign rdata = data[raddr];
+endmodule
+
+module coreir_lshr #(parameter width = 1) (input [width-1:0] in0/*verilator public*/, input [width-1:0] in1/*verilator public*/, output [width-1:0] out/*verilator public*/);
+  assign out = in0 >> in1;
 endmodule
 
 module coreir_eq #(parameter width = 1) (input [width-1:0] in0/*verilator public*/, input [width-1:0] in1/*verilator public*/, output out/*verilator public*/);
@@ -232,6 +232,13 @@ wire [0:0] const_0_1_out;
 Term_Bitt Term_Bitt_inst0(.I(CE));
 coreir_const #(.value(1'h0), .width(1)) const_0_1(.out(const_0_1_out));
 assign O = const_0_1_out;
+endmodule
+
+module RShift_Atom (input [7:0] I__0/*verilator public*/, input [7:0] I__1/*verilator public*/, output [7:0] O/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
+wire [7:0] lshr8_inst0_out;
+coreir_lshr #(.width(8)) lshr8_inst0(.in0(I__0), .in1(I__1), .out(lshr8_inst0_out));
+assign O = lshr8_inst0_out;
+assign valid_down = valid_up;
 endmodule
 
 module RAM3x8 (input CLK/*verilator public*/, input [1:0] RADDR/*verilator public*/, output [7:0] RDATA/*verilator public*/, input [1:0] WADDR/*verilator public*/, input [7:0] WDATA/*verilator public*/, input WE/*verilator public*/);
@@ -609,6 +616,14 @@ assign O__1 = atomTupleCreator_t0Int_t1Int_inst0_O__1;
 assign valid_down = atomTupleCreator_t0Int_t1Int_inst0_valid_down;
 endmodule
 
+module Map_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__ (input CLK/*verilator public*/, input [7:0] I__0/*verilator public*/, input [7:0] I__1/*verilator public*/, output [7:0] O/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
+wire [7:0] RShift_Atom_inst0_O;
+wire RShift_Atom_inst0_valid_down;
+RShift_Atom RShift_Atom_inst0(.I__0(I__0), .I__1(I__1), .O(RShift_Atom_inst0_O), .valid_down(RShift_Atom_inst0_valid_down), .valid_up(valid_up));
+assign O = RShift_Atom_inst0_O;
+assign valid_down = RShift_Atom_inst0_valid_down;
+endmodule
+
 module Map_T_n1_i2_opMap_T_n1_i2_opsseqTupleCreator_tInt_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Array_2_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Array_2_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ (input CLK/*verilator public*/, input [7:0] I0/*verilator public*/, input [7:0] I1/*verilator public*/, output [7:0] O_0/*verilator public*/, output [7:0] O_1/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
 wire [7:0] Map_T_n1_i2_opsseqTupleCreator_tInt_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Array_2_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___inst0_O_0;
 wire [7:0] Map_T_n1_i2_opsseqTupleCreator_tInt_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Array_2_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___inst0_O_1;
@@ -639,6 +654,14 @@ Map_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit
 assign O__0 = Map_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___inst0_O__0;
 assign O__1 = Map_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___inst0_O__1;
 assign valid_down = Map_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___inst0_valid_down;
+endmodule
+
+module Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ (input CLK/*verilator public*/, input [7:0] I__0/*verilator public*/, input [7:0] I__1/*verilator public*/, output [7:0] O/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
+wire [7:0] Map_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_O;
+wire Map_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_valid_down;
+Map_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__ Map_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0(.CLK(CLK), .I__0(I__0), .I__1(I__1), .O(Map_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_O), .valid_down(Map_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_valid_down), .valid_up(valid_up));
+assign O = Map_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_O;
+assign valid_down = Map_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_valid_down;
 endmodule
 
 module Map_T_n16_i0_opMap_T_n1_i2_opsseqTupleCreator_tTSeq_3_0_Int__I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Array_2_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Array_2_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ (input CLK/*verilator public*/, input [7:0] I0/*verilator public*/, input [7:0] I1/*verilator public*/, output [7:0] O_0/*verilator public*/, output [7:0] O_1/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
@@ -695,12 +718,6 @@ assign O_2 = Map_T_n1_i2_opMap_T_n1_i2_opsseqTupleAppender_tInt_n2_I0_Array_2_Ar
 assign valid_down = Map_T_n1_i2_opMap_T_n1_i2_opsseqTupleAppender_tInt_n2_I0_Array_2_Array_8_In_Bit____I1_Array_8_In_Bit___O_Array_3_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_2_Array_8_In_Bit____I1_Array_8_In_Bit___O_Array_3_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down;
 endmodule
 
-module LUT4_8192 (input I0/*verilator public*/, input I1/*verilator public*/, input I2/*verilator public*/, input I3/*verilator public*/, output O/*verilator public*/);
-wire coreir_lut4_inst0_out;
-lutN #(.init(16'h2000), .N(4)) coreir_lut4_inst0(.in({I3,I2,I1,I0}), .out(coreir_lut4_inst0_out));
-assign O = coreir_lut4_inst0_out;
-endmodule
-
 module LUT4_4096 (input I0/*verilator public*/, input I1/*verilator public*/, input I2/*verilator public*/, input I3/*verilator public*/, output O/*verilator public*/);
 wire coreir_lut4_inst0_out;
 lutN #(.init(16'h1000), .N(4)) coreir_lut4_inst0(.in({I3,I2,I1,I0}), .out(coreir_lut4_inst0_out));
@@ -713,6 +730,12 @@ lutN #(.init(16'h0145), .N(4)) coreir_lut4_inst0(.in({I3,I2,I1,I0}), .out(coreir
 assign O = coreir_lut4_inst0_out;
 endmodule
 
+module LUT4_31 (input I0/*verilator public*/, input I1/*verilator public*/, input I2/*verilator public*/, input I3/*verilator public*/, output O/*verilator public*/);
+wire coreir_lut4_inst0_out;
+lutN #(.init(16'h001f), .N(4)) coreir_lut4_inst0(.in({I3,I2,I1,I0}), .out(coreir_lut4_inst0_out));
+assign O = coreir_lut4_inst0_out;
+endmodule
+
 module LUT4_256 (input I0/*verilator public*/, input I1/*verilator public*/, input I2/*verilator public*/, input I3/*verilator public*/, output O/*verilator public*/);
 wire coreir_lut4_inst0_out;
 lutN #(.init(16'h0100), .N(4)) coreir_lut4_inst0(.in({I3,I2,I1,I0}), .out(coreir_lut4_inst0_out));
@@ -722,12 +745,6 @@ endmodule
 module LUT4_170 (input I0/*verilator public*/, input I1/*verilator public*/, input I2/*verilator public*/, input I3/*verilator public*/, output O/*verilator public*/);
 wire coreir_lut4_inst0_out;
 lutN #(.init(16'h00aa), .N(4)) coreir_lut4_inst0(.in({I3,I2,I1,I0}), .out(coreir_lut4_inst0_out));
-assign O = coreir_lut4_inst0_out;
-endmodule
-
-module LUT4_17 (input I0/*verilator public*/, input I1/*verilator public*/, input I2/*verilator public*/, input I3/*verilator public*/, output O/*verilator public*/);
-wire coreir_lut4_inst0_out;
-lutN #(.init(16'h0011), .N(4)) coreir_lut4_inst0(.in({I3,I2,I1,I0}), .out(coreir_lut4_inst0_out));
 assign O = coreir_lut4_inst0_out;
 endmodule
 
@@ -773,7 +790,7 @@ LUT4_0 LUT4_0_inst4(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(L
 LUT4_0 LUT4_0_inst5(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_0_inst5_O));
 LUT4_1 LUT4_1_inst0(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_1_inst0_O));
 LUT4_1 LUT4_1_inst1(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_1_inst1_O));
-\aetherlinglib_hydrate__hydratedTypeBit8 hydrate_tArray_8_Bit__inst0(.in({LUT4_0_inst5_O,LUT4_0_inst4_O,LUT4_0_inst3_O,LUT4_0_inst2_O,LUT4_0_inst1_O,LUT4_1_inst1_O,LUT4_1_inst0_O,LUT4_0_inst0_O}), .out(hydrate_tArray_8_Bit__inst0_out));
+\aetherlinglib_hydrate__hydratedTypeBit8 hydrate_tArray_8_Bit__inst0(.in({LUT4_0_inst5_O,LUT4_0_inst4_O,LUT4_0_inst3_O,LUT4_0_inst2_O,LUT4_0_inst1_O,LUT4_0_inst0_O,LUT4_1_inst1_O,LUT4_1_inst0_O}), .out(hydrate_tArray_8_Bit__inst0_out));
 assign data = hydrate_tArray_8_Bit__inst0_out;
 endmodule
 
@@ -785,7 +802,7 @@ wire LUT4_0_inst3_O;
 wire LUT4_0_inst4_O;
 wire LUT4_0_inst5_O;
 wire LUT4_14_inst0_O;
-wire LUT4_17_inst0_O;
+wire LUT4_31_inst0_O;
 wire [7:0] hydrate_tArray_8_Bit__inst0_out;
 LUT4_0 LUT4_0_inst0(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_0_inst0_O));
 LUT4_0 LUT4_0_inst1(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_0_inst1_O));
@@ -794,8 +811,8 @@ LUT4_0 LUT4_0_inst3(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(L
 LUT4_0 LUT4_0_inst4(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_0_inst4_O));
 LUT4_0 LUT4_0_inst5(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_0_inst5_O));
 LUT4_14 LUT4_14_inst0(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_14_inst0_O));
-LUT4_17 LUT4_17_inst0(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_17_inst0_O));
-\aetherlinglib_hydrate__hydratedTypeBit8 hydrate_tArray_8_Bit__inst0(.in({LUT4_0_inst5_O,LUT4_0_inst4_O,LUT4_0_inst3_O,LUT4_0_inst2_O,LUT4_0_inst1_O,LUT4_0_inst0_O,LUT4_14_inst0_O,LUT4_17_inst0_O}), .out(hydrate_tArray_8_Bit__inst0_out));
+LUT4_31 LUT4_31_inst0(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_31_inst0_O));
+\aetherlinglib_hydrate__hydratedTypeBit8 hydrate_tArray_8_Bit__inst0(.in({LUT4_0_inst5_O,LUT4_0_inst4_O,LUT4_0_inst3_O,LUT4_0_inst2_O,LUT4_0_inst1_O,LUT4_0_inst0_O,LUT4_14_inst0_O,LUT4_31_inst0_O}), .out(hydrate_tArray_8_Bit__inst0_out));
 assign data = hydrate_tArray_8_Bit__inst0_out;
 endmodule
 
@@ -817,7 +834,7 @@ LUT4_0 LUT4_0_inst4(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(L
 LUT4_0 LUT4_0_inst5(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_0_inst5_O));
 LUT4_0 LUT4_0_inst6(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_0_inst6_O));
 LUT4_1 LUT4_1_inst0(.I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(addr[3]), .O(LUT4_1_inst0_O));
-\aetherlinglib_hydrate__hydratedTypeBit8 hydrate_tArray_8_Bit__inst0(.in({LUT4_0_inst6_O,LUT4_0_inst5_O,LUT4_0_inst4_O,LUT4_1_inst0_O,LUT4_0_inst3_O,LUT4_0_inst2_O,LUT4_0_inst1_O,LUT4_0_inst0_O}), .out(hydrate_tArray_8_Bit__inst0_out));
+\aetherlinglib_hydrate__hydratedTypeBit8 hydrate_tArray_8_Bit__inst0(.in({LUT4_0_inst6_O,LUT4_0_inst5_O,LUT4_0_inst4_O,LUT4_0_inst3_O,LUT4_0_inst2_O,LUT4_1_inst0_O,LUT4_0_inst1_O,LUT4_0_inst0_O}), .out(hydrate_tArray_8_Bit__inst0_out));
 assign data = hydrate_tArray_8_Bit__inst0_out;
 endmodule
 
@@ -891,11 +908,11 @@ lutN #(.init(2'h1), .N(1)) coreir_lut1_inst0(.in(I0), .out(coreir_lut1_inst0_out
 assign O = coreir_lut1_inst0_out;
 endmodule
 
-module Decode195 (input [4:0] I/*verilator public*/, output O/*verilator public*/);
-wire [4:0] const_19_5_out;
+module Decode185 (input [4:0] I/*verilator public*/, output O/*verilator public*/);
+wire [4:0] const_18_5_out;
 wire coreir_eq_5_inst0_out;
-coreir_const #(.value(5'h13), .width(5)) const_19_5(.out(const_19_5_out));
-coreir_eq #(.width(5)) coreir_eq_5_inst0(.in0(I), .in1(const_19_5_out), .out(coreir_eq_5_inst0_out));
+coreir_const #(.value(5'h12), .width(5)) const_18_5(.out(const_18_5_out));
+coreir_eq #(.width(5)) coreir_eq_5_inst0(.in0(I), .in1(const_18_5_out), .out(coreir_eq_5_inst0_out));
 assign O = coreir_eq_5_inst0_out;
 endmodule
 
@@ -992,33 +1009,6 @@ assign O = Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst0_O;
 assign valid_down = Register_Bitt_0init_FalseCE_FalseRESET_inst0_O;
 endmodule
 
-module Div_Atom (input [7:0] I__0/*verilator public*/, input [7:0] I__1/*verilator public*/, output [7:0] O/*verilator public*/, input clk/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
-wire [0:0] Register1_inst0_O;
-wire [7:0] Register8_inst0_O;
-wire [7:0] coreir_udiv8_inst0_out;
-Register1 Register1_inst0(.CLK(clk), .I(valid_up), .O(Register1_inst0_O));
-Register8 Register8_inst0(.CLK(clk), .I(coreir_udiv8_inst0_out), .O(Register8_inst0_O));
-coreir_udiv #(.width(8)) coreir_udiv8_inst0(.in0(I__0), .in1(I__1), .out(coreir_udiv8_inst0_out));
-assign O = Register8_inst0_O;
-assign valid_down = Register1_inst0_O[0];
-endmodule
-
-module Map_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__ (input CLK/*verilator public*/, input [7:0] I__0/*verilator public*/, input [7:0] I__1/*verilator public*/, output [7:0] O/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
-wire [7:0] Div_Atom_inst0_O;
-wire Div_Atom_inst0_valid_down;
-Div_Atom Div_Atom_inst0(.I__0(I__0), .I__1(I__1), .O(Div_Atom_inst0_O), .clk(CLK), .valid_down(Div_Atom_inst0_valid_down), .valid_up(valid_up));
-assign O = Div_Atom_inst0_O;
-assign valid_down = Div_Atom_inst0_valid_down;
-endmodule
-
-module Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ (input CLK/*verilator public*/, input [7:0] I__0/*verilator public*/, input [7:0] I__1/*verilator public*/, output [7:0] O/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
-wire [7:0] Map_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_O;
-wire Map_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_valid_down;
-Map_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__ Map_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0(.CLK(CLK), .I__0(I__0), .I__1(I__1), .O(Map_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_O), .valid_down(Map_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_valid_down), .valid_up(valid_up));
-assign O = Map_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_O;
-assign valid_down = Map_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___inst0_valid_down;
-endmodule
-
 module Counter5CER (input CE/*verilator public*/, input CLK/*verilator public*/, output [4:0] O/*verilator public*/, input RESET/*verilator public*/);
 wire [4:0] Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_5_inst0_O;
 wire [4:0] const_1_5_out;
@@ -1029,27 +1019,27 @@ coreir_add #(.width(5)) coreir_add5_inst0(.in0(Register_has_ce_True_has_reset_Tr
 assign O = Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_5_inst0_O;
 endmodule
 
-module Counter5_Mod20CE (input CE/*verilator public*/, input CLK/*verilator public*/, output [4:0] O/*verilator public*/);
+module Counter5_Mod19CE (input CE/*verilator public*/, input CLK/*verilator public*/, output [4:0] O/*verilator public*/);
 wire [4:0] Counter5CER_inst0_O;
-wire Decode195_inst0_O;
+wire Decode185_inst0_O;
 wire and_inst0_out;
 Counter5CER Counter5CER_inst0(.CE(CE), .CLK(CLK), .O(Counter5CER_inst0_O), .RESET(and_inst0_out));
-Decode195 Decode195_inst0(.I(Counter5CER_inst0_O), .O(Decode195_inst0_O));
-corebit_and and_inst0(.in0(Decode195_inst0_O), .in1(CE), .out(and_inst0_out));
+Decode185 Decode185_inst0(.I(Counter5CER_inst0_O), .O(Decode185_inst0_O));
+corebit_and and_inst0(.in0(Decode185_inst0_O), .in1(CE), .out(and_inst0_out));
 assign O = Counter5CER_inst0_O;
 endmodule
 
-module InitialDelayCounter_19 (input CE/*verilator public*/, input CLK/*verilator public*/, output valid/*verilator public*/);
-wire [4:0] Counter5_Mod20CE_inst0_O;
+module InitialDelayCounter_18 (input CE/*verilator public*/, input CLK/*verilator public*/, output valid/*verilator public*/);
+wire [4:0] Counter5_Mod19CE_inst0_O;
 wire and_inst0_out;
-wire [4:0] coreir_const519_inst0_out;
+wire [4:0] coreir_const518_inst0_out;
 wire coreir_eq_5_inst0_out;
 wire coreir_ult5_inst0_out;
-Counter5_Mod20CE Counter5_Mod20CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter5_Mod20CE_inst0_O));
+Counter5_Mod19CE Counter5_Mod19CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter5_Mod19CE_inst0_O));
 corebit_and and_inst0(.in0(CE), .in1(coreir_ult5_inst0_out), .out(and_inst0_out));
-coreir_const #(.value(5'h13), .width(5)) coreir_const519_inst0(.out(coreir_const519_inst0_out));
-coreir_eq #(.width(5)) coreir_eq_5_inst0(.in0(Counter5_Mod20CE_inst0_O), .in1(coreir_const519_inst0_out), .out(coreir_eq_5_inst0_out));
-coreir_ult #(.width(5)) coreir_ult5_inst0(.in0(Counter5_Mod20CE_inst0_O), .in1(coreir_const519_inst0_out), .out(coreir_ult5_inst0_out));
+coreir_const #(.value(5'h12), .width(5)) coreir_const518_inst0(.out(coreir_const518_inst0_out));
+coreir_eq #(.width(5)) coreir_eq_5_inst0(.in0(Counter5_Mod19CE_inst0_O), .in1(coreir_const518_inst0_out), .out(coreir_eq_5_inst0_out));
+coreir_ult #(.width(5)) coreir_ult5_inst0(.in0(Counter5_Mod19CE_inst0_O), .in1(coreir_const518_inst0_out), .out(coreir_ult5_inst0_out));
 assign valid = coreir_eq_5_inst0_out;
 endmodule
 
@@ -1071,30 +1061,6 @@ Counter4CER Counter4CER_inst0(.CE(CE), .CLK(CLK), .O(Counter4CER_inst0_O), .RESE
 LUT4_256 LUT4_256_inst0(.I0(Counter4CER_inst0_O[0]), .I1(Counter4CER_inst0_O[1]), .I2(Counter4CER_inst0_O[2]), .I3(Counter4CER_inst0_O[3]), .O(LUT4_256_inst0_O));
 corebit_and and_inst0(.in0(LUT4_256_inst0_O), .in1(CE), .out(and_inst0_out));
 assign O = Counter4CER_inst0_O;
-endmodule
-
-module Counter4_Mod14CE (input CE/*verilator public*/, input CLK/*verilator public*/, output [3:0] O/*verilator public*/);
-wire [3:0] Counter4CER_inst0_O;
-wire LUT4_8192_inst0_O;
-wire and_inst0_out;
-Counter4CER Counter4CER_inst0(.CE(CE), .CLK(CLK), .O(Counter4CER_inst0_O), .RESET(and_inst0_out));
-LUT4_8192 LUT4_8192_inst0(.I0(Counter4CER_inst0_O[0]), .I1(Counter4CER_inst0_O[1]), .I2(Counter4CER_inst0_O[2]), .I3(Counter4CER_inst0_O[3]), .O(LUT4_8192_inst0_O));
-corebit_and and_inst0(.in0(LUT4_8192_inst0_O), .in1(CE), .out(and_inst0_out));
-assign O = Counter4CER_inst0_O;
-endmodule
-
-module InitialDelayCounter_13 (input CE/*verilator public*/, input CLK/*verilator public*/, output valid/*verilator public*/);
-wire [3:0] Counter4_Mod14CE_inst0_O;
-wire and_inst0_out;
-wire [3:0] coreir_const413_inst0_out;
-wire coreir_eq_4_inst0_out;
-wire coreir_ult4_inst0_out;
-Counter4_Mod14CE Counter4_Mod14CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter4_Mod14CE_inst0_O));
-corebit_and and_inst0(.in0(CE), .in1(coreir_ult4_inst0_out), .out(and_inst0_out));
-coreir_const #(.value(4'hd), .width(4)) coreir_const413_inst0(.out(coreir_const413_inst0_out));
-coreir_eq #(.width(4)) coreir_eq_4_inst0(.in0(Counter4_Mod14CE_inst0_O), .in1(coreir_const413_inst0_out), .out(coreir_eq_4_inst0_out));
-coreir_ult #(.width(4)) coreir_ult4_inst0(.in0(Counter4_Mod14CE_inst0_O), .in1(coreir_const413_inst0_out), .out(coreir_ult4_inst0_out));
-assign valid = coreir_eq_4_inst0_out;
 endmodule
 
 module Counter4_Mod13CE (input CE/*verilator public*/, input CLK/*verilator public*/, output [3:0] O/*verilator public*/);
@@ -1668,30 +1634,30 @@ endmodule
 
 module Const_tTSeq_2_1_TSeq_2_1_Int___hasCEFalse_hasResetFalse_hasValidTrue (input CLK/*verilator public*/, output [7:0] O/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
 wire [3:0] Counter4_Mod9CE_inst0_O;
-wire InitialDelayCounter_13_inst0_valid;
+wire InitialDelayCounter_12_inst0_valid;
 wire [7:0] LUT_Array_8_Bit_t_9n_inst0_data;
 wire [0:0] coreir_const11_inst0_out;
-Counter4_Mod9CE Counter4_Mod9CE_inst0(.CE(InitialDelayCounter_13_inst0_valid), .CLK(CLK), .O(Counter4_Mod9CE_inst0_O));
-InitialDelayCounter_13 InitialDelayCounter_13_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_13_inst0_valid));
+Counter4_Mod9CE Counter4_Mod9CE_inst0(.CE(InitialDelayCounter_12_inst0_valid), .CLK(CLK), .O(Counter4_Mod9CE_inst0_O));
+InitialDelayCounter_12 InitialDelayCounter_12_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_12_inst0_valid));
 LUT_Array_8_Bit_t_9n_unq2 LUT_Array_8_Bit_t_9n_inst0(.CLK(CLK), .addr(Counter4_Mod9CE_inst0_O), .data(LUT_Array_8_Bit_t_9n_inst0_data));
 Term_Bitt Term_Bitt_inst0(.I(valid_up));
 coreir_const #(.value(1'h1), .width(1)) coreir_const11_inst0(.out(coreir_const11_inst0_out));
 assign O = LUT_Array_8_Bit_t_9n_inst0_data;
-assign valid_down = InitialDelayCounter_13_inst0_valid;
+assign valid_down = InitialDelayCounter_12_inst0_valid;
 endmodule
 
 module Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_unq1 (input CLK/*verilator public*/, output [7:0] O/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
 wire [3:0] Counter4_Mod9CE_inst0_O;
-wire InitialDelayCounter_19_inst0_valid;
+wire InitialDelayCounter_18_inst0_valid;
 wire [7:0] LUT_Array_8_Bit_t_9n_inst0_data;
 wire [0:0] coreir_const11_inst0_out;
-Counter4_Mod9CE Counter4_Mod9CE_inst0(.CE(InitialDelayCounter_19_inst0_valid), .CLK(CLK), .O(Counter4_Mod9CE_inst0_O));
-InitialDelayCounter_19 InitialDelayCounter_19_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_19_inst0_valid));
+Counter4_Mod9CE Counter4_Mod9CE_inst0(.CE(InitialDelayCounter_18_inst0_valid), .CLK(CLK), .O(Counter4_Mod9CE_inst0_O));
+InitialDelayCounter_18 InitialDelayCounter_18_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_18_inst0_valid));
 LUT_Array_8_Bit_t_9n_unq3 LUT_Array_8_Bit_t_9n_inst0(.CLK(CLK), .addr(Counter4_Mod9CE_inst0_O), .data(LUT_Array_8_Bit_t_9n_inst0_data));
 Term_Bitt Term_Bitt_inst0(.I(valid_up));
 coreir_const #(.value(1'h1), .width(1)) coreir_const11_inst0(.out(coreir_const11_inst0_out));
 assign O = LUT_Array_8_Bit_t_9n_inst0_data;
-assign valid_down = InitialDelayCounter_19_inst0_valid;
+assign valid_down = InitialDelayCounter_18_inst0_valid;
 endmodule
 
 module Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue (input CLK/*verilator public*/, output [7:0] O/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
@@ -1873,8 +1839,8 @@ wire [7:0] Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_
 wire Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down;
 wire [7:0] Const_tTSeq_3_0_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O;
 wire Const_tTSeq_3_0_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down;
-wire [7:0] Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O;
-wire Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down;
+wire [7:0] Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O;
+wire Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down;
 wire [7:0] Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0;
 wire [7:0] Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1;
 wire Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down;
@@ -1891,7 +1857,7 @@ wire and_inst0_out;
 wire and_inst1_out;
 Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0(.CLK(CLK), .O(Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .valid_down(Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .valid_up(valid_up));
 Const_tTSeq_3_0_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue Const_tTSeq_3_0_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0(.CLK(CLK), .O(Const_tTSeq_3_0_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .valid_down(Const_tTSeq_3_0_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .valid_up(valid_up));
-Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0(.CLK(CLK), .I__0(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0), .I__1(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1), .O(Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O), .valid_down(Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down), .valid_up(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down));
+Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0(.CLK(CLK), .I__0(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0), .I__1(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1), .O(Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O), .valid_down(Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down), .valid_up(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down));
 Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0(.CLK(CLK), .I0(Reduce_T_n3_i0_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_O), .I1(Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .O__0(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0), .O__1(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1), .valid_down(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down), .valid_up(and_inst1_out));
 Map_T_n3_i0_opMap_T_n3_i0_opMul_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ Map_T_n3_i0_opMap_T_n3_i0_opMul_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0(.CLK(CLK), .I__0(Map_T_n3_i0_opMap_T_n3_i0_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0), .I__1(Map_T_n3_i0_opMap_T_n3_i0_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1), .O(Map_T_n3_i0_opMap_T_n3_i0_opMul_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O), .valid_down(Map_T_n3_i0_opMap_T_n3_i0_opMul_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down), .valid_up(Map_T_n3_i0_opMap_T_n3_i0_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down));
 Map_T_n3_i0_opMap_T_n3_i0_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ Map_T_n3_i0_opMap_T_n3_i0_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0(.CLK(CLK), .I0(Const_tTSeq_3_0_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .I1(I), .O__0(Map_T_n3_i0_opMap_T_n3_i0_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0), .O__1(Map_T_n3_i0_opMap_T_n3_i0_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1), .valid_down(Map_T_n3_i0_opMap_T_n3_i0_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down), .valid_up(and_inst0_out));
@@ -1899,8 +1865,8 @@ Map_T_n3_i0_opReduce_T_n3_i0_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_
 Reduce_T_n3_i0_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock__ Reduce_T_n3_i0_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0(.CLK(CLK), .I(Map_T_n3_i0_opReduce_T_n3_i0_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Array_8_In_Bit___O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O), .O(Reduce_T_n3_i0_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_O), .valid_down(Reduce_T_n3_i0_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_valid_down), .valid_up(Map_T_n3_i0_opReduce_T_n3_i0_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Array_8_In_Bit___O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down));
 corebit_and and_inst0(.in0(Const_tTSeq_3_0_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .in1(valid_up), .out(and_inst0_out));
 corebit_and and_inst1(.in0(Reduce_T_n3_i0_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_valid_down), .in1(Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .out(and_inst1_out));
-assign O = Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O;
-assign valid_down = Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down;
+assign O = Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O;
+assign valid_down = Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down;
 endmodule
 
 module Map_T_n16_i0_opModule_0_I_Array_8_In_Bit___O_Array_8_Out_Bit___CLK_In_Clock__valid_up_In_Bit__valid_down_Out_Bit__ (input CLK/*verilator public*/, input [7:0] I/*verilator public*/, output [7:0] O/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
@@ -1956,8 +1922,8 @@ wire [7:0] Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_
 wire Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down;
 wire [7:0] Const_tTSeq_2_1_TSeq_2_1_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O;
 wire Const_tTSeq_2_1_TSeq_2_1_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down;
-wire [7:0] Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O;
-wire Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down;
+wire [7:0] Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O;
+wire Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down;
 wire [7:0] Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0;
 wire [7:0] Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1;
 wire Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down;
@@ -1974,7 +1940,7 @@ wire and_inst0_out;
 wire and_inst1_out;
 Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_unq1 Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0(.CLK(CLK), .O(Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .valid_down(Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .valid_up(valid_up));
 Const_tTSeq_2_1_TSeq_2_1_Int___hasCEFalse_hasResetFalse_hasValidTrue Const_tTSeq_2_1_TSeq_2_1_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0(.CLK(CLK), .O(Const_tTSeq_2_1_TSeq_2_1_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .valid_down(Const_tTSeq_2_1_TSeq_2_1_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .valid_up(valid_up));
-Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0(.CLK(CLK), .I__0(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0), .I__1(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1), .O(Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O), .valid_down(Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down), .valid_up(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down));
+Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0(.CLK(CLK), .I__0(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0), .I__1(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1), .O(Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O), .valid_down(Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down), .valid_up(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down));
 Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0(.CLK(CLK), .I0(Reduce_T_n2_i1_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_O), .I1(Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .O__0(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0), .O__1(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1), .valid_down(Map_T_n1_i2_opMap_T_n1_i2_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down), .valid_up(and_inst1_out));
 Map_T_n2_i1_opMap_T_n2_i1_opMul_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ Map_T_n2_i1_opMap_T_n2_i1_opMul_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0(.CLK(CLK), .I__0(Map_T_n2_i1_opMap_T_n2_i1_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0), .I__1(Map_T_n2_i1_opMap_T_n2_i1_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1), .O(Map_T_n2_i1_opMap_T_n2_i1_opMul_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O), .valid_down(Map_T_n2_i1_opMap_T_n2_i1_opMul_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down), .valid_up(Map_T_n2_i1_opMap_T_n2_i1_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down));
 Map_T_n2_i1_opMap_T_n2_i1_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock__ Map_T_n2_i1_opMap_T_n2_i1_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0(.CLK(CLK), .I0(Const_tTSeq_2_1_TSeq_2_1_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .I1(I), .O__0(Map_T_n2_i1_opMap_T_n2_i1_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__0), .O__1(Map_T_n2_i1_opMap_T_n2_i1_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O__1), .valid_down(Map_T_n2_i1_opMap_T_n2_i1_opatomTupleCreator_t0Int_t1Int_I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit___I0_Array_8_In_Bit___I1_Array_8_In_Bit___O_Tuple_0_Array_8_Out_Bit___1_Array_8_Out_Bit____valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down), .valid_up(and_inst0_out));
@@ -1982,8 +1948,8 @@ Map_T_n2_i1_opReduce_T_n2_i1_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_
 Reduce_T_n2_i1_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock__ Reduce_T_n2_i1_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0(.CLK(CLK), .I(Map_T_n2_i1_opReduce_T_n2_i1_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Array_8_In_Bit___O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O), .O(Reduce_T_n2_i1_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_O), .valid_down(Reduce_T_n2_i1_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_valid_down), .valid_up(Map_T_n2_i1_opReduce_T_n2_i1_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Array_8_In_Bit___O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down));
 corebit_and and_inst0(.in0(Const_tTSeq_2_1_TSeq_2_1_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .in1(valid_up), .out(and_inst0_out));
 corebit_and and_inst1(.in0(Reduce_T_n2_i1_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_valid_down), .in1(Const_tTSeq_1_2_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .out(and_inst1_out));
-assign O = Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O;
-assign valid_down = Map_T_n1_i2_opMap_T_n1_i2_opDiv_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down;
+assign O = Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_O;
+assign valid_down = Map_T_n1_i2_opMap_T_n1_i2_opRShift_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit___I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___valid_up_In_Bit__valid_down_Out_Bit__CLK_In_Clock___inst0_valid_down;
 endmodule
 
 module Map_T_n16_i0_opModule_1_I_Array_8_In_Bit___O_Array_8_Out_Bit___CLK_In_Clock__valid_up_In_Bit__valid_down_Out_Bit__ (input CLK/*verilator public*/, input [7:0] I/*verilator public*/, output [7:0] O/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);

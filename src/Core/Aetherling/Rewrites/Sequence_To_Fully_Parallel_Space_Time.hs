@@ -29,6 +29,8 @@ sequence_to_fully_parallel (SeqE.AddN producer _) = parallelize_atom_operator ST
 sequence_to_fully_parallel (SeqE.SubN producer _) = parallelize_atom_operator STE.SubN producer
 sequence_to_fully_parallel (SeqE.MulN producer _) = parallelize_atom_operator STE.MulN producer
 sequence_to_fully_parallel (SeqE.DivN producer _) = parallelize_atom_operator STE.DivN producer
+sequence_to_fully_parallel (SeqE.LSRN producer _) = parallelize_atom_operator STE.LSRN producer
+sequence_to_fully_parallel (SeqE.LSLN producer _) = parallelize_atom_operator STE.LSLN producer
 sequence_to_fully_parallel (SeqE.LtN producer _) = parallelize_atom_operator STE.LtN producer
 sequence_to_fully_parallel (SeqE.EqN t producer _) = do
   producer_par <- memo producer $ sequence_to_fully_parallel producer
