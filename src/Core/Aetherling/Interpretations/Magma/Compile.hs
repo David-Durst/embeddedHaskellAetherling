@@ -246,7 +246,7 @@ compile_with_slowdown_to_expr shallow_seq_program s = do
   let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
   let deep_st_program =
         rewrite_to_partially_parallel s deep_seq_program_with_indexes
-  let pipelined_program = APR.add_pipeline_registers deep_st_program 6
+  let pipelined_program = APR.add_pipeline_registers deep_st_program 10
   matched_latencies <- ML.match_latencies pipelined_program
   --return matched_latencies
   return $ matched_latencies {
@@ -259,7 +259,7 @@ tst_compile_with_slowdown_to_expr shallow_seq_program s = do
   let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
   let deep_st_program =
         rewrite_to_partially_parallel s deep_seq_program_with_indexes
-  let pipelined_program = APR.add_pipeline_registers deep_st_program 6
+  let pipelined_program = APR.add_pipeline_registers deep_st_program 10
   putStr "pipelined: "
   print_st pipelined_program
   matched_latencies <- ML.match_latencies pipelined_program

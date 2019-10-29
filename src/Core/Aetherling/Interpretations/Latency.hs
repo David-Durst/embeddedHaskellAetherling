@@ -84,7 +84,9 @@ compute_latency e@(NotN producer _) = memo producer $ compute_latency producer
 compute_latency e@(AddN producer _) = memo producer $ compute_latency producer
 compute_latency e@(SubN producer _) = memo producer $ compute_latency producer
 compute_latency e@(MulN producer _) = memo producer $ compute_latency producer
-compute_latency e@(DivN producer _) = memo producer $ compute_latency producer
+compute_latency e@(DivN producer _) = do
+  producer_latency <- memo producer $ compute_latency producer
+  return $ producer_latency + 1
 compute_latency e@(LtN producer _) = memo producer $ compute_latency producer
 compute_latency e@(EqN t producer _) = memo producer $ compute_latency producer
 compute_latency e@(IfN t producer _) = memo producer $ compute_latency producer
@@ -253,7 +255,7 @@ compute_latency' (Down_1d_tN _ _ sel_idx t _ _) =
   return $ sel_idx * clocks_t t
 compute_latency' (Reduce_tN n _ f _ _) = do
   let f_out_type = ST_Conv.e_out_type $ ST_Conv.expr_to_types f
-  return $ (n - 1) * (clocks_t f_out_type)
+  return $ (n - 1) * (clocks_t f_out_type) + 1
 compute_latency' (FIFON _ delay_clks _ _) = return $ delay_clks
 compute_latency' (ReshapeN in_t out_t _ _) = do
   let in_t_py_str = type_to_python in_t
