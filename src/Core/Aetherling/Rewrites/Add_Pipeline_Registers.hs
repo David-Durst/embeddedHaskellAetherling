@@ -35,10 +35,9 @@ add_pipeline_registers' :: Expr -> Maybe Int -> Memo_Rewrite_StateM Expr Expr
 -- ok to assume this input is a top level input as map/reduce never calls inner
 -- function for this rewrite
 add_pipeline_registers' e@(InputN t _ _) maybe_num_end_registers = do
-  reg1_idx <- get_cur_index
-  reg2_idx <- get_cur_index
+  reg_idx <- get_cur_index
   add_pipeline_registers_if_last maybe_num_end_registers $
-    FIFON t 1 (FIFON t 1 e reg1_idx) reg2_idx
+    FIFON t 1 e reg_idx
 add_pipeline_registers' e@(Const_GenN _ t _ _) maybe_num_end_registers = do
   reg_idx <- get_cur_index
   add_pipeline_registers_if_last maybe_num_end_registers e

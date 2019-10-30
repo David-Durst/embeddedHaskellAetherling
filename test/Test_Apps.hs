@@ -62,6 +62,9 @@ single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                                 single_map_200 s (Just "map")
                                                 single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
 
+single_map_200_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                                single_map_200 s (Just "map")
+                                                single_map_200_inputs single_map_200_output) [50]
 stencil_3_1dC_nested in_seq = do
   let first_el = in_seq
   let second_el = shiftC (Proxy @1) first_el
@@ -401,7 +404,7 @@ sharpen_one_pixel a_pixel b_pixel = do
   let t_constC = const_genC (Atom_Int t_const') a_pixel
   let passed_threshold = ltC $ atom_tupleC t_constC abs_b_sub_a
   let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a const_0))
-  let alpha_h = divC $ atom_tupleC h (const_genC (Atom_Int 5) a_pixel)
+  let alpha_h = lsrC $ atom_tupleC h (const_genC (Atom_Int 2) a_pixel)
   addC $ atom_tupleC b_pixel alpha_h
 {-
 sharpen_one_pixel a_pixel b_pixel = do
@@ -423,7 +426,7 @@ sharpen_one_pixel a_pixel b_pixel = do
 sharpen_one_pixel' :: Integer -> Integer -> Integer
 sharpen_one_pixel' a b = do
   let h = if (abs $ b - a) > t_const then b - a else 0
-  if a == int_to_ignore then a else b + (h `div` 5)
+  if a == int_to_ignore then a else b + (h `div` 4)
 sharpen_one_pixel_map_no_input a_pixel b_pixel = do
   map2C sharpen_one_pixel a_pixel b_pixel 
 sharpen_one_pixel_map = sharpen_one_pixel_map_no_input
