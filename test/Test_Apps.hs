@@ -478,3 +478,5 @@ sharpen_output :: [Integer] =
 sharpen_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       sharpen s (Just "sharpen")
                                       sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
+sharpen_results' = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
+                                      sharpen s "sharpen") [1,2,4,8,16,48,144]

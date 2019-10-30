@@ -79,7 +79,9 @@ get_cur_latency = do
 
 compute_latency :: Expr -> Memo_Rewrite_StateTM Int Latency_StateTM Int
 compute_latency e@(IdN producer _) = memo producer $ compute_latency producer
-compute_latency e@(AbsN producer _) = memo producer $ compute_latency producer
+compute_latency e@(AbsN producer _) = do
+  producer_latency <- memo producer $ compute_latency producer
+  return $ producer_latency + 1
 compute_latency e@(NotN producer _) = memo producer $ compute_latency producer
 compute_latency e@(AddN producer _) = memo producer $ compute_latency producer
 compute_latency e@(SubN producer _) = memo producer $ compute_latency producer
@@ -134,7 +136,7 @@ compute_latency e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
 -- these helpers shouldn't exist now that i've written reshape
 compute_latency e@(SerializeN _ _ _ producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  return $ producer_latency + 2
+  return $ producer_latency + 1
 compute_latency e@(DeserializeN _ _ _ _ _) = undefined
 compute_latency e@(Add_1_sN f producer _) = compute_latency_map e f producer
 compute_latency e@(Add_1_0_tN f producer _) = compute_latency_map e f producer

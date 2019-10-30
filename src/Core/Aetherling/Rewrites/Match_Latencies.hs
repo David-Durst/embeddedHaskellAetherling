@@ -43,7 +43,11 @@ instance Ord Matched_Latency_Result where
 
 match_latencies' :: Expr -> Memo_Rewrite_StateTM Matched_Latency_Result Latency_StateTM Matched_Latency_Result
 match_latencies' e@(IdN producer _) = match_combinational_op e producer
-match_latencies' e@(AbsN producer _) = match_combinational_op e producer
+match_latencies' e@(AbsN producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 1
+    }
 match_latencies' e@(NotN producer _) = match_combinational_op e producer
 match_latencies' e@(AddN producer _) = match_combinational_op e producer
 match_latencies' e@(SubN producer _) = match_combinational_op e producer
@@ -109,7 +113,7 @@ match_latencies' e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
 match_latencies' e@(SerializeN _ _ _ producer _) = do
   this_comb_latency <- match_combinational_op e producer
   return $ this_comb_latency {
-    latency = latency this_comb_latency + 2
+    latency = latency this_comb_latency + 1
     }
 match_latencies' e@(DeserializeN _ _ _ _ _) = undefined
 match_latencies' e@(Add_1_sN f producer _) = match_map e f producer
