@@ -141,7 +141,7 @@ match_latencies' e@(Reduce_sN _ f producer _) = do
     cur_idx <- get_cur_index
     return $ Matched_Latency_Result
       (e {f = new_f, seq_in = new_producer, index = cur_idx} )
-      (latency_producer + latency_f)
+      (latency_producer + latency_f + 1)
     else do
     lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $

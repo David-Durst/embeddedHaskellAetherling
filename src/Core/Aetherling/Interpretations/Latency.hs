@@ -177,7 +177,7 @@ compute_latency e@(Reduce_sN _ f producer _) = do
   inner_latency <- compute_latency f
   update_latency_state cur_lat
   if inner_latency == 0
-    then return producer_latency
+    then return $ producer_latency + 1
     else do
     lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $
