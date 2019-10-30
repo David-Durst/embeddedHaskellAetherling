@@ -134,7 +134,7 @@ compute_latency e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
 -- these helpers shouldn't exist now that i've written reshape
 compute_latency e@(SerializeN _ _ _ producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  return $ producer_latency + 1
+  return $ producer_latency + 2
 compute_latency e@(DeserializeN _ _ _ _ _) = undefined
 compute_latency e@(Add_1_sN f producer _) = compute_latency_map e f producer
 compute_latency e@(Add_1_0_tN f producer _) = compute_latency_map e f producer

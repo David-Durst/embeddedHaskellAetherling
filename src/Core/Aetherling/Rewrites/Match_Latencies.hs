@@ -109,7 +109,7 @@ match_latencies' e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
 match_latencies' e@(SerializeN _ _ _ producer _) = do
   this_comb_latency <- match_combinational_op e producer
   return $ this_comb_latency {
-    latency = latency this_comb_latency + 1
+    latency = latency this_comb_latency + 2
     }
 match_latencies' e@(DeserializeN _ _ _ _ _) = undefined
 match_latencies' e@(Add_1_sN f producer _) = match_map e f producer
