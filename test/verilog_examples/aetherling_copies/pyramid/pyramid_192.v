@@ -2052,19 +2052,19 @@ coreir_eq #(.width(5)) coreir_eq_5_inst0(.in0(I), .in1(const_22_5_out), .out(cor
 assign O = coreir_eq_5_inst0_out;
 endmodule
 
-module Decode1598 (input [7:0] I/*verilator public*/, output O/*verilator public*/);
-wire [7:0] const_159_8_out;
+module Decode1618 (input [7:0] I/*verilator public*/, output O/*verilator public*/);
+wire [7:0] const_161_8_out;
 wire coreir_eq_8_inst0_out;
-coreir_const #(.value(8'h9f), .width(8)) const_159_8(.out(const_159_8_out));
-coreir_eq #(.width(8)) coreir_eq_8_inst0(.in0(I), .in1(const_159_8_out), .out(coreir_eq_8_inst0_out));
+coreir_const #(.value(8'ha1), .width(8)) const_161_8(.out(const_161_8_out));
+coreir_eq #(.width(8)) coreir_eq_8_inst0(.in0(I), .in1(const_161_8_out), .out(coreir_eq_8_inst0_out));
 assign O = coreir_eq_8_inst0_out;
 endmodule
 
-module Decode1568 (input [7:0] I/*verilator public*/, output O/*verilator public*/);
-wire [7:0] const_156_8_out;
+module Decode1578 (input [7:0] I/*verilator public*/, output O/*verilator public*/);
+wire [7:0] const_157_8_out;
 wire coreir_eq_8_inst0_out;
-coreir_const #(.value(8'h9c), .width(8)) const_156_8(.out(const_156_8_out));
-coreir_eq #(.width(8)) coreir_eq_8_inst0(.in0(I), .in1(const_156_8_out), .out(coreir_eq_8_inst0_out));
+coreir_const #(.value(8'h9d), .width(8)) const_157_8(.out(const_157_8_out));
+coreir_eq #(.width(8)) coreir_eq_8_inst0(.in0(I), .in1(const_157_8_out), .out(coreir_eq_8_inst0_out));
 assign O = coreir_eq_8_inst0_out;
 endmodule
 
@@ -2206,51 +2206,51 @@ coreir_add #(.width(8)) coreir_add8_inst0(.in0(Register_has_ce_True_has_reset_Tr
 assign O = Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_8_inst0_O;
 endmodule
 
-module Counter8_Mod160CE (input CE/*verilator public*/, input CLK/*verilator public*/, output [7:0] O/*verilator public*/);
+module Counter8_Mod162CE (input CE/*verilator public*/, input CLK/*verilator public*/, output [7:0] O/*verilator public*/);
 wire [7:0] Counter8CER_inst0_O;
-wire Decode1598_inst0_O;
+wire Decode1618_inst0_O;
 wire and_inst0_out;
 Counter8CER Counter8CER_inst0(.CE(CE), .CLK(CLK), .O(Counter8CER_inst0_O), .RESET(and_inst0_out));
-Decode1598 Decode1598_inst0(.I(Counter8CER_inst0_O), .O(Decode1598_inst0_O));
-corebit_and and_inst0(.in0(Decode1598_inst0_O), .in1(CE), .out(and_inst0_out));
+Decode1618 Decode1618_inst0(.I(Counter8CER_inst0_O), .O(Decode1618_inst0_O));
+corebit_and and_inst0(.in0(Decode1618_inst0_O), .in1(CE), .out(and_inst0_out));
 assign O = Counter8CER_inst0_O;
 endmodule
 
-module InitialDelayCounter_159 (input CE/*verilator public*/, input CLK/*verilator public*/, output valid/*verilator public*/);
-wire [7:0] Counter8_Mod160CE_inst0_O;
+module InitialDelayCounter_161 (input CE/*verilator public*/, input CLK/*verilator public*/, output valid/*verilator public*/);
+wire [7:0] Counter8_Mod162CE_inst0_O;
 wire and_inst0_out;
-wire [7:0] coreir_const8159_inst0_out;
+wire [7:0] coreir_const8161_inst0_out;
 wire coreir_eq_8_inst0_out;
 wire coreir_ult8_inst0_out;
-Counter8_Mod160CE Counter8_Mod160CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter8_Mod160CE_inst0_O));
+Counter8_Mod162CE Counter8_Mod162CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter8_Mod162CE_inst0_O));
 corebit_and and_inst0(.in0(CE), .in1(coreir_ult8_inst0_out), .out(and_inst0_out));
-coreir_const #(.value(8'h9f), .width(8)) coreir_const8159_inst0(.out(coreir_const8159_inst0_out));
-coreir_eq #(.width(8)) coreir_eq_8_inst0(.in0(Counter8_Mod160CE_inst0_O), .in1(coreir_const8159_inst0_out), .out(coreir_eq_8_inst0_out));
-coreir_ult #(.width(8)) coreir_ult8_inst0(.in0(Counter8_Mod160CE_inst0_O), .in1(coreir_const8159_inst0_out), .out(coreir_ult8_inst0_out));
+coreir_const #(.value(8'ha1), .width(8)) coreir_const8161_inst0(.out(coreir_const8161_inst0_out));
+coreir_eq #(.width(8)) coreir_eq_8_inst0(.in0(Counter8_Mod162CE_inst0_O), .in1(coreir_const8161_inst0_out), .out(coreir_eq_8_inst0_out));
+coreir_ult #(.width(8)) coreir_ult8_inst0(.in0(Counter8_Mod162CE_inst0_O), .in1(coreir_const8161_inst0_out), .out(coreir_ult8_inst0_out));
 assign valid = coreir_eq_8_inst0_out;
 endmodule
 
-module Counter8_Mod157CE (input CE/*verilator public*/, input CLK/*verilator public*/, output [7:0] O/*verilator public*/);
+module Counter8_Mod158CE (input CE/*verilator public*/, input CLK/*verilator public*/, output [7:0] O/*verilator public*/);
 wire [7:0] Counter8CER_inst0_O;
-wire Decode1568_inst0_O;
+wire Decode1578_inst0_O;
 wire and_inst0_out;
 Counter8CER Counter8CER_inst0(.CE(CE), .CLK(CLK), .O(Counter8CER_inst0_O), .RESET(and_inst0_out));
-Decode1568 Decode1568_inst0(.I(Counter8CER_inst0_O), .O(Decode1568_inst0_O));
-corebit_and and_inst0(.in0(Decode1568_inst0_O), .in1(CE), .out(and_inst0_out));
+Decode1578 Decode1578_inst0(.I(Counter8CER_inst0_O), .O(Decode1578_inst0_O));
+corebit_and and_inst0(.in0(Decode1578_inst0_O), .in1(CE), .out(and_inst0_out));
 assign O = Counter8CER_inst0_O;
 endmodule
 
-module InitialDelayCounter_156 (input CE/*verilator public*/, input CLK/*verilator public*/, output valid/*verilator public*/);
-wire [7:0] Counter8_Mod157CE_inst0_O;
+module InitialDelayCounter_157 (input CE/*verilator public*/, input CLK/*verilator public*/, output valid/*verilator public*/);
+wire [7:0] Counter8_Mod158CE_inst0_O;
 wire and_inst0_out;
-wire [7:0] coreir_const8156_inst0_out;
+wire [7:0] coreir_const8157_inst0_out;
 wire coreir_eq_8_inst0_out;
 wire coreir_ult8_inst0_out;
-Counter8_Mod157CE Counter8_Mod157CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter8_Mod157CE_inst0_O));
+Counter8_Mod158CE Counter8_Mod158CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter8_Mod158CE_inst0_O));
 corebit_and and_inst0(.in0(CE), .in1(coreir_ult8_inst0_out), .out(and_inst0_out));
-coreir_const #(.value(8'h9c), .width(8)) coreir_const8156_inst0(.out(coreir_const8156_inst0_out));
-coreir_eq #(.width(8)) coreir_eq_8_inst0(.in0(Counter8_Mod157CE_inst0_O), .in1(coreir_const8156_inst0_out), .out(coreir_eq_8_inst0_out));
-coreir_ult #(.width(8)) coreir_ult8_inst0(.in0(Counter8_Mod157CE_inst0_O), .in1(coreir_const8156_inst0_out), .out(coreir_ult8_inst0_out));
+coreir_const #(.value(8'h9d), .width(8)) coreir_const8157_inst0(.out(coreir_const8157_inst0_out));
+coreir_eq #(.width(8)) coreir_eq_8_inst0(.in0(Counter8_Mod158CE_inst0_O), .in1(coreir_const8157_inst0_out), .out(coreir_eq_8_inst0_out));
+coreir_ult #(.width(8)) coreir_ult8_inst0(.in0(Counter8_Mod158CE_inst0_O), .in1(coreir_const8157_inst0_out), .out(coreir_ult8_inst0_out));
 assign valid = coreir_eq_8_inst0_out;
 endmodule
 
@@ -2476,30 +2476,6 @@ wire Down_S_n2_i0_sel1_tElTSeq_2_0_SSeq_1_TSeq_1_2_Int____vTrue_inst0_valid_down
 Down_S_n2_i0_sel1_tElTSeq_2_0_SSeq_1_TSeq_1_2_Int____vTrue Down_S_n2_i0_sel1_tElTSeq_2_0_SSeq_1_TSeq_1_2_Int____vTrue_inst0(.CLK(CLK), .I_0(I_0), .O_0(Down_S_n2_i0_sel1_tElTSeq_2_0_SSeq_1_TSeq_1_2_Int____vTrue_inst0_O_0), .valid_down(Down_S_n2_i0_sel1_tElTSeq_2_0_SSeq_1_TSeq_1_2_Int____vTrue_inst0_valid_down), .valid_up(valid_up));
 assign O_0 = Down_S_n2_i0_sel1_tElTSeq_2_0_SSeq_1_TSeq_1_2_Int____vTrue_inst0_O_0;
 assign valid_down = Down_S_n2_i0_sel1_tElTSeq_2_0_SSeq_1_TSeq_1_2_Int____vTrue_inst0_valid_down;
-endmodule
-
-module Counter3_Mod6CE (input CE/*verilator public*/, input CLK/*verilator public*/, output [2:0] O/*verilator public*/);
-wire [2:0] Counter3CER_inst0_O;
-wire LUT3_32_inst0_O;
-wire and_inst0_out;
-Counter3CER Counter3CER_inst0(.CE(CE), .CLK(CLK), .O(Counter3CER_inst0_O), .RESET(and_inst0_out));
-LUT3_32 LUT3_32_inst0(.I0(Counter3CER_inst0_O[0]), .I1(Counter3CER_inst0_O[1]), .I2(Counter3CER_inst0_O[2]), .O(LUT3_32_inst0_O));
-corebit_and and_inst0(.in0(LUT3_32_inst0_O), .in1(CE), .out(and_inst0_out));
-assign O = Counter3CER_inst0_O;
-endmodule
-
-module InitialDelayCounter_5 (input CE/*verilator public*/, input CLK/*verilator public*/, output valid/*verilator public*/);
-wire [2:0] Counter3_Mod6CE_inst0_O;
-wire and_inst0_out;
-wire [2:0] coreir_const35_inst0_out;
-wire coreir_eq_3_inst0_out;
-wire coreir_ult3_inst0_out;
-Counter3_Mod6CE Counter3_Mod6CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter3_Mod6CE_inst0_O));
-corebit_and and_inst0(.in0(CE), .in1(coreir_ult3_inst0_out), .out(and_inst0_out));
-coreir_const #(.value(3'h5), .width(3)) coreir_const35_inst0(.out(coreir_const35_inst0_out));
-coreir_eq #(.width(3)) coreir_eq_3_inst0(.in0(Counter3_Mod6CE_inst0_O), .in1(coreir_const35_inst0_out), .out(coreir_eq_3_inst0_out));
-coreir_ult #(.width(3)) coreir_ult3_inst0(.in0(Counter3_Mod6CE_inst0_O), .in1(coreir_const35_inst0_out), .out(coreir_ult3_inst0_out));
-assign valid = coreir_eq_3_inst0_out;
 endmodule
 
 module Counter2CER (input CE/*verilator public*/, input CLK/*verilator public*/, output [1:0] O/*verilator public*/, input RESET/*verilator public*/);
@@ -2973,20 +2949,20 @@ endmodule
 
 module Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_unq1 (input CLK/*verilator public*/, output [7:0] O_0/*verilator public*/, output [7:0] O_1/*verilator public*/, output [7:0] O_2/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
 wire [1:0] Counter2_Mod3CE_inst0_O;
-wire InitialDelayCounter_156_inst0_valid;
+wire InitialDelayCounter_157_inst0_valid;
 wire [7:0] LUT_Array_3_Array_8_Bit__t_3n_inst0_data_0;
 wire [7:0] LUT_Array_3_Array_8_Bit__t_3n_inst0_data_1;
 wire [7:0] LUT_Array_3_Array_8_Bit__t_3n_inst0_data_2;
 wire [0:0] coreir_const11_inst0_out;
-Counter2_Mod3CE Counter2_Mod3CE_inst0(.CE(InitialDelayCounter_156_inst0_valid), .CLK(CLK), .O(Counter2_Mod3CE_inst0_O));
-InitialDelayCounter_156 InitialDelayCounter_156_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_156_inst0_valid));
+Counter2_Mod3CE Counter2_Mod3CE_inst0(.CE(InitialDelayCounter_157_inst0_valid), .CLK(CLK), .O(Counter2_Mod3CE_inst0_O));
+InitialDelayCounter_157 InitialDelayCounter_157_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_157_inst0_valid));
 LUT_Array_3_Array_8_Bit__t_3n LUT_Array_3_Array_8_Bit__t_3n_inst0(.CLK(CLK), .addr(Counter2_Mod3CE_inst0_O), .data_0(LUT_Array_3_Array_8_Bit__t_3n_inst0_data_0), .data_1(LUT_Array_3_Array_8_Bit__t_3n_inst0_data_1), .data_2(LUT_Array_3_Array_8_Bit__t_3n_inst0_data_2));
 Term_Bitt Term_Bitt_inst0(.I(valid_up));
 coreir_const #(.value(1'h1), .width(1)) coreir_const11_inst0(.out(coreir_const11_inst0_out));
 assign O_0 = LUT_Array_3_Array_8_Bit__t_3n_inst0_data_0;
 assign O_1 = LUT_Array_3_Array_8_Bit__t_3n_inst0_data_1;
 assign O_2 = LUT_Array_3_Array_8_Bit__t_3n_inst0_data_2;
-assign valid_down = InitialDelayCounter_156_inst0_valid;
+assign valid_down = InitialDelayCounter_157_inst0_valid;
 endmodule
 
 module Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue (input CLK/*verilator public*/, output [7:0] O_0/*verilator public*/, output [7:0] O_1/*verilator public*/, output [7:0] O_2/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
@@ -3009,30 +2985,30 @@ endmodule
 
 module Const_tSSeq_1_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_unq1 (input CLK/*verilator public*/, output [7:0] O_0/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
 wire [1:0] Counter2_Mod3CE_inst0_O;
-wire InitialDelayCounter_159_inst0_valid;
+wire InitialDelayCounter_161_inst0_valid;
 wire [7:0] LUT_Array_1_Array_8_Bit__t_3n_inst0_data_0;
 wire [0:0] coreir_const11_inst0_out;
-Counter2_Mod3CE Counter2_Mod3CE_inst0(.CE(InitialDelayCounter_159_inst0_valid), .CLK(CLK), .O(Counter2_Mod3CE_inst0_O));
-InitialDelayCounter_159 InitialDelayCounter_159_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_159_inst0_valid));
+Counter2_Mod3CE Counter2_Mod3CE_inst0(.CE(InitialDelayCounter_161_inst0_valid), .CLK(CLK), .O(Counter2_Mod3CE_inst0_O));
+InitialDelayCounter_161 InitialDelayCounter_161_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_161_inst0_valid));
 LUT_Array_1_Array_8_Bit__t_3n LUT_Array_1_Array_8_Bit__t_3n_inst0(.CLK(CLK), .addr(Counter2_Mod3CE_inst0_O), .data_0(LUT_Array_1_Array_8_Bit__t_3n_inst0_data_0));
 Term_Bitt Term_Bitt_inst0(.I(valid_up));
 coreir_const #(.value(1'h1), .width(1)) coreir_const11_inst0(.out(coreir_const11_inst0_out));
 assign O_0 = LUT_Array_1_Array_8_Bit__t_3n_inst0_data_0;
-assign valid_down = InitialDelayCounter_159_inst0_valid;
+assign valid_down = InitialDelayCounter_161_inst0_valid;
 endmodule
 
 module Const_tSSeq_1_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue (input CLK/*verilator public*/, output [7:0] O_0/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
 wire [1:0] Counter2_Mod3CE_inst0_O;
-wire InitialDelayCounter_5_inst0_valid;
+wire InitialDelayCounter_6_inst0_valid;
 wire [7:0] LUT_Array_1_Array_8_Bit__t_3n_inst0_data_0;
 wire [0:0] coreir_const11_inst0_out;
-Counter2_Mod3CE Counter2_Mod3CE_inst0(.CE(InitialDelayCounter_5_inst0_valid), .CLK(CLK), .O(Counter2_Mod3CE_inst0_O));
-InitialDelayCounter_5 InitialDelayCounter_5_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_5_inst0_valid));
+Counter2_Mod3CE Counter2_Mod3CE_inst0(.CE(InitialDelayCounter_6_inst0_valid), .CLK(CLK), .O(Counter2_Mod3CE_inst0_O));
+InitialDelayCounter_6 InitialDelayCounter_6_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_6_inst0_valid));
 LUT_Array_1_Array_8_Bit__t_3n LUT_Array_1_Array_8_Bit__t_3n_inst0(.CLK(CLK), .addr(Counter2_Mod3CE_inst0_O), .data_0(LUT_Array_1_Array_8_Bit__t_3n_inst0_data_0));
 Term_Bitt Term_Bitt_inst0(.I(valid_up));
 coreir_const #(.value(1'h1), .width(1)) coreir_const11_inst0(.out(coreir_const11_inst0_out));
 assign O_0 = LUT_Array_1_Array_8_Bit__t_3n_inst0_data_0;
-assign valid_down = InitialDelayCounter_5_inst0_valid;
+assign valid_down = InitialDelayCounter_6_inst0_valid;
 endmodule
 
 module BitonicSortPow2_tTuple_lane_Array_1_Bit__val_Array_8_Bit___n1 (input [0:0] I_0_lane/*verilator public*/, input [7:0] I_0_val/*verilator public*/, output [0:0] O_0_lane/*verilator public*/, output [7:0] O_0_val/*verilator public*/);
@@ -3571,16 +3547,20 @@ endmodule
 module ReduceParallel_n3_oprenamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___in0_Array_8_In_Bit___in1_Array_8_In_Bit___out_Array_8_Out_Bit___ (input [7:0] I_0/*verilator public*/, input [7:0] I_1/*verilator public*/, input [7:0] I_2/*verilator public*/, output [7:0] O/*verilator public*/, input clk/*verilator public*/);
 wire [7:0] renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_out;
 wire [7:0] renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst1_out;
-renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock__ renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0(.clk(clk), .in0(I_0), .in1(renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst1_out), .out(renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_out));
-renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock__ renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst1(.clk(clk), .in0(I_1), .in1(I_2), .out(renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst1_out));
+renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock__ renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0(.clk(clk), .in0(I_2), .in1(renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst1_out), .out(renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_out));
+renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock__ renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst1(.clk(clk), .in0(I_0), .in1(I_1), .out(renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst1_out));
 assign O = renamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___inst0_out;
 endmodule
 
 module Reduce_S_n3_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock__ (input CLK/*verilator public*/, input [7:0] I_0/*verilator public*/, input [7:0] I_1/*verilator public*/, input [7:0] I_2/*verilator public*/, output [7:0] O_0/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
 wire [7:0] ReduceParallel_n3_oprenamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___in0_Array_8_In_Bit___in1_Array_8_In_Bit___out_Array_8_Out_Bit____inst0_O;
+wire [7:0] Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0;
+wire [0:0] reg_P_inst0_out;
 ReduceParallel_n3_oprenamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___in0_Array_8_In_Bit___in1_Array_8_In_Bit___out_Array_8_Out_Bit___ ReduceParallel_n3_oprenamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___in0_Array_8_In_Bit___in1_Array_8_In_Bit___out_Array_8_Out_Bit____inst0(.I_0(I_0), .I_1(I_1), .I_2(I_2), .O(ReduceParallel_n3_oprenamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___in0_Array_8_In_Bit___in1_Array_8_In_Bit___out_Array_8_Out_Bit____inst0_O), .clk(CLK));
-assign O_0 = ReduceParallel_n3_oprenamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___in0_Array_8_In_Bit___in1_Array_8_In_Bit___out_Array_8_Out_Bit____inst0_O;
-assign valid_down = valid_up;
+Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0(.CLK(CLK), .I_0(ReduceParallel_n3_oprenamedForReduce_opMap_T_n1_i2_opAdd_Atom_I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit____I_Tuple_0_Array_8_In_Bit___1_Array_8_In_Bit____O_Array_8_Out_Bit___CLK_In_Clock___in0_Array_8_In_Bit___in1_Array_8_In_Bit___out_Array_8_Out_Bit____inst0_O), .O_0(Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0));
+coreir_reg #(.clk_posedge(1), .init(1'h0), .width(1)) reg_P_inst0(.clk(CLK), .in(valid_up), .out(reg_P_inst0_out));
+assign O_0 = Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0;
+assign valid_down = reg_P_inst0_out[0];
 endmodule
 
 module Module_1 (input CLK/*verilator public*/, input [7:0] I_0/*verilator public*/, input [7:0] I_1/*verilator public*/, input [7:0] I_2/*verilator public*/, output [7:0] O_0/*verilator public*/, output valid_down/*verilator public*/, input valid_up/*verilator public*/);
