@@ -51,7 +51,11 @@ match_latencies' e@(AbsN producer _) = do
 match_latencies' e@(NotN producer _) = match_combinational_op e producer
 match_latencies' e@(AddN producer _) = match_combinational_op e producer
 match_latencies' e@(SubN producer _) = match_combinational_op e producer
-match_latencies' e@(MulN producer _) = match_combinational_op e producer
+match_latencies' e@(MulN producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 2
+    }
 match_latencies' e@(DivN producer _) = do
   this_comb_latency <- match_combinational_op e producer
   return $ this_comb_latency {
