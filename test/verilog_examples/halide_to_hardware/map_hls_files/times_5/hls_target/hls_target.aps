@@ -1,0 +1,9 @@
+<AutoPilot:solution xmlns:AutoPilot="com.autoesl.autopilot.solution">
+    <name>
+        <value string="hls_target"/>
+    </name>
+    <project>
+        <value string="times_5"/>
+    </project>
+</AutoPilot:solution>
+
