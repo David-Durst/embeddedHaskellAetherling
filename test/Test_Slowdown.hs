@@ -37,6 +37,10 @@ slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
     (all_success =<< single_map_underutil_results) @? "map with underutilization slowdowns failed",
     testCase "slowing a constant generator" $
     (all_success =<< const_test_results) @? "constant generator slowdowns failed",
+    testCase "slowing a less than" $
+    (all_success =<< lt_test_results) @? "less than slowdowns failed",
+    testCase "slowing an if and less than" $
+    (all_success =<< if_lt_test_results) @? "if and less than slowdowns failed",
     testCase "slowing a map to an upsample" $
     (all_success =<< map_to_up_results) @? "map to up slowdowns failed",
     testCase "slowing up to down" $
@@ -187,6 +191,42 @@ const_test_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                        const_test s Nothing
                                        const_test_inputs const_test_outputs) [1,3,9]
 
+lt_atom_test x = do
+  let one = const_genC (Atom_Int 1) x
+  ltC $ atom_tupleC x one
+lt_test =
+  mapC' (Proxy @4) lt_atom_test $
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+lt_test_seq_idx = add_indexes $ seq_shallow_to_deep lt_test
+lt_test_ppar = fmap
+  (\s -> rewrite_to_partially_parallel s lt_test_seq_idx) [1,2,4]
+lt_test_ppar_typechecked = fmap check_type lt_test_ppar
+lt_test_ppar_typechecked' = fmap check_type_get_error lt_test_ppar
+lt_test_inputs :: [[Integer]] = [[0..3]]
+lt_test_outputs :: [Integer] = [1,0,0,0]
+lt_test_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                       lt_test s Nothing
+                                       lt_test_inputs lt_test_outputs) [1,2,4]
+  
+if_lt_atom_test x = do
+  let one = const_genC (Atom_Int 1) x
+  let two = const_genC (Atom_Int 2) x
+  let three = const_genC (Atom_Int 3) x
+  let bool = ltC $ atom_tupleC x one
+  ifC (atom_tupleC bool (atom_tupleC three two))
+if_lt_test =
+  mapC' (Proxy @4) if_lt_atom_test $
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+if_lt_test_seq_idx = add_indexes $ seq_shallow_to_deep if_lt_test
+if_lt_test_ppar = fmap
+  (\s -> rewrite_to_partially_parallel s if_lt_test_seq_idx) [1,2,4]
+if_lt_test_ppar_typechecked = fmap check_type if_lt_test_ppar
+if_lt_test_ppar_typechecked' = fmap check_type_get_error if_lt_test_ppar
+if_lt_test_inputs :: [[Integer]] = [[0..3]]
+if_lt_test_outputs :: [Integer] = [3,2,2,2]
+if_lt_test_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                       if_lt_test s Nothing
+                                       if_lt_test_inputs if_lt_test_outputs) [1,2,4]
 -- tests basic multi-rate
 map_to_up = 
   mapC' (Proxy @1) absC >>> -- [1]
@@ -325,6 +365,24 @@ down_over_nested_to_down_over_flattened_results =
                          down_over_nested_to_down_over_flattened_output) [1,2,4,8,16]
 
 
+tuple_reverse_shallow_no_input in_seq0 in_seq1 = do
+  map2C (\x y -> sndC $ atom_tupleC y x) in_seq0 in_seq1
+tuple_reverse = tuple_reverse_shallow_no_input
+  (com_input_seq "I0" (Proxy :: Proxy (Seq 4 0 Atom_Int)))
+  (com_input_seq "I1" (Proxy :: Proxy (Seq 4 0 Atom_Int)))
+tuple_reverse_seq_idx = add_indexes $ seq_shallow_to_deep tuple_reverse
+tuple_reverse_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s tuple_reverse_seq_idx) [1,2,4]
+tuple_reverse_ppar_typechecked =
+  fmap check_type tuple_reverse_ppar
+tuple_reverse_ppar_typechecked' =
+  fmap check_type_get_error tuple_reverse_ppar
+tuple_reverse_inputs :: [[Integer]] = [[1,2,3,4], [5,6,7,8]]
+tuple_reverse_output :: [Integer] = [1,2,3,4]
+tuple_reverse_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      tuple_reverse s Nothing
+                                      tuple_reverse_inputs tuple_reverse_output) [1,2,4]
+                    
 tuple_sum_shallow_no_input in_seq = do
   let kernel_list = fmap Atom_Int [1,2,3,4]
   let kernel = const_genC (Seq $ listToVector (Proxy @4) kernel_list) in_seq

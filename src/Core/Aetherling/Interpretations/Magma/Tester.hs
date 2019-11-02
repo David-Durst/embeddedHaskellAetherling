@@ -23,7 +23,7 @@ import Data.Maybe
 import Debug.Trace
 
 -- a helper int for stencil values that should be ignored
-int_to_ignore = -23451
+int_to_ignore = 253
 
 data Fault_Result = Fault_Success
                   | Fault_Failure {

@@ -48,13 +48,21 @@ check_type' consumer_e@(MulN producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(DivN producer_e _) =
   check_unary_operator consumer_e producer_e
+check_type' consumer_e@(LtN producer_e _) =
+  check_unary_operator consumer_e producer_e
+check_type' consumer_e@(LSRN producer_e _) =
+  check_unary_operator consumer_e producer_e
+check_type' consumer_e@(LSLN producer_e _) =
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(EqN _ producer_e _) =
+  check_unary_operator consumer_e producer_e
+check_type' consumer_e@(IfN _ producer_e _) =
   check_unary_operator consumer_e producer_e
 
 -- generators
 check_type' consumer_e@(Lut_GenN _ _ producer_e _) = 
   check_unary_operator consumer_e producer_e
-check_type' (Const_GenN _ t _) = return t
+check_type' (Const_GenN _ t _ _) = return t
 
 -- sequence operators
 check_type' consumer_e@(Shift_sN _ _ _ producer_e _) =

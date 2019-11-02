@@ -11,6 +11,7 @@ type MemoInt = DAG_MemoT Integer (StateT FibState Identity)
 
 instance Indexible Integer where
   get_index i = Index (fromInteger i)
+  set_index = undefined
 
 fibm ::  Integer -> MemoInt Integer
 fibm 0 = do

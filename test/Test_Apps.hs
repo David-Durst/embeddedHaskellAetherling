@@ -18,11 +18,33 @@ import Aetherling.Rewrites.Sequence_Assign_Indexes
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import Aetherling.Interpretations.Magma.Compile
 import Aetherling.Interpretations.Magma.Tester
+import Control.Applicative
 import Data.Proxy
 import Data.Traversable
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 
+apps_tests = testGroup "Full Application Tests"
+  [
+    testCase "map" $
+    (all_success =<< single_map_200_results) @? "map failed",
+    testCase "single 3x3 convolution" $
+    (all_success =<< conv_2d_results) @? "single 3x3 convolution failed",
+    testCase "pyramid" $
+    (all_success =<< pyramid_2d_results) @? "pyramid failed",
+    testCase "conv 3x3 to 2x2" $
+    (all_success =<< conv_2d_b2b_results) @? "conv 3x3 to 2x2 failed",
+    testCase "conv 3x3 to 3x3" $
+    (all_success =<< conv_2d_3x3_repeat_b2b_results) @? "conv 3x3 to 3x3 failed",
+    testCase "sharpen" $
+    (all_success =<< sharpen_results) @? "sharpen failed"
+  ]
+  
+all_success :: [Fault_Result] -> IO Bool
+all_success results = do
+  let checked_results = all (\x -> x == Fault_Success) results
+  return checked_results
+  
 add_5 atom_in = do
   let const = const_genC (Atom_Int 5) atom_in
   let tupled = atom_tupleC atom_in const
@@ -40,6 +62,9 @@ single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                                 single_map_200 s (Just "map")
                                                 single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
 
+single_map_200_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                                single_map_200 s (Just "map")
+                                                single_map_200_inputs single_map_200_output) [50]
 stencil_3_1dC_nested in_seq = do
   let first_el = in_seq
   let second_el = shiftC (Proxy @1) first_el
@@ -105,20 +130,20 @@ stencil_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
 
                      
 -- need thse for Integer and Int versions
-hask_kernel :: [[Int]] = [[1,2,1],[2,4,2],[1,2,1]]
+hask_kernel :: [[Int]] = [[0,1,0],[1,2,1],[0,1,0]]
 hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
 tuple_2d_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @3) $
                     fmap (list_to_seq (Proxy @3)) $
                     fmap (fmap Atom_Int) hask_kernel
   let kernel = const_genC kernel_list in_seq
-  let kernel_and_values = map2C (map2C atom_tupleC) kernel in_seq
-  let mul_result = mapC (mapC mulC) kernel_and_values
+  let kernel_and_values = map2C (map2C atom_tupleC) in_seq kernel 
+  let mul_result = mapC (mapC lslC) kernel_and_values
   let sum = reduceC'' (mapC addC) $ mapC (reduceC addC) mul_result
-  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_Int 16]]
+  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_Int 4]]
   let norm = const_genC norm_list in_seq
   let sum_and_norm = map2C (map2C atom_tupleC) sum norm
-  mapC (mapC divC) sum_and_norm
+  mapC (mapC lsrC) sum_and_norm
 tuple_2d_mul = tuple_2d_mul_shallow_no_input $
   com_input_seq "I" (Proxy :: Proxy (Seq 3 0 (Seq 3 0 Atom_Int)))
 tuple_2d_mul_seq_idx = add_indexes $ seq_shallow_to_deep tuple_2d_mul
@@ -290,20 +315,20 @@ stencil_2x2_generator row_size inputs = [
   ] | r <- [1..row_size], c <- [1..row_size]]
 
 -- need thse for Integer and Int versions
-hask_kernel_2x2 :: [[Int]] = [[1,2],[2,1]]
-hask_kernel'_2x2 :: [Integer] = [1,2,2,1]
+hask_kernel_2x2 :: [[Int]] = [[0,2],[1,0]]
+hask_kernel'_2x2 :: [Integer] = [1,4,2,1]
 tuple_2d_2x2_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @2) $
                     fmap (list_to_seq (Proxy @2)) $
                     fmap (fmap Atom_Int) hask_kernel_2x2
   let kernel = const_genC kernel_list in_seq
-  let kernel_and_values = map2C (map2C atom_tupleC) kernel in_seq
-  let mul_result = mapC (mapC mulC) kernel_and_values
+  let kernel_and_values = map2C (map2C atom_tupleC) in_seq kernel
+  let mul_result = mapC (mapC lslC) kernel_and_values
   let sum = reduceC'' (mapC addC) $ mapC (reduceC addC) mul_result
-  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_Int 6]]
+  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_Int 3]]
   let norm = const_genC norm_list in_seq
   let sum_and_norm = map2C (map2C atom_tupleC) sum norm
-  mapC (mapC divC) sum_and_norm
+  mapC (mapC lsrC) sum_and_norm
   
 conv_2d_b2b_shallow_no_input in_col in_seq = do
   let first_stencil = stencil_3x3_2dC_test in_col in_seq
@@ -323,7 +348,7 @@ conv_2d_b2b_ppar_typechecked' =
 conv_2x2_generator :: [[[Integer]]] -> [Integer]
 conv_2x2_generator stencil_2d_output = [
   if window_valid
-  then (sum $ zipWith (*) window_flat hask_kernel'_2x2) `mod` 255 `div` 6
+  then (sum $ zipWith (*) window_flat hask_kernel'_2x2) `mod` 255 `div` 8
   else int_to_ignore
   | window <- stencil_2d_output,
     let window_flat = concat window,
@@ -336,7 +361,12 @@ conv_2d_b2b_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_2d_b2b s (Just "conv2d_b2b")
                                       conv_2d_b2b_inputs conv_2d_b2b_output) [1,2,4,8,16,48,144]
 
+conv_2d_b2b_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      conv_2d_b2b s (Just "conv2d_b2b")
+                                      conv_2d_b2b_inputs conv_2d_b2b_output) [144]
 conv_2d_b2b_print_st = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
+                                      conv_2d_b2b s "conv2d_b2b") [1,2,4,8,16,48,144]
+conv_2d_b2b_compile = sequence $ fmap (\s -> compile_with_slowdown
                                       conv_2d_b2b s "conv2d_b2b") [1,2,4,8,16,48,144]
 
 
@@ -364,3 +394,89 @@ conv_2d_3x3_repeat_b2b_results = sequence $ fmap (\s -> compile_and_test_with_sl
 
 conv_2d_3x3_repeat_b2b_print_st = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
                                       conv_2d_3x3_repeat_b2b s "conv2d_b2b_3x3_repeat") [1,2,4,8,16,48,144]
+t_const :: Integer
+t_const = 15
+t_const' = 15
+sharpen_one_pixel a_pixel b_pixel = do
+  let b_sub_a = subC $ atom_tupleC b_pixel a_pixel
+  let const_0 = (const_genC (Atom_Int 0) a_pixel)
+  let abs_b_sub_a = absC b_sub_a
+  let t_constC = const_genC (Atom_Int t_const') a_pixel
+  let passed_threshold = ltC $ atom_tupleC t_constC abs_b_sub_a
+  let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a const_0))
+  let alpha_h = lsrC $ atom_tupleC h (const_genC (Atom_Int 2) a_pixel)
+  addC $ atom_tupleC b_pixel alpha_h
+{-
+sharpen_one_pixel a_pixel b_pixel = do
+  let b_sub_a = subC $ atom_tupleC b_pixel a_pixel
+  --let const_0 = (const_genC (Atom_Int 0) a_pixel)
+  let const_t = (const_genC (Atom_Bit True) a_pixel)
+  {-
+  let abs_b_sub_a = absC b_sub_a
+  let t_constC = const_genC (Atom_Int t_const') a_pixel
+  let passed_threshold = ltC $ atom_tupleC t_constC abs_b_sub_a
+  let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a const_0))
+-}
+  let h = ifC (atom_tupleC const_t (atom_tupleC b_sub_a b_pixel))
+  --let alpha_h = divC $ atom_tupleC h (const_genC (Atom_Int 5) a_pixel)
+  --addC $ atom_tupleC b_pixel alpha_h
+  --addC $ atom_tupleC h b_sub_a
+  b_sub_a
+-}
+sharpen_one_pixel' :: Integer -> Integer -> Integer
+sharpen_one_pixel' a b = do
+  let h = if (abs $ b - a) > t_const then b - a else 0
+  if a == int_to_ignore then a else b + (h `div` 4)
+sharpen_one_pixel_map_no_input a_pixel b_pixel = do
+  map2C sharpen_one_pixel a_pixel b_pixel 
+sharpen_one_pixel_map = sharpen_one_pixel_map_no_input
+  (com_input_seq "I0" (Proxy :: Proxy (Seq 2 0 Atom_Int)))
+  (com_input_seq "I1" (Proxy :: Proxy (Seq 2 0 Atom_Int)))
+sharpen_one_pixel_map_deep = seq_shallow_to_deep sharpen_one_pixel_map
+sharpen_one_pixel_map_seq_idx = add_indexes $ seq_shallow_to_deep sharpen_one_pixel_map
+sharpen_one_pixel_map_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s sharpen_one_pixel_map_seq_idx) [1,2]
+sharpen_one_pixel_map_ppar_typechecked =
+  fmap check_type sharpen_one_pixel_map_ppar
+sharpen_one_pixel_map_ppar_typechecked' =
+  fmap check_type_get_error sharpen_one_pixel_map_ppar
+sharpen_one_pixel_map_inputs :: [[Integer]] = [[1,2],[2,30]]
+sharpen_one_pixel_map_output :: [Integer] =
+  zipWith sharpen_one_pixel'
+  (sharpen_one_pixel_map_inputs !! 0) 
+  (sharpen_one_pixel_map_inputs !! 1)
+sharpen_one_pixel_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      sharpen_one_pixel_map s Nothing
+                                      sharpen_one_pixel_map_inputs sharpen_one_pixel_map_output) [1,2]
+
+sharpen_shallow_no_input in_col in_seq = do
+  let first_stencil = stencil_3x3_2dC_test in_col in_seq
+  let branch_a = mapC tuple_2d_mul_shallow_no_input first_stencil
+  let branch_b = in_seq
+  {-
+  let b_sub_a = map2C (map2C $ map2C $ \x y -> (subC $ atom_tupleC x y)) branch_b branch_a
+  let abs_b_sub_a = mapC (mapC $ mapC $ absC) b_sub_a
+  let t_const = const_genC (Atom_Int 15) in_seq
+  let passed_threshold = mapC (mapC $ mapC $ (\x -> ltC $ atom_tupleC t_const x)) abs_b_sub_a
+   -}
+  --let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a (const_genC (Atom_Int 0) in_seq)))
+  map2C (map2C $ map2C sharpen_one_pixel) branch_a branch_b
+sharpen = sharpen_shallow_no_input (Proxy @4) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+sharpen_seq_idx = add_indexes $ seq_shallow_to_deep sharpen
+sharpen_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s sharpen_seq_idx) [1,2,4,8,16,48,144]
+sharpen_ppar_typechecked =
+  fmap check_type sharpen_ppar
+sharpen_ppar_typechecked' =
+  fmap check_type_get_error sharpen_ppar
+sharpen_inputs :: [[Integer]] = [[i * 5 | i <- [1..row_size * row_size]]]
+sharpen_output :: [Integer] =
+  zipWith sharpen_one_pixel' 
+  (conv_generator $ stencil_generator 4 (sharpen_inputs !! 0))
+  (sharpen_inputs !! 0)
+sharpen_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      sharpen s (Just "sharpen")
+                                      sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
+sharpen_results' = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
+                                      sharpen s "sharpen") [1,2,4,8,16,48,144]

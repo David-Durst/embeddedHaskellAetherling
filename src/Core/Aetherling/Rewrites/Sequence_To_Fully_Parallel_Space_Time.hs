@@ -29,11 +29,19 @@ sequence_to_fully_parallel (SeqE.AddN producer _) = parallelize_atom_operator ST
 sequence_to_fully_parallel (SeqE.SubN producer _) = parallelize_atom_operator STE.SubN producer
 sequence_to_fully_parallel (SeqE.MulN producer _) = parallelize_atom_operator STE.MulN producer
 sequence_to_fully_parallel (SeqE.DivN producer _) = parallelize_atom_operator STE.DivN producer
+sequence_to_fully_parallel (SeqE.LSRN producer _) = parallelize_atom_operator STE.LSRN producer
+sequence_to_fully_parallel (SeqE.LSLN producer _) = parallelize_atom_operator STE.LSLN producer
+sequence_to_fully_parallel (SeqE.LtN producer _) = parallelize_atom_operator STE.LtN producer
 sequence_to_fully_parallel (SeqE.EqN t producer _) = do
   producer_par <- memo producer $ sequence_to_fully_parallel producer
   t_par <- lift $ parallelize_AST_type t
   cur_idx <- get_cur_index
   return $ STE.EqN t_par producer_par cur_idx
+sequence_to_fully_parallel (SeqE.IfN t producer _) = do
+  producer_par <- memo producer $ sequence_to_fully_parallel producer
+  t_par <- lift $ parallelize_AST_type t
+  cur_idx <- get_cur_index
+  return $ STE.IfN t_par producer_par cur_idx
 
 -- generators
 sequence_to_fully_parallel node@(SeqE.Lut_GenN _ _ producer _) =
@@ -42,7 +50,7 @@ sequence_to_fully_parallel (SeqE.Const_GenN constant_val constant_type _) = do
   t_par <- lift $ parallelize_AST_type constant_type
   v_par <- lift $ parallelize_AST_value constant_val
   cur_idx <- get_cur_index
-  return $ STE.Const_GenN v_par t_par cur_idx
+  return $ STE.Const_GenN v_par t_par 0 cur_idx
 
 -- sequence operators
 sequence_to_fully_parallel (SeqE.ShiftN n _ shift_amount elem_t producer _) =

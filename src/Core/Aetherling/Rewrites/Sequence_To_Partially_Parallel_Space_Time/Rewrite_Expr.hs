@@ -142,12 +142,25 @@ sequence_to_partially_parallel type_rewrites seq_e@(SeqE.MulN producer _) = do
 sequence_to_partially_parallel type_rewrites seq_e@(SeqE.DivN producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   ppar_atom_operator type_rewrites STE.DivN producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.LSRN producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  ppar_atom_operator type_rewrites STE.LSRN producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.LSLN producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  ppar_atom_operator type_rewrites STE.LSLN producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.LtN producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  ppar_atom_operator type_rewrites STE.LtN producer
 sequence_to_partially_parallel type_rewrites seq_e@(SeqE.EqN t producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   -- can reuse all of type_rewrites in these calls as atom tuples
   -- and other atoms all have same Type_Rewrite object - NonSeqR
   t_ppar <- ppar_AST_type type_rewrites t
   ppar_atom_operator type_rewrites (STE.EqN t_ppar) producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.IfN t producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  t_ppar <- ppar_AST_type type_rewrites t
+  ppar_atom_operator type_rewrites (STE.IfN t_ppar) producer
 
 -- generators
 sequence_to_partially_parallel _ node@(SeqE.Lut_GenN _ _ producer _) =
@@ -157,7 +170,7 @@ sequence_to_partially_parallel type_rewrites seq_e@(SeqE.Const_GenN constant_val
   t_par <- ppar_AST_type type_rewrites constant_type
   v_par <- ppar_AST_value type_rewrites constant_val
   cur_idx <- get_cur_index
-  return $ STE.Const_GenN v_par t_par cur_idx
+  return $ STE.Const_GenN v_par t_par 0 cur_idx
 
 -- sequence operators
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)

@@ -43,19 +43,35 @@ instance Ord Matched_Latency_Result where
 
 match_latencies' :: Expr -> Memo_Rewrite_StateTM Matched_Latency_Result Latency_StateTM Matched_Latency_Result
 match_latencies' e@(IdN producer _) = match_combinational_op e producer
-match_latencies' e@(AbsN producer _) = match_combinational_op e producer
+match_latencies' e@(AbsN producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 1
+    }
 match_latencies' e@(NotN producer _) = match_combinational_op e producer
 match_latencies' e@(AddN producer _) = match_combinational_op e producer
 match_latencies' e@(SubN producer _) = match_combinational_op e producer
-match_latencies' e@(MulN producer _) = match_combinational_op e producer
-match_latencies' e@(DivN producer _) = match_combinational_op e producer
+match_latencies' e@(MulN producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 2
+    }
+match_latencies' e@(DivN producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 1
+    }
+match_latencies' e@(LSRN producer _) = match_combinational_op e producer
+match_latencies' e@(LSLN producer _) = match_combinational_op e producer
+match_latencies' e@(LtN producer _) = match_combinational_op e producer
 match_latencies' e@(EqN t producer _) = match_combinational_op e producer
+match_latencies' e@(IfN t producer _) = match_combinational_op e producer
 
 -- generators
 match_latencies' e@(Lut_GenN _ _ producer _) = match_combinational_op e producer
-match_latencies' e@(Const_GenN _ _ _) = do
+match_latencies' e@(Const_GenN _ _ delay _) = do
   e_new_idx <- update_index e
-  return $ Matched_Latency_Result e_new_idx 0
+  return $ Matched_Latency_Result e_new_idx delay
 
 -- sequence operators
 match_latencies' e@(Shift_sN _ _ _ producer _) = match_combinational_op e producer
@@ -98,7 +114,11 @@ match_latencies' e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
     }
   
 -- these helpers shouldn't exist now that i've written reshape
-match_latencies' e@(SerializeN _ _ _ producer _) = match_combinational_op e producer
+match_latencies' e@(SerializeN _ _ _ producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 1
+    }
 match_latencies' e@(DeserializeN _ _ _ _ _) = undefined
 match_latencies' e@(Add_1_sN f producer _) = match_map e f producer
 match_latencies' e@(Add_1_0_tN f producer _) = match_map e f producer
@@ -125,7 +145,7 @@ match_latencies' e@(Reduce_sN _ f producer _) = do
     cur_idx <- get_cur_index
     return $ Matched_Latency_Result
       (e {f = new_f, seq_in = new_producer, index = cur_idx} )
-      (latency_producer + latency_f)
+      (latency_producer + latency_f + 1)
     else do
     lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $

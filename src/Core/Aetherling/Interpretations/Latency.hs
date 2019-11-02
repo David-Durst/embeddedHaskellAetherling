@@ -16,6 +16,7 @@ import System.IO
 import System.Process
 import System.Environment
 import Debug.Trace
+import Data.Map as M
 
 -- | Return true if all latencies match when merging two paths
 check_latency :: Expr -> IO Bool
@@ -31,6 +32,20 @@ check_latency e = do
     then putStrLn $ show $ fromLeft undefined computed_latency
     else return ()
   return $ isRight computed_latency
+  
+get_ops_latencies :: Expr -> IO (M.Map DAG_Index Int)
+get_ops_latencies e = do
+  computed_latencies <- evalStateT
+                      (
+                        evalStateT
+                        (runExceptT $ startExecMemoT $ compute_latency e)
+                        empty_rewrite_data
+                      )
+                      empty_latency_state
+  if isLeft computed_latencies
+    then putStrLn $ show $ fromLeft undefined computed_latencies
+    else return ()
+  return $ fromRight M.empty computed_latencies
   
 print_latency :: Expr -> IO Int
 print_latency e = do
@@ -64,17 +79,27 @@ get_cur_latency = do
 
 compute_latency :: Expr -> Memo_Rewrite_StateTM Int Latency_StateTM Int
 compute_latency e@(IdN producer _) = memo producer $ compute_latency producer
-compute_latency e@(AbsN producer _) = memo producer $ compute_latency producer
+compute_latency e@(AbsN producer _) = do
+  producer_latency <- memo producer $ compute_latency producer
+  return $ producer_latency + 1
 compute_latency e@(NotN producer _) = memo producer $ compute_latency producer
 compute_latency e@(AddN producer _) = memo producer $ compute_latency producer
 compute_latency e@(SubN producer _) = memo producer $ compute_latency producer
-compute_latency e@(MulN producer _) = memo producer $ compute_latency producer
-compute_latency e@(DivN producer _) = memo producer $ compute_latency producer
+compute_latency e@(MulN producer _) = do
+  producer_latency <- memo producer $ compute_latency producer
+  return $ producer_latency + 2
+compute_latency e@(DivN producer _) = do
+  producer_latency <- memo producer $ compute_latency producer
+  return $ producer_latency + 1
+compute_latency e@(LSRN producer _) = memo producer $ compute_latency producer
+compute_latency e@(LSLN producer _) = memo producer $ compute_latency producer
+compute_latency e@(LtN producer _) = memo producer $ compute_latency producer
 compute_latency e@(EqN t producer _) = memo producer $ compute_latency producer
+compute_latency e@(IfN t producer _) = memo producer $ compute_latency producer
 
 -- generators
 compute_latency e@(Lut_GenN _ _ producer _) = memo producer $ compute_latency producer
-compute_latency e@(Const_GenN _ _ _) = return 0
+compute_latency e@(Const_GenN _ _ delay _) = return delay
 
 -- sequence operators
 compute_latency e@(Shift_sN _ _ _ producer _) = memo producer $ compute_latency producer
@@ -111,7 +136,9 @@ compute_latency e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
   return $ producer_latency + cur_latency
   
 -- these helpers shouldn't exist now that i've written reshape
-compute_latency e@(SerializeN _ _ _ producer _) = memo producer $ compute_latency producer
+compute_latency e@(SerializeN _ _ _ producer _) = do
+  producer_latency <- memo producer $ compute_latency producer
+  return $ producer_latency + 1
 compute_latency e@(DeserializeN _ _ _ _ _) = undefined
 compute_latency e@(Add_1_sN f producer _) = compute_latency_map e f producer
 compute_latency e@(Add_1_0_tN f producer _) = compute_latency_map e f producer
@@ -152,7 +179,7 @@ compute_latency e@(Reduce_sN _ f producer _) = do
   inner_latency <- compute_latency f
   update_latency_state cur_lat
   if inner_latency == 0
-    then return producer_latency
+    then return $ producer_latency + 1
     else do
     lift_memo_rewrite_state $ lift $ print_st e
     throwError $ Latency_Failure $
@@ -236,7 +263,7 @@ compute_latency' (Down_1d_tN _ _ sel_idx t _ _) =
   return $ sel_idx * clocks_t t
 compute_latency' (Reduce_tN n _ f _ _) = do
   let f_out_type = ST_Conv.e_out_type $ ST_Conv.expr_to_types f
-  return $ (n - 1) * (clocks_t f_out_type)
+  return $ (n - 1) * (clocks_t f_out_type) + 1
 compute_latency' (FIFON _ delay_clks _ _) = return $ delay_clks
 compute_latency' (ReshapeN in_t out_t _ _) = do
   let in_t_py_str = type_to_python in_t

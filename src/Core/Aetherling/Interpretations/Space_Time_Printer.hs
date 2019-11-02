@@ -8,6 +8,7 @@ import Control.Monad.State
 import Control.Monad.Identity
 import Aetherling.Monad_Helpers
 import Debug.Trace
+import Data.List
 
 data Print_Data = Print_Data {
   cur_module_output_lines :: [String],
@@ -80,7 +81,7 @@ print_module new_module = do
     else do
     let cur_module_index = next_module_index end_data
     let cur_module_ref = "module" ++ show cur_module_index
-    let cur_inputs = cur_module_inputs end_data
+    let cur_inputs = sort $ cur_module_inputs end_data
     let cur_inputs_str = foldl (\x y -> x ++ " " ++ y)
                         (head $ cur_inputs) (tail $ cur_inputs)
     let module_start_string = cur_module_ref ++ " " ++ cur_inputs_str ++ " =\n"
@@ -134,10 +135,30 @@ print_inner consumer_e@(DivN producer_e cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "DivN " ++ producer_ref
   return cur_ref_name
+print_inner consumer_e@(LSRN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ print_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "LSRN " ++ producer_ref
+  return cur_ref_name
+print_inner consumer_e@(LSLN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ print_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "LSLN " ++ producer_ref
+  return cur_ref_name
+print_inner consumer_e@(LtN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ print_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "LtN " ++ producer_ref
+  return cur_ref_name
 print_inner consumer_e@(EqN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "EqN " ++ show t ++ " " ++ producer_ref
+  return cur_ref_name
+print_inner consumer_e@(IfN t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ print_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "IfN " ++ show t ++ " " ++ producer_ref
   return cur_ref_name
 
 -- generators
@@ -147,10 +168,10 @@ print_inner consumer_e@(Lut_GenN lut_table lut_type producer_e cur_idx) = do
   add_to_cur_module cur_ref_name $ "Lut_GenN " ++ show lut_table ++ " " ++
     show lut_type ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(Const_GenN constant constant_type cur_idx) = do
+print_inner consumer_e@(Const_GenN constant constant_type delay cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "Const_GenN " ++ show constant ++ " " ++
-    show constant_type
+    show delay ++ " " ++ show constant_type
   return cur_ref_name
 
 -- sequence operators

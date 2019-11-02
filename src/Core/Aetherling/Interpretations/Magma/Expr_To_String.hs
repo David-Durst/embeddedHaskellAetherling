@@ -11,6 +11,7 @@ import Control.Monad.Identity
 import Aetherling.Monad_Helpers
 import Data.Either
 import Debug.Trace
+import Data.List
 
 data Module_Port = Module_Port {
   -- this is the port of the instance to wire
@@ -155,7 +156,7 @@ print_module new_module = do
 
   -- get state after executing inside module
   end_data <- lift get
-  let cur_inputs = cur_module_inputs end_data
+  let cur_inputs = sortBy (\x y -> compare (port_name x) (port_name y)) $ cur_module_inputs end_data
   if cur_module_num_non_inputs end_data == 1 && (not $ is_top_module start_data)
     then do
     -- setup for outer module
@@ -236,7 +237,7 @@ print_module new_module = do
       modules = modules end_data ++ [module_str]
       }
     --traceShowM $ "module " ++ cur_module_name
-    --traceShowM $ show end_data
+    --traceShowM $ show cur_inputs
     --traceShowM $ show cur_module_result_ref
     return $ Magma_Module_Ref (cur_module_name ++ "()") "" cur_inputs (out_port cur_module_result_ref)
 
@@ -305,6 +306,33 @@ module_to_string_inner consumer_e@(DivN producer_e cur_idx) = do
                 [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
+module_to_string_inner consumer_e@(LSRN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name ("DefineRShift_Atom(" ++ valid_str ++ ")")
+                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(LSLN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name ("DefineLShift_Atom(" ++ valid_str ++ ")")
+                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(LtN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name ("DefineLt_Atom(" ++ valid_str ++ ")")
+                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" BitT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
@@ -316,12 +344,23 @@ module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do
                 (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
+module_to_string_inner consumer_e@(IfN t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let cur_ref = Magma_Module_Ref cur_ref_name
+                ("DefineIf_Atom(" ++ type_to_python t ++ ", " ++ valid_str ++ ")")
+                [Module_Port "I" (ATupleT BitT (ATupleT t t))]
+                (Module_Port "O" t)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 
 -- need to fix from here until map
 -- generators
 module_to_string_inner consumer_e@(Lut_GenN lut_table lut_type producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Lut_GenN not printable"
-module_to_string_inner consumer_e@(Const_GenN constant t cur_idx) = do
+module_to_string_inner consumer_e@(Const_GenN constant t delay cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   let const_values_str =
         convert_seq_val_to_st_val_string (flatten_ast_value constant) t
@@ -332,7 +371,8 @@ module_to_string_inner consumer_e@(Const_GenN constant t cur_idx) = do
           repl x = [x]
         in concatMap repl x
   let gen_str = "DefineConst(" ++ type_to_python t ++
-                ", " ++ replace_brackets (st_values const_values_str) ++ ",has_valid=True)"
+                ", " ++ replace_brackets (st_values const_values_str) ++
+                ", has_valid=True, delay=" ++ show delay ++ ")"
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str
                 [] (Module_Port "O" t)
   add_to_cur_module $ var_name cur_ref ++ " = " ++ gen_call cur_ref ++ "()"
