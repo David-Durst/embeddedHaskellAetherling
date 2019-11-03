@@ -68,7 +68,7 @@ stencil_2(std::array< std::array< int, ROW_SIZE > , ROW_SIZE > inputs, int row, 
 // this convolves each window of the stencil with the blur kernel
 int conv_2(std::array< std::array< int, KERNEL_2_SIZE >, KERNEL_2_SIZE > inputs) {
   int result = 0;
-  int kernel[KERNEL_2_SIZE][KERNEL_2_SIZE] = {{1,2},{2,1}};
+  int kernel[KERNEL_2_SIZE][KERNEL_2_SIZE] = {{1,4},{2,1}};
   for (int i = 0; i < KERNEL_2_SIZE; i++) {
     for (int j = 0; j < KERNEL_2_SIZE; j++) {
       if (inputs[i][j] == INT_TO_IGNORE) {
@@ -77,7 +77,7 @@ int conv_2(std::array< std::array< int, KERNEL_2_SIZE >, KERNEL_2_SIZE > inputs)
       result += kernel[i][j] * inputs[i][j];
     }
   }
-  return result / 6;
+  return result / 8;
 }
 
 

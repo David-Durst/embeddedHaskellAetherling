@@ -47,7 +47,7 @@ int conv(std::array< std::array< int, KERNEL_SIZE >, KERNEL_SIZE > inputs) {
 int thres_const = 15;
 int sharpen_one_pixel(int blur_px, int in_px) {
   int h = abs(in_px - blur_px) > 15 ? in_px - blur_px : 0;
-  return blur_px == INT_TO_IGNORE ? blur_px : in_px + (h / 5);
+  return blur_px == INT_TO_IGNORE ? blur_px : in_px + (h / 4);
 }
 
 int main(int argc, char** argv) {
