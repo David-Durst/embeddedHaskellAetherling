@@ -1,4 +1,4 @@
-// Latency = 1
+// Latency = 4
 module top(
   input CLK/*verilator public*/, 
   input [7:0] I/*verilator public*/, 
