@@ -10,16 +10,16 @@ module top(
   wire [31:0] io_output_counts_1;
   wire [31:0] io_output_counts_0;
 
-  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1 sampler_box ( // @[m_x55_ctr_0.scala 26:17:@1721.4]
+  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1 sampler_box ( // @[m_x55_ctr_0.scala 26:17:@1721.4]
     .clock(CLK), // @[:@1296.4]
     .reset('b0), // @[:@1297.4]
-    .io_in_x195_TREADY(dontcare), // @[:@1298.4]
-    .io_in_x195_TDATA(I_0_0), // @[:@1298.4]
-    .io_in_x195_TID(8'h0),
-    .io_in_x195_TDEST(8'h0),
-    .io_in_x196_TVALID(valid_down), // @[:@1298.4]
-    .io_in_x196_TDATA(O_0_0), // @[:@1298.4]
-    .io_in_x196_TREADY(1'b1), // @[:@1298.4]
+    .io_in_x181_TREADY(dontcare), // @[:@1298.4]
+    .io_in_x181_TDATA(I_0_0), // @[:@1298.4]
+    .io_in_x181_TID(8'h0),
+    .io_in_x181_TDEST(8'h0),
+    .io_in_x182_TVALID(valid_down), // @[:@1298.4]
+    .io_in_x182_TDATA(O_0_0), // @[:@1298.4]
+    .io_in_x182_TREADY(1'b1), // @[:@1298.4]
     .io_sigsIn_datapathEn(valid_up), // @[:@1298.4]
     .io_sigsIn_backpressure(1'b1), // @[:@20563.4]
     .io_sigsIn_break(1'b0), // @[:@20563.4]
@@ -34,7 +34,7 @@ module top(
 
   wire io_output_oobs_0;
   wire io_output_oobs_1;
-  x203_ctrchain cchain ( // @[:@2879.2]
+  x189_ctrchain cchain ( // @[:@2879.2]
     .clock(CLK), // @[:@2880.4]
     .reset(1'b0), // @[:@2881.4]
     .io_input_reset(1'b0), // @[:@2882.4]
@@ -266,11 +266,11 @@ module SingleCounter( // @[:@41.2]
   assign _T_50 = $signed(_T_48) + $signed(32'sh1); // @[Counter.scala 283:33:@102.4]
   assign _T_51 = $signed(_T_48) + $signed(32'sh1); // @[Counter.scala 283:33:@103.4]
   assign _T_52 = $signed(_T_51); // @[Counter.scala 283:33:@104.4]
-  assign _T_57 = $signed(_T_52) >= $signed(32'sh12); // @[Counter.scala 285:18:@106.4]
+  assign _T_57 = $signed(_T_52) >= $signed(32'shc); // @[Counter.scala 285:18:@106.4]
   assign _T_68 = $unsigned(_T_48); // @[Counter.scala 291:115:@114.4]
   assign _T_71 = $unsigned(_T_52); // @[Counter.scala 291:152:@117.4]
   assign _T_72 = _T_57 ? _T_68 : _T_71; // @[Counter.scala 291:74:@118.4]
-  assign io_output_done = $signed(_T_52) >= $signed(32'sh12); // @[Counter.scala 325:20:@127.4]
+  assign io_output_done = $signed(_T_52) >= $signed(32'shc); // @[Counter.scala 325:20:@127.4]
   assign bases_0_clock = clock; // @[:@58.4]
   assign bases_0_reset = reset; // @[:@59.4]
   assign bases_0_io_wPort_0_data_0 = io_input_reset ? 32'h0 : _T_72; // @[Counter.scala 291:31:@120.4]
@@ -522,7 +522,7 @@ module RootController_sm( // @[:@312.2]
     end
   end
 endmodule
-module x322_outr_UnitPipe_sm( // @[:@2389.2]
+module x301_outr_UnitPipe_sm( // @[:@2389.2]
   input   clock, // @[:@2390.4]
   input   reset, // @[:@2391.4]
   input   io_enable, // @[:@2392.4]
@@ -844,7 +844,7 @@ module SingleCounter_1( // @[:@2659.2]
   assign SRFF_io_input_reset = io_input_reset | io_output_done; // @[Counter.scala 257:25:@2698.4]
   assign SRFF_io_input_asyn_reset = 1'h0; // @[Counter.scala 258:30:@2699.4]
 endmodule
-module x203_ctrchain( // @[:@2879.2]
+module x189_ctrchain( // @[:@2879.2]
   input         clock, // @[:@2880.4]
   input         reset, // @[:@2881.4]
   input         io_input_reset, // @[:@2882.4]
@@ -990,7 +990,7 @@ module RetimeWrapper_12( // @[:@2968.2]
   wire  sr_flow; // @[RetimeShiftRegister.scala 15:20:@2973.4]
   wire  sr_reset; // @[RetimeShiftRegister.scala 15:20:@2973.4]
   wire  sr_clock; // @[RetimeShiftRegister.scala 15:20:@2973.4]
-  RetimeShiftRegister #(.WIDTH(1), .STAGES(19)) sr ( // @[RetimeShiftRegister.scala 15:20:@2973.4]
+  RetimeShiftRegister #(.WIDTH(1), .STAGES(12)) sr ( // @[RetimeShiftRegister.scala 15:20:@2973.4]
     .out(sr_out),
     .in(sr_in),
     .init(sr_init),
@@ -1018,7 +1018,7 @@ module RetimeWrapper_16( // @[:@3096.2]
   wire  sr_flow; // @[RetimeShiftRegister.scala 15:20:@3101.4]
   wire  sr_reset; // @[RetimeShiftRegister.scala 15:20:@3101.4]
   wire  sr_clock; // @[RetimeShiftRegister.scala 15:20:@3101.4]
-  RetimeShiftRegister #(.WIDTH(1), .STAGES(18)) sr ( // @[RetimeShiftRegister.scala 15:20:@3101.4]
+  RetimeShiftRegister #(.WIDTH(1), .STAGES(11)) sr ( // @[RetimeShiftRegister.scala 15:20:@3101.4]
     .out(sr_out),
     .in(sr_in),
     .init(sr_init),
@@ -1033,7 +1033,7 @@ module RetimeWrapper_16( // @[:@3096.2]
   assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@3110.4]
   assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@3108.4]
 endmodule
-module x321_inr_Foreach_SAMPLER_BOX_sm( // @[:@3116.2]
+module x300_inr_Foreach_SAMPLER_BOX_sm( // @[:@3116.2]
   input   clock, // @[:@3117.4]
   input   reset, // @[:@3118.4]
   input   io_enable, // @[:@3119.4]
@@ -1779,7 +1779,7 @@ module RetimeWrapper_52( // @[:@6764.2]
   assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@6778.4]
   assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@6776.4]
 endmodule
-module x208_lb_0( // @[:@11360.2]
+module x194_lb_0( // @[:@11360.2]
   input        clock, // @[:@11361.4]
   input        reset, // @[:@11362.4]
   input  [2:0] io_rPort_8_banks_1, // @[:@11363.4]
@@ -7376,7 +7376,7 @@ module fix2fixBox( // @[:@15173.2]
   assign RetimeWrapper_io_flow = io_flow; // @[package.scala 95:18:@15190.4]
   assign RetimeWrapper_io_in = io_a[31:0]; // @[package.scala 94:16:@15189.4]
 endmodule
-module x222_sum( // @[:@15195.2]
+module x208_sum( // @[:@15195.2]
   input         clock, // @[:@15196.4]
   input         reset, // @[:@15197.4]
   input  [31:0] io_a, // @[:@15198.4]
@@ -7478,34 +7478,6 @@ module RetimeWrapper_206( // @[:@15657.2]
   assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@15671.4]
   assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@15669.4]
 endmodule
-module RetimeWrapper_207( // @[:@15689.2]
-  input         clock, // @[:@15690.4]
-  input         reset, // @[:@15691.4]
-  input         io_flow, // @[:@15692.4]
-  input  [31:0] io_in, // @[:@15692.4]
-  output [31:0] io_out // @[:@15692.4]
-);
-  wire [31:0] sr_out; // @[RetimeShiftRegister.scala 15:20:@15694.4]
-  wire [31:0] sr_in; // @[RetimeShiftRegister.scala 15:20:@15694.4]
-  wire [31:0] sr_init; // @[RetimeShiftRegister.scala 15:20:@15694.4]
-  wire  sr_flow; // @[RetimeShiftRegister.scala 15:20:@15694.4]
-  wire  sr_reset; // @[RetimeShiftRegister.scala 15:20:@15694.4]
-  wire  sr_clock; // @[RetimeShiftRegister.scala 15:20:@15694.4]
-  RetimeShiftRegister #(.WIDTH(32), .STAGES(2)) sr ( // @[RetimeShiftRegister.scala 15:20:@15694.4]
-    .out(sr_out),
-    .in(sr_in),
-    .init(sr_init),
-    .flow(sr_flow),
-    .reset(sr_reset),
-    .clock(sr_clock)
-  );
-  assign io_out = sr_out; // @[RetimeShiftRegister.scala 21:12:@15707.4]
-  assign sr_in = io_in; // @[RetimeShiftRegister.scala 20:14:@15706.4]
-  assign sr_init = 32'h0; // @[RetimeShiftRegister.scala 19:16:@15705.4]
-  assign sr_flow = io_flow; // @[RetimeShiftRegister.scala 18:16:@15704.4]
-  assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@15703.4]
-  assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@15701.4]
-endmodule
 module RetimeWrapper_208( // @[:@15721.2]
   input         clock, // @[:@15722.4]
   input         reset, // @[:@15723.4]
@@ -7519,7 +7491,7 @@ module RetimeWrapper_208( // @[:@15721.2]
   wire  sr_flow; // @[RetimeShiftRegister.scala 15:20:@15726.4]
   wire  sr_reset; // @[RetimeShiftRegister.scala 15:20:@15726.4]
   wire  sr_clock; // @[RetimeShiftRegister.scala 15:20:@15726.4]
-  RetimeShiftRegister #(.WIDTH(32), .STAGES(5)) sr ( // @[RetimeShiftRegister.scala 15:20:@15726.4]
+  RetimeShiftRegister #(.WIDTH(32), .STAGES(2)) sr ( // @[RetimeShiftRegister.scala 15:20:@15726.4]
     .out(sr_out),
     .in(sr_in),
     .init(sr_init),
@@ -7534,7 +7506,35 @@ module RetimeWrapper_208( // @[:@15721.2]
   assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@15735.4]
   assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@15733.4]
 endmodule
-module x238_rdcol( // @[:@16003.2]
+module RetimeWrapper_210( // @[:@15785.2]
+  input         clock, // @[:@15786.4]
+  input         reset, // @[:@15787.4]
+  input         io_flow, // @[:@15788.4]
+  input  [31:0] io_in, // @[:@15788.4]
+  output [31:0] io_out // @[:@15788.4]
+);
+  wire [31:0] sr_out; // @[RetimeShiftRegister.scala 15:20:@15790.4]
+  wire [31:0] sr_in; // @[RetimeShiftRegister.scala 15:20:@15790.4]
+  wire [31:0] sr_init; // @[RetimeShiftRegister.scala 15:20:@15790.4]
+  wire  sr_flow; // @[RetimeShiftRegister.scala 15:20:@15790.4]
+  wire  sr_reset; // @[RetimeShiftRegister.scala 15:20:@15790.4]
+  wire  sr_clock; // @[RetimeShiftRegister.scala 15:20:@15790.4]
+  RetimeShiftRegister #(.WIDTH(32), .STAGES(5)) sr ( // @[RetimeShiftRegister.scala 15:20:@15790.4]
+    .out(sr_out),
+    .in(sr_in),
+    .init(sr_init),
+    .flow(sr_flow),
+    .reset(sr_reset),
+    .clock(sr_clock)
+  );
+  assign io_out = sr_out; // @[RetimeShiftRegister.scala 21:12:@15803.4]
+  assign sr_in = io_in; // @[RetimeShiftRegister.scala 20:14:@15802.4]
+  assign sr_init = 32'h0; // @[RetimeShiftRegister.scala 19:16:@15801.4]
+  assign sr_flow = io_flow; // @[RetimeShiftRegister.scala 18:16:@15800.4]
+  assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@15799.4]
+  assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@15797.4]
+endmodule
+module x224_rdcol( // @[:@16003.2]
   input         clock, // @[:@16004.4]
   input         reset, // @[:@16005.4]
   input  [31:0] io_a, // @[:@16006.4]
@@ -7654,7 +7654,7 @@ module fix2fixBox_14( // @[:@18591.2]
   assign RetimeWrapper_io_flow = io_flow; // @[package.scala 95:18:@18608.4]
   assign RetimeWrapper_io_in = io_a[7:0]; // @[package.scala 94:16:@18607.4]
 endmodule
-module x301_x17( // @[:@18613.2]
+module x287_x11( // @[:@18613.2]
   input        clock, // @[:@18614.4]
   input        reset, // @[:@18615.4]
   input  [7:0] io_a, // @[:@18616.4]
@@ -7706,7 +7706,7 @@ module fix2fixBox_18( // @[:@19239.2]
 );
   assign io_b = io_a[7:0]; // @[Converter.scala 95:38:@19252.4]
 endmodule
-module x305_x17( // @[:@19254.2]
+module x291_x11( // @[:@19254.2]
   input  [7:0] io_a, // @[:@19257.4]
   input  [7:0] io_b, // @[:@19257.4]
   output [7:0] io_result // @[:@19257.4]
@@ -7753,7 +7753,7 @@ module RetimeWrapper_245( // @[:@19761.2]
   wire  sr_flow; // @[RetimeShiftRegister.scala 15:20:@19766.4]
   wire  sr_reset; // @[RetimeShiftRegister.scala 15:20:@19766.4]
   wire  sr_clock; // @[RetimeShiftRegister.scala 15:20:@19766.4]
-  RetimeShiftRegister #(.WIDTH(8), .STAGES(2)) sr ( // @[RetimeShiftRegister.scala 15:20:@19766.4]
+  RetimeShiftRegister #(.WIDTH(8), .STAGES(3)) sr ( // @[RetimeShiftRegister.scala 15:20:@19766.4]
     .out(sr_out),
     .in(sr_in),
     .init(sr_init),
@@ -7768,1116 +7768,885 @@ module RetimeWrapper_245( // @[:@19761.2]
   assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@19775.4]
   assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@19773.4]
 endmodule
-module x310_sub( // @[:@19874.2]
-  input  [7:0] io_a, // @[:@19877.4]
-  input  [7:0] io_b, // @[:@19877.4]
-  output [7:0] io_result // @[:@19877.4]
+module x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1( // @[:@19877.2]
+  input          clock, // @[:@19878.4]
+  input          reset, // @[:@19879.4]
+  output         io_in_x181_TREADY, // @[:@19880.4]
+  input  [255:0] io_in_x181_TDATA, // @[:@19880.4]
+  input  [7:0]   io_in_x181_TID, // @[:@19880.4]
+  input  [7:0]   io_in_x181_TDEST, // @[:@19880.4]
+  output         io_in_x182_TVALID, // @[:@19880.4]
+  input          io_in_x182_TREADY, // @[:@19880.4]
+  output [255:0] io_in_x182_TDATA, // @[:@19880.4]
+  input          io_sigsIn_backpressure, // @[:@19880.4]
+  input          io_sigsIn_datapathEn, // @[:@19880.4]
+  input          io_sigsIn_break, // @[:@19880.4]
+  input  [31:0]  io_sigsIn_cchainOutputs_0_counts_1, // @[:@19880.4]
+  input  [31:0]  io_sigsIn_cchainOutputs_0_counts_0, // @[:@19880.4]
+  input          io_sigsIn_cchainOutputs_0_oobs_0, // @[:@19880.4]
+  input          io_sigsIn_cchainOutputs_0_oobs_1, // @[:@19880.4]
+  input          io_rr // @[:@19880.4]
 );
-  wire [7:0] __io_b; // @[Math.scala 709:24:@19885.4]
-  wire [8:0] __io_result; // @[Math.scala 709:24:@19885.4]
-  wire [7:0] __1_io_b; // @[Math.scala 709:24:@19892.4]
-  wire [8:0] __1_io_result; // @[Math.scala 709:24:@19892.4]
-  wire [8:0] fix2fixBox_io_a; // @[Math.scala 182:30:@19903.4]
-  wire [7:0] fix2fixBox_io_b; // @[Math.scala 182:30:@19903.4]
-  wire [8:0] a_upcast_number; // @[Math.scala 712:22:@19890.4 Math.scala 713:14:@19891.4]
-  wire [8:0] b_upcast_number; // @[Math.scala 712:22:@19897.4 Math.scala 713:14:@19898.4]
-  wire [9:0] _T_21; // @[Math.scala 177:37:@19899.4]
-  wire [9:0] _T_22; // @[Math.scala 177:37:@19900.4]
-  __30 _ ( // @[Math.scala 709:24:@19885.4]
+  wire [31:0] __io_b; // @[Math.scala 709:24:@19894.4]
+  wire [31:0] __io_result; // @[Math.scala 709:24:@19894.4]
+  wire [31:0] __1_io_b; // @[Math.scala 709:24:@19906.4]
+  wire [31:0] __1_io_result; // @[Math.scala 709:24:@19906.4]
+  wire  x194_lb_0_clock; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_reset; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_8_banks_1; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_8_banks_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_8_ofs_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_8_en_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_8_backpressure; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [7:0] x194_lb_0_io_rPort_8_output_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_7_banks_1; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_7_banks_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_7_ofs_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_7_en_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_7_backpressure; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [7:0] x194_lb_0_io_rPort_7_output_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_6_banks_1; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_6_banks_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_6_ofs_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_6_en_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_6_backpressure; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [7:0] x194_lb_0_io_rPort_6_output_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_5_banks_1; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_5_banks_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_5_ofs_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_5_en_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_5_backpressure; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [7:0] x194_lb_0_io_rPort_5_output_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_4_banks_1; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_4_banks_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_4_ofs_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_4_en_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_4_backpressure; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [7:0] x194_lb_0_io_rPort_4_output_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_3_banks_1; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_3_banks_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_3_ofs_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_3_en_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_3_backpressure; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [7:0] x194_lb_0_io_rPort_3_output_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_2_banks_1; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_2_banks_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_2_ofs_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_2_en_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_2_backpressure; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [7:0] x194_lb_0_io_rPort_2_output_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_1_banks_1; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_1_banks_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_1_ofs_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_1_en_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_1_backpressure; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [7:0] x194_lb_0_io_rPort_1_output_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_0_banks_1; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_rPort_0_banks_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_0_ofs_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_0_en_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_rPort_0_backpressure; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [7:0] x194_lb_0_io_rPort_0_output_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_wPort_0_banks_1; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [2:0] x194_lb_0_io_wPort_0_banks_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_wPort_0_ofs_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire [7:0] x194_lb_0_io_wPort_0_data_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  x194_lb_0_io_wPort_0_en_0; // @[m_x194_lb_0.scala 35:17:@19916.4]
+  wire  RetimeWrapper_clock; // @[package.scala 93:22:@19996.4]
+  wire  RetimeWrapper_reset; // @[package.scala 93:22:@19996.4]
+  wire  RetimeWrapper_io_flow; // @[package.scala 93:22:@19996.4]
+  wire [7:0] RetimeWrapper_io_in; // @[package.scala 93:22:@19996.4]
+  wire [7:0] RetimeWrapper_io_out; // @[package.scala 93:22:@19996.4]
+  wire  x208_sum_1_clock; // @[Math.scala 150:24:@20101.4]
+  wire  x208_sum_1_reset; // @[Math.scala 150:24:@20101.4]
+  wire [31:0] x208_sum_1_io_a; // @[Math.scala 150:24:@20101.4]
+  wire [31:0] x208_sum_1_io_b; // @[Math.scala 150:24:@20101.4]
+  wire  x208_sum_1_io_flow; // @[Math.scala 150:24:@20101.4]
+  wire [31:0] x208_sum_1_io_result; // @[Math.scala 150:24:@20101.4]
+  wire  RetimeWrapper_1_clock; // @[package.scala 93:22:@20111.4]
+  wire  RetimeWrapper_1_reset; // @[package.scala 93:22:@20111.4]
+  wire  RetimeWrapper_1_io_flow; // @[package.scala 93:22:@20111.4]
+  wire [31:0] RetimeWrapper_1_io_in; // @[package.scala 93:22:@20111.4]
+  wire [31:0] RetimeWrapper_1_io_out; // @[package.scala 93:22:@20111.4]
+  wire  RetimeWrapper_2_clock; // @[package.scala 93:22:@20120.4]
+  wire  RetimeWrapper_2_reset; // @[package.scala 93:22:@20120.4]
+  wire  RetimeWrapper_2_io_flow; // @[package.scala 93:22:@20120.4]
+  wire [31:0] RetimeWrapper_2_io_in; // @[package.scala 93:22:@20120.4]
+  wire [31:0] RetimeWrapper_2_io_out; // @[package.scala 93:22:@20120.4]
+  wire  RetimeWrapper_3_clock; // @[package.scala 93:22:@20129.4]
+  wire  RetimeWrapper_3_reset; // @[package.scala 93:22:@20129.4]
+  wire  RetimeWrapper_3_io_flow; // @[package.scala 93:22:@20129.4]
+  wire  RetimeWrapper_3_io_in; // @[package.scala 93:22:@20129.4]
+  wire  RetimeWrapper_3_io_out; // @[package.scala 93:22:@20129.4]
+  wire  RetimeWrapper_4_clock; // @[package.scala 93:22:@20138.4]
+  wire  RetimeWrapper_4_reset; // @[package.scala 93:22:@20138.4]
+  wire  RetimeWrapper_4_io_flow; // @[package.scala 93:22:@20138.4]
+  wire  RetimeWrapper_4_io_in; // @[package.scala 93:22:@20138.4]
+  wire  RetimeWrapper_4_io_out; // @[package.scala 93:22:@20138.4]
+  wire  RetimeWrapper_5_clock; // @[package.scala 93:22:@20149.4]
+  wire  RetimeWrapper_5_reset; // @[package.scala 93:22:@20149.4]
+  wire  RetimeWrapper_5_io_flow; // @[package.scala 93:22:@20149.4]
+  wire  RetimeWrapper_5_io_in; // @[package.scala 93:22:@20149.4]
+  wire  RetimeWrapper_5_io_out; // @[package.scala 93:22:@20149.4]
+  wire  RetimeWrapper_6_clock; // @[package.scala 93:22:@20170.4]
+  wire  RetimeWrapper_6_reset; // @[package.scala 93:22:@20170.4]
+  wire  RetimeWrapper_6_io_flow; // @[package.scala 93:22:@20170.4]
+  wire [31:0] RetimeWrapper_6_io_in; // @[package.scala 93:22:@20170.4]
+  wire [31:0] RetimeWrapper_6_io_out; // @[package.scala 93:22:@20170.4]
+  wire  RetimeWrapper_7_clock; // @[package.scala 93:22:@20210.4]
+  wire  RetimeWrapper_7_reset; // @[package.scala 93:22:@20210.4]
+  wire  RetimeWrapper_7_io_flow; // @[package.scala 93:22:@20210.4]
+  wire [31:0] RetimeWrapper_7_io_in; // @[package.scala 93:22:@20210.4]
+  wire [31:0] RetimeWrapper_7_io_out; // @[package.scala 93:22:@20210.4]
+  wire  x218_sum_1_clock; // @[Math.scala 150:24:@20219.4]
+  wire  x218_sum_1_reset; // @[Math.scala 150:24:@20219.4]
+  wire [31:0] x218_sum_1_io_a; // @[Math.scala 150:24:@20219.4]
+  wire [31:0] x218_sum_1_io_b; // @[Math.scala 150:24:@20219.4]
+  wire  x218_sum_1_io_flow; // @[Math.scala 150:24:@20219.4]
+  wire [31:0] x218_sum_1_io_result; // @[Math.scala 150:24:@20219.4]
+  wire  RetimeWrapper_8_clock; // @[package.scala 93:22:@20229.4]
+  wire  RetimeWrapper_8_reset; // @[package.scala 93:22:@20229.4]
+  wire  RetimeWrapper_8_io_flow; // @[package.scala 93:22:@20229.4]
+  wire  RetimeWrapper_8_io_in; // @[package.scala 93:22:@20229.4]
+  wire  RetimeWrapper_8_io_out; // @[package.scala 93:22:@20229.4]
+  wire  RetimeWrapper_9_clock; // @[package.scala 93:22:@20238.4]
+  wire  RetimeWrapper_9_reset; // @[package.scala 93:22:@20238.4]
+  wire  RetimeWrapper_9_io_flow; // @[package.scala 93:22:@20238.4]
+  wire  RetimeWrapper_9_io_in; // @[package.scala 93:22:@20238.4]
+  wire  RetimeWrapper_9_io_out; // @[package.scala 93:22:@20238.4]
+  wire  RetimeWrapper_10_clock; // @[package.scala 93:22:@20247.4]
+  wire  RetimeWrapper_10_reset; // @[package.scala 93:22:@20247.4]
+  wire  RetimeWrapper_10_io_flow; // @[package.scala 93:22:@20247.4]
+  wire [31:0] RetimeWrapper_10_io_in; // @[package.scala 93:22:@20247.4]
+  wire [31:0] RetimeWrapper_10_io_out; // @[package.scala 93:22:@20247.4]
+  wire  RetimeWrapper_11_clock; // @[package.scala 93:22:@20256.4]
+  wire  RetimeWrapper_11_reset; // @[package.scala 93:22:@20256.4]
+  wire  RetimeWrapper_11_io_flow; // @[package.scala 93:22:@20256.4]
+  wire [31:0] RetimeWrapper_11_io_in; // @[package.scala 93:22:@20256.4]
+  wire [31:0] RetimeWrapper_11_io_out; // @[package.scala 93:22:@20256.4]
+  wire  RetimeWrapper_12_clock; // @[package.scala 93:22:@20265.4]
+  wire  RetimeWrapper_12_reset; // @[package.scala 93:22:@20265.4]
+  wire  RetimeWrapper_12_io_flow; // @[package.scala 93:22:@20265.4]
+  wire [31:0] RetimeWrapper_12_io_in; // @[package.scala 93:22:@20265.4]
+  wire [31:0] RetimeWrapper_12_io_out; // @[package.scala 93:22:@20265.4]
+  wire  RetimeWrapper_13_clock; // @[package.scala 93:22:@20277.4]
+  wire  RetimeWrapper_13_reset; // @[package.scala 93:22:@20277.4]
+  wire  RetimeWrapper_13_io_flow; // @[package.scala 93:22:@20277.4]
+  wire  RetimeWrapper_13_io_in; // @[package.scala 93:22:@20277.4]
+  wire  RetimeWrapper_13_io_out; // @[package.scala 93:22:@20277.4]
+  wire  RetimeWrapper_14_clock; // @[package.scala 93:22:@20297.4]
+  wire  RetimeWrapper_14_reset; // @[package.scala 93:22:@20297.4]
+  wire  RetimeWrapper_14_io_flow; // @[package.scala 93:22:@20297.4]
+  wire [31:0] RetimeWrapper_14_io_in; // @[package.scala 93:22:@20297.4]
+  wire [31:0] RetimeWrapper_14_io_out; // @[package.scala 93:22:@20297.4]
+  wire  x224_rdcol_1_clock; // @[Math.scala 191:24:@20308.4]
+  wire  x224_rdcol_1_reset; // @[Math.scala 191:24:@20308.4]
+  wire [31:0] x224_rdcol_1_io_a; // @[Math.scala 191:24:@20308.4]
+  wire [31:0] x224_rdcol_1_io_b; // @[Math.scala 191:24:@20308.4]
+  wire  x224_rdcol_1_io_flow; // @[Math.scala 191:24:@20308.4]
+  wire [31:0] x224_rdcol_1_io_result; // @[Math.scala 191:24:@20308.4]
+  wire  RetimeWrapper_15_clock; // @[package.scala 93:22:@20338.4]
+  wire  RetimeWrapper_15_reset; // @[package.scala 93:22:@20338.4]
+  wire  RetimeWrapper_15_io_flow; // @[package.scala 93:22:@20338.4]
+  wire [31:0] RetimeWrapper_15_io_in; // @[package.scala 93:22:@20338.4]
+  wire [31:0] RetimeWrapper_15_io_out; // @[package.scala 93:22:@20338.4]
+  wire  x227_sum_1_clock; // @[Math.scala 150:24:@20347.4]
+  wire  x227_sum_1_reset; // @[Math.scala 150:24:@20347.4]
+  wire [31:0] x227_sum_1_io_a; // @[Math.scala 150:24:@20347.4]
+  wire [31:0] x227_sum_1_io_b; // @[Math.scala 150:24:@20347.4]
+  wire  x227_sum_1_io_flow; // @[Math.scala 150:24:@20347.4]
+  wire [31:0] x227_sum_1_io_result; // @[Math.scala 150:24:@20347.4]
+  wire  RetimeWrapper_16_clock; // @[package.scala 93:22:@20357.4]
+  wire  RetimeWrapper_16_reset; // @[package.scala 93:22:@20357.4]
+  wire  RetimeWrapper_16_io_flow; // @[package.scala 93:22:@20357.4]
+  wire [31:0] RetimeWrapper_16_io_in; // @[package.scala 93:22:@20357.4]
+  wire [31:0] RetimeWrapper_16_io_out; // @[package.scala 93:22:@20357.4]
+  wire  RetimeWrapper_17_clock; // @[package.scala 93:22:@20369.4]
+  wire  RetimeWrapper_17_reset; // @[package.scala 93:22:@20369.4]
+  wire  RetimeWrapper_17_io_flow; // @[package.scala 93:22:@20369.4]
+  wire  RetimeWrapper_17_io_in; // @[package.scala 93:22:@20369.4]
+  wire  RetimeWrapper_17_io_out; // @[package.scala 93:22:@20369.4]
+  wire  x233_rdcol_1_clock; // @[Math.scala 191:24:@20391.4]
+  wire  x233_rdcol_1_reset; // @[Math.scala 191:24:@20391.4]
+  wire [31:0] x233_rdcol_1_io_a; // @[Math.scala 191:24:@20391.4]
+  wire [31:0] x233_rdcol_1_io_b; // @[Math.scala 191:24:@20391.4]
+  wire  x233_rdcol_1_io_flow; // @[Math.scala 191:24:@20391.4]
+  wire [31:0] x233_rdcol_1_io_result; // @[Math.scala 191:24:@20391.4]
+  wire  x236_sum_1_clock; // @[Math.scala 150:24:@20421.4]
+  wire  x236_sum_1_reset; // @[Math.scala 150:24:@20421.4]
+  wire [31:0] x236_sum_1_io_a; // @[Math.scala 150:24:@20421.4]
+  wire [31:0] x236_sum_1_io_b; // @[Math.scala 150:24:@20421.4]
+  wire  x236_sum_1_io_flow; // @[Math.scala 150:24:@20421.4]
+  wire [31:0] x236_sum_1_io_result; // @[Math.scala 150:24:@20421.4]
+  wire  RetimeWrapper_18_clock; // @[package.scala 93:22:@20431.4]
+  wire  RetimeWrapper_18_reset; // @[package.scala 93:22:@20431.4]
+  wire  RetimeWrapper_18_io_flow; // @[package.scala 93:22:@20431.4]
+  wire [31:0] RetimeWrapper_18_io_in; // @[package.scala 93:22:@20431.4]
+  wire [31:0] RetimeWrapper_18_io_out; // @[package.scala 93:22:@20431.4]
+  wire  RetimeWrapper_19_clock; // @[package.scala 93:22:@20443.4]
+  wire  RetimeWrapper_19_reset; // @[package.scala 93:22:@20443.4]
+  wire  RetimeWrapper_19_io_flow; // @[package.scala 93:22:@20443.4]
+  wire  RetimeWrapper_19_io_in; // @[package.scala 93:22:@20443.4]
+  wire  RetimeWrapper_19_io_out; // @[package.scala 93:22:@20443.4]
+  wire  x242_rdrow_1_clock; // @[Math.scala 191:24:@20467.4]
+  wire  x242_rdrow_1_reset; // @[Math.scala 191:24:@20467.4]
+  wire [31:0] x242_rdrow_1_io_a; // @[Math.scala 191:24:@20467.4]
+  wire [31:0] x242_rdrow_1_io_b; // @[Math.scala 191:24:@20467.4]
+  wire  x242_rdrow_1_io_flow; // @[Math.scala 191:24:@20467.4]
+  wire [31:0] x242_rdrow_1_io_result; // @[Math.scala 191:24:@20467.4]
+  wire  RetimeWrapper_20_clock; // @[package.scala 93:22:@20508.4]
+  wire  RetimeWrapper_20_reset; // @[package.scala 93:22:@20508.4]
+  wire  RetimeWrapper_20_io_flow; // @[package.scala 93:22:@20508.4]
+  wire [31:0] RetimeWrapper_20_io_in; // @[package.scala 93:22:@20508.4]
+  wire [31:0] RetimeWrapper_20_io_out; // @[package.scala 93:22:@20508.4]
+  wire  x246_sum_1_clock; // @[Math.scala 150:24:@20517.4]
+  wire  x246_sum_1_reset; // @[Math.scala 150:24:@20517.4]
+  wire [31:0] x246_sum_1_io_a; // @[Math.scala 150:24:@20517.4]
+  wire [31:0] x246_sum_1_io_b; // @[Math.scala 150:24:@20517.4]
+  wire  x246_sum_1_io_flow; // @[Math.scala 150:24:@20517.4]
+  wire [31:0] x246_sum_1_io_result; // @[Math.scala 150:24:@20517.4]
+  wire  RetimeWrapper_21_clock; // @[package.scala 93:22:@20527.4]
+  wire  RetimeWrapper_21_reset; // @[package.scala 93:22:@20527.4]
+  wire  RetimeWrapper_21_io_flow; // @[package.scala 93:22:@20527.4]
+  wire [31:0] RetimeWrapper_21_io_in; // @[package.scala 93:22:@20527.4]
+  wire [31:0] RetimeWrapper_21_io_out; // @[package.scala 93:22:@20527.4]
+  wire  RetimeWrapper_22_clock; // @[package.scala 93:22:@20539.4]
+  wire  RetimeWrapper_22_reset; // @[package.scala 93:22:@20539.4]
+  wire  RetimeWrapper_22_io_flow; // @[package.scala 93:22:@20539.4]
+  wire  RetimeWrapper_22_io_in; // @[package.scala 93:22:@20539.4]
+  wire  RetimeWrapper_22_io_out; // @[package.scala 93:22:@20539.4]
+  wire  x252_sum_1_clock; // @[Math.scala 150:24:@20559.4]
+  wire  x252_sum_1_reset; // @[Math.scala 150:24:@20559.4]
+  wire [31:0] x252_sum_1_io_a; // @[Math.scala 150:24:@20559.4]
+  wire [31:0] x252_sum_1_io_b; // @[Math.scala 150:24:@20559.4]
+  wire  x252_sum_1_io_flow; // @[Math.scala 150:24:@20559.4]
+  wire [31:0] x252_sum_1_io_result; // @[Math.scala 150:24:@20559.4]
+  wire  RetimeWrapper_23_clock; // @[package.scala 93:22:@20572.4]
+  wire  RetimeWrapper_23_reset; // @[package.scala 93:22:@20572.4]
+  wire  RetimeWrapper_23_io_flow; // @[package.scala 93:22:@20572.4]
+  wire  RetimeWrapper_23_io_in; // @[package.scala 93:22:@20572.4]
+  wire  RetimeWrapper_23_io_out; // @[package.scala 93:22:@20572.4]
+  wire  x257_sum_1_clock; // @[Math.scala 150:24:@20592.4]
+  wire  x257_sum_1_reset; // @[Math.scala 150:24:@20592.4]
+  wire [31:0] x257_sum_1_io_a; // @[Math.scala 150:24:@20592.4]
+  wire [31:0] x257_sum_1_io_b; // @[Math.scala 150:24:@20592.4]
+  wire  x257_sum_1_io_flow; // @[Math.scala 150:24:@20592.4]
+  wire [31:0] x257_sum_1_io_result; // @[Math.scala 150:24:@20592.4]
+  wire  RetimeWrapper_24_clock; // @[package.scala 93:22:@20605.4]
+  wire  RetimeWrapper_24_reset; // @[package.scala 93:22:@20605.4]
+  wire  RetimeWrapper_24_io_flow; // @[package.scala 93:22:@20605.4]
+  wire  RetimeWrapper_24_io_in; // @[package.scala 93:22:@20605.4]
+  wire  RetimeWrapper_24_io_out; // @[package.scala 93:22:@20605.4]
+  wire  x262_rdrow_1_clock; // @[Math.scala 191:24:@20627.4]
+  wire  x262_rdrow_1_reset; // @[Math.scala 191:24:@20627.4]
+  wire [31:0] x262_rdrow_1_io_a; // @[Math.scala 191:24:@20627.4]
+  wire [31:0] x262_rdrow_1_io_b; // @[Math.scala 191:24:@20627.4]
+  wire  x262_rdrow_1_io_flow; // @[Math.scala 191:24:@20627.4]
+  wire [31:0] x262_rdrow_1_io_result; // @[Math.scala 191:24:@20627.4]
+  wire  x266_sum_1_clock; // @[Math.scala 150:24:@20668.4]
+  wire  x266_sum_1_reset; // @[Math.scala 150:24:@20668.4]
+  wire [31:0] x266_sum_1_io_a; // @[Math.scala 150:24:@20668.4]
+  wire [31:0] x266_sum_1_io_b; // @[Math.scala 150:24:@20668.4]
+  wire  x266_sum_1_io_flow; // @[Math.scala 150:24:@20668.4]
+  wire [31:0] x266_sum_1_io_result; // @[Math.scala 150:24:@20668.4]
+  wire  RetimeWrapper_25_clock; // @[package.scala 93:22:@20678.4]
+  wire  RetimeWrapper_25_reset; // @[package.scala 93:22:@20678.4]
+  wire  RetimeWrapper_25_io_flow; // @[package.scala 93:22:@20678.4]
+  wire [31:0] RetimeWrapper_25_io_in; // @[package.scala 93:22:@20678.4]
+  wire [31:0] RetimeWrapper_25_io_out; // @[package.scala 93:22:@20678.4]
+  wire  RetimeWrapper_26_clock; // @[package.scala 93:22:@20690.4]
+  wire  RetimeWrapper_26_reset; // @[package.scala 93:22:@20690.4]
+  wire  RetimeWrapper_26_io_flow; // @[package.scala 93:22:@20690.4]
+  wire  RetimeWrapper_26_io_in; // @[package.scala 93:22:@20690.4]
+  wire  RetimeWrapper_26_io_out; // @[package.scala 93:22:@20690.4]
+  wire  x272_sum_1_clock; // @[Math.scala 150:24:@20710.4]
+  wire  x272_sum_1_reset; // @[Math.scala 150:24:@20710.4]
+  wire [31:0] x272_sum_1_io_a; // @[Math.scala 150:24:@20710.4]
+  wire [31:0] x272_sum_1_io_b; // @[Math.scala 150:24:@20710.4]
+  wire  x272_sum_1_io_flow; // @[Math.scala 150:24:@20710.4]
+  wire [31:0] x272_sum_1_io_result; // @[Math.scala 150:24:@20710.4]
+  wire  RetimeWrapper_27_clock; // @[package.scala 93:22:@20723.4]
+  wire  RetimeWrapper_27_reset; // @[package.scala 93:22:@20723.4]
+  wire  RetimeWrapper_27_io_flow; // @[package.scala 93:22:@20723.4]
+  wire  RetimeWrapper_27_io_in; // @[package.scala 93:22:@20723.4]
+  wire  RetimeWrapper_27_io_out; // @[package.scala 93:22:@20723.4]
+  wire  x277_sum_1_clock; // @[Math.scala 150:24:@20743.4]
+  wire  x277_sum_1_reset; // @[Math.scala 150:24:@20743.4]
+  wire [31:0] x277_sum_1_io_a; // @[Math.scala 150:24:@20743.4]
+  wire [31:0] x277_sum_1_io_b; // @[Math.scala 150:24:@20743.4]
+  wire  x277_sum_1_io_flow; // @[Math.scala 150:24:@20743.4]
+  wire [31:0] x277_sum_1_io_result; // @[Math.scala 150:24:@20743.4]
+  wire  RetimeWrapper_28_clock; // @[package.scala 93:22:@20756.4]
+  wire  RetimeWrapper_28_reset; // @[package.scala 93:22:@20756.4]
+  wire  RetimeWrapper_28_io_flow; // @[package.scala 93:22:@20756.4]
+  wire  RetimeWrapper_28_io_in; // @[package.scala 93:22:@20756.4]
+  wire  RetimeWrapper_28_io_out; // @[package.scala 93:22:@20756.4]
+  wire  x287_x11_1_clock; // @[Math.scala 150:24:@20801.4]
+  wire  x287_x11_1_reset; // @[Math.scala 150:24:@20801.4]
+  wire [7:0] x287_x11_1_io_a; // @[Math.scala 150:24:@20801.4]
+  wire [7:0] x287_x11_1_io_b; // @[Math.scala 150:24:@20801.4]
+  wire  x287_x11_1_io_flow; // @[Math.scala 150:24:@20801.4]
+  wire [7:0] x287_x11_1_io_result; // @[Math.scala 150:24:@20801.4]
+  wire  x288_x12_1_clock; // @[Math.scala 150:24:@20811.4]
+  wire  x288_x12_1_reset; // @[Math.scala 150:24:@20811.4]
+  wire [7:0] x288_x12_1_io_a; // @[Math.scala 150:24:@20811.4]
+  wire [7:0] x288_x12_1_io_b; // @[Math.scala 150:24:@20811.4]
+  wire  x288_x12_1_io_flow; // @[Math.scala 150:24:@20811.4]
+  wire [7:0] x288_x12_1_io_result; // @[Math.scala 150:24:@20811.4]
+  wire  x289_x11_1_clock; // @[Math.scala 150:24:@20821.4]
+  wire  x289_x11_1_reset; // @[Math.scala 150:24:@20821.4]
+  wire [7:0] x289_x11_1_io_a; // @[Math.scala 150:24:@20821.4]
+  wire [7:0] x289_x11_1_io_b; // @[Math.scala 150:24:@20821.4]
+  wire  x289_x11_1_io_flow; // @[Math.scala 150:24:@20821.4]
+  wire [7:0] x289_x11_1_io_result; // @[Math.scala 150:24:@20821.4]
+  wire  x290_x12_1_clock; // @[Math.scala 150:24:@20831.4]
+  wire  x290_x12_1_reset; // @[Math.scala 150:24:@20831.4]
+  wire [7:0] x290_x12_1_io_a; // @[Math.scala 150:24:@20831.4]
+  wire [7:0] x290_x12_1_io_b; // @[Math.scala 150:24:@20831.4]
+  wire  x290_x12_1_io_flow; // @[Math.scala 150:24:@20831.4]
+  wire [7:0] x290_x12_1_io_result; // @[Math.scala 150:24:@20831.4]
+  wire [7:0] x291_x11_1_io_a; // @[Math.scala 150:24:@20841.4]
+  wire [7:0] x291_x11_1_io_b; // @[Math.scala 150:24:@20841.4]
+  wire [7:0] x291_x11_1_io_result; // @[Math.scala 150:24:@20841.4]
+  wire [7:0] x292_x12_1_io_a; // @[Math.scala 150:24:@20851.4]
+  wire [7:0] x292_x12_1_io_b; // @[Math.scala 150:24:@20851.4]
+  wire [7:0] x292_x12_1_io_result; // @[Math.scala 150:24:@20851.4]
+  wire [7:0] x293_x11_1_io_a; // @[Math.scala 150:24:@20861.4]
+  wire [7:0] x293_x11_1_io_b; // @[Math.scala 150:24:@20861.4]
+  wire [7:0] x293_x11_1_io_result; // @[Math.scala 150:24:@20861.4]
+  wire  RetimeWrapper_29_clock; // @[package.scala 93:22:@20871.4]
+  wire  RetimeWrapper_29_reset; // @[package.scala 93:22:@20871.4]
+  wire  RetimeWrapper_29_io_flow; // @[package.scala 93:22:@20871.4]
+  wire [7:0] RetimeWrapper_29_io_in; // @[package.scala 93:22:@20871.4]
+  wire [7:0] RetimeWrapper_29_io_out; // @[package.scala 93:22:@20871.4]
+  wire [7:0] x294_sum_1_io_a; // @[Math.scala 150:24:@20880.4]
+  wire [7:0] x294_sum_1_io_b; // @[Math.scala 150:24:@20880.4]
+  wire [7:0] x294_sum_1_io_result; // @[Math.scala 150:24:@20880.4]
+  wire  RetimeWrapper_30_clock; // @[package.scala 93:22:@20894.4]
+  wire  RetimeWrapper_30_reset; // @[package.scala 93:22:@20894.4]
+  wire  RetimeWrapper_30_io_flow; // @[package.scala 93:22:@20894.4]
+  wire [7:0] RetimeWrapper_30_io_in; // @[package.scala 93:22:@20894.4]
+  wire [7:0] RetimeWrapper_30_io_out; // @[package.scala 93:22:@20894.4]
+  wire  RetimeWrapper_31_clock; // @[package.scala 93:22:@20908.4]
+  wire  RetimeWrapper_31_reset; // @[package.scala 93:22:@20908.4]
+  wire  RetimeWrapper_31_io_flow; // @[package.scala 93:22:@20908.4]
+  wire [7:0] RetimeWrapper_31_io_in; // @[package.scala 93:22:@20908.4]
+  wire [7:0] RetimeWrapper_31_io_out; // @[package.scala 93:22:@20908.4]
+  wire  RetimeWrapper_32_clock; // @[package.scala 93:22:@20917.4]
+  wire  RetimeWrapper_32_reset; // @[package.scala 93:22:@20917.4]
+  wire  RetimeWrapper_32_io_flow; // @[package.scala 93:22:@20917.4]
+  wire  RetimeWrapper_32_io_in; // @[package.scala 93:22:@20917.4]
+  wire  RetimeWrapper_32_io_out; // @[package.scala 93:22:@20917.4]
+  wire  RetimeWrapper_33_clock; // @[package.scala 93:22:@20926.4]
+  wire  RetimeWrapper_33_reset; // @[package.scala 93:22:@20926.4]
+  wire  RetimeWrapper_33_io_flow; // @[package.scala 93:22:@20926.4]
+  wire  RetimeWrapper_33_io_in; // @[package.scala 93:22:@20926.4]
+  wire  RetimeWrapper_33_io_out; // @[package.scala 93:22:@20926.4]
+  wire  RetimeWrapper_34_clock; // @[package.scala 93:22:@20935.4]
+  wire  RetimeWrapper_34_reset; // @[package.scala 93:22:@20935.4]
+  wire  RetimeWrapper_34_io_flow; // @[package.scala 93:22:@20935.4]
+  wire  RetimeWrapper_34_io_in; // @[package.scala 93:22:@20935.4]
+  wire  RetimeWrapper_34_io_out; // @[package.scala 93:22:@20935.4]
+  wire  b192; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 62:18:@19914.4]
+  wire  b193; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 63:18:@19915.4]
+  wire  _T_206; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 68:30:@19984.4]
+  wire  _T_207; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 68:37:@19985.4]
+  wire  _T_211; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 70:76:@19990.4]
+  wire  _T_212; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 70:62:@19991.4]
+  wire  _T_214; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 70:101:@19992.4]
+  wire [31:0] b190_number; // @[Math.scala 712:22:@19899.4 Math.scala 713:14:@19900.4]
+  wire [31:0] _T_240; // @[Math.scala 499:52:@20015.4]
+  wire  x199; // @[Math.scala 499:44:@20023.4]
+  wire  x200; // @[Math.scala 499:44:@20030.4]
+  wire  x201; // @[Math.scala 499:44:@20037.4]
+  wire [31:0] _T_287; // @[Mux.scala 19:72:@20049.4]
+  wire [31:0] _T_289; // @[Mux.scala 19:72:@20050.4]
+  wire [31:0] _T_291; // @[Mux.scala 19:72:@20051.4]
+  wire [31:0] _T_293; // @[Mux.scala 19:72:@20053.4]
+  wire [31:0] x202_number; // @[Mux.scala 19:72:@20054.4]
+  wire [31:0] _T_305; // @[Math.scala 406:49:@20064.4]
+  wire [31:0] _T_307; // @[Math.scala 406:56:@20066.4]
+  wire [31:0] _T_308; // @[Math.scala 406:56:@20067.4]
+  wire [31:0] b191_number; // @[Math.scala 712:22:@19911.4 Math.scala 713:14:@19912.4]
+  wire [31:0] _T_317; // @[Math.scala 406:49:@20075.4]
+  wire [31:0] _T_319; // @[Math.scala 406:56:@20077.4]
+  wire [31:0] _T_320; // @[Math.scala 406:56:@20078.4]
+  wire  _T_325; // @[FixedPoint.scala 50:25:@20084.4]
+  wire [1:0] _T_329; // @[Bitwise.scala 72:12:@20086.4]
+  wire [29:0] _T_330; // @[FixedPoint.scala 18:52:@20087.4]
+  wire  _T_335; // @[FixedPoint.scala 50:25:@20093.4]
+  wire [1:0] _T_339; // @[Bitwise.scala 72:12:@20095.4]
+  wire [29:0] _T_340; // @[FixedPoint.scala 18:52:@20096.4]
+  wire  _T_358; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 113:101:@20146.4]
+  wire  _T_362; // @[package.scala 96:25:@20154.4 package.scala 96:25:@20155.4]
+  wire  _T_364; // @[implicits.scala 55:10:@20156.4]
+  wire  _T_365; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 113:118:@20157.4]
+  wire  _T_367; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 113:205:@20159.4]
+  wire  _T_368; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 113:224:@20160.4]
+  wire  x382_b192_D1; // @[package.scala 96:25:@20143.4 package.scala 96:25:@20144.4]
+  wire  _T_369; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 113:250:@20161.4]
+  wire  x381_b193_D1; // @[package.scala 96:25:@20134.4 package.scala 96:25:@20135.4]
+  wire [31:0] x383_b190_D3_number; // @[package.scala 96:25:@20175.4 package.scala 96:25:@20176.4]
+  wire [31:0] _T_381; // @[Math.scala 406:49:@20182.4]
+  wire [31:0] _T_383; // @[Math.scala 406:56:@20184.4]
+  wire [31:0] _T_384; // @[Math.scala 406:56:@20185.4]
+  wire [31:0] x370_number; // @[implicits.scala 133:21:@20186.4]
+  wire [31:0] _T_393; // @[Math.scala 406:49:@20193.4]
+  wire [31:0] _T_395; // @[Math.scala 406:56:@20195.4]
+  wire [31:0] _T_396; // @[Math.scala 406:56:@20196.4]
+  wire  _T_401; // @[FixedPoint.scala 50:25:@20202.4]
+  wire [1:0] _T_405; // @[Bitwise.scala 72:12:@20204.4]
+  wire [29:0] _T_406; // @[FixedPoint.scala 18:52:@20205.4]
+  wire  _T_440; // @[package.scala 96:25:@20282.4 package.scala 96:25:@20283.4]
+  wire  _T_442; // @[implicits.scala 55:10:@20284.4]
+  wire  _T_443; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 141:146:@20285.4]
+  wire  x385_b192_D5; // @[package.scala 96:25:@20234.4 package.scala 96:25:@20235.4]
+  wire  _T_444; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 141:233:@20286.4]
+  wire  x386_b193_D5; // @[package.scala 96:25:@20243.4 package.scala 96:25:@20244.4]
+  wire [31:0] x224_rdcol_number; // @[Math.scala 195:22:@20314.4 Math.scala 196:14:@20315.4]
+  wire [31:0] _T_464; // @[Math.scala 406:49:@20321.4]
+  wire [31:0] _T_466; // @[Math.scala 406:56:@20323.4]
+  wire [31:0] _T_467; // @[Math.scala 406:56:@20324.4]
+  wire  _T_472; // @[FixedPoint.scala 50:25:@20330.4]
+  wire [1:0] _T_476; // @[Bitwise.scala 72:12:@20332.4]
+  wire [29:0] _T_477; // @[FixedPoint.scala 18:52:@20333.4]
+  wire  _T_499; // @[package.scala 96:25:@20374.4 package.scala 96:25:@20375.4]
+  wire  _T_501; // @[implicits.scala 55:10:@20376.4]
+  wire  _T_502; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 162:146:@20377.4]
+  wire  _T_503; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 162:233:@20378.4]
+  wire [31:0] x233_rdcol_number; // @[Math.scala 195:22:@20397.4 Math.scala 196:14:@20398.4]
+  wire [31:0] _T_520; // @[Math.scala 406:49:@20404.4]
+  wire [31:0] _T_522; // @[Math.scala 406:56:@20406.4]
+  wire [31:0] _T_523; // @[Math.scala 406:56:@20407.4]
+  wire  _T_528; // @[FixedPoint.scala 50:25:@20413.4]
+  wire [1:0] _T_532; // @[Bitwise.scala 72:12:@20415.4]
+  wire [29:0] _T_533; // @[FixedPoint.scala 18:52:@20416.4]
+  wire  _T_552; // @[package.scala 96:25:@20448.4 package.scala 96:25:@20449.4]
+  wire  _T_554; // @[implicits.scala 55:10:@20450.4]
+  wire  _T_555; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 185:194:@20451.4]
+  wire  _T_556; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 185:281:@20452.4]
+  wire [31:0] x242_rdrow_number; // @[Math.scala 195:22:@20473.4 Math.scala 196:14:@20474.4]
+  wire [31:0] _T_575; // @[Math.scala 406:49:@20480.4]
+  wire [31:0] _T_577; // @[Math.scala 406:56:@20482.4]
+  wire [31:0] _T_578; // @[Math.scala 406:56:@20483.4]
+  wire [31:0] x374_number; // @[implicits.scala 133:21:@20484.4]
+  wire [31:0] _T_587; // @[Math.scala 406:49:@20491.4]
+  wire [31:0] _T_589; // @[Math.scala 406:56:@20493.4]
+  wire [31:0] _T_590; // @[Math.scala 406:56:@20494.4]
+  wire  _T_595; // @[FixedPoint.scala 50:25:@20500.4]
+  wire [1:0] _T_599; // @[Bitwise.scala 72:12:@20502.4]
+  wire [29:0] _T_600; // @[FixedPoint.scala 18:52:@20503.4]
+  wire  _T_622; // @[package.scala 96:25:@20544.4 package.scala 96:25:@20545.4]
+  wire  _T_624; // @[implicits.scala 55:10:@20546.4]
+  wire  _T_625; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 208:194:@20547.4]
+  wire  _T_626; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 208:281:@20548.4]
+  wire  _T_643; // @[package.scala 96:25:@20577.4 package.scala 96:25:@20578.4]
+  wire  _T_645; // @[implicits.scala 55:10:@20579.4]
+  wire  _T_646; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 217:194:@20580.4]
+  wire  _T_647; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 217:281:@20581.4]
+  wire  _T_664; // @[package.scala 96:25:@20610.4 package.scala 96:25:@20611.4]
+  wire  _T_666; // @[implicits.scala 55:10:@20612.4]
+  wire  _T_667; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 226:194:@20613.4]
+  wire  _T_668; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 226:281:@20614.4]
+  wire [31:0] x262_rdrow_number; // @[Math.scala 195:22:@20633.4 Math.scala 196:14:@20634.4]
+  wire [31:0] _T_685; // @[Math.scala 406:49:@20640.4]
+  wire [31:0] _T_687; // @[Math.scala 406:56:@20642.4]
+  wire [31:0] _T_688; // @[Math.scala 406:56:@20643.4]
+  wire [31:0] x376_number; // @[implicits.scala 133:21:@20644.4]
+  wire [31:0] _T_697; // @[Math.scala 406:49:@20651.4]
+  wire [31:0] _T_699; // @[Math.scala 406:56:@20653.4]
+  wire [31:0] _T_700; // @[Math.scala 406:56:@20654.4]
+  wire  _T_705; // @[FixedPoint.scala 50:25:@20660.4]
+  wire [1:0] _T_709; // @[Bitwise.scala 72:12:@20662.4]
+  wire [29:0] _T_710; // @[FixedPoint.scala 18:52:@20663.4]
+  wire  _T_729; // @[package.scala 96:25:@20695.4 package.scala 96:25:@20696.4]
+  wire  _T_731; // @[implicits.scala 55:10:@20697.4]
+  wire  _T_732; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 245:194:@20698.4]
+  wire  _T_733; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 245:281:@20699.4]
+  wire  _T_750; // @[package.scala 96:25:@20728.4 package.scala 96:25:@20729.4]
+  wire  _T_752; // @[implicits.scala 55:10:@20730.4]
+  wire  _T_753; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 254:194:@20731.4]
+  wire  _T_754; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 254:281:@20732.4]
+  wire  _T_771; // @[package.scala 96:25:@20761.4 package.scala 96:25:@20762.4]
+  wire  _T_773; // @[implicits.scala 55:10:@20763.4]
+  wire  _T_774; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 263:194:@20764.4]
+  wire  _T_775; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 263:281:@20765.4]
+  wire [7:0] x231_rd_0_number; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 158:29:@20365.4 sm_x300_inr_Foreach_SAMPLER_BOX.scala 162:281:@20385.4]
+  wire [8:0] _GEN_0; // @[Math.scala 450:32:@20777.4]
+  wire [8:0] _T_781; // @[Math.scala 450:32:@20777.4]
+  wire [7:0] x250_rd_0_number; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 204:29:@20535.4 sm_x300_inr_Foreach_SAMPLER_BOX.scala 208:399:@20555.4]
+  wire [8:0] _GEN_1; // @[Math.scala 450:32:@20782.4]
+  wire [8:0] _T_785; // @[Math.scala 450:32:@20782.4]
+  wire [7:0] x255_rd_0_number; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 213:29:@20568.4 sm_x300_inr_Foreach_SAMPLER_BOX.scala 217:399:@20588.4]
+  wire [9:0] _GEN_2; // @[Math.scala 450:32:@20787.4]
+  wire [9:0] _T_789; // @[Math.scala 450:32:@20787.4]
+  wire [7:0] x260_rd_0_number; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 222:29:@20601.4 sm_x300_inr_Foreach_SAMPLER_BOX.scala 226:399:@20621.4]
+  wire [8:0] _GEN_3; // @[Math.scala 450:32:@20792.4]
+  wire [8:0] _T_793; // @[Math.scala 450:32:@20792.4]
+  wire [7:0] x275_rd_0_number; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 250:29:@20719.4 sm_x300_inr_Foreach_SAMPLER_BOX.scala 254:399:@20739.4]
+  wire [8:0] _GEN_4; // @[Math.scala 450:32:@20797.4]
+  wire [8:0] _T_797; // @[Math.scala 450:32:@20797.4]
+  wire [7:0] x294_sum_number; // @[Math.scala 154:22:@20886.4 Math.scala 155:14:@20887.4]
+  wire [3:0] _T_833; // @[FixedPoint.scala 18:52:@20892.4]
+  wire  _T_856; // @[package.scala 96:25:@20940.4 package.scala 96:25:@20941.4]
+  wire  _T_858; // @[implicits.scala 55:10:@20942.4]
+  wire  x399_b192_D12; // @[package.scala 96:25:@20931.4 package.scala 96:25:@20932.4]
+  wire  _T_859; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 311:116:@20943.4]
+  wire  x398_b193_D12; // @[package.scala 96:25:@20922.4 package.scala 96:25:@20923.4]
+  wire  _T_860; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 311:122:@20944.4]
+  wire [31:0] x208_sum_number; // @[Math.scala 154:22:@20107.4 Math.scala 155:14:@20108.4]
+  wire [31:0] x379_x369_D1_number; // @[package.scala 96:25:@20116.4 package.scala 96:25:@20117.4]
+  wire [31:0] x380_x368_D1_number; // @[package.scala 96:25:@20125.4 package.scala 96:25:@20126.4]
+  wire [31:0] x387_x371_D2_number; // @[package.scala 96:25:@20252.4 package.scala 96:25:@20253.4]
+  wire [31:0] x388_x218_sum_D1_number; // @[package.scala 96:25:@20261.4 package.scala 96:25:@20262.4]
+  wire [31:0] x389_x369_D5_number; // @[package.scala 96:25:@20270.4 package.scala 96:25:@20271.4]
+  wire [31:0] x227_sum_number; // @[Math.scala 154:22:@20353.4 Math.scala 155:14:@20354.4]
+  wire [31:0] x392_x372_D1_number; // @[package.scala 96:25:@20362.4 package.scala 96:25:@20363.4]
+  wire [31:0] x236_sum_number; // @[Math.scala 154:22:@20427.4 Math.scala 155:14:@20428.4]
+  wire [31:0] x393_x373_D1_number; // @[package.scala 96:25:@20436.4 package.scala 96:25:@20437.4]
+  wire [31:0] x246_sum_number; // @[Math.scala 154:22:@20523.4 Math.scala 155:14:@20524.4]
+  wire [31:0] x395_x375_D1_number; // @[package.scala 96:25:@20532.4 package.scala 96:25:@20533.4]
+  wire [31:0] x252_sum_number; // @[Math.scala 154:22:@20565.4 Math.scala 155:14:@20566.4]
+  wire [31:0] x257_sum_number; // @[Math.scala 154:22:@20598.4 Math.scala 155:14:@20599.4]
+  wire [31:0] x266_sum_number; // @[Math.scala 154:22:@20674.4 Math.scala 155:14:@20675.4]
+  wire [31:0] x396_x377_D1_number; // @[package.scala 96:25:@20683.4 package.scala 96:25:@20684.4]
+  wire [31:0] x272_sum_number; // @[Math.scala 154:22:@20716.4 Math.scala 155:14:@20717.4]
+  wire [31:0] x277_sum_number; // @[Math.scala 154:22:@20749.4 Math.scala 155:14:@20750.4]
+  _ _ ( // @[Math.scala 709:24:@19894.4]
     .io_b(__io_b),
     .io_result(__io_result)
   );
-  __30 __1 ( // @[Math.scala 709:24:@19892.4]
+  _ __1 ( // @[Math.scala 709:24:@19906.4]
     .io_b(__1_io_b),
     .io_result(__1_io_result)
   );
-  fix2fixBox_18 fix2fixBox ( // @[Math.scala 182:30:@19903.4]
-    .io_a(fix2fixBox_io_a),
-    .io_b(fix2fixBox_io_b)
+  x194_lb_0 x194_lb_0 ( // @[m_x194_lb_0.scala 35:17:@19916.4]
+    .clock(x194_lb_0_clock),
+    .reset(x194_lb_0_reset),
+    .io_rPort_8_banks_1(x194_lb_0_io_rPort_8_banks_1),
+    .io_rPort_8_banks_0(x194_lb_0_io_rPort_8_banks_0),
+    .io_rPort_8_ofs_0(x194_lb_0_io_rPort_8_ofs_0),
+    .io_rPort_8_en_0(x194_lb_0_io_rPort_8_en_0),
+    .io_rPort_8_backpressure(x194_lb_0_io_rPort_8_backpressure),
+    .io_rPort_8_output_0(x194_lb_0_io_rPort_8_output_0),
+    .io_rPort_7_banks_1(x194_lb_0_io_rPort_7_banks_1),
+    .io_rPort_7_banks_0(x194_lb_0_io_rPort_7_banks_0),
+    .io_rPort_7_ofs_0(x194_lb_0_io_rPort_7_ofs_0),
+    .io_rPort_7_en_0(x194_lb_0_io_rPort_7_en_0),
+    .io_rPort_7_backpressure(x194_lb_0_io_rPort_7_backpressure),
+    .io_rPort_7_output_0(x194_lb_0_io_rPort_7_output_0),
+    .io_rPort_6_banks_1(x194_lb_0_io_rPort_6_banks_1),
+    .io_rPort_6_banks_0(x194_lb_0_io_rPort_6_banks_0),
+    .io_rPort_6_ofs_0(x194_lb_0_io_rPort_6_ofs_0),
+    .io_rPort_6_en_0(x194_lb_0_io_rPort_6_en_0),
+    .io_rPort_6_backpressure(x194_lb_0_io_rPort_6_backpressure),
+    .io_rPort_6_output_0(x194_lb_0_io_rPort_6_output_0),
+    .io_rPort_5_banks_1(x194_lb_0_io_rPort_5_banks_1),
+    .io_rPort_5_banks_0(x194_lb_0_io_rPort_5_banks_0),
+    .io_rPort_5_ofs_0(x194_lb_0_io_rPort_5_ofs_0),
+    .io_rPort_5_en_0(x194_lb_0_io_rPort_5_en_0),
+    .io_rPort_5_backpressure(x194_lb_0_io_rPort_5_backpressure),
+    .io_rPort_5_output_0(x194_lb_0_io_rPort_5_output_0),
+    .io_rPort_4_banks_1(x194_lb_0_io_rPort_4_banks_1),
+    .io_rPort_4_banks_0(x194_lb_0_io_rPort_4_banks_0),
+    .io_rPort_4_ofs_0(x194_lb_0_io_rPort_4_ofs_0),
+    .io_rPort_4_en_0(x194_lb_0_io_rPort_4_en_0),
+    .io_rPort_4_backpressure(x194_lb_0_io_rPort_4_backpressure),
+    .io_rPort_4_output_0(x194_lb_0_io_rPort_4_output_0),
+    .io_rPort_3_banks_1(x194_lb_0_io_rPort_3_banks_1),
+    .io_rPort_3_banks_0(x194_lb_0_io_rPort_3_banks_0),
+    .io_rPort_3_ofs_0(x194_lb_0_io_rPort_3_ofs_0),
+    .io_rPort_3_en_0(x194_lb_0_io_rPort_3_en_0),
+    .io_rPort_3_backpressure(x194_lb_0_io_rPort_3_backpressure),
+    .io_rPort_3_output_0(x194_lb_0_io_rPort_3_output_0),
+    .io_rPort_2_banks_1(x194_lb_0_io_rPort_2_banks_1),
+    .io_rPort_2_banks_0(x194_lb_0_io_rPort_2_banks_0),
+    .io_rPort_2_ofs_0(x194_lb_0_io_rPort_2_ofs_0),
+    .io_rPort_2_en_0(x194_lb_0_io_rPort_2_en_0),
+    .io_rPort_2_backpressure(x194_lb_0_io_rPort_2_backpressure),
+    .io_rPort_2_output_0(x194_lb_0_io_rPort_2_output_0),
+    .io_rPort_1_banks_1(x194_lb_0_io_rPort_1_banks_1),
+    .io_rPort_1_banks_0(x194_lb_0_io_rPort_1_banks_0),
+    .io_rPort_1_ofs_0(x194_lb_0_io_rPort_1_ofs_0),
+    .io_rPort_1_en_0(x194_lb_0_io_rPort_1_en_0),
+    .io_rPort_1_backpressure(x194_lb_0_io_rPort_1_backpressure),
+    .io_rPort_1_output_0(x194_lb_0_io_rPort_1_output_0),
+    .io_rPort_0_banks_1(x194_lb_0_io_rPort_0_banks_1),
+    .io_rPort_0_banks_0(x194_lb_0_io_rPort_0_banks_0),
+    .io_rPort_0_ofs_0(x194_lb_0_io_rPort_0_ofs_0),
+    .io_rPort_0_en_0(x194_lb_0_io_rPort_0_en_0),
+    .io_rPort_0_backpressure(x194_lb_0_io_rPort_0_backpressure),
+    .io_rPort_0_output_0(x194_lb_0_io_rPort_0_output_0),
+    .io_wPort_0_banks_1(x194_lb_0_io_wPort_0_banks_1),
+    .io_wPort_0_banks_0(x194_lb_0_io_wPort_0_banks_0),
+    .io_wPort_0_ofs_0(x194_lb_0_io_wPort_0_ofs_0),
+    .io_wPort_0_data_0(x194_lb_0_io_wPort_0_data_0),
+    .io_wPort_0_en_0(x194_lb_0_io_wPort_0_en_0)
   );
-  assign a_upcast_number = __io_result; // @[Math.scala 712:22:@19890.4 Math.scala 713:14:@19891.4]
-  assign b_upcast_number = __1_io_result; // @[Math.scala 712:22:@19897.4 Math.scala 713:14:@19898.4]
-  assign _T_21 = a_upcast_number - b_upcast_number; // @[Math.scala 177:37:@19899.4]
-  assign _T_22 = $unsigned(_T_21); // @[Math.scala 177:37:@19900.4]
-  assign io_result = fix2fixBox_io_b; // @[Math.scala 188:17:@19911.4]
-  assign __io_b = io_a; // @[Math.scala 710:17:@19888.4]
-  assign __1_io_b = io_b; // @[Math.scala 710:17:@19895.4]
-  assign fix2fixBox_io_a = _T_22[8:0]; // @[Math.scala 183:23:@19906.4]
-endmodule
-module RetimeWrapper_247( // @[:@19957.2]
-  input        clock, // @[:@19958.4]
-  input        reset, // @[:@19959.4]
-  input        io_flow, // @[:@19960.4]
-  input  [7:0] io_in, // @[:@19960.4]
-  output [7:0] io_out // @[:@19960.4]
-);
-  wire [7:0] sr_out; // @[RetimeShiftRegister.scala 15:20:@19962.4]
-  wire [7:0] sr_in; // @[RetimeShiftRegister.scala 15:20:@19962.4]
-  wire [7:0] sr_init; // @[RetimeShiftRegister.scala 15:20:@19962.4]
-  wire  sr_flow; // @[RetimeShiftRegister.scala 15:20:@19962.4]
-  wire  sr_reset; // @[RetimeShiftRegister.scala 15:20:@19962.4]
-  wire  sr_clock; // @[RetimeShiftRegister.scala 15:20:@19962.4]
-  RetimeShiftRegister #(.WIDTH(8), .STAGES(5)) sr ( // @[RetimeShiftRegister.scala 15:20:@19962.4]
-    .out(sr_out),
-    .in(sr_in),
-    .init(sr_init),
-    .flow(sr_flow),
-    .reset(sr_reset),
-    .clock(sr_clock)
-  );
-  assign io_out = sr_out; // @[RetimeShiftRegister.scala 21:12:@19975.4]
-  assign sr_in = io_in; // @[RetimeShiftRegister.scala 20:14:@19974.4]
-  assign sr_init = 8'h0; // @[RetimeShiftRegister.scala 19:16:@19973.4]
-  assign sr_flow = io_flow; // @[RetimeShiftRegister.scala 18:16:@19972.4]
-  assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@19971.4]
-  assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@19969.4]
-endmodule
-module SimBlackBoxesfix2fixBox_48( // @[:@19977.2]
-  input  [7:0] io_a, // @[:@19980.4]
-  output [7:0] io_b // @[:@19980.4]
-);
-  assign io_b = io_a; // @[SimBlackBoxes.scala 99:40:@19990.4]
-endmodule
-module __48( // @[:@19992.2]
-  input  [7:0] io_b, // @[:@19995.4]
-  output [7:0] io_result // @[:@19995.4]
-);
-  wire [7:0] SimBlackBoxesfix2fixBox_io_a; // @[BigIPSim.scala 239:30:@20000.4]
-  wire [7:0] SimBlackBoxesfix2fixBox_io_b; // @[BigIPSim.scala 239:30:@20000.4]
-  SimBlackBoxesfix2fixBox_48 SimBlackBoxesfix2fixBox ( // @[BigIPSim.scala 239:30:@20000.4]
-    .io_a(SimBlackBoxesfix2fixBox_io_a),
-    .io_b(SimBlackBoxesfix2fixBox_io_b)
-  );
-  assign io_result = SimBlackBoxesfix2fixBox_io_b; // @[Math.scala 706:17:@20013.4]
-  assign SimBlackBoxesfix2fixBox_io_a = io_b; // @[BigIPSim.scala 241:23:@20008.4]
-endmodule
-module x314_div( // @[:@20015.2]
-  input        clock, // @[:@20016.4]
-  input        reset, // @[:@20017.4]
-  input  [7:0] io_a, // @[:@20018.4]
-  input        io_flow, // @[:@20018.4]
-  output [7:0] io_result // @[:@20018.4]
-);
-  wire  RetimeWrapper_clock; // @[package.scala 93:22:@20025.4]
-  wire  RetimeWrapper_reset; // @[package.scala 93:22:@20025.4]
-  wire  RetimeWrapper_io_flow; // @[package.scala 93:22:@20025.4]
-  wire [7:0] RetimeWrapper_io_in; // @[package.scala 93:22:@20025.4]
-  wire [7:0] RetimeWrapper_io_out; // @[package.scala 93:22:@20025.4]
-  wire [7:0] __io_b; // @[Math.scala 709:24:@20035.4]
-  wire [7:0] __io_result; // @[Math.scala 709:24:@20035.4]
-  RetimeWrapper_247 RetimeWrapper ( // @[package.scala 93:22:@20025.4]
+  RetimeWrapper_21 RetimeWrapper ( // @[package.scala 93:22:@19996.4]
     .clock(RetimeWrapper_clock),
     .reset(RetimeWrapper_reset),
     .io_flow(RetimeWrapper_io_flow),
     .io_in(RetimeWrapper_io_in),
     .io_out(RetimeWrapper_io_out)
   );
-  __48 _ ( // @[Math.scala 709:24:@20035.4]
-    .io_b(__io_b),
-    .io_result(__io_result)
+  x208_sum x208_sum_1 ( // @[Math.scala 150:24:@20101.4]
+    .clock(x208_sum_1_clock),
+    .reset(x208_sum_1_reset),
+    .io_a(x208_sum_1_io_a),
+    .io_b(x208_sum_1_io_b),
+    .io_flow(x208_sum_1_io_flow),
+    .io_result(x208_sum_1_io_result)
   );
-  assign io_result = __io_result; // @[Math.scala 291:34:@20043.4]
-  assign RetimeWrapper_clock = clock; // @[:@20026.4]
-  assign RetimeWrapper_reset = reset; // @[:@20027.4]
-  assign RetimeWrapper_io_flow = io_flow; // @[package.scala 95:18:@20029.4]
-  assign RetimeWrapper_io_in = io_a / 8'h5; // @[package.scala 94:16:@20028.4]
-  assign __io_b = RetimeWrapper_io_out; // @[Math.scala 710:17:@20038.4]
-endmodule
-module RetimeWrapper_248( // @[:@20057.2]
-  input        clock, // @[:@20058.4]
-  input        reset, // @[:@20059.4]
-  input        io_flow, // @[:@20060.4]
-  input  [7:0] io_in, // @[:@20060.4]
-  output [7:0] io_out // @[:@20060.4]
-);
-  wire [7:0] sr_out; // @[RetimeShiftRegister.scala 15:20:@20062.4]
-  wire [7:0] sr_in; // @[RetimeShiftRegister.scala 15:20:@20062.4]
-  wire [7:0] sr_init; // @[RetimeShiftRegister.scala 15:20:@20062.4]
-  wire  sr_flow; // @[RetimeShiftRegister.scala 15:20:@20062.4]
-  wire  sr_reset; // @[RetimeShiftRegister.scala 15:20:@20062.4]
-  wire  sr_clock; // @[RetimeShiftRegister.scala 15:20:@20062.4]
-  RetimeShiftRegister #(.WIDTH(8), .STAGES(8)) sr ( // @[RetimeShiftRegister.scala 15:20:@20062.4]
-    .out(sr_out),
-    .in(sr_in),
-    .init(sr_init),
-    .flow(sr_flow),
-    .reset(sr_reset),
-    .clock(sr_clock)
-  );
-  assign io_out = sr_out; // @[RetimeShiftRegister.scala 21:12:@20075.4]
-  assign sr_in = io_in; // @[RetimeShiftRegister.scala 20:14:@20074.4]
-  assign sr_init = 8'h0; // @[RetimeShiftRegister.scala 19:16:@20073.4]
-  assign sr_flow = io_flow; // @[RetimeShiftRegister.scala 18:16:@20072.4]
-  assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@20071.4]
-  assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@20069.4]
-endmodule
-module RetimeWrapper_249( // @[:@20220.2]
-  input        clock, // @[:@20221.4]
-  input        reset, // @[:@20222.4]
-  input        io_flow, // @[:@20223.4]
-  input  [7:0] io_in, // @[:@20223.4]
-  output [7:0] io_out // @[:@20223.4]
-);
-  wire [7:0] sr_out; // @[RetimeShiftRegister.scala 15:20:@20225.4]
-  wire [7:0] sr_in; // @[RetimeShiftRegister.scala 15:20:@20225.4]
-  wire [7:0] sr_init; // @[RetimeShiftRegister.scala 15:20:@20225.4]
-  wire  sr_flow; // @[RetimeShiftRegister.scala 15:20:@20225.4]
-  wire  sr_reset; // @[RetimeShiftRegister.scala 15:20:@20225.4]
-  wire  sr_clock; // @[RetimeShiftRegister.scala 15:20:@20225.4]
-  RetimeShiftRegister #(.WIDTH(8), .STAGES(6)) sr ( // @[RetimeShiftRegister.scala 15:20:@20225.4]
-    .out(sr_out),
-    .in(sr_in),
-    .init(sr_init),
-    .flow(sr_flow),
-    .reset(sr_reset),
-    .clock(sr_clock)
-  );
-  assign io_out = sr_out; // @[RetimeShiftRegister.scala 21:12:@20238.4]
-  assign sr_in = io_in; // @[RetimeShiftRegister.scala 20:14:@20237.4]
-  assign sr_init = 8'h0; // @[RetimeShiftRegister.scala 19:16:@20236.4]
-  assign sr_flow = io_flow; // @[RetimeShiftRegister.scala 18:16:@20235.4]
-  assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@20234.4]
-  assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@20232.4]
-endmodule
-module RetimeWrapper_250( // @[:@20252.2]
-  input   clock, // @[:@20253.4]
-  input   reset, // @[:@20254.4]
-  input   io_flow, // @[:@20255.4]
-  input   io_in, // @[:@20255.4]
-  output  io_out // @[:@20255.4]
-);
-  wire  sr_out; // @[RetimeShiftRegister.scala 15:20:@20257.4]
-  wire  sr_in; // @[RetimeShiftRegister.scala 15:20:@20257.4]
-  wire  sr_init; // @[RetimeShiftRegister.scala 15:20:@20257.4]
-  wire  sr_flow; // @[RetimeShiftRegister.scala 15:20:@20257.4]
-  wire  sr_reset; // @[RetimeShiftRegister.scala 15:20:@20257.4]
-  wire  sr_clock; // @[RetimeShiftRegister.scala 15:20:@20257.4]
-  RetimeShiftRegister #(.WIDTH(1), .STAGES(6)) sr ( // @[RetimeShiftRegister.scala 15:20:@20257.4]
-    .out(sr_out),
-    .in(sr_in),
-    .init(sr_init),
-    .flow(sr_flow),
-    .reset(sr_reset),
-    .clock(sr_clock)
-  );
-  assign io_out = sr_out; // @[RetimeShiftRegister.scala 21:12:@20270.4]
-  assign sr_in = io_in; // @[RetimeShiftRegister.scala 20:14:@20269.4]
-  assign sr_init = 1'h0; // @[RetimeShiftRegister.scala 19:16:@20268.4]
-  assign sr_flow = io_flow; // @[RetimeShiftRegister.scala 18:16:@20267.4]
-  assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@20266.4]
-  assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@20264.4]
-endmodule
-module RetimeWrapper_251( // @[:@20284.2]
-  input        clock, // @[:@20285.4]
-  input        reset, // @[:@20286.4]
-  input        io_flow, // @[:@20287.4]
-  input  [7:0] io_in, // @[:@20287.4]
-  output [7:0] io_out // @[:@20287.4]
-);
-  wire [7:0] sr_out; // @[RetimeShiftRegister.scala 15:20:@20289.4]
-  wire [7:0] sr_in; // @[RetimeShiftRegister.scala 15:20:@20289.4]
-  wire [7:0] sr_init; // @[RetimeShiftRegister.scala 15:20:@20289.4]
-  wire  sr_flow; // @[RetimeShiftRegister.scala 15:20:@20289.4]
-  wire  sr_reset; // @[RetimeShiftRegister.scala 15:20:@20289.4]
-  wire  sr_clock; // @[RetimeShiftRegister.scala 15:20:@20289.4]
-  RetimeShiftRegister #(.WIDTH(8), .STAGES(3)) sr ( // @[RetimeShiftRegister.scala 15:20:@20289.4]
-    .out(sr_out),
-    .in(sr_in),
-    .init(sr_init),
-    .flow(sr_flow),
-    .reset(sr_reset),
-    .clock(sr_clock)
-  );
-  assign io_out = sr_out; // @[RetimeShiftRegister.scala 21:12:@20302.4]
-  assign sr_in = io_in; // @[RetimeShiftRegister.scala 20:14:@20301.4]
-  assign sr_init = 8'h0; // @[RetimeShiftRegister.scala 19:16:@20300.4]
-  assign sr_flow = io_flow; // @[RetimeShiftRegister.scala 18:16:@20299.4]
-  assign sr_reset = reset; // @[RetimeShiftRegister.scala 17:17:@20298.4]
-  assign sr_clock = clock; // @[RetimeShiftRegister.scala 16:17:@20296.4]
-endmodule
-module x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1( // @[:@20400.2]
-  input          clock, // @[:@20401.4]
-  input          reset, // @[:@20402.4]
-  output         io_in_x196_TVALID, // @[:@20403.4]
-  input          io_in_x196_TREADY, // @[:@20403.4]
-  output [255:0] io_in_x196_TDATA, // @[:@20403.4]
-  output         io_in_x195_TREADY, // @[:@20403.4]
-  input  [255:0] io_in_x195_TDATA, // @[:@20403.4]
-  input  [7:0]   io_in_x195_TID, // @[:@20403.4]
-  input  [7:0]   io_in_x195_TDEST, // @[:@20403.4]
-  input          io_sigsIn_backpressure, // @[:@20403.4]
-  input          io_sigsIn_datapathEn, // @[:@20403.4]
-  input          io_sigsIn_break, // @[:@20403.4]
-  input  [31:0]  io_sigsIn_cchainOutputs_0_counts_1, // @[:@20403.4]
-  input  [31:0]  io_sigsIn_cchainOutputs_0_counts_0, // @[:@20403.4]
-  input          io_sigsIn_cchainOutputs_0_oobs_0, // @[:@20403.4]
-  input          io_sigsIn_cchainOutputs_0_oobs_1, // @[:@20403.4]
-  input          io_rr // @[:@20403.4]
-);
-  wire [31:0] __io_b; // @[Math.scala 709:24:@20417.4]
-  wire [31:0] __io_result; // @[Math.scala 709:24:@20417.4]
-  wire [31:0] __1_io_b; // @[Math.scala 709:24:@20429.4]
-  wire [31:0] __1_io_result; // @[Math.scala 709:24:@20429.4]
-  wire  x208_lb_0_clock; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_reset; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_8_banks_1; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_8_banks_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_8_ofs_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_8_en_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_8_backpressure; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [7:0] x208_lb_0_io_rPort_8_output_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_7_banks_1; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_7_banks_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_7_ofs_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_7_en_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_7_backpressure; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [7:0] x208_lb_0_io_rPort_7_output_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_6_banks_1; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_6_banks_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_6_ofs_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_6_en_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_6_backpressure; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [7:0] x208_lb_0_io_rPort_6_output_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_5_banks_1; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_5_banks_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_5_ofs_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_5_en_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_5_backpressure; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [7:0] x208_lb_0_io_rPort_5_output_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_4_banks_1; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_4_banks_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_4_ofs_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_4_en_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_4_backpressure; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [7:0] x208_lb_0_io_rPort_4_output_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_3_banks_1; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_3_banks_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_3_ofs_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_3_en_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_3_backpressure; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [7:0] x208_lb_0_io_rPort_3_output_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_2_banks_1; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_2_banks_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_2_ofs_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_2_en_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_2_backpressure; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [7:0] x208_lb_0_io_rPort_2_output_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_1_banks_1; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_1_banks_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_1_ofs_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_1_en_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_1_backpressure; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [7:0] x208_lb_0_io_rPort_1_output_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_0_banks_1; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_rPort_0_banks_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_0_ofs_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_0_en_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_rPort_0_backpressure; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [7:0] x208_lb_0_io_rPort_0_output_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_wPort_0_banks_1; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [2:0] x208_lb_0_io_wPort_0_banks_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_wPort_0_ofs_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire [7:0] x208_lb_0_io_wPort_0_data_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  x208_lb_0_io_wPort_0_en_0; // @[m_x208_lb_0.scala 35:17:@20439.4]
-  wire  RetimeWrapper_clock; // @[package.scala 93:22:@20519.4]
-  wire  RetimeWrapper_reset; // @[package.scala 93:22:@20519.4]
-  wire  RetimeWrapper_io_flow; // @[package.scala 93:22:@20519.4]
-  wire [7:0] RetimeWrapper_io_in; // @[package.scala 93:22:@20519.4]
-  wire [7:0] RetimeWrapper_io_out; // @[package.scala 93:22:@20519.4]
-  wire  x222_sum_1_clock; // @[Math.scala 150:24:@20624.4]
-  wire  x222_sum_1_reset; // @[Math.scala 150:24:@20624.4]
-  wire [31:0] x222_sum_1_io_a; // @[Math.scala 150:24:@20624.4]
-  wire [31:0] x222_sum_1_io_b; // @[Math.scala 150:24:@20624.4]
-  wire  x222_sum_1_io_flow; // @[Math.scala 150:24:@20624.4]
-  wire [31:0] x222_sum_1_io_result; // @[Math.scala 150:24:@20624.4]
-  wire  RetimeWrapper_1_clock; // @[package.scala 93:22:@20634.4]
-  wire  RetimeWrapper_1_reset; // @[package.scala 93:22:@20634.4]
-  wire  RetimeWrapper_1_io_flow; // @[package.scala 93:22:@20634.4]
-  wire  RetimeWrapper_1_io_in; // @[package.scala 93:22:@20634.4]
-  wire  RetimeWrapper_1_io_out; // @[package.scala 93:22:@20634.4]
-  wire  RetimeWrapper_2_clock; // @[package.scala 93:22:@20643.4]
-  wire  RetimeWrapper_2_reset; // @[package.scala 93:22:@20643.4]
-  wire  RetimeWrapper_2_io_flow; // @[package.scala 93:22:@20643.4]
-  wire [31:0] RetimeWrapper_2_io_in; // @[package.scala 93:22:@20643.4]
-  wire [31:0] RetimeWrapper_2_io_out; // @[package.scala 93:22:@20643.4]
-  wire  RetimeWrapper_3_clock; // @[package.scala 93:22:@20652.4]
-  wire  RetimeWrapper_3_reset; // @[package.scala 93:22:@20652.4]
-  wire  RetimeWrapper_3_io_flow; // @[package.scala 93:22:@20652.4]
-  wire  RetimeWrapper_3_io_in; // @[package.scala 93:22:@20652.4]
-  wire  RetimeWrapper_3_io_out; // @[package.scala 93:22:@20652.4]
-  wire  RetimeWrapper_4_clock; // @[package.scala 93:22:@20661.4]
-  wire  RetimeWrapper_4_reset; // @[package.scala 93:22:@20661.4]
-  wire  RetimeWrapper_4_io_flow; // @[package.scala 93:22:@20661.4]
-  wire [31:0] RetimeWrapper_4_io_in; // @[package.scala 93:22:@20661.4]
-  wire [31:0] RetimeWrapper_4_io_out; // @[package.scala 93:22:@20661.4]
-  wire  RetimeWrapper_5_clock; // @[package.scala 93:22:@20672.4]
-  wire  RetimeWrapper_5_reset; // @[package.scala 93:22:@20672.4]
-  wire  RetimeWrapper_5_io_flow; // @[package.scala 93:22:@20672.4]
-  wire  RetimeWrapper_5_io_in; // @[package.scala 93:22:@20672.4]
-  wire  RetimeWrapper_5_io_out; // @[package.scala 93:22:@20672.4]
-  wire  RetimeWrapper_6_clock; // @[package.scala 93:22:@20693.4]
-  wire  RetimeWrapper_6_reset; // @[package.scala 93:22:@20693.4]
-  wire  RetimeWrapper_6_io_flow; // @[package.scala 93:22:@20693.4]
-  wire [31:0] RetimeWrapper_6_io_in; // @[package.scala 93:22:@20693.4]
-  wire [31:0] RetimeWrapper_6_io_out; // @[package.scala 93:22:@20693.4]
-  wire  RetimeWrapper_7_clock; // @[package.scala 93:22:@20733.4]
-  wire  RetimeWrapper_7_reset; // @[package.scala 93:22:@20733.4]
-  wire  RetimeWrapper_7_io_flow; // @[package.scala 93:22:@20733.4]
-  wire [31:0] RetimeWrapper_7_io_in; // @[package.scala 93:22:@20733.4]
-  wire [31:0] RetimeWrapper_7_io_out; // @[package.scala 93:22:@20733.4]
-  wire  x232_sum_1_clock; // @[Math.scala 150:24:@20742.4]
-  wire  x232_sum_1_reset; // @[Math.scala 150:24:@20742.4]
-  wire [31:0] x232_sum_1_io_a; // @[Math.scala 150:24:@20742.4]
-  wire [31:0] x232_sum_1_io_b; // @[Math.scala 150:24:@20742.4]
-  wire  x232_sum_1_io_flow; // @[Math.scala 150:24:@20742.4]
-  wire [31:0] x232_sum_1_io_result; // @[Math.scala 150:24:@20742.4]
-  wire  RetimeWrapper_8_clock; // @[package.scala 93:22:@20752.4]
-  wire  RetimeWrapper_8_reset; // @[package.scala 93:22:@20752.4]
-  wire  RetimeWrapper_8_io_flow; // @[package.scala 93:22:@20752.4]
-  wire  RetimeWrapper_8_io_in; // @[package.scala 93:22:@20752.4]
-  wire  RetimeWrapper_8_io_out; // @[package.scala 93:22:@20752.4]
-  wire  RetimeWrapper_9_clock; // @[package.scala 93:22:@20761.4]
-  wire  RetimeWrapper_9_reset; // @[package.scala 93:22:@20761.4]
-  wire  RetimeWrapper_9_io_flow; // @[package.scala 93:22:@20761.4]
-  wire [31:0] RetimeWrapper_9_io_in; // @[package.scala 93:22:@20761.4]
-  wire [31:0] RetimeWrapper_9_io_out; // @[package.scala 93:22:@20761.4]
-  wire  RetimeWrapper_10_clock; // @[package.scala 93:22:@20770.4]
-  wire  RetimeWrapper_10_reset; // @[package.scala 93:22:@20770.4]
-  wire  RetimeWrapper_10_io_flow; // @[package.scala 93:22:@20770.4]
-  wire [31:0] RetimeWrapper_10_io_in; // @[package.scala 93:22:@20770.4]
-  wire [31:0] RetimeWrapper_10_io_out; // @[package.scala 93:22:@20770.4]
-  wire  RetimeWrapper_11_clock; // @[package.scala 93:22:@20779.4]
-  wire  RetimeWrapper_11_reset; // @[package.scala 93:22:@20779.4]
-  wire  RetimeWrapper_11_io_flow; // @[package.scala 93:22:@20779.4]
-  wire  RetimeWrapper_11_io_in; // @[package.scala 93:22:@20779.4]
-  wire  RetimeWrapper_11_io_out; // @[package.scala 93:22:@20779.4]
-  wire  RetimeWrapper_12_clock; // @[package.scala 93:22:@20788.4]
-  wire  RetimeWrapper_12_reset; // @[package.scala 93:22:@20788.4]
-  wire  RetimeWrapper_12_io_flow; // @[package.scala 93:22:@20788.4]
-  wire [31:0] RetimeWrapper_12_io_in; // @[package.scala 93:22:@20788.4]
-  wire [31:0] RetimeWrapper_12_io_out; // @[package.scala 93:22:@20788.4]
-  wire  RetimeWrapper_13_clock; // @[package.scala 93:22:@20800.4]
-  wire  RetimeWrapper_13_reset; // @[package.scala 93:22:@20800.4]
-  wire  RetimeWrapper_13_io_flow; // @[package.scala 93:22:@20800.4]
-  wire  RetimeWrapper_13_io_in; // @[package.scala 93:22:@20800.4]
-  wire  RetimeWrapper_13_io_out; // @[package.scala 93:22:@20800.4]
-  wire  RetimeWrapper_14_clock; // @[package.scala 93:22:@20820.4]
-  wire  RetimeWrapper_14_reset; // @[package.scala 93:22:@20820.4]
-  wire  RetimeWrapper_14_io_flow; // @[package.scala 93:22:@20820.4]
-  wire [31:0] RetimeWrapper_14_io_in; // @[package.scala 93:22:@20820.4]
-  wire [31:0] RetimeWrapper_14_io_out; // @[package.scala 93:22:@20820.4]
-  wire  x238_rdcol_1_clock; // @[Math.scala 191:24:@20831.4]
-  wire  x238_rdcol_1_reset; // @[Math.scala 191:24:@20831.4]
-  wire [31:0] x238_rdcol_1_io_a; // @[Math.scala 191:24:@20831.4]
-  wire [31:0] x238_rdcol_1_io_b; // @[Math.scala 191:24:@20831.4]
-  wire  x238_rdcol_1_io_flow; // @[Math.scala 191:24:@20831.4]
-  wire [31:0] x238_rdcol_1_io_result; // @[Math.scala 191:24:@20831.4]
-  wire  RetimeWrapper_15_clock; // @[package.scala 93:22:@20861.4]
-  wire  RetimeWrapper_15_reset; // @[package.scala 93:22:@20861.4]
-  wire  RetimeWrapper_15_io_flow; // @[package.scala 93:22:@20861.4]
-  wire [31:0] RetimeWrapper_15_io_in; // @[package.scala 93:22:@20861.4]
-  wire [31:0] RetimeWrapper_15_io_out; // @[package.scala 93:22:@20861.4]
-  wire  x241_sum_1_clock; // @[Math.scala 150:24:@20870.4]
-  wire  x241_sum_1_reset; // @[Math.scala 150:24:@20870.4]
-  wire [31:0] x241_sum_1_io_a; // @[Math.scala 150:24:@20870.4]
-  wire [31:0] x241_sum_1_io_b; // @[Math.scala 150:24:@20870.4]
-  wire  x241_sum_1_io_flow; // @[Math.scala 150:24:@20870.4]
-  wire [31:0] x241_sum_1_io_result; // @[Math.scala 150:24:@20870.4]
-  wire  RetimeWrapper_16_clock; // @[package.scala 93:22:@20880.4]
-  wire  RetimeWrapper_16_reset; // @[package.scala 93:22:@20880.4]
-  wire  RetimeWrapper_16_io_flow; // @[package.scala 93:22:@20880.4]
-  wire [31:0] RetimeWrapper_16_io_in; // @[package.scala 93:22:@20880.4]
-  wire [31:0] RetimeWrapper_16_io_out; // @[package.scala 93:22:@20880.4]
-  wire  RetimeWrapper_17_clock; // @[package.scala 93:22:@20892.4]
-  wire  RetimeWrapper_17_reset; // @[package.scala 93:22:@20892.4]
-  wire  RetimeWrapper_17_io_flow; // @[package.scala 93:22:@20892.4]
-  wire  RetimeWrapper_17_io_in; // @[package.scala 93:22:@20892.4]
-  wire  RetimeWrapper_17_io_out; // @[package.scala 93:22:@20892.4]
-  wire  x247_rdcol_1_clock; // @[Math.scala 191:24:@20914.4]
-  wire  x247_rdcol_1_reset; // @[Math.scala 191:24:@20914.4]
-  wire [31:0] x247_rdcol_1_io_a; // @[Math.scala 191:24:@20914.4]
-  wire [31:0] x247_rdcol_1_io_b; // @[Math.scala 191:24:@20914.4]
-  wire  x247_rdcol_1_io_flow; // @[Math.scala 191:24:@20914.4]
-  wire [31:0] x247_rdcol_1_io_result; // @[Math.scala 191:24:@20914.4]
-  wire  x250_sum_1_clock; // @[Math.scala 150:24:@20944.4]
-  wire  x250_sum_1_reset; // @[Math.scala 150:24:@20944.4]
-  wire [31:0] x250_sum_1_io_a; // @[Math.scala 150:24:@20944.4]
-  wire [31:0] x250_sum_1_io_b; // @[Math.scala 150:24:@20944.4]
-  wire  x250_sum_1_io_flow; // @[Math.scala 150:24:@20944.4]
-  wire [31:0] x250_sum_1_io_result; // @[Math.scala 150:24:@20944.4]
-  wire  RetimeWrapper_18_clock; // @[package.scala 93:22:@20954.4]
-  wire  RetimeWrapper_18_reset; // @[package.scala 93:22:@20954.4]
-  wire  RetimeWrapper_18_io_flow; // @[package.scala 93:22:@20954.4]
-  wire [31:0] RetimeWrapper_18_io_in; // @[package.scala 93:22:@20954.4]
-  wire [31:0] RetimeWrapper_18_io_out; // @[package.scala 93:22:@20954.4]
-  wire  RetimeWrapper_19_clock; // @[package.scala 93:22:@20966.4]
-  wire  RetimeWrapper_19_reset; // @[package.scala 93:22:@20966.4]
-  wire  RetimeWrapper_19_io_flow; // @[package.scala 93:22:@20966.4]
-  wire  RetimeWrapper_19_io_in; // @[package.scala 93:22:@20966.4]
-  wire  RetimeWrapper_19_io_out; // @[package.scala 93:22:@20966.4]
-  wire  x256_rdrow_1_clock; // @[Math.scala 191:24:@20990.4]
-  wire  x256_rdrow_1_reset; // @[Math.scala 191:24:@20990.4]
-  wire [31:0] x256_rdrow_1_io_a; // @[Math.scala 191:24:@20990.4]
-  wire [31:0] x256_rdrow_1_io_b; // @[Math.scala 191:24:@20990.4]
-  wire  x256_rdrow_1_io_flow; // @[Math.scala 191:24:@20990.4]
-  wire [31:0] x256_rdrow_1_io_result; // @[Math.scala 191:24:@20990.4]
-  wire  RetimeWrapper_20_clock; // @[package.scala 93:22:@21031.4]
-  wire  RetimeWrapper_20_reset; // @[package.scala 93:22:@21031.4]
-  wire  RetimeWrapper_20_io_flow; // @[package.scala 93:22:@21031.4]
-  wire [31:0] RetimeWrapper_20_io_in; // @[package.scala 93:22:@21031.4]
-  wire [31:0] RetimeWrapper_20_io_out; // @[package.scala 93:22:@21031.4]
-  wire  x260_sum_1_clock; // @[Math.scala 150:24:@21040.4]
-  wire  x260_sum_1_reset; // @[Math.scala 150:24:@21040.4]
-  wire [31:0] x260_sum_1_io_a; // @[Math.scala 150:24:@21040.4]
-  wire [31:0] x260_sum_1_io_b; // @[Math.scala 150:24:@21040.4]
-  wire  x260_sum_1_io_flow; // @[Math.scala 150:24:@21040.4]
-  wire [31:0] x260_sum_1_io_result; // @[Math.scala 150:24:@21040.4]
-  wire  RetimeWrapper_21_clock; // @[package.scala 93:22:@21050.4]
-  wire  RetimeWrapper_21_reset; // @[package.scala 93:22:@21050.4]
-  wire  RetimeWrapper_21_io_flow; // @[package.scala 93:22:@21050.4]
-  wire [31:0] RetimeWrapper_21_io_in; // @[package.scala 93:22:@21050.4]
-  wire [31:0] RetimeWrapper_21_io_out; // @[package.scala 93:22:@21050.4]
-  wire  RetimeWrapper_22_clock; // @[package.scala 93:22:@21062.4]
-  wire  RetimeWrapper_22_reset; // @[package.scala 93:22:@21062.4]
-  wire  RetimeWrapper_22_io_flow; // @[package.scala 93:22:@21062.4]
-  wire  RetimeWrapper_22_io_in; // @[package.scala 93:22:@21062.4]
-  wire  RetimeWrapper_22_io_out; // @[package.scala 93:22:@21062.4]
-  wire  x266_sum_1_clock; // @[Math.scala 150:24:@21082.4]
-  wire  x266_sum_1_reset; // @[Math.scala 150:24:@21082.4]
-  wire [31:0] x266_sum_1_io_a; // @[Math.scala 150:24:@21082.4]
-  wire [31:0] x266_sum_1_io_b; // @[Math.scala 150:24:@21082.4]
-  wire  x266_sum_1_io_flow; // @[Math.scala 150:24:@21082.4]
-  wire [31:0] x266_sum_1_io_result; // @[Math.scala 150:24:@21082.4]
-  wire  RetimeWrapper_23_clock; // @[package.scala 93:22:@21095.4]
-  wire  RetimeWrapper_23_reset; // @[package.scala 93:22:@21095.4]
-  wire  RetimeWrapper_23_io_flow; // @[package.scala 93:22:@21095.4]
-  wire  RetimeWrapper_23_io_in; // @[package.scala 93:22:@21095.4]
-  wire  RetimeWrapper_23_io_out; // @[package.scala 93:22:@21095.4]
-  wire  x271_sum_1_clock; // @[Math.scala 150:24:@21115.4]
-  wire  x271_sum_1_reset; // @[Math.scala 150:24:@21115.4]
-  wire [31:0] x271_sum_1_io_a; // @[Math.scala 150:24:@21115.4]
-  wire [31:0] x271_sum_1_io_b; // @[Math.scala 150:24:@21115.4]
-  wire  x271_sum_1_io_flow; // @[Math.scala 150:24:@21115.4]
-  wire [31:0] x271_sum_1_io_result; // @[Math.scala 150:24:@21115.4]
-  wire  RetimeWrapper_24_clock; // @[package.scala 93:22:@21128.4]
-  wire  RetimeWrapper_24_reset; // @[package.scala 93:22:@21128.4]
-  wire  RetimeWrapper_24_io_flow; // @[package.scala 93:22:@21128.4]
-  wire  RetimeWrapper_24_io_in; // @[package.scala 93:22:@21128.4]
-  wire  RetimeWrapper_24_io_out; // @[package.scala 93:22:@21128.4]
-  wire  x276_rdrow_1_clock; // @[Math.scala 191:24:@21150.4]
-  wire  x276_rdrow_1_reset; // @[Math.scala 191:24:@21150.4]
-  wire [31:0] x276_rdrow_1_io_a; // @[Math.scala 191:24:@21150.4]
-  wire [31:0] x276_rdrow_1_io_b; // @[Math.scala 191:24:@21150.4]
-  wire  x276_rdrow_1_io_flow; // @[Math.scala 191:24:@21150.4]
-  wire [31:0] x276_rdrow_1_io_result; // @[Math.scala 191:24:@21150.4]
-  wire  x280_sum_1_clock; // @[Math.scala 150:24:@21191.4]
-  wire  x280_sum_1_reset; // @[Math.scala 150:24:@21191.4]
-  wire [31:0] x280_sum_1_io_a; // @[Math.scala 150:24:@21191.4]
-  wire [31:0] x280_sum_1_io_b; // @[Math.scala 150:24:@21191.4]
-  wire  x280_sum_1_io_flow; // @[Math.scala 150:24:@21191.4]
-  wire [31:0] x280_sum_1_io_result; // @[Math.scala 150:24:@21191.4]
-  wire  RetimeWrapper_25_clock; // @[package.scala 93:22:@21201.4]
-  wire  RetimeWrapper_25_reset; // @[package.scala 93:22:@21201.4]
-  wire  RetimeWrapper_25_io_flow; // @[package.scala 93:22:@21201.4]
-  wire [31:0] RetimeWrapper_25_io_in; // @[package.scala 93:22:@21201.4]
-  wire [31:0] RetimeWrapper_25_io_out; // @[package.scala 93:22:@21201.4]
-  wire  RetimeWrapper_26_clock; // @[package.scala 93:22:@21213.4]
-  wire  RetimeWrapper_26_reset; // @[package.scala 93:22:@21213.4]
-  wire  RetimeWrapper_26_io_flow; // @[package.scala 93:22:@21213.4]
-  wire  RetimeWrapper_26_io_in; // @[package.scala 93:22:@21213.4]
-  wire  RetimeWrapper_26_io_out; // @[package.scala 93:22:@21213.4]
-  wire  x286_sum_1_clock; // @[Math.scala 150:24:@21233.4]
-  wire  x286_sum_1_reset; // @[Math.scala 150:24:@21233.4]
-  wire [31:0] x286_sum_1_io_a; // @[Math.scala 150:24:@21233.4]
-  wire [31:0] x286_sum_1_io_b; // @[Math.scala 150:24:@21233.4]
-  wire  x286_sum_1_io_flow; // @[Math.scala 150:24:@21233.4]
-  wire [31:0] x286_sum_1_io_result; // @[Math.scala 150:24:@21233.4]
-  wire  RetimeWrapper_27_clock; // @[package.scala 93:22:@21246.4]
-  wire  RetimeWrapper_27_reset; // @[package.scala 93:22:@21246.4]
-  wire  RetimeWrapper_27_io_flow; // @[package.scala 93:22:@21246.4]
-  wire  RetimeWrapper_27_io_in; // @[package.scala 93:22:@21246.4]
-  wire  RetimeWrapper_27_io_out; // @[package.scala 93:22:@21246.4]
-  wire  x291_sum_1_clock; // @[Math.scala 150:24:@21266.4]
-  wire  x291_sum_1_reset; // @[Math.scala 150:24:@21266.4]
-  wire [31:0] x291_sum_1_io_a; // @[Math.scala 150:24:@21266.4]
-  wire [31:0] x291_sum_1_io_b; // @[Math.scala 150:24:@21266.4]
-  wire  x291_sum_1_io_flow; // @[Math.scala 150:24:@21266.4]
-  wire [31:0] x291_sum_1_io_result; // @[Math.scala 150:24:@21266.4]
-  wire  RetimeWrapper_28_clock; // @[package.scala 93:22:@21279.4]
-  wire  RetimeWrapper_28_reset; // @[package.scala 93:22:@21279.4]
-  wire  RetimeWrapper_28_io_flow; // @[package.scala 93:22:@21279.4]
-  wire  RetimeWrapper_28_io_in; // @[package.scala 93:22:@21279.4]
-  wire  RetimeWrapper_28_io_out; // @[package.scala 93:22:@21279.4]
-  wire  x301_x17_1_clock; // @[Math.scala 150:24:@21324.4]
-  wire  x301_x17_1_reset; // @[Math.scala 150:24:@21324.4]
-  wire [7:0] x301_x17_1_io_a; // @[Math.scala 150:24:@21324.4]
-  wire [7:0] x301_x17_1_io_b; // @[Math.scala 150:24:@21324.4]
-  wire  x301_x17_1_io_flow; // @[Math.scala 150:24:@21324.4]
-  wire [7:0] x301_x17_1_io_result; // @[Math.scala 150:24:@21324.4]
-  wire  x302_x18_1_clock; // @[Math.scala 150:24:@21334.4]
-  wire  x302_x18_1_reset; // @[Math.scala 150:24:@21334.4]
-  wire [7:0] x302_x18_1_io_a; // @[Math.scala 150:24:@21334.4]
-  wire [7:0] x302_x18_1_io_b; // @[Math.scala 150:24:@21334.4]
-  wire  x302_x18_1_io_flow; // @[Math.scala 150:24:@21334.4]
-  wire [7:0] x302_x18_1_io_result; // @[Math.scala 150:24:@21334.4]
-  wire  x303_x17_1_clock; // @[Math.scala 150:24:@21344.4]
-  wire  x303_x17_1_reset; // @[Math.scala 150:24:@21344.4]
-  wire [7:0] x303_x17_1_io_a; // @[Math.scala 150:24:@21344.4]
-  wire [7:0] x303_x17_1_io_b; // @[Math.scala 150:24:@21344.4]
-  wire  x303_x17_1_io_flow; // @[Math.scala 150:24:@21344.4]
-  wire [7:0] x303_x17_1_io_result; // @[Math.scala 150:24:@21344.4]
-  wire  x304_x18_1_clock; // @[Math.scala 150:24:@21354.4]
-  wire  x304_x18_1_reset; // @[Math.scala 150:24:@21354.4]
-  wire [7:0] x304_x18_1_io_a; // @[Math.scala 150:24:@21354.4]
-  wire [7:0] x304_x18_1_io_b; // @[Math.scala 150:24:@21354.4]
-  wire  x304_x18_1_io_flow; // @[Math.scala 150:24:@21354.4]
-  wire [7:0] x304_x18_1_io_result; // @[Math.scala 150:24:@21354.4]
-  wire [7:0] x305_x17_1_io_a; // @[Math.scala 150:24:@21364.4]
-  wire [7:0] x305_x17_1_io_b; // @[Math.scala 150:24:@21364.4]
-  wire [7:0] x305_x17_1_io_result; // @[Math.scala 150:24:@21364.4]
-  wire [7:0] x306_x18_1_io_a; // @[Math.scala 150:24:@21374.4]
-  wire [7:0] x306_x18_1_io_b; // @[Math.scala 150:24:@21374.4]
-  wire [7:0] x306_x18_1_io_result; // @[Math.scala 150:24:@21374.4]
-  wire [7:0] x307_x17_1_io_a; // @[Math.scala 150:24:@21384.4]
-  wire [7:0] x307_x17_1_io_b; // @[Math.scala 150:24:@21384.4]
-  wire [7:0] x307_x17_1_io_result; // @[Math.scala 150:24:@21384.4]
-  wire  RetimeWrapper_29_clock; // @[package.scala 93:22:@21394.4]
-  wire  RetimeWrapper_29_reset; // @[package.scala 93:22:@21394.4]
-  wire  RetimeWrapper_29_io_flow; // @[package.scala 93:22:@21394.4]
-  wire [7:0] RetimeWrapper_29_io_in; // @[package.scala 93:22:@21394.4]
-  wire [7:0] RetimeWrapper_29_io_out; // @[package.scala 93:22:@21394.4]
-  wire [7:0] x308_sum_1_io_a; // @[Math.scala 150:24:@21403.4]
-  wire [7:0] x308_sum_1_io_b; // @[Math.scala 150:24:@21403.4]
-  wire [7:0] x308_sum_1_io_result; // @[Math.scala 150:24:@21403.4]
-  wire  RetimeWrapper_30_clock; // @[package.scala 93:22:@21417.4]
-  wire  RetimeWrapper_30_reset; // @[package.scala 93:22:@21417.4]
-  wire  RetimeWrapper_30_io_flow; // @[package.scala 93:22:@21417.4]
-  wire [7:0] RetimeWrapper_30_io_in; // @[package.scala 93:22:@21417.4]
-  wire [7:0] RetimeWrapper_30_io_out; // @[package.scala 93:22:@21417.4]
-  wire  RetimeWrapper_31_clock; // @[package.scala 93:22:@21427.4]
-  wire  RetimeWrapper_31_reset; // @[package.scala 93:22:@21427.4]
-  wire  RetimeWrapper_31_io_flow; // @[package.scala 93:22:@21427.4]
-  wire [7:0] RetimeWrapper_31_io_in; // @[package.scala 93:22:@21427.4]
-  wire [7:0] RetimeWrapper_31_io_out; // @[package.scala 93:22:@21427.4]
-  wire [7:0] x310_sub_1_io_a; // @[Math.scala 191:24:@21436.4]
-  wire [7:0] x310_sub_1_io_b; // @[Math.scala 191:24:@21436.4]
-  wire [7:0] x310_sub_1_io_result; // @[Math.scala 191:24:@21436.4]
-  wire  RetimeWrapper_32_clock; // @[package.scala 93:22:@21463.4]
-  wire  RetimeWrapper_32_reset; // @[package.scala 93:22:@21463.4]
-  wire  RetimeWrapper_32_io_flow; // @[package.scala 93:22:@21463.4]
-  wire [7:0] RetimeWrapper_32_io_in; // @[package.scala 93:22:@21463.4]
-  wire [7:0] RetimeWrapper_32_io_out; // @[package.scala 93:22:@21463.4]
-  wire  x314_div_1_clock; // @[Math.scala 327:24:@21474.4]
-  wire  x314_div_1_reset; // @[Math.scala 327:24:@21474.4]
-  wire [7:0] x314_div_1_io_a; // @[Math.scala 327:24:@21474.4]
-  wire  x314_div_1_io_flow; // @[Math.scala 327:24:@21474.4]
-  wire [7:0] x314_div_1_io_result; // @[Math.scala 327:24:@21474.4]
-  wire  RetimeWrapper_33_clock; // @[package.scala 93:22:@21484.4]
-  wire  RetimeWrapper_33_reset; // @[package.scala 93:22:@21484.4]
-  wire  RetimeWrapper_33_io_flow; // @[package.scala 93:22:@21484.4]
-  wire [7:0] RetimeWrapper_33_io_in; // @[package.scala 93:22:@21484.4]
-  wire [7:0] RetimeWrapper_33_io_out; // @[package.scala 93:22:@21484.4]
-  wire [7:0] x315_sum_1_io_a; // @[Math.scala 150:24:@21493.4]
-  wire [7:0] x315_sum_1_io_b; // @[Math.scala 150:24:@21493.4]
-  wire [7:0] x315_sum_1_io_result; // @[Math.scala 150:24:@21493.4]
-  wire  RetimeWrapper_34_clock; // @[package.scala 93:22:@21503.4]
-  wire  RetimeWrapper_34_reset; // @[package.scala 93:22:@21503.4]
-  wire  RetimeWrapper_34_io_flow; // @[package.scala 93:22:@21503.4]
-  wire [7:0] RetimeWrapper_34_io_in; // @[package.scala 93:22:@21503.4]
-  wire [7:0] RetimeWrapper_34_io_out; // @[package.scala 93:22:@21503.4]
-  wire  RetimeWrapper_35_clock; // @[package.scala 93:22:@21512.4]
-  wire  RetimeWrapper_35_reset; // @[package.scala 93:22:@21512.4]
-  wire  RetimeWrapper_35_io_flow; // @[package.scala 93:22:@21512.4]
-  wire  RetimeWrapper_35_io_in; // @[package.scala 93:22:@21512.4]
-  wire  RetimeWrapper_35_io_out; // @[package.scala 93:22:@21512.4]
-  wire  RetimeWrapper_36_clock; // @[package.scala 93:22:@21528.4]
-  wire  RetimeWrapper_36_reset; // @[package.scala 93:22:@21528.4]
-  wire  RetimeWrapper_36_io_flow; // @[package.scala 93:22:@21528.4]
-  wire [7:0] RetimeWrapper_36_io_in; // @[package.scala 93:22:@21528.4]
-  wire [7:0] RetimeWrapper_36_io_out; // @[package.scala 93:22:@21528.4]
-  wire  RetimeWrapper_37_clock; // @[package.scala 93:22:@21537.4]
-  wire  RetimeWrapper_37_reset; // @[package.scala 93:22:@21537.4]
-  wire  RetimeWrapper_37_io_flow; // @[package.scala 93:22:@21537.4]
-  wire  RetimeWrapper_37_io_in; // @[package.scala 93:22:@21537.4]
-  wire  RetimeWrapper_37_io_out; // @[package.scala 93:22:@21537.4]
-  wire  RetimeWrapper_38_clock; // @[package.scala 93:22:@21546.4]
-  wire  RetimeWrapper_38_reset; // @[package.scala 93:22:@21546.4]
-  wire  RetimeWrapper_38_io_flow; // @[package.scala 93:22:@21546.4]
-  wire  RetimeWrapper_38_io_in; // @[package.scala 93:22:@21546.4]
-  wire  RetimeWrapper_38_io_out; // @[package.scala 93:22:@21546.4]
-  wire  RetimeWrapper_39_clock; // @[package.scala 93:22:@21555.4]
-  wire  RetimeWrapper_39_reset; // @[package.scala 93:22:@21555.4]
-  wire  RetimeWrapper_39_io_flow; // @[package.scala 93:22:@21555.4]
-  wire  RetimeWrapper_39_io_in; // @[package.scala 93:22:@21555.4]
-  wire  RetimeWrapper_39_io_out; // @[package.scala 93:22:@21555.4]
-  wire  b206; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 62:18:@20437.4]
-  wire  b207; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 63:18:@20438.4]
-  wire  _T_206; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 68:30:@20507.4]
-  wire  _T_207; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 68:37:@20508.4]
-  wire  _T_211; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 70:76:@20513.4]
-  wire  _T_212; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 70:62:@20514.4]
-  wire  _T_214; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 70:101:@20515.4]
-  wire [31:0] b204_number; // @[Math.scala 712:22:@20422.4 Math.scala 713:14:@20423.4]
-  wire [31:0] _T_240; // @[Math.scala 499:52:@20538.4]
-  wire  x213; // @[Math.scala 499:44:@20546.4]
-  wire  x214; // @[Math.scala 499:44:@20553.4]
-  wire  x215; // @[Math.scala 499:44:@20560.4]
-  wire [31:0] _T_287; // @[Mux.scala 19:72:@20572.4]
-  wire [31:0] _T_289; // @[Mux.scala 19:72:@20573.4]
-  wire [31:0] _T_291; // @[Mux.scala 19:72:@20574.4]
-  wire [31:0] _T_293; // @[Mux.scala 19:72:@20576.4]
-  wire [31:0] x216_number; // @[Mux.scala 19:72:@20577.4]
-  wire [31:0] _T_305; // @[Math.scala 406:49:@20587.4]
-  wire [31:0] _T_307; // @[Math.scala 406:56:@20589.4]
-  wire [31:0] _T_308; // @[Math.scala 406:56:@20590.4]
-  wire [31:0] b205_number; // @[Math.scala 712:22:@20434.4 Math.scala 713:14:@20435.4]
-  wire [31:0] _T_317; // @[Math.scala 406:49:@20598.4]
-  wire [31:0] _T_319; // @[Math.scala 406:56:@20600.4]
-  wire [31:0] _T_320; // @[Math.scala 406:56:@20601.4]
-  wire  _T_325; // @[FixedPoint.scala 50:25:@20607.4]
-  wire [1:0] _T_329; // @[Bitwise.scala 72:12:@20609.4]
-  wire [29:0] _T_330; // @[FixedPoint.scala 18:52:@20610.4]
-  wire  _T_335; // @[FixedPoint.scala 50:25:@20616.4]
-  wire [1:0] _T_339; // @[Bitwise.scala 72:12:@20618.4]
-  wire [29:0] _T_340; // @[FixedPoint.scala 18:52:@20619.4]
-  wire  _T_358; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 113:101:@20669.4]
-  wire  _T_362; // @[package.scala 96:25:@20677.4 package.scala 96:25:@20678.4]
-  wire  _T_364; // @[implicits.scala 55:10:@20679.4]
-  wire  _T_365; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 113:118:@20680.4]
-  wire  _T_367; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 113:205:@20682.4]
-  wire  _T_368; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 113:224:@20683.4]
-  wire  x402_b206_D1; // @[package.scala 96:25:@20657.4 package.scala 96:25:@20658.4]
-  wire  _T_369; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 113:250:@20684.4]
-  wire  x400_b207_D1; // @[package.scala 96:25:@20639.4 package.scala 96:25:@20640.4]
-  wire [31:0] x404_b204_D3_number; // @[package.scala 96:25:@20698.4 package.scala 96:25:@20699.4]
-  wire [31:0] _T_381; // @[Math.scala 406:49:@20705.4]
-  wire [31:0] _T_383; // @[Math.scala 406:56:@20707.4]
-  wire [31:0] _T_384; // @[Math.scala 406:56:@20708.4]
-  wire [31:0] x391_number; // @[implicits.scala 133:21:@20709.4]
-  wire [31:0] _T_393; // @[Math.scala 406:49:@20716.4]
-  wire [31:0] _T_395; // @[Math.scala 406:56:@20718.4]
-  wire [31:0] _T_396; // @[Math.scala 406:56:@20719.4]
-  wire  _T_401; // @[FixedPoint.scala 50:25:@20725.4]
-  wire [1:0] _T_405; // @[Bitwise.scala 72:12:@20727.4]
-  wire [29:0] _T_406; // @[FixedPoint.scala 18:52:@20728.4]
-  wire  _T_440; // @[package.scala 96:25:@20805.4 package.scala 96:25:@20806.4]
-  wire  _T_442; // @[implicits.scala 55:10:@20807.4]
-  wire  _T_443; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 141:146:@20808.4]
-  wire  x406_b206_D5; // @[package.scala 96:25:@20757.4 package.scala 96:25:@20758.4]
-  wire  _T_444; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 141:233:@20809.4]
-  wire  x409_b207_D5; // @[package.scala 96:25:@20784.4 package.scala 96:25:@20785.4]
-  wire [31:0] x238_rdcol_number; // @[Math.scala 195:22:@20837.4 Math.scala 196:14:@20838.4]
-  wire [31:0] _T_464; // @[Math.scala 406:49:@20844.4]
-  wire [31:0] _T_466; // @[Math.scala 406:56:@20846.4]
-  wire [31:0] _T_467; // @[Math.scala 406:56:@20847.4]
-  wire  _T_472; // @[FixedPoint.scala 50:25:@20853.4]
-  wire [1:0] _T_476; // @[Bitwise.scala 72:12:@20855.4]
-  wire [29:0] _T_477; // @[FixedPoint.scala 18:52:@20856.4]
-  wire  _T_499; // @[package.scala 96:25:@20897.4 package.scala 96:25:@20898.4]
-  wire  _T_501; // @[implicits.scala 55:10:@20899.4]
-  wire  _T_502; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 162:146:@20900.4]
-  wire  _T_503; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 162:233:@20901.4]
-  wire [31:0] x247_rdcol_number; // @[Math.scala 195:22:@20920.4 Math.scala 196:14:@20921.4]
-  wire [31:0] _T_520; // @[Math.scala 406:49:@20927.4]
-  wire [31:0] _T_522; // @[Math.scala 406:56:@20929.4]
-  wire [31:0] _T_523; // @[Math.scala 406:56:@20930.4]
-  wire  _T_528; // @[FixedPoint.scala 50:25:@20936.4]
-  wire [1:0] _T_532; // @[Bitwise.scala 72:12:@20938.4]
-  wire [29:0] _T_533; // @[FixedPoint.scala 18:52:@20939.4]
-  wire  _T_552; // @[package.scala 96:25:@20971.4 package.scala 96:25:@20972.4]
-  wire  _T_554; // @[implicits.scala 55:10:@20973.4]
-  wire  _T_555; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 185:194:@20974.4]
-  wire  _T_556; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 185:281:@20975.4]
-  wire [31:0] x256_rdrow_number; // @[Math.scala 195:22:@20996.4 Math.scala 196:14:@20997.4]
-  wire [31:0] _T_575; // @[Math.scala 406:49:@21003.4]
-  wire [31:0] _T_577; // @[Math.scala 406:56:@21005.4]
-  wire [31:0] _T_578; // @[Math.scala 406:56:@21006.4]
-  wire [31:0] x395_number; // @[implicits.scala 133:21:@21007.4]
-  wire [31:0] _T_587; // @[Math.scala 406:49:@21014.4]
-  wire [31:0] _T_589; // @[Math.scala 406:56:@21016.4]
-  wire [31:0] _T_590; // @[Math.scala 406:56:@21017.4]
-  wire  _T_595; // @[FixedPoint.scala 50:25:@21023.4]
-  wire [1:0] _T_599; // @[Bitwise.scala 72:12:@21025.4]
-  wire [29:0] _T_600; // @[FixedPoint.scala 18:52:@21026.4]
-  wire  _T_622; // @[package.scala 96:25:@21067.4 package.scala 96:25:@21068.4]
-  wire  _T_624; // @[implicits.scala 55:10:@21069.4]
-  wire  _T_625; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 208:194:@21070.4]
-  wire  _T_626; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 208:281:@21071.4]
-  wire  _T_643; // @[package.scala 96:25:@21100.4 package.scala 96:25:@21101.4]
-  wire  _T_645; // @[implicits.scala 55:10:@21102.4]
-  wire  _T_646; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 217:194:@21103.4]
-  wire  _T_647; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 217:281:@21104.4]
-  wire  _T_664; // @[package.scala 96:25:@21133.4 package.scala 96:25:@21134.4]
-  wire  _T_666; // @[implicits.scala 55:10:@21135.4]
-  wire  _T_667; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 226:194:@21136.4]
-  wire  _T_668; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 226:281:@21137.4]
-  wire [31:0] x276_rdrow_number; // @[Math.scala 195:22:@21156.4 Math.scala 196:14:@21157.4]
-  wire [31:0] _T_685; // @[Math.scala 406:49:@21163.4]
-  wire [31:0] _T_687; // @[Math.scala 406:56:@21165.4]
-  wire [31:0] _T_688; // @[Math.scala 406:56:@21166.4]
-  wire [31:0] x397_number; // @[implicits.scala 133:21:@21167.4]
-  wire [31:0] _T_697; // @[Math.scala 406:49:@21174.4]
-  wire [31:0] _T_699; // @[Math.scala 406:56:@21176.4]
-  wire [31:0] _T_700; // @[Math.scala 406:56:@21177.4]
-  wire  _T_705; // @[FixedPoint.scala 50:25:@21183.4]
-  wire [1:0] _T_709; // @[Bitwise.scala 72:12:@21185.4]
-  wire [29:0] _T_710; // @[FixedPoint.scala 18:52:@21186.4]
-  wire  _T_729; // @[package.scala 96:25:@21218.4 package.scala 96:25:@21219.4]
-  wire  _T_731; // @[implicits.scala 55:10:@21220.4]
-  wire  _T_732; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 245:194:@21221.4]
-  wire  _T_733; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 245:281:@21222.4]
-  wire  _T_750; // @[package.scala 96:25:@21251.4 package.scala 96:25:@21252.4]
-  wire  _T_752; // @[implicits.scala 55:10:@21253.4]
-  wire  _T_753; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 254:194:@21254.4]
-  wire  _T_754; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 254:281:@21255.4]
-  wire  _T_771; // @[package.scala 96:25:@21284.4 package.scala 96:25:@21285.4]
-  wire  _T_773; // @[implicits.scala 55:10:@21286.4]
-  wire  _T_774; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 263:194:@21287.4]
-  wire  _T_775; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 263:281:@21288.4]
-  wire [7:0] x245_rd_0_number; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 158:29:@20888.4 sm_x321_inr_Foreach_SAMPLER_BOX.scala 162:281:@20908.4]
-  wire [8:0] _GEN_0; // @[Math.scala 450:32:@21300.4]
-  wire [8:0] _T_781; // @[Math.scala 450:32:@21300.4]
-  wire [7:0] x264_rd_0_number; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 204:29:@21058.4 sm_x321_inr_Foreach_SAMPLER_BOX.scala 208:399:@21078.4]
-  wire [8:0] _GEN_1; // @[Math.scala 450:32:@21305.4]
-  wire [8:0] _T_785; // @[Math.scala 450:32:@21305.4]
-  wire [7:0] x269_rd_0_number; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 213:29:@21091.4 sm_x321_inr_Foreach_SAMPLER_BOX.scala 217:399:@21111.4]
-  wire [9:0] _GEN_2; // @[Math.scala 450:32:@21310.4]
-  wire [9:0] _T_789; // @[Math.scala 450:32:@21310.4]
-  wire [7:0] x274_rd_0_number; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 222:29:@21124.4 sm_x321_inr_Foreach_SAMPLER_BOX.scala 226:399:@21144.4]
-  wire [8:0] _GEN_3; // @[Math.scala 450:32:@21315.4]
-  wire [8:0] _T_793; // @[Math.scala 450:32:@21315.4]
-  wire [7:0] x289_rd_0_number; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 250:29:@21242.4 sm_x321_inr_Foreach_SAMPLER_BOX.scala 254:399:@21262.4]
-  wire [8:0] _GEN_4; // @[Math.scala 450:32:@21320.4]
-  wire [8:0] _T_797; // @[Math.scala 450:32:@21320.4]
-  wire [7:0] x308_sum_number; // @[Math.scala 154:22:@21409.4 Math.scala 155:14:@21410.4]
-  wire [3:0] _T_833; // @[FixedPoint.scala 18:52:@21415.4]
-  wire [7:0] x310_sub_number; // @[Math.scala 195:22:@21442.4 Math.scala 196:14:@21443.4]
-  wire  x311; // @[Math.scala 466:37:@21448.4]
-  wire [7:0] x309_number; // @[package.scala 96:25:@21422.4 package.scala 96:25:@21423.4]
-  wire  x423_x313_D6; // @[package.scala 96:25:@21517.4 package.scala 96:25:@21518.4]
-  wire [7:0] x422_x309_D6_number; // @[package.scala 96:25:@21508.4 package.scala 96:25:@21509.4]
-  wire [7:0] x315_sum_number; // @[Math.scala 154:22:@21499.4 Math.scala 155:14:@21500.4]
-  wire  _T_906; // @[package.scala 96:25:@21560.4 package.scala 96:25:@21561.4]
-  wire  _T_908; // @[implicits.scala 55:10:@21562.4]
-  wire  x425_b206_D18; // @[package.scala 96:25:@21551.4 package.scala 96:25:@21552.4]
-  wire  _T_909; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 337:116:@21563.4]
-  wire  x424_b207_D18; // @[package.scala 96:25:@21542.4 package.scala 96:25:@21543.4]
-  wire  _T_910; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 337:122:@21564.4]
-  wire [31:0] x222_sum_number; // @[Math.scala 154:22:@20630.4 Math.scala 155:14:@20631.4]
-  wire [31:0] x401_x390_D1_number; // @[package.scala 96:25:@20648.4 package.scala 96:25:@20649.4]
-  wire [31:0] x403_x389_D1_number; // @[package.scala 96:25:@20666.4 package.scala 96:25:@20667.4]
-  wire [31:0] x407_x392_D2_number; // @[package.scala 96:25:@20766.4 package.scala 96:25:@20767.4]
-  wire [31:0] x408_x390_D5_number; // @[package.scala 96:25:@20775.4 package.scala 96:25:@20776.4]
-  wire [31:0] x410_x232_sum_D1_number; // @[package.scala 96:25:@20793.4 package.scala 96:25:@20794.4]
-  wire [31:0] x241_sum_number; // @[Math.scala 154:22:@20876.4 Math.scala 155:14:@20877.4]
-  wire [31:0] x413_x393_D1_number; // @[package.scala 96:25:@20885.4 package.scala 96:25:@20886.4]
-  wire [31:0] x250_sum_number; // @[Math.scala 154:22:@20950.4 Math.scala 155:14:@20951.4]
-  wire [31:0] x414_x394_D1_number; // @[package.scala 96:25:@20959.4 package.scala 96:25:@20960.4]
-  wire [31:0] x260_sum_number; // @[Math.scala 154:22:@21046.4 Math.scala 155:14:@21047.4]
-  wire [31:0] x416_x396_D1_number; // @[package.scala 96:25:@21055.4 package.scala 96:25:@21056.4]
-  wire [31:0] x266_sum_number; // @[Math.scala 154:22:@21088.4 Math.scala 155:14:@21089.4]
-  wire [31:0] x271_sum_number; // @[Math.scala 154:22:@21121.4 Math.scala 155:14:@21122.4]
-  wire [31:0] x280_sum_number; // @[Math.scala 154:22:@21197.4 Math.scala 155:14:@21198.4]
-  wire [31:0] x417_x398_D1_number; // @[package.scala 96:25:@21206.4 package.scala 96:25:@21207.4]
-  wire [31:0] x286_sum_number; // @[Math.scala 154:22:@21239.4 Math.scala 155:14:@21240.4]
-  wire [31:0] x291_sum_number; // @[Math.scala 154:22:@21272.4 Math.scala 155:14:@21273.4]
-  _ _ ( // @[Math.scala 709:24:@20417.4]
-    .io_b(__io_b),
-    .io_result(__io_result)
-  );
-  _ __1 ( // @[Math.scala 709:24:@20429.4]
-    .io_b(__1_io_b),
-    .io_result(__1_io_result)
-  );
-  x208_lb_0 x208_lb_0 ( // @[m_x208_lb_0.scala 35:17:@20439.4]
-    .clock(x208_lb_0_clock),
-    .reset(x208_lb_0_reset),
-    .io_rPort_8_banks_1(x208_lb_0_io_rPort_8_banks_1),
-    .io_rPort_8_banks_0(x208_lb_0_io_rPort_8_banks_0),
-    .io_rPort_8_ofs_0(x208_lb_0_io_rPort_8_ofs_0),
-    .io_rPort_8_en_0(x208_lb_0_io_rPort_8_en_0),
-    .io_rPort_8_backpressure(x208_lb_0_io_rPort_8_backpressure),
-    .io_rPort_8_output_0(x208_lb_0_io_rPort_8_output_0),
-    .io_rPort_7_banks_1(x208_lb_0_io_rPort_7_banks_1),
-    .io_rPort_7_banks_0(x208_lb_0_io_rPort_7_banks_0),
-    .io_rPort_7_ofs_0(x208_lb_0_io_rPort_7_ofs_0),
-    .io_rPort_7_en_0(x208_lb_0_io_rPort_7_en_0),
-    .io_rPort_7_backpressure(x208_lb_0_io_rPort_7_backpressure),
-    .io_rPort_7_output_0(x208_lb_0_io_rPort_7_output_0),
-    .io_rPort_6_banks_1(x208_lb_0_io_rPort_6_banks_1),
-    .io_rPort_6_banks_0(x208_lb_0_io_rPort_6_banks_0),
-    .io_rPort_6_ofs_0(x208_lb_0_io_rPort_6_ofs_0),
-    .io_rPort_6_en_0(x208_lb_0_io_rPort_6_en_0),
-    .io_rPort_6_backpressure(x208_lb_0_io_rPort_6_backpressure),
-    .io_rPort_6_output_0(x208_lb_0_io_rPort_6_output_0),
-    .io_rPort_5_banks_1(x208_lb_0_io_rPort_5_banks_1),
-    .io_rPort_5_banks_0(x208_lb_0_io_rPort_5_banks_0),
-    .io_rPort_5_ofs_0(x208_lb_0_io_rPort_5_ofs_0),
-    .io_rPort_5_en_0(x208_lb_0_io_rPort_5_en_0),
-    .io_rPort_5_backpressure(x208_lb_0_io_rPort_5_backpressure),
-    .io_rPort_5_output_0(x208_lb_0_io_rPort_5_output_0),
-    .io_rPort_4_banks_1(x208_lb_0_io_rPort_4_banks_1),
-    .io_rPort_4_banks_0(x208_lb_0_io_rPort_4_banks_0),
-    .io_rPort_4_ofs_0(x208_lb_0_io_rPort_4_ofs_0),
-    .io_rPort_4_en_0(x208_lb_0_io_rPort_4_en_0),
-    .io_rPort_4_backpressure(x208_lb_0_io_rPort_4_backpressure),
-    .io_rPort_4_output_0(x208_lb_0_io_rPort_4_output_0),
-    .io_rPort_3_banks_1(x208_lb_0_io_rPort_3_banks_1),
-    .io_rPort_3_banks_0(x208_lb_0_io_rPort_3_banks_0),
-    .io_rPort_3_ofs_0(x208_lb_0_io_rPort_3_ofs_0),
-    .io_rPort_3_en_0(x208_lb_0_io_rPort_3_en_0),
-    .io_rPort_3_backpressure(x208_lb_0_io_rPort_3_backpressure),
-    .io_rPort_3_output_0(x208_lb_0_io_rPort_3_output_0),
-    .io_rPort_2_banks_1(x208_lb_0_io_rPort_2_banks_1),
-    .io_rPort_2_banks_0(x208_lb_0_io_rPort_2_banks_0),
-    .io_rPort_2_ofs_0(x208_lb_0_io_rPort_2_ofs_0),
-    .io_rPort_2_en_0(x208_lb_0_io_rPort_2_en_0),
-    .io_rPort_2_backpressure(x208_lb_0_io_rPort_2_backpressure),
-    .io_rPort_2_output_0(x208_lb_0_io_rPort_2_output_0),
-    .io_rPort_1_banks_1(x208_lb_0_io_rPort_1_banks_1),
-    .io_rPort_1_banks_0(x208_lb_0_io_rPort_1_banks_0),
-    .io_rPort_1_ofs_0(x208_lb_0_io_rPort_1_ofs_0),
-    .io_rPort_1_en_0(x208_lb_0_io_rPort_1_en_0),
-    .io_rPort_1_backpressure(x208_lb_0_io_rPort_1_backpressure),
-    .io_rPort_1_output_0(x208_lb_0_io_rPort_1_output_0),
-    .io_rPort_0_banks_1(x208_lb_0_io_rPort_0_banks_1),
-    .io_rPort_0_banks_0(x208_lb_0_io_rPort_0_banks_0),
-    .io_rPort_0_ofs_0(x208_lb_0_io_rPort_0_ofs_0),
-    .io_rPort_0_en_0(x208_lb_0_io_rPort_0_en_0),
-    .io_rPort_0_backpressure(x208_lb_0_io_rPort_0_backpressure),
-    .io_rPort_0_output_0(x208_lb_0_io_rPort_0_output_0),
-    .io_wPort_0_banks_1(x208_lb_0_io_wPort_0_banks_1),
-    .io_wPort_0_banks_0(x208_lb_0_io_wPort_0_banks_0),
-    .io_wPort_0_ofs_0(x208_lb_0_io_wPort_0_ofs_0),
-    .io_wPort_0_data_0(x208_lb_0_io_wPort_0_data_0),
-    .io_wPort_0_en_0(x208_lb_0_io_wPort_0_en_0)
-  );
-  RetimeWrapper_21 RetimeWrapper ( // @[package.scala 93:22:@20519.4]
-    .clock(RetimeWrapper_clock),
-    .reset(RetimeWrapper_reset),
-    .io_flow(RetimeWrapper_io_flow),
-    .io_in(RetimeWrapper_io_in),
-    .io_out(RetimeWrapper_io_out)
-  );
-  x222_sum x222_sum_1 ( // @[Math.scala 150:24:@20624.4]
-    .clock(x222_sum_1_clock),
-    .reset(x222_sum_1_reset),
-    .io_a(x222_sum_1_io_a),
-    .io_b(x222_sum_1_io_b),
-    .io_flow(x222_sum_1_io_flow),
-    .io_result(x222_sum_1_io_result)
-  );
-  RetimeWrapper RetimeWrapper_1 ( // @[package.scala 93:22:@20634.4]
+  RetimeWrapper_197 RetimeWrapper_1 ( // @[package.scala 93:22:@20111.4]
     .clock(RetimeWrapper_1_clock),
     .reset(RetimeWrapper_1_reset),
     .io_flow(RetimeWrapper_1_io_flow),
     .io_in(RetimeWrapper_1_io_in),
     .io_out(RetimeWrapper_1_io_out)
   );
-  RetimeWrapper_197 RetimeWrapper_2 ( // @[package.scala 93:22:@20643.4]
+  RetimeWrapper_197 RetimeWrapper_2 ( // @[package.scala 93:22:@20120.4]
     .clock(RetimeWrapper_2_clock),
     .reset(RetimeWrapper_2_reset),
     .io_flow(RetimeWrapper_2_io_flow),
     .io_in(RetimeWrapper_2_io_in),
     .io_out(RetimeWrapper_2_io_out)
   );
-  RetimeWrapper RetimeWrapper_3 ( // @[package.scala 93:22:@20652.4]
+  RetimeWrapper RetimeWrapper_3 ( // @[package.scala 93:22:@20129.4]
     .clock(RetimeWrapper_3_clock),
     .reset(RetimeWrapper_3_reset),
     .io_flow(RetimeWrapper_3_io_flow),
     .io_in(RetimeWrapper_3_io_in),
     .io_out(RetimeWrapper_3_io_out)
   );
-  RetimeWrapper_197 RetimeWrapper_4 ( // @[package.scala 93:22:@20661.4]
+  RetimeWrapper RetimeWrapper_4 ( // @[package.scala 93:22:@20138.4]
     .clock(RetimeWrapper_4_clock),
     .reset(RetimeWrapper_4_reset),
     .io_flow(RetimeWrapper_4_io_flow),
     .io_in(RetimeWrapper_4_io_in),
     .io_out(RetimeWrapper_4_io_out)
   );
-  RetimeWrapper RetimeWrapper_5 ( // @[package.scala 93:22:@20672.4]
+  RetimeWrapper RetimeWrapper_5 ( // @[package.scala 93:22:@20149.4]
     .clock(RetimeWrapper_5_clock),
     .reset(RetimeWrapper_5_reset),
     .io_flow(RetimeWrapper_5_io_flow),
     .io_in(RetimeWrapper_5_io_in),
     .io_out(RetimeWrapper_5_io_out)
   );
-  RetimeWrapper_203 RetimeWrapper_6 ( // @[package.scala 93:22:@20693.4]
+  RetimeWrapper_203 RetimeWrapper_6 ( // @[package.scala 93:22:@20170.4]
     .clock(RetimeWrapper_6_clock),
     .reset(RetimeWrapper_6_reset),
     .io_flow(RetimeWrapper_6_io_flow),
     .io_in(RetimeWrapper_6_io_in),
     .io_out(RetimeWrapper_6_io_out)
   );
-  RetimeWrapper_203 RetimeWrapper_7 ( // @[package.scala 93:22:@20733.4]
+  RetimeWrapper_203 RetimeWrapper_7 ( // @[package.scala 93:22:@20210.4]
     .clock(RetimeWrapper_7_clock),
     .reset(RetimeWrapper_7_reset),
     .io_flow(RetimeWrapper_7_io_flow),
     .io_in(RetimeWrapper_7_io_in),
     .io_out(RetimeWrapper_7_io_out)
   );
-  x222_sum x232_sum_1 ( // @[Math.scala 150:24:@20742.4]
-    .clock(x232_sum_1_clock),
-    .reset(x232_sum_1_reset),
-    .io_a(x232_sum_1_io_a),
-    .io_b(x232_sum_1_io_b),
-    .io_flow(x232_sum_1_io_flow),
-    .io_result(x232_sum_1_io_result)
+  x208_sum x218_sum_1 ( // @[Math.scala 150:24:@20219.4]
+    .clock(x218_sum_1_clock),
+    .reset(x218_sum_1_reset),
+    .io_a(x218_sum_1_io_a),
+    .io_b(x218_sum_1_io_b),
+    .io_flow(x218_sum_1_io_flow),
+    .io_result(x218_sum_1_io_result)
   );
-  RetimeWrapper_206 RetimeWrapper_8 ( // @[package.scala 93:22:@20752.4]
+  RetimeWrapper_206 RetimeWrapper_8 ( // @[package.scala 93:22:@20229.4]
     .clock(RetimeWrapper_8_clock),
     .reset(RetimeWrapper_8_reset),
     .io_flow(RetimeWrapper_8_io_flow),
     .io_in(RetimeWrapper_8_io_in),
     .io_out(RetimeWrapper_8_io_out)
   );
-  RetimeWrapper_207 RetimeWrapper_9 ( // @[package.scala 93:22:@20761.4]
+  RetimeWrapper_206 RetimeWrapper_9 ( // @[package.scala 93:22:@20238.4]
     .clock(RetimeWrapper_9_clock),
     .reset(RetimeWrapper_9_reset),
     .io_flow(RetimeWrapper_9_io_flow),
     .io_in(RetimeWrapper_9_io_in),
     .io_out(RetimeWrapper_9_io_out)
   );
-  RetimeWrapper_208 RetimeWrapper_10 ( // @[package.scala 93:22:@20770.4]
+  RetimeWrapper_208 RetimeWrapper_10 ( // @[package.scala 93:22:@20247.4]
     .clock(RetimeWrapper_10_clock),
     .reset(RetimeWrapper_10_reset),
     .io_flow(RetimeWrapper_10_io_flow),
     .io_in(RetimeWrapper_10_io_in),
     .io_out(RetimeWrapper_10_io_out)
   );
-  RetimeWrapper_206 RetimeWrapper_11 ( // @[package.scala 93:22:@20779.4]
+  RetimeWrapper_197 RetimeWrapper_11 ( // @[package.scala 93:22:@20256.4]
     .clock(RetimeWrapper_11_clock),
     .reset(RetimeWrapper_11_reset),
     .io_flow(RetimeWrapper_11_io_flow),
     .io_in(RetimeWrapper_11_io_in),
     .io_out(RetimeWrapper_11_io_out)
   );
-  RetimeWrapper_197 RetimeWrapper_12 ( // @[package.scala 93:22:@20788.4]
+  RetimeWrapper_210 RetimeWrapper_12 ( // @[package.scala 93:22:@20265.4]
     .clock(RetimeWrapper_12_clock),
     .reset(RetimeWrapper_12_reset),
     .io_flow(RetimeWrapper_12_io_flow),
     .io_in(RetimeWrapper_12_io_in),
     .io_out(RetimeWrapper_12_io_out)
   );
-  RetimeWrapper_206 RetimeWrapper_13 ( // @[package.scala 93:22:@20800.4]
+  RetimeWrapper_206 RetimeWrapper_13 ( // @[package.scala 93:22:@20277.4]
     .clock(RetimeWrapper_13_clock),
     .reset(RetimeWrapper_13_reset),
     .io_flow(RetimeWrapper_13_io_flow),
     .io_in(RetimeWrapper_13_io_in),
     .io_out(RetimeWrapper_13_io_out)
   );
-  RetimeWrapper_203 RetimeWrapper_14 ( // @[package.scala 93:22:@20820.4]
+  RetimeWrapper_203 RetimeWrapper_14 ( // @[package.scala 93:22:@20297.4]
     .clock(RetimeWrapper_14_clock),
     .reset(RetimeWrapper_14_reset),
     .io_flow(RetimeWrapper_14_io_flow),
     .io_in(RetimeWrapper_14_io_in),
     .io_out(RetimeWrapper_14_io_out)
   );
-  x238_rdcol x238_rdcol_1 ( // @[Math.scala 191:24:@20831.4]
-    .clock(x238_rdcol_1_clock),
-    .reset(x238_rdcol_1_reset),
-    .io_a(x238_rdcol_1_io_a),
-    .io_b(x238_rdcol_1_io_b),
-    .io_flow(x238_rdcol_1_io_flow),
-    .io_result(x238_rdcol_1_io_result)
+  x224_rdcol x224_rdcol_1 ( // @[Math.scala 191:24:@20308.4]
+    .clock(x224_rdcol_1_clock),
+    .reset(x224_rdcol_1_reset),
+    .io_a(x224_rdcol_1_io_a),
+    .io_b(x224_rdcol_1_io_b),
+    .io_flow(x224_rdcol_1_io_flow),
+    .io_result(x224_rdcol_1_io_result)
   );
-  RetimeWrapper_197 RetimeWrapper_15 ( // @[package.scala 93:22:@20861.4]
+  RetimeWrapper_197 RetimeWrapper_15 ( // @[package.scala 93:22:@20338.4]
     .clock(RetimeWrapper_15_clock),
     .reset(RetimeWrapper_15_reset),
     .io_flow(RetimeWrapper_15_io_flow),
     .io_in(RetimeWrapper_15_io_in),
     .io_out(RetimeWrapper_15_io_out)
   );
-  x222_sum x241_sum_1 ( // @[Math.scala 150:24:@20870.4]
-    .clock(x241_sum_1_clock),
-    .reset(x241_sum_1_reset),
-    .io_a(x241_sum_1_io_a),
-    .io_b(x241_sum_1_io_b),
-    .io_flow(x241_sum_1_io_flow),
-    .io_result(x241_sum_1_io_result)
+  x208_sum x227_sum_1 ( // @[Math.scala 150:24:@20347.4]
+    .clock(x227_sum_1_clock),
+    .reset(x227_sum_1_reset),
+    .io_a(x227_sum_1_io_a),
+    .io_b(x227_sum_1_io_b),
+    .io_flow(x227_sum_1_io_flow),
+    .io_result(x227_sum_1_io_result)
   );
-  RetimeWrapper_197 RetimeWrapper_16 ( // @[package.scala 93:22:@20880.4]
+  RetimeWrapper_197 RetimeWrapper_16 ( // @[package.scala 93:22:@20357.4]
     .clock(RetimeWrapper_16_clock),
     .reset(RetimeWrapper_16_reset),
     .io_flow(RetimeWrapper_16_io_flow),
     .io_in(RetimeWrapper_16_io_in),
     .io_out(RetimeWrapper_16_io_out)
   );
-  RetimeWrapper_206 RetimeWrapper_17 ( // @[package.scala 93:22:@20892.4]
+  RetimeWrapper_206 RetimeWrapper_17 ( // @[package.scala 93:22:@20369.4]
     .clock(RetimeWrapper_17_clock),
     .reset(RetimeWrapper_17_reset),
     .io_flow(RetimeWrapper_17_io_flow),
     .io_in(RetimeWrapper_17_io_in),
     .io_out(RetimeWrapper_17_io_out)
   );
-  x238_rdcol x247_rdcol_1 ( // @[Math.scala 191:24:@20914.4]
-    .clock(x247_rdcol_1_clock),
-    .reset(x247_rdcol_1_reset),
-    .io_a(x247_rdcol_1_io_a),
-    .io_b(x247_rdcol_1_io_b),
-    .io_flow(x247_rdcol_1_io_flow),
-    .io_result(x247_rdcol_1_io_result)
+  x224_rdcol x233_rdcol_1 ( // @[Math.scala 191:24:@20391.4]
+    .clock(x233_rdcol_1_clock),
+    .reset(x233_rdcol_1_reset),
+    .io_a(x233_rdcol_1_io_a),
+    .io_b(x233_rdcol_1_io_b),
+    .io_flow(x233_rdcol_1_io_flow),
+    .io_result(x233_rdcol_1_io_result)
   );
-  x222_sum x250_sum_1 ( // @[Math.scala 150:24:@20944.4]
-    .clock(x250_sum_1_clock),
-    .reset(x250_sum_1_reset),
-    .io_a(x250_sum_1_io_a),
-    .io_b(x250_sum_1_io_b),
-    .io_flow(x250_sum_1_io_flow),
-    .io_result(x250_sum_1_io_result)
+  x208_sum x236_sum_1 ( // @[Math.scala 150:24:@20421.4]
+    .clock(x236_sum_1_clock),
+    .reset(x236_sum_1_reset),
+    .io_a(x236_sum_1_io_a),
+    .io_b(x236_sum_1_io_b),
+    .io_flow(x236_sum_1_io_flow),
+    .io_result(x236_sum_1_io_result)
   );
-  RetimeWrapper_197 RetimeWrapper_18 ( // @[package.scala 93:22:@20954.4]
+  RetimeWrapper_197 RetimeWrapper_18 ( // @[package.scala 93:22:@20431.4]
     .clock(RetimeWrapper_18_clock),
     .reset(RetimeWrapper_18_reset),
     .io_flow(RetimeWrapper_18_io_flow),
     .io_in(RetimeWrapper_18_io_in),
     .io_out(RetimeWrapper_18_io_out)
   );
-  RetimeWrapper_206 RetimeWrapper_19 ( // @[package.scala 93:22:@20966.4]
+  RetimeWrapper_206 RetimeWrapper_19 ( // @[package.scala 93:22:@20443.4]
     .clock(RetimeWrapper_19_clock),
     .reset(RetimeWrapper_19_reset),
     .io_flow(RetimeWrapper_19_io_flow),
     .io_in(RetimeWrapper_19_io_in),
     .io_out(RetimeWrapper_19_io_out)
   );
-  x238_rdcol x256_rdrow_1 ( // @[Math.scala 191:24:@20990.4]
-    .clock(x256_rdrow_1_clock),
-    .reset(x256_rdrow_1_reset),
-    .io_a(x256_rdrow_1_io_a),
-    .io_b(x256_rdrow_1_io_b),
-    .io_flow(x256_rdrow_1_io_flow),
-    .io_result(x256_rdrow_1_io_result)
+  x224_rdcol x242_rdrow_1 ( // @[Math.scala 191:24:@20467.4]
+    .clock(x242_rdrow_1_clock),
+    .reset(x242_rdrow_1_reset),
+    .io_a(x242_rdrow_1_io_a),
+    .io_b(x242_rdrow_1_io_b),
+    .io_flow(x242_rdrow_1_io_flow),
+    .io_result(x242_rdrow_1_io_result)
   );
-  RetimeWrapper_223 RetimeWrapper_20 ( // @[package.scala 93:22:@21031.4]
+  RetimeWrapper_223 RetimeWrapper_20 ( // @[package.scala 93:22:@20508.4]
     .clock(RetimeWrapper_20_clock),
     .reset(RetimeWrapper_20_reset),
     .io_flow(RetimeWrapper_20_io_flow),
     .io_in(RetimeWrapper_20_io_in),
     .io_out(RetimeWrapper_20_io_out)
   );
-  x222_sum x260_sum_1 ( // @[Math.scala 150:24:@21040.4]
-    .clock(x260_sum_1_clock),
-    .reset(x260_sum_1_reset),
-    .io_a(x260_sum_1_io_a),
-    .io_b(x260_sum_1_io_b),
-    .io_flow(x260_sum_1_io_flow),
-    .io_result(x260_sum_1_io_result)
+  x208_sum x246_sum_1 ( // @[Math.scala 150:24:@20517.4]
+    .clock(x246_sum_1_clock),
+    .reset(x246_sum_1_reset),
+    .io_a(x246_sum_1_io_a),
+    .io_b(x246_sum_1_io_b),
+    .io_flow(x246_sum_1_io_flow),
+    .io_result(x246_sum_1_io_result)
   );
-  RetimeWrapper_197 RetimeWrapper_21 ( // @[package.scala 93:22:@21050.4]
+  RetimeWrapper_197 RetimeWrapper_21 ( // @[package.scala 93:22:@20527.4]
     .clock(RetimeWrapper_21_clock),
     .reset(RetimeWrapper_21_reset),
     .io_flow(RetimeWrapper_21_io_flow),
     .io_in(RetimeWrapper_21_io_in),
     .io_out(RetimeWrapper_21_io_out)
   );
-  RetimeWrapper_206 RetimeWrapper_22 ( // @[package.scala 93:22:@21062.4]
+  RetimeWrapper_206 RetimeWrapper_22 ( // @[package.scala 93:22:@20539.4]
     .clock(RetimeWrapper_22_clock),
     .reset(RetimeWrapper_22_reset),
     .io_flow(RetimeWrapper_22_io_flow),
     .io_in(RetimeWrapper_22_io_in),
     .io_out(RetimeWrapper_22_io_out)
   );
-  x222_sum x266_sum_1 ( // @[Math.scala 150:24:@21082.4]
+  x208_sum x252_sum_1 ( // @[Math.scala 150:24:@20559.4]
+    .clock(x252_sum_1_clock),
+    .reset(x252_sum_1_reset),
+    .io_a(x252_sum_1_io_a),
+    .io_b(x252_sum_1_io_b),
+    .io_flow(x252_sum_1_io_flow),
+    .io_result(x252_sum_1_io_result)
+  );
+  RetimeWrapper_206 RetimeWrapper_23 ( // @[package.scala 93:22:@20572.4]
+    .clock(RetimeWrapper_23_clock),
+    .reset(RetimeWrapper_23_reset),
+    .io_flow(RetimeWrapper_23_io_flow),
+    .io_in(RetimeWrapper_23_io_in),
+    .io_out(RetimeWrapper_23_io_out)
+  );
+  x208_sum x257_sum_1 ( // @[Math.scala 150:24:@20592.4]
+    .clock(x257_sum_1_clock),
+    .reset(x257_sum_1_reset),
+    .io_a(x257_sum_1_io_a),
+    .io_b(x257_sum_1_io_b),
+    .io_flow(x257_sum_1_io_flow),
+    .io_result(x257_sum_1_io_result)
+  );
+  RetimeWrapper_206 RetimeWrapper_24 ( // @[package.scala 93:22:@20605.4]
+    .clock(RetimeWrapper_24_clock),
+    .reset(RetimeWrapper_24_reset),
+    .io_flow(RetimeWrapper_24_io_flow),
+    .io_in(RetimeWrapper_24_io_in),
+    .io_out(RetimeWrapper_24_io_out)
+  );
+  x224_rdcol x262_rdrow_1 ( // @[Math.scala 191:24:@20627.4]
+    .clock(x262_rdrow_1_clock),
+    .reset(x262_rdrow_1_reset),
+    .io_a(x262_rdrow_1_io_a),
+    .io_b(x262_rdrow_1_io_b),
+    .io_flow(x262_rdrow_1_io_flow),
+    .io_result(x262_rdrow_1_io_result)
+  );
+  x208_sum x266_sum_1 ( // @[Math.scala 150:24:@20668.4]
     .clock(x266_sum_1_clock),
     .reset(x266_sum_1_reset),
     .io_a(x266_sum_1_io_a),
@@ -8885,1274 +8654,1150 @@ module x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1
     .io_flow(x266_sum_1_io_flow),
     .io_result(x266_sum_1_io_result)
   );
-  RetimeWrapper_206 RetimeWrapper_23 ( // @[package.scala 93:22:@21095.4]
-    .clock(RetimeWrapper_23_clock),
-    .reset(RetimeWrapper_23_reset),
-    .io_flow(RetimeWrapper_23_io_flow),
-    .io_in(RetimeWrapper_23_io_in),
-    .io_out(RetimeWrapper_23_io_out)
-  );
-  x222_sum x271_sum_1 ( // @[Math.scala 150:24:@21115.4]
-    .clock(x271_sum_1_clock),
-    .reset(x271_sum_1_reset),
-    .io_a(x271_sum_1_io_a),
-    .io_b(x271_sum_1_io_b),
-    .io_flow(x271_sum_1_io_flow),
-    .io_result(x271_sum_1_io_result)
-  );
-  RetimeWrapper_206 RetimeWrapper_24 ( // @[package.scala 93:22:@21128.4]
-    .clock(RetimeWrapper_24_clock),
-    .reset(RetimeWrapper_24_reset),
-    .io_flow(RetimeWrapper_24_io_flow),
-    .io_in(RetimeWrapper_24_io_in),
-    .io_out(RetimeWrapper_24_io_out)
-  );
-  x238_rdcol x276_rdrow_1 ( // @[Math.scala 191:24:@21150.4]
-    .clock(x276_rdrow_1_clock),
-    .reset(x276_rdrow_1_reset),
-    .io_a(x276_rdrow_1_io_a),
-    .io_b(x276_rdrow_1_io_b),
-    .io_flow(x276_rdrow_1_io_flow),
-    .io_result(x276_rdrow_1_io_result)
-  );
-  x222_sum x280_sum_1 ( // @[Math.scala 150:24:@21191.4]
-    .clock(x280_sum_1_clock),
-    .reset(x280_sum_1_reset),
-    .io_a(x280_sum_1_io_a),
-    .io_b(x280_sum_1_io_b),
-    .io_flow(x280_sum_1_io_flow),
-    .io_result(x280_sum_1_io_result)
-  );
-  RetimeWrapper_197 RetimeWrapper_25 ( // @[package.scala 93:22:@21201.4]
+  RetimeWrapper_197 RetimeWrapper_25 ( // @[package.scala 93:22:@20678.4]
     .clock(RetimeWrapper_25_clock),
     .reset(RetimeWrapper_25_reset),
     .io_flow(RetimeWrapper_25_io_flow),
     .io_in(RetimeWrapper_25_io_in),
     .io_out(RetimeWrapper_25_io_out)
   );
-  RetimeWrapper_206 RetimeWrapper_26 ( // @[package.scala 93:22:@21213.4]
+  RetimeWrapper_206 RetimeWrapper_26 ( // @[package.scala 93:22:@20690.4]
     .clock(RetimeWrapper_26_clock),
     .reset(RetimeWrapper_26_reset),
     .io_flow(RetimeWrapper_26_io_flow),
     .io_in(RetimeWrapper_26_io_in),
     .io_out(RetimeWrapper_26_io_out)
   );
-  x222_sum x286_sum_1 ( // @[Math.scala 150:24:@21233.4]
-    .clock(x286_sum_1_clock),
-    .reset(x286_sum_1_reset),
-    .io_a(x286_sum_1_io_a),
-    .io_b(x286_sum_1_io_b),
-    .io_flow(x286_sum_1_io_flow),
-    .io_result(x286_sum_1_io_result)
+  x208_sum x272_sum_1 ( // @[Math.scala 150:24:@20710.4]
+    .clock(x272_sum_1_clock),
+    .reset(x272_sum_1_reset),
+    .io_a(x272_sum_1_io_a),
+    .io_b(x272_sum_1_io_b),
+    .io_flow(x272_sum_1_io_flow),
+    .io_result(x272_sum_1_io_result)
   );
-  RetimeWrapper_206 RetimeWrapper_27 ( // @[package.scala 93:22:@21246.4]
+  RetimeWrapper_206 RetimeWrapper_27 ( // @[package.scala 93:22:@20723.4]
     .clock(RetimeWrapper_27_clock),
     .reset(RetimeWrapper_27_reset),
     .io_flow(RetimeWrapper_27_io_flow),
     .io_in(RetimeWrapper_27_io_in),
     .io_out(RetimeWrapper_27_io_out)
   );
-  x222_sum x291_sum_1 ( // @[Math.scala 150:24:@21266.4]
-    .clock(x291_sum_1_clock),
-    .reset(x291_sum_1_reset),
-    .io_a(x291_sum_1_io_a),
-    .io_b(x291_sum_1_io_b),
-    .io_flow(x291_sum_1_io_flow),
-    .io_result(x291_sum_1_io_result)
+  x208_sum x277_sum_1 ( // @[Math.scala 150:24:@20743.4]
+    .clock(x277_sum_1_clock),
+    .reset(x277_sum_1_reset),
+    .io_a(x277_sum_1_io_a),
+    .io_b(x277_sum_1_io_b),
+    .io_flow(x277_sum_1_io_flow),
+    .io_result(x277_sum_1_io_result)
   );
-  RetimeWrapper_206 RetimeWrapper_28 ( // @[package.scala 93:22:@21279.4]
+  RetimeWrapper_206 RetimeWrapper_28 ( // @[package.scala 93:22:@20756.4]
     .clock(RetimeWrapper_28_clock),
     .reset(RetimeWrapper_28_reset),
     .io_flow(RetimeWrapper_28_io_flow),
     .io_in(RetimeWrapper_28_io_in),
     .io_out(RetimeWrapper_28_io_out)
   );
-  x301_x17 x301_x17_1 ( // @[Math.scala 150:24:@21324.4]
-    .clock(x301_x17_1_clock),
-    .reset(x301_x17_1_reset),
-    .io_a(x301_x17_1_io_a),
-    .io_b(x301_x17_1_io_b),
-    .io_flow(x301_x17_1_io_flow),
-    .io_result(x301_x17_1_io_result)
+  x287_x11 x287_x11_1 ( // @[Math.scala 150:24:@20801.4]
+    .clock(x287_x11_1_clock),
+    .reset(x287_x11_1_reset),
+    .io_a(x287_x11_1_io_a),
+    .io_b(x287_x11_1_io_b),
+    .io_flow(x287_x11_1_io_flow),
+    .io_result(x287_x11_1_io_result)
   );
-  x301_x17 x302_x18_1 ( // @[Math.scala 150:24:@21334.4]
-    .clock(x302_x18_1_clock),
-    .reset(x302_x18_1_reset),
-    .io_a(x302_x18_1_io_a),
-    .io_b(x302_x18_1_io_b),
-    .io_flow(x302_x18_1_io_flow),
-    .io_result(x302_x18_1_io_result)
+  x287_x11 x288_x12_1 ( // @[Math.scala 150:24:@20811.4]
+    .clock(x288_x12_1_clock),
+    .reset(x288_x12_1_reset),
+    .io_a(x288_x12_1_io_a),
+    .io_b(x288_x12_1_io_b),
+    .io_flow(x288_x12_1_io_flow),
+    .io_result(x288_x12_1_io_result)
   );
-  x301_x17 x303_x17_1 ( // @[Math.scala 150:24:@21344.4]
-    .clock(x303_x17_1_clock),
-    .reset(x303_x17_1_reset),
-    .io_a(x303_x17_1_io_a),
-    .io_b(x303_x17_1_io_b),
-    .io_flow(x303_x17_1_io_flow),
-    .io_result(x303_x17_1_io_result)
+  x287_x11 x289_x11_1 ( // @[Math.scala 150:24:@20821.4]
+    .clock(x289_x11_1_clock),
+    .reset(x289_x11_1_reset),
+    .io_a(x289_x11_1_io_a),
+    .io_b(x289_x11_1_io_b),
+    .io_flow(x289_x11_1_io_flow),
+    .io_result(x289_x11_1_io_result)
   );
-  x301_x17 x304_x18_1 ( // @[Math.scala 150:24:@21354.4]
-    .clock(x304_x18_1_clock),
-    .reset(x304_x18_1_reset),
-    .io_a(x304_x18_1_io_a),
-    .io_b(x304_x18_1_io_b),
-    .io_flow(x304_x18_1_io_flow),
-    .io_result(x304_x18_1_io_result)
+  x287_x11 x290_x12_1 ( // @[Math.scala 150:24:@20831.4]
+    .clock(x290_x12_1_clock),
+    .reset(x290_x12_1_reset),
+    .io_a(x290_x12_1_io_a),
+    .io_b(x290_x12_1_io_b),
+    .io_flow(x290_x12_1_io_flow),
+    .io_result(x290_x12_1_io_result)
   );
-  x305_x17 x305_x17_1 ( // @[Math.scala 150:24:@21364.4]
-    .io_a(x305_x17_1_io_a),
-    .io_b(x305_x17_1_io_b),
-    .io_result(x305_x17_1_io_result)
+  x291_x11 x291_x11_1 ( // @[Math.scala 150:24:@20841.4]
+    .io_a(x291_x11_1_io_a),
+    .io_b(x291_x11_1_io_b),
+    .io_result(x291_x11_1_io_result)
   );
-  x305_x17 x306_x18_1 ( // @[Math.scala 150:24:@21374.4]
-    .io_a(x306_x18_1_io_a),
-    .io_b(x306_x18_1_io_b),
-    .io_result(x306_x18_1_io_result)
+  x291_x11 x292_x12_1 ( // @[Math.scala 150:24:@20851.4]
+    .io_a(x292_x12_1_io_a),
+    .io_b(x292_x12_1_io_b),
+    .io_result(x292_x12_1_io_result)
   );
-  x305_x17 x307_x17_1 ( // @[Math.scala 150:24:@21384.4]
-    .io_a(x307_x17_1_io_a),
-    .io_b(x307_x17_1_io_b),
-    .io_result(x307_x17_1_io_result)
+  x291_x11 x293_x11_1 ( // @[Math.scala 150:24:@20861.4]
+    .io_a(x293_x11_1_io_a),
+    .io_b(x293_x11_1_io_b),
+    .io_result(x293_x11_1_io_result)
   );
-  RetimeWrapper_21 RetimeWrapper_29 ( // @[package.scala 93:22:@21394.4]
+  RetimeWrapper_21 RetimeWrapper_29 ( // @[package.scala 93:22:@20871.4]
     .clock(RetimeWrapper_29_clock),
     .reset(RetimeWrapper_29_reset),
     .io_flow(RetimeWrapper_29_io_flow),
     .io_in(RetimeWrapper_29_io_in),
     .io_out(RetimeWrapper_29_io_out)
   );
-  x305_x17 x308_sum_1 ( // @[Math.scala 150:24:@21403.4]
-    .io_a(x308_sum_1_io_a),
-    .io_b(x308_sum_1_io_b),
-    .io_result(x308_sum_1_io_result)
+  x291_x11 x294_sum_1 ( // @[Math.scala 150:24:@20880.4]
+    .io_a(x294_sum_1_io_a),
+    .io_b(x294_sum_1_io_b),
+    .io_result(x294_sum_1_io_result)
   );
-  RetimeWrapper_21 RetimeWrapper_30 ( // @[package.scala 93:22:@21417.4]
+  RetimeWrapper_21 RetimeWrapper_30 ( // @[package.scala 93:22:@20894.4]
     .clock(RetimeWrapper_30_clock),
     .reset(RetimeWrapper_30_reset),
     .io_flow(RetimeWrapper_30_io_flow),
     .io_in(RetimeWrapper_30_io_in),
     .io_out(RetimeWrapper_30_io_out)
   );
-  RetimeWrapper_245 RetimeWrapper_31 ( // @[package.scala 93:22:@21427.4]
+  RetimeWrapper_245 RetimeWrapper_31 ( // @[package.scala 93:22:@20908.4]
     .clock(RetimeWrapper_31_clock),
     .reset(RetimeWrapper_31_reset),
     .io_flow(RetimeWrapper_31_io_flow),
     .io_in(RetimeWrapper_31_io_in),
     .io_out(RetimeWrapper_31_io_out)
   );
-  x310_sub x310_sub_1 ( // @[Math.scala 191:24:@21436.4]
-    .io_a(x310_sub_1_io_a),
-    .io_b(x310_sub_1_io_b),
-    .io_result(x310_sub_1_io_result)
-  );
-  RetimeWrapper_21 RetimeWrapper_32 ( // @[package.scala 93:22:@21463.4]
+  RetimeWrapper_12 RetimeWrapper_32 ( // @[package.scala 93:22:@20917.4]
     .clock(RetimeWrapper_32_clock),
     .reset(RetimeWrapper_32_reset),
     .io_flow(RetimeWrapper_32_io_flow),
     .io_in(RetimeWrapper_32_io_in),
     .io_out(RetimeWrapper_32_io_out)
   );
-  x314_div x314_div_1 ( // @[Math.scala 327:24:@21474.4]
-    .clock(x314_div_1_clock),
-    .reset(x314_div_1_reset),
-    .io_a(x314_div_1_io_a),
-    .io_flow(x314_div_1_io_flow),
-    .io_result(x314_div_1_io_result)
-  );
-  RetimeWrapper_248 RetimeWrapper_33 ( // @[package.scala 93:22:@21484.4]
+  RetimeWrapper_12 RetimeWrapper_33 ( // @[package.scala 93:22:@20926.4]
     .clock(RetimeWrapper_33_clock),
     .reset(RetimeWrapper_33_reset),
     .io_flow(RetimeWrapper_33_io_flow),
     .io_in(RetimeWrapper_33_io_in),
     .io_out(RetimeWrapper_33_io_out)
   );
-  x305_x17 x315_sum_1 ( // @[Math.scala 150:24:@21493.4]
-    .io_a(x315_sum_1_io_a),
-    .io_b(x315_sum_1_io_b),
-    .io_result(x315_sum_1_io_result)
-  );
-  RetimeWrapper_249 RetimeWrapper_34 ( // @[package.scala 93:22:@21503.4]
+  RetimeWrapper_12 RetimeWrapper_34 ( // @[package.scala 93:22:@20935.4]
     .clock(RetimeWrapper_34_clock),
     .reset(RetimeWrapper_34_reset),
     .io_flow(RetimeWrapper_34_io_flow),
     .io_in(RetimeWrapper_34_io_in),
     .io_out(RetimeWrapper_34_io_out)
   );
-  RetimeWrapper_250 RetimeWrapper_35 ( // @[package.scala 93:22:@21512.4]
-    .clock(RetimeWrapper_35_clock),
-    .reset(RetimeWrapper_35_reset),
-    .io_flow(RetimeWrapper_35_io_flow),
-    .io_in(RetimeWrapper_35_io_in),
-    .io_out(RetimeWrapper_35_io_out)
-  );
-  RetimeWrapper_251 RetimeWrapper_36 ( // @[package.scala 93:22:@21528.4]
-    .clock(RetimeWrapper_36_clock),
-    .reset(RetimeWrapper_36_reset),
-    .io_flow(RetimeWrapper_36_io_flow),
-    .io_in(RetimeWrapper_36_io_in),
-    .io_out(RetimeWrapper_36_io_out)
-  );
-  RetimeWrapper_16 RetimeWrapper_37 ( // @[package.scala 93:22:@21537.4]
-    .clock(RetimeWrapper_37_clock),
-    .reset(RetimeWrapper_37_reset),
-    .io_flow(RetimeWrapper_37_io_flow),
-    .io_in(RetimeWrapper_37_io_in),
-    .io_out(RetimeWrapper_37_io_out)
-  );
-  RetimeWrapper_16 RetimeWrapper_38 ( // @[package.scala 93:22:@21546.4]
-    .clock(RetimeWrapper_38_clock),
-    .reset(RetimeWrapper_38_reset),
-    .io_flow(RetimeWrapper_38_io_flow),
-    .io_in(RetimeWrapper_38_io_in),
-    .io_out(RetimeWrapper_38_io_out)
-  );
-  RetimeWrapper_16 RetimeWrapper_39 ( // @[package.scala 93:22:@21555.4]
-    .clock(RetimeWrapper_39_clock),
-    .reset(RetimeWrapper_39_reset),
-    .io_flow(RetimeWrapper_39_io_flow),
-    .io_in(RetimeWrapper_39_io_in),
-    .io_out(RetimeWrapper_39_io_out)
-  );
-  assign b206 = ~ io_sigsIn_cchainOutputs_0_oobs_0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 62:18:@20437.4]
-  assign b207 = ~ io_sigsIn_cchainOutputs_0_oobs_1; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 63:18:@20438.4]
-  assign _T_206 = b206 & b207; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 68:30:@20507.4]
-  assign _T_207 = _T_206 & io_sigsIn_datapathEn; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 68:37:@20508.4]
-  assign _T_211 = io_in_x195_TID == 8'h0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 70:76:@20513.4]
-  assign _T_212 = _T_207 & _T_211; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 70:62:@20514.4]
-  assign _T_214 = io_in_x195_TDEST == 8'h0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 70:101:@20515.4]
-  assign b204_number = __io_result; // @[Math.scala 712:22:@20422.4 Math.scala 713:14:@20423.4]
-  assign _T_240 = $signed(b204_number); // @[Math.scala 499:52:@20538.4]
-  assign x213 = $signed(32'sh1) == $signed(_T_240); // @[Math.scala 499:44:@20546.4]
-  assign x214 = $signed(32'sh2) == $signed(_T_240); // @[Math.scala 499:44:@20553.4]
-  assign x215 = $signed(32'sh3) == $signed(_T_240); // @[Math.scala 499:44:@20560.4]
-  assign _T_287 = x213 ? 32'h1 : 32'h0; // @[Mux.scala 19:72:@20572.4]
-  assign _T_289 = x214 ? 32'h2 : 32'h0; // @[Mux.scala 19:72:@20573.4]
-  assign _T_291 = x215 ? 32'h3 : 32'h0; // @[Mux.scala 19:72:@20574.4]
-  assign _T_293 = _T_287 | _T_289; // @[Mux.scala 19:72:@20576.4]
-  assign x216_number = _T_293 | _T_291; // @[Mux.scala 19:72:@20577.4]
-  assign _T_305 = $signed(x216_number); // @[Math.scala 406:49:@20587.4]
-  assign _T_307 = $signed(_T_305) & $signed(32'sh3); // @[Math.scala 406:56:@20589.4]
-  assign _T_308 = $signed(_T_307); // @[Math.scala 406:56:@20590.4]
-  assign b205_number = __1_io_result; // @[Math.scala 712:22:@20434.4 Math.scala 713:14:@20435.4]
-  assign _T_317 = $signed(b205_number); // @[Math.scala 406:49:@20598.4]
-  assign _T_319 = $signed(_T_317) & $signed(32'sh3); // @[Math.scala 406:56:@20600.4]
-  assign _T_320 = $signed(_T_319); // @[Math.scala 406:56:@20601.4]
-  assign _T_325 = x216_number[31]; // @[FixedPoint.scala 50:25:@20607.4]
-  assign _T_329 = _T_325 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20609.4]
-  assign _T_330 = x216_number[31:2]; // @[FixedPoint.scala 18:52:@20610.4]
-  assign _T_335 = b205_number[31]; // @[FixedPoint.scala 50:25:@20616.4]
-  assign _T_339 = _T_335 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20618.4]
-  assign _T_340 = b205_number[31:2]; // @[FixedPoint.scala 18:52:@20619.4]
-  assign _T_358 = ~ io_sigsIn_break; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 113:101:@20669.4]
-  assign _T_362 = RetimeWrapper_5_io_out; // @[package.scala 96:25:@20677.4 package.scala 96:25:@20678.4]
-  assign _T_364 = io_rr ? _T_362 : 1'h0; // @[implicits.scala 55:10:@20679.4]
-  assign _T_365 = _T_358 & _T_364; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 113:118:@20680.4]
-  assign _T_367 = _T_365 & _T_358; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 113:205:@20682.4]
-  assign _T_368 = _T_367 & io_sigsIn_backpressure; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 113:224:@20683.4]
-  assign x402_b206_D1 = RetimeWrapper_3_io_out; // @[package.scala 96:25:@20657.4 package.scala 96:25:@20658.4]
-  assign _T_369 = _T_368 & x402_b206_D1; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 113:250:@20684.4]
-  assign x400_b207_D1 = RetimeWrapper_1_io_out; // @[package.scala 96:25:@20639.4 package.scala 96:25:@20640.4]
-  assign x404_b204_D3_number = RetimeWrapper_6_io_out; // @[package.scala 96:25:@20698.4 package.scala 96:25:@20699.4]
-  assign _T_381 = $signed(x404_b204_D3_number); // @[Math.scala 406:49:@20705.4]
-  assign _T_383 = $signed(_T_381) & $signed(32'sh3); // @[Math.scala 406:56:@20707.4]
-  assign _T_384 = $signed(_T_383); // @[Math.scala 406:56:@20708.4]
-  assign x391_number = $unsigned(_T_384); // @[implicits.scala 133:21:@20709.4]
-  assign _T_393 = $signed(x391_number); // @[Math.scala 406:49:@20716.4]
-  assign _T_395 = $signed(_T_393) & $signed(32'sh3); // @[Math.scala 406:56:@20718.4]
-  assign _T_396 = $signed(_T_395); // @[Math.scala 406:56:@20719.4]
-  assign _T_401 = x391_number[31]; // @[FixedPoint.scala 50:25:@20725.4]
-  assign _T_405 = _T_401 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20727.4]
-  assign _T_406 = x391_number[31:2]; // @[FixedPoint.scala 18:52:@20728.4]
-  assign _T_440 = RetimeWrapper_13_io_out; // @[package.scala 96:25:@20805.4 package.scala 96:25:@20806.4]
-  assign _T_442 = io_rr ? _T_440 : 1'h0; // @[implicits.scala 55:10:@20807.4]
-  assign _T_443 = _T_358 & _T_442; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 141:146:@20808.4]
-  assign x406_b206_D5 = RetimeWrapper_8_io_out; // @[package.scala 96:25:@20757.4 package.scala 96:25:@20758.4]
-  assign _T_444 = _T_443 & x406_b206_D5; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 141:233:@20809.4]
-  assign x409_b207_D5 = RetimeWrapper_11_io_out; // @[package.scala 96:25:@20784.4 package.scala 96:25:@20785.4]
-  assign x238_rdcol_number = x238_rdcol_1_io_result; // @[Math.scala 195:22:@20837.4 Math.scala 196:14:@20838.4]
-  assign _T_464 = $signed(x238_rdcol_number); // @[Math.scala 406:49:@20844.4]
-  assign _T_466 = $signed(_T_464) & $signed(32'sh3); // @[Math.scala 406:56:@20846.4]
-  assign _T_467 = $signed(_T_466); // @[Math.scala 406:56:@20847.4]
-  assign _T_472 = x238_rdcol_number[31]; // @[FixedPoint.scala 50:25:@20853.4]
-  assign _T_476 = _T_472 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20855.4]
-  assign _T_477 = x238_rdcol_number[31:2]; // @[FixedPoint.scala 18:52:@20856.4]
-  assign _T_499 = RetimeWrapper_17_io_out; // @[package.scala 96:25:@20897.4 package.scala 96:25:@20898.4]
-  assign _T_501 = io_rr ? _T_499 : 1'h0; // @[implicits.scala 55:10:@20899.4]
-  assign _T_502 = _T_358 & _T_501; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 162:146:@20900.4]
-  assign _T_503 = _T_502 & x406_b206_D5; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 162:233:@20901.4]
-  assign x247_rdcol_number = x247_rdcol_1_io_result; // @[Math.scala 195:22:@20920.4 Math.scala 196:14:@20921.4]
-  assign _T_520 = $signed(x247_rdcol_number); // @[Math.scala 406:49:@20927.4]
-  assign _T_522 = $signed(_T_520) & $signed(32'sh3); // @[Math.scala 406:56:@20929.4]
-  assign _T_523 = $signed(_T_522); // @[Math.scala 406:56:@20930.4]
-  assign _T_528 = x247_rdcol_number[31]; // @[FixedPoint.scala 50:25:@20936.4]
-  assign _T_532 = _T_528 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20938.4]
-  assign _T_533 = x247_rdcol_number[31:2]; // @[FixedPoint.scala 18:52:@20939.4]
-  assign _T_552 = RetimeWrapper_19_io_out; // @[package.scala 96:25:@20971.4 package.scala 96:25:@20972.4]
-  assign _T_554 = io_rr ? _T_552 : 1'h0; // @[implicits.scala 55:10:@20973.4]
-  assign _T_555 = _T_358 & _T_554; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 185:194:@20974.4]
-  assign _T_556 = _T_555 & x406_b206_D5; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 185:281:@20975.4]
-  assign x256_rdrow_number = x256_rdrow_1_io_result; // @[Math.scala 195:22:@20996.4 Math.scala 196:14:@20997.4]
-  assign _T_575 = $signed(x256_rdrow_number); // @[Math.scala 406:49:@21003.4]
-  assign _T_577 = $signed(_T_575) & $signed(32'sh3); // @[Math.scala 406:56:@21005.4]
-  assign _T_578 = $signed(_T_577); // @[Math.scala 406:56:@21006.4]
-  assign x395_number = $unsigned(_T_578); // @[implicits.scala 133:21:@21007.4]
-  assign _T_587 = $signed(x395_number); // @[Math.scala 406:49:@21014.4]
-  assign _T_589 = $signed(_T_587) & $signed(32'sh3); // @[Math.scala 406:56:@21016.4]
-  assign _T_590 = $signed(_T_589); // @[Math.scala 406:56:@21017.4]
-  assign _T_595 = x395_number[31]; // @[FixedPoint.scala 50:25:@21023.4]
-  assign _T_599 = _T_595 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@21025.4]
-  assign _T_600 = x395_number[31:2]; // @[FixedPoint.scala 18:52:@21026.4]
-  assign _T_622 = RetimeWrapper_22_io_out; // @[package.scala 96:25:@21067.4 package.scala 96:25:@21068.4]
-  assign _T_624 = io_rr ? _T_622 : 1'h0; // @[implicits.scala 55:10:@21069.4]
-  assign _T_625 = _T_358 & _T_624; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 208:194:@21070.4]
-  assign _T_626 = _T_625 & x406_b206_D5; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 208:281:@21071.4]
-  assign _T_643 = RetimeWrapper_23_io_out; // @[package.scala 96:25:@21100.4 package.scala 96:25:@21101.4]
-  assign _T_645 = io_rr ? _T_643 : 1'h0; // @[implicits.scala 55:10:@21102.4]
-  assign _T_646 = _T_358 & _T_645; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 217:194:@21103.4]
-  assign _T_647 = _T_646 & x406_b206_D5; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 217:281:@21104.4]
-  assign _T_664 = RetimeWrapper_24_io_out; // @[package.scala 96:25:@21133.4 package.scala 96:25:@21134.4]
-  assign _T_666 = io_rr ? _T_664 : 1'h0; // @[implicits.scala 55:10:@21135.4]
-  assign _T_667 = _T_358 & _T_666; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 226:194:@21136.4]
-  assign _T_668 = _T_667 & x406_b206_D5; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 226:281:@21137.4]
-  assign x276_rdrow_number = x276_rdrow_1_io_result; // @[Math.scala 195:22:@21156.4 Math.scala 196:14:@21157.4]
-  assign _T_685 = $signed(x276_rdrow_number); // @[Math.scala 406:49:@21163.4]
-  assign _T_687 = $signed(_T_685) & $signed(32'sh3); // @[Math.scala 406:56:@21165.4]
-  assign _T_688 = $signed(_T_687); // @[Math.scala 406:56:@21166.4]
-  assign x397_number = $unsigned(_T_688); // @[implicits.scala 133:21:@21167.4]
-  assign _T_697 = $signed(x397_number); // @[Math.scala 406:49:@21174.4]
-  assign _T_699 = $signed(_T_697) & $signed(32'sh3); // @[Math.scala 406:56:@21176.4]
-  assign _T_700 = $signed(_T_699); // @[Math.scala 406:56:@21177.4]
-  assign _T_705 = x397_number[31]; // @[FixedPoint.scala 50:25:@21183.4]
-  assign _T_709 = _T_705 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@21185.4]
-  assign _T_710 = x397_number[31:2]; // @[FixedPoint.scala 18:52:@21186.4]
-  assign _T_729 = RetimeWrapper_26_io_out; // @[package.scala 96:25:@21218.4 package.scala 96:25:@21219.4]
-  assign _T_731 = io_rr ? _T_729 : 1'h0; // @[implicits.scala 55:10:@21220.4]
-  assign _T_732 = _T_358 & _T_731; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 245:194:@21221.4]
-  assign _T_733 = _T_732 & x406_b206_D5; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 245:281:@21222.4]
-  assign _T_750 = RetimeWrapper_27_io_out; // @[package.scala 96:25:@21251.4 package.scala 96:25:@21252.4]
-  assign _T_752 = io_rr ? _T_750 : 1'h0; // @[implicits.scala 55:10:@21253.4]
-  assign _T_753 = _T_358 & _T_752; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 254:194:@21254.4]
-  assign _T_754 = _T_753 & x406_b206_D5; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 254:281:@21255.4]
-  assign _T_771 = RetimeWrapper_28_io_out; // @[package.scala 96:25:@21284.4 package.scala 96:25:@21285.4]
-  assign _T_773 = io_rr ? _T_771 : 1'h0; // @[implicits.scala 55:10:@21286.4]
-  assign _T_774 = _T_358 & _T_773; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 263:194:@21287.4]
-  assign _T_775 = _T_774 & x406_b206_D5; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 263:281:@21288.4]
-  assign x245_rd_0_number = x208_lb_0_io_rPort_6_output_0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 158:29:@20888.4 sm_x321_inr_Foreach_SAMPLER_BOX.scala 162:281:@20908.4]
-  assign _GEN_0 = {{1'd0}, x245_rd_0_number}; // @[Math.scala 450:32:@21300.4]
-  assign _T_781 = _GEN_0 << 1; // @[Math.scala 450:32:@21300.4]
-  assign x264_rd_0_number = x208_lb_0_io_rPort_3_output_0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 204:29:@21058.4 sm_x321_inr_Foreach_SAMPLER_BOX.scala 208:399:@21078.4]
-  assign _GEN_1 = {{1'd0}, x264_rd_0_number}; // @[Math.scala 450:32:@21305.4]
-  assign _T_785 = _GEN_1 << 1; // @[Math.scala 450:32:@21305.4]
-  assign x269_rd_0_number = x208_lb_0_io_rPort_0_output_0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 213:29:@21091.4 sm_x321_inr_Foreach_SAMPLER_BOX.scala 217:399:@21111.4]
-  assign _GEN_2 = {{2'd0}, x269_rd_0_number}; // @[Math.scala 450:32:@21310.4]
-  assign _T_789 = _GEN_2 << 2; // @[Math.scala 450:32:@21310.4]
-  assign x274_rd_0_number = x208_lb_0_io_rPort_5_output_0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 222:29:@21124.4 sm_x321_inr_Foreach_SAMPLER_BOX.scala 226:399:@21144.4]
-  assign _GEN_3 = {{1'd0}, x274_rd_0_number}; // @[Math.scala 450:32:@21315.4]
-  assign _T_793 = _GEN_3 << 1; // @[Math.scala 450:32:@21315.4]
-  assign x289_rd_0_number = x208_lb_0_io_rPort_2_output_0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 250:29:@21242.4 sm_x321_inr_Foreach_SAMPLER_BOX.scala 254:399:@21262.4]
-  assign _GEN_4 = {{1'd0}, x289_rd_0_number}; // @[Math.scala 450:32:@21320.4]
-  assign _T_797 = _GEN_4 << 1; // @[Math.scala 450:32:@21320.4]
-  assign x308_sum_number = x308_sum_1_io_result; // @[Math.scala 154:22:@21409.4 Math.scala 155:14:@21410.4]
-  assign _T_833 = x308_sum_number[7:4]; // @[FixedPoint.scala 18:52:@21415.4]
-  assign x310_sub_number = x310_sub_1_io_result; // @[Math.scala 195:22:@21442.4 Math.scala 196:14:@21443.4]
-  assign x311 = 8'hf < x310_sub_number; // @[Math.scala 466:37:@21448.4]
-  assign x309_number = RetimeWrapper_30_io_out; // @[package.scala 96:25:@21422.4 package.scala 96:25:@21423.4]
-  assign x423_x313_D6 = RetimeWrapper_35_io_out; // @[package.scala 96:25:@21517.4 package.scala 96:25:@21518.4]
-  assign x422_x309_D6_number = RetimeWrapper_34_io_out; // @[package.scala 96:25:@21508.4 package.scala 96:25:@21509.4]
-  assign x315_sum_number = x315_sum_1_io_result; // @[Math.scala 154:22:@21499.4 Math.scala 155:14:@21500.4]
-  assign _T_906 = RetimeWrapper_39_io_out; // @[package.scala 96:25:@21560.4 package.scala 96:25:@21561.4]
-  assign _T_908 = io_rr ? _T_906 : 1'h0; // @[implicits.scala 55:10:@21562.4]
-  assign x425_b206_D18 = RetimeWrapper_38_io_out; // @[package.scala 96:25:@21551.4 package.scala 96:25:@21552.4]
-  assign _T_909 = _T_908 & x425_b206_D18; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 337:116:@21563.4]
-  assign x424_b207_D18 = RetimeWrapper_37_io_out; // @[package.scala 96:25:@21542.4 package.scala 96:25:@21543.4]
-  assign _T_910 = _T_909 & x424_b207_D18; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 337:122:@21564.4]
-  assign x222_sum_number = x222_sum_1_io_result; // @[Math.scala 154:22:@20630.4 Math.scala 155:14:@20631.4]
-  assign x401_x390_D1_number = RetimeWrapper_2_io_out; // @[package.scala 96:25:@20648.4 package.scala 96:25:@20649.4]
-  assign x403_x389_D1_number = RetimeWrapper_4_io_out; // @[package.scala 96:25:@20666.4 package.scala 96:25:@20667.4]
-  assign x407_x392_D2_number = RetimeWrapper_9_io_out; // @[package.scala 96:25:@20766.4 package.scala 96:25:@20767.4]
-  assign x408_x390_D5_number = RetimeWrapper_10_io_out; // @[package.scala 96:25:@20775.4 package.scala 96:25:@20776.4]
-  assign x410_x232_sum_D1_number = RetimeWrapper_12_io_out; // @[package.scala 96:25:@20793.4 package.scala 96:25:@20794.4]
-  assign x241_sum_number = x241_sum_1_io_result; // @[Math.scala 154:22:@20876.4 Math.scala 155:14:@20877.4]
-  assign x413_x393_D1_number = RetimeWrapper_16_io_out; // @[package.scala 96:25:@20885.4 package.scala 96:25:@20886.4]
-  assign x250_sum_number = x250_sum_1_io_result; // @[Math.scala 154:22:@20950.4 Math.scala 155:14:@20951.4]
-  assign x414_x394_D1_number = RetimeWrapper_18_io_out; // @[package.scala 96:25:@20959.4 package.scala 96:25:@20960.4]
-  assign x260_sum_number = x260_sum_1_io_result; // @[Math.scala 154:22:@21046.4 Math.scala 155:14:@21047.4]
-  assign x416_x396_D1_number = RetimeWrapper_21_io_out; // @[package.scala 96:25:@21055.4 package.scala 96:25:@21056.4]
-  assign x266_sum_number = x266_sum_1_io_result; // @[Math.scala 154:22:@21088.4 Math.scala 155:14:@21089.4]
-  assign x271_sum_number = x271_sum_1_io_result; // @[Math.scala 154:22:@21121.4 Math.scala 155:14:@21122.4]
-  assign x280_sum_number = x280_sum_1_io_result; // @[Math.scala 154:22:@21197.4 Math.scala 155:14:@21198.4]
-  assign x417_x398_D1_number = RetimeWrapper_25_io_out; // @[package.scala 96:25:@21206.4 package.scala 96:25:@21207.4]
-  assign x286_sum_number = x286_sum_1_io_result; // @[Math.scala 154:22:@21239.4 Math.scala 155:14:@21240.4]
-  assign x291_sum_number = x291_sum_1_io_result; // @[Math.scala 154:22:@21272.4 Math.scala 155:14:@21273.4]
-  assign io_in_x196_TVALID = _T_910 & io_sigsIn_backpressure; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 337:22:@21566.4]
-  assign io_in_x196_TDATA = {{248'd0}, RetimeWrapper_36_io_out}; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 338:24:@21567.4]
-  assign io_in_x195_TREADY = _T_212 & _T_214; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 68:22:@20509.4 sm_x321_inr_Foreach_SAMPLER_BOX.scala 70:22:@20517.4]
-  assign __io_b = $unsigned(io_sigsIn_cchainOutputs_0_counts_0); // @[Math.scala 710:17:@20420.4]
-  assign __1_io_b = $unsigned(io_sigsIn_cchainOutputs_0_counts_1); // @[Math.scala 710:17:@20432.4]
-  assign x208_lb_0_clock = clock; // @[:@20440.4]
-  assign x208_lb_0_reset = reset; // @[:@20441.4]
-  assign x208_lb_0_io_rPort_8_banks_1 = x414_x394_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20978.4]
-  assign x208_lb_0_io_rPort_8_banks_0 = x407_x392_D2_number[2:0]; // @[MemInterfaceType.scala 106:58:@20977.4]
-  assign x208_lb_0_io_rPort_8_ofs_0 = x250_sum_number[0]; // @[MemInterfaceType.scala 107:54:@20979.4]
-  assign x208_lb_0_io_rPort_8_en_0 = _T_556 & x409_b207_D5; // @[MemInterfaceType.scala 110:79:@20981.4]
-  assign x208_lb_0_io_rPort_8_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20980.4]
-  assign x208_lb_0_io_rPort_7_banks_1 = x414_x394_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@21291.4]
-  assign x208_lb_0_io_rPort_7_banks_0 = x417_x398_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@21290.4]
-  assign x208_lb_0_io_rPort_7_ofs_0 = x291_sum_number[0]; // @[MemInterfaceType.scala 107:54:@21292.4]
-  assign x208_lb_0_io_rPort_7_en_0 = _T_775 & x409_b207_D5; // @[MemInterfaceType.scala 110:79:@21294.4]
-  assign x208_lb_0_io_rPort_7_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@21293.4]
-  assign x208_lb_0_io_rPort_6_banks_1 = x413_x393_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20904.4]
-  assign x208_lb_0_io_rPort_6_banks_0 = x407_x392_D2_number[2:0]; // @[MemInterfaceType.scala 106:58:@20903.4]
-  assign x208_lb_0_io_rPort_6_ofs_0 = x241_sum_number[0]; // @[MemInterfaceType.scala 107:54:@20905.4]
-  assign x208_lb_0_io_rPort_6_en_0 = _T_503 & x409_b207_D5; // @[MemInterfaceType.scala 110:79:@20907.4]
-  assign x208_lb_0_io_rPort_6_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20906.4]
-  assign x208_lb_0_io_rPort_5_banks_1 = x414_x394_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@21140.4]
-  assign x208_lb_0_io_rPort_5_banks_0 = x416_x396_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@21139.4]
-  assign x208_lb_0_io_rPort_5_ofs_0 = x271_sum_number[0]; // @[MemInterfaceType.scala 107:54:@21141.4]
-  assign x208_lb_0_io_rPort_5_en_0 = _T_668 & x409_b207_D5; // @[MemInterfaceType.scala 110:79:@21143.4]
-  assign x208_lb_0_io_rPort_5_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@21142.4]
-  assign x208_lb_0_io_rPort_4_banks_1 = x408_x390_D5_number[2:0]; // @[MemInterfaceType.scala 106:58:@20812.4]
-  assign x208_lb_0_io_rPort_4_banks_0 = x407_x392_D2_number[2:0]; // @[MemInterfaceType.scala 106:58:@20811.4]
-  assign x208_lb_0_io_rPort_4_ofs_0 = x410_x232_sum_D1_number[0]; // @[MemInterfaceType.scala 107:54:@20813.4]
-  assign x208_lb_0_io_rPort_4_en_0 = _T_444 & x409_b207_D5; // @[MemInterfaceType.scala 110:79:@20815.4]
-  assign x208_lb_0_io_rPort_4_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20814.4]
-  assign x208_lb_0_io_rPort_3_banks_1 = x408_x390_D5_number[2:0]; // @[MemInterfaceType.scala 106:58:@21074.4]
-  assign x208_lb_0_io_rPort_3_banks_0 = x416_x396_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@21073.4]
-  assign x208_lb_0_io_rPort_3_ofs_0 = x260_sum_number[0]; // @[MemInterfaceType.scala 107:54:@21075.4]
-  assign x208_lb_0_io_rPort_3_en_0 = _T_626 & x409_b207_D5; // @[MemInterfaceType.scala 110:79:@21077.4]
-  assign x208_lb_0_io_rPort_3_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@21076.4]
-  assign x208_lb_0_io_rPort_2_banks_1 = x413_x393_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@21258.4]
-  assign x208_lb_0_io_rPort_2_banks_0 = x417_x398_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@21257.4]
-  assign x208_lb_0_io_rPort_2_ofs_0 = x286_sum_number[0]; // @[MemInterfaceType.scala 107:54:@21259.4]
-  assign x208_lb_0_io_rPort_2_en_0 = _T_754 & x409_b207_D5; // @[MemInterfaceType.scala 110:79:@21261.4]
-  assign x208_lb_0_io_rPort_2_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@21260.4]
-  assign x208_lb_0_io_rPort_1_banks_1 = x408_x390_D5_number[2:0]; // @[MemInterfaceType.scala 106:58:@21225.4]
-  assign x208_lb_0_io_rPort_1_banks_0 = x417_x398_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@21224.4]
-  assign x208_lb_0_io_rPort_1_ofs_0 = x280_sum_number[0]; // @[MemInterfaceType.scala 107:54:@21226.4]
-  assign x208_lb_0_io_rPort_1_en_0 = _T_733 & x409_b207_D5; // @[MemInterfaceType.scala 110:79:@21228.4]
-  assign x208_lb_0_io_rPort_1_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@21227.4]
-  assign x208_lb_0_io_rPort_0_banks_1 = x413_x393_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@21107.4]
-  assign x208_lb_0_io_rPort_0_banks_0 = x416_x396_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@21106.4]
-  assign x208_lb_0_io_rPort_0_ofs_0 = x266_sum_number[0]; // @[MemInterfaceType.scala 107:54:@21108.4]
-  assign x208_lb_0_io_rPort_0_en_0 = _T_647 & x409_b207_D5; // @[MemInterfaceType.scala 110:79:@21110.4]
-  assign x208_lb_0_io_rPort_0_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@21109.4]
-  assign x208_lb_0_io_wPort_0_banks_1 = x401_x390_D1_number[2:0]; // @[MemInterfaceType.scala 88:58:@20687.4]
-  assign x208_lb_0_io_wPort_0_banks_0 = x403_x389_D1_number[2:0]; // @[MemInterfaceType.scala 88:58:@20686.4]
-  assign x208_lb_0_io_wPort_0_ofs_0 = x222_sum_number[0]; // @[MemInterfaceType.scala 89:54:@20688.4]
-  assign x208_lb_0_io_wPort_0_data_0 = RetimeWrapper_io_out; // @[MemInterfaceType.scala 90:56:@20689.4]
-  assign x208_lb_0_io_wPort_0_en_0 = _T_369 & x400_b207_D1; // @[MemInterfaceType.scala 93:57:@20691.4]
-  assign RetimeWrapper_clock = clock; // @[:@20520.4]
-  assign RetimeWrapper_reset = reset; // @[:@20521.4]
-  assign RetimeWrapper_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20523.4]
-  assign RetimeWrapper_io_in = io_in_x195_TDATA[7:0]; // @[package.scala 94:16:@20522.4]
-  assign x222_sum_1_clock = clock; // @[:@20625.4]
-  assign x222_sum_1_reset = reset; // @[:@20626.4]
-  assign x222_sum_1_io_a = {_T_329,_T_330}; // @[Math.scala 151:17:@20627.4]
-  assign x222_sum_1_io_b = {_T_339,_T_340}; // @[Math.scala 152:17:@20628.4]
-  assign x222_sum_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@20629.4]
-  assign RetimeWrapper_1_clock = clock; // @[:@20635.4]
-  assign RetimeWrapper_1_reset = reset; // @[:@20636.4]
-  assign RetimeWrapper_1_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20638.4]
-  assign RetimeWrapper_1_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_1; // @[package.scala 94:16:@20637.4]
-  assign RetimeWrapper_2_clock = clock; // @[:@20644.4]
-  assign RetimeWrapper_2_reset = reset; // @[:@20645.4]
-  assign RetimeWrapper_2_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20647.4]
-  assign RetimeWrapper_2_io_in = $unsigned(_T_320); // @[package.scala 94:16:@20646.4]
-  assign RetimeWrapper_3_clock = clock; // @[:@20653.4]
-  assign RetimeWrapper_3_reset = reset; // @[:@20654.4]
-  assign RetimeWrapper_3_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20656.4]
-  assign RetimeWrapper_3_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_0; // @[package.scala 94:16:@20655.4]
-  assign RetimeWrapper_4_clock = clock; // @[:@20662.4]
-  assign RetimeWrapper_4_reset = reset; // @[:@20663.4]
-  assign RetimeWrapper_4_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20665.4]
-  assign RetimeWrapper_4_io_in = $unsigned(_T_308); // @[package.scala 94:16:@20664.4]
-  assign RetimeWrapper_5_clock = clock; // @[:@20673.4]
-  assign RetimeWrapper_5_reset = reset; // @[:@20674.4]
-  assign RetimeWrapper_5_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20676.4]
-  assign RetimeWrapper_5_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20675.4]
-  assign RetimeWrapper_6_clock = clock; // @[:@20694.4]
-  assign RetimeWrapper_6_reset = reset; // @[:@20695.4]
-  assign RetimeWrapper_6_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20697.4]
-  assign RetimeWrapper_6_io_in = __io_result; // @[package.scala 94:16:@20696.4]
-  assign RetimeWrapper_7_clock = clock; // @[:@20734.4]
-  assign RetimeWrapper_7_reset = reset; // @[:@20735.4]
-  assign RetimeWrapper_7_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20737.4]
-  assign RetimeWrapper_7_io_in = {_T_339,_T_340}; // @[package.scala 94:16:@20736.4]
-  assign x232_sum_1_clock = clock; // @[:@20743.4]
-  assign x232_sum_1_reset = reset; // @[:@20744.4]
-  assign x232_sum_1_io_a = {_T_405,_T_406}; // @[Math.scala 151:17:@20745.4]
-  assign x232_sum_1_io_b = RetimeWrapper_7_io_out; // @[Math.scala 152:17:@20746.4]
-  assign x232_sum_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@20747.4]
-  assign RetimeWrapper_8_clock = clock; // @[:@20753.4]
-  assign RetimeWrapper_8_reset = reset; // @[:@20754.4]
-  assign RetimeWrapper_8_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20756.4]
-  assign RetimeWrapper_8_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_0; // @[package.scala 94:16:@20755.4]
-  assign RetimeWrapper_9_clock = clock; // @[:@20762.4]
-  assign RetimeWrapper_9_reset = reset; // @[:@20763.4]
-  assign RetimeWrapper_9_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20765.4]
-  assign RetimeWrapper_9_io_in = $unsigned(_T_396); // @[package.scala 94:16:@20764.4]
-  assign RetimeWrapper_10_clock = clock; // @[:@20771.4]
-  assign RetimeWrapper_10_reset = reset; // @[:@20772.4]
-  assign RetimeWrapper_10_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20774.4]
-  assign RetimeWrapper_10_io_in = $unsigned(_T_320); // @[package.scala 94:16:@20773.4]
-  assign RetimeWrapper_11_clock = clock; // @[:@20780.4]
-  assign RetimeWrapper_11_reset = reset; // @[:@20781.4]
-  assign RetimeWrapper_11_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20783.4]
-  assign RetimeWrapper_11_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_1; // @[package.scala 94:16:@20782.4]
-  assign RetimeWrapper_12_clock = clock; // @[:@20789.4]
-  assign RetimeWrapper_12_reset = reset; // @[:@20790.4]
-  assign RetimeWrapper_12_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20792.4]
-  assign RetimeWrapper_12_io_in = x232_sum_1_io_result; // @[package.scala 94:16:@20791.4]
-  assign RetimeWrapper_13_clock = clock; // @[:@20801.4]
-  assign RetimeWrapper_13_reset = reset; // @[:@20802.4]
-  assign RetimeWrapper_13_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20804.4]
-  assign RetimeWrapper_13_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20803.4]
-  assign RetimeWrapper_14_clock = clock; // @[:@20821.4]
-  assign RetimeWrapper_14_reset = reset; // @[:@20822.4]
-  assign RetimeWrapper_14_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20824.4]
-  assign RetimeWrapper_14_io_in = __1_io_result; // @[package.scala 94:16:@20823.4]
-  assign x238_rdcol_1_clock = clock; // @[:@20832.4]
-  assign x238_rdcol_1_reset = reset; // @[:@20833.4]
-  assign x238_rdcol_1_io_a = RetimeWrapper_14_io_out; // @[Math.scala 192:17:@20834.4]
-  assign x238_rdcol_1_io_b = 32'h1; // @[Math.scala 193:17:@20835.4]
-  assign x238_rdcol_1_io_flow = io_in_x196_TREADY; // @[Math.scala 194:20:@20836.4]
-  assign RetimeWrapper_15_clock = clock; // @[:@20862.4]
-  assign RetimeWrapper_15_reset = reset; // @[:@20863.4]
-  assign RetimeWrapper_15_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20865.4]
-  assign RetimeWrapper_15_io_in = {_T_405,_T_406}; // @[package.scala 94:16:@20864.4]
-  assign x241_sum_1_clock = clock; // @[:@20871.4]
-  assign x241_sum_1_reset = reset; // @[:@20872.4]
-  assign x241_sum_1_io_a = RetimeWrapper_15_io_out; // @[Math.scala 151:17:@20873.4]
-  assign x241_sum_1_io_b = {_T_476,_T_477}; // @[Math.scala 152:17:@20874.4]
-  assign x241_sum_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@20875.4]
-  assign RetimeWrapper_16_clock = clock; // @[:@20881.4]
-  assign RetimeWrapper_16_reset = reset; // @[:@20882.4]
-  assign RetimeWrapper_16_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20884.4]
-  assign RetimeWrapper_16_io_in = $unsigned(_T_467); // @[package.scala 94:16:@20883.4]
-  assign RetimeWrapper_17_clock = clock; // @[:@20893.4]
-  assign RetimeWrapper_17_reset = reset; // @[:@20894.4]
-  assign RetimeWrapper_17_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20896.4]
-  assign RetimeWrapper_17_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20895.4]
-  assign x247_rdcol_1_clock = clock; // @[:@20915.4]
-  assign x247_rdcol_1_reset = reset; // @[:@20916.4]
-  assign x247_rdcol_1_io_a = RetimeWrapper_14_io_out; // @[Math.scala 192:17:@20917.4]
-  assign x247_rdcol_1_io_b = 32'h2; // @[Math.scala 193:17:@20918.4]
-  assign x247_rdcol_1_io_flow = io_in_x196_TREADY; // @[Math.scala 194:20:@20919.4]
-  assign x250_sum_1_clock = clock; // @[:@20945.4]
-  assign x250_sum_1_reset = reset; // @[:@20946.4]
-  assign x250_sum_1_io_a = RetimeWrapper_15_io_out; // @[Math.scala 151:17:@20947.4]
-  assign x250_sum_1_io_b = {_T_532,_T_533}; // @[Math.scala 152:17:@20948.4]
-  assign x250_sum_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@20949.4]
-  assign RetimeWrapper_18_clock = clock; // @[:@20955.4]
-  assign RetimeWrapper_18_reset = reset; // @[:@20956.4]
-  assign RetimeWrapper_18_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20958.4]
-  assign RetimeWrapper_18_io_in = $unsigned(_T_523); // @[package.scala 94:16:@20957.4]
-  assign RetimeWrapper_19_clock = clock; // @[:@20967.4]
-  assign RetimeWrapper_19_reset = reset; // @[:@20968.4]
-  assign RetimeWrapper_19_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20970.4]
-  assign RetimeWrapper_19_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20969.4]
-  assign x256_rdrow_1_clock = clock; // @[:@20991.4]
-  assign x256_rdrow_1_reset = reset; // @[:@20992.4]
-  assign x256_rdrow_1_io_a = RetimeWrapper_6_io_out; // @[Math.scala 192:17:@20993.4]
-  assign x256_rdrow_1_io_b = 32'h1; // @[Math.scala 193:17:@20994.4]
-  assign x256_rdrow_1_io_flow = io_in_x196_TREADY; // @[Math.scala 194:20:@20995.4]
-  assign RetimeWrapper_20_clock = clock; // @[:@21032.4]
-  assign RetimeWrapper_20_reset = reset; // @[:@21033.4]
-  assign RetimeWrapper_20_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21035.4]
-  assign RetimeWrapper_20_io_in = {_T_339,_T_340}; // @[package.scala 94:16:@21034.4]
-  assign x260_sum_1_clock = clock; // @[:@21041.4]
-  assign x260_sum_1_reset = reset; // @[:@21042.4]
-  assign x260_sum_1_io_a = {_T_599,_T_600}; // @[Math.scala 151:17:@21043.4]
-  assign x260_sum_1_io_b = RetimeWrapper_20_io_out; // @[Math.scala 152:17:@21044.4]
-  assign x260_sum_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@21045.4]
-  assign RetimeWrapper_21_clock = clock; // @[:@21051.4]
-  assign RetimeWrapper_21_reset = reset; // @[:@21052.4]
-  assign RetimeWrapper_21_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21054.4]
-  assign RetimeWrapper_21_io_in = $unsigned(_T_590); // @[package.scala 94:16:@21053.4]
-  assign RetimeWrapper_22_clock = clock; // @[:@21063.4]
-  assign RetimeWrapper_22_reset = reset; // @[:@21064.4]
-  assign RetimeWrapper_22_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21066.4]
-  assign RetimeWrapper_22_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@21065.4]
-  assign x266_sum_1_clock = clock; // @[:@21083.4]
-  assign x266_sum_1_reset = reset; // @[:@21084.4]
-  assign x266_sum_1_io_a = {_T_599,_T_600}; // @[Math.scala 151:17:@21085.4]
-  assign x266_sum_1_io_b = {_T_476,_T_477}; // @[Math.scala 152:17:@21086.4]
-  assign x266_sum_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@21087.4]
-  assign RetimeWrapper_23_clock = clock; // @[:@21096.4]
-  assign RetimeWrapper_23_reset = reset; // @[:@21097.4]
-  assign RetimeWrapper_23_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21099.4]
-  assign RetimeWrapper_23_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@21098.4]
-  assign x271_sum_1_clock = clock; // @[:@21116.4]
-  assign x271_sum_1_reset = reset; // @[:@21117.4]
-  assign x271_sum_1_io_a = {_T_599,_T_600}; // @[Math.scala 151:17:@21118.4]
-  assign x271_sum_1_io_b = {_T_532,_T_533}; // @[Math.scala 152:17:@21119.4]
-  assign x271_sum_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@21120.4]
-  assign RetimeWrapper_24_clock = clock; // @[:@21129.4]
-  assign RetimeWrapper_24_reset = reset; // @[:@21130.4]
-  assign RetimeWrapper_24_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21132.4]
-  assign RetimeWrapper_24_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@21131.4]
-  assign x276_rdrow_1_clock = clock; // @[:@21151.4]
-  assign x276_rdrow_1_reset = reset; // @[:@21152.4]
-  assign x276_rdrow_1_io_a = RetimeWrapper_6_io_out; // @[Math.scala 192:17:@21153.4]
-  assign x276_rdrow_1_io_b = 32'h2; // @[Math.scala 193:17:@21154.4]
-  assign x276_rdrow_1_io_flow = io_in_x196_TREADY; // @[Math.scala 194:20:@21155.4]
-  assign x280_sum_1_clock = clock; // @[:@21192.4]
-  assign x280_sum_1_reset = reset; // @[:@21193.4]
-  assign x280_sum_1_io_a = {_T_709,_T_710}; // @[Math.scala 151:17:@21194.4]
-  assign x280_sum_1_io_b = RetimeWrapper_20_io_out; // @[Math.scala 152:17:@21195.4]
-  assign x280_sum_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@21196.4]
-  assign RetimeWrapper_25_clock = clock; // @[:@21202.4]
-  assign RetimeWrapper_25_reset = reset; // @[:@21203.4]
-  assign RetimeWrapper_25_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21205.4]
-  assign RetimeWrapper_25_io_in = $unsigned(_T_700); // @[package.scala 94:16:@21204.4]
-  assign RetimeWrapper_26_clock = clock; // @[:@21214.4]
-  assign RetimeWrapper_26_reset = reset; // @[:@21215.4]
-  assign RetimeWrapper_26_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21217.4]
-  assign RetimeWrapper_26_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@21216.4]
-  assign x286_sum_1_clock = clock; // @[:@21234.4]
-  assign x286_sum_1_reset = reset; // @[:@21235.4]
-  assign x286_sum_1_io_a = {_T_709,_T_710}; // @[Math.scala 151:17:@21236.4]
-  assign x286_sum_1_io_b = {_T_476,_T_477}; // @[Math.scala 152:17:@21237.4]
-  assign x286_sum_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@21238.4]
-  assign RetimeWrapper_27_clock = clock; // @[:@21247.4]
-  assign RetimeWrapper_27_reset = reset; // @[:@21248.4]
-  assign RetimeWrapper_27_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21250.4]
-  assign RetimeWrapper_27_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@21249.4]
-  assign x291_sum_1_clock = clock; // @[:@21267.4]
-  assign x291_sum_1_reset = reset; // @[:@21268.4]
-  assign x291_sum_1_io_a = {_T_709,_T_710}; // @[Math.scala 151:17:@21269.4]
-  assign x291_sum_1_io_b = {_T_532,_T_533}; // @[Math.scala 152:17:@21270.4]
-  assign x291_sum_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@21271.4]
-  assign RetimeWrapper_28_clock = clock; // @[:@21280.4]
-  assign RetimeWrapper_28_reset = reset; // @[:@21281.4]
-  assign RetimeWrapper_28_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21283.4]
-  assign RetimeWrapper_28_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@21282.4]
-  assign x301_x17_1_clock = clock; // @[:@21325.4]
-  assign x301_x17_1_reset = reset; // @[:@21326.4]
-  assign x301_x17_1_io_a = x208_lb_0_io_rPort_4_output_0; // @[Math.scala 151:17:@21327.4]
-  assign x301_x17_1_io_b = _T_781[7:0]; // @[Math.scala 152:17:@21328.4]
-  assign x301_x17_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@21329.4]
-  assign x302_x18_1_clock = clock; // @[:@21335.4]
-  assign x302_x18_1_reset = reset; // @[:@21336.4]
-  assign x302_x18_1_io_a = x208_lb_0_io_rPort_8_output_0; // @[Math.scala 151:17:@21337.4]
-  assign x302_x18_1_io_b = _T_785[7:0]; // @[Math.scala 152:17:@21338.4]
-  assign x302_x18_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@21339.4]
-  assign x303_x17_1_clock = clock; // @[:@21345.4]
-  assign x303_x17_1_reset = reset; // @[:@21346.4]
-  assign x303_x17_1_io_a = _T_789[7:0]; // @[Math.scala 151:17:@21347.4]
-  assign x303_x17_1_io_b = _T_793[7:0]; // @[Math.scala 152:17:@21348.4]
-  assign x303_x17_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@21349.4]
-  assign x304_x18_1_clock = clock; // @[:@21355.4]
-  assign x304_x18_1_reset = reset; // @[:@21356.4]
-  assign x304_x18_1_io_a = x208_lb_0_io_rPort_1_output_0; // @[Math.scala 151:17:@21357.4]
-  assign x304_x18_1_io_b = _T_797[7:0]; // @[Math.scala 152:17:@21358.4]
-  assign x304_x18_1_io_flow = io_in_x196_TREADY; // @[Math.scala 153:20:@21359.4]
-  assign x305_x17_1_io_a = x301_x17_1_io_result; // @[Math.scala 151:17:@21367.4]
-  assign x305_x17_1_io_b = x302_x18_1_io_result; // @[Math.scala 152:17:@21368.4]
-  assign x306_x18_1_io_a = x303_x17_1_io_result; // @[Math.scala 151:17:@21377.4]
-  assign x306_x18_1_io_b = x304_x18_1_io_result; // @[Math.scala 152:17:@21378.4]
-  assign x307_x17_1_io_a = x305_x17_1_io_result; // @[Math.scala 151:17:@21387.4]
-  assign x307_x17_1_io_b = x306_x18_1_io_result; // @[Math.scala 152:17:@21388.4]
-  assign RetimeWrapper_29_clock = clock; // @[:@21395.4]
-  assign RetimeWrapper_29_reset = reset; // @[:@21396.4]
-  assign RetimeWrapper_29_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21398.4]
-  assign RetimeWrapper_29_io_in = x208_lb_0_io_rPort_7_output_0; // @[package.scala 94:16:@21397.4]
-  assign x308_sum_1_io_a = x307_x17_1_io_result; // @[Math.scala 151:17:@21406.4]
-  assign x308_sum_1_io_b = RetimeWrapper_29_io_out; // @[Math.scala 152:17:@21407.4]
-  assign RetimeWrapper_30_clock = clock; // @[:@21418.4]
-  assign RetimeWrapper_30_reset = reset; // @[:@21419.4]
-  assign RetimeWrapper_30_io_flow = io_in_x196_TREADY; // @[package.scala 95:18:@21421.4]
-  assign RetimeWrapper_30_io_in = {4'h0,_T_833}; // @[package.scala 94:16:@21420.4]
-  assign RetimeWrapper_31_clock = clock; // @[:@21428.4]
-  assign RetimeWrapper_31_reset = reset; // @[:@21429.4]
-  assign RetimeWrapper_31_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21431.4]
-  assign RetimeWrapper_31_io_in = x208_lb_0_io_rPort_4_output_0; // @[package.scala 94:16:@21430.4]
-  assign x310_sub_1_io_a = RetimeWrapper_31_io_out; // @[Math.scala 192:17:@21439.4]
-  assign x310_sub_1_io_b = RetimeWrapper_30_io_out; // @[Math.scala 193:17:@21440.4]
-  assign RetimeWrapper_32_clock = clock; // @[:@21464.4]
-  assign RetimeWrapper_32_reset = reset; // @[:@21465.4]
-  assign RetimeWrapper_32_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21467.4]
-  assign RetimeWrapper_32_io_in = x311 ? x310_sub_number : 8'h0; // @[package.scala 94:16:@21466.4]
-  assign x314_div_1_clock = clock; // @[:@21475.4]
-  assign x314_div_1_reset = reset; // @[:@21476.4]
-  assign x314_div_1_io_a = RetimeWrapper_32_io_out; // @[Math.scala 328:17:@21477.4]
-  assign x314_div_1_io_flow = io_in_x196_TREADY; // @[Math.scala 330:20:@21479.4]
-  assign RetimeWrapper_33_clock = clock; // @[:@21485.4]
-  assign RetimeWrapper_33_reset = reset; // @[:@21486.4]
-  assign RetimeWrapper_33_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21488.4]
-  assign RetimeWrapper_33_io_in = x208_lb_0_io_rPort_4_output_0; // @[package.scala 94:16:@21487.4]
-  assign x315_sum_1_io_a = RetimeWrapper_33_io_out; // @[Math.scala 151:17:@21496.4]
-  assign x315_sum_1_io_b = x314_div_1_io_result; // @[Math.scala 152:17:@21497.4]
-  assign RetimeWrapper_34_clock = clock; // @[:@21504.4]
-  assign RetimeWrapper_34_reset = reset; // @[:@21505.4]
-  assign RetimeWrapper_34_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21507.4]
-  assign RetimeWrapper_34_io_in = RetimeWrapper_30_io_out; // @[package.scala 94:16:@21506.4]
-  assign RetimeWrapper_35_clock = clock; // @[:@21513.4]
-  assign RetimeWrapper_35_reset = reset; // @[:@21514.4]
-  assign RetimeWrapper_35_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21516.4]
-  assign RetimeWrapper_35_io_in = x309_number == 8'h0; // @[package.scala 94:16:@21515.4]
-  assign RetimeWrapper_36_clock = clock; // @[:@21529.4]
-  assign RetimeWrapper_36_reset = reset; // @[:@21530.4]
-  assign RetimeWrapper_36_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21532.4]
-  assign RetimeWrapper_36_io_in = x423_x313_D6 ? x422_x309_D6_number : x315_sum_number; // @[package.scala 94:16:@21531.4]
-  assign RetimeWrapper_37_clock = clock; // @[:@21538.4]
-  assign RetimeWrapper_37_reset = reset; // @[:@21539.4]
-  assign RetimeWrapper_37_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21541.4]
-  assign RetimeWrapper_37_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_1; // @[package.scala 94:16:@21540.4]
-  assign RetimeWrapper_38_clock = clock; // @[:@21547.4]
-  assign RetimeWrapper_38_reset = reset; // @[:@21548.4]
-  assign RetimeWrapper_38_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21550.4]
-  assign RetimeWrapper_38_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_0; // @[package.scala 94:16:@21549.4]
-  assign RetimeWrapper_39_clock = clock; // @[:@21556.4]
-  assign RetimeWrapper_39_reset = reset; // @[:@21557.4]
-  assign RetimeWrapper_39_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@21559.4]
-  assign RetimeWrapper_39_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@21558.4]
+  assign b192 = ~ io_sigsIn_cchainOutputs_0_oobs_0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 62:18:@19914.4]
+  assign b193 = ~ io_sigsIn_cchainOutputs_0_oobs_1; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 63:18:@19915.4]
+  assign _T_206 = b192 & b193; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 68:30:@19984.4]
+  assign _T_207 = _T_206 & io_sigsIn_datapathEn; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 68:37:@19985.4]
+  assign _T_211 = io_in_x181_TID == 8'h0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 70:76:@19990.4]
+  assign _T_212 = _T_207 & _T_211; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 70:62:@19991.4]
+  assign _T_214 = io_in_x181_TDEST == 8'h0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 70:101:@19992.4]
+  assign b190_number = __io_result; // @[Math.scala 712:22:@19899.4 Math.scala 713:14:@19900.4]
+  assign _T_240 = $signed(b190_number); // @[Math.scala 499:52:@20015.4]
+  assign x199 = $signed(32'sh1) == $signed(_T_240); // @[Math.scala 499:44:@20023.4]
+  assign x200 = $signed(32'sh2) == $signed(_T_240); // @[Math.scala 499:44:@20030.4]
+  assign x201 = $signed(32'sh3) == $signed(_T_240); // @[Math.scala 499:44:@20037.4]
+  assign _T_287 = x199 ? 32'h1 : 32'h0; // @[Mux.scala 19:72:@20049.4]
+  assign _T_289 = x200 ? 32'h2 : 32'h0; // @[Mux.scala 19:72:@20050.4]
+  assign _T_291 = x201 ? 32'h3 : 32'h0; // @[Mux.scala 19:72:@20051.4]
+  assign _T_293 = _T_287 | _T_289; // @[Mux.scala 19:72:@20053.4]
+  assign x202_number = _T_293 | _T_291; // @[Mux.scala 19:72:@20054.4]
+  assign _T_305 = $signed(x202_number); // @[Math.scala 406:49:@20064.4]
+  assign _T_307 = $signed(_T_305) & $signed(32'sh3); // @[Math.scala 406:56:@20066.4]
+  assign _T_308 = $signed(_T_307); // @[Math.scala 406:56:@20067.4]
+  assign b191_number = __1_io_result; // @[Math.scala 712:22:@19911.4 Math.scala 713:14:@19912.4]
+  assign _T_317 = $signed(b191_number); // @[Math.scala 406:49:@20075.4]
+  assign _T_319 = $signed(_T_317) & $signed(32'sh3); // @[Math.scala 406:56:@20077.4]
+  assign _T_320 = $signed(_T_319); // @[Math.scala 406:56:@20078.4]
+  assign _T_325 = x202_number[31]; // @[FixedPoint.scala 50:25:@20084.4]
+  assign _T_329 = _T_325 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20086.4]
+  assign _T_330 = x202_number[31:2]; // @[FixedPoint.scala 18:52:@20087.4]
+  assign _T_335 = b191_number[31]; // @[FixedPoint.scala 50:25:@20093.4]
+  assign _T_339 = _T_335 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20095.4]
+  assign _T_340 = b191_number[31:2]; // @[FixedPoint.scala 18:52:@20096.4]
+  assign _T_358 = ~ io_sigsIn_break; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 113:101:@20146.4]
+  assign _T_362 = RetimeWrapper_5_io_out; // @[package.scala 96:25:@20154.4 package.scala 96:25:@20155.4]
+  assign _T_364 = io_rr ? _T_362 : 1'h0; // @[implicits.scala 55:10:@20156.4]
+  assign _T_365 = _T_358 & _T_364; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 113:118:@20157.4]
+  assign _T_367 = _T_365 & _T_358; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 113:205:@20159.4]
+  assign _T_368 = _T_367 & io_sigsIn_backpressure; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 113:224:@20160.4]
+  assign x382_b192_D1 = RetimeWrapper_4_io_out; // @[package.scala 96:25:@20143.4 package.scala 96:25:@20144.4]
+  assign _T_369 = _T_368 & x382_b192_D1; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 113:250:@20161.4]
+  assign x381_b193_D1 = RetimeWrapper_3_io_out; // @[package.scala 96:25:@20134.4 package.scala 96:25:@20135.4]
+  assign x383_b190_D3_number = RetimeWrapper_6_io_out; // @[package.scala 96:25:@20175.4 package.scala 96:25:@20176.4]
+  assign _T_381 = $signed(x383_b190_D3_number); // @[Math.scala 406:49:@20182.4]
+  assign _T_383 = $signed(_T_381) & $signed(32'sh3); // @[Math.scala 406:56:@20184.4]
+  assign _T_384 = $signed(_T_383); // @[Math.scala 406:56:@20185.4]
+  assign x370_number = $unsigned(_T_384); // @[implicits.scala 133:21:@20186.4]
+  assign _T_393 = $signed(x370_number); // @[Math.scala 406:49:@20193.4]
+  assign _T_395 = $signed(_T_393) & $signed(32'sh3); // @[Math.scala 406:56:@20195.4]
+  assign _T_396 = $signed(_T_395); // @[Math.scala 406:56:@20196.4]
+  assign _T_401 = x370_number[31]; // @[FixedPoint.scala 50:25:@20202.4]
+  assign _T_405 = _T_401 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20204.4]
+  assign _T_406 = x370_number[31:2]; // @[FixedPoint.scala 18:52:@20205.4]
+  assign _T_440 = RetimeWrapper_13_io_out; // @[package.scala 96:25:@20282.4 package.scala 96:25:@20283.4]
+  assign _T_442 = io_rr ? _T_440 : 1'h0; // @[implicits.scala 55:10:@20284.4]
+  assign _T_443 = _T_358 & _T_442; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 141:146:@20285.4]
+  assign x385_b192_D5 = RetimeWrapper_8_io_out; // @[package.scala 96:25:@20234.4 package.scala 96:25:@20235.4]
+  assign _T_444 = _T_443 & x385_b192_D5; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 141:233:@20286.4]
+  assign x386_b193_D5 = RetimeWrapper_9_io_out; // @[package.scala 96:25:@20243.4 package.scala 96:25:@20244.4]
+  assign x224_rdcol_number = x224_rdcol_1_io_result; // @[Math.scala 195:22:@20314.4 Math.scala 196:14:@20315.4]
+  assign _T_464 = $signed(x224_rdcol_number); // @[Math.scala 406:49:@20321.4]
+  assign _T_466 = $signed(_T_464) & $signed(32'sh3); // @[Math.scala 406:56:@20323.4]
+  assign _T_467 = $signed(_T_466); // @[Math.scala 406:56:@20324.4]
+  assign _T_472 = x224_rdcol_number[31]; // @[FixedPoint.scala 50:25:@20330.4]
+  assign _T_476 = _T_472 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20332.4]
+  assign _T_477 = x224_rdcol_number[31:2]; // @[FixedPoint.scala 18:52:@20333.4]
+  assign _T_499 = RetimeWrapper_17_io_out; // @[package.scala 96:25:@20374.4 package.scala 96:25:@20375.4]
+  assign _T_501 = io_rr ? _T_499 : 1'h0; // @[implicits.scala 55:10:@20376.4]
+  assign _T_502 = _T_358 & _T_501; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 162:146:@20377.4]
+  assign _T_503 = _T_502 & x385_b192_D5; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 162:233:@20378.4]
+  assign x233_rdcol_number = x233_rdcol_1_io_result; // @[Math.scala 195:22:@20397.4 Math.scala 196:14:@20398.4]
+  assign _T_520 = $signed(x233_rdcol_number); // @[Math.scala 406:49:@20404.4]
+  assign _T_522 = $signed(_T_520) & $signed(32'sh3); // @[Math.scala 406:56:@20406.4]
+  assign _T_523 = $signed(_T_522); // @[Math.scala 406:56:@20407.4]
+  assign _T_528 = x233_rdcol_number[31]; // @[FixedPoint.scala 50:25:@20413.4]
+  assign _T_532 = _T_528 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20415.4]
+  assign _T_533 = x233_rdcol_number[31:2]; // @[FixedPoint.scala 18:52:@20416.4]
+  assign _T_552 = RetimeWrapper_19_io_out; // @[package.scala 96:25:@20448.4 package.scala 96:25:@20449.4]
+  assign _T_554 = io_rr ? _T_552 : 1'h0; // @[implicits.scala 55:10:@20450.4]
+  assign _T_555 = _T_358 & _T_554; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 185:194:@20451.4]
+  assign _T_556 = _T_555 & x385_b192_D5; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 185:281:@20452.4]
+  assign x242_rdrow_number = x242_rdrow_1_io_result; // @[Math.scala 195:22:@20473.4 Math.scala 196:14:@20474.4]
+  assign _T_575 = $signed(x242_rdrow_number); // @[Math.scala 406:49:@20480.4]
+  assign _T_577 = $signed(_T_575) & $signed(32'sh3); // @[Math.scala 406:56:@20482.4]
+  assign _T_578 = $signed(_T_577); // @[Math.scala 406:56:@20483.4]
+  assign x374_number = $unsigned(_T_578); // @[implicits.scala 133:21:@20484.4]
+  assign _T_587 = $signed(x374_number); // @[Math.scala 406:49:@20491.4]
+  assign _T_589 = $signed(_T_587) & $signed(32'sh3); // @[Math.scala 406:56:@20493.4]
+  assign _T_590 = $signed(_T_589); // @[Math.scala 406:56:@20494.4]
+  assign _T_595 = x374_number[31]; // @[FixedPoint.scala 50:25:@20500.4]
+  assign _T_599 = _T_595 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20502.4]
+  assign _T_600 = x374_number[31:2]; // @[FixedPoint.scala 18:52:@20503.4]
+  assign _T_622 = RetimeWrapper_22_io_out; // @[package.scala 96:25:@20544.4 package.scala 96:25:@20545.4]
+  assign _T_624 = io_rr ? _T_622 : 1'h0; // @[implicits.scala 55:10:@20546.4]
+  assign _T_625 = _T_358 & _T_624; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 208:194:@20547.4]
+  assign _T_626 = _T_625 & x385_b192_D5; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 208:281:@20548.4]
+  assign _T_643 = RetimeWrapper_23_io_out; // @[package.scala 96:25:@20577.4 package.scala 96:25:@20578.4]
+  assign _T_645 = io_rr ? _T_643 : 1'h0; // @[implicits.scala 55:10:@20579.4]
+  assign _T_646 = _T_358 & _T_645; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 217:194:@20580.4]
+  assign _T_647 = _T_646 & x385_b192_D5; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 217:281:@20581.4]
+  assign _T_664 = RetimeWrapper_24_io_out; // @[package.scala 96:25:@20610.4 package.scala 96:25:@20611.4]
+  assign _T_666 = io_rr ? _T_664 : 1'h0; // @[implicits.scala 55:10:@20612.4]
+  assign _T_667 = _T_358 & _T_666; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 226:194:@20613.4]
+  assign _T_668 = _T_667 & x385_b192_D5; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 226:281:@20614.4]
+  assign x262_rdrow_number = x262_rdrow_1_io_result; // @[Math.scala 195:22:@20633.4 Math.scala 196:14:@20634.4]
+  assign _T_685 = $signed(x262_rdrow_number); // @[Math.scala 406:49:@20640.4]
+  assign _T_687 = $signed(_T_685) & $signed(32'sh3); // @[Math.scala 406:56:@20642.4]
+  assign _T_688 = $signed(_T_687); // @[Math.scala 406:56:@20643.4]
+  assign x376_number = $unsigned(_T_688); // @[implicits.scala 133:21:@20644.4]
+  assign _T_697 = $signed(x376_number); // @[Math.scala 406:49:@20651.4]
+  assign _T_699 = $signed(_T_697) & $signed(32'sh3); // @[Math.scala 406:56:@20653.4]
+  assign _T_700 = $signed(_T_699); // @[Math.scala 406:56:@20654.4]
+  assign _T_705 = x376_number[31]; // @[FixedPoint.scala 50:25:@20660.4]
+  assign _T_709 = _T_705 ? 2'h3 : 2'h0; // @[Bitwise.scala 72:12:@20662.4]
+  assign _T_710 = x376_number[31:2]; // @[FixedPoint.scala 18:52:@20663.4]
+  assign _T_729 = RetimeWrapper_26_io_out; // @[package.scala 96:25:@20695.4 package.scala 96:25:@20696.4]
+  assign _T_731 = io_rr ? _T_729 : 1'h0; // @[implicits.scala 55:10:@20697.4]
+  assign _T_732 = _T_358 & _T_731; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 245:194:@20698.4]
+  assign _T_733 = _T_732 & x385_b192_D5; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 245:281:@20699.4]
+  assign _T_750 = RetimeWrapper_27_io_out; // @[package.scala 96:25:@20728.4 package.scala 96:25:@20729.4]
+  assign _T_752 = io_rr ? _T_750 : 1'h0; // @[implicits.scala 55:10:@20730.4]
+  assign _T_753 = _T_358 & _T_752; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 254:194:@20731.4]
+  assign _T_754 = _T_753 & x385_b192_D5; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 254:281:@20732.4]
+  assign _T_771 = RetimeWrapper_28_io_out; // @[package.scala 96:25:@20761.4 package.scala 96:25:@20762.4]
+  assign _T_773 = io_rr ? _T_771 : 1'h0; // @[implicits.scala 55:10:@20763.4]
+  assign _T_774 = _T_358 & _T_773; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 263:194:@20764.4]
+  assign _T_775 = _T_774 & x385_b192_D5; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 263:281:@20765.4]
+  assign x231_rd_0_number = x194_lb_0_io_rPort_7_output_0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 158:29:@20365.4 sm_x300_inr_Foreach_SAMPLER_BOX.scala 162:281:@20385.4]
+  assign _GEN_0 = {{1'd0}, x231_rd_0_number}; // @[Math.scala 450:32:@20777.4]
+  assign _T_781 = _GEN_0 << 1; // @[Math.scala 450:32:@20777.4]
+  assign x250_rd_0_number = x194_lb_0_io_rPort_6_output_0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 204:29:@20535.4 sm_x300_inr_Foreach_SAMPLER_BOX.scala 208:399:@20555.4]
+  assign _GEN_1 = {{1'd0}, x250_rd_0_number}; // @[Math.scala 450:32:@20782.4]
+  assign _T_785 = _GEN_1 << 1; // @[Math.scala 450:32:@20782.4]
+  assign x255_rd_0_number = x194_lb_0_io_rPort_5_output_0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 213:29:@20568.4 sm_x300_inr_Foreach_SAMPLER_BOX.scala 217:399:@20588.4]
+  assign _GEN_2 = {{2'd0}, x255_rd_0_number}; // @[Math.scala 450:32:@20787.4]
+  assign _T_789 = _GEN_2 << 2; // @[Math.scala 450:32:@20787.4]
+  assign x260_rd_0_number = x194_lb_0_io_rPort_2_output_0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 222:29:@20601.4 sm_x300_inr_Foreach_SAMPLER_BOX.scala 226:399:@20621.4]
+  assign _GEN_3 = {{1'd0}, x260_rd_0_number}; // @[Math.scala 450:32:@20792.4]
+  assign _T_793 = _GEN_3 << 1; // @[Math.scala 450:32:@20792.4]
+  assign x275_rd_0_number = x194_lb_0_io_rPort_3_output_0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 250:29:@20719.4 sm_x300_inr_Foreach_SAMPLER_BOX.scala 254:399:@20739.4]
+  assign _GEN_4 = {{1'd0}, x275_rd_0_number}; // @[Math.scala 450:32:@20797.4]
+  assign _T_797 = _GEN_4 << 1; // @[Math.scala 450:32:@20797.4]
+  assign x294_sum_number = x294_sum_1_io_result; // @[Math.scala 154:22:@20886.4 Math.scala 155:14:@20887.4]
+  assign _T_833 = x294_sum_number[7:4]; // @[FixedPoint.scala 18:52:@20892.4]
+  assign _T_856 = RetimeWrapper_34_io_out; // @[package.scala 96:25:@20940.4 package.scala 96:25:@20941.4]
+  assign _T_858 = io_rr ? _T_856 : 1'h0; // @[implicits.scala 55:10:@20942.4]
+  assign x399_b192_D12 = RetimeWrapper_33_io_out; // @[package.scala 96:25:@20931.4 package.scala 96:25:@20932.4]
+  assign _T_859 = _T_858 & x399_b192_D12; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 311:116:@20943.4]
+  assign x398_b193_D12 = RetimeWrapper_32_io_out; // @[package.scala 96:25:@20922.4 package.scala 96:25:@20923.4]
+  assign _T_860 = _T_859 & x398_b193_D12; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 311:122:@20944.4]
+  assign x208_sum_number = x208_sum_1_io_result; // @[Math.scala 154:22:@20107.4 Math.scala 155:14:@20108.4]
+  assign x379_x369_D1_number = RetimeWrapper_1_io_out; // @[package.scala 96:25:@20116.4 package.scala 96:25:@20117.4]
+  assign x380_x368_D1_number = RetimeWrapper_2_io_out; // @[package.scala 96:25:@20125.4 package.scala 96:25:@20126.4]
+  assign x387_x371_D2_number = RetimeWrapper_10_io_out; // @[package.scala 96:25:@20252.4 package.scala 96:25:@20253.4]
+  assign x388_x218_sum_D1_number = RetimeWrapper_11_io_out; // @[package.scala 96:25:@20261.4 package.scala 96:25:@20262.4]
+  assign x389_x369_D5_number = RetimeWrapper_12_io_out; // @[package.scala 96:25:@20270.4 package.scala 96:25:@20271.4]
+  assign x227_sum_number = x227_sum_1_io_result; // @[Math.scala 154:22:@20353.4 Math.scala 155:14:@20354.4]
+  assign x392_x372_D1_number = RetimeWrapper_16_io_out; // @[package.scala 96:25:@20362.4 package.scala 96:25:@20363.4]
+  assign x236_sum_number = x236_sum_1_io_result; // @[Math.scala 154:22:@20427.4 Math.scala 155:14:@20428.4]
+  assign x393_x373_D1_number = RetimeWrapper_18_io_out; // @[package.scala 96:25:@20436.4 package.scala 96:25:@20437.4]
+  assign x246_sum_number = x246_sum_1_io_result; // @[Math.scala 154:22:@20523.4 Math.scala 155:14:@20524.4]
+  assign x395_x375_D1_number = RetimeWrapper_21_io_out; // @[package.scala 96:25:@20532.4 package.scala 96:25:@20533.4]
+  assign x252_sum_number = x252_sum_1_io_result; // @[Math.scala 154:22:@20565.4 Math.scala 155:14:@20566.4]
+  assign x257_sum_number = x257_sum_1_io_result; // @[Math.scala 154:22:@20598.4 Math.scala 155:14:@20599.4]
+  assign x266_sum_number = x266_sum_1_io_result; // @[Math.scala 154:22:@20674.4 Math.scala 155:14:@20675.4]
+  assign x396_x377_D1_number = RetimeWrapper_25_io_out; // @[package.scala 96:25:@20683.4 package.scala 96:25:@20684.4]
+  assign x272_sum_number = x272_sum_1_io_result; // @[Math.scala 154:22:@20716.4 Math.scala 155:14:@20717.4]
+  assign x277_sum_number = x277_sum_1_io_result; // @[Math.scala 154:22:@20749.4 Math.scala 155:14:@20750.4]
+  assign io_in_x181_TREADY = _T_212 & _T_214; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 68:22:@19986.4 sm_x300_inr_Foreach_SAMPLER_BOX.scala 70:22:@19994.4]
+  assign io_in_x182_TVALID = _T_860 & io_sigsIn_backpressure; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 311:22:@20946.4]
+  assign io_in_x182_TDATA = {{248'd0}, RetimeWrapper_31_io_out}; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 312:24:@20947.4]
+  assign __io_b = $unsigned(io_sigsIn_cchainOutputs_0_counts_0); // @[Math.scala 710:17:@19897.4]
+  assign __1_io_b = $unsigned(io_sigsIn_cchainOutputs_0_counts_1); // @[Math.scala 710:17:@19909.4]
+  assign x194_lb_0_clock = clock; // @[:@19917.4]
+  assign x194_lb_0_reset = reset; // @[:@19918.4]
+  assign x194_lb_0_io_rPort_8_banks_1 = x389_x369_D5_number[2:0]; // @[MemInterfaceType.scala 106:58:@20289.4]
+  assign x194_lb_0_io_rPort_8_banks_0 = x387_x371_D2_number[2:0]; // @[MemInterfaceType.scala 106:58:@20288.4]
+  assign x194_lb_0_io_rPort_8_ofs_0 = x388_x218_sum_D1_number[0]; // @[MemInterfaceType.scala 107:54:@20290.4]
+  assign x194_lb_0_io_rPort_8_en_0 = _T_444 & x386_b193_D5; // @[MemInterfaceType.scala 110:79:@20292.4]
+  assign x194_lb_0_io_rPort_8_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20291.4]
+  assign x194_lb_0_io_rPort_7_banks_1 = x392_x372_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20381.4]
+  assign x194_lb_0_io_rPort_7_banks_0 = x387_x371_D2_number[2:0]; // @[MemInterfaceType.scala 106:58:@20380.4]
+  assign x194_lb_0_io_rPort_7_ofs_0 = x227_sum_number[0]; // @[MemInterfaceType.scala 107:54:@20382.4]
+  assign x194_lb_0_io_rPort_7_en_0 = _T_503 & x386_b193_D5; // @[MemInterfaceType.scala 110:79:@20384.4]
+  assign x194_lb_0_io_rPort_7_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20383.4]
+  assign x194_lb_0_io_rPort_6_banks_1 = x389_x369_D5_number[2:0]; // @[MemInterfaceType.scala 106:58:@20551.4]
+  assign x194_lb_0_io_rPort_6_banks_0 = x395_x375_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20550.4]
+  assign x194_lb_0_io_rPort_6_ofs_0 = x246_sum_number[0]; // @[MemInterfaceType.scala 107:54:@20552.4]
+  assign x194_lb_0_io_rPort_6_en_0 = _T_626 & x386_b193_D5; // @[MemInterfaceType.scala 110:79:@20554.4]
+  assign x194_lb_0_io_rPort_6_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20553.4]
+  assign x194_lb_0_io_rPort_5_banks_1 = x392_x372_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20584.4]
+  assign x194_lb_0_io_rPort_5_banks_0 = x395_x375_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20583.4]
+  assign x194_lb_0_io_rPort_5_ofs_0 = x252_sum_number[0]; // @[MemInterfaceType.scala 107:54:@20585.4]
+  assign x194_lb_0_io_rPort_5_en_0 = _T_647 & x386_b193_D5; // @[MemInterfaceType.scala 110:79:@20587.4]
+  assign x194_lb_0_io_rPort_5_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20586.4]
+  assign x194_lb_0_io_rPort_4_banks_1 = x393_x373_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20455.4]
+  assign x194_lb_0_io_rPort_4_banks_0 = x387_x371_D2_number[2:0]; // @[MemInterfaceType.scala 106:58:@20454.4]
+  assign x194_lb_0_io_rPort_4_ofs_0 = x236_sum_number[0]; // @[MemInterfaceType.scala 107:54:@20456.4]
+  assign x194_lb_0_io_rPort_4_en_0 = _T_556 & x386_b193_D5; // @[MemInterfaceType.scala 110:79:@20458.4]
+  assign x194_lb_0_io_rPort_4_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20457.4]
+  assign x194_lb_0_io_rPort_3_banks_1 = x392_x372_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20735.4]
+  assign x194_lb_0_io_rPort_3_banks_0 = x396_x377_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20734.4]
+  assign x194_lb_0_io_rPort_3_ofs_0 = x272_sum_number[0]; // @[MemInterfaceType.scala 107:54:@20736.4]
+  assign x194_lb_0_io_rPort_3_en_0 = _T_754 & x386_b193_D5; // @[MemInterfaceType.scala 110:79:@20738.4]
+  assign x194_lb_0_io_rPort_3_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20737.4]
+  assign x194_lb_0_io_rPort_2_banks_1 = x393_x373_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20617.4]
+  assign x194_lb_0_io_rPort_2_banks_0 = x395_x375_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20616.4]
+  assign x194_lb_0_io_rPort_2_ofs_0 = x257_sum_number[0]; // @[MemInterfaceType.scala 107:54:@20618.4]
+  assign x194_lb_0_io_rPort_2_en_0 = _T_668 & x386_b193_D5; // @[MemInterfaceType.scala 110:79:@20620.4]
+  assign x194_lb_0_io_rPort_2_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20619.4]
+  assign x194_lb_0_io_rPort_1_banks_1 = x389_x369_D5_number[2:0]; // @[MemInterfaceType.scala 106:58:@20702.4]
+  assign x194_lb_0_io_rPort_1_banks_0 = x396_x377_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20701.4]
+  assign x194_lb_0_io_rPort_1_ofs_0 = x266_sum_number[0]; // @[MemInterfaceType.scala 107:54:@20703.4]
+  assign x194_lb_0_io_rPort_1_en_0 = _T_733 & x386_b193_D5; // @[MemInterfaceType.scala 110:79:@20705.4]
+  assign x194_lb_0_io_rPort_1_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20704.4]
+  assign x194_lb_0_io_rPort_0_banks_1 = x393_x373_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20768.4]
+  assign x194_lb_0_io_rPort_0_banks_0 = x396_x377_D1_number[2:0]; // @[MemInterfaceType.scala 106:58:@20767.4]
+  assign x194_lb_0_io_rPort_0_ofs_0 = x277_sum_number[0]; // @[MemInterfaceType.scala 107:54:@20769.4]
+  assign x194_lb_0_io_rPort_0_en_0 = _T_775 & x386_b193_D5; // @[MemInterfaceType.scala 110:79:@20771.4]
+  assign x194_lb_0_io_rPort_0_backpressure = io_sigsIn_backpressure; // @[MemInterfaceType.scala 108:30:@20770.4]
+  assign x194_lb_0_io_wPort_0_banks_1 = x379_x369_D1_number[2:0]; // @[MemInterfaceType.scala 88:58:@20164.4]
+  assign x194_lb_0_io_wPort_0_banks_0 = x380_x368_D1_number[2:0]; // @[MemInterfaceType.scala 88:58:@20163.4]
+  assign x194_lb_0_io_wPort_0_ofs_0 = x208_sum_number[0]; // @[MemInterfaceType.scala 89:54:@20165.4]
+  assign x194_lb_0_io_wPort_0_data_0 = RetimeWrapper_io_out; // @[MemInterfaceType.scala 90:56:@20166.4]
+  assign x194_lb_0_io_wPort_0_en_0 = _T_369 & x381_b193_D1; // @[MemInterfaceType.scala 93:57:@20168.4]
+  assign RetimeWrapper_clock = clock; // @[:@19997.4]
+  assign RetimeWrapper_reset = reset; // @[:@19998.4]
+  assign RetimeWrapper_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20000.4]
+  assign RetimeWrapper_io_in = io_in_x181_TDATA[7:0]; // @[package.scala 94:16:@19999.4]
+  assign x208_sum_1_clock = clock; // @[:@20102.4]
+  assign x208_sum_1_reset = reset; // @[:@20103.4]
+  assign x208_sum_1_io_a = {_T_329,_T_330}; // @[Math.scala 151:17:@20104.4]
+  assign x208_sum_1_io_b = {_T_339,_T_340}; // @[Math.scala 152:17:@20105.4]
+  assign x208_sum_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20106.4]
+  assign RetimeWrapper_1_clock = clock; // @[:@20112.4]
+  assign RetimeWrapper_1_reset = reset; // @[:@20113.4]
+  assign RetimeWrapper_1_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20115.4]
+  assign RetimeWrapper_1_io_in = $unsigned(_T_320); // @[package.scala 94:16:@20114.4]
+  assign RetimeWrapper_2_clock = clock; // @[:@20121.4]
+  assign RetimeWrapper_2_reset = reset; // @[:@20122.4]
+  assign RetimeWrapper_2_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20124.4]
+  assign RetimeWrapper_2_io_in = $unsigned(_T_308); // @[package.scala 94:16:@20123.4]
+  assign RetimeWrapper_3_clock = clock; // @[:@20130.4]
+  assign RetimeWrapper_3_reset = reset; // @[:@20131.4]
+  assign RetimeWrapper_3_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20133.4]
+  assign RetimeWrapper_3_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_1; // @[package.scala 94:16:@20132.4]
+  assign RetimeWrapper_4_clock = clock; // @[:@20139.4]
+  assign RetimeWrapper_4_reset = reset; // @[:@20140.4]
+  assign RetimeWrapper_4_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20142.4]
+  assign RetimeWrapper_4_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_0; // @[package.scala 94:16:@20141.4]
+  assign RetimeWrapper_5_clock = clock; // @[:@20150.4]
+  assign RetimeWrapper_5_reset = reset; // @[:@20151.4]
+  assign RetimeWrapper_5_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20153.4]
+  assign RetimeWrapper_5_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20152.4]
+  assign RetimeWrapper_6_clock = clock; // @[:@20171.4]
+  assign RetimeWrapper_6_reset = reset; // @[:@20172.4]
+  assign RetimeWrapper_6_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20174.4]
+  assign RetimeWrapper_6_io_in = __io_result; // @[package.scala 94:16:@20173.4]
+  assign RetimeWrapper_7_clock = clock; // @[:@20211.4]
+  assign RetimeWrapper_7_reset = reset; // @[:@20212.4]
+  assign RetimeWrapper_7_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20214.4]
+  assign RetimeWrapper_7_io_in = {_T_339,_T_340}; // @[package.scala 94:16:@20213.4]
+  assign x218_sum_1_clock = clock; // @[:@20220.4]
+  assign x218_sum_1_reset = reset; // @[:@20221.4]
+  assign x218_sum_1_io_a = {_T_405,_T_406}; // @[Math.scala 151:17:@20222.4]
+  assign x218_sum_1_io_b = RetimeWrapper_7_io_out; // @[Math.scala 152:17:@20223.4]
+  assign x218_sum_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20224.4]
+  assign RetimeWrapper_8_clock = clock; // @[:@20230.4]
+  assign RetimeWrapper_8_reset = reset; // @[:@20231.4]
+  assign RetimeWrapper_8_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20233.4]
+  assign RetimeWrapper_8_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_0; // @[package.scala 94:16:@20232.4]
+  assign RetimeWrapper_9_clock = clock; // @[:@20239.4]
+  assign RetimeWrapper_9_reset = reset; // @[:@20240.4]
+  assign RetimeWrapper_9_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20242.4]
+  assign RetimeWrapper_9_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_1; // @[package.scala 94:16:@20241.4]
+  assign RetimeWrapper_10_clock = clock; // @[:@20248.4]
+  assign RetimeWrapper_10_reset = reset; // @[:@20249.4]
+  assign RetimeWrapper_10_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20251.4]
+  assign RetimeWrapper_10_io_in = $unsigned(_T_396); // @[package.scala 94:16:@20250.4]
+  assign RetimeWrapper_11_clock = clock; // @[:@20257.4]
+  assign RetimeWrapper_11_reset = reset; // @[:@20258.4]
+  assign RetimeWrapper_11_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20260.4]
+  assign RetimeWrapper_11_io_in = x218_sum_1_io_result; // @[package.scala 94:16:@20259.4]
+  assign RetimeWrapper_12_clock = clock; // @[:@20266.4]
+  assign RetimeWrapper_12_reset = reset; // @[:@20267.4]
+  assign RetimeWrapper_12_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20269.4]
+  assign RetimeWrapper_12_io_in = $unsigned(_T_320); // @[package.scala 94:16:@20268.4]
+  assign RetimeWrapper_13_clock = clock; // @[:@20278.4]
+  assign RetimeWrapper_13_reset = reset; // @[:@20279.4]
+  assign RetimeWrapper_13_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20281.4]
+  assign RetimeWrapper_13_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20280.4]
+  assign RetimeWrapper_14_clock = clock; // @[:@20298.4]
+  assign RetimeWrapper_14_reset = reset; // @[:@20299.4]
+  assign RetimeWrapper_14_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20301.4]
+  assign RetimeWrapper_14_io_in = __1_io_result; // @[package.scala 94:16:@20300.4]
+  assign x224_rdcol_1_clock = clock; // @[:@20309.4]
+  assign x224_rdcol_1_reset = reset; // @[:@20310.4]
+  assign x224_rdcol_1_io_a = RetimeWrapper_14_io_out; // @[Math.scala 192:17:@20311.4]
+  assign x224_rdcol_1_io_b = 32'h1; // @[Math.scala 193:17:@20312.4]
+  assign x224_rdcol_1_io_flow = io_in_x182_TREADY; // @[Math.scala 194:20:@20313.4]
+  assign RetimeWrapper_15_clock = clock; // @[:@20339.4]
+  assign RetimeWrapper_15_reset = reset; // @[:@20340.4]
+  assign RetimeWrapper_15_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20342.4]
+  assign RetimeWrapper_15_io_in = {_T_405,_T_406}; // @[package.scala 94:16:@20341.4]
+  assign x227_sum_1_clock = clock; // @[:@20348.4]
+  assign x227_sum_1_reset = reset; // @[:@20349.4]
+  assign x227_sum_1_io_a = RetimeWrapper_15_io_out; // @[Math.scala 151:17:@20350.4]
+  assign x227_sum_1_io_b = {_T_476,_T_477}; // @[Math.scala 152:17:@20351.4]
+  assign x227_sum_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20352.4]
+  assign RetimeWrapper_16_clock = clock; // @[:@20358.4]
+  assign RetimeWrapper_16_reset = reset; // @[:@20359.4]
+  assign RetimeWrapper_16_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20361.4]
+  assign RetimeWrapper_16_io_in = $unsigned(_T_467); // @[package.scala 94:16:@20360.4]
+  assign RetimeWrapper_17_clock = clock; // @[:@20370.4]
+  assign RetimeWrapper_17_reset = reset; // @[:@20371.4]
+  assign RetimeWrapper_17_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20373.4]
+  assign RetimeWrapper_17_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20372.4]
+  assign x233_rdcol_1_clock = clock; // @[:@20392.4]
+  assign x233_rdcol_1_reset = reset; // @[:@20393.4]
+  assign x233_rdcol_1_io_a = RetimeWrapper_14_io_out; // @[Math.scala 192:17:@20394.4]
+  assign x233_rdcol_1_io_b = 32'h2; // @[Math.scala 193:17:@20395.4]
+  assign x233_rdcol_1_io_flow = io_in_x182_TREADY; // @[Math.scala 194:20:@20396.4]
+  assign x236_sum_1_clock = clock; // @[:@20422.4]
+  assign x236_sum_1_reset = reset; // @[:@20423.4]
+  assign x236_sum_1_io_a = RetimeWrapper_15_io_out; // @[Math.scala 151:17:@20424.4]
+  assign x236_sum_1_io_b = {_T_532,_T_533}; // @[Math.scala 152:17:@20425.4]
+  assign x236_sum_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20426.4]
+  assign RetimeWrapper_18_clock = clock; // @[:@20432.4]
+  assign RetimeWrapper_18_reset = reset; // @[:@20433.4]
+  assign RetimeWrapper_18_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20435.4]
+  assign RetimeWrapper_18_io_in = $unsigned(_T_523); // @[package.scala 94:16:@20434.4]
+  assign RetimeWrapper_19_clock = clock; // @[:@20444.4]
+  assign RetimeWrapper_19_reset = reset; // @[:@20445.4]
+  assign RetimeWrapper_19_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20447.4]
+  assign RetimeWrapper_19_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20446.4]
+  assign x242_rdrow_1_clock = clock; // @[:@20468.4]
+  assign x242_rdrow_1_reset = reset; // @[:@20469.4]
+  assign x242_rdrow_1_io_a = RetimeWrapper_6_io_out; // @[Math.scala 192:17:@20470.4]
+  assign x242_rdrow_1_io_b = 32'h1; // @[Math.scala 193:17:@20471.4]
+  assign x242_rdrow_1_io_flow = io_in_x182_TREADY; // @[Math.scala 194:20:@20472.4]
+  assign RetimeWrapper_20_clock = clock; // @[:@20509.4]
+  assign RetimeWrapper_20_reset = reset; // @[:@20510.4]
+  assign RetimeWrapper_20_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20512.4]
+  assign RetimeWrapper_20_io_in = {_T_339,_T_340}; // @[package.scala 94:16:@20511.4]
+  assign x246_sum_1_clock = clock; // @[:@20518.4]
+  assign x246_sum_1_reset = reset; // @[:@20519.4]
+  assign x246_sum_1_io_a = {_T_599,_T_600}; // @[Math.scala 151:17:@20520.4]
+  assign x246_sum_1_io_b = RetimeWrapper_20_io_out; // @[Math.scala 152:17:@20521.4]
+  assign x246_sum_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20522.4]
+  assign RetimeWrapper_21_clock = clock; // @[:@20528.4]
+  assign RetimeWrapper_21_reset = reset; // @[:@20529.4]
+  assign RetimeWrapper_21_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20531.4]
+  assign RetimeWrapper_21_io_in = $unsigned(_T_590); // @[package.scala 94:16:@20530.4]
+  assign RetimeWrapper_22_clock = clock; // @[:@20540.4]
+  assign RetimeWrapper_22_reset = reset; // @[:@20541.4]
+  assign RetimeWrapper_22_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20543.4]
+  assign RetimeWrapper_22_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20542.4]
+  assign x252_sum_1_clock = clock; // @[:@20560.4]
+  assign x252_sum_1_reset = reset; // @[:@20561.4]
+  assign x252_sum_1_io_a = {_T_599,_T_600}; // @[Math.scala 151:17:@20562.4]
+  assign x252_sum_1_io_b = {_T_476,_T_477}; // @[Math.scala 152:17:@20563.4]
+  assign x252_sum_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20564.4]
+  assign RetimeWrapper_23_clock = clock; // @[:@20573.4]
+  assign RetimeWrapper_23_reset = reset; // @[:@20574.4]
+  assign RetimeWrapper_23_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20576.4]
+  assign RetimeWrapper_23_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20575.4]
+  assign x257_sum_1_clock = clock; // @[:@20593.4]
+  assign x257_sum_1_reset = reset; // @[:@20594.4]
+  assign x257_sum_1_io_a = {_T_599,_T_600}; // @[Math.scala 151:17:@20595.4]
+  assign x257_sum_1_io_b = {_T_532,_T_533}; // @[Math.scala 152:17:@20596.4]
+  assign x257_sum_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20597.4]
+  assign RetimeWrapper_24_clock = clock; // @[:@20606.4]
+  assign RetimeWrapper_24_reset = reset; // @[:@20607.4]
+  assign RetimeWrapper_24_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20609.4]
+  assign RetimeWrapper_24_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20608.4]
+  assign x262_rdrow_1_clock = clock; // @[:@20628.4]
+  assign x262_rdrow_1_reset = reset; // @[:@20629.4]
+  assign x262_rdrow_1_io_a = RetimeWrapper_6_io_out; // @[Math.scala 192:17:@20630.4]
+  assign x262_rdrow_1_io_b = 32'h2; // @[Math.scala 193:17:@20631.4]
+  assign x262_rdrow_1_io_flow = io_in_x182_TREADY; // @[Math.scala 194:20:@20632.4]
+  assign x266_sum_1_clock = clock; // @[:@20669.4]
+  assign x266_sum_1_reset = reset; // @[:@20670.4]
+  assign x266_sum_1_io_a = {_T_709,_T_710}; // @[Math.scala 151:17:@20671.4]
+  assign x266_sum_1_io_b = RetimeWrapper_20_io_out; // @[Math.scala 152:17:@20672.4]
+  assign x266_sum_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20673.4]
+  assign RetimeWrapper_25_clock = clock; // @[:@20679.4]
+  assign RetimeWrapper_25_reset = reset; // @[:@20680.4]
+  assign RetimeWrapper_25_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20682.4]
+  assign RetimeWrapper_25_io_in = $unsigned(_T_700); // @[package.scala 94:16:@20681.4]
+  assign RetimeWrapper_26_clock = clock; // @[:@20691.4]
+  assign RetimeWrapper_26_reset = reset; // @[:@20692.4]
+  assign RetimeWrapper_26_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20694.4]
+  assign RetimeWrapper_26_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20693.4]
+  assign x272_sum_1_clock = clock; // @[:@20711.4]
+  assign x272_sum_1_reset = reset; // @[:@20712.4]
+  assign x272_sum_1_io_a = {_T_709,_T_710}; // @[Math.scala 151:17:@20713.4]
+  assign x272_sum_1_io_b = {_T_476,_T_477}; // @[Math.scala 152:17:@20714.4]
+  assign x272_sum_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20715.4]
+  assign RetimeWrapper_27_clock = clock; // @[:@20724.4]
+  assign RetimeWrapper_27_reset = reset; // @[:@20725.4]
+  assign RetimeWrapper_27_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20727.4]
+  assign RetimeWrapper_27_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20726.4]
+  assign x277_sum_1_clock = clock; // @[:@20744.4]
+  assign x277_sum_1_reset = reset; // @[:@20745.4]
+  assign x277_sum_1_io_a = {_T_709,_T_710}; // @[Math.scala 151:17:@20746.4]
+  assign x277_sum_1_io_b = {_T_532,_T_533}; // @[Math.scala 152:17:@20747.4]
+  assign x277_sum_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20748.4]
+  assign RetimeWrapper_28_clock = clock; // @[:@20757.4]
+  assign RetimeWrapper_28_reset = reset; // @[:@20758.4]
+  assign RetimeWrapper_28_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20760.4]
+  assign RetimeWrapper_28_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20759.4]
+  assign x287_x11_1_clock = clock; // @[:@20802.4]
+  assign x287_x11_1_reset = reset; // @[:@20803.4]
+  assign x287_x11_1_io_a = x194_lb_0_io_rPort_8_output_0; // @[Math.scala 151:17:@20804.4]
+  assign x287_x11_1_io_b = _T_781[7:0]; // @[Math.scala 152:17:@20805.4]
+  assign x287_x11_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20806.4]
+  assign x288_x12_1_clock = clock; // @[:@20812.4]
+  assign x288_x12_1_reset = reset; // @[:@20813.4]
+  assign x288_x12_1_io_a = x194_lb_0_io_rPort_4_output_0; // @[Math.scala 151:17:@20814.4]
+  assign x288_x12_1_io_b = _T_785[7:0]; // @[Math.scala 152:17:@20815.4]
+  assign x288_x12_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20816.4]
+  assign x289_x11_1_clock = clock; // @[:@20822.4]
+  assign x289_x11_1_reset = reset; // @[:@20823.4]
+  assign x289_x11_1_io_a = _T_789[7:0]; // @[Math.scala 151:17:@20824.4]
+  assign x289_x11_1_io_b = _T_793[7:0]; // @[Math.scala 152:17:@20825.4]
+  assign x289_x11_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20826.4]
+  assign x290_x12_1_clock = clock; // @[:@20832.4]
+  assign x290_x12_1_reset = reset; // @[:@20833.4]
+  assign x290_x12_1_io_a = x194_lb_0_io_rPort_1_output_0; // @[Math.scala 151:17:@20834.4]
+  assign x290_x12_1_io_b = _T_797[7:0]; // @[Math.scala 152:17:@20835.4]
+  assign x290_x12_1_io_flow = io_in_x182_TREADY; // @[Math.scala 153:20:@20836.4]
+  assign x291_x11_1_io_a = x287_x11_1_io_result; // @[Math.scala 151:17:@20844.4]
+  assign x291_x11_1_io_b = x288_x12_1_io_result; // @[Math.scala 152:17:@20845.4]
+  assign x292_x12_1_io_a = x289_x11_1_io_result; // @[Math.scala 151:17:@20854.4]
+  assign x292_x12_1_io_b = x290_x12_1_io_result; // @[Math.scala 152:17:@20855.4]
+  assign x293_x11_1_io_a = x291_x11_1_io_result; // @[Math.scala 151:17:@20864.4]
+  assign x293_x11_1_io_b = x292_x12_1_io_result; // @[Math.scala 152:17:@20865.4]
+  assign RetimeWrapper_29_clock = clock; // @[:@20872.4]
+  assign RetimeWrapper_29_reset = reset; // @[:@20873.4]
+  assign RetimeWrapper_29_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20875.4]
+  assign RetimeWrapper_29_io_in = x194_lb_0_io_rPort_0_output_0; // @[package.scala 94:16:@20874.4]
+  assign x294_sum_1_io_a = x293_x11_1_io_result; // @[Math.scala 151:17:@20883.4]
+  assign x294_sum_1_io_b = RetimeWrapper_29_io_out; // @[Math.scala 152:17:@20884.4]
+  assign RetimeWrapper_30_clock = clock; // @[:@20895.4]
+  assign RetimeWrapper_30_reset = reset; // @[:@20896.4]
+  assign RetimeWrapper_30_io_flow = io_in_x182_TREADY; // @[package.scala 95:18:@20898.4]
+  assign RetimeWrapper_30_io_in = {4'h0,_T_833}; // @[package.scala 94:16:@20897.4]
+  assign RetimeWrapper_31_clock = clock; // @[:@20909.4]
+  assign RetimeWrapper_31_reset = reset; // @[:@20910.4]
+  assign RetimeWrapper_31_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20912.4]
+  assign RetimeWrapper_31_io_in = RetimeWrapper_30_io_out; // @[package.scala 94:16:@20911.4]
+  assign RetimeWrapper_32_clock = clock; // @[:@20918.4]
+  assign RetimeWrapper_32_reset = reset; // @[:@20919.4]
+  assign RetimeWrapper_32_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20921.4]
+  assign RetimeWrapper_32_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_1; // @[package.scala 94:16:@20920.4]
+  assign RetimeWrapper_33_clock = clock; // @[:@20927.4]
+  assign RetimeWrapper_33_reset = reset; // @[:@20928.4]
+  assign RetimeWrapper_33_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20930.4]
+  assign RetimeWrapper_33_io_in = ~ io_sigsIn_cchainOutputs_0_oobs_0; // @[package.scala 94:16:@20929.4]
+  assign RetimeWrapper_34_clock = clock; // @[:@20936.4]
+  assign RetimeWrapper_34_reset = reset; // @[:@20937.4]
+  assign RetimeWrapper_34_io_flow = io_sigsIn_backpressure; // @[package.scala 95:18:@20939.4]
+  assign RetimeWrapper_34_io_in = io_sigsIn_datapathEn; // @[package.scala 94:16:@20938.4]
 endmodule
-module x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1( // @[:@21577.2]
-  input          clock, // @[:@21578.4]
-  input          reset, // @[:@21579.4]
-  output         io_in_x196_TVALID, // @[:@21580.4]
-  input          io_in_x196_TREADY, // @[:@21580.4]
-  output [255:0] io_in_x196_TDATA, // @[:@21580.4]
-  input          io_in_x195_TVALID, // @[:@21580.4]
-  output         io_in_x195_TREADY, // @[:@21580.4]
-  input  [255:0] io_in_x195_TDATA, // @[:@21580.4]
-  input  [7:0]   io_in_x195_TID, // @[:@21580.4]
-  input  [7:0]   io_in_x195_TDEST, // @[:@21580.4]
-  input          io_sigsIn_smEnableOuts_0, // @[:@21580.4]
-  input          io_sigsIn_smChildAcks_0, // @[:@21580.4]
-  output         io_sigsOut_smDoneIn_0, // @[:@21580.4]
-  output         io_sigsOut_smCtrCopyDone_0, // @[:@21580.4]
-  input          io_rr // @[:@21580.4]
+module x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1( // @[:@20957.2]
+  input          clock, // @[:@20958.4]
+  input          reset, // @[:@20959.4]
+  input          io_in_x181_TVALID, // @[:@20960.4]
+  output         io_in_x181_TREADY, // @[:@20960.4]
+  input  [255:0] io_in_x181_TDATA, // @[:@20960.4]
+  input  [7:0]   io_in_x181_TID, // @[:@20960.4]
+  input  [7:0]   io_in_x181_TDEST, // @[:@20960.4]
+  output         io_in_x182_TVALID, // @[:@20960.4]
+  input          io_in_x182_TREADY, // @[:@20960.4]
+  output [255:0] io_in_x182_TDATA, // @[:@20960.4]
+  input          io_sigsIn_smEnableOuts_0, // @[:@20960.4]
+  input          io_sigsIn_smChildAcks_0, // @[:@20960.4]
+  output         io_sigsOut_smDoneIn_0, // @[:@20960.4]
+  output         io_sigsOut_smCtrCopyDone_0, // @[:@20960.4]
+  input          io_rr // @[:@20960.4]
 );
-  wire  x203_ctrchain_clock; // @[SpatialBlocks.scala 37:22:@21590.4]
-  wire  x203_ctrchain_reset; // @[SpatialBlocks.scala 37:22:@21590.4]
-  wire  x203_ctrchain_io_input_reset; // @[SpatialBlocks.scala 37:22:@21590.4]
-  wire  x203_ctrchain_io_input_enable; // @[SpatialBlocks.scala 37:22:@21590.4]
-  wire [31:0] x203_ctrchain_io_output_counts_1; // @[SpatialBlocks.scala 37:22:@21590.4]
-  wire [31:0] x203_ctrchain_io_output_counts_0; // @[SpatialBlocks.scala 37:22:@21590.4]
-  wire  x203_ctrchain_io_output_oobs_0; // @[SpatialBlocks.scala 37:22:@21590.4]
-  wire  x203_ctrchain_io_output_oobs_1; // @[SpatialBlocks.scala 37:22:@21590.4]
-  wire  x203_ctrchain_io_output_done; // @[SpatialBlocks.scala 37:22:@21590.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_clock; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_reset; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_io_enable; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_io_done; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_io_doneLatch; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_io_ctrDone; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_io_datapathEn; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_io_ctrInc; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_io_ctrRst; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_io_parentAck; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_io_backpressure; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sm_io_break; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-  wire  RetimeWrapper_clock; // @[package.scala 93:22:@21677.4]
-  wire  RetimeWrapper_reset; // @[package.scala 93:22:@21677.4]
-  wire  RetimeWrapper_io_flow; // @[package.scala 93:22:@21677.4]
-  wire  RetimeWrapper_io_in; // @[package.scala 93:22:@21677.4]
-  wire  RetimeWrapper_io_out; // @[package.scala 93:22:@21677.4]
-  wire  RetimeWrapper_1_clock; // @[package.scala 93:22:@21719.4]
-  wire  RetimeWrapper_1_reset; // @[package.scala 93:22:@21719.4]
-  wire  RetimeWrapper_1_io_flow; // @[package.scala 93:22:@21719.4]
-  wire  RetimeWrapper_1_io_in; // @[package.scala 93:22:@21719.4]
-  wire  RetimeWrapper_1_io_out; // @[package.scala 93:22:@21719.4]
-  wire  RetimeWrapper_2_clock; // @[package.scala 93:22:@21727.4]
-  wire  RetimeWrapper_2_reset; // @[package.scala 93:22:@21727.4]
-  wire  RetimeWrapper_2_io_flow; // @[package.scala 93:22:@21727.4]
-  wire  RetimeWrapper_2_io_in; // @[package.scala 93:22:@21727.4]
-  wire  RetimeWrapper_2_io_out; // @[package.scala 93:22:@21727.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_clock; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_reset; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x196_TVALID; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x196_TREADY; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire [255:0] x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x196_TDATA; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TREADY; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire [255:0] x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TDATA; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire [7:0] x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TID; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire [7:0] x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TDEST; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_backpressure; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_datapathEn; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_break; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire [31:0] x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_1; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire [31:0] x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_1; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_rr; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-  wire  _T_239; // @[package.scala 96:25:@21682.4 package.scala 96:25:@21683.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sigsIn_forwardpressure; // @[sm_x322_outr_UnitPipe.scala 68:66:@21688.4]
-  wire  _T_252; // @[package.scala 96:25:@21724.4 package.scala 96:25:@21725.4]
-  wire  _T_258; // @[package.scala 96:25:@21732.4 package.scala 96:25:@21733.4]
-  wire  _T_261; // @[SpatialBlocks.scala 110:93:@21735.4]
-  wire  x321_inr_Foreach_SAMPLER_BOX_sigsIn_baseEn; // @[SpatialBlocks.scala 110:90:@21736.4]
-  wire  _T_263; // @[SpatialBlocks.scala 128:36:@21744.4]
-  wire  _T_264; // @[SpatialBlocks.scala 128:78:@21745.4]
-  wire  _T_269; // @[SpatialBlocks.scala 130:61:@21754.4]
-  x203_ctrchain x203_ctrchain ( // @[SpatialBlocks.scala 37:22:@21590.4]
-    .clock(x203_ctrchain_clock),
-    .reset(x203_ctrchain_reset),
-    .io_input_reset(x203_ctrchain_io_input_reset),
-    .io_input_enable(x203_ctrchain_io_input_enable),
-    .io_output_counts_1(x203_ctrchain_io_output_counts_1),
-    .io_output_counts_0(x203_ctrchain_io_output_counts_0),
-    .io_output_oobs_0(x203_ctrchain_io_output_oobs_0),
-    .io_output_oobs_1(x203_ctrchain_io_output_oobs_1),
-    .io_output_done(x203_ctrchain_io_output_done)
+  wire  x189_ctrchain_clock; // @[SpatialBlocks.scala 37:22:@20970.4]
+  wire  x189_ctrchain_reset; // @[SpatialBlocks.scala 37:22:@20970.4]
+  wire  x189_ctrchain_io_input_reset; // @[SpatialBlocks.scala 37:22:@20970.4]
+  wire  x189_ctrchain_io_input_enable; // @[SpatialBlocks.scala 37:22:@20970.4]
+  wire [31:0] x189_ctrchain_io_output_counts_1; // @[SpatialBlocks.scala 37:22:@20970.4]
+  wire [31:0] x189_ctrchain_io_output_counts_0; // @[SpatialBlocks.scala 37:22:@20970.4]
+  wire  x189_ctrchain_io_output_oobs_0; // @[SpatialBlocks.scala 37:22:@20970.4]
+  wire  x189_ctrchain_io_output_oobs_1; // @[SpatialBlocks.scala 37:22:@20970.4]
+  wire  x189_ctrchain_io_output_done; // @[SpatialBlocks.scala 37:22:@20970.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_clock; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_reset; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_io_enable; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_io_done; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_io_doneLatch; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_io_ctrDone; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_io_datapathEn; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_io_ctrInc; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_io_ctrRst; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_io_parentAck; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_io_backpressure; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sm_io_break; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+  wire  RetimeWrapper_clock; // @[package.scala 93:22:@21057.4]
+  wire  RetimeWrapper_reset; // @[package.scala 93:22:@21057.4]
+  wire  RetimeWrapper_io_flow; // @[package.scala 93:22:@21057.4]
+  wire  RetimeWrapper_io_in; // @[package.scala 93:22:@21057.4]
+  wire  RetimeWrapper_io_out; // @[package.scala 93:22:@21057.4]
+  wire  RetimeWrapper_1_clock; // @[package.scala 93:22:@21099.4]
+  wire  RetimeWrapper_1_reset; // @[package.scala 93:22:@21099.4]
+  wire  RetimeWrapper_1_io_flow; // @[package.scala 93:22:@21099.4]
+  wire  RetimeWrapper_1_io_in; // @[package.scala 93:22:@21099.4]
+  wire  RetimeWrapper_1_io_out; // @[package.scala 93:22:@21099.4]
+  wire  RetimeWrapper_2_clock; // @[package.scala 93:22:@21107.4]
+  wire  RetimeWrapper_2_reset; // @[package.scala 93:22:@21107.4]
+  wire  RetimeWrapper_2_io_flow; // @[package.scala 93:22:@21107.4]
+  wire  RetimeWrapper_2_io_in; // @[package.scala 93:22:@21107.4]
+  wire  RetimeWrapper_2_io_out; // @[package.scala 93:22:@21107.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_clock; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_reset; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TREADY; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire [255:0] x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TDATA; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire [7:0] x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TID; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire [7:0] x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TDEST; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x182_TVALID; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x182_TREADY; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire [255:0] x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x182_TDATA; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_backpressure; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_datapathEn; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_break; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire [31:0] x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_1; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire [31:0] x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_1; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_rr; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+  wire  _T_239; // @[package.scala 96:25:@21062.4 package.scala 96:25:@21063.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sigsIn_forwardpressure; // @[sm_x301_outr_UnitPipe.scala 68:66:@21068.4]
+  wire  _T_252; // @[package.scala 96:25:@21104.4 package.scala 96:25:@21105.4]
+  wire  _T_258; // @[package.scala 96:25:@21112.4 package.scala 96:25:@21113.4]
+  wire  _T_261; // @[SpatialBlocks.scala 110:93:@21115.4]
+  wire  x300_inr_Foreach_SAMPLER_BOX_sigsIn_baseEn; // @[SpatialBlocks.scala 110:90:@21116.4]
+  wire  _T_263; // @[SpatialBlocks.scala 128:36:@21124.4]
+  wire  _T_264; // @[SpatialBlocks.scala 128:78:@21125.4]
+  wire  _T_269; // @[SpatialBlocks.scala 130:61:@21134.4]
+  x189_ctrchain x189_ctrchain ( // @[SpatialBlocks.scala 37:22:@20970.4]
+    .clock(x189_ctrchain_clock),
+    .reset(x189_ctrchain_reset),
+    .io_input_reset(x189_ctrchain_io_input_reset),
+    .io_input_enable(x189_ctrchain_io_input_enable),
+    .io_output_counts_1(x189_ctrchain_io_output_counts_1),
+    .io_output_counts_0(x189_ctrchain_io_output_counts_0),
+    .io_output_oobs_0(x189_ctrchain_io_output_oobs_0),
+    .io_output_oobs_1(x189_ctrchain_io_output_oobs_1),
+    .io_output_done(x189_ctrchain_io_output_done)
   );
-  x321_inr_Foreach_SAMPLER_BOX_sm x321_inr_Foreach_SAMPLER_BOX_sm ( // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 32:18:@21649.4]
-    .clock(x321_inr_Foreach_SAMPLER_BOX_sm_clock),
-    .reset(x321_inr_Foreach_SAMPLER_BOX_sm_reset),
-    .io_enable(x321_inr_Foreach_SAMPLER_BOX_sm_io_enable),
-    .io_done(x321_inr_Foreach_SAMPLER_BOX_sm_io_done),
-    .io_doneLatch(x321_inr_Foreach_SAMPLER_BOX_sm_io_doneLatch),
-    .io_ctrDone(x321_inr_Foreach_SAMPLER_BOX_sm_io_ctrDone),
-    .io_datapathEn(x321_inr_Foreach_SAMPLER_BOX_sm_io_datapathEn),
-    .io_ctrInc(x321_inr_Foreach_SAMPLER_BOX_sm_io_ctrInc),
-    .io_ctrRst(x321_inr_Foreach_SAMPLER_BOX_sm_io_ctrRst),
-    .io_parentAck(x321_inr_Foreach_SAMPLER_BOX_sm_io_parentAck),
-    .io_backpressure(x321_inr_Foreach_SAMPLER_BOX_sm_io_backpressure),
-    .io_break(x321_inr_Foreach_SAMPLER_BOX_sm_io_break)
+  x300_inr_Foreach_SAMPLER_BOX_sm x300_inr_Foreach_SAMPLER_BOX_sm ( // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 32:18:@21029.4]
+    .clock(x300_inr_Foreach_SAMPLER_BOX_sm_clock),
+    .reset(x300_inr_Foreach_SAMPLER_BOX_sm_reset),
+    .io_enable(x300_inr_Foreach_SAMPLER_BOX_sm_io_enable),
+    .io_done(x300_inr_Foreach_SAMPLER_BOX_sm_io_done),
+    .io_doneLatch(x300_inr_Foreach_SAMPLER_BOX_sm_io_doneLatch),
+    .io_ctrDone(x300_inr_Foreach_SAMPLER_BOX_sm_io_ctrDone),
+    .io_datapathEn(x300_inr_Foreach_SAMPLER_BOX_sm_io_datapathEn),
+    .io_ctrInc(x300_inr_Foreach_SAMPLER_BOX_sm_io_ctrInc),
+    .io_ctrRst(x300_inr_Foreach_SAMPLER_BOX_sm_io_ctrRst),
+    .io_parentAck(x300_inr_Foreach_SAMPLER_BOX_sm_io_parentAck),
+    .io_backpressure(x300_inr_Foreach_SAMPLER_BOX_sm_io_backpressure),
+    .io_break(x300_inr_Foreach_SAMPLER_BOX_sm_io_break)
   );
-  RetimeWrapper RetimeWrapper ( // @[package.scala 93:22:@21677.4]
+  RetimeWrapper RetimeWrapper ( // @[package.scala 93:22:@21057.4]
     .clock(RetimeWrapper_clock),
     .reset(RetimeWrapper_reset),
     .io_flow(RetimeWrapper_io_flow),
     .io_in(RetimeWrapper_io_in),
     .io_out(RetimeWrapper_io_out)
   );
-  RetimeWrapper RetimeWrapper_1 ( // @[package.scala 93:22:@21719.4]
+  RetimeWrapper RetimeWrapper_1 ( // @[package.scala 93:22:@21099.4]
     .clock(RetimeWrapper_1_clock),
     .reset(RetimeWrapper_1_reset),
     .io_flow(RetimeWrapper_1_io_flow),
     .io_in(RetimeWrapper_1_io_in),
     .io_out(RetimeWrapper_1_io_out)
   );
-  RetimeWrapper RetimeWrapper_2 ( // @[package.scala 93:22:@21727.4]
+  RetimeWrapper RetimeWrapper_2 ( // @[package.scala 93:22:@21107.4]
     .clock(RetimeWrapper_2_clock),
     .reset(RetimeWrapper_2_reset),
     .io_flow(RetimeWrapper_2_io_flow),
     .io_in(RetimeWrapper_2_io_in),
     .io_out(RetimeWrapper_2_io_out)
   );
-  x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1 x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1 ( // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 350:24:@21759.4]
-    .clock(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_clock),
-    .reset(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_reset),
-    .io_in_x196_TVALID(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x196_TVALID),
-    .io_in_x196_TREADY(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x196_TREADY),
-    .io_in_x196_TDATA(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x196_TDATA),
-    .io_in_x195_TREADY(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TREADY),
-    .io_in_x195_TDATA(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TDATA),
-    .io_in_x195_TID(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TID),
-    .io_in_x195_TDEST(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TDEST),
-    .io_sigsIn_backpressure(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_backpressure),
-    .io_sigsIn_datapathEn(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_datapathEn),
-    .io_sigsIn_break(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_break),
-    .io_sigsIn_cchainOutputs_0_counts_1(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_1),
-    .io_sigsIn_cchainOutputs_0_counts_0(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_0),
-    .io_sigsIn_cchainOutputs_0_oobs_0(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_0),
-    .io_sigsIn_cchainOutputs_0_oobs_1(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_1),
-    .io_rr(x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_rr)
+  x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1 x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1 ( // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 324:24:@21139.4]
+    .clock(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_clock),
+    .reset(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_reset),
+    .io_in_x181_TREADY(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TREADY),
+    .io_in_x181_TDATA(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TDATA),
+    .io_in_x181_TID(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TID),
+    .io_in_x181_TDEST(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TDEST),
+    .io_in_x182_TVALID(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x182_TVALID),
+    .io_in_x182_TREADY(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x182_TREADY),
+    .io_in_x182_TDATA(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x182_TDATA),
+    .io_sigsIn_backpressure(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_backpressure),
+    .io_sigsIn_datapathEn(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_datapathEn),
+    .io_sigsIn_break(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_break),
+    .io_sigsIn_cchainOutputs_0_counts_1(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_1),
+    .io_sigsIn_cchainOutputs_0_counts_0(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_0),
+    .io_sigsIn_cchainOutputs_0_oobs_0(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_0),
+    .io_sigsIn_cchainOutputs_0_oobs_1(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_1),
+    .io_rr(x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_rr)
   );
-  assign _T_239 = RetimeWrapper_io_out; // @[package.scala 96:25:@21682.4 package.scala 96:25:@21683.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_sigsIn_forwardpressure = io_in_x195_TVALID | x321_inr_Foreach_SAMPLER_BOX_sm_io_doneLatch; // @[sm_x322_outr_UnitPipe.scala 68:66:@21688.4]
-  assign _T_252 = RetimeWrapper_1_io_out; // @[package.scala 96:25:@21724.4 package.scala 96:25:@21725.4]
-  assign _T_258 = RetimeWrapper_2_io_out; // @[package.scala 96:25:@21732.4 package.scala 96:25:@21733.4]
-  assign _T_261 = ~ _T_258; // @[SpatialBlocks.scala 110:93:@21735.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_sigsIn_baseEn = _T_252 & _T_261; // @[SpatialBlocks.scala 110:90:@21736.4]
-  assign _T_263 = x321_inr_Foreach_SAMPLER_BOX_sm_io_datapathEn; // @[SpatialBlocks.scala 128:36:@21744.4]
-  assign _T_264 = ~ x321_inr_Foreach_SAMPLER_BOX_sm_io_ctrDone; // @[SpatialBlocks.scala 128:78:@21745.4]
-  assign _T_269 = x321_inr_Foreach_SAMPLER_BOX_sm_io_ctrInc; // @[SpatialBlocks.scala 130:61:@21754.4]
-  assign io_in_x196_TVALID = x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x196_TVALID; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 48:23:@21817.4]
-  assign io_in_x196_TDATA = x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x196_TDATA; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 48:23:@21815.4]
-  assign io_in_x195_TREADY = x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TREADY; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 49:23:@21825.4]
-  assign io_sigsOut_smDoneIn_0 = x321_inr_Foreach_SAMPLER_BOX_sm_io_done; // @[SpatialBlocks.scala 127:53:@21742.4]
-  assign io_sigsOut_smCtrCopyDone_0 = x321_inr_Foreach_SAMPLER_BOX_sm_io_done; // @[SpatialBlocks.scala 139:125:@21758.4]
-  assign x203_ctrchain_clock = clock; // @[:@21591.4]
-  assign x203_ctrchain_reset = reset; // @[:@21592.4]
-  assign x203_ctrchain_io_input_reset = x321_inr_Foreach_SAMPLER_BOX_sm_io_ctrRst; // @[SpatialBlocks.scala 130:103:@21757.4]
-  assign x203_ctrchain_io_input_enable = _T_269 & x321_inr_Foreach_SAMPLER_BOX_sigsIn_forwardpressure; // @[SpatialBlocks.scala 104:75:@21712.4 SpatialBlocks.scala 130:45:@21756.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_sm_clock = clock; // @[:@21650.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_sm_reset = reset; // @[:@21651.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_sm_io_enable = x321_inr_Foreach_SAMPLER_BOX_sigsIn_baseEn & x321_inr_Foreach_SAMPLER_BOX_sigsIn_forwardpressure; // @[SpatialBlocks.scala 112:18:@21739.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_sm_io_ctrDone = io_rr ? _T_239 : 1'h0; // @[sm_x322_outr_UnitPipe.scala 66:50:@21685.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_sm_io_parentAck = io_sigsIn_smChildAcks_0; // @[SpatialBlocks.scala 114:21:@21741.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_sm_io_backpressure = io_in_x196_TREADY | x321_inr_Foreach_SAMPLER_BOX_sm_io_doneLatch; // @[SpatialBlocks.scala 105:24:@21713.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_sm_io_break = 1'h0; // @[sm_x322_outr_UnitPipe.scala 70:48:@21691.4]
-  assign RetimeWrapper_clock = clock; // @[:@21678.4]
-  assign RetimeWrapper_reset = reset; // @[:@21679.4]
-  assign RetimeWrapper_io_flow = 1'h1; // @[package.scala 95:18:@21681.4]
-  assign RetimeWrapper_io_in = x203_ctrchain_io_output_done; // @[package.scala 94:16:@21680.4]
-  assign RetimeWrapper_1_clock = clock; // @[:@21720.4]
-  assign RetimeWrapper_1_reset = reset; // @[:@21721.4]
-  assign RetimeWrapper_1_io_flow = 1'h1; // @[package.scala 95:18:@21723.4]
-  assign RetimeWrapper_1_io_in = io_sigsIn_smEnableOuts_0; // @[package.scala 94:16:@21722.4]
-  assign RetimeWrapper_2_clock = clock; // @[:@21728.4]
-  assign RetimeWrapper_2_reset = reset; // @[:@21729.4]
-  assign RetimeWrapper_2_io_flow = 1'h1; // @[package.scala 95:18:@21731.4]
-  assign RetimeWrapper_2_io_in = x321_inr_Foreach_SAMPLER_BOX_sm_io_done; // @[package.scala 94:16:@21730.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_clock = clock; // @[:@21760.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_reset = reset; // @[:@21761.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x196_TREADY = io_in_x196_TREADY; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 48:23:@21816.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TDATA = io_in_x195_TDATA; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 49:23:@21824.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TID = io_in_x195_TID; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 49:23:@21820.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x195_TDEST = io_in_x195_TDEST; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 49:23:@21819.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_backpressure = io_in_x196_TREADY | x321_inr_Foreach_SAMPLER_BOX_sm_io_doneLatch; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 354:22:@21843.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_datapathEn = _T_263 & _T_264; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 354:22:@21841.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_break = x321_inr_Foreach_SAMPLER_BOX_sm_io_break; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 354:22:@21839.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_1 = x203_ctrchain_io_output_counts_1; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 354:22:@21834.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_0 = x203_ctrchain_io_output_counts_0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 354:22:@21833.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_0 = x203_ctrchain_io_output_oobs_0; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 354:22:@21831.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_1 = x203_ctrchain_io_output_oobs_1; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 354:22:@21832.4]
-  assign x321_inr_Foreach_SAMPLER_BOX_kernelx321_inr_Foreach_SAMPLER_BOX_concrete1_io_rr = io_rr; // @[sm_x321_inr_Foreach_SAMPLER_BOX.scala 353:18:@21827.4]
+  assign _T_239 = RetimeWrapper_io_out; // @[package.scala 96:25:@21062.4 package.scala 96:25:@21063.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_sigsIn_forwardpressure = io_in_x181_TVALID | x300_inr_Foreach_SAMPLER_BOX_sm_io_doneLatch; // @[sm_x301_outr_UnitPipe.scala 68:66:@21068.4]
+  assign _T_252 = RetimeWrapper_1_io_out; // @[package.scala 96:25:@21104.4 package.scala 96:25:@21105.4]
+  assign _T_258 = RetimeWrapper_2_io_out; // @[package.scala 96:25:@21112.4 package.scala 96:25:@21113.4]
+  assign _T_261 = ~ _T_258; // @[SpatialBlocks.scala 110:93:@21115.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_sigsIn_baseEn = _T_252 & _T_261; // @[SpatialBlocks.scala 110:90:@21116.4]
+  assign _T_263 = x300_inr_Foreach_SAMPLER_BOX_sm_io_datapathEn; // @[SpatialBlocks.scala 128:36:@21124.4]
+  assign _T_264 = ~ x300_inr_Foreach_SAMPLER_BOX_sm_io_ctrDone; // @[SpatialBlocks.scala 128:78:@21125.4]
+  assign _T_269 = x300_inr_Foreach_SAMPLER_BOX_sm_io_ctrInc; // @[SpatialBlocks.scala 130:61:@21134.4]
+  assign io_in_x181_TREADY = x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TREADY; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 48:23:@21196.4]
+  assign io_in_x182_TVALID = x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x182_TVALID; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 49:23:@21206.4]
+  assign io_in_x182_TDATA = x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x182_TDATA; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 49:23:@21204.4]
+  assign io_sigsOut_smDoneIn_0 = x300_inr_Foreach_SAMPLER_BOX_sm_io_done; // @[SpatialBlocks.scala 127:53:@21122.4]
+  assign io_sigsOut_smCtrCopyDone_0 = x300_inr_Foreach_SAMPLER_BOX_sm_io_done; // @[SpatialBlocks.scala 139:125:@21138.4]
+  assign x189_ctrchain_clock = clock; // @[:@20971.4]
+  assign x189_ctrchain_reset = reset; // @[:@20972.4]
+  assign x189_ctrchain_io_input_reset = x300_inr_Foreach_SAMPLER_BOX_sm_io_ctrRst; // @[SpatialBlocks.scala 130:103:@21137.4]
+  assign x189_ctrchain_io_input_enable = _T_269 & x300_inr_Foreach_SAMPLER_BOX_sigsIn_forwardpressure; // @[SpatialBlocks.scala 104:75:@21092.4 SpatialBlocks.scala 130:45:@21136.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_sm_clock = clock; // @[:@21030.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_sm_reset = reset; // @[:@21031.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_sm_io_enable = x300_inr_Foreach_SAMPLER_BOX_sigsIn_baseEn & x300_inr_Foreach_SAMPLER_BOX_sigsIn_forwardpressure; // @[SpatialBlocks.scala 112:18:@21119.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_sm_io_ctrDone = io_rr ? _T_239 : 1'h0; // @[sm_x301_outr_UnitPipe.scala 66:50:@21065.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_sm_io_parentAck = io_sigsIn_smChildAcks_0; // @[SpatialBlocks.scala 114:21:@21121.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_sm_io_backpressure = io_in_x182_TREADY | x300_inr_Foreach_SAMPLER_BOX_sm_io_doneLatch; // @[SpatialBlocks.scala 105:24:@21093.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_sm_io_break = 1'h0; // @[sm_x301_outr_UnitPipe.scala 70:48:@21071.4]
+  assign RetimeWrapper_clock = clock; // @[:@21058.4]
+  assign RetimeWrapper_reset = reset; // @[:@21059.4]
+  assign RetimeWrapper_io_flow = 1'h1; // @[package.scala 95:18:@21061.4]
+  assign RetimeWrapper_io_in = x189_ctrchain_io_output_done; // @[package.scala 94:16:@21060.4]
+  assign RetimeWrapper_1_clock = clock; // @[:@21100.4]
+  assign RetimeWrapper_1_reset = reset; // @[:@21101.4]
+  assign RetimeWrapper_1_io_flow = 1'h1; // @[package.scala 95:18:@21103.4]
+  assign RetimeWrapper_1_io_in = io_sigsIn_smEnableOuts_0; // @[package.scala 94:16:@21102.4]
+  assign RetimeWrapper_2_clock = clock; // @[:@21108.4]
+  assign RetimeWrapper_2_reset = reset; // @[:@21109.4]
+  assign RetimeWrapper_2_io_flow = 1'h1; // @[package.scala 95:18:@21111.4]
+  assign RetimeWrapper_2_io_in = x300_inr_Foreach_SAMPLER_BOX_sm_io_done; // @[package.scala 94:16:@21110.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_clock = clock; // @[:@21140.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_reset = reset; // @[:@21141.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TDATA = io_in_x181_TDATA; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 48:23:@21195.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TID = io_in_x181_TID; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 48:23:@21191.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x181_TDEST = io_in_x181_TDEST; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 48:23:@21190.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_in_x182_TREADY = io_in_x182_TREADY; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 49:23:@21205.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_backpressure = io_in_x182_TREADY | x300_inr_Foreach_SAMPLER_BOX_sm_io_doneLatch; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 328:22:@21223.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_datapathEn = _T_263 & _T_264; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 328:22:@21221.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_break = x300_inr_Foreach_SAMPLER_BOX_sm_io_break; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 328:22:@21219.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_1 = x189_ctrchain_io_output_counts_1; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 328:22:@21214.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_counts_0 = x189_ctrchain_io_output_counts_0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 328:22:@21213.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_0 = x189_ctrchain_io_output_oobs_0; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 328:22:@21211.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_sigsIn_cchainOutputs_0_oobs_1 = x189_ctrchain_io_output_oobs_1; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 328:22:@21212.4]
+  assign x300_inr_Foreach_SAMPLER_BOX_kernelx300_inr_Foreach_SAMPLER_BOX_concrete1_io_rr = io_rr; // @[sm_x300_inr_Foreach_SAMPLER_BOX.scala 327:18:@21207.4]
 endmodule
-module RootController_kernelRootController_concrete1( // @[:@21856.2]
-  input          clock, // @[:@21857.4]
-  input          reset, // @[:@21858.4]
-  output         io_in_x196_TVALID, // @[:@21859.4]
-  input          io_in_x196_TREADY, // @[:@21859.4]
-  output [255:0] io_in_x196_TDATA, // @[:@21859.4]
-  input          io_in_x195_TVALID, // @[:@21859.4]
-  output         io_in_x195_TREADY, // @[:@21859.4]
-  input  [255:0] io_in_x195_TDATA, // @[:@21859.4]
-  input  [7:0]   io_in_x195_TID, // @[:@21859.4]
-  input  [7:0]   io_in_x195_TDEST, // @[:@21859.4]
-  input          io_sigsIn_smEnableOuts_0, // @[:@21859.4]
-  input          io_sigsIn_smChildAcks_0, // @[:@21859.4]
-  output         io_sigsOut_smDoneIn_0, // @[:@21859.4]
-  input          io_rr // @[:@21859.4]
+module RootController_kernelRootController_concrete1( // @[:@21236.2]
+  input          clock, // @[:@21237.4]
+  input          reset, // @[:@21238.4]
+  input          io_in_x181_TVALID, // @[:@21239.4]
+  output         io_in_x181_TREADY, // @[:@21239.4]
+  input  [255:0] io_in_x181_TDATA, // @[:@21239.4]
+  input  [7:0]   io_in_x181_TID, // @[:@21239.4]
+  input  [7:0]   io_in_x181_TDEST, // @[:@21239.4]
+  output         io_in_x182_TVALID, // @[:@21239.4]
+  input          io_in_x182_TREADY, // @[:@21239.4]
+  output [255:0] io_in_x182_TDATA, // @[:@21239.4]
+  input          io_sigsIn_smEnableOuts_0, // @[:@21239.4]
+  input          io_sigsIn_smChildAcks_0, // @[:@21239.4]
+  output         io_sigsOut_smDoneIn_0, // @[:@21239.4]
+  input          io_rr // @[:@21239.4]
 );
-  wire  x322_outr_UnitPipe_sm_clock; // @[sm_x322_outr_UnitPipe.scala 32:18:@22000.4]
-  wire  x322_outr_UnitPipe_sm_reset; // @[sm_x322_outr_UnitPipe.scala 32:18:@22000.4]
-  wire  x322_outr_UnitPipe_sm_io_enable; // @[sm_x322_outr_UnitPipe.scala 32:18:@22000.4]
-  wire  x322_outr_UnitPipe_sm_io_done; // @[sm_x322_outr_UnitPipe.scala 32:18:@22000.4]
-  wire  x322_outr_UnitPipe_sm_io_parentAck; // @[sm_x322_outr_UnitPipe.scala 32:18:@22000.4]
-  wire  x322_outr_UnitPipe_sm_io_doneIn_0; // @[sm_x322_outr_UnitPipe.scala 32:18:@22000.4]
-  wire  x322_outr_UnitPipe_sm_io_enableOut_0; // @[sm_x322_outr_UnitPipe.scala 32:18:@22000.4]
-  wire  x322_outr_UnitPipe_sm_io_childAck_0; // @[sm_x322_outr_UnitPipe.scala 32:18:@22000.4]
-  wire  x322_outr_UnitPipe_sm_io_ctrCopyDone_0; // @[sm_x322_outr_UnitPipe.scala 32:18:@22000.4]
-  wire  RetimeWrapper_clock; // @[package.scala 93:22:@22052.4]
-  wire  RetimeWrapper_reset; // @[package.scala 93:22:@22052.4]
-  wire  RetimeWrapper_io_flow; // @[package.scala 93:22:@22052.4]
-  wire  RetimeWrapper_io_in; // @[package.scala 93:22:@22052.4]
-  wire  RetimeWrapper_io_out; // @[package.scala 93:22:@22052.4]
-  wire  RetimeWrapper_1_clock; // @[package.scala 93:22:@22060.4]
-  wire  RetimeWrapper_1_reset; // @[package.scala 93:22:@22060.4]
-  wire  RetimeWrapper_1_io_flow; // @[package.scala 93:22:@22060.4]
-  wire  RetimeWrapper_1_io_in; // @[package.scala 93:22:@22060.4]
-  wire  RetimeWrapper_1_io_out; // @[package.scala 93:22:@22060.4]
-  wire  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_clock; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_reset; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x196_TVALID; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x196_TREADY; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire [255:0] x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x196_TDATA; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TVALID; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TREADY; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire [255:0] x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TDATA; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire [7:0] x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TID; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire [7:0] x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TDEST; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsIn_smEnableOuts_0; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsIn_smChildAcks_0; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsOut_smDoneIn_0; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsOut_smCtrCopyDone_0; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_rr; // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-  wire  _T_246; // @[package.scala 96:25:@22057.4 package.scala 96:25:@22058.4]
-  wire  _T_252; // @[package.scala 96:25:@22065.4 package.scala 96:25:@22066.4]
-  wire  _T_255; // @[SpatialBlocks.scala 110:93:@22068.4]
-  x322_outr_UnitPipe_sm x322_outr_UnitPipe_sm ( // @[sm_x322_outr_UnitPipe.scala 32:18:@22000.4]
-    .clock(x322_outr_UnitPipe_sm_clock),
-    .reset(x322_outr_UnitPipe_sm_reset),
-    .io_enable(x322_outr_UnitPipe_sm_io_enable),
-    .io_done(x322_outr_UnitPipe_sm_io_done),
-    .io_parentAck(x322_outr_UnitPipe_sm_io_parentAck),
-    .io_doneIn_0(x322_outr_UnitPipe_sm_io_doneIn_0),
-    .io_enableOut_0(x322_outr_UnitPipe_sm_io_enableOut_0),
-    .io_childAck_0(x322_outr_UnitPipe_sm_io_childAck_0),
-    .io_ctrCopyDone_0(x322_outr_UnitPipe_sm_io_ctrCopyDone_0)
+  wire  x301_outr_UnitPipe_sm_clock; // @[sm_x301_outr_UnitPipe.scala 32:18:@21380.4]
+  wire  x301_outr_UnitPipe_sm_reset; // @[sm_x301_outr_UnitPipe.scala 32:18:@21380.4]
+  wire  x301_outr_UnitPipe_sm_io_enable; // @[sm_x301_outr_UnitPipe.scala 32:18:@21380.4]
+  wire  x301_outr_UnitPipe_sm_io_done; // @[sm_x301_outr_UnitPipe.scala 32:18:@21380.4]
+  wire  x301_outr_UnitPipe_sm_io_parentAck; // @[sm_x301_outr_UnitPipe.scala 32:18:@21380.4]
+  wire  x301_outr_UnitPipe_sm_io_doneIn_0; // @[sm_x301_outr_UnitPipe.scala 32:18:@21380.4]
+  wire  x301_outr_UnitPipe_sm_io_enableOut_0; // @[sm_x301_outr_UnitPipe.scala 32:18:@21380.4]
+  wire  x301_outr_UnitPipe_sm_io_childAck_0; // @[sm_x301_outr_UnitPipe.scala 32:18:@21380.4]
+  wire  x301_outr_UnitPipe_sm_io_ctrCopyDone_0; // @[sm_x301_outr_UnitPipe.scala 32:18:@21380.4]
+  wire  RetimeWrapper_clock; // @[package.scala 93:22:@21432.4]
+  wire  RetimeWrapper_reset; // @[package.scala 93:22:@21432.4]
+  wire  RetimeWrapper_io_flow; // @[package.scala 93:22:@21432.4]
+  wire  RetimeWrapper_io_in; // @[package.scala 93:22:@21432.4]
+  wire  RetimeWrapper_io_out; // @[package.scala 93:22:@21432.4]
+  wire  RetimeWrapper_1_clock; // @[package.scala 93:22:@21440.4]
+  wire  RetimeWrapper_1_reset; // @[package.scala 93:22:@21440.4]
+  wire  RetimeWrapper_1_io_flow; // @[package.scala 93:22:@21440.4]
+  wire  RetimeWrapper_1_io_in; // @[package.scala 93:22:@21440.4]
+  wire  RetimeWrapper_1_io_out; // @[package.scala 93:22:@21440.4]
+  wire  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_clock; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_reset; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TVALID; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TREADY; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire [255:0] x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TDATA; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire [7:0] x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TID; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire [7:0] x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TDEST; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x182_TVALID; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x182_TREADY; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire [255:0] x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x182_TDATA; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsIn_smEnableOuts_0; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsIn_smChildAcks_0; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsOut_smDoneIn_0; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsOut_smCtrCopyDone_0; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_rr; // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+  wire  _T_246; // @[package.scala 96:25:@21437.4 package.scala 96:25:@21438.4]
+  wire  _T_252; // @[package.scala 96:25:@21445.4 package.scala 96:25:@21446.4]
+  wire  _T_255; // @[SpatialBlocks.scala 110:93:@21448.4]
+  x301_outr_UnitPipe_sm x301_outr_UnitPipe_sm ( // @[sm_x301_outr_UnitPipe.scala 32:18:@21380.4]
+    .clock(x301_outr_UnitPipe_sm_clock),
+    .reset(x301_outr_UnitPipe_sm_reset),
+    .io_enable(x301_outr_UnitPipe_sm_io_enable),
+    .io_done(x301_outr_UnitPipe_sm_io_done),
+    .io_parentAck(x301_outr_UnitPipe_sm_io_parentAck),
+    .io_doneIn_0(x301_outr_UnitPipe_sm_io_doneIn_0),
+    .io_enableOut_0(x301_outr_UnitPipe_sm_io_enableOut_0),
+    .io_childAck_0(x301_outr_UnitPipe_sm_io_childAck_0),
+    .io_ctrCopyDone_0(x301_outr_UnitPipe_sm_io_ctrCopyDone_0)
   );
-  RetimeWrapper RetimeWrapper ( // @[package.scala 93:22:@22052.4]
+  RetimeWrapper RetimeWrapper ( // @[package.scala 93:22:@21432.4]
     .clock(RetimeWrapper_clock),
     .reset(RetimeWrapper_reset),
     .io_flow(RetimeWrapper_io_flow),
     .io_in(RetimeWrapper_io_in),
     .io_out(RetimeWrapper_io_out)
   );
-  RetimeWrapper RetimeWrapper_1 ( // @[package.scala 93:22:@22060.4]
+  RetimeWrapper RetimeWrapper_1 ( // @[package.scala 93:22:@21440.4]
     .clock(RetimeWrapper_1_clock),
     .reset(RetimeWrapper_1_reset),
     .io_flow(RetimeWrapper_1_io_flow),
     .io_in(RetimeWrapper_1_io_in),
     .io_out(RetimeWrapper_1_io_out)
   );
-  x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1 x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1 ( // @[sm_x322_outr_UnitPipe.scala 75:24:@22087.4]
-    .clock(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_clock),
-    .reset(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_reset),
-    .io_in_x196_TVALID(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x196_TVALID),
-    .io_in_x196_TREADY(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x196_TREADY),
-    .io_in_x196_TDATA(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x196_TDATA),
-    .io_in_x195_TVALID(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TVALID),
-    .io_in_x195_TREADY(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TREADY),
-    .io_in_x195_TDATA(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TDATA),
-    .io_in_x195_TID(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TID),
-    .io_in_x195_TDEST(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TDEST),
-    .io_sigsIn_smEnableOuts_0(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsIn_smEnableOuts_0),
-    .io_sigsIn_smChildAcks_0(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsIn_smChildAcks_0),
-    .io_sigsOut_smDoneIn_0(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsOut_smDoneIn_0),
-    .io_sigsOut_smCtrCopyDone_0(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsOut_smCtrCopyDone_0),
-    .io_rr(x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_rr)
+  x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1 x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1 ( // @[sm_x301_outr_UnitPipe.scala 75:24:@21467.4]
+    .clock(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_clock),
+    .reset(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_reset),
+    .io_in_x181_TVALID(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TVALID),
+    .io_in_x181_TREADY(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TREADY),
+    .io_in_x181_TDATA(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TDATA),
+    .io_in_x181_TID(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TID),
+    .io_in_x181_TDEST(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TDEST),
+    .io_in_x182_TVALID(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x182_TVALID),
+    .io_in_x182_TREADY(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x182_TREADY),
+    .io_in_x182_TDATA(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x182_TDATA),
+    .io_sigsIn_smEnableOuts_0(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsIn_smEnableOuts_0),
+    .io_sigsIn_smChildAcks_0(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsIn_smChildAcks_0),
+    .io_sigsOut_smDoneIn_0(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsOut_smDoneIn_0),
+    .io_sigsOut_smCtrCopyDone_0(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsOut_smCtrCopyDone_0),
+    .io_rr(x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_rr)
   );
-  assign _T_246 = RetimeWrapper_io_out; // @[package.scala 96:25:@22057.4 package.scala 96:25:@22058.4]
-  assign _T_252 = RetimeWrapper_1_io_out; // @[package.scala 96:25:@22065.4 package.scala 96:25:@22066.4]
-  assign _T_255 = ~ _T_252; // @[SpatialBlocks.scala 110:93:@22068.4]
-  assign io_in_x196_TVALID = x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x196_TVALID; // @[sm_x322_outr_UnitPipe.scala 48:23:@22143.4]
-  assign io_in_x196_TDATA = x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x196_TDATA; // @[sm_x322_outr_UnitPipe.scala 48:23:@22141.4]
-  assign io_in_x195_TREADY = x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TREADY; // @[sm_x322_outr_UnitPipe.scala 49:23:@22151.4]
-  assign io_sigsOut_smDoneIn_0 = x322_outr_UnitPipe_sm_io_done; // @[SpatialBlocks.scala 127:53:@22075.4]
-  assign x322_outr_UnitPipe_sm_clock = clock; // @[:@22001.4]
-  assign x322_outr_UnitPipe_sm_reset = reset; // @[:@22002.4]
-  assign x322_outr_UnitPipe_sm_io_enable = _T_246 & _T_255; // @[SpatialBlocks.scala 112:18:@22072.4]
-  assign x322_outr_UnitPipe_sm_io_parentAck = io_sigsIn_smChildAcks_0; // @[SpatialBlocks.scala 114:21:@22074.4]
-  assign x322_outr_UnitPipe_sm_io_doneIn_0 = x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsOut_smDoneIn_0; // @[SpatialBlocks.scala 102:67:@22044.4]
-  assign x322_outr_UnitPipe_sm_io_ctrCopyDone_0 = x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsOut_smCtrCopyDone_0; // @[SpatialBlocks.scala 132:80:@22086.4]
-  assign RetimeWrapper_clock = clock; // @[:@22053.4]
-  assign RetimeWrapper_reset = reset; // @[:@22054.4]
-  assign RetimeWrapper_io_flow = 1'h1; // @[package.scala 95:18:@22056.4]
-  assign RetimeWrapper_io_in = io_sigsIn_smEnableOuts_0; // @[package.scala 94:16:@22055.4]
-  assign RetimeWrapper_1_clock = clock; // @[:@22061.4]
-  assign RetimeWrapper_1_reset = reset; // @[:@22062.4]
-  assign RetimeWrapper_1_io_flow = 1'h1; // @[package.scala 95:18:@22064.4]
-  assign RetimeWrapper_1_io_in = x322_outr_UnitPipe_sm_io_done; // @[package.scala 94:16:@22063.4]
-  assign x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_clock = clock; // @[:@22088.4]
-  assign x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_reset = reset; // @[:@22089.4]
-  assign x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x196_TREADY = io_in_x196_TREADY; // @[sm_x322_outr_UnitPipe.scala 48:23:@22142.4]
-  assign x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TVALID = io_in_x195_TVALID; // @[sm_x322_outr_UnitPipe.scala 49:23:@22152.4]
-  assign x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TDATA = io_in_x195_TDATA; // @[sm_x322_outr_UnitPipe.scala 49:23:@22150.4]
-  assign x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TID = io_in_x195_TID; // @[sm_x322_outr_UnitPipe.scala 49:23:@22146.4]
-  assign x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_in_x195_TDEST = io_in_x195_TDEST; // @[sm_x322_outr_UnitPipe.scala 49:23:@22145.4]
-  assign x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsIn_smEnableOuts_0 = x322_outr_UnitPipe_sm_io_enableOut_0; // @[sm_x322_outr_UnitPipe.scala 79:22:@22161.4]
-  assign x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_sigsIn_smChildAcks_0 = x322_outr_UnitPipe_sm_io_childAck_0; // @[sm_x322_outr_UnitPipe.scala 79:22:@22159.4]
-  assign x322_outr_UnitPipe_kernelx322_outr_UnitPipe_concrete1_io_rr = io_rr; // @[sm_x322_outr_UnitPipe.scala 78:18:@22153.4]
+  assign _T_246 = RetimeWrapper_io_out; // @[package.scala 96:25:@21437.4 package.scala 96:25:@21438.4]
+  assign _T_252 = RetimeWrapper_1_io_out; // @[package.scala 96:25:@21445.4 package.scala 96:25:@21446.4]
+  assign _T_255 = ~ _T_252; // @[SpatialBlocks.scala 110:93:@21448.4]
+  assign io_in_x181_TREADY = x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TREADY; // @[sm_x301_outr_UnitPipe.scala 48:23:@21522.4]
+  assign io_in_x182_TVALID = x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x182_TVALID; // @[sm_x301_outr_UnitPipe.scala 49:23:@21532.4]
+  assign io_in_x182_TDATA = x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x182_TDATA; // @[sm_x301_outr_UnitPipe.scala 49:23:@21530.4]
+  assign io_sigsOut_smDoneIn_0 = x301_outr_UnitPipe_sm_io_done; // @[SpatialBlocks.scala 127:53:@21455.4]
+  assign x301_outr_UnitPipe_sm_clock = clock; // @[:@21381.4]
+  assign x301_outr_UnitPipe_sm_reset = reset; // @[:@21382.4]
+  assign x301_outr_UnitPipe_sm_io_enable = _T_246 & _T_255; // @[SpatialBlocks.scala 112:18:@21452.4]
+  assign x301_outr_UnitPipe_sm_io_parentAck = io_sigsIn_smChildAcks_0; // @[SpatialBlocks.scala 114:21:@21454.4]
+  assign x301_outr_UnitPipe_sm_io_doneIn_0 = x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsOut_smDoneIn_0; // @[SpatialBlocks.scala 102:67:@21424.4]
+  assign x301_outr_UnitPipe_sm_io_ctrCopyDone_0 = x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsOut_smCtrCopyDone_0; // @[SpatialBlocks.scala 132:80:@21466.4]
+  assign RetimeWrapper_clock = clock; // @[:@21433.4]
+  assign RetimeWrapper_reset = reset; // @[:@21434.4]
+  assign RetimeWrapper_io_flow = 1'h1; // @[package.scala 95:18:@21436.4]
+  assign RetimeWrapper_io_in = io_sigsIn_smEnableOuts_0; // @[package.scala 94:16:@21435.4]
+  assign RetimeWrapper_1_clock = clock; // @[:@21441.4]
+  assign RetimeWrapper_1_reset = reset; // @[:@21442.4]
+  assign RetimeWrapper_1_io_flow = 1'h1; // @[package.scala 95:18:@21444.4]
+  assign RetimeWrapper_1_io_in = x301_outr_UnitPipe_sm_io_done; // @[package.scala 94:16:@21443.4]
+  assign x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_clock = clock; // @[:@21468.4]
+  assign x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_reset = reset; // @[:@21469.4]
+  assign x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TVALID = io_in_x181_TVALID; // @[sm_x301_outr_UnitPipe.scala 48:23:@21523.4]
+  assign x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TDATA = io_in_x181_TDATA; // @[sm_x301_outr_UnitPipe.scala 48:23:@21521.4]
+  assign x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TID = io_in_x181_TID; // @[sm_x301_outr_UnitPipe.scala 48:23:@21517.4]
+  assign x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x181_TDEST = io_in_x181_TDEST; // @[sm_x301_outr_UnitPipe.scala 48:23:@21516.4]
+  assign x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_in_x182_TREADY = io_in_x182_TREADY; // @[sm_x301_outr_UnitPipe.scala 49:23:@21531.4]
+  assign x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsIn_smEnableOuts_0 = x301_outr_UnitPipe_sm_io_enableOut_0; // @[sm_x301_outr_UnitPipe.scala 79:22:@21541.4]
+  assign x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_sigsIn_smChildAcks_0 = x301_outr_UnitPipe_sm_io_childAck_0; // @[sm_x301_outr_UnitPipe.scala 79:22:@21539.4]
+  assign x301_outr_UnitPipe_kernelx301_outr_UnitPipe_concrete1_io_rr = io_rr; // @[sm_x301_outr_UnitPipe.scala 78:18:@21533.4]
 endmodule
-module AccelUnit( // @[:@22180.2]
-  input          clock, // @[:@22181.4]
-  input          reset, // @[:@22182.4]
-  input          io_enable, // @[:@22183.4]
-  output         io_done, // @[:@22183.4]
-  input          io_reset, // @[:@22183.4]
-  input          io_memStreams_loads_0_cmd_ready, // @[:@22183.4]
-  output         io_memStreams_loads_0_cmd_valid, // @[:@22183.4]
-  output [63:0]  io_memStreams_loads_0_cmd_bits_addr, // @[:@22183.4]
-  output [31:0]  io_memStreams_loads_0_cmd_bits_size, // @[:@22183.4]
-  output         io_memStreams_loads_0_data_ready, // @[:@22183.4]
-  input          io_memStreams_loads_0_data_valid, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_0, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_1, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_2, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_3, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_4, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_5, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_6, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_7, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_8, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_9, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_10, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_11, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_12, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_13, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_14, // @[:@22183.4]
-  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_15, // @[:@22183.4]
-  input          io_memStreams_stores_0_cmd_ready, // @[:@22183.4]
-  output         io_memStreams_stores_0_cmd_valid, // @[:@22183.4]
-  output [63:0]  io_memStreams_stores_0_cmd_bits_addr, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_cmd_bits_size, // @[:@22183.4]
-  input          io_memStreams_stores_0_data_ready, // @[:@22183.4]
-  output         io_memStreams_stores_0_data_valid, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_0, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_1, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_2, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_3, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_4, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_5, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_6, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_7, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_8, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_9, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_10, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_11, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_12, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_13, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_14, // @[:@22183.4]
-  output [31:0]  io_memStreams_stores_0_data_bits_wdata_15, // @[:@22183.4]
-  output [15:0]  io_memStreams_stores_0_data_bits_wstrb, // @[:@22183.4]
-  output         io_memStreams_stores_0_wresp_ready, // @[:@22183.4]
-  input          io_memStreams_stores_0_wresp_valid, // @[:@22183.4]
-  input          io_memStreams_stores_0_wresp_bits, // @[:@22183.4]
-  input          io_memStreams_gathers_0_cmd_ready, // @[:@22183.4]
-  output         io_memStreams_gathers_0_cmd_valid, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_0, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_1, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_2, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_3, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_4, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_5, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_6, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_7, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_8, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_9, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_10, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_11, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_12, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_13, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_14, // @[:@22183.4]
-  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_15, // @[:@22183.4]
-  output         io_memStreams_gathers_0_data_ready, // @[:@22183.4]
-  input          io_memStreams_gathers_0_data_valid, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_0, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_1, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_2, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_3, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_4, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_5, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_6, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_7, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_8, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_9, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_10, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_11, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_12, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_13, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_14, // @[:@22183.4]
-  input  [31:0]  io_memStreams_gathers_0_data_bits_15, // @[:@22183.4]
-  input          io_memStreams_scatters_0_cmd_ready, // @[:@22183.4]
-  output         io_memStreams_scatters_0_cmd_valid, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_0, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_1, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_2, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_3, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_4, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_5, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_6, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_7, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_8, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_9, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_10, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_11, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_12, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_13, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_14, // @[:@22183.4]
-  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_15, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_0, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_1, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_2, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_3, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_4, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_5, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_6, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_7, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_8, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_9, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_10, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_11, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_12, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_13, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_14, // @[:@22183.4]
-  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_15, // @[:@22183.4]
-  output         io_memStreams_scatters_0_wresp_ready, // @[:@22183.4]
-  input          io_memStreams_scatters_0_wresp_valid, // @[:@22183.4]
-  input          io_memStreams_scatters_0_wresp_bits, // @[:@22183.4]
-  input          io_axiStreamsIn_0_TVALID, // @[:@22183.4]
-  output         io_axiStreamsIn_0_TREADY, // @[:@22183.4]
-  input  [255:0] io_axiStreamsIn_0_TDATA, // @[:@22183.4]
-  input  [31:0]  io_axiStreamsIn_0_TSTRB, // @[:@22183.4]
-  input  [31:0]  io_axiStreamsIn_0_TKEEP, // @[:@22183.4]
-  input          io_axiStreamsIn_0_TLAST, // @[:@22183.4]
-  input  [7:0]   io_axiStreamsIn_0_TID, // @[:@22183.4]
-  input  [7:0]   io_axiStreamsIn_0_TDEST, // @[:@22183.4]
-  input  [31:0]  io_axiStreamsIn_0_TUSER, // @[:@22183.4]
-  output         io_axiStreamsOut_0_TVALID, // @[:@22183.4]
-  input          io_axiStreamsOut_0_TREADY, // @[:@22183.4]
-  output [255:0] io_axiStreamsOut_0_TDATA, // @[:@22183.4]
-  output [31:0]  io_axiStreamsOut_0_TSTRB, // @[:@22183.4]
-  output [31:0]  io_axiStreamsOut_0_TKEEP, // @[:@22183.4]
-  output         io_axiStreamsOut_0_TLAST, // @[:@22183.4]
-  output [7:0]   io_axiStreamsOut_0_TID, // @[:@22183.4]
-  output [7:0]   io_axiStreamsOut_0_TDEST, // @[:@22183.4]
-  output [31:0]  io_axiStreamsOut_0_TUSER, // @[:@22183.4]
-  output         io_heap_0_req_valid, // @[:@22183.4]
-  output         io_heap_0_req_bits_allocDealloc, // @[:@22183.4]
-  output [63:0]  io_heap_0_req_bits_sizeAddr, // @[:@22183.4]
-  input          io_heap_0_resp_valid, // @[:@22183.4]
-  input          io_heap_0_resp_bits_allocDealloc, // @[:@22183.4]
-  input  [63:0]  io_heap_0_resp_bits_sizeAddr, // @[:@22183.4]
-  input  [63:0]  io_argIns_0, // @[:@22183.4]
-  input  [63:0]  io_argIns_1, // @[:@22183.4]
-  input          io_argOuts_0_port_ready, // @[:@22183.4]
-  output         io_argOuts_0_port_valid, // @[:@22183.4]
-  output [63:0]  io_argOuts_0_port_bits, // @[:@22183.4]
-  input  [63:0]  io_argOuts_0_echo // @[:@22183.4]
+module AccelUnit( // @[:@21560.2]
+  input          clock, // @[:@21561.4]
+  input          reset, // @[:@21562.4]
+  input          io_enable, // @[:@21563.4]
+  output         io_done, // @[:@21563.4]
+  input          io_reset, // @[:@21563.4]
+  input          io_memStreams_loads_0_cmd_ready, // @[:@21563.4]
+  output         io_memStreams_loads_0_cmd_valid, // @[:@21563.4]
+  output [63:0]  io_memStreams_loads_0_cmd_bits_addr, // @[:@21563.4]
+  output [31:0]  io_memStreams_loads_0_cmd_bits_size, // @[:@21563.4]
+  output         io_memStreams_loads_0_data_ready, // @[:@21563.4]
+  input          io_memStreams_loads_0_data_valid, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_0, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_1, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_2, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_3, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_4, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_5, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_6, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_7, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_8, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_9, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_10, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_11, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_12, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_13, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_14, // @[:@21563.4]
+  input  [31:0]  io_memStreams_loads_0_data_bits_rdata_15, // @[:@21563.4]
+  input          io_memStreams_stores_0_cmd_ready, // @[:@21563.4]
+  output         io_memStreams_stores_0_cmd_valid, // @[:@21563.4]
+  output [63:0]  io_memStreams_stores_0_cmd_bits_addr, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_cmd_bits_size, // @[:@21563.4]
+  input          io_memStreams_stores_0_data_ready, // @[:@21563.4]
+  output         io_memStreams_stores_0_data_valid, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_0, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_1, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_2, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_3, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_4, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_5, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_6, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_7, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_8, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_9, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_10, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_11, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_12, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_13, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_14, // @[:@21563.4]
+  output [31:0]  io_memStreams_stores_0_data_bits_wdata_15, // @[:@21563.4]
+  output [15:0]  io_memStreams_stores_0_data_bits_wstrb, // @[:@21563.4]
+  output         io_memStreams_stores_0_wresp_ready, // @[:@21563.4]
+  input          io_memStreams_stores_0_wresp_valid, // @[:@21563.4]
+  input          io_memStreams_stores_0_wresp_bits, // @[:@21563.4]
+  input          io_memStreams_gathers_0_cmd_ready, // @[:@21563.4]
+  output         io_memStreams_gathers_0_cmd_valid, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_0, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_1, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_2, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_3, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_4, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_5, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_6, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_7, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_8, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_9, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_10, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_11, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_12, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_13, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_14, // @[:@21563.4]
+  output [63:0]  io_memStreams_gathers_0_cmd_bits_addr_15, // @[:@21563.4]
+  output         io_memStreams_gathers_0_data_ready, // @[:@21563.4]
+  input          io_memStreams_gathers_0_data_valid, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_0, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_1, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_2, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_3, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_4, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_5, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_6, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_7, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_8, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_9, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_10, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_11, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_12, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_13, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_14, // @[:@21563.4]
+  input  [31:0]  io_memStreams_gathers_0_data_bits_15, // @[:@21563.4]
+  input          io_memStreams_scatters_0_cmd_ready, // @[:@21563.4]
+  output         io_memStreams_scatters_0_cmd_valid, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_0, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_1, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_2, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_3, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_4, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_5, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_6, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_7, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_8, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_9, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_10, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_11, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_12, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_13, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_14, // @[:@21563.4]
+  output [63:0]  io_memStreams_scatters_0_cmd_bits_addr_addr_15, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_0, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_1, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_2, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_3, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_4, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_5, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_6, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_7, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_8, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_9, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_10, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_11, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_12, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_13, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_14, // @[:@21563.4]
+  output [31:0]  io_memStreams_scatters_0_cmd_bits_wdata_15, // @[:@21563.4]
+  output         io_memStreams_scatters_0_wresp_ready, // @[:@21563.4]
+  input          io_memStreams_scatters_0_wresp_valid, // @[:@21563.4]
+  input          io_memStreams_scatters_0_wresp_bits, // @[:@21563.4]
+  input          io_axiStreamsIn_0_TVALID, // @[:@21563.4]
+  output         io_axiStreamsIn_0_TREADY, // @[:@21563.4]
+  input  [255:0] io_axiStreamsIn_0_TDATA, // @[:@21563.4]
+  input  [31:0]  io_axiStreamsIn_0_TSTRB, // @[:@21563.4]
+  input  [31:0]  io_axiStreamsIn_0_TKEEP, // @[:@21563.4]
+  input          io_axiStreamsIn_0_TLAST, // @[:@21563.4]
+  input  [7:0]   io_axiStreamsIn_0_TID, // @[:@21563.4]
+  input  [7:0]   io_axiStreamsIn_0_TDEST, // @[:@21563.4]
+  input  [31:0]  io_axiStreamsIn_0_TUSER, // @[:@21563.4]
+  output         io_axiStreamsOut_0_TVALID, // @[:@21563.4]
+  input          io_axiStreamsOut_0_TREADY, // @[:@21563.4]
+  output [255:0] io_axiStreamsOut_0_TDATA, // @[:@21563.4]
+  output [31:0]  io_axiStreamsOut_0_TSTRB, // @[:@21563.4]
+  output [31:0]  io_axiStreamsOut_0_TKEEP, // @[:@21563.4]
+  output         io_axiStreamsOut_0_TLAST, // @[:@21563.4]
+  output [7:0]   io_axiStreamsOut_0_TID, // @[:@21563.4]
+  output [7:0]   io_axiStreamsOut_0_TDEST, // @[:@21563.4]
+  output [31:0]  io_axiStreamsOut_0_TUSER, // @[:@21563.4]
+  output         io_heap_0_req_valid, // @[:@21563.4]
+  output         io_heap_0_req_bits_allocDealloc, // @[:@21563.4]
+  output [63:0]  io_heap_0_req_bits_sizeAddr, // @[:@21563.4]
+  input          io_heap_0_resp_valid, // @[:@21563.4]
+  input          io_heap_0_resp_bits_allocDealloc, // @[:@21563.4]
+  input  [63:0]  io_heap_0_resp_bits_sizeAddr, // @[:@21563.4]
+  input  [63:0]  io_argIns_0, // @[:@21563.4]
+  input  [63:0]  io_argIns_1, // @[:@21563.4]
+  input          io_argOuts_0_port_ready, // @[:@21563.4]
+  output         io_argOuts_0_port_valid, // @[:@21563.4]
+  output [63:0]  io_argOuts_0_port_bits, // @[:@21563.4]
+  input  [63:0]  io_argOuts_0_echo // @[:@21563.4]
 );
-  wire  SingleCounter_clock; // @[Main.scala 35:32:@22346.4]
-  wire  SingleCounter_reset; // @[Main.scala 35:32:@22346.4]
-  wire  SingleCounter_io_input_reset; // @[Main.scala 35:32:@22346.4]
-  wire  SingleCounter_io_output_done; // @[Main.scala 35:32:@22346.4]
-  wire  RetimeWrapper_clock; // @[package.scala 93:22:@22364.4]
-  wire  RetimeWrapper_reset; // @[package.scala 93:22:@22364.4]
-  wire  RetimeWrapper_io_flow; // @[package.scala 93:22:@22364.4]
-  wire  RetimeWrapper_io_in; // @[package.scala 93:22:@22364.4]
-  wire  RetimeWrapper_io_out; // @[package.scala 93:22:@22364.4]
-  wire  SRFF_clock; // @[Main.scala 39:28:@22373.4]
-  wire  SRFF_reset; // @[Main.scala 39:28:@22373.4]
-  wire  SRFF_io_input_set; // @[Main.scala 39:28:@22373.4]
-  wire  SRFF_io_input_reset; // @[Main.scala 39:28:@22373.4]
-  wire  SRFF_io_input_asyn_reset; // @[Main.scala 39:28:@22373.4]
-  wire  SRFF_io_output; // @[Main.scala 39:28:@22373.4]
-  wire  RootController_sm_clock; // @[sm_RootController.scala 32:18:@22411.4]
-  wire  RootController_sm_reset; // @[sm_RootController.scala 32:18:@22411.4]
-  wire  RootController_sm_io_enable; // @[sm_RootController.scala 32:18:@22411.4]
-  wire  RootController_sm_io_done; // @[sm_RootController.scala 32:18:@22411.4]
-  wire  RootController_sm_io_rst; // @[sm_RootController.scala 32:18:@22411.4]
-  wire  RootController_sm_io_ctrDone; // @[sm_RootController.scala 32:18:@22411.4]
-  wire  RootController_sm_io_ctrInc; // @[sm_RootController.scala 32:18:@22411.4]
-  wire  RootController_sm_io_doneIn_0; // @[sm_RootController.scala 32:18:@22411.4]
-  wire  RootController_sm_io_enableOut_0; // @[sm_RootController.scala 32:18:@22411.4]
-  wire  RootController_sm_io_childAck_0; // @[sm_RootController.scala 32:18:@22411.4]
-  wire  RetimeWrapper_1_clock; // @[package.scala 93:22:@22443.4]
-  wire  RetimeWrapper_1_reset; // @[package.scala 93:22:@22443.4]
-  wire  RetimeWrapper_1_io_flow; // @[package.scala 93:22:@22443.4]
-  wire  RetimeWrapper_1_io_in; // @[package.scala 93:22:@22443.4]
-  wire  RetimeWrapper_1_io_out; // @[package.scala 93:22:@22443.4]
-  wire  RootController_kernelRootController_concrete1_clock; // @[sm_RootController.scala 73:24:@22502.4]
-  wire  RootController_kernelRootController_concrete1_reset; // @[sm_RootController.scala 73:24:@22502.4]
-  wire  RootController_kernelRootController_concrete1_io_in_x196_TVALID; // @[sm_RootController.scala 73:24:@22502.4]
-  wire  RootController_kernelRootController_concrete1_io_in_x196_TREADY; // @[sm_RootController.scala 73:24:@22502.4]
-  wire [255:0] RootController_kernelRootController_concrete1_io_in_x196_TDATA; // @[sm_RootController.scala 73:24:@22502.4]
-  wire  RootController_kernelRootController_concrete1_io_in_x195_TVALID; // @[sm_RootController.scala 73:24:@22502.4]
-  wire  RootController_kernelRootController_concrete1_io_in_x195_TREADY; // @[sm_RootController.scala 73:24:@22502.4]
-  wire [255:0] RootController_kernelRootController_concrete1_io_in_x195_TDATA; // @[sm_RootController.scala 73:24:@22502.4]
-  wire [7:0] RootController_kernelRootController_concrete1_io_in_x195_TID; // @[sm_RootController.scala 73:24:@22502.4]
-  wire [7:0] RootController_kernelRootController_concrete1_io_in_x195_TDEST; // @[sm_RootController.scala 73:24:@22502.4]
-  wire  RootController_kernelRootController_concrete1_io_sigsIn_smEnableOuts_0; // @[sm_RootController.scala 73:24:@22502.4]
-  wire  RootController_kernelRootController_concrete1_io_sigsIn_smChildAcks_0; // @[sm_RootController.scala 73:24:@22502.4]
-  wire  RootController_kernelRootController_concrete1_io_sigsOut_smDoneIn_0; // @[sm_RootController.scala 73:24:@22502.4]
-  wire  RootController_kernelRootController_concrete1_io_rr; // @[sm_RootController.scala 73:24:@22502.4]
-  wire  _T_599; // @[package.scala 96:25:@22369.4 package.scala 96:25:@22370.4]
-  wire  _T_664; // @[Main.scala 41:50:@22439.4]
-  wire  _T_665; // @[Main.scala 41:59:@22440.4]
-  wire  _T_677; // @[package.scala 100:49:@22460.4]
-  reg  _T_680; // @[package.scala 48:56:@22461.4]
+  wire  SingleCounter_clock; // @[Main.scala 35:32:@21726.4]
+  wire  SingleCounter_reset; // @[Main.scala 35:32:@21726.4]
+  wire  SingleCounter_io_input_reset; // @[Main.scala 35:32:@21726.4]
+  wire  SingleCounter_io_output_done; // @[Main.scala 35:32:@21726.4]
+  wire  RetimeWrapper_clock; // @[package.scala 93:22:@21744.4]
+  wire  RetimeWrapper_reset; // @[package.scala 93:22:@21744.4]
+  wire  RetimeWrapper_io_flow; // @[package.scala 93:22:@21744.4]
+  wire  RetimeWrapper_io_in; // @[package.scala 93:22:@21744.4]
+  wire  RetimeWrapper_io_out; // @[package.scala 93:22:@21744.4]
+  wire  SRFF_clock; // @[Main.scala 39:28:@21753.4]
+  wire  SRFF_reset; // @[Main.scala 39:28:@21753.4]
+  wire  SRFF_io_input_set; // @[Main.scala 39:28:@21753.4]
+  wire  SRFF_io_input_reset; // @[Main.scala 39:28:@21753.4]
+  wire  SRFF_io_input_asyn_reset; // @[Main.scala 39:28:@21753.4]
+  wire  SRFF_io_output; // @[Main.scala 39:28:@21753.4]
+  wire  RootController_sm_clock; // @[sm_RootController.scala 32:18:@21791.4]
+  wire  RootController_sm_reset; // @[sm_RootController.scala 32:18:@21791.4]
+  wire  RootController_sm_io_enable; // @[sm_RootController.scala 32:18:@21791.4]
+  wire  RootController_sm_io_done; // @[sm_RootController.scala 32:18:@21791.4]
+  wire  RootController_sm_io_rst; // @[sm_RootController.scala 32:18:@21791.4]
+  wire  RootController_sm_io_ctrDone; // @[sm_RootController.scala 32:18:@21791.4]
+  wire  RootController_sm_io_ctrInc; // @[sm_RootController.scala 32:18:@21791.4]
+  wire  RootController_sm_io_doneIn_0; // @[sm_RootController.scala 32:18:@21791.4]
+  wire  RootController_sm_io_enableOut_0; // @[sm_RootController.scala 32:18:@21791.4]
+  wire  RootController_sm_io_childAck_0; // @[sm_RootController.scala 32:18:@21791.4]
+  wire  RetimeWrapper_1_clock; // @[package.scala 93:22:@21823.4]
+  wire  RetimeWrapper_1_reset; // @[package.scala 93:22:@21823.4]
+  wire  RetimeWrapper_1_io_flow; // @[package.scala 93:22:@21823.4]
+  wire  RetimeWrapper_1_io_in; // @[package.scala 93:22:@21823.4]
+  wire  RetimeWrapper_1_io_out; // @[package.scala 93:22:@21823.4]
+  wire  RootController_kernelRootController_concrete1_clock; // @[sm_RootController.scala 73:24:@21882.4]
+  wire  RootController_kernelRootController_concrete1_reset; // @[sm_RootController.scala 73:24:@21882.4]
+  wire  RootController_kernelRootController_concrete1_io_in_x181_TVALID; // @[sm_RootController.scala 73:24:@21882.4]
+  wire  RootController_kernelRootController_concrete1_io_in_x181_TREADY; // @[sm_RootController.scala 73:24:@21882.4]
+  wire [255:0] RootController_kernelRootController_concrete1_io_in_x181_TDATA; // @[sm_RootController.scala 73:24:@21882.4]
+  wire [7:0] RootController_kernelRootController_concrete1_io_in_x181_TID; // @[sm_RootController.scala 73:24:@21882.4]
+  wire [7:0] RootController_kernelRootController_concrete1_io_in_x181_TDEST; // @[sm_RootController.scala 73:24:@21882.4]
+  wire  RootController_kernelRootController_concrete1_io_in_x182_TVALID; // @[sm_RootController.scala 73:24:@21882.4]
+  wire  RootController_kernelRootController_concrete1_io_in_x182_TREADY; // @[sm_RootController.scala 73:24:@21882.4]
+  wire [255:0] RootController_kernelRootController_concrete1_io_in_x182_TDATA; // @[sm_RootController.scala 73:24:@21882.4]
+  wire  RootController_kernelRootController_concrete1_io_sigsIn_smEnableOuts_0; // @[sm_RootController.scala 73:24:@21882.4]
+  wire  RootController_kernelRootController_concrete1_io_sigsIn_smChildAcks_0; // @[sm_RootController.scala 73:24:@21882.4]
+  wire  RootController_kernelRootController_concrete1_io_sigsOut_smDoneIn_0; // @[sm_RootController.scala 73:24:@21882.4]
+  wire  RootController_kernelRootController_concrete1_io_rr; // @[sm_RootController.scala 73:24:@21882.4]
+  wire  _T_599; // @[package.scala 96:25:@21749.4 package.scala 96:25:@21750.4]
+  wire  _T_664; // @[Main.scala 41:50:@21819.4]
+  wire  _T_665; // @[Main.scala 41:59:@21820.4]
+  wire  _T_677; // @[package.scala 100:49:@21840.4]
+  reg  _T_680; // @[package.scala 48:56:@21841.4]
   reg [31:0] _RAND_0;
-  SingleCounter SingleCounter ( // @[Main.scala 35:32:@22346.4]
+  SingleCounter SingleCounter ( // @[Main.scala 35:32:@21726.4]
     .clock(SingleCounter_clock),
     .reset(SingleCounter_reset),
     .io_input_reset(SingleCounter_io_input_reset),
     .io_output_done(SingleCounter_io_output_done)
   );
-  RetimeWrapper RetimeWrapper ( // @[package.scala 93:22:@22364.4]
+  RetimeWrapper RetimeWrapper ( // @[package.scala 93:22:@21744.4]
     .clock(RetimeWrapper_clock),
     .reset(RetimeWrapper_reset),
     .io_flow(RetimeWrapper_io_flow),
     .io_in(RetimeWrapper_io_in),
     .io_out(RetimeWrapper_io_out)
   );
-  SRFF SRFF ( // @[Main.scala 39:28:@22373.4]
+  SRFF SRFF ( // @[Main.scala 39:28:@21753.4]
     .clock(SRFF_clock),
     .reset(SRFF_reset),
     .io_input_set(SRFF_io_input_set),
@@ -10160,7 +9805,7 @@ module AccelUnit( // @[:@22180.2]
     .io_input_asyn_reset(SRFF_io_input_asyn_reset),
     .io_output(SRFF_io_output)
   );
-  RootController_sm RootController_sm ( // @[sm_RootController.scala 32:18:@22411.4]
+  RootController_sm RootController_sm ( // @[sm_RootController.scala 32:18:@21791.4]
     .clock(RootController_sm_clock),
     .reset(RootController_sm_reset),
     .io_enable(RootController_sm_io_enable),
@@ -10172,34 +9817,34 @@ module AccelUnit( // @[:@22180.2]
     .io_enableOut_0(RootController_sm_io_enableOut_0),
     .io_childAck_0(RootController_sm_io_childAck_0)
   );
-  RetimeWrapper RetimeWrapper_1 ( // @[package.scala 93:22:@22443.4]
+  RetimeWrapper RetimeWrapper_1 ( // @[package.scala 93:22:@21823.4]
     .clock(RetimeWrapper_1_clock),
     .reset(RetimeWrapper_1_reset),
     .io_flow(RetimeWrapper_1_io_flow),
     .io_in(RetimeWrapper_1_io_in),
     .io_out(RetimeWrapper_1_io_out)
   );
-  RootController_kernelRootController_concrete1 RootController_kernelRootController_concrete1 ( // @[sm_RootController.scala 73:24:@22502.4]
+  RootController_kernelRootController_concrete1 RootController_kernelRootController_concrete1 ( // @[sm_RootController.scala 73:24:@21882.4]
     .clock(RootController_kernelRootController_concrete1_clock),
     .reset(RootController_kernelRootController_concrete1_reset),
-    .io_in_x196_TVALID(RootController_kernelRootController_concrete1_io_in_x196_TVALID),
-    .io_in_x196_TREADY(RootController_kernelRootController_concrete1_io_in_x196_TREADY),
-    .io_in_x196_TDATA(RootController_kernelRootController_concrete1_io_in_x196_TDATA),
-    .io_in_x195_TVALID(RootController_kernelRootController_concrete1_io_in_x195_TVALID),
-    .io_in_x195_TREADY(RootController_kernelRootController_concrete1_io_in_x195_TREADY),
-    .io_in_x195_TDATA(RootController_kernelRootController_concrete1_io_in_x195_TDATA),
-    .io_in_x195_TID(RootController_kernelRootController_concrete1_io_in_x195_TID),
-    .io_in_x195_TDEST(RootController_kernelRootController_concrete1_io_in_x195_TDEST),
+    .io_in_x181_TVALID(RootController_kernelRootController_concrete1_io_in_x181_TVALID),
+    .io_in_x181_TREADY(RootController_kernelRootController_concrete1_io_in_x181_TREADY),
+    .io_in_x181_TDATA(RootController_kernelRootController_concrete1_io_in_x181_TDATA),
+    .io_in_x181_TID(RootController_kernelRootController_concrete1_io_in_x181_TID),
+    .io_in_x181_TDEST(RootController_kernelRootController_concrete1_io_in_x181_TDEST),
+    .io_in_x182_TVALID(RootController_kernelRootController_concrete1_io_in_x182_TVALID),
+    .io_in_x182_TREADY(RootController_kernelRootController_concrete1_io_in_x182_TREADY),
+    .io_in_x182_TDATA(RootController_kernelRootController_concrete1_io_in_x182_TDATA),
     .io_sigsIn_smEnableOuts_0(RootController_kernelRootController_concrete1_io_sigsIn_smEnableOuts_0),
     .io_sigsIn_smChildAcks_0(RootController_kernelRootController_concrete1_io_sigsIn_smChildAcks_0),
     .io_sigsOut_smDoneIn_0(RootController_kernelRootController_concrete1_io_sigsOut_smDoneIn_0),
     .io_rr(RootController_kernelRootController_concrete1_io_rr)
   );
-  assign _T_599 = RetimeWrapper_io_out; // @[package.scala 96:25:@22369.4 package.scala 96:25:@22370.4]
-  assign _T_664 = io_enable & _T_599; // @[Main.scala 41:50:@22439.4]
-  assign _T_665 = ~ SRFF_io_output; // @[Main.scala 41:59:@22440.4]
-  assign _T_677 = RootController_sm_io_ctrInc == 1'h0; // @[package.scala 100:49:@22460.4]
-  assign io_done = SRFF_io_output; // @[Main.scala 48:23:@22459.4]
+  assign _T_599 = RetimeWrapper_io_out; // @[package.scala 96:25:@21749.4 package.scala 96:25:@21750.4]
+  assign _T_664 = io_enable & _T_599; // @[Main.scala 41:50:@21819.4]
+  assign _T_665 = ~ SRFF_io_output; // @[Main.scala 41:59:@21820.4]
+  assign _T_677 = RootController_sm_io_ctrInc == 1'h0; // @[package.scala 100:49:@21840.4]
+  assign io_done = SRFF_io_output; // @[Main.scala 48:23:@21839.4]
   assign io_memStreams_loads_0_cmd_valid = 1'h0;
   assign io_memStreams_loads_0_cmd_bits_addr = 64'h0;
   assign io_memStreams_loads_0_cmd_bits_size = 32'h0;
@@ -10278,52 +9923,52 @@ module AccelUnit( // @[:@22180.2]
   assign io_memStreams_scatters_0_cmd_bits_wdata_14 = 32'h0;
   assign io_memStreams_scatters_0_cmd_bits_wdata_15 = 32'h0;
   assign io_memStreams_scatters_0_wresp_ready = 1'h0;
-  assign io_axiStreamsIn_0_TREADY = RootController_kernelRootController_concrete1_io_in_x195_TREADY; // @[sm_RootController.scala 49:23:@22566.4]
-  assign io_axiStreamsOut_0_TVALID = RootController_kernelRootController_concrete1_io_in_x196_TVALID; // @[sm_RootController.scala 48:23:@22558.4]
-  assign io_axiStreamsOut_0_TDATA = RootController_kernelRootController_concrete1_io_in_x196_TDATA; // @[sm_RootController.scala 48:23:@22556.4]
-  assign io_axiStreamsOut_0_TSTRB = 32'hffffffff; // @[sm_RootController.scala 48:23:@22555.4]
-  assign io_axiStreamsOut_0_TKEEP = 32'hffffffff; // @[sm_RootController.scala 48:23:@22554.4]
-  assign io_axiStreamsOut_0_TLAST = 1'h0; // @[sm_RootController.scala 48:23:@22553.4]
-  assign io_axiStreamsOut_0_TID = 8'h0; // @[sm_RootController.scala 48:23:@22552.4]
-  assign io_axiStreamsOut_0_TDEST = 8'h0; // @[sm_RootController.scala 48:23:@22551.4]
-  assign io_axiStreamsOut_0_TUSER = 32'h4; // @[sm_RootController.scala 48:23:@22550.4]
+  assign io_axiStreamsIn_0_TREADY = RootController_kernelRootController_concrete1_io_in_x181_TREADY; // @[sm_RootController.scala 48:23:@21937.4]
+  assign io_axiStreamsOut_0_TVALID = RootController_kernelRootController_concrete1_io_in_x182_TVALID; // @[sm_RootController.scala 49:23:@21947.4]
+  assign io_axiStreamsOut_0_TDATA = RootController_kernelRootController_concrete1_io_in_x182_TDATA; // @[sm_RootController.scala 49:23:@21945.4]
+  assign io_axiStreamsOut_0_TSTRB = 32'hffffffff; // @[sm_RootController.scala 49:23:@21944.4]
+  assign io_axiStreamsOut_0_TKEEP = 32'hffffffff; // @[sm_RootController.scala 49:23:@21943.4]
+  assign io_axiStreamsOut_0_TLAST = 1'h0; // @[sm_RootController.scala 49:23:@21942.4]
+  assign io_axiStreamsOut_0_TID = 8'h0; // @[sm_RootController.scala 49:23:@21941.4]
+  assign io_axiStreamsOut_0_TDEST = 8'h0; // @[sm_RootController.scala 49:23:@21940.4]
+  assign io_axiStreamsOut_0_TUSER = 32'h4; // @[sm_RootController.scala 49:23:@21939.4]
   assign io_heap_0_req_valid = 1'h0;
   assign io_heap_0_req_bits_allocDealloc = 1'h0;
   assign io_heap_0_req_bits_sizeAddr = 64'h0;
   assign io_argOuts_0_port_valid = 1'h0;
   assign io_argOuts_0_port_bits = 64'h0;
-  assign SingleCounter_clock = clock; // @[:@22347.4]
-  assign SingleCounter_reset = reset; // @[:@22348.4]
-  assign SingleCounter_io_input_reset = reset; // @[Main.scala 36:79:@22362.4]
-  assign RetimeWrapper_clock = clock; // @[:@22365.4]
-  assign RetimeWrapper_reset = reset; // @[:@22366.4]
-  assign RetimeWrapper_io_flow = 1'h1; // @[package.scala 95:18:@22368.4]
-  assign RetimeWrapper_io_in = SingleCounter_io_output_done; // @[package.scala 94:16:@22367.4]
-  assign SRFF_clock = clock; // @[:@22374.4]
-  assign SRFF_reset = reset; // @[:@22375.4]
-  assign SRFF_io_input_set = RootController_sm_io_done; // @[Main.scala 57:29:@22594.4]
-  assign SRFF_io_input_reset = RetimeWrapper_1_io_out; // @[Main.scala 46:31:@22457.4]
-  assign SRFF_io_input_asyn_reset = RetimeWrapper_1_io_out; // @[Main.scala 47:36:@22458.4]
-  assign RootController_sm_clock = clock; // @[:@22412.4]
-  assign RootController_sm_reset = reset; // @[:@22413.4]
-  assign RootController_sm_io_enable = _T_664 & _T_665; // @[Main.scala 45:33:@22456.4 SpatialBlocks.scala 112:18:@22490.4]
-  assign RootController_sm_io_rst = RetimeWrapper_1_io_out; // @[SpatialBlocks.scala 106:15:@22484.4]
-  assign RootController_sm_io_ctrDone = RootController_sm_io_ctrInc & _T_680; // @[Main.scala 49:34:@22464.4]
-  assign RootController_sm_io_doneIn_0 = RootController_kernelRootController_concrete1_io_sigsOut_smDoneIn_0; // @[SpatialBlocks.scala 102:67:@22481.4]
-  assign RetimeWrapper_1_clock = clock; // @[:@22444.4]
-  assign RetimeWrapper_1_reset = reset; // @[:@22445.4]
-  assign RetimeWrapper_1_io_flow = 1'h1; // @[package.scala 95:18:@22447.4]
-  assign RetimeWrapper_1_io_in = reset | io_reset; // @[package.scala 94:16:@22446.4]
-  assign RootController_kernelRootController_concrete1_clock = clock; // @[:@22503.4]
-  assign RootController_kernelRootController_concrete1_reset = reset; // @[:@22504.4]
-  assign RootController_kernelRootController_concrete1_io_in_x196_TREADY = io_axiStreamsOut_0_TREADY; // @[sm_RootController.scala 48:23:@22557.4]
-  assign RootController_kernelRootController_concrete1_io_in_x195_TVALID = io_axiStreamsIn_0_TVALID; // @[sm_RootController.scala 49:23:@22567.4]
-  assign RootController_kernelRootController_concrete1_io_in_x195_TDATA = io_axiStreamsIn_0_TDATA; // @[sm_RootController.scala 49:23:@22565.4]
-  assign RootController_kernelRootController_concrete1_io_in_x195_TID = io_axiStreamsIn_0_TID; // @[sm_RootController.scala 49:23:@22561.4]
-  assign RootController_kernelRootController_concrete1_io_in_x195_TDEST = io_axiStreamsIn_0_TDEST; // @[sm_RootController.scala 49:23:@22560.4]
-  assign RootController_kernelRootController_concrete1_io_sigsIn_smEnableOuts_0 = RootController_sm_io_enableOut_0; // @[sm_RootController.scala 77:22:@22576.4]
-  assign RootController_kernelRootController_concrete1_io_sigsIn_smChildAcks_0 = RootController_sm_io_childAck_0; // @[sm_RootController.scala 77:22:@22574.4]
-  assign RootController_kernelRootController_concrete1_io_rr = RetimeWrapper_io_out; // @[sm_RootController.scala 76:18:@22568.4]
+  assign SingleCounter_clock = clock; // @[:@21727.4]
+  assign SingleCounter_reset = reset; // @[:@21728.4]
+  assign SingleCounter_io_input_reset = reset; // @[Main.scala 36:79:@21742.4]
+  assign RetimeWrapper_clock = clock; // @[:@21745.4]
+  assign RetimeWrapper_reset = reset; // @[:@21746.4]
+  assign RetimeWrapper_io_flow = 1'h1; // @[package.scala 95:18:@21748.4]
+  assign RetimeWrapper_io_in = SingleCounter_io_output_done; // @[package.scala 94:16:@21747.4]
+  assign SRFF_clock = clock; // @[:@21754.4]
+  assign SRFF_reset = reset; // @[:@21755.4]
+  assign SRFF_io_input_set = RootController_sm_io_done; // @[Main.scala 57:29:@21974.4]
+  assign SRFF_io_input_reset = RetimeWrapper_1_io_out; // @[Main.scala 46:31:@21837.4]
+  assign SRFF_io_input_asyn_reset = RetimeWrapper_1_io_out; // @[Main.scala 47:36:@21838.4]
+  assign RootController_sm_clock = clock; // @[:@21792.4]
+  assign RootController_sm_reset = reset; // @[:@21793.4]
+  assign RootController_sm_io_enable = _T_664 & _T_665; // @[Main.scala 45:33:@21836.4 SpatialBlocks.scala 112:18:@21870.4]
+  assign RootController_sm_io_rst = RetimeWrapper_1_io_out; // @[SpatialBlocks.scala 106:15:@21864.4]
+  assign RootController_sm_io_ctrDone = RootController_sm_io_ctrInc & _T_680; // @[Main.scala 49:34:@21844.4]
+  assign RootController_sm_io_doneIn_0 = RootController_kernelRootController_concrete1_io_sigsOut_smDoneIn_0; // @[SpatialBlocks.scala 102:67:@21861.4]
+  assign RetimeWrapper_1_clock = clock; // @[:@21824.4]
+  assign RetimeWrapper_1_reset = reset; // @[:@21825.4]
+  assign RetimeWrapper_1_io_flow = 1'h1; // @[package.scala 95:18:@21827.4]
+  assign RetimeWrapper_1_io_in = reset | io_reset; // @[package.scala 94:16:@21826.4]
+  assign RootController_kernelRootController_concrete1_clock = clock; // @[:@21883.4]
+  assign RootController_kernelRootController_concrete1_reset = reset; // @[:@21884.4]
+  assign RootController_kernelRootController_concrete1_io_in_x181_TVALID = io_axiStreamsIn_0_TVALID; // @[sm_RootController.scala 48:23:@21938.4]
+  assign RootController_kernelRootController_concrete1_io_in_x181_TDATA = io_axiStreamsIn_0_TDATA; // @[sm_RootController.scala 48:23:@21936.4]
+  assign RootController_kernelRootController_concrete1_io_in_x181_TID = io_axiStreamsIn_0_TID; // @[sm_RootController.scala 48:23:@21932.4]
+  assign RootController_kernelRootController_concrete1_io_in_x181_TDEST = io_axiStreamsIn_0_TDEST; // @[sm_RootController.scala 48:23:@21931.4]
+  assign RootController_kernelRootController_concrete1_io_in_x182_TREADY = io_axiStreamsOut_0_TREADY; // @[sm_RootController.scala 49:23:@21946.4]
+  assign RootController_kernelRootController_concrete1_io_sigsIn_smEnableOuts_0 = RootController_sm_io_enableOut_0; // @[sm_RootController.scala 77:22:@21956.4]
+  assign RootController_kernelRootController_concrete1_io_sigsIn_smChildAcks_0 = RootController_sm_io_childAck_0; // @[sm_RootController.scala 77:22:@21954.4]
+  assign RootController_kernelRootController_concrete1_io_rr = RetimeWrapper_io_out; // @[sm_RootController.scala 76:18:@21948.4]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -10362,172 +10007,172 @@ module AccelUnit( // @[:@22180.2]
     end
   end
 endmodule
-module SpatialIP( // @[:@22596.2]
-  input         clock, // @[:@22597.4]
-  input         reset, // @[:@22598.4]
-  input  [31:0] io_raddr, // @[:@22599.4]
-  input         io_wen, // @[:@22599.4]
-  input  [31:0] io_waddr, // @[:@22599.4]
-  input  [63:0] io_wdata, // @[:@22599.4]
-  output [63:0] io_rdata // @[:@22599.4]
+module SpatialIP( // @[:@21976.2]
+  input         clock, // @[:@21977.4]
+  input         reset, // @[:@21978.4]
+  input  [31:0] io_raddr, // @[:@21979.4]
+  input         io_wen, // @[:@21979.4]
+  input  [31:0] io_waddr, // @[:@21979.4]
+  input  [63:0] io_wdata, // @[:@21979.4]
+  output [63:0] io_rdata // @[:@21979.4]
 );
-  wire  accel_clock; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_reset; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_enable; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_done; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_reset; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_loads_0_cmd_ready; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_loads_0_cmd_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_loads_0_cmd_bits_addr; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_cmd_bits_size; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_loads_0_data_ready; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_loads_0_data_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_0; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_1; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_2; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_3; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_4; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_5; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_6; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_7; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_8; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_9; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_10; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_11; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_12; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_13; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_14; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_15; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_stores_0_cmd_ready; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_stores_0_cmd_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_stores_0_cmd_bits_addr; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_cmd_bits_size; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_stores_0_data_ready; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_stores_0_data_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_0; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_1; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_2; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_3; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_4; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_5; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_6; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_7; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_8; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_9; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_10; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_11; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_12; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_13; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_14; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_15; // @[Instantiator.scala 53:44:@22601.4]
-  wire [15:0] accel_io_memStreams_stores_0_data_bits_wstrb; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_stores_0_wresp_ready; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_stores_0_wresp_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_stores_0_wresp_bits; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_gathers_0_cmd_ready; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_gathers_0_cmd_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_0; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_1; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_2; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_3; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_4; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_5; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_6; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_7; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_8; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_9; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_10; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_11; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_12; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_13; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_14; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_15; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_gathers_0_data_ready; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_gathers_0_data_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_0; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_1; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_2; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_3; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_4; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_5; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_6; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_7; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_8; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_9; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_10; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_11; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_12; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_13; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_14; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_gathers_0_data_bits_15; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_scatters_0_cmd_ready; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_scatters_0_cmd_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_0; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_1; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_2; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_3; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_4; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_5; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_6; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_7; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_8; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_9; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_10; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_11; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_12; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_13; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_14; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_15; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_0; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_1; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_2; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_3; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_4; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_5; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_6; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_7; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_8; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_9; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_10; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_11; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_12; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_13; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_14; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_15; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_scatters_0_wresp_ready; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_scatters_0_wresp_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_memStreams_scatters_0_wresp_bits; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_axiStreamsIn_0_TVALID; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_axiStreamsIn_0_TREADY; // @[Instantiator.scala 53:44:@22601.4]
-  wire [255:0] accel_io_axiStreamsIn_0_TDATA; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_axiStreamsIn_0_TSTRB; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_axiStreamsIn_0_TKEEP; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_axiStreamsIn_0_TLAST; // @[Instantiator.scala 53:44:@22601.4]
-  wire [7:0] accel_io_axiStreamsIn_0_TID; // @[Instantiator.scala 53:44:@22601.4]
-  wire [7:0] accel_io_axiStreamsIn_0_TDEST; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_axiStreamsIn_0_TUSER; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_axiStreamsOut_0_TVALID; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_axiStreamsOut_0_TREADY; // @[Instantiator.scala 53:44:@22601.4]
-  wire [255:0] accel_io_axiStreamsOut_0_TDATA; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_axiStreamsOut_0_TSTRB; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_axiStreamsOut_0_TKEEP; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_axiStreamsOut_0_TLAST; // @[Instantiator.scala 53:44:@22601.4]
-  wire [7:0] accel_io_axiStreamsOut_0_TID; // @[Instantiator.scala 53:44:@22601.4]
-  wire [7:0] accel_io_axiStreamsOut_0_TDEST; // @[Instantiator.scala 53:44:@22601.4]
-  wire [31:0] accel_io_axiStreamsOut_0_TUSER; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_heap_0_req_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_heap_0_req_bits_allocDealloc; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_heap_0_req_bits_sizeAddr; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_heap_0_resp_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_heap_0_resp_bits_allocDealloc; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_heap_0_resp_bits_sizeAddr; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_argIns_0; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_argIns_1; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_argOuts_0_port_ready; // @[Instantiator.scala 53:44:@22601.4]
-  wire  accel_io_argOuts_0_port_valid; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_argOuts_0_port_bits; // @[Instantiator.scala 53:44:@22601.4]
-  wire [63:0] accel_io_argOuts_0_echo; // @[Instantiator.scala 53:44:@22601.4]
-  AccelUnit accel ( // @[Instantiator.scala 53:44:@22601.4]
+  wire  accel_clock; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_reset; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_enable; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_done; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_reset; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_loads_0_cmd_ready; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_loads_0_cmd_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_loads_0_cmd_bits_addr; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_cmd_bits_size; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_loads_0_data_ready; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_loads_0_data_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_0; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_1; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_2; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_3; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_4; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_5; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_6; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_7; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_8; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_9; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_10; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_11; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_12; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_13; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_14; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_loads_0_data_bits_rdata_15; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_stores_0_cmd_ready; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_stores_0_cmd_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_stores_0_cmd_bits_addr; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_cmd_bits_size; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_stores_0_data_ready; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_stores_0_data_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_0; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_1; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_2; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_3; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_4; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_5; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_6; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_7; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_8; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_9; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_10; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_11; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_12; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_13; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_14; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_stores_0_data_bits_wdata_15; // @[Instantiator.scala 53:44:@21981.4]
+  wire [15:0] accel_io_memStreams_stores_0_data_bits_wstrb; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_stores_0_wresp_ready; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_stores_0_wresp_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_stores_0_wresp_bits; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_gathers_0_cmd_ready; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_gathers_0_cmd_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_0; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_1; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_2; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_3; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_4; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_5; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_6; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_7; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_8; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_9; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_10; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_11; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_12; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_13; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_14; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_gathers_0_cmd_bits_addr_15; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_gathers_0_data_ready; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_gathers_0_data_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_0; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_1; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_2; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_3; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_4; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_5; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_6; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_7; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_8; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_9; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_10; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_11; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_12; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_13; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_14; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_gathers_0_data_bits_15; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_scatters_0_cmd_ready; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_scatters_0_cmd_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_0; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_1; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_2; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_3; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_4; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_5; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_6; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_7; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_8; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_9; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_10; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_11; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_12; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_13; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_14; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_memStreams_scatters_0_cmd_bits_addr_addr_15; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_0; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_1; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_2; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_3; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_4; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_5; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_6; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_7; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_8; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_9; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_10; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_11; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_12; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_13; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_14; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_memStreams_scatters_0_cmd_bits_wdata_15; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_scatters_0_wresp_ready; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_scatters_0_wresp_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_memStreams_scatters_0_wresp_bits; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_axiStreamsIn_0_TVALID; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_axiStreamsIn_0_TREADY; // @[Instantiator.scala 53:44:@21981.4]
+  wire [255:0] accel_io_axiStreamsIn_0_TDATA; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_axiStreamsIn_0_TSTRB; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_axiStreamsIn_0_TKEEP; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_axiStreamsIn_0_TLAST; // @[Instantiator.scala 53:44:@21981.4]
+  wire [7:0] accel_io_axiStreamsIn_0_TID; // @[Instantiator.scala 53:44:@21981.4]
+  wire [7:0] accel_io_axiStreamsIn_0_TDEST; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_axiStreamsIn_0_TUSER; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_axiStreamsOut_0_TVALID; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_axiStreamsOut_0_TREADY; // @[Instantiator.scala 53:44:@21981.4]
+  wire [255:0] accel_io_axiStreamsOut_0_TDATA; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_axiStreamsOut_0_TSTRB; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_axiStreamsOut_0_TKEEP; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_axiStreamsOut_0_TLAST; // @[Instantiator.scala 53:44:@21981.4]
+  wire [7:0] accel_io_axiStreamsOut_0_TID; // @[Instantiator.scala 53:44:@21981.4]
+  wire [7:0] accel_io_axiStreamsOut_0_TDEST; // @[Instantiator.scala 53:44:@21981.4]
+  wire [31:0] accel_io_axiStreamsOut_0_TUSER; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_heap_0_req_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_heap_0_req_bits_allocDealloc; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_heap_0_req_bits_sizeAddr; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_heap_0_resp_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_heap_0_resp_bits_allocDealloc; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_heap_0_resp_bits_sizeAddr; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_argIns_0; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_argIns_1; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_argOuts_0_port_ready; // @[Instantiator.scala 53:44:@21981.4]
+  wire  accel_io_argOuts_0_port_valid; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_argOuts_0_port_bits; // @[Instantiator.scala 53:44:@21981.4]
+  wire [63:0] accel_io_argOuts_0_echo; // @[Instantiator.scala 53:44:@21981.4]
+  AccelUnit accel ( // @[Instantiator.scala 53:44:@21981.4]
     .clock(accel_clock),
     .reset(accel_reset),
     .io_enable(accel_io_enable),
@@ -10686,8 +10331,8 @@ module SpatialIP( // @[:@22596.2]
     .io_argOuts_0_echo(accel_io_argOuts_0_echo)
   );
   assign io_rdata = 64'h0;
-  assign accel_clock = clock; // @[:@22602.4]
-  assign accel_reset = reset; // @[:@22603.4]
+  assign accel_clock = clock; // @[:@21982.4]
+  assign accel_reset = reset; // @[:@21983.4]
   assign accel_io_enable = 1'h0;
   assign accel_io_reset = 1'h0;
   assign accel_io_memStreams_loads_0_cmd_ready = 1'h0;
