@@ -5,5 +5,15 @@
     <project>
         <value string="times_5"/>
     </project>
+    <targetInfo>
+        <TargetInfo value="xc7z020:clg484:-1"/>
+    </targetInfo>
+    <libraryList>
+        <library value="xilinx/zynq/zynq" name="DefaultPlatform"/>
+        <library value="xilinx/zynq/zynq_fpv6" name="DefaultPlatform"/>
+    </libraryList>
+    <clockList>
+        <clock name="default" period="10" default="false"/>
+    </clockList>
 </AutoPilot:solution>
 

@@ -5,6 +5,8 @@
 #define INT_TO_IGNORE 253
 
 
+#define DEBUG 1
+
 // this makes one window of the stencil
 std::array< std::array< int, KERNEL_SIZE >, KERNEL_SIZE >
 stencil(std::array< std::array< int, ROW_SIZE > , ROW_SIZE > inputs, int row, int col) {
