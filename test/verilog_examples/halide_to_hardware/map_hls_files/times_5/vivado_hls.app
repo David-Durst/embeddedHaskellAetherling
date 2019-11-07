@@ -6,7 +6,7 @@
     <libraryFlag/>
     <files>
         <file name="../../test.cpp" sc="0" tb="1" cflags=" "/>
-        <file name="hls_target.cpp" sc="0" tb="false" cflags=""/>
+        <file name="hls_target.cpp" sc="0" tb="false" cflags="-std=c++11"/>
     </files>
     <solutions>
         <solution name="hls_target" status=""/>

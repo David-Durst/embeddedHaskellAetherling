@@ -17,6 +17,8 @@ __SIM_FIR__ = 1
 
 __SIM_DDS__ = 1
 
+__USE_CLANG__ = 1
+
 ObjDir = obj
 
 HLS_SOURCES = ../../../../test.cpp ../../../../hls_target.cpp
@@ -57,9 +59,16 @@ IFLAG += -D__SIM_FIR__
 
 IFLAG += -D__SIM_DDS__
 
+IFLAG += -std=c++11 
 IFLAG += -g
 DFLAG += -D__xilinx_ip_top= -DAESL_TB
 CCFLAG += 
+CCFLAG += --gcc-toolchain=${AUTOPILOT_TOOL}/clang-3.9
+LFLAG += --gcc-toolchain=${AUTOPILOT_TOOL}/clang-3.9
+CCFLAG += -Wno-c++11-narrowing
+CCFLAG += -Werror=uninitialized
+CCFLAG += -std=c++11
+LFLAG += -std=c++11
 
 
 
@@ -71,12 +80,12 @@ all: $(TARGET)
 
 $(ObjDir)/test.o: ../../../../test.cpp $(ObjDir)/.dir
 	$(Echo) "   Compiling ../../../../test.cpp in $(BuildMode) mode" $(AVE_DIR_DLOG)
-	$(Verb)  $(CC) ${CCFLAG} -c -MMD  $(IFLAG) $(DFLAG) $< -o $@ ; \
+	$(Verb)  $(CXX) ${CCFLAG} -c -MMD  $(IFLAG) $(DFLAG) $< -o $@ ; \
 
 -include $(ObjDir)/test.d
 
 $(ObjDir)/hls_target.o: ../../../../hls_target.cpp $(ObjDir)/.dir
 	$(Echo) "   Compiling ../../../../hls_target.cpp in $(BuildMode) mode" $(AVE_DIR_DLOG)
-	$(Verb)  $(CC) ${CCFLAG} -c -MMD  $(IFLAG) $(DFLAG) $< -o $@ ; \
+	$(Verb)  $(CXX) ${CCFLAG} -c -MMD -std=c++11  $(IFLAG) $(DFLAG) $< -o $@ ; \
 
 -include $(ObjDir)/hls_target.d
