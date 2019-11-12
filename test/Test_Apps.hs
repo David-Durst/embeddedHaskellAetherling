@@ -480,3 +480,28 @@ sharpen_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
 sharpen_results' = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
                                       sharpen s "sharpen") [1,2,4,8,16,48,144]
+
+row_size_big = 17
+big_conv_2d = conv_2d_shallow_no_input (Proxy @17) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 289 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
+big_conv_2d_slowdowns = [289 `div` 2, 289, 289 *3, 289*9]
+big_conv_2d_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s big_conv_2d_seq_idx) big_conv_2d_slowdowns
+big_conv_2d_ppar_typechecked =
+  fmap check_type big_conv_2d_ppar
+big_conv_2d_ppar_typechecked' =
+  fmap check_type_get_error big_conv_2d_ppar
+big_conv_2d_inputs :: [[Integer]] = [[1..row_size_big*row_size_big]]
+big_conv_2d_output :: [Integer] =
+  conv_generator $ stencil_generator row_size_big [1.. row_size_big*row_size_big]
+big_conv_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      big_conv_2d s (Just "big_conv2d")
+                                      big_conv_2d_inputs big_conv_2d_output) big_conv_2d_slowdowns
+big_conv_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      big_conv_2d s Nothing
+                                      big_conv_2d_inputs big_conv_2d_output) [289]
+big_conv_2d_st_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
+                                      big_conv_2d s "conv2d") big_conv_2d_slowdowns
+big_conv_2d_verilog_prints = sequence $ fmap (\s -> compile_with_slowdown
+                                      big_conv_2d s "conv2d") big_conv_2d_slowdowns
