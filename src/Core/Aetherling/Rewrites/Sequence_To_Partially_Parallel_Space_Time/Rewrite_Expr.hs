@@ -32,7 +32,12 @@ rewrite_to_partially_parallel s seq_expr = do
   --trace ("num_calls : " ++ (show $ num_calls state)) $
   if isLeft expr_par
     then STE.ErrorN (rw_msg $ fromLeft undefined expr_par) No_Index
-    else fromRight undefined expr_par
+    else do
+    let result = fromRight undefined expr_par
+    let output_time = STT.clocks_t $ ST_Conv.e_out_type $ ST_Conv.expr_to_types result
+    if output_time == s
+      then result
+      else STE.ErrorN "slowdown doesn't match result" No_Index
 
 rewrite_to_partially_parallel' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
 rewrite_to_partially_parallel' s seq_expr = do
@@ -41,7 +46,7 @@ rewrite_to_partially_parallel' s seq_expr = do
   output_type_slowdowns <- rewrite_AST_type s seq_expr_out_type
   --traceM ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
   startEvalMemoT $ sequence_to_partially_parallel output_type_slowdowns seq_expr
-
+  
 data Input_Type_Rewrites = Input_Type_Rewrites {
   input_rewrites :: [Type_Rewrite],
   input_name :: String
@@ -249,11 +254,12 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
             SplitR no (num_clocks - no) (n `div` no)
         _ -> undefined
           
-  --traceShowM $ "down"
+  traceShowM $ "down"
+  traceShowM $ "n " ++ show n
   --traceShowM $ "i " ++ show i
-  --traceShowM $ "tr " ++ show tr
+  traceShowM $ "tr " ++ show tr
   --traceShowM $ "in seq t slowed: " ++ show (SeqT.SeqT n i SeqT.IntT)
-  --traceShowM $ "input_rewrite " ++ show input_rewrites
+  traceShowM $ "input_rewrite " ++ show input_rewrite
 
   let upstream_type_rewrites = input_rewrite : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
@@ -428,13 +434,13 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let input_rewrite_outer : input_rewrite_inner : _ = input_rewrites
   let upstream_type_rewrites = input_rewrite_outer : input_rewrite_inner : type_rewrites_tl
   in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
-  --traceShowM "unpartition"
-  --traceShowM $ "tr: " ++ show tr
-  --traceShowM $ "out_t: " ++ show out_t_ppar
-  --traceShowM $ "slowdown: " ++ show slowdown
+  traceShowM "unpartition"
+  traceShowM $ "tr: " ++ show tr
+  traceShowM $ "out_t: " ++ show out_t_ppar
+  traceShowM $ "slowdown: " ++ show slowdown
   --traceShowM $ "in seq t slowed: " ++ show (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
-  --traceShowM $ "input_rewrites: " ++ show input_rewrites
-  --traceShowM $ "in_t_ppar: " ++ show in_t_ppar
+  traceShowM $ "input_rewrites: " ++ show input_rewrites
+  traceShowM $ "in_t_ppar: " ++ show in_t_ppar
   
   ppar_unary_seq_operator upstream_type_rewrites
     (STE.ReshapeN in_t_ppar out_t_ppar) producer

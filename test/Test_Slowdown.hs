@@ -363,6 +363,11 @@ down_over_nested_to_down_over_flattened_results =
                          down_over_nested_to_down_over_flattened s Nothing
                          down_over_nested_to_down_over_flattened_inputs
                          down_over_nested_to_down_over_flattened_output) [1,2,4,8,16]
+down_over_nested_to_down_over_flattened_results' =
+  sequence $ fmap (\s -> compile_and_test_with_slowdown
+                         down_over_nested_to_down_over_flattened s Nothing
+                         down_over_nested_to_down_over_flattened_inputs
+                         down_over_nested_to_down_over_flattened_output) [16]
 
 
 tuple_reverse_shallow_no_input in_seq0 in_seq1 = do
