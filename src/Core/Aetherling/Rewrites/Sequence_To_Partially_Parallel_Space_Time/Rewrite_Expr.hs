@@ -243,7 +243,15 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
 
   let input_rewrite = case tr of
         SpaceR 1 -> SpaceR n -- <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
-        TimeR 1 tr_i_down -> TimeR n (tr_i_down - n + 1)
+        TimeR 1 tr_i_down | 1 + tr_i_down >= n -> TimeR n (tr_i_down - n + 1)
+        TimeR 1 tr_i_down -> do
+          let num_clocks = 1 + tr_i_down
+          if num_clocks >= n
+            then SplitR n (num_clocks - n) 1
+            else do
+            let n_divisors = ae_divisors_from_factors $ ae_factorize n
+            let no = maximum $ S.filter (\x -> x <= num_clocks) n_divisors
+            SplitR no (num_clocks - no) (n `div` no)
         SplitR 1 tr_i_down 1 -> do
           let num_clocks = 1 + tr_i_down
           if num_clocks >= n
@@ -253,36 +261,51 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
             let no = maximum $ S.filter (\x -> x <= num_clocks) n_divisors
             SplitR no (num_clocks - no) (n `div` no)
         _ -> undefined
+
+  let reshape_to_remove_sseq = case tr of
+        TimeR 1 tr_i_down | 1 + tr_i_down < n -> True
+        _ -> False
+        
+    
           
-  traceShowM $ "down"
-  traceShowM $ "n " ++ show n
+  --traceShowM $ "down"
+  --traceShowM $ "n " ++ show n
   --traceShowM $ "i " ++ show i
-  traceShowM $ "tr " ++ show tr
+  --traceShowM $ "tr " ++ show tr
   --traceShowM $ "in seq t slowed: " ++ show (SeqT.SeqT n i SeqT.IntT)
-  traceShowM $ "input_rewrite " ++ show input_rewrite
+  --traceShowM $ "input_rewrite " ++ show input_rewrite
 
   let upstream_type_rewrites = input_rewrite : type_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
 
-  get_scheduled_down input_rewrite elem_t_ppar producer_ppar
+  get_scheduled_down input_rewrite elem_t_ppar producer_ppar reshape_to_remove_sseq
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
-    get_scheduled_down :: Type_Rewrite -> STT.AST_Type -> STE.Expr ->
+    get_scheduled_down :: Type_Rewrite -> STT.AST_Type -> STE.Expr -> Bool ->
                           Partially_Parallel_MemoM STE.Expr STE.Expr
-    get_scheduled_down (SpaceR in_n) elem_t_ppar producer_ppar =
+    get_scheduled_down (SpaceR in_n) elem_t_ppar producer_ppar _ =
       add_index (STE.Down_1d_sN in_n sel_idx elem_t_ppar) producer_ppar
-    get_scheduled_down (TimeR in_n in_i) elem_t_ppar producer_ppar =
+    get_scheduled_down (TimeR in_n in_i) elem_t_ppar producer_ppar _ =
       add_index (STE.Down_1d_tN in_n in_i sel_idx elem_t_ppar) producer_ppar
-    get_scheduled_down (SplitR in_no in_io in_ni) elem_t_ppar producer_ppar = do
-      STB.make_map_t 1 (in_no + in_io - 1) ( 
-        STE.Down_1d_sN in_ni (sel_idx `mod` in_ni) elem_t_ppar
-        ) =<<
-        (add_index
-         (STE.Down_1d_tN in_no in_io (sel_idx `div` in_ni) (STT.SSeqT in_ni elem_t_ppar))
-         producer_ppar)
-    get_scheduled_down NonSeqR _ _ = throwError $
+    get_scheduled_down (SplitR in_no in_io in_ni) elem_t_ppar producer_ppar remove_sseq = do
+      let result =
+            STB.make_map_t 1 (in_no + in_io - 1) ( 
+            STE.Down_1d_sN in_ni (sel_idx `mod` in_ni) elem_t_ppar
+            ) =<<
+            (add_index
+             (STE.Down_1d_tN in_no in_io (sel_idx `div` in_ni) (STT.SSeqT in_ni elem_t_ppar))
+             producer_ppar)
+      if remove_sseq
+        then (add_index $
+             STE.ReshapeN
+             (STT.TSeqT 1 (in_no + in_io - 1) (STT.SSeqT 1 elem_t_ppar))
+             (STT.TSeqT 1 (in_no + in_io - 1) elem_t_ppar))
+             =<< result
+        else result
+             
+    get_scheduled_down NonSeqR _ _ _ = throwError $
       Slowdown_Failure "can't get nonseq for down_1d input"
 
 sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr_no) : tr1@(SpaceR tr_ni) : type_rewrites_tl)
@@ -434,13 +457,13 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let input_rewrite_outer : input_rewrite_inner : _ = input_rewrites
   let upstream_type_rewrites = input_rewrite_outer : input_rewrite_inner : type_rewrites_tl
   in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
-  traceShowM "unpartition"
-  traceShowM $ "tr: " ++ show tr
-  traceShowM $ "out_t: " ++ show out_t_ppar
-  traceShowM $ "slowdown: " ++ show slowdown
+  --traceShowM "unpartition"
+  --traceShowM $ "tr: " ++ show tr
+  --traceShowM $ "out_t: " ++ show out_t_ppar
+  --traceShowM $ "slowdown: " ++ show slowdown
   --traceShowM $ "in seq t slowed: " ++ show (SeqT.SeqT no io (SeqT.SeqT ni ii SeqT.IntT))
-  traceShowM $ "input_rewrites: " ++ show input_rewrites
-  traceShowM $ "in_t_ppar: " ++ show in_t_ppar
+  --traceShowM $ "input_rewrites: " ++ show input_rewrites
+  --traceShowM $ "in_t_ppar: " ++ show in_t_ppar
   
   ppar_unary_seq_operator upstream_type_rewrites
     (STE.ReshapeN in_t_ppar out_t_ppar) producer
@@ -581,7 +604,15 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   -- this is input rewrite for reduce and not subgraph f
   let input_rewrite = case tr of
         SpaceR 1 -> SpaceR n -- <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
-        TimeR 1 tr_i_down -> TimeR n (tr_i_down - n + 1)
+        TimeR 1 tr_i_down | 1 + tr_i_down >= n -> TimeR n (tr_i_down - n + 1)
+        TimeR 1 tr_i_down -> do
+          let num_clocks = 1 + tr_i_down
+          if num_clocks >= n
+            then SplitR n (num_clocks - n) 1
+            else do
+            let n_divisors = ae_divisors_from_factors $ ae_factorize n
+            let no = maximum $ S.filter (\x -> x <= num_clocks) n_divisors
+            SplitR no (num_clocks - no) (n `div` no)
         SplitR 1 tr_i_down 1 -> do
           let num_clocks = 1 + tr_i_down
           if num_clocks >= n
@@ -591,6 +622,10 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
             let no = maximum $ S.filter (\x -> x <= num_clocks) n_divisors
             SplitR no (num_clocks - no) (n `div` no)
         _ -> undefined
+
+  let reshape_to_remove_sseq = case tr of
+        TimeR 1 tr_i_down | 1 + tr_i_down < n -> True
+        _ -> False
 
   -- need to know what f_ppar's input type rewrites were
   -- as those are the inner type rewrites that the map must propagate up
@@ -603,20 +638,30 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let upstream_type_rewrites = input_rewrite : f_ppar_in_rewrites_tl
   producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
 
-  get_scheduled_partition input_rewrite f_ppar producer_ppar
+  get_scheduled_partition input_rewrite f_ppar producer_ppar reshape_to_remove_sseq
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
-    get_scheduled_partition :: Type_Rewrite -> STE.Expr -> STE.Expr -> Partially_Parallel_MemoM STE.Expr STE.Expr
-    get_scheduled_partition (SpaceR in_n) f_ppar producer_ppar =
+    get_scheduled_partition :: Type_Rewrite -> STE.Expr -> STE.Expr -> Bool ->
+                               Partially_Parallel_MemoM STE.Expr STE.Expr
+    get_scheduled_partition (SpaceR in_n) f_ppar producer_ppar _ =
       add_index (STE.Reduce_sN in_n f_ppar) producer_ppar
-    get_scheduled_partition (TimeR in_n in_i) f_ppar producer_ppar =
+    get_scheduled_partition (TimeR in_n in_i) f_ppar producer_ppar _ =
       add_index (STE.Reduce_tN in_n in_i f_ppar) producer_ppar
-    get_scheduled_partition (SplitR in_no in_io in_ni) f_ppar producer_ppar =
-      STB.make_reduce_t in_no in_io (STE.Map_sN 1 f_ppar) =<<
-        STB.make_map_t in_no in_io (STE.Reduce_sN in_ni f_ppar)
-        producer_ppar
-    get_scheduled_partition NonSeqR _ _ = throwError $
+    get_scheduled_partition (SplitR in_no in_io in_ni) f_ppar producer_ppar remove_sseq = do
+      let result =
+            STB.make_reduce_t in_no in_io (STE.Map_sN 1 f_ppar) =<<
+            STB.make_map_t in_no in_io (STE.Reduce_sN in_ni f_ppar)
+            producer_ppar
+      let elem_t_ppar = ST_Conv.e_out_type $ ST_Conv.expr_to_types f_ppar
+      if remove_sseq
+        then (add_index $
+             STE.ReshapeN
+             (STT.TSeqT 1 (in_no + in_io - 1) (STT.SSeqT 1 elem_t_ppar))
+             (STT.TSeqT 1 (in_no + in_io - 1) elem_t_ppar))
+             =<< result
+        else result
+    get_scheduled_partition NonSeqR _ _ _ = throwError $
       Slowdown_Failure "can't get nonseq for reduce input"
 
 -- tuple operations
