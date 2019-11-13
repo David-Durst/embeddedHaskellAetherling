@@ -237,9 +237,40 @@ down_from_pyramid_2d_output :: [Integer] =
   --down_generator  $ conv_generator $ stencil_generator 8 [1..] 
 down_from_pyramid_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       down_from_pyramid_2d s Nothing 
-                                      down_from_pyramid_2d_inputs down_from_pyramid_2d_output) [32]
+                                      down_from_pyramid_2d_inputs down_from_pyramid_2d_output) [192]
 
 
+first_layer_pyr_shallow_no_input in_seq = do
+  let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq
+  let layer1_drop_cols = unpartitionC $ mapC (down_1dC 1) $
+        partitionC (Proxy @32) (Proxy @2) Proxy (Proxy @0) layer1_blurred
+  unpartitionC $ unpartitionC $
+        mapC (down_1dC 1) $
+        partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) $
+        partitionC (Proxy @8) (Proxy @4) Proxy (Proxy @0) layer1_drop_cols
+first_layer_pyr = first_layer_pyr_shallow_no_input $ 
+  com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+first_layer_pyr_seq_idx = add_indexes $ seq_shallow_to_deep first_layer_pyr
+first_layer_pyr_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s first_layer_pyr_seq_idx) [1,2,4,8,16,32,64,192,576]
+first_layer_pyr_ppar_typechecked =
+  fmap check_type first_layer_pyr_ppar
+first_layer_pyr_ppar_typechecked' =
+  fmap check_type_get_error first_layer_pyr_ppar
+first_layer_pyr_inputs :: [[Integer]] = [[1..row_size_pyramid*row_size_pyramid]]
+first_layer_pyr_output :: [Integer] =
+  down_generator  $ conv_generator $ stencil_generator 8 [1..] 
+first_layer_pyr_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      first_layer_pyr s Nothing
+                                      first_layer_pyr_inputs first_layer_pyr_output) [1,2,4,8,16,32,64,192,576]
+first_layer_pyr_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      first_layer_pyr s Nothing
+                                      first_layer_pyr_inputs first_layer_pyr_output) [2,4,8,16,32,64,192,576]
+first_layer_pyr_results'' = sequence $ fmap (\s -> compile_with_slowdown
+                                      first_layer_pyr s "pyramid") [1]
+first_layer_pyr_results''' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      first_layer_pyr s Nothing
+                                      first_layer_pyr_inputs first_layer_pyr_output) [576]
   
 pyramid_2d_shallow_no_input in_seq = do
   let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq
@@ -286,7 +317,7 @@ pyramid_2d_results'' = sequence $ fmap (\s -> compile_with_slowdown
                                       pyramid_2d s "pyramid") [1]
 pyramid_2d_results''' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_2d s (Just "pyramid")
-                                      pyramid_2d_inputs pyramid_2d_output) [192]
+                                      pyramid_2d_inputs pyramid_2d_output) [576]
 
 
   
