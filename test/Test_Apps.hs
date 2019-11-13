@@ -284,6 +284,9 @@ pyramid_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_2d_inputs pyramid_2d_output) [2,4,8,16,32,64,192,576]
 pyramid_2d_results'' = sequence $ fmap (\s -> compile_with_slowdown
                                       pyramid_2d s "pyramid") [1]
+pyramid_2d_results''' = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      pyramid_2d s (Just "pyramid")
+                                      pyramid_2d_inputs pyramid_2d_output) [192]
 
 
   
