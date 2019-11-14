@@ -1,0 +1,39 @@
+module0 (I :: SSeqT 3 IntT) =
+    n23 = Const_GenN SSeqV [IntV 1,IntV 1,IntV 1] 1 SSeqT 3 IntT
+    n26 = Map2_sN 3 (ATupleN IntT IntT I0 I1) n23 I
+    n32 = Map_sN 3 (MulN I) n26
+    n35 = Reduce_sN 3 (AddN I) n32
+    n36 = Const_GenN SSeqV [IntV 3] 4 SSeqT 1 IntT
+    n38 = Map2_sN 1 (ATupleN IntT IntT I0 I1) n35 n36
+    n44 = Map_sN 1 (DivN I) n38
+
+module1 (I :: SSeqT 3 IntT) =
+    n72 = Const_GenN SSeqV [IntV 1,IntV 1,IntV 1] 5 SSeqT 3 IntT
+    n75 = Map2_sN 3 (ATupleN IntT IntT I0 I1) n72 I
+    n81 = Map_sN 3 (MulN I) n75
+    n84 = Reduce_sN 3 (AddN I) n81
+    n85 = Const_GenN SSeqV [IntV 3] 8 SSeqT 1 IntT
+    n87 = Map2_sN 1 (ATupleN IntT IntT I0 I1) n84 n85
+    n93 = Map_sN 1 (DivN I) n87
+
+module2 (hi :: SSeqT 9 (SSeqT 1 IntT)) =
+    n1 = FIFON SSeqT 9 (SSeqT 1 IntT) 1 "hi"
+    n2 = Shift_sN 9 1 SSeqT 1 IntT n1
+    n3 = Shift_sN 9 1 SSeqT 1 IntT n2
+    n4 = Map2_sN 9 (Map2_sN 1 (STupleN IntT I0 I1) I0 I1) n3 n2
+    n11 = Map2_sN 9 (Map2_sN 1 (STupleAppendN 3 IntT I0 I1) I0 I1) n4 n1
+    n22 = Map_sN 9 (Remove_1_sN (STupleToSSeqN 3 (IntT) I) I) n11
+    n45 = Map_sN 9 module0 n22
+    n46 = Partition_s_ssN 3 3 SSeqT 1 IntT n45
+    n49 = Map_sN 3 (Down_1d_sN 3 2 SSeqT 1 IntT I) n46
+    n50 = Unpartition_s_ssN 3 1 SSeqT 1 IntT n49
+    n51 = Shift_sN 3 1 SSeqT 1 IntT n50
+    n52 = Shift_sN 3 1 SSeqT 1 IntT n51
+    n53 = Map2_sN 3 (Map2_sN 1 (STupleN IntT I0 I1) I0 I1) n52 n51
+    n60 = Map2_sN 3 (Map2_sN 1 (STupleAppendN 3 IntT I0 I1) I0 I1) n53 n50
+    n71 = Map_sN 3 (Remove_1_sN (STupleToSSeqN 3 (IntT) I) I) n60
+    n94 = Map_sN 3 module1 n71
+    n95 = Down_1d_sN 3 2 SSeqT 1 IntT n94
+    n96 = FIFON SSeqT 1 (SSeqT 1 IntT) 1 "n95"
+    n97 = FIFON SSeqT 1 (SSeqT 1 IntT) 1 "n96"
+
