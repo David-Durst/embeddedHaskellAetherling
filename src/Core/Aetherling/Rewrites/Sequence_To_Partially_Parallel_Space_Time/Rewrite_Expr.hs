@@ -47,6 +47,28 @@ rewrite_to_partially_parallel' s seq_expr = do
   --traceM ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
   startEvalMemoT $ sequence_to_partially_parallel output_type_slowdowns seq_expr
   
+rewrite_to_partially_parallel_type :: [Type_Rewrite] -> SeqE.Expr -> STE.Expr
+rewrite_to_partially_parallel_type tr seq_expr = do
+  let (expr_par, state) = runState (evalStateT
+                             (runExceptT $ rewrite_to_partially_parallel_type' tr seq_expr)
+                             empty_rewrite_data)
+                 empty_ppar_state
+  --trace ("num_calls : " ++ (show $ num_calls state)) $
+  if isLeft expr_par
+    then STE.ErrorN (rw_msg $ fromLeft undefined expr_par) No_Index
+    else do
+    let result = fromRight undefined expr_par
+    let output_time = STT.clocks_t $ ST_Conv.e_out_type $ ST_Conv.expr_to_types result
+    if output_time == product (filter (>0) $ fmap get_type_rewrite_periods tr)
+      then result
+      else STE.ErrorN "slowdown doesn't match result" No_Index
+
+rewrite_to_partially_parallel_type' :: [Type_Rewrite] -> SeqE.Expr -> Partially_ParallelM STE.Expr
+rewrite_to_partially_parallel_type' tr seq_expr = do
+  --traceShowM $ rewrite_AST_type_debug s seq_expr_out_type
+  --traceM ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
+  startEvalMemoT $ sequence_to_partially_parallel tr seq_expr
+  
 data Input_Type_Rewrites = Input_Type_Rewrites {
   input_rewrites :: [Type_Rewrite],
   input_name :: String
@@ -437,7 +459,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrit
 -}
 
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
-  seq_e@(SeqE.UnpartitionN no ni _ _ elem_t producer _) = do
+  seq_e@(SeqE.UnpartitionN no ni io ii elem_t producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   let types = Seq_Conv.expr_to_types seq_e
   -- ppar_AST_type applies the type_rewrites to match downstream
@@ -452,8 +474,8 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let no_factors = ae_factorize no
   let ni_factors = ae_factorize ni
   let slowdown_without_ni_factors = ae_factors_product $ ae_factors_diff slowdown_factors ni_factors
-  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no (slowdown_without_ni_factors - no)
-                                                      (SeqT.SeqT ni 0 SeqT.IntT))
+  input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io -- (slowdown_without_ni_factors - no)
+                                                      (SeqT.SeqT ni ii SeqT.IntT))
   let input_rewrite_outer : input_rewrite_inner : _ = input_rewrites
   let upstream_type_rewrites = input_rewrite_outer : input_rewrite_inner : type_rewrites_tl
   in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
