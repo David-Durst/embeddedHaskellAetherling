@@ -27,7 +27,7 @@ cp $CONSTRAINT_FILE $BUILDDIR
 cd $BUILDDIR
 echo "read_verilog $VERILOG_BUILD_COPY" > system.tcl
 echo "read_xdc $CONSTRAINT_BUILD_COPY" >> system.tcl
-echo "synth_design -top top -part xc7z020clg484-1 -mode out_of_context" >> system.tcl
+echo "synth_design -top top -part xc7z020clg484-1 -mode out_of_context -retiming -flatten_hierarchy full" >> system.tcl
 #echo "set_property HD.CLK_SRC BUFGCTRL_X0Y16 [get_ports CLK]" >> system.tcl
 echo "set_property SEVERITY {Warning} [get_drc_checks UCIO-1]" >> system.tcl
 echo "set_property SEVERITY {Warning} [get_drc_checks NSTD-1]" >> system.tcl

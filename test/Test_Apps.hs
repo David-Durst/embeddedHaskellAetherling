@@ -30,8 +30,8 @@ apps_tests = testGroup "Full Application Tests"
     (all_success =<< single_map_200_results) @? "map failed",
     testCase "single 3x3 convolution" $
     (all_success =<< conv_2d_results) @? "single 3x3 convolution failed",
-    testCase "pyramid" $
-    (all_success =<< pyramid_2d_results) @? "pyramid failed",
+    --testCase "pyramid" $
+    --(all_success =<< pyramid_2d_results) @? "pyramid failed",
     testCase "conv 3x3 to 2x2" $
     (all_success =<< conv_2d_b2b_results) @? "conv 3x3 to 2x2 failed",
     testCase "conv 3x3 to 3x3" $
