@@ -1,0 +1,79 @@
+module0 (I :: TSeqT 3 0 (TSeqT 3 0 IntT)) =
+    n136 = Const_GenN TSeqV {vals = [TSeqV {vals = [IntV 0,IntV 1,IntV 0], i_v = 0},TSeqV {vals = [IntV 1,IntV 2,IntV 1], i_v = 0},TSeqV {vals = [IntV 0,IntV 1,IntV 0], i_v = 0}], i_v = 0} 3 TSeqT 3 0 (TSeqT 3 0 IntT)
+    n138 = Map2_tN 3 0 (Map2_tN 3 0 (ATupleN IntT IntT I0 I1) I0 I1) I n136
+    n149 = Map_tN 3 0 (Map_tN 3 0 (LSLN I) I) n138
+    n154 = Map_tN 3 0 (Reduce_tN 3 0 (AddN I) I) n149
+    n159 = Reduce_tN 3 0 (Map_tN 1 2 (AddN I) I) n154
+    n160 = Const_GenN TSeqV {vals = [TSeqV {vals = [IntV 4], i_v = 2}], i_v = 2} 13 TSeqT 1 2 (TSeqT 1 2 IntT)
+    n162 = Map2_tN 1 2 (Map2_tN 1 2 (ATupleN IntT IntT I0 I1) I0 I1) n159 n160
+    n173 = Map_tN 1 2 (Map_tN 1 2 (LSRN I) I) n162
+
+module1 (I :: TSeqT 3 0 (TSeqT 3 0 IntT)) =
+    n320 = Const_GenN TSeqV {vals = [TSeqV {vals = [IntV 0,IntV 1,IntV 0], i_v = 0},TSeqV {vals = [IntV 1,IntV 2,IntV 1], i_v = 0},TSeqV {vals = [IntV 0,IntV 1,IntV 0], i_v = 0}], i_v = 0} 268 TSeqT 3 0 (TSeqT 3 0 IntT)
+    n322 = Map2_tN 3 0 (Map2_tN 3 0 (ATupleN IntT IntT I0 I1) I0 I1) I n320
+    n333 = Map_tN 3 0 (Map_tN 3 0 (LSLN I) I) n322
+    n338 = Map_tN 3 0 (Reduce_tN 3 0 (AddN I) I) n333
+    n343 = Reduce_tN 3 0 (Map_tN 1 2 (AddN I) I) n338
+    n344 = Const_GenN TSeqV {vals = [TSeqV {vals = [IntV 4], i_v = 2}], i_v = 2} 278 TSeqT 1 2 (TSeqT 1 2 IntT)
+    n346 = Map2_tN 1 2 (Map2_tN 1 2 (ATupleN IntT IntT I0 I1) I0 I1) n343 n344
+    n357 = Map_tN 1 2 (Map_tN 1 2 (LSRN I) I) n346
+
+module2 (hi :: TSeqT 32 32 (SSeqT 2 (TSeqT 1 2 (TSeqT 1 2 IntT)))) =
+    n1 = FIFON TSeqT 32 32 (SSeqT 2 (TSeqT 1 2 (TSeqT 1 2 IntT))) 1 "hi"
+    n2 = Shift_tsN 32 32 2 8 TSeqT 1 2 (TSeqT 1 2 IntT) n1
+    n3 = Shift_tsN 32 32 2 8 TSeqT 1 2 (TSeqT 1 2 IntT) n2
+    n4 = Shift_tsN 32 32 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n3
+    n5 = Shift_tsN 32 32 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n4
+    n6 = Map2_tN 32 32 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleN IntT I0 I1) I0 I1) I0 I1) I0 I1) n5 n4
+    n19 = Map2_tN 32 32 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleAppendN 3 IntT I0 I1) I0 I1) I0 I1) I0 I1) n6 n3
+    n38 = Map_tN 32 32 (Map_sN 2 (Map_tN 1 2 (SerializeN 3 0 IntT I) I) I) n19
+    n39 = Shift_tsN 32 32 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n2
+    n40 = Shift_tsN 32 32 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n39
+    n41 = Map2_tN 32 32 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleN IntT I0 I1) I0 I1) I0 I1) I0 I1) n40 n39
+    n54 = Map2_tN 32 32 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleAppendN 3 IntT I0 I1) I0 I1) I0 I1) I0 I1) n41 n2
+    n73 = Map_tN 32 32 (Map_sN 2 (Map_tN 1 2 (SerializeN 3 0 IntT I) I) I) n54
+    n74 = Map2_tN 32 32 (Map2_sN 2 (Map2_tN 1 2 (STupleN TSeqT 3 0 IntT I0 I1) I0 I1) I0 I1) n38 n73
+    n84 = Shift_tsN 32 32 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n1
+    n85 = Shift_tsN 32 32 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n84
+    n86 = Map2_tN 32 32 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleN IntT I0 I1) I0 I1) I0 I1) I0 I1) n85 n84
+    n99 = Map2_tN 32 32 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleAppendN 3 IntT I0 I1) I0 I1) I0 I1) I0 I1) n86 n1
+    n118 = Map_tN 32 32 (Map_sN 2 (Map_tN 1 2 (SerializeN 3 0 IntT I) I) I) n99
+    n119 = Map2_tN 32 32 (Map2_sN 2 (Map2_tN 1 2 (STupleAppendN 3 TSeqT 3 0 IntT I0 I1) I0 I1) I0 I1) n74 n118
+    n133 = Map_tN 32 32 (Map_sN 2 (SerializeN 3 0 TSeqT 3 0 IntT I) I) n119
+    n175 = Map_tN 32 32 (Map_sN 2 module0 I) n133
+    n178 = Map_tN 32 32 (Down_1d_sN 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) I) n175
+    n179 = ReshapeN (TSeqT 32 32 (SSeqT 1 (TSeqT 1 2 (TSeqT 1 2 IntT)))) (TSeqT 16 48 (SSeqT 2 (TSeqT 1 2 (TSeqT 1 2 IntT)))) n178
+    n180 = ReshapeN (TSeqT 16 48 (SSeqT 2 (TSeqT 1 2 (TSeqT 1 2 IntT)))) (TSeqT 4 12 (SSeqT 2 (TSeqT 4 0 (TSeqT 1 2 (TSeqT 1 2 IntT))))) n179
+    n183 = Map_tN 4 12 (Down_1d_sN 2 1 TSeqT 4 0 (TSeqT 1 2 (TSeqT 1 2 IntT)) I) n180
+    n184 = ReshapeN (TSeqT 4 12 (SSeqT 1 (TSeqT 4 0 (TSeqT 1 2 (TSeqT 1 2 IntT))))) (TSeqT 4 12 (TSeqT 4 0 (TSeqT 1 2 (TSeqT 1 2 IntT)))) n183
+    n185 = ReshapeN (TSeqT 4 12 (TSeqT 4 0 (TSeqT 1 2 (TSeqT 1 2 IntT)))) (TSeqT 8 56 (SSeqT 2 (TSeqT 1 2 (TSeqT 1 2 IntT)))) n184
+    n186 = Shift_tsN 8 56 2 4 TSeqT 1 2 (TSeqT 1 2 IntT) n185
+    n187 = Shift_tsN 8 56 2 4 TSeqT 1 2 (TSeqT 1 2 IntT) n186
+    n188 = Shift_tsN 8 56 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n187
+    n189 = Shift_tsN 8 56 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n188
+    n190 = Map2_tN 8 56 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleN IntT I0 I1) I0 I1) I0 I1) I0 I1) n189 n188
+    n203 = Map2_tN 8 56 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleAppendN 3 IntT I0 I1) I0 I1) I0 I1) I0 I1) n190 n187
+    n222 = Map_tN 8 56 (Map_sN 2 (Map_tN 1 2 (SerializeN 3 0 IntT I) I) I) n203
+    n223 = Shift_tsN 8 56 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n186
+    n224 = Shift_tsN 8 56 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n223
+    n225 = Map2_tN 8 56 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleN IntT I0 I1) I0 I1) I0 I1) I0 I1) n224 n223
+    n238 = Map2_tN 8 56 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleAppendN 3 IntT I0 I1) I0 I1) I0 I1) I0 I1) n225 n186
+    n257 = Map_tN 8 56 (Map_sN 2 (Map_tN 1 2 (SerializeN 3 0 IntT I) I) I) n238
+    n258 = Map2_tN 8 56 (Map2_sN 2 (Map2_tN 1 2 (STupleN TSeqT 3 0 IntT I0 I1) I0 I1) I0 I1) n222 n257
+    n268 = Shift_tsN 8 56 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n185
+    n269 = Shift_tsN 8 56 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) n268
+    n270 = Map2_tN 8 56 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleN IntT I0 I1) I0 I1) I0 I1) I0 I1) n269 n268
+    n283 = Map2_tN 8 56 (Map2_sN 2 (Map2_tN 1 2 (Map2_tN 1 2 (STupleAppendN 3 IntT I0 I1) I0 I1) I0 I1) I0 I1) n270 n185
+    n302 = Map_tN 8 56 (Map_sN 2 (Map_tN 1 2 (SerializeN 3 0 IntT I) I) I) n283
+    n303 = Map2_tN 8 56 (Map2_sN 2 (Map2_tN 1 2 (STupleAppendN 3 TSeqT 3 0 IntT I0 I1) I0 I1) I0 I1) n258 n302
+    n317 = Map_tN 8 56 (Map_sN 2 (SerializeN 3 0 TSeqT 3 0 IntT I) I) n303
+    n359 = Map_tN 8 56 (Map_sN 2 module1 I) n317
+    n362 = Map_tN 8 56 (Down_1d_sN 2 1 TSeqT 1 2 (TSeqT 1 2 IntT) I) n359
+    n363 = ReshapeN (TSeqT 8 56 (SSeqT 1 (TSeqT 1 2 (TSeqT 1 2 IntT)))) (TSeqT 4 60 (SSeqT 2 (TSeqT 1 2 (TSeqT 1 2 IntT)))) n362
+    n364 = ReshapeN (TSeqT 4 60 (SSeqT 2 (TSeqT 1 2 (TSeqT 1 2 IntT)))) (TSeqT 2 30 (SSeqT 2 (TSeqT 2 0 (TSeqT 1 2 (TSeqT 1 2 IntT))))) n363
+    n367 = Map_tN 2 30 (Down_1d_sN 2 1 TSeqT 2 0 (TSeqT 1 2 (TSeqT 1 2 IntT)) I) n364
+    n368 = ReshapeN (TSeqT 2 30 (SSeqT 1 (TSeqT 2 0 (TSeqT 1 2 (TSeqT 1 2 IntT))))) (TSeqT 2 30 (TSeqT 2 0 (TSeqT 1 2 (TSeqT 1 2 IntT)))) n367
+    n369 = ReshapeN (TSeqT 2 30 (TSeqT 2 0 (TSeqT 1 2 (TSeqT 1 2 IntT)))) (TSeqT 4 60 (TSeqT 1 2 (TSeqT 1 2 IntT))) n368
+    n370 = FIFON TSeqT 4 60 (TSeqT 1 2 (TSeqT 1 2 IntT)) 1 "n369"
+    n371 = FIFON TSeqT 4 60 (TSeqT 1 2 (TSeqT 1 2 IntT)) 1 "n370"
+
