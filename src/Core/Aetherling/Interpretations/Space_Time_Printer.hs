@@ -194,6 +194,13 @@ print_inner consumer_e@(Shift_tsN no io ni shift_amount elem_t producer_e cur_id
     " " ++ show ni ++ " " ++ show shift_amount ++ " " ++
     show elem_t ++ " " ++ producer_ref
   return cur_ref_name
+print_inner consumer_e@(Shift_ttN no ni io ii shift_amount elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ print_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "Shift_ttN " ++ show no ++ " " ++ show ni ++
+    " " ++ show io ++ " " ++ show ii ++ " " ++ show shift_amount ++ " " ++
+    show elem_t ++ " " ++ producer_ref
+  return cur_ref_name
 print_inner consumer_e@(Up_1d_sN n elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx

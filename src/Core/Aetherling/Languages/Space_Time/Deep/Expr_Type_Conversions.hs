@@ -41,6 +41,8 @@ expr_to_types (Shift_tN n i _ elem_t _ _) = Expr_Types [seq_type] seq_type
   where seq_type = TSeqT n i elem_t
 expr_to_types (Shift_tsN no io ni _ elem_t _ _) = Expr_Types [seq_type] seq_type
   where seq_type = TSeqT no io (SSeqT ni elem_t)
+expr_to_types (Shift_ttN no ni io ii _ elem_t _ _) = Expr_Types [seq_type] seq_type
+  where seq_type = TSeqT no io (TSeqT ni ii elem_t)
 expr_to_types (Up_1d_sN n elem_t _ _) = Expr_Types in_types out_type
   where
     in_types = [SSeqT 1 elem_t]
@@ -213,6 +215,8 @@ expr_to_outer_types' consumer_e@(Shift_sN _ _ _ producer_e _) =
 expr_to_outer_types' consumer_e@(Shift_tN _ _ _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(Shift_tsN _ _ _ _ _ producer_e _) =
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' consumer_e@(Shift_ttN _ _ _ _ _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(Up_1d_sN _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e

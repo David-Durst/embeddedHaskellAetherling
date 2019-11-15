@@ -412,6 +412,17 @@ module_to_string_inner consumer_e@(Shift_tsN no io ni shift_amount elem_t produc
                 (Module_Port "O" (TSeqT no io (SSeqT ni elem_t)))
   print_unary_operator cur_ref producer_ref
   return cur_ref
+module_to_string_inner consumer_e@(Shift_ttN no ni io ii shift_amount elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "DefineShift_TT(" ++ show no ++ ", " ++ show ni ++ ", " ++
+                show io ++ ", " ++ show ii ++ ", " ++ show shift_amount ++ ", " ++
+                type_to_python elem_t ++ ", has_valid=True)"
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (TSeqT no io (TSeqT ni ii elem_t))]
+                (Module_Port "O" (TSeqT no io (TSeqT ni ii elem_t)))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(Up_1d_sN n elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx

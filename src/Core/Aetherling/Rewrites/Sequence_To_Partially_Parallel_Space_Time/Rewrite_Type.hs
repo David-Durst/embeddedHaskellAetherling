@@ -24,22 +24,29 @@ data Type_Rewrite =
   | TimeR { tr_n :: Int, tr_i :: Int}
   | SplitR { tr_n_outer :: Int, tr_i_outer :: Int, tr_n_inner :: Int }
   -- this must be a bunch of tseqs with either 0 or 1 sseqs at bottom
+  -- always ended with a nonseqR
+  -- currently only using for two TimeR's
   | SplitNestedR { tr_head :: Type_Rewrite, tr_tail :: Type_Rewrite }
   | NonSeqR
   deriving (Show, Eq)
 
 add_tseq_to_bottom_split_nested :: Type_Rewrite -> Int -> Int -> Type_Rewrite
 add_tseq_to_bottom_split_nested
-  (SplitNestedR (TimeR tr_no tr_io) (SpaceR tr_ni)) new_tseq_n new_tseq_i =
-  SplitNestedR (TimeR tr_no tr_io) (SplitNestedR (TimeR new_tseq_n new_tseq_i) (SpaceR tr_ni))
+  (SplitNestedR (TimeR tr_no tr_io)
+    (SplitNestedR (SpaceR tr_ni) NonSeqR))
+  new_tseq_n new_tseq_i =
+  SplitNestedR
+  (TimeR tr_no tr_io)
+  (SplitNestedR (TimeR new_tseq_n new_tseq_i)
+    (SplitNestedR (SpaceR tr_ni) NonSeqR))
 add_tseq_to_bottom_split_nested (SplitNestedR tr_hd tr_tl) new_tseq_n new_tseq_i =
   SplitNestedR tr_hd (add_tseq_to_bottom_split_nested tr_tl new_tseq_n new_tseq_i)
 add_tseq_to_bottom_split_nested _ _ _ = undefined
 
 add_sseq_to_bottom_split_nested :: Type_Rewrite -> Int -> Type_Rewrite
 add_sseq_to_bottom_split_nested
-  (SplitNestedR (TimeR tr_no tr_io) (SpaceR tr_ni)) new_sseq_n =
-  SplitNestedR (TimeR tr_no tr_io) (SpaceR $ tr_ni*new_sseq_n)
+  (SplitNestedR (SpaceR tr_n) NonSeqR) new_sseq_n =
+  SplitNestedR (SpaceR (tr_n*new_sseq_n)) NonSeqR
 add_sseq_to_bottom_split_nested (SplitNestedR tr_hd tr_tl) new_sseq_n =
   SplitNestedR tr_hd (add_sseq_to_bottom_split_nested tr_tl new_sseq_n)
 add_sseq_to_bottom_split_nested _ _ = undefined
@@ -48,6 +55,7 @@ get_type_rewrite_periods :: Type_Rewrite -> Int
 get_type_rewrite_periods (SpaceR _) = 1
 get_type_rewrite_periods (TimeR tr_n tr_i) = tr_n + tr_i
 get_type_rewrite_periods (SplitR tr_no tr_io _) = tr_no + tr_io
+get_type_rewrite_periods (SplitNestedR (TimeR tr_n tr_i) NonSeqR) = tr_n + tr_i
 get_type_rewrite_periods (SplitNestedR tr_hd tr_tl) =
   get_type_rewrite_periods tr_hd * get_type_rewrite_periods tr_tl
 get_type_rewrite_periods NonSeqR = -1

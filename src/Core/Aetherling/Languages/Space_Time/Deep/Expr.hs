@@ -55,6 +55,16 @@ data Expr =
       seq_in :: Expr,
       index :: DAG_Index
       }
+  | Shift_ttN {
+      no :: Int,
+      ni :: Int,
+      io :: Int,
+      ii :: Int,
+      shift_amount :: Int,
+      elem_t :: AST_Type,
+      seq_in :: Expr,
+      index :: DAG_Index
+      }
   | Up_1d_sN {
       n :: Int,
       t :: AST_Type,
