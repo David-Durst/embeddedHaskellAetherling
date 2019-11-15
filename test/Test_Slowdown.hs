@@ -627,6 +627,13 @@ pyramid_1d_output :: [Integer] = [5]
 pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_1d s Nothing
                                       pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
+pyramid_1d_results_types = sequence $ fmap (\s -> compile_and_test_with_type_rewrites
+                                      pyramid_1d s Nothing
+                                      pyramid_1d_inputs pyramid_1d_output)
+                           [[SpaceR 1, SpaceR 1, NonSeqR],
+                            [SplitR 1 2 1, SpaceR 1, NonSeqR],
+                            [SplitNestedR (TimeR 1 2) (SplitNestedR (TimeR 1 2) NonSeqR), SpaceR 1, NonSeqR],
+                            [SplitNestedR (TimeR 1 2) (SplitNestedR (TimeR 1 2) NonSeqR), TimeR 1 2, NonSeqR]]
 pyramid_1d_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
                                       pyramid_1d s "pyramid1d") [1,3,9,27]
 

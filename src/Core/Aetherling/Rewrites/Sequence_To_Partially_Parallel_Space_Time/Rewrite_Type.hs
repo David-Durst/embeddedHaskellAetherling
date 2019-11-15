@@ -51,6 +51,7 @@ add_sseq_to_bottom_split_nested (SplitNestedR tr_hd tr_tl) new_sseq_n =
   SplitNestedR tr_hd (add_sseq_to_bottom_split_nested tr_tl new_sseq_n)
 add_sseq_to_bottom_split_nested _ _ = undefined
 
+product_tr_periods trs = product (filter (>0) $ fmap get_type_rewrite_periods trs)
 get_type_rewrite_periods :: Type_Rewrite -> Int
 get_type_rewrite_periods (SpaceR _) = 1
 get_type_rewrite_periods (TimeR tr_n tr_i) = tr_n + tr_i

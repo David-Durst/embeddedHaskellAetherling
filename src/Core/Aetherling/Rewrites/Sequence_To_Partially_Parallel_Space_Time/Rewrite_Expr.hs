@@ -60,7 +60,7 @@ rewrite_to_partially_parallel_type tr seq_expr = do
     else do
     let result = fromRight undefined expr_par
     let output_time = STT.clocks_t $ ST_Conv.e_out_type $ ST_Conv.expr_to_types result
-    if output_time == product (filter (>0) $ fmap get_type_rewrite_periods tr)
+    if output_time == product_tr_periods tr
       then result
       else STE.ErrorN ("\noutput_time: " ++ show output_time ++
                        "\ntype_rewrites: " ++ show tr ++

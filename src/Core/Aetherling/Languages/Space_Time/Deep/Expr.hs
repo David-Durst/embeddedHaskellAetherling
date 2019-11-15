@@ -277,3 +277,4 @@ instance Indexible Expr where
   set_index e i = e { index = i }
 
 seq_in_st = seq_in
+f_st = f
