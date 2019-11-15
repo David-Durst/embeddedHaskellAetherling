@@ -608,6 +608,9 @@ pyramid_1d = pyramid_1d_shallow_no_input $
 pyramid_1d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_1d
 pyramid_1d_ppar =
   fmap (\s -> rewrite_to_partially_parallel s pyramid_1d_seq_idx) [1,3,9,27]
+pyramid_1d_ppar_type =
+  fmap (\tr -> rewrite_to_partially_parallel_type tr pyramid_1d_seq_idx)
+  [[SpaceR 1, SpaceR 1, NonSeqR],[SplitR 1 2 1, SpaceR 1, NonSeqR],[TimeR 1 8, SpaceR 1, NonSeqR],[TimeR 1 8, TimeR 1 2, NonSeqR]]
 pyramid_1d_ppar_typechecked =
   fmap check_type pyramid_1d_ppar
 pyramid_1d_ppar_typechecked' =
@@ -617,6 +620,8 @@ pyramid_1d_output :: [Integer] = [5]
 pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_1d s Nothing
                                       pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
+pyramid_1d_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
+                                      pyramid_1d s "pyramid1d") [1,3,9,27]
 
 {-
   let tuple = zipC window_size shifted_seqs

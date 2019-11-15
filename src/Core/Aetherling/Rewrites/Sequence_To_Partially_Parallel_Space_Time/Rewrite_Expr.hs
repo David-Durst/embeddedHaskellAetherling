@@ -882,6 +882,10 @@ ppar_AST_type (tr@(SplitR tr_n_outer tr_i_outer tr_n_inner) : type_rewrites_tl)
   (SeqT.SeqT n _ t) = do
   inner_type <- ppar_AST_type type_rewrites_tl t
   return $ STT.TSeqT tr_n_outer tr_i_outer (STT.SSeqT tr_n_inner inner_type)
+ppar_AST_type (tr@(SplitNestedR (TimeR tr_n tr_i) tr_tl) : type_rewrites_tl)
+  (SeqT.SeqT n _ t) | n `mod` tr_n == 0 = do
+  inner_type <- ppar_AST_type (tr_tl : type_rewrites_tl) (SeqT.SeqT (n `div` tr_n) 0 t)
+  return $ STT.TSeqT tr_n tr_i inner_type
 ppar_AST_type (NonSeqR : type_rewrites_tl) (SeqT.STupleT n t) = do
   inner_type <- ppar_AST_type type_rewrites_tl t
   return $ STT.STupleT n inner_type
