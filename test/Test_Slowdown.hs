@@ -532,7 +532,40 @@ striple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       striple_to_seq s Nothing
                                       striple_to_seq_inputs striple_to_seq_output) [1,2,4,8,24]
 
-
+stencil_1dC_internal_test :: forall m n n0 a .
+                         (Sequence_Language m, Aetherling_Value a,
+                          KnownNat n, KnownNat n0, (n0 + 1) ~ n) =>
+                      m (Seq n (n GHC.TypeLits.* 2) a) -> m (Seq n 0 (Seq 3 0 a))
+stencil_1dC_internal_test in_seq = do
+  let shifted_once = shiftC (Proxy @1) in_seq
+  let shifted_twice = shiftC (Proxy @1) shifted_once
+  let window_tuple = map2C seq_tuple_appendC
+                     (map2C seq_tupleC in_seq shifted_once)
+                     shifted_twice
+  let partitioned_tuple = partitionC (Proxy :: Proxy n) (Proxy :: Proxy 1) (Proxy :: Proxy 0) (Proxy :: Proxy i) window_tuple
+  mapC seq_tuple_to_seqC partitioned_tuple
+stencil_1d_internal_test = stencil_1dC_internal_test $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 100 200 Atom_Int))
+{-
+stencil_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_internal
+stencil_1d_internal_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s stencil_1d_internal_seq_idx) [1,2,5,10,30,100,300]
+stencil_1d_internal_ppar_type =
+  fmap (\tr -> rewrite_to_partially_parallel_type tr stencil_1d_internal_seq_idx)
+  [[SpaceR 1, SpaceR 1, NonSeqR],
+   [SplitR 1 2 1, SpaceR 1, NonSeqR],
+   [SplitNestedR (TimeR 1 2) (SplitNestedR (TimeR 1 2) NonSeqR), SpaceR 1, NonSeqR],
+   [SplitNestedR (TimeR 1 2) (SplitNestedR (TimeR 1 2) NonSeqR), TimeR 1 2, NonSeqR]]
+stencil_1d_internal_ppar_typechecked =
+  fmap check_type stencil_1d_internal_ppar
+stencil_1d_internal_ppar_typechecked' =
+  fmap check_type_get_error stencil_1d_internal_ppar
+stencil_1d_internal_ppar_type_typechecked =
+  fmap check_type stencil_1d_internal_ppar_type
+stencil_1d_internal_ppar_type_typechecked' =
+  fmap check_type_get_error stencil_1d_internal_ppar_type
+-}
+  
 stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC (Proxy @1) last_shifted_seq) : l)
