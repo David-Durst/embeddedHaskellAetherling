@@ -92,17 +92,15 @@ rewrite_AST_type_given_slowdowns ((LFVP l s):other_s) cur_layer (SeqT.SeqT n _ t
   let inner_rewrite_options = rewrite_AST_type_given_slowdowns other_s (cur_layer + 1) t
   let invalids = s-n
   let t_options = fmap (\trs -> TimeR n invalids : trs) inner_rewrite_options
-  -- can't put these on inner t, must be on outer t
-  let invalids_mod_n = invalids `mod` n
   -- only exploring the tt options with 1 in bottom to allow repeating patterns
   let tt_options = concat $
         fmap (\trs ->
                 -- s-n total invalids, divide them up between outer and
                 -- and inner in all possible ways
                 fmap (\io -> 
-                         SplitNestedR (TimeR n (io + invalids_mod_n))
-                         (SplitNestedR (TimeR 1 (invalids - io)) NonSeqR) : trs)
-                [i | i <- [0..invalids], i `mod` n == 0]
+                         SplitNestedR (TimeR n io)
+                         (SplitNestedR (TimeR 1 (fromJust $ ii_given_others n 1 io)) NonSeqR) : trs)
+                [io | io <- [0..invalids], isJust (ii_given_others n 1 io)]
              )
         inner_rewrite_options
   let possible_no = filter is_valid [1..n]
@@ -115,6 +113,10 @@ rewrite_AST_type_given_slowdowns ((LFVP l s):other_s) cur_layer (SeqT.SeqT n _ t
   ts_options ++ t_options ++ tt_options
   where
     is_valid no = (no <= s) && (no >= 0) && (n `mod` no == 0)
+    ii_given_others no ni io =
+      if (s `mod` (no + io) == 0) && ((s `div` (no + io)) >= ni)
+      then Just ((s `div` (no + io)) - ni)
+      else Nothing
 rewrite_AST_type_given_slowdowns s_xs cur_layer (SeqT.STupleT n t) = do
   inner_rewrite <- rewrite_AST_type_given_slowdowns s_xs cur_layer t
   return $ NonSeqR : inner_rewrite
