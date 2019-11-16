@@ -19,14 +19,14 @@ import System.Environment
 import Debug.Trace
 import Data.Map as M
 
-get_area :: Expr -> IO Int
+get_area :: Expr -> Int
 get_area e = do
-  computed_latency <- evalStateT
+  let computed_area = evalState
                         (runExceptT $ startEvalMemoT $ get_area' e)
                         empty_rewrite_data
-  return $ fromRight undefined computed_latency
+  fromRight undefined computed_area
 
-get_area' :: Expr -> Memo_Rewrite_StateTM Int IO Int
+get_area' :: Expr -> Memo_Rewrite_StateM Int Int
 get_area' e@(IdN producer _) = memo producer $ get_area' producer
 get_area' e@(AbsN producer _) = do
   producer_latency <- memo producer $ get_area' producer

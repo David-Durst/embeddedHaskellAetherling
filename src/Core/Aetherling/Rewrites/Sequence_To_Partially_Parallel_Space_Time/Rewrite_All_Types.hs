@@ -74,6 +74,40 @@ rewrite_all_AST_types_debug s seq_t = do
   -- get all possible slowdowns for each factor distribution
   return $ concat $ fmap (\l_and_s_xs -> rewrite_AST_type_given_slowdowns l_and_s_xs 0 seq_t)
     all_possible_slowdowns_per_level
+    
+rewrite_all_AST_types :: Int -> SeqT.AST_Type -> [Out_Type_Rewrites]
+rewrite_all_AST_types s seq_t = do
+  let l = num_seq_layers seq_t
+  let s_factors = S.toList $ ae_factorize s
+  -- for each s, get all levels it can be at
+  let s_for_each_level = groupBy factor_eq $ sortBy factor_cmp
+        [ LFP x y | x <- [0..l-1], y <- s_factors]
+  --traceShowM s_for_each_level
+  -- each inner list is a possible distribution of factors among levels without using a factor twice
+  -- collection of lists is all possible distributions of factors among all levels
+  let all_possible_s_distributions = crossr s_for_each_level
+  -- for each distribution, for each factor, remove the factor index and just get the value
+  let all_possible_levels_and_s_int =
+        fmap (fmap (\(LFP level factor) -> (LFVP level (factor_val factor))))
+        all_possible_s_distributions
+  -- for each distribution, for each level, the slowdown factors
+  let all_possible_slowdown_factors_per_level =
+        fmap (groupBy level_v_eq . sortBy level_v_cmp) all_possible_levels_and_s_int
+  -- for each distribution, for each level, the level and the product of slowdown factors
+  let all_possible_slowdowns_per_level_with_dups =
+        fmap (fmap level_factor_vals_to_total_slowdown) all_possible_slowdown_factors_per_level
+  --traceShowM all_possible_slowdowns_per_level_with_dups
+  -- sending to set to remove duplicate distributions of factors
+  let all_possible_slowdowns_per_level = S.toList $ S.fromList $
+        fmap (sortBy (\x y -> compare (level_v x) (level_v y)))
+        all_possible_slowdowns_per_level_with_dups
+  --traceShowM all_possible_slowdowns_per_level
+  -- get all possible slowdowns for each factor distribution
+  let unordered_results =
+        concat $ fmap (\l_and_s_xs -> rewrite_AST_type_given_slowdowns l_and_s_xs 0 seq_t)
+        all_possible_slowdowns_per_level
+  sortBy (\trs0 trs1 -> compare (rewrite_nesting_depth trs0) (rewrite_nesting_depth trs1))
+    unordered_results
 
 rewrite_AST_type_given_slowdowns :: [Level_Factor_Val_Pair] -> Int ->
                                     SeqT.AST_Type -> [Out_Type_Rewrites]
@@ -91,7 +125,10 @@ rewrite_AST_type_given_slowdowns (LFVP l 1:other_s) cur_layer (SeqT.SeqT n _ t) 
 rewrite_AST_type_given_slowdowns ((LFVP l s):other_s) cur_layer (SeqT.SeqT n _ t) = do
   let inner_rewrite_options = rewrite_AST_type_given_slowdowns other_s (cur_layer + 1) t
   let invalids = s-n
-  let t_options = fmap (\trs -> TimeR n invalids : trs) inner_rewrite_options
+  let t_options =
+        if s >= n
+        then fmap (\trs -> TimeR n invalids : trs) inner_rewrite_options
+        else []
   -- only exploring the tt options with 1 in bottom to allow repeating patterns
   let tt_options = concat $
         fmap (\trs ->
@@ -121,3 +158,12 @@ rewrite_AST_type_given_slowdowns s_xs cur_layer (SeqT.STupleT n t) = do
   inner_rewrite <- rewrite_AST_type_given_slowdowns s_xs cur_layer t
   return $ NonSeqR : inner_rewrite
 rewrite_AST_type_given_slowdowns _ _ _ = [[NonSeqR]]
+
+rewrite_nesting_depth :: [Type_Rewrite] -> Int
+rewrite_nesting_depth (SpaceR _ : tl) = 1 + rewrite_nesting_depth tl
+rewrite_nesting_depth (TimeR _ _ : tl) = 1 + rewrite_nesting_depth tl
+rewrite_nesting_depth (SplitR _ _ _ : tl) = 2 + rewrite_nesting_depth tl
+rewrite_nesting_depth (SplitNestedR _ NonSeqR : tl) = 1 + rewrite_nesting_depth tl
+rewrite_nesting_depth (SplitNestedR _ ntl : tl) = 1 + rewrite_nesting_depth (ntl : tl)
+rewrite_nesting_depth (NonSeqR : tl) = 1 + rewrite_nesting_depth tl
+rewrite_nesting_depth [] = 0

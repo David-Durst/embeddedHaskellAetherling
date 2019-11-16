@@ -1,5 +1,6 @@
 module Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr where
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types
 import Aetherling.Rewrites.Rewrite_Helpers
 import Aetherling.Monad_Helpers
 import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
@@ -7,6 +8,7 @@ import qualified Aetherling.Languages.Sequence.Deep.Types as SeqT
 import qualified Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq_Conv
 import qualified Aetherling.Interpretations.Sequence_Printer as Seq_Print
 import qualified Aetherling.Interpretations.Space_Time_Printer as ST_Print
+import qualified Aetherling.Interpretations.Compute_Area as Comp_Area
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import qualified Aetherling.Languages.Space_Time.Deep.Expr_Builders as STB
@@ -17,6 +19,7 @@ import Control.Monad.Identity
 import Control.Monad.State
 import Data.Maybe
 import Data.Either
+import qualified Data.List as L
 import Data.List.Split (chunksOf)
 import qualified Data.Set as S
 import qualified Data.Map as M
@@ -24,8 +27,8 @@ import Debug.Trace
 import Data.Time
 import System.IO.Unsafe
 
-rewrite_to_partially_parallel :: Int -> SeqE.Expr -> STE.Expr
-rewrite_to_partially_parallel s seq_expr = do
+rewrite_to_partially_parallel_old :: Int -> SeqE.Expr -> STE.Expr
+rewrite_to_partially_parallel_old s seq_expr = do
   let (expr_par, state) = runState (evalStateT
                              (runExceptT $ rewrite_to_partially_parallel' s seq_expr)
                              empty_rewrite_data)
@@ -71,6 +74,29 @@ rewrite_to_partially_parallel_type' tr seq_expr = do
   --traceShowM $ rewrite_AST_type_debug s seq_expr_out_type
   --traceM ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
   startEvalMemoT $ sequence_to_partially_parallel tr seq_expr
+
+data Program_And_Area = PA { program :: STE.Expr, area :: Int }
+  deriving (Show, Eq)
+rewrite_to_partially_parallel :: Int -> SeqE.Expr -> STE.Expr
+rewrite_to_partially_parallel s seq_expr = do
+  let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
+  let possible_output_types = rewrite_all_AST_types s seq_expr_out_type
+  let possible_st_programs = map (\trs -> rewrite_to_partially_parallel_type trs seq_expr)
+                             possible_output_types
+  let possible_st_programs_and_areas = map (\p -> PA p (Comp_Area.get_area p))
+                                       possible_st_programs
+  program $ L.minimumBy (\pa pb -> compare (area pa) (area pb)) possible_st_programs_and_areas
+ {-
+
+rewrite_to_partially_parallel_search' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
+rewrite_to_partially_parallel_search' s seq_expr = do
+  --traceShowM $ rewrite_AST_type_debug s seq_expr_out_type
+  --traceM ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
+  let possible_programs = map
+                          (\output_type -> startEvalMemoT $
+                                           sequence_to_partially_parallel output_type seq_expr)
+                          output_type_slowdowns
+-} 
   
 data Input_Type_Rewrites = Input_Type_Rewrites {
   input_rewrites :: [Type_Rewrite],
