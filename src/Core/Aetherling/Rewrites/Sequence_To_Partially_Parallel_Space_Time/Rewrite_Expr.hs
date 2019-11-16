@@ -591,22 +591,25 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
 
   -- just get possible type rewrites for the input two seqs, rest aren't changed by unpartition
   let unparititioned_in_seq = SeqT.SeqT no 0 (SeqT.SeqT ni 0 SeqT.IntT)
-  traceShowM "unpartition"
-  traceShowM $ "slowdown: " ++ show slowdown
-  traceShowM $ "type_rewrites_tl: " ++ show type_rewrites_tl
+  --traceShowM "unpartition"
+  --traceShowM $ "slowdown: " ++ show slowdown
+  --traceShowM $ "type_rewrites_tl: " ++ show type_rewrites_tl
   let possible_trs_for_in_seq = rewrite_all_AST_types slowdown unparititioned_in_seq
-  traceShowM $ "possible_trs_for_in_seq: " ++ show possible_trs_for_in_seq
-  traceShowM $ "lengths possible_trs_for_in_seq: " ++ show (fmap length possible_trs_for_in_seq)
+  --traceShowM $ "possible_trs_for_in_seq: " ++ show possible_trs_for_in_seq
+  --traceShowM $ "lengths possible_trs_for_in_seq: " ++ show (fmap length possible_trs_for_in_seq)
   let possible_input_trs = map (\(tr0 : tr1 : _) -> tr0 : tr1 : type_rewrites_tl) possible_trs_for_in_seq
-  traceShowM $ "possible_input_trs: " ++ show possible_input_trs
-  let possible_st_programs = map (\trs -> (trs, rewrite_to_partially_parallel_type trs seq_e))
+  --traceShowM $ "possible_input_trs: " ++ show possible_input_trs
+  let possible_st_programs = map (\trs -> (trs, rewrite_to_partially_parallel_type trs producer))
                              possible_input_trs
-  traceShowM $ "possible_st_programs: " ++ show possible_st_programs
+  --traceShowM $ "possible_st_programs: " ++ show possible_st_programs
   let valid_possible_st_programs = filter (not . Has_Error.has_error . snd) possible_st_programs
-  traceShowM $ "valid_possible_st_programs: " ++ show valid_possible_st_programs
+  --traceShowM $ "valid_possible_st_programs: " ++ show valid_possible_st_programs
   let possible_st_trs_and_areas = map (\(tr, p) -> (tr, Comp_Area.get_area p))
                                        valid_possible_st_programs
-  traceShowM $ "valid_possible_st_trs_and_areas: " ++ show possible_st_trs_and_areas
+  --traceShowM $ "valid_possible_st_trs_and_areas: " ++ show possible_st_trs_and_areas
+  --base_input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io -- (slowdown_without_ni_factors - no)
+  --                                                    (SeqT.SeqT ni ii SeqT.IntT))
+  --traceShowM $ "base_input_rewrites: " ++ show base_input_rewrites
   if length possible_st_trs_and_areas /= 0
     then do
     let min_tr = fst $ L.minimumBy (\pa pb -> compare (snd pa) (snd pb)) possible_st_trs_and_areas
