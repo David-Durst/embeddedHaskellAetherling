@@ -9,6 +9,7 @@ import qualified Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq
 import qualified Aetherling.Interpretations.Sequence_Printer as Seq_Print
 import qualified Aetherling.Interpretations.Space_Time_Printer as ST_Print
 import qualified Aetherling.Interpretations.Compute_Area as Comp_Area
+import qualified Aetherling.Interpretations.Has_Error as Has_Error
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import qualified Aetherling.Languages.Space_Time.Deep.Expr_Builders as STB
@@ -83,8 +84,9 @@ rewrite_to_partially_parallel s seq_expr = do
   let possible_output_types = rewrite_all_AST_types s seq_expr_out_type
   let possible_st_programs = map (\trs -> rewrite_to_partially_parallel_type trs seq_expr)
                              possible_output_types
+  let valid_possible_st_programs = filter (not . Has_Error.has_error) possible_st_programs
   let possible_st_programs_and_areas = map (\p -> PA p (Comp_Area.get_area p))
-                                       possible_st_programs
+                                       valid_possible_st_programs
   program $ L.minimumBy (\pa pb -> compare (area pa) (area pb)) possible_st_programs_and_areas
  {-
 

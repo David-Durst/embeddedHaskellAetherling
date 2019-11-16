@@ -29,6 +29,7 @@ has_error st_expr_in = do
       
     
 has_error' :: Expr -> Memo_Rewrite_StateM Bool Bool
+has_error' (ErrorN _ _) = return True
 has_error' consumer_e = do
   let f_e_maybe = get_f consumer_e
   f_error_maybe <- mapM (\f_e -> memo f_e $ has_error' f_e) f_e_maybe
