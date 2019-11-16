@@ -937,7 +937,6 @@ sequence_to_partially_parallel type_rewrites@(NonSeqR : type_rewrites_tl)
   cur_idx <- get_cur_index
   return $ STE.STupleAppendN out_len elem_t_ppar producer_left_ppar producer_right_ppar cur_idx
 
-
   
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
   seq_e@(SeqE.STupleToSeqN n _ elem_t producer _) = do
@@ -977,17 +976,32 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
         SpaceR n -> SpaceR 1 -- <- lift $ rewrite_AST_type slowdown (SeqT.SeqT n i SeqT.IntT)
         TimeR tr_n tr_i -> TimeR 1 (tr_n + tr_i - 1)
         SplitR tr_no tr_io tr_ni -> SplitR 1 (tr_no + tr_io - 1) 1
-        NonSeqR -> undefined
+        SplitNestedR (TimeR tr_no tr_io)
+          (SplitNestedR (TimeR tr_ni tr_ii) NonSeqR) ->
+          SplitNestedR (TimeR 1 (tr_no + tr_io - 1))
+                          (SplitNestedR (TimeR 1 (tr_ni + tr_ii - 1)) NonSeqR)
+        SplitNestedR _ _ -> NonSeqR
+        NonSeqR -> NonSeqR
+ 
+  let bad_input = case seq_input_rewrite of
+        SplitNestedR (TimeR (-1) _) _ -> True
+        NonSeqR -> True
+        _ -> False
   -- input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT 1 (n-1+i) SeqT.IntT)
   -- let seq_input_rewrite : _ = input_rewrites
   -- the input is a seq of an stuple, and stuple rewrite is with NonSeqR
   let upstream_type_rewrites = seq_input_rewrite : NonSeqR : type_rewrites_tl
   in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
+  
 
   x <- ppar_unary_seq_operator upstream_type_rewrites
     (STE.ReshapeN in_t_ppar out_t_ppar) producer
   --traceShowM x
-  return x
+  if bad_input
+    then do
+    cur_idx <- get_cur_index
+    return $ STE.ErrorN "STupleToSeq invalid output type rewrite" cur_idx
+    else return x
 
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR 1) : NonSeqR : type_rewrites_tl)
   seq_e@(SeqE.SeqToSTupleN n _ elem_t producer _) = do
@@ -1028,12 +1042,31 @@ sequence_to_partially_parallel type_rewrites@(tr : NonSeqR : type_rewrites_tl)
             let n_divisors = ae_divisors_from_factors $ ae_factorize n
             let no = maximum $ S.filter (\x -> x <= num_clocks) n_divisors
             SplitR no (num_clocks - no) (n `div` no)
-        _ -> undefined
+        SplitNestedR (TimeR 1 tr_io_down) (SplitNestedR (TimeR 1 tr_ii_down) NonSeqR) -> do
+          let num_clocks_outer = 1 + tr_io_down
+          let num_clocks_inner = 1 + tr_ii_down
+          let n_divisors = ae_divisors_from_factors $ ae_factorize n
+          let no = maximumOrDefault (-1) $ S.filter
+                (\x -> (x <= num_clocks_outer) && ((n `div` x) <= num_clocks_inner))
+                n_divisors
+          let ni = n `div` no
+          SplitNestedR (TimeR no (tr_io_down - no + 1))
+            (SplitNestedR (TimeR ni (tr_ii_down - ni + 1)) NonSeqR)
+        _ -> NonSeqR
+        
+  let bad_input = case input_rewrite of
+        SplitNestedR (TimeR (-1) _) _ -> True
+        NonSeqR -> True
+        _ -> False
   let upstream_type_rewrites = input_rewrite : type_rewrites_tl
   in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
 
-  ppar_unary_seq_operator upstream_type_rewrites
-    (STE.ReshapeN in_t_ppar out_t_ppar) producer
+  if bad_input
+    then do
+    cur_idx <- get_cur_index
+    return $ STE.ErrorN "SeqToSTuple invalid output type rewrite" cur_idx
+    else ppar_unary_seq_operator upstream_type_rewrites
+         (STE.ReshapeN in_t_ppar out_t_ppar) producer
 
 sequence_to_partially_parallel type_rewrites seq_e@(SeqE.InputN t input_name _) = do
   add_output_rewrite_for_node seq_e type_rewrites
