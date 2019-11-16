@@ -359,8 +359,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
 
   if bad_input
     then do
-    cur_idx <- get_cur_index
-    return $ STE.ErrorN "down invalid output type rewrite" cur_idx
+    throwError $ Slowdown_Failure "down invalid output type rewrite"
     else get_scheduled_down input_rewrite elem_t_ppar producer_ppar reshape_to_remove_sseq
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
@@ -396,9 +395,8 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
           (add_index
             (STE.Down_1d_tN in_no in_io (sel_idx `div` in_ni) (STT.TSeqT in_ni in_ii elem_t_ppar))
             producer_ppar)
-    get_scheduled_down (SplitNestedR _ _) _ _ _ = do
-      cur_idx <- get_cur_index
-      return $ STE.ErrorN ("can't handle tr " ++ show tr ++ " with seq_e " ++ show seq_e) cur_idx
+    get_scheduled_down (SplitNestedR _ _) _ _ _ = throwError $
+      Slowdown_Failure ("can't handle tr " ++ show tr ++ " with seq_e " ++ show seq_e) 
     get_scheduled_down NonSeqR _ _ _ = throwError $
       Slowdown_Failure "can't get nonseq for down_1d input"
 
@@ -845,7 +843,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   if bad_input
     then do
     cur_idx <- get_cur_index
-    return $ STE.ErrorN "reduce invalid output type rewrite" cur_idx
+    throwError $ Slowdown_Failure "reduce invalid output type rewrite"
     else get_scheduled_partition input_rewrite f_ppar producer_ppar reshape_to_remove_sseq
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
@@ -877,8 +875,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
           STB.make_map_t in_no in_io (STE.Reduce_tN in_ni in_io f_ppar)
           producer_ppar
     get_scheduled_partition (SplitNestedR _ _) _ _ _ = do
-      cur_idx <- get_cur_index
-      return $ STE.ErrorN ("can't handle tr " ++ show tr ++ " with seq_e " ++ show seq_e) cur_idx
+      throwError $ Slowdown_Failure ("can't handle tr " ++ show tr ++ " with seq_e " ++ show seq_e)
     get_scheduled_partition NonSeqR _ _ _ = throwError $
       Slowdown_Failure "can't get nonseq for reduce input"
 
@@ -992,15 +989,13 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   -- the input is a seq of an stuple, and stuple rewrite is with NonSeqR
   let upstream_type_rewrites = seq_input_rewrite : NonSeqR : type_rewrites_tl
   in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
-  
 
   x <- ppar_unary_seq_operator upstream_type_rewrites
     (STE.ReshapeN in_t_ppar out_t_ppar) producer
   --traceShowM x
   if bad_input
     then do
-    cur_idx <- get_cur_index
-    return $ STE.ErrorN "STupleToSeq invalid output type rewrite" cur_idx
+    throwError $ Slowdown_Failure "STupleToSeq invalid output type rewrite"
     else return x
 
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR 1) : NonSeqR : type_rewrites_tl)
@@ -1063,8 +1058,7 @@ sequence_to_partially_parallel type_rewrites@(tr : NonSeqR : type_rewrites_tl)
 
   if bad_input
     then do
-    cur_idx <- get_cur_index
-    return $ STE.ErrorN "SeqToSTuple invalid output type rewrite" cur_idx
+    throwError $ Slowdown_Failure "SeqToSTuple invalid output type rewrite"
     else ppar_unary_seq_operator upstream_type_rewrites
          (STE.ReshapeN in_t_ppar out_t_ppar) producer
 
