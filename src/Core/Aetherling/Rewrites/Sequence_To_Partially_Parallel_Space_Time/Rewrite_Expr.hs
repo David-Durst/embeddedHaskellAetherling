@@ -87,7 +87,10 @@ rewrite_to_partially_parallel s seq_expr = do
   let valid_possible_st_programs = filter (not . Has_Error.has_error) possible_st_programs
   let possible_st_programs_and_areas = map (\p -> PA p (Comp_Area.get_area p))
                                        valid_possible_st_programs
-  program $ L.minimumBy (\pa pb -> compare (area pa) (area pb)) possible_st_programs_and_areas
+  if length possible_st_programs_and_areas == 0
+    then STE.ErrorN ("No possible rewrites for slowdown " ++ show s ++ " of program \n" ++
+                     Seq_Print.print_seq_str seq_expr) No_Index
+    else program $ L.minimumBy (\pa pb -> compare (area pa) (area pb)) possible_st_programs_and_areas
  {-
 
 rewrite_to_partially_parallel_search' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
@@ -577,7 +580,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrit
 -}
 
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
-  seq_e@(SeqE.UnpartitionN no ni io ii elem_t producer _) = do
+  seq_e@(SeqE.UnpartitionN no ni _ _ elem_t producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   let types = Seq_Conv.expr_to_types seq_e
   -- ppar_AST_type applies the type_rewrites to match downstream
@@ -586,6 +589,32 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   -- to compute how to slowed input, get the number of clocks the output takes
   let slowdown = get_type_rewrite_periods tr
 
+  -- just get possible type rewrites for the input two seqs, rest aren't changed by unpartition
+  let unparititioned_in_seq = SeqT.SeqT no 0 (SeqT.SeqT ni 0 SeqT.IntT)
+  traceShowM "unpartition"
+  traceShowM $ "slowdown: " ++ show slowdown
+  traceShowM $ "type_rewrites_tl: " ++ show type_rewrites_tl
+  let possible_trs_for_in_seq = rewrite_all_AST_types slowdown unparititioned_in_seq
+  traceShowM $ "possible_trs_for_in_seq: " ++ show possible_trs_for_in_seq
+  traceShowM $ "lengths possible_trs_for_in_seq: " ++ show (fmap length possible_trs_for_in_seq)
+  let possible_input_trs = map (\(tr0 : tr1 : _) -> tr0 : tr1 : type_rewrites_tl) possible_trs_for_in_seq
+  traceShowM $ "possible_input_trs: " ++ show possible_input_trs
+  let possible_st_programs = map (\trs -> (trs, rewrite_to_partially_parallel_type trs seq_e))
+                             possible_input_trs
+  traceShowM $ "possible_st_programs: " ++ show possible_st_programs
+  let valid_possible_st_programs = filter (not . Has_Error.has_error . snd) possible_st_programs
+  traceShowM $ "valid_possible_st_programs: " ++ show valid_possible_st_programs
+  let possible_st_trs_and_areas = map (\(tr, p) -> (tr, Comp_Area.get_area p))
+                                       valid_possible_st_programs
+  traceShowM $ "valid_possible_st_trs_and_areas: " ++ show possible_st_trs_and_areas
+  if length possible_st_trs_and_areas /= 0
+    then do
+    let min_tr = fst $ L.minimumBy (\pa pb -> compare (snd pa) (snd pb)) possible_st_trs_and_areas
+    in_t_ppar <- ppar_AST_type min_tr (head $ Seq_Conv.e_in_types types)
+    ppar_unary_seq_operator min_tr
+      (STE.ReshapeN in_t_ppar out_t_ppar) producer
+    else throwError $ Slowdown_Failure "Unpartition has no valid upstreams"
+{-
   -- rewrite inputs to get same throuhgput of output,
   -- but this can be in whatever nesting structure rewrite_AST_type chooses
   let slowdown_factors = ae_factorize slowdown
@@ -607,7 +636,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   
   ppar_unary_seq_operator upstream_type_rewrites
     (STE.ReshapeN in_t_ppar out_t_ppar) producer
-
+-}
 -- higher order operators
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)
   seq_e@(SeqE.MapN n _ f producer _) = do
