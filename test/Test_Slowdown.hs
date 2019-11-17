@@ -550,25 +550,32 @@ stencil_1dC_internal_test in_seq = do
   mapC seq_tuple_to_seqC partitioned_tuple
 stencil_1d_internal_test = stencil_1dC_internal_test $
   com_input_seq "hi" (Proxy :: Proxy (Seq 100 200 Atom_Int))
-{-
-stencil_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_internal
+stencil_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_internal_test
 stencil_1d_internal_ppar =
   fmap (\s -> rewrite_to_partially_parallel s stencil_1d_internal_seq_idx) [1,2,5,10,30,100,300]
-stencil_1d_internal_ppar_type =
-  fmap (\tr -> rewrite_to_partially_parallel_type tr stencil_1d_internal_seq_idx)
-  [[SpaceR 1, SpaceR 1, NonSeqR],
-   [SplitR 1 2 1, SpaceR 1, NonSeqR],
-   [SplitNestedR (TimeR 1 2) (SplitNestedR (TimeR 1 2) NonSeqR), SpaceR 1, NonSeqR],
-   [SplitNestedR (TimeR 1 2) (SplitNestedR (TimeR 1 2) NonSeqR), TimeR 1 2, NonSeqR]]
 stencil_1d_internal_ppar_typechecked =
   fmap check_type stencil_1d_internal_ppar
 stencil_1d_internal_ppar_typechecked' =
   fmap check_type_get_error stencil_1d_internal_ppar
-stencil_1d_internal_ppar_type_typechecked =
-  fmap check_type stencil_1d_internal_ppar_type
-stencil_1d_internal_ppar_type_typechecked' =
-  fmap check_type_get_error stencil_1d_internal_ppar_type
--}
+tuple_mul_internal_shallow_no_input in_seq = do
+  let kernel_list = fmap Atom_Int [1,1,1]
+  let kernel = const_genC (Seq $ listToVector (Proxy @3) kernel_list) in_seq
+  let kernel_and_values = map2C atom_tupleC kernel in_seq
+  let mul_result = mapC mulC kernel_and_values
+  let sum = reduceC addC mul_result
+  let norm_list = fmap Atom_Int [3]
+  let norm = const_genC (Seq $ listToVector (Proxy @1) norm_list) in_seq
+  let sum_and_norm = map2C atom_tupleC sum norm
+  mapC divC sum_and_norm
+conv_1d_internal_shallow_no_input in_seq = do
+  let stencil = stencil_1dC_internal_test in_seq
+  let conv_result = mapC tuple_mul_internal_shallow_no_input stencil
+  unpartitionC conv_result
+conv_1d_internal = conv_1d_internal_shallow_no_input $ 
+  com_input_seq "hi" (Proxy :: Proxy (Seq 5 10 Atom_Int))
+conv_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep conv_1d_internal
+conv_1d_internal_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s conv_1d_internal_seq_idx) [1,3,5,15]
   
 stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
