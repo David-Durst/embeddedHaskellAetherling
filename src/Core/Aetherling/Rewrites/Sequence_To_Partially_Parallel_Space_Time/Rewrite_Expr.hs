@@ -27,7 +27,7 @@ import qualified Data.Map as M
 import Debug.Trace
 import Data.Time
 import System.IO.Unsafe
-
+{-
 rewrite_to_partially_parallel_old :: Int -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel_old s seq_expr = do
   let (expr_par, state) = runState (evalStateT
@@ -51,7 +51,7 @@ rewrite_to_partially_parallel' s seq_expr = do
   output_type_slowdowns <- rewrite_AST_type s seq_expr_out_type
   --traceM ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
   startEvalMemoT $ sequence_to_partially_parallel output_type_slowdowns seq_expr
-  
+-} 
 rewrite_to_partially_parallel_type :: [Type_Rewrite] -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel_type tr seq_expr = do
   let (expr_par, state) = runState (evalStateT

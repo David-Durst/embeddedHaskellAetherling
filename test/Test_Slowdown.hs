@@ -332,7 +332,7 @@ double_up =
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 30 Atom_Int))
 double_up_seq_idx = add_indexes $ seq_shallow_to_deep double_up
 double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up_seq_idx) [1,2,4,8,16,32]
-double_up_ppar_old = fmap (\s -> rewrite_to_partially_parallel_old s double_up_seq_idx) [1,2,4,8,16,32]
+--double_up_ppar_old = fmap (\s -> rewrite_to_partially_parallel_old s double_up_seq_idx) [1,2,4,8,16,32]
 double_up_ppar_typechecked = fmap check_type double_up_ppar
 double_up_inputs :: [[Integer]] = [[1,2]]
 double_up_output :: [[Integer]] = [[1,1,1,1,2,2,2,2] | _ <- [1..4]]
@@ -352,9 +352,9 @@ down_over_nested_to_down_over_flattened_seq_idx = add_indexes $
 down_over_nested_to_down_over_flattened_ppar =
   fmap (\s -> rewrite_to_partially_parallel s down_over_nested_to_down_over_flattened_seq_idx)
   [1,2,4,8,16]
-down_over_nested_to_down_over_flattened_ppar_old =
-  fmap (\s -> rewrite_to_partially_parallel_old s down_over_nested_to_down_over_flattened_seq_idx)
-  [1,2,4,8,16]
+--down_over_nested_to_down_over_flattened_ppar_old =
+--  fmap (\s -> rewrite_to_partially_parallel_old s down_over_nested_to_down_over_flattened_seq_idx)
+--  [1,2,4,8,16]
 down_over_nested_to_down_over_flattened_ppar_typechecked =
   fmap check_type down_over_nested_to_down_over_flattened_ppar
 down_over_nested_to_down_over_flattened_ppar_typechecked' =
