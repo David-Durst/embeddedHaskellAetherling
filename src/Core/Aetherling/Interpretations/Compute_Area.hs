@@ -48,10 +48,10 @@ get_area' e@(DivN producer _) = do
   return $ producer_latency + 8
 get_area' e@(LSRN producer _) = do
   producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 4
+  return $ producer_latency + 8
 get_area' e@(LSLN producer _) = do
   producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 4
+  return $ producer_latency + 8
 get_area' e@(LtN producer _) = do
   producer_latency <- memo producer $ get_area' producer
   return $ producer_latency + 4
