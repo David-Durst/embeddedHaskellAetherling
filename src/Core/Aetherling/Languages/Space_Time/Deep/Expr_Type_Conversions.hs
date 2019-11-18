@@ -41,6 +41,14 @@ expr_to_types (Shift_tN n i _ elem_t _ _) = Expr_Types [seq_type] seq_type
   where seq_type = TSeqT n i elem_t
 expr_to_types (Shift_tsN no io ni _ elem_t _ _) = Expr_Types [seq_type] seq_type
   where seq_type = TSeqT no io (SSeqT ni elem_t)
+expr_to_types (Shift_ttN no ni io ii _ elem_t _ _) = Expr_Types [seq_type] seq_type
+  where seq_type = TSeqT no io (TSeqT ni ii elem_t)
+expr_to_types (Shift_tnN no nis io iis _ elem_t _ _) = Expr_Types [seq_type] seq_type
+  where
+    inner_type [] [] = elem_t
+    inner_type (ni:ni_tl) (ii:ii_tl) = TSeqT ni ii (inner_type ni_tl ii_tl)
+    inner_type _ _ = error "shift_tn inner_type mismatched nis iis lengths"
+    seq_type = TSeqT no io (inner_type nis iis)
 expr_to_types (Up_1d_sN n elem_t _ _) = Expr_Types in_types out_type
   where
     in_types = [SSeqT 1 elem_t]
@@ -213,6 +221,10 @@ expr_to_outer_types' consumer_e@(Shift_sN _ _ _ producer_e _) =
 expr_to_outer_types' consumer_e@(Shift_tN _ _ _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(Shift_tsN _ _ _ _ _ producer_e _) =
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' consumer_e@(Shift_ttN _ _ _ _ _ _ producer_e _) =
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' consumer_e@(Shift_tnN _ _ _ _ _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(Up_1d_sN _ _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e

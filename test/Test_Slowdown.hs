@@ -332,6 +332,7 @@ double_up =
   com_input_seq "hi" (Proxy :: Proxy (Seq 2 30 Atom_Int))
 double_up_seq_idx = add_indexes $ seq_shallow_to_deep double_up
 double_up_ppar = fmap (\s -> rewrite_to_partially_parallel s double_up_seq_idx) [1,2,4,8,16,32]
+--double_up_ppar_old = fmap (\s -> rewrite_to_partially_parallel_old s double_up_seq_idx) [1,2,4,8,16,32]
 double_up_ppar_typechecked = fmap check_type double_up_ppar
 double_up_inputs :: [[Integer]] = [[1,2]]
 double_up_output :: [[Integer]] = [[1,1,1,1,2,2,2,2] | _ <- [1..4]]
@@ -351,6 +352,9 @@ down_over_nested_to_down_over_flattened_seq_idx = add_indexes $
 down_over_nested_to_down_over_flattened_ppar =
   fmap (\s -> rewrite_to_partially_parallel s down_over_nested_to_down_over_flattened_seq_idx)
   [1,2,4,8,16]
+--down_over_nested_to_down_over_flattened_ppar_old =
+--  fmap (\s -> rewrite_to_partially_parallel_old s down_over_nested_to_down_over_flattened_seq_idx)
+--  [1,2,4,8,16]
 down_over_nested_to_down_over_flattened_ppar_typechecked =
   fmap check_type down_over_nested_to_down_over_flattened_ppar
 down_over_nested_to_down_over_flattened_ppar_typechecked' =
@@ -532,7 +536,47 @@ striple_to_seq_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       striple_to_seq s Nothing
                                       striple_to_seq_inputs striple_to_seq_output) [1,2,4,8,24]
 
-
+stencil_1dC_internal_test :: forall m n n0 a .
+                         (Sequence_Language m, Aetherling_Value a,
+                          KnownNat n, KnownNat n0, (n0 + 1) ~ n) =>
+                      m (Seq n (n GHC.TypeLits.* 2) a) -> m (Seq n 0 (Seq 3 0 a))
+stencil_1dC_internal_test in_seq = do
+  let shifted_once = shiftC (Proxy @1) in_seq
+  let shifted_twice = shiftC (Proxy @1) shifted_once
+  let window_tuple = map2C seq_tuple_appendC
+                     (map2C seq_tupleC in_seq shifted_once)
+                     shifted_twice
+  let partitioned_tuple = partitionC (Proxy :: Proxy n) (Proxy :: Proxy 1) (Proxy :: Proxy 0) (Proxy :: Proxy i) window_tuple
+  mapC seq_tuple_to_seqC partitioned_tuple
+stencil_1d_internal_test = stencil_1dC_internal_test $
+  com_input_seq "hi" (Proxy :: Proxy (Seq 100 200 Atom_Int))
+stencil_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_internal_test
+stencil_1d_internal_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s stencil_1d_internal_seq_idx) [1,2,5,10,30,100,300]
+stencil_1d_internal_ppar_typechecked =
+  fmap check_type stencil_1d_internal_ppar
+stencil_1d_internal_ppar_typechecked' =
+  fmap check_type_get_error stencil_1d_internal_ppar
+tuple_mul_internal_shallow_no_input in_seq = do
+  let kernel_list = fmap Atom_Int [1,1,1]
+  let kernel = const_genC (Seq $ listToVector (Proxy @3) kernel_list) in_seq
+  let kernel_and_values = map2C atom_tupleC kernel in_seq
+  let mul_result = mapC mulC kernel_and_values
+  let sum = reduceC addC mul_result
+  let norm_list = fmap Atom_Int [3]
+  let norm = const_genC (Seq $ listToVector (Proxy @1) norm_list) in_seq
+  let sum_and_norm = map2C atom_tupleC sum norm
+  mapC divC sum_and_norm
+conv_1d_internal_shallow_no_input in_seq = do
+  let stencil = stencil_1dC_internal_test in_seq
+  let conv_result = mapC tuple_mul_internal_shallow_no_input stencil
+  unpartitionC conv_result
+conv_1d_internal = conv_1d_internal_shallow_no_input $ 
+  com_input_seq "hi" (Proxy :: Proxy (Seq 10 20 Atom_Int))
+conv_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep conv_1d_internal
+conv_1d_internal_ppar =
+  fmap (\s -> rewrite_to_partially_parallel s conv_1d_internal_seq_idx) [1,3,5,6,10,30]
+  
 stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
                                (shiftC (Proxy @1) last_shifted_seq) : l)
@@ -600,23 +644,42 @@ conv_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
 pyramid_1d_shallow_no_input in_seq = do
   let layer1_blurred = conv_1d_shallow_no_input in_seq
   let layer2_input = unpartitionC $ mapC (down_1dC 2) $
-        partitionC (Proxy @3) (Proxy @3) Proxy (Proxy @0) layer1_blurred
+        partitionC (Proxy @9) (Proxy @3) Proxy (Proxy @0) layer1_blurred
   let layer2_blurred = conv_1d_shallow_no_input layer2_input
-  down_1dC 2 layer2_blurred
+  unpartitionC $ mapC (down_1dC 2) $ partitionC (Proxy @3) (Proxy @3) Proxy (Proxy @0) layer2_blurred
 pyramid_1d = pyramid_1d_shallow_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 9 0 (Seq 1 2 Atom_Int)))
+  com_input_seq "hi" (Proxy :: Proxy (Seq 27 0 (Seq 1 2 Atom_Int)))
 pyramid_1d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_1d
 pyramid_1d_ppar =
   fmap (\s -> rewrite_to_partially_parallel s pyramid_1d_seq_idx) [1,3,9,27]
+pyramid_1d_ppar_type =
+  fmap (\tr -> rewrite_to_partially_parallel_type tr pyramid_1d_seq_idx)
+  [[SpaceR 1, SpaceR 1, NonSeqR],
+   [SplitR 1 2 1, SpaceR 1, NonSeqR],
+   [SplitNestedR (TimeR 1 2) (SplitNestedR (TimeR 1 2) NonSeqR), SpaceR 1, NonSeqR],
+   [SplitNestedR (TimeR 1 2) (SplitNestedR (TimeR 1 2) NonSeqR), TimeR 1 2, NonSeqR]]
 pyramid_1d_ppar_typechecked =
   fmap check_type pyramid_1d_ppar
 pyramid_1d_ppar_typechecked' =
   fmap check_type_get_error pyramid_1d_ppar
+pyramid_1d_ppar_type_typechecked =
+  fmap check_type pyramid_1d_ppar_type
+pyramid_1d_ppar_type_typechecked' =
+  fmap check_type_get_error pyramid_1d_ppar_type
 pyramid_1d_inputs :: [[Integer]] = [[1..9]]
 pyramid_1d_output :: [Integer] = [5]
 pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_1d s Nothing
                                       pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
+pyramid_1d_results_types = sequence $ fmap (\s -> compile_and_test_with_type_rewrites
+                                      pyramid_1d s Nothing
+                                      pyramid_1d_inputs pyramid_1d_output)
+                           [[SpaceR 1, SpaceR 1, NonSeqR],
+                            [SplitR 1 2 1, SpaceR 1, NonSeqR],
+                            [SplitNestedR (TimeR 1 2) (SplitNestedR (TimeR 1 2) NonSeqR), SpaceR 1, NonSeqR],
+                            [SplitNestedR (TimeR 1 2) (SplitNestedR (TimeR 1 2) NonSeqR), TimeR 1 2, NonSeqR]]
+pyramid_1d_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
+                                      pyramid_1d s "pyramid1d") [1,3,9,27]
 
 {-
   let tuple = zipC window_size shifted_seqs

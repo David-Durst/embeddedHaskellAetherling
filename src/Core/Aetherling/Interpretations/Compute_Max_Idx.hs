@@ -78,6 +78,9 @@ compute_max_idx' consumer_e@(Shift_tN n i shift_amount elem_t producer_e cur_idx
 compute_max_idx' consumer_e@(Shift_tsN no io ni shift_amount elem_t producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
+compute_max_idx' consumer_e@(Shift_ttN no ni io ii shift_amount elem_t producer_e cur_idx) = do
+  max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
+  return $ max cur_idx max_idx_producer
 compute_max_idx' consumer_e@(Up_1d_sN n elem_t producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer

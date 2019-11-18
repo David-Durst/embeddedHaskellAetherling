@@ -55,6 +55,26 @@ data Expr =
       seq_in :: Expr,
       index :: DAG_Index
       }
+  | Shift_ttN {
+      no :: Int,
+      ni :: Int,
+      io :: Int,
+      ii :: Int,
+      shift_amount :: Int,
+      elem_t :: AST_Type,
+      seq_in :: Expr,
+      index :: DAG_Index
+      }
+  | Shift_tnN {
+      no :: Int,
+      nis :: [Int],
+      io :: Int,
+      iis :: [Int],
+      shift_amount :: Int,
+      elem_t :: AST_Type,
+      seq_in :: Expr,
+      index :: DAG_Index
+      }
   | Up_1d_sN {
       n :: Int,
       t :: AST_Type,
@@ -267,3 +287,4 @@ instance Indexible Expr where
   set_index e i = e { index = i }
 
 seq_in_st = seq_in
+f_st = f

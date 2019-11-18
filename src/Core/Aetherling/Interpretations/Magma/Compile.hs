@@ -13,6 +13,7 @@ import qualified Aetherling.Rewrites.Match_Latencies as ML
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Type_To_Slowdown
 import qualified Aetherling.Interpretations.Latency as CL
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import qualified Aetherling.Languages.Sequence.Shallow.Types as Shallow_Types
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
@@ -118,7 +119,44 @@ compile_and_test_with_slowdown shallow_seq_program s base_name inputs output = d
       return $ Fault_Failure "invalid latencies for program" "" "" 0
     else do
     return $ Fault_Failure "invalid types for program" "" "" 0
-    
+
+
+compile_and_test_with_type_rewrites :: (Shallow_Types.Aetherling_Value a,
+                                   Convertible_To_Atom_Strings b,
+                                   Convertible_To_Atom_Strings c) =>
+                                  RH.Rewrite_StateM a -> [Type_Rewrite] -> Maybe String -> [b] ->
+                                  c -> IO Fault_Result
+compile_and_test_with_type_rewrites shallow_seq_program trs base_name inputs output = do
+  ML.Matched_Latency_Result deep_st_program output_latency <-
+    compile_with_type_rewrites_to_expr shallow_seq_program trs
+  if check_type deep_st_program
+    then do
+    correct_latencies <- CL.check_latency deep_st_program
+    if correct_latencies
+      then do
+      let outer_types = ST_Conv.expr_to_outer_types deep_st_program
+      let actual_s = type_to_slowdown $ ST_Conv.e_out_type outer_types
+      if actual_s == product_tr_periods trs
+        then do
+        result <- test_circuit_with_fault deep_st_program inputs output output_latency
+        if isJust base_name
+          then do
+          let test_verilog_dir = root_dir ++
+                "/test/verilog_examples/aetherling_copies/" ++
+                fromJust base_name
+          createDirectoryIfMissing True test_verilog_dir
+          copyFile "vBuild/top.v"
+            (test_verilog_dir ++ "/" ++ fromJust base_name ++ "_" ++ show actual_s ++ ".v")
+          else return ()
+        return result
+        else do
+        return $ Fault_Failure ("program not slowed correctly for target" ++
+          " slowdown " ++ show trs ++ " with actual slowdown " ++ show actual_s) "" "" 0
+      else do
+      return $ Fault_Failure "invalid latencies for program" "" "" 0
+    else do
+    return $ Fault_Failure "invalid types for program" "" "" 0
+  
 compile_with_slowdown :: (Shallow_Types.Aetherling_Value a) =>
                          RH.Rewrite_StateM a -> Int -> String -> IO String
 compile_with_slowdown shallow_seq_program s base_name = do
@@ -246,6 +284,21 @@ compile_with_slowdown_to_expr shallow_seq_program s = do
   let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
   let deep_st_program =
         rewrite_to_partially_parallel s deep_seq_program_with_indexes
+  let pipelined_program = APR.add_pipeline_registers deep_st_program 2
+  matched_latencies <- ML.match_latencies pipelined_program
+  --return matched_latencies
+  return $ matched_latencies {
+    ML.new_expr = MCF.merge_consts_and_fifos $ ML.new_expr matched_latencies
+    }
+    
+compile_with_type_rewrites_to_expr :: (Shallow_Types.Aetherling_Value a) =>
+                                 RH.Rewrite_StateM a -> [Type_Rewrite] -> IO ML.Matched_Latency_Result
+compile_with_type_rewrites_to_expr shallow_seq_program trs = do
+  let deep_seq_program_no_indexes =
+        Seq_SToD.seq_shallow_to_deep shallow_seq_program
+  let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
+  let deep_st_program =
+        rewrite_to_partially_parallel_type trs deep_seq_program_with_indexes
   let pipelined_program = APR.add_pipeline_registers deep_st_program 2
   matched_latencies <- ML.match_latencies pipelined_program
   --return matched_latencies
