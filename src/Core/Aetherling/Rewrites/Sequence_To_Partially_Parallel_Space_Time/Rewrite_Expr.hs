@@ -646,15 +646,21 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
           case tr of
             SplitNestedR (TimeR htr0_n htr0_i)
               (SplitNestedR (TimeR htr1_n htr1_i) _) |
-              h_no == htr0_n && (h_ni == htr1_n + htr1_i) -> True
-            _ -> False
+              h_no == htr0_n && (h_ni == htr1_n + htr1_i) -> Just False
+            SplitNestedR (TimeR htr0_n htr0_i)
+              (SplitNestedR (TimeR htr1_n 0) _) |
+              h_no == htr0_n * htr1_n -> Just True
+            _ -> Nothing
         SeqE.UnpartitionN _ _ _ _ _ (SeqE.MapN h_no _ (SeqE.Down_1dN h_ni _ _ _ _ _) _ _) _ ->
           case tr of
             SplitNestedR (TimeR htr0_n htr0_i)
               (SplitNestedR (TimeR htr1_n htr1_i) _) |
-              h_no == htr0_n && (h_ni == htr1_n + htr1_i) -> True
-            _ -> False
-        _ -> False
+              h_no == htr0_n && (h_ni == htr1_n + htr1_i) -> Just False
+            SplitNestedR (TimeR htr0_n htr0_i)
+              (SplitNestedR (TimeR htr1_n 0) _) |
+              h_no == htr0_n * htr1_n -> Just True
+            _ -> Nothing
+        _ -> Nothing 
 
   -- to compute how to slowed input, get the number of clocks the output takes
   let slowdown = get_type_rewrite_periods tr
@@ -683,8 +689,9 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   traceShowM $ "matched_huersitics: " ++ show matches_heuristics
   traceShowM $ "tr:" ++ show type_rewrites
   traceShowM $ "index: " ++ show index
-  if matches_heuristics
+  if isJust matches_heuristics 
     then do
+    -- need to handle Tseq TSeq case where adding SSeq 1 to bottom 
     let upstream_type_rewrites =
           case tr of
             SplitNestedR (TimeR tr0_n tr0_i)
