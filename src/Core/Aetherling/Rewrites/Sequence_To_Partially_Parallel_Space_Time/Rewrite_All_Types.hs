@@ -10,6 +10,7 @@ import Data.Either
 import qualified Data.Set as S
 import Text.Printf
 import Math.NumberTheory.Primes.Factorisation
+import Math.NumberTheory.Powers.Squares
 import Debug.Trace
 
 num_seq_layers :: SeqT.AST_Type -> Int
@@ -140,6 +141,17 @@ rewrite_AST_type_given_slowdowns ((LFVP l s):other_s) cur_layer (SeqT.SeqT n _ t
                 [io | io <- [0..invalids], isJust (ii_given_others n 1 io)]
              )
         inner_rewrite_options
+  let ttt_options = concat $
+        fmap (\trs ->
+                -- s-n total invalids, divide them up between outer and
+                -- and inner in all possible ways
+                fmap (\io -> 
+                         SplitNestedR (TimeR n io)
+                         (SplitNestedR (TimeR 1 (fromJust $ iii_given_others n io))
+                         (SplitNestedR (TimeR 1 (fromJust $ iii_given_others n io)) NonSeqR)) : trs)
+                [io | io <- [0..invalids], isJust (iii_given_others n io)]
+             )
+        inner_rewrite_options
   let possible_no = filter is_valid [1..n]
   let ts_options =
         if length possible_no == 0
@@ -147,12 +159,16 @@ rewrite_AST_type_given_slowdowns ((LFVP l s):other_s) cur_layer (SeqT.SeqT n _ t
         else do
           let max_no = maximum possible_no
           fmap (\trs -> SplitR max_no (s-max_no) (n `div` max_no) : trs) inner_rewrite_options
-  ts_options ++ t_options ++ tt_options
+  ts_options ++ t_options ++ tt_options ++ ttt_options
   where
     is_valid no = (no <= s) && (no >= 0) && (n `mod` no == 0)
     ii_given_others no ni io =
       if (s `mod` (no + io) == 0) && ((s `div` (no + io)) >= ni)
       then Just ((s `div` (no + io)) - ni)
+      else Nothing
+    iii_given_others no io =
+      if (s `mod` (no + io) == 0) && ((isSquare $ s `div` (no + io)))
+      then Just $ integerSquareRoot $ (s `div` (no +io)) - 1
       else Nothing
 rewrite_AST_type_given_slowdowns s_xs cur_layer (SeqT.STupleT n t) = do
   inner_rewrite <- rewrite_AST_type_given_slowdowns s_xs cur_layer t

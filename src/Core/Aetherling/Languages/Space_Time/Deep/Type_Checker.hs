@@ -73,6 +73,8 @@ check_type' consumer_e@(Shift_tsN _ _ _ _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Shift_ttN _ _ _ _ _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
+check_type' consumer_e@(Shift_tnN _ _ _ _ _ _ producer_e _) =
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Up_1d_sN _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(Up_1d_tN _ _ _ producer_e _) =

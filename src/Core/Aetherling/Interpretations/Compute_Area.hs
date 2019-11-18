@@ -79,6 +79,9 @@ get_area' e@(Shift_tsN _ _ _ shift_amount elem_t producer _) = do
 get_area' e@(Shift_ttN _ _ _ _ shift_amount elem_t producer _) = do
   producer_latency <- memo producer $ get_area' producer
   return $ producer_latency + shift_amount * area_t elem_t
+get_area' e@(Shift_tnN _ _ _ _ shift_amount elem_t producer _) = do
+  producer_latency <- memo producer $ get_area' producer
+  return $ producer_latency + shift_amount * area_t elem_t
 get_area' e@(Up_1d_sN _ _ producer _) = memo producer $ get_area' producer
 get_area' e@(Up_1d_tN _ _ _ producer _) = memo producer $ get_area' producer
 get_area' e@(Down_1d_sN _ _ _ producer _) = memo producer $ get_area' producer

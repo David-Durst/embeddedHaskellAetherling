@@ -572,10 +572,10 @@ conv_1d_internal_shallow_no_input in_seq = do
   let conv_result = mapC tuple_mul_internal_shallow_no_input stencil
   unpartitionC conv_result
 conv_1d_internal = conv_1d_internal_shallow_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 5 10 Atom_Int))
+  com_input_seq "hi" (Proxy :: Proxy (Seq 10 20 Atom_Int))
 conv_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep conv_1d_internal
 conv_1d_internal_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s conv_1d_internal_seq_idx) [1,3,5,15]
+  fmap (\s -> rewrite_to_partially_parallel s conv_1d_internal_seq_idx) [1,3,5,6,10,30]
   
 stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   let shifted_seqs = foldl (\l@(last_shifted_seq:_) _ ->
@@ -644,11 +644,11 @@ conv_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
 pyramid_1d_shallow_no_input in_seq = do
   let layer1_blurred = conv_1d_shallow_no_input in_seq
   let layer2_input = unpartitionC $ mapC (down_1dC 2) $
-        partitionC (Proxy @3) (Proxy @3) Proxy (Proxy @0) layer1_blurred
+        partitionC (Proxy @9) (Proxy @3) Proxy (Proxy @0) layer1_blurred
   let layer2_blurred = conv_1d_shallow_no_input layer2_input
-  down_1dC 2 layer2_blurred
+  unpartitionC $ mapC (down_1dC 2) $ partitionC (Proxy @3) (Proxy @3) Proxy (Proxy @0) layer2_blurred
 pyramid_1d = pyramid_1d_shallow_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 9 0 (Seq 1 2 Atom_Int)))
+  com_input_seq "hi" (Proxy :: Proxy (Seq 27 0 (Seq 1 2 Atom_Int)))
 pyramid_1d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_1d
 pyramid_1d_ppar =
   fmap (\s -> rewrite_to_partially_parallel s pyramid_1d_seq_idx) [1,3,9,27]
