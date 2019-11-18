@@ -518,6 +518,17 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitNestedR (TimeR tr0_n tr0
   add_index (STE.Partition_t_ttN tr0_n tr1_n tr0_i tr1_i (STT.SSeqT tr2_n elem_t_ppar)) producer_ppar
   
 sequence_to_partially_parallel type_rewrites@((SplitNestedR tr0@(TimeR tr0_n tr0_i)
+                                                    (SplitNestedR tr1@(TimeR tr1_n 0) NonSeqR))
+                                              : tr2@(TimeR tr2_n tr2_i) : type_rewrites_tl)
+  seq_e@(SeqE.PartitionN no ni _ _ elem_t producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  add_output_rewrite_for_node seq_e type_rewrites
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  let upstream_type_rewrites = SplitNestedR (TimeR (tr0_n * tr1_n) (tr0_i * tr1_n)) (SplitNestedR tr2 NonSeqR) : type_rewrites_tl
+  producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+  add_index (STE.Partition_t_ttN tr0_n tr1_n tr0_i 0 (STT.TSeqT tr2_n tr2_i elem_t_ppar)) producer_ppar
+  
+sequence_to_partially_parallel type_rewrites@((SplitNestedR tr0@(TimeR tr0_n tr0_i)
                                                     (SplitNestedR tr1@(TimeR tr1_n tr1_i) NonSeqR))
                                               : tr2@(TimeR tr2_n tr2_i) : type_rewrites_tl)
   seq_e@(SeqE.PartitionN no ni _ _ elem_t producer _) = do
@@ -526,6 +537,18 @@ sequence_to_partially_parallel type_rewrites@((SplitNestedR tr0@(TimeR tr0_n tr0
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   let upstream_type_rewrites = SplitNestedR tr0 (SplitNestedR tr1 (SplitNestedR tr2 NonSeqR)) : type_rewrites_tl
   sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+  
+sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr0_n tr0_i) :
+                                              (SplitNestedR tr1@(TimeR tr1_n 0)
+                                                (SplitNestedR tr2@(TimeR tr2_n tr2_i) NonSeqR))
+                                               : type_rewrites_tl)
+  seq_e@(SeqE.PartitionN no ni _ _ elem_t producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  add_output_rewrite_for_node seq_e type_rewrites
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  let upstream_type_rewrites = SplitNestedR (TimeR (tr0_n * tr1_n) (tr0_i * tr1_n)) (SplitNestedR tr2 NonSeqR) : type_rewrites_tl
+  producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+  add_index (STE.Partition_t_ttN tr0_n tr1_n tr0_i 0 (STT.TSeqT tr2_n tr2_i elem_t_ppar)) producer_ppar
   
 sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr0_n tr0_i) :
                                               (SplitNestedR tr1@(TimeR tr1_n tr1_i)
@@ -612,11 +635,26 @@ sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr_n tr_i) : type_rewrit
 -}
 
 sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
-  seq_e@(SeqE.UnpartitionN no ni _ _ elem_t producer _) = do
+  seq_e@(SeqE.UnpartitionN no ni _ _ elem_t producer index) = do
   add_output_rewrite_for_node seq_e type_rewrites
   let types = Seq_Conv.expr_to_types seq_e
   -- ppar_AST_type applies the type_rewrites to match downstream
   out_t_ppar <- ppar_AST_type type_rewrites (Seq_Conv.e_out_type types)
+
+  let matches_heuristics = case producer of
+        SeqE.MapN h_no _ (SeqE.Down_1dN h_ni _ _ _ _ _) _ _ ->
+          case tr of
+            SplitNestedR (TimeR htr0_n htr0_i)
+              (SplitNestedR (TimeR htr1_n htr1_i) _) |
+              h_no == htr0_n && (h_ni == htr1_n + htr1_i) -> True
+            _ -> False
+        SeqE.UnpartitionN _ _ _ _ _ (SeqE.MapN h_no _ (SeqE.Down_1dN h_ni _ _ _ _ _) _ _) _ ->
+          case tr of
+            SplitNestedR (TimeR htr0_n htr0_i)
+              (SplitNestedR (TimeR htr1_n htr1_i) _) |
+              h_no == htr0_n && (h_ni == htr1_n + htr1_i) -> True
+            _ -> False
+        _ -> False
 
   -- to compute how to slowed input, get the number of clocks the output takes
   let slowdown = get_type_rewrite_periods tr
@@ -642,7 +680,28 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   --base_input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io -- (slowdown_without_ni_factors - no)
   --                                                    (SeqT.SeqT ni ii SeqT.IntT))
   --traceShowM $ "base_input_rewrites: " ++ show base_input_rewrites
-  if length possible_st_trs_and_areas /= 0
+  traceShowM $ "matched_huersitics: " ++ show matches_heuristics
+  traceShowM $ "tr:" ++ show type_rewrites
+  traceShowM $ "index: " ++ show index
+  if matches_heuristics
+    then do
+    let upstream_type_rewrites =
+          case tr of
+            SplitNestedR (TimeR tr0_n tr0_i)
+              (SplitNestedR (TimeR tr1_n tr1_i) NonSeqR) ->
+              TimeR tr0_n tr0_i : TimeR tr1_n tr1_i : type_rewrites_tl
+            SplitNestedR (TimeR tr0_n tr0_i)
+              (SplitNestedR (TimeR tr1_n tr1_i)
+              (SplitNestedR (TimeR tr2_n tr2_i) NonSeqR)) ->
+              TimeR tr0_n tr0_i :
+              (SplitNestedR (TimeR tr1_n tr1_i)
+               (SplitNestedR (TimeR tr2_n tr2_i) NonSeqR)) :
+               type_rewrites_tl
+            _ -> error "unpartition heuristics bad"
+    sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+    else if True
+    then throwError $ Slowdown_Failure "Not doing real unpartition for now"
+    else if length possible_st_trs_and_areas /= 0
     then do
     let min_tr = fst $ L.minimumBy (\pa pb -> compare (snd pa) (snd pb)) possible_st_trs_and_areas
     in_t_ppar <- ppar_AST_type min_tr (head $ Seq_Conv.e_in_types types)
