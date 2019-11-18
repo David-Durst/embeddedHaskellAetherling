@@ -4,7 +4,7 @@
 using namespace Halide;
 
 Var x("x"), y("y"), c("c");
-Var xo("xo"), yo("yo"), xi("xi"), yi("yi");
+Var xo("xo"), yo("yo"), xi("xi"), yi("yi"), xii("xii"), yii("yii");
 
 class MyPipeline {
 public:
@@ -56,14 +56,22 @@ public:
         hw_input.compute_root();
         hw_output.compute_root();
 
+        //hw_input.unroll(x).unroll(y);
+        //hw_output.tile(x, y, xo, yo, xi, yi, 4, 4)
+          //.tile(xi, yi, xi, yi, xii, yii, 2, 2)
+          //.unroll(xii)
+          //.unroll(yii);
+
+        //hw_output.accelerate({hw_input}, xi, xo);
+        //.reorder(xi, yi, xo, yo)
+          //.unroll(xi, 2)
+          //.unroll(yi, 2);
+
         hw_output.tile(x, y, xo, yo, xi, yi, 2, 2)
           .reorder(xi, yi, xo, yo)
           .unroll(xi, 2)
           .unroll(yi, 2);
-          //.unroll(x, 2);
-          //.unroll(xo, 2);
-          //.unroll(yi, 2);
-        hw_output.accelerate({hw_input}, xi, xo);
+        hw_output.accelerate({hw_input}, yi, xo);
         kernel.compute_at(hw_output, xo).unroll(x).unroll(y);
 
         mul.update(0)
@@ -71,6 +79,8 @@ public:
 
           //.unroll(x, 2).unroll(y, 2);
 
+        hw_input.bound(x, 0, 4);
+        hw_input.bound(y, 0, 4);
         output.print_loop_nest();
 
         // Create the target for HLS simulation

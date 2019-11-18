@@ -7,6 +7,486 @@
 
 `timescale 1 ns / 1 ps 
 
+(* CORE_GENERATION_INFO="hls_target,hls_ip_2017_2,{HLS_INPUT_TYPE=cxx,HLS_INPUT_FLOAT=0,HLS_INPUT_FIXED=0,HLS_INPUT_PART=xc7z020clg484-1,HLS_INPUT_CLOCK=5.600000,HLS_INPUT_ARCH=dataflow,HLS_SYN_CLOCK=5.375000,HLS_SYN_LAT=28,HLS_SYN_TPT=28,HLS_SYN_MEM=0,HLS_SYN_DSP=0,HLS_SYN_FF=378,HLS_SYN_LUT=373}" *)
+
+module top (
+        hw_input_V_value_V,
+        hw_input_V_last_V,
+        hw_output_V_value_V,
+        hw_output_V_last_V,
+        ap_clk,
+        ap_rst,
+        hw_input_V_value_V_ap_vld,
+        hw_input_V_value_V_ap_ack,
+        hw_input_V_last_V_ap_vld,
+        hw_input_V_last_V_ap_ack,
+        hw_output_V_value_V_ap_vld,
+        hw_output_V_value_V_ap_ack,
+        hw_output_V_last_V_ap_vld,
+        hw_output_V_last_V_ap_ack,
+        ap_done,
+        ap_start,
+        ap_ready,
+        ap_idle
+);
+
+
+input  [63:0] hw_input_V_value_V;
+input  [0:0] hw_input_V_last_V;
+output  [63:0] hw_output_V_value_V;
+output  [0:0] hw_output_V_last_V;
+input   ap_clk;
+input   ap_rst;
+input   hw_input_V_value_V_ap_vld;
+output   hw_input_V_value_V_ap_ack;
+input   hw_input_V_last_V_ap_vld;
+output   hw_input_V_last_V_ap_ack;
+output   hw_output_V_value_V_ap_vld;
+input   hw_output_V_value_V_ap_ack;
+output   hw_output_V_last_V_ap_vld;
+input   hw_output_V_last_V_ap_ack;
+output   ap_done;
+input   ap_start;
+output   ap_ready;
+output   ap_idle;
+
+wire    Loop_1_proc_U0_ap_start;
+wire    Loop_1_proc_U0_start_full_n;
+wire    Loop_1_proc_U0_ap_ready;
+wire    Loop_1_proc_U0_ap_done;
+wire    Loop_1_proc_U0_ap_continue;
+wire    Loop_1_proc_U0_ap_idle;
+wire    Loop_1_proc_U0_start_out;
+wire    Loop_1_proc_U0_start_write;
+wire    Loop_1_proc_U0_hw_input_V_value_V_ap_ack;
+wire    Loop_1_proc_U0_hw_input_V_last_V_ap_ack;
+wire   [63:0] Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_din;
+wire    Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_write;
+wire   [0:0] Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_din;
+wire    Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_write;
+wire    Loop_2_proc_U0_ap_start;
+wire    Loop_2_proc_U0_ap_done;
+wire    Loop_2_proc_U0_ap_continue;
+wire    Loop_2_proc_U0_ap_idle;
+wire    Loop_2_proc_U0_ap_ready;
+wire    Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_read;
+wire    Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_read;
+wire   [63:0] Loop_2_proc_U0_hw_output_V_value_V;
+wire    Loop_2_proc_U0_hw_output_V_value_V_ap_vld;
+wire   [0:0] Loop_2_proc_U0_hw_output_V_last_V;
+wire    Loop_2_proc_U0_hw_output_V_last_V_ap_vld;
+wire    ap_sync_continue;
+wire    p_hw_input_stencil_st_2_1_full_n;
+wire   [63:0] p_hw_input_stencil_st_2_1_dout;
+wire    p_hw_input_stencil_st_2_1_empty_n;
+wire    p_hw_input_stencil_st_2_full_n;
+wire   [0:0] p_hw_input_stencil_st_2_dout;
+wire    p_hw_input_stencil_st_2_empty_n;
+wire    ap_sync_done;
+wire    ap_sync_ready;
+wire   [0:0] start_for_Loop_2_proc_U0_din;
+wire    start_for_Loop_2_proc_U0_full_n;
+wire   [0:0] start_for_Loop_2_proc_U0_dout;
+wire    start_for_Loop_2_proc_U0_empty_n;
+wire    Loop_2_proc_U0_start_full_n;
+wire    Loop_2_proc_U0_start_write;
+
+Loop_1_proc Loop_1_proc_U0(
+    .ap_clk(ap_clk),
+    .ap_rst(ap_rst),
+    .ap_start(Loop_1_proc_U0_ap_start),
+    .start_full_n(Loop_1_proc_U0_start_full_n),
+    .ap_ready(Loop_1_proc_U0_ap_ready),
+    .ap_done(Loop_1_proc_U0_ap_done),
+    .ap_continue(Loop_1_proc_U0_ap_continue),
+    .ap_idle(Loop_1_proc_U0_ap_idle),
+    .start_out(Loop_1_proc_U0_start_out),
+    .start_write(Loop_1_proc_U0_start_write),
+    .hw_input_V_value_V(hw_input_V_value_V),
+    .hw_input_V_value_V_ap_vld(hw_input_V_value_V_ap_vld),
+    .hw_input_V_value_V_ap_ack(Loop_1_proc_U0_hw_input_V_value_V_ap_ack),
+    .hw_input_V_last_V(hw_input_V_last_V),
+    .hw_input_V_last_V_ap_vld(hw_input_V_last_V_ap_vld),
+    .hw_input_V_last_V_ap_ack(Loop_1_proc_U0_hw_input_V_last_V_ap_ack),
+    .p_hw_input_stencil_stream_to_hw_output_V_value_V_din(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_din),
+    .p_hw_input_stencil_stream_to_hw_output_V_value_V_full_n(p_hw_input_stencil_st_2_1_full_n),
+    .p_hw_input_stencil_stream_to_hw_output_V_value_V_write(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_write),
+    .p_hw_input_stencil_stream_to_hw_output_V_last_V_din(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_din),
+    .p_hw_input_stencil_stream_to_hw_output_V_last_V_full_n(p_hw_input_stencil_st_2_full_n),
+    .p_hw_input_stencil_stream_to_hw_output_V_last_V_write(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_write)
+);
+
+Loop_2_proc Loop_2_proc_U0(
+    .ap_clk(ap_clk),
+    .ap_rst(ap_rst),
+    .ap_start(Loop_2_proc_U0_ap_start),
+    .ap_done(Loop_2_proc_U0_ap_done),
+    .ap_continue(Loop_2_proc_U0_ap_continue),
+    .ap_idle(Loop_2_proc_U0_ap_idle),
+    .ap_ready(Loop_2_proc_U0_ap_ready),
+    .p_hw_input_stencil_stream_to_hw_output_V_value_V_dout(p_hw_input_stencil_st_2_1_dout),
+    .p_hw_input_stencil_stream_to_hw_output_V_value_V_empty_n(p_hw_input_stencil_st_2_1_empty_n),
+    .p_hw_input_stencil_stream_to_hw_output_V_value_V_read(Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_read),
+    .p_hw_input_stencil_stream_to_hw_output_V_last_V_dout(p_hw_input_stencil_st_2_dout),
+    .p_hw_input_stencil_stream_to_hw_output_V_last_V_empty_n(p_hw_input_stencil_st_2_empty_n),
+    .p_hw_input_stencil_stream_to_hw_output_V_last_V_read(Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_read),
+    .hw_output_V_value_V(Loop_2_proc_U0_hw_output_V_value_V),
+    .hw_output_V_value_V_ap_vld(Loop_2_proc_U0_hw_output_V_value_V_ap_vld),
+    .hw_output_V_value_V_ap_ack(hw_output_V_value_V_ap_ack),
+    .hw_output_V_last_V(Loop_2_proc_U0_hw_output_V_last_V),
+    .hw_output_V_last_V_ap_vld(Loop_2_proc_U0_hw_output_V_last_V_ap_vld),
+    .hw_output_V_last_V_ap_ack(hw_output_V_last_V_ap_ack)
+);
+
+fifo_w64_d1_S p_hw_input_stencil_st_2_1_U(
+    .clk(ap_clk),
+    .reset(ap_rst),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_din),
+    .if_full_n(p_hw_input_stencil_st_2_1_full_n),
+    .if_write(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_write),
+    .if_dout(p_hw_input_stencil_st_2_1_dout),
+    .if_empty_n(p_hw_input_stencil_st_2_1_empty_n),
+    .if_read(Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_read)
+);
+
+fifo_w1_d1_S p_hw_input_stencil_st_2_U(
+    .clk(ap_clk),
+    .reset(ap_rst),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_din),
+    .if_full_n(p_hw_input_stencil_st_2_full_n),
+    .if_write(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_write),
+    .if_dout(p_hw_input_stencil_st_2_dout),
+    .if_empty_n(p_hw_input_stencil_st_2_empty_n),
+    .if_read(Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_read)
+);
+
+start_for_Loop_2_bkb start_for_Loop_2_bkb_U(
+    .clk(ap_clk),
+    .reset(ap_rst),
+    .if_read_ce(1'b1),
+    .if_write_ce(1'b1),
+    .if_din(start_for_Loop_2_proc_U0_din),
+    .if_full_n(start_for_Loop_2_proc_U0_full_n),
+    .if_write(Loop_1_proc_U0_start_write),
+    .if_dout(start_for_Loop_2_proc_U0_dout),
+    .if_empty_n(start_for_Loop_2_proc_U0_empty_n),
+    .if_read(Loop_2_proc_U0_ap_ready)
+);
+
+assign Loop_1_proc_U0_ap_continue = 1'b1;
+
+assign Loop_1_proc_U0_ap_start = ap_start;
+
+assign Loop_1_proc_U0_start_full_n = (start_for_Loop_2_proc_U0_full_n | 1'b0);
+
+assign Loop_2_proc_U0_ap_continue = 1'b1;
+
+assign Loop_2_proc_U0_ap_start = start_for_Loop_2_proc_U0_empty_n;
+
+assign Loop_2_proc_U0_start_full_n = 1'b0;
+
+assign Loop_2_proc_U0_start_write = 1'b0;
+
+assign ap_done = Loop_2_proc_U0_ap_done;
+
+assign ap_idle = (Loop_1_proc_U0_ap_idle & Loop_2_proc_U0_ap_idle);
+
+assign ap_ready = Loop_1_proc_U0_ap_ready;
+
+assign ap_sync_continue = 1'b1;
+
+assign ap_sync_done = Loop_2_proc_U0_ap_done;
+
+assign ap_sync_ready = Loop_1_proc_U0_ap_ready;
+
+assign hw_input_V_last_V_ap_ack = Loop_1_proc_U0_hw_input_V_last_V_ap_ack;
+
+assign hw_input_V_value_V_ap_ack = Loop_1_proc_U0_hw_input_V_value_V_ap_ack;
+
+assign hw_output_V_last_V = Loop_2_proc_U0_hw_output_V_last_V;
+
+assign hw_output_V_last_V_ap_vld = Loop_2_proc_U0_hw_output_V_last_V_ap_vld;
+
+assign hw_output_V_value_V = Loop_2_proc_U0_hw_output_V_value_V;
+
+assign hw_output_V_value_V_ap_vld = Loop_2_proc_U0_hw_output_V_value_V_ap_vld;
+
+assign start_for_Loop_2_proc_U0_din = 1'b1;
+
+endmodule //hls_target
+
+
+// ==============================================================
+// File generated by Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC
+// Version: 2017.2
+// Copyright (C) 1986-2017 Xilinx, Inc. All Rights Reserved.
+// 
+// ==============================================================
+
+
+`timescale 1 ns / 1 ps
+
+module start_for_Loop_2_bkb_shiftReg (
+    clk,
+    data,
+    ce,
+    a,
+    q);
+
+parameter DATA_WIDTH = 32'd1;
+parameter ADDR_WIDTH = 32'd1;
+parameter DEPTH = 32'd2;
+
+input clk;
+input [DATA_WIDTH-1:0] data;
+input ce;
+input [ADDR_WIDTH-1:0] a;
+output [DATA_WIDTH-1:0] q;
+
+reg[DATA_WIDTH-1:0] SRL_SIG [0:DEPTH-1];
+integer i;
+
+always @ (posedge clk)
+    begin
+        if (ce)
+        begin
+            for (i=0;i<DEPTH-1;i=i+1)
+                SRL_SIG[i+1] <= SRL_SIG[i];
+            SRL_SIG[0] <= data;
+        end
+    end
+
+assign q = SRL_SIG[a];
+
+endmodule
+
+module start_for_Loop_2_bkb (
+    clk,
+    reset,
+    if_empty_n,
+    if_read_ce,
+    if_read,
+    if_dout,
+    if_full_n,
+    if_write_ce,
+    if_write,
+    if_din);
+
+parameter MEM_STYLE   = "auto";
+parameter DATA_WIDTH  = 32'd1;
+parameter ADDR_WIDTH  = 32'd1;
+parameter DEPTH       = 32'd2;
+
+input clk;
+input reset;
+output if_empty_n;
+input if_read_ce;
+input if_read;
+output[DATA_WIDTH - 1:0] if_dout;
+output if_full_n;
+input if_write_ce;
+input if_write;
+input[DATA_WIDTH - 1:0] if_din;
+
+wire[ADDR_WIDTH - 1:0] shiftReg_addr ;
+wire[DATA_WIDTH - 1:0] shiftReg_data, shiftReg_q;
+wire                     shiftReg_ce;
+reg[ADDR_WIDTH:0] mOutPtr = {(ADDR_WIDTH+1){1'b1}};
+reg internal_empty_n = 0, internal_full_n = 1;
+
+assign if_empty_n = internal_empty_n;
+assign if_full_n = internal_full_n;
+assign shiftReg_data = if_din;
+assign if_dout = shiftReg_q;
+
+always @ (posedge clk) begin
+    if (reset == 1'b1)
+    begin
+        mOutPtr <= ~{ADDR_WIDTH+1{1'b0}};
+        internal_empty_n <= 1'b0;
+        internal_full_n <= 1'b1;
+    end
+    else begin
+        if (((if_read & if_read_ce) == 1 & internal_empty_n == 1) && 
+            ((if_write & if_write_ce) == 0 | internal_full_n == 0))
+        begin
+            mOutPtr <= mOutPtr - 1;
+            if (mOutPtr == 0)
+                internal_empty_n <= 1'b0;
+            internal_full_n <= 1'b1;
+        end 
+        else if (((if_read & if_read_ce) == 0 | internal_empty_n == 0) && 
+            ((if_write & if_write_ce) == 1 & internal_full_n == 1))
+        begin
+            mOutPtr <= mOutPtr + 1;
+            internal_empty_n <= 1'b1;
+            if (mOutPtr == DEPTH - 2)
+                internal_full_n <= 1'b0;
+        end 
+    end
+end
+
+assign shiftReg_addr = mOutPtr[ADDR_WIDTH] == 1'b0 ? mOutPtr[ADDR_WIDTH-1:0]:{ADDR_WIDTH{1'b0}};
+assign shiftReg_ce = (if_write & if_write_ce) & internal_full_n;
+
+start_for_Loop_2_bkb_shiftReg 
+#(
+    .DATA_WIDTH(DATA_WIDTH),
+    .ADDR_WIDTH(ADDR_WIDTH),
+    .DEPTH(DEPTH))
+U_start_for_Loop_2_bkb_ram (
+    .clk(clk),
+    .data(shiftReg_data),
+    .ce(shiftReg_ce),
+    .a(shiftReg_addr),
+    .q(shiftReg_q));
+
+endmodule  
+
+
+
+// ==============================================================
+// File generated by Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC
+// Version: 2017.2
+// Copyright (C) 1986-2017 Xilinx, Inc. All Rights Reserved.
+// 
+// ==============================================================
+
+
+`timescale 1 ns / 1 ps
+
+module fifo_w1_d1_S_shiftReg (
+    clk,
+    data,
+    ce,
+    a,
+    q);
+
+parameter DATA_WIDTH = 32'd1;
+parameter ADDR_WIDTH = 32'd1;
+parameter DEPTH = 32'd2;
+
+input clk;
+input [DATA_WIDTH-1:0] data;
+input ce;
+input [ADDR_WIDTH-1:0] a;
+output [DATA_WIDTH-1:0] q;
+
+reg[DATA_WIDTH-1:0] SRL_SIG [0:DEPTH-1];
+integer i;
+
+always @ (posedge clk)
+    begin
+        if (ce)
+        begin
+            for (i=0;i<DEPTH-1;i=i+1)
+                SRL_SIG[i+1] <= SRL_SIG[i];
+            SRL_SIG[0] <= data;
+        end
+    end
+
+assign q = SRL_SIG[a];
+
+endmodule
+
+module fifo_w1_d1_S (
+    clk,
+    reset,
+    if_empty_n,
+    if_read_ce,
+    if_read,
+    if_dout,
+    if_full_n,
+    if_write_ce,
+    if_write,
+    if_din);
+
+parameter MEM_STYLE   = "auto";
+parameter DATA_WIDTH  = 32'd1;
+parameter ADDR_WIDTH  = 32'd1;
+parameter DEPTH       = 32'd2;
+
+input clk;
+input reset;
+output if_empty_n;
+input if_read_ce;
+input if_read;
+output[DATA_WIDTH - 1:0] if_dout;
+output if_full_n;
+input if_write_ce;
+input if_write;
+input[DATA_WIDTH - 1:0] if_din;
+
+wire[ADDR_WIDTH - 1:0] shiftReg_addr ;
+wire[DATA_WIDTH - 1:0] shiftReg_data, shiftReg_q;
+wire                     shiftReg_ce;
+reg[ADDR_WIDTH:0] mOutPtr = {(ADDR_WIDTH+1){1'b1}};
+reg internal_empty_n = 0, internal_full_n = 1;
+
+assign if_empty_n = internal_empty_n;
+assign if_full_n = internal_full_n;
+assign shiftReg_data = if_din;
+assign if_dout = shiftReg_q;
+
+always @ (posedge clk) begin
+    if (reset == 1'b1)
+    begin
+        mOutPtr <= ~{ADDR_WIDTH+1{1'b0}};
+        internal_empty_n <= 1'b0;
+        internal_full_n <= 1'b1;
+    end
+    else begin
+        if (((if_read & if_read_ce) == 1 & internal_empty_n == 1) && 
+            ((if_write & if_write_ce) == 0 | internal_full_n == 0))
+        begin
+            mOutPtr <= mOutPtr - 1;
+            if (mOutPtr == 0)
+                internal_empty_n <= 1'b0;
+            internal_full_n <= 1'b1;
+        end 
+        else if (((if_read & if_read_ce) == 0 | internal_empty_n == 0) && 
+            ((if_write & if_write_ce) == 1 & internal_full_n == 1))
+        begin
+            mOutPtr <= mOutPtr + 1;
+            internal_empty_n <= 1'b1;
+            if (mOutPtr == DEPTH - 2)
+                internal_full_n <= 1'b0;
+        end 
+    end
+end
+
+assign shiftReg_addr = mOutPtr[ADDR_WIDTH] == 1'b0 ? mOutPtr[ADDR_WIDTH-1:0]:{ADDR_WIDTH{1'b0}};
+assign shiftReg_ce = (if_write & if_write_ce) & internal_full_n;
+
+fifo_w1_d1_S_shiftReg 
+#(
+    .DATA_WIDTH(DATA_WIDTH),
+    .ADDR_WIDTH(ADDR_WIDTH),
+    .DEPTH(DEPTH))
+U_fifo_w1_d1_S_ram (
+    .clk(clk),
+    .data(shiftReg_data),
+    .ce(shiftReg_ce),
+    .a(shiftReg_addr),
+    .q(shiftReg_q));
+
+endmodule  
+
+
+
+// ==============================================================
+// RTL generated by Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC
+// Version: 2017.2
+// Copyright (C) 1986-2017 Xilinx, Inc. All Rights Reserved.
+// 
+// ===========================================================
+
+`timescale 1 ns / 1 ps 
+
 module Loop_1_proc (
         ap_clk,
         ap_rst,
@@ -398,357 +878,6 @@ assign start_write = (ap_start & start_control_reg);
 assign tmp_1_i_fu_82_p2 = ((p_dim_0_i_reg_71 < 8'd193) ? 1'b1 : 1'b0);
 
 endmodule //Loop_1_proc
-
-
-// ==============================================================
-// File generated by Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC
-// Version: 2017.2
-// Copyright (C) 1986-2017 Xilinx, Inc. All Rights Reserved.
-// 
-// ==============================================================
-
-
-`timescale 1 ns / 1 ps
-
-module fifo_w64_d1_S_shiftReg (
-    clk,
-    data,
-    ce,
-    a,
-    q);
-
-parameter DATA_WIDTH = 32'd64;
-parameter ADDR_WIDTH = 32'd1;
-parameter DEPTH = 32'd2;
-
-input clk;
-input [DATA_WIDTH-1:0] data;
-input ce;
-input [ADDR_WIDTH-1:0] a;
-output [DATA_WIDTH-1:0] q;
-
-reg[DATA_WIDTH-1:0] SRL_SIG [0:DEPTH-1];
-integer i;
-
-always @ (posedge clk)
-    begin
-        if (ce)
-        begin
-            for (i=0;i<DEPTH-1;i=i+1)
-                SRL_SIG[i+1] <= SRL_SIG[i];
-            SRL_SIG[0] <= data;
-        end
-    end
-
-assign q = SRL_SIG[a];
-
-endmodule
-
-module fifo_w64_d1_S (
-    clk,
-    reset,
-    if_empty_n,
-    if_read_ce,
-    if_read,
-    if_dout,
-    if_full_n,
-    if_write_ce,
-    if_write,
-    if_din);
-
-parameter MEM_STYLE   = "auto";
-parameter DATA_WIDTH  = 32'd64;
-parameter ADDR_WIDTH  = 32'd1;
-parameter DEPTH       = 32'd2;
-
-input clk;
-input reset;
-output if_empty_n;
-input if_read_ce;
-input if_read;
-output[DATA_WIDTH - 1:0] if_dout;
-output if_full_n;
-input if_write_ce;
-input if_write;
-input[DATA_WIDTH - 1:0] if_din;
-
-wire[ADDR_WIDTH - 1:0] shiftReg_addr ;
-wire[DATA_WIDTH - 1:0] shiftReg_data, shiftReg_q;
-wire                     shiftReg_ce;
-reg[ADDR_WIDTH:0] mOutPtr = {(ADDR_WIDTH+1){1'b1}};
-reg internal_empty_n = 0, internal_full_n = 1;
-
-assign if_empty_n = internal_empty_n;
-assign if_full_n = internal_full_n;
-assign shiftReg_data = if_din;
-assign if_dout = shiftReg_q;
-
-always @ (posedge clk) begin
-    if (reset == 1'b1)
-    begin
-        mOutPtr <= ~{ADDR_WIDTH+1{1'b0}};
-        internal_empty_n <= 1'b0;
-        internal_full_n <= 1'b1;
-    end
-    else begin
-        if (((if_read & if_read_ce) == 1 & internal_empty_n == 1) && 
-            ((if_write & if_write_ce) == 0 | internal_full_n == 0))
-        begin
-            mOutPtr <= mOutPtr - 1;
-            if (mOutPtr == 0)
-                internal_empty_n <= 1'b0;
-            internal_full_n <= 1'b1;
-        end 
-        else if (((if_read & if_read_ce) == 0 | internal_empty_n == 0) && 
-            ((if_write & if_write_ce) == 1 & internal_full_n == 1))
-        begin
-            mOutPtr <= mOutPtr + 1;
-            internal_empty_n <= 1'b1;
-            if (mOutPtr == DEPTH - 2)
-                internal_full_n <= 1'b0;
-        end 
-    end
-end
-
-assign shiftReg_addr = mOutPtr[ADDR_WIDTH] == 1'b0 ? mOutPtr[ADDR_WIDTH-1:0]:{ADDR_WIDTH{1'b0}};
-assign shiftReg_ce = (if_write & if_write_ce) & internal_full_n;
-
-fifo_w64_d1_S_shiftReg 
-#(
-    .DATA_WIDTH(DATA_WIDTH),
-    .ADDR_WIDTH(ADDR_WIDTH),
-    .DEPTH(DEPTH))
-U_fifo_w64_d1_S_ram (
-    .clk(clk),
-    .data(shiftReg_data),
-    .ce(shiftReg_ce),
-    .a(shiftReg_addr),
-    .q(shiftReg_q));
-
-endmodule  
-
-
-
-// ==============================================================
-// RTL generated by Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC
-// Version: 2017.2
-// Copyright (C) 1986-2017 Xilinx, Inc. All Rights Reserved.
-// 
-// ===========================================================
-
-`timescale 1 ns / 1 ps 
-
-(* CORE_GENERATION_INFO="hls_target,hls_ip_2017_2,{HLS_INPUT_TYPE=cxx,HLS_INPUT_FLOAT=0,HLS_INPUT_FIXED=0,HLS_INPUT_PART=xc7z020clg484-1,HLS_INPUT_CLOCK=10.000000,HLS_INPUT_ARCH=dataflow,HLS_SYN_CLOCK=5.952333,HLS_SYN_LAT=28,HLS_SYN_TPT=28,HLS_SYN_MEM=0,HLS_SYN_DSP=0,HLS_SYN_FF=378,HLS_SYN_LUT=373}" *)
-
-module top (
-        hw_input_V_value_V,
-        hw_input_V_last_V,
-        hw_output_V_value_V,
-        hw_output_V_last_V,
-        ap_clk,
-        ap_rst,
-        hw_input_V_value_V_ap_vld,
-        hw_input_V_value_V_ap_ack,
-        hw_input_V_last_V_ap_vld,
-        hw_input_V_last_V_ap_ack,
-        hw_output_V_value_V_ap_vld,
-        hw_output_V_value_V_ap_ack,
-        hw_output_V_last_V_ap_vld,
-        hw_output_V_last_V_ap_ack,
-        ap_done,
-        ap_start,
-        ap_ready,
-        ap_idle
-);
-
-
-input  [63:0] hw_input_V_value_V;
-input  [0:0] hw_input_V_last_V;
-output  [63:0] hw_output_V_value_V;
-output  [0:0] hw_output_V_last_V;
-input   ap_clk;
-input   ap_rst;
-input   hw_input_V_value_V_ap_vld;
-output   hw_input_V_value_V_ap_ack;
-input   hw_input_V_last_V_ap_vld;
-output   hw_input_V_last_V_ap_ack;
-output   hw_output_V_value_V_ap_vld;
-input   hw_output_V_value_V_ap_ack;
-output   hw_output_V_last_V_ap_vld;
-input   hw_output_V_last_V_ap_ack;
-output   ap_done;
-input   ap_start;
-output   ap_ready;
-output   ap_idle;
-
-wire    Loop_1_proc_U0_ap_start;
-wire    Loop_1_proc_U0_start_full_n;
-wire    Loop_1_proc_U0_ap_ready;
-wire    Loop_1_proc_U0_ap_done;
-wire    Loop_1_proc_U0_ap_continue;
-wire    Loop_1_proc_U0_ap_idle;
-wire    Loop_1_proc_U0_start_out;
-wire    Loop_1_proc_U0_start_write;
-wire    Loop_1_proc_U0_hw_input_V_value_V_ap_ack;
-wire    Loop_1_proc_U0_hw_input_V_last_V_ap_ack;
-wire   [63:0] Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_din;
-wire    Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_write;
-wire   [0:0] Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_din;
-wire    Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_write;
-wire    Loop_2_proc_U0_ap_start;
-wire    Loop_2_proc_U0_ap_done;
-wire    Loop_2_proc_U0_ap_continue;
-wire    Loop_2_proc_U0_ap_idle;
-wire    Loop_2_proc_U0_ap_ready;
-wire    Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_read;
-wire    Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_read;
-wire   [63:0] Loop_2_proc_U0_hw_output_V_value_V;
-wire    Loop_2_proc_U0_hw_output_V_value_V_ap_vld;
-wire   [0:0] Loop_2_proc_U0_hw_output_V_last_V;
-wire    Loop_2_proc_U0_hw_output_V_last_V_ap_vld;
-wire    ap_sync_continue;
-wire    p_hw_input_stencil_st_2_1_full_n;
-wire   [63:0] p_hw_input_stencil_st_2_1_dout;
-wire    p_hw_input_stencil_st_2_1_empty_n;
-wire    p_hw_input_stencil_st_2_full_n;
-wire   [0:0] p_hw_input_stencil_st_2_dout;
-wire    p_hw_input_stencil_st_2_empty_n;
-wire    ap_sync_done;
-wire    ap_sync_ready;
-wire   [0:0] start_for_Loop_2_proc_U0_din;
-wire    start_for_Loop_2_proc_U0_full_n;
-wire   [0:0] start_for_Loop_2_proc_U0_dout;
-wire    start_for_Loop_2_proc_U0_empty_n;
-wire    Loop_2_proc_U0_start_full_n;
-wire    Loop_2_proc_U0_start_write;
-
-Loop_1_proc Loop_1_proc_U0(
-    .ap_clk(ap_clk),
-    .ap_rst(ap_rst),
-    .ap_start(Loop_1_proc_U0_ap_start),
-    .start_full_n(Loop_1_proc_U0_start_full_n),
-    .ap_ready(Loop_1_proc_U0_ap_ready),
-    .ap_done(Loop_1_proc_U0_ap_done),
-    .ap_continue(Loop_1_proc_U0_ap_continue),
-    .ap_idle(Loop_1_proc_U0_ap_idle),
-    .start_out(Loop_1_proc_U0_start_out),
-    .start_write(Loop_1_proc_U0_start_write),
-    .hw_input_V_value_V(hw_input_V_value_V),
-    .hw_input_V_value_V_ap_vld(hw_input_V_value_V_ap_vld),
-    .hw_input_V_value_V_ap_ack(Loop_1_proc_U0_hw_input_V_value_V_ap_ack),
-    .hw_input_V_last_V(hw_input_V_last_V),
-    .hw_input_V_last_V_ap_vld(hw_input_V_last_V_ap_vld),
-    .hw_input_V_last_V_ap_ack(Loop_1_proc_U0_hw_input_V_last_V_ap_ack),
-    .p_hw_input_stencil_stream_to_hw_output_V_value_V_din(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_din),
-    .p_hw_input_stencil_stream_to_hw_output_V_value_V_full_n(p_hw_input_stencil_st_2_1_full_n),
-    .p_hw_input_stencil_stream_to_hw_output_V_value_V_write(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_write),
-    .p_hw_input_stencil_stream_to_hw_output_V_last_V_din(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_din),
-    .p_hw_input_stencil_stream_to_hw_output_V_last_V_full_n(p_hw_input_stencil_st_2_full_n),
-    .p_hw_input_stencil_stream_to_hw_output_V_last_V_write(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_write)
-);
-
-Loop_2_proc Loop_2_proc_U0(
-    .ap_clk(ap_clk),
-    .ap_rst(ap_rst),
-    .ap_start(Loop_2_proc_U0_ap_start),
-    .ap_done(Loop_2_proc_U0_ap_done),
-    .ap_continue(Loop_2_proc_U0_ap_continue),
-    .ap_idle(Loop_2_proc_U0_ap_idle),
-    .ap_ready(Loop_2_proc_U0_ap_ready),
-    .p_hw_input_stencil_stream_to_hw_output_V_value_V_dout(p_hw_input_stencil_st_2_1_dout),
-    .p_hw_input_stencil_stream_to_hw_output_V_value_V_empty_n(p_hw_input_stencil_st_2_1_empty_n),
-    .p_hw_input_stencil_stream_to_hw_output_V_value_V_read(Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_read),
-    .p_hw_input_stencil_stream_to_hw_output_V_last_V_dout(p_hw_input_stencil_st_2_dout),
-    .p_hw_input_stencil_stream_to_hw_output_V_last_V_empty_n(p_hw_input_stencil_st_2_empty_n),
-    .p_hw_input_stencil_stream_to_hw_output_V_last_V_read(Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_read),
-    .hw_output_V_value_V(Loop_2_proc_U0_hw_output_V_value_V),
-    .hw_output_V_value_V_ap_vld(Loop_2_proc_U0_hw_output_V_value_V_ap_vld),
-    .hw_output_V_value_V_ap_ack(hw_output_V_value_V_ap_ack),
-    .hw_output_V_last_V(Loop_2_proc_U0_hw_output_V_last_V),
-    .hw_output_V_last_V_ap_vld(Loop_2_proc_U0_hw_output_V_last_V_ap_vld),
-    .hw_output_V_last_V_ap_ack(hw_output_V_last_V_ap_ack)
-);
-
-fifo_w64_d1_S p_hw_input_stencil_st_2_1_U(
-    .clk(ap_clk),
-    .reset(ap_rst),
-    .if_read_ce(1'b1),
-    .if_write_ce(1'b1),
-    .if_din(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_din),
-    .if_full_n(p_hw_input_stencil_st_2_1_full_n),
-    .if_write(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_write),
-    .if_dout(p_hw_input_stencil_st_2_1_dout),
-    .if_empty_n(p_hw_input_stencil_st_2_1_empty_n),
-    .if_read(Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_value_V_read)
-);
-
-fifo_w1_d1_S p_hw_input_stencil_st_2_U(
-    .clk(ap_clk),
-    .reset(ap_rst),
-    .if_read_ce(1'b1),
-    .if_write_ce(1'b1),
-    .if_din(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_din),
-    .if_full_n(p_hw_input_stencil_st_2_full_n),
-    .if_write(Loop_1_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_write),
-    .if_dout(p_hw_input_stencil_st_2_dout),
-    .if_empty_n(p_hw_input_stencil_st_2_empty_n),
-    .if_read(Loop_2_proc_U0_p_hw_input_stencil_stream_to_hw_output_V_last_V_read)
-);
-
-start_for_Loop_2_bkb start_for_Loop_2_bkb_U(
-    .clk(ap_clk),
-    .reset(ap_rst),
-    .if_read_ce(1'b1),
-    .if_write_ce(1'b1),
-    .if_din(start_for_Loop_2_proc_U0_din),
-    .if_full_n(start_for_Loop_2_proc_U0_full_n),
-    .if_write(Loop_1_proc_U0_start_write),
-    .if_dout(start_for_Loop_2_proc_U0_dout),
-    .if_empty_n(start_for_Loop_2_proc_U0_empty_n),
-    .if_read(Loop_2_proc_U0_ap_ready)
-);
-
-assign Loop_1_proc_U0_ap_continue = 1'b1;
-
-assign Loop_1_proc_U0_ap_start = ap_start;
-
-assign Loop_1_proc_U0_start_full_n = (start_for_Loop_2_proc_U0_full_n | 1'b0);
-
-assign Loop_2_proc_U0_ap_continue = 1'b1;
-
-assign Loop_2_proc_U0_ap_start = start_for_Loop_2_proc_U0_empty_n;
-
-assign Loop_2_proc_U0_start_full_n = 1'b0;
-
-assign Loop_2_proc_U0_start_write = 1'b0;
-
-assign ap_done = Loop_2_proc_U0_ap_done;
-
-assign ap_idle = (Loop_1_proc_U0_ap_idle & Loop_2_proc_U0_ap_idle);
-
-assign ap_ready = Loop_1_proc_U0_ap_ready;
-
-assign ap_sync_continue = 1'b1;
-
-assign ap_sync_done = Loop_2_proc_U0_ap_done;
-
-assign ap_sync_ready = Loop_1_proc_U0_ap_ready;
-
-assign hw_input_V_last_V_ap_ack = Loop_1_proc_U0_hw_input_V_last_V_ap_ack;
-
-assign hw_input_V_value_V_ap_ack = Loop_1_proc_U0_hw_input_V_value_V_ap_ack;
-
-assign hw_output_V_last_V = Loop_2_proc_U0_hw_output_V_last_V;
-
-assign hw_output_V_last_V_ap_vld = Loop_2_proc_U0_hw_output_V_last_V_ap_vld;
-
-assign hw_output_V_value_V = Loop_2_proc_U0_hw_output_V_value_V;
-
-assign hw_output_V_value_V_ap_vld = Loop_2_proc_U0_hw_output_V_value_V_ap_vld;
-
-assign start_for_Loop_2_proc_U0_din = 1'b1;
-
-endmodule //hls_target
 
 
 // ==============================================================
@@ -1200,14 +1329,14 @@ endmodule //Loop_2_proc
 
 `timescale 1 ns / 1 ps
 
-module start_for_Loop_2_bkb_shiftReg (
+module fifo_w64_d1_S_shiftReg (
     clk,
     data,
     ce,
     a,
     q);
 
-parameter DATA_WIDTH = 32'd1;
+parameter DATA_WIDTH = 32'd64;
 parameter ADDR_WIDTH = 32'd1;
 parameter DEPTH = 32'd2;
 
@@ -1234,7 +1363,7 @@ assign q = SRL_SIG[a];
 
 endmodule
 
-module start_for_Loop_2_bkb (
+module fifo_w64_d1_S (
     clk,
     reset,
     if_empty_n,
@@ -1247,7 +1376,7 @@ module start_for_Loop_2_bkb (
     if_din);
 
 parameter MEM_STYLE   = "auto";
-parameter DATA_WIDTH  = 32'd1;
+parameter DATA_WIDTH  = 32'd64;
 parameter ADDR_WIDTH  = 32'd1;
 parameter DEPTH       = 32'd2;
 
@@ -1303,141 +1432,12 @@ end
 assign shiftReg_addr = mOutPtr[ADDR_WIDTH] == 1'b0 ? mOutPtr[ADDR_WIDTH-1:0]:{ADDR_WIDTH{1'b0}};
 assign shiftReg_ce = (if_write & if_write_ce) & internal_full_n;
 
-start_for_Loop_2_bkb_shiftReg 
+fifo_w64_d1_S_shiftReg 
 #(
     .DATA_WIDTH(DATA_WIDTH),
     .ADDR_WIDTH(ADDR_WIDTH),
     .DEPTH(DEPTH))
-U_start_for_Loop_2_bkb_ram (
-    .clk(clk),
-    .data(shiftReg_data),
-    .ce(shiftReg_ce),
-    .a(shiftReg_addr),
-    .q(shiftReg_q));
-
-endmodule  
-
-
-
-// ==============================================================
-// File generated by Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC
-// Version: 2017.2
-// Copyright (C) 1986-2017 Xilinx, Inc. All Rights Reserved.
-// 
-// ==============================================================
-
-
-`timescale 1 ns / 1 ps
-
-module fifo_w1_d1_S_shiftReg (
-    clk,
-    data,
-    ce,
-    a,
-    q);
-
-parameter DATA_WIDTH = 32'd1;
-parameter ADDR_WIDTH = 32'd1;
-parameter DEPTH = 32'd2;
-
-input clk;
-input [DATA_WIDTH-1:0] data;
-input ce;
-input [ADDR_WIDTH-1:0] a;
-output [DATA_WIDTH-1:0] q;
-
-reg[DATA_WIDTH-1:0] SRL_SIG [0:DEPTH-1];
-integer i;
-
-always @ (posedge clk)
-    begin
-        if (ce)
-        begin
-            for (i=0;i<DEPTH-1;i=i+1)
-                SRL_SIG[i+1] <= SRL_SIG[i];
-            SRL_SIG[0] <= data;
-        end
-    end
-
-assign q = SRL_SIG[a];
-
-endmodule
-
-module fifo_w1_d1_S (
-    clk,
-    reset,
-    if_empty_n,
-    if_read_ce,
-    if_read,
-    if_dout,
-    if_full_n,
-    if_write_ce,
-    if_write,
-    if_din);
-
-parameter MEM_STYLE   = "auto";
-parameter DATA_WIDTH  = 32'd1;
-parameter ADDR_WIDTH  = 32'd1;
-parameter DEPTH       = 32'd2;
-
-input clk;
-input reset;
-output if_empty_n;
-input if_read_ce;
-input if_read;
-output[DATA_WIDTH - 1:0] if_dout;
-output if_full_n;
-input if_write_ce;
-input if_write;
-input[DATA_WIDTH - 1:0] if_din;
-
-wire[ADDR_WIDTH - 1:0] shiftReg_addr ;
-wire[DATA_WIDTH - 1:0] shiftReg_data, shiftReg_q;
-wire                     shiftReg_ce;
-reg[ADDR_WIDTH:0] mOutPtr = {(ADDR_WIDTH+1){1'b1}};
-reg internal_empty_n = 0, internal_full_n = 1;
-
-assign if_empty_n = internal_empty_n;
-assign if_full_n = internal_full_n;
-assign shiftReg_data = if_din;
-assign if_dout = shiftReg_q;
-
-always @ (posedge clk) begin
-    if (reset == 1'b1)
-    begin
-        mOutPtr <= ~{ADDR_WIDTH+1{1'b0}};
-        internal_empty_n <= 1'b0;
-        internal_full_n <= 1'b1;
-    end
-    else begin
-        if (((if_read & if_read_ce) == 1 & internal_empty_n == 1) && 
-            ((if_write & if_write_ce) == 0 | internal_full_n == 0))
-        begin
-            mOutPtr <= mOutPtr - 1;
-            if (mOutPtr == 0)
-                internal_empty_n <= 1'b0;
-            internal_full_n <= 1'b1;
-        end 
-        else if (((if_read & if_read_ce) == 0 | internal_empty_n == 0) && 
-            ((if_write & if_write_ce) == 1 & internal_full_n == 1))
-        begin
-            mOutPtr <= mOutPtr + 1;
-            internal_empty_n <= 1'b1;
-            if (mOutPtr == DEPTH - 2)
-                internal_full_n <= 1'b0;
-        end 
-    end
-end
-
-assign shiftReg_addr = mOutPtr[ADDR_WIDTH] == 1'b0 ? mOutPtr[ADDR_WIDTH-1:0]:{ADDR_WIDTH{1'b0}};
-assign shiftReg_ce = (if_write & if_write_ce) & internal_full_n;
-
-fifo_w1_d1_S_shiftReg 
-#(
-    .DATA_WIDTH(DATA_WIDTH),
-    .ADDR_WIDTH(ADDR_WIDTH),
-    .DEPTH(DEPTH))
-U_fifo_w1_d1_S_ram (
+U_fifo_w64_d1_S_ram (
     .clk(clk),
     .data(shiftReg_data),
     .ce(shiftReg_ce),
