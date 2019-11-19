@@ -61,6 +61,9 @@ single_map_200_output :: [Integer] = [6..205]
 single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                                 single_map_200 s (Just "map")
                                                 single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
+single_map_200_results_all_options = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
+                                                single_map_200 s (Just "map")
+                                                single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
 
 single_map_200_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                                 single_map_200 s (Just "map")
@@ -188,6 +191,9 @@ conv_2d_output :: [Integer] = [
     let window_flat = concat window,
     let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
 conv_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      conv_2d s (Just "conv2d")
+                                      conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
+conv_2d_results_all_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
                                       conv_2d s (Just "conv2d")
                                       conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
 conv_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
@@ -396,6 +402,9 @@ conv_2d_b2b_output :: [Integer] =
 conv_2d_b2b_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_2d_b2b s (Just "conv2d_b2b")
                                       conv_2d_b2b_inputs conv_2d_b2b_output) [1,2,4,8,16,48,144]
+conv_2d_b2b_results_all_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
+                                      conv_2d_b2b s (Just "conv2d_b2b")
+                                      conv_2d_b2b_inputs conv_2d_b2b_output) [1,2,4,8,16,48,144]
 
 conv_2d_b2b_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_2d_b2b s (Just "conv2d_b2b")
@@ -512,6 +521,9 @@ sharpen_output :: [Integer] =
   (conv_generator $ stencil_generator 4 (sharpen_inputs !! 0))
   (sharpen_inputs !! 0)
 sharpen_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
+                                      sharpen s (Just "sharpen")
+                                      sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
+sharpen_results_all_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
                                       sharpen s (Just "sharpen")
                                       sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
 sharpen_results' = sequence $ fmap (\s -> compile_and_write_st_with_slowdown

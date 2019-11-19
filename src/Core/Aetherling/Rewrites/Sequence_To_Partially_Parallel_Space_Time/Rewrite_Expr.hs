@@ -91,6 +91,17 @@ rewrite_to_partially_parallel s seq_expr = do
     then STE.ErrorN ("No possible rewrites for slowdown " ++ show s ++ " of program \n" ++
                      Seq_Print.print_seq_str seq_expr) No_Index
     else program $ L.minimumBy (\pa pb -> compare (area pa) (area pb)) possible_st_programs_and_areas
+    
+rewrite_to_partially_parallel_all_options :: Int -> SeqE.Expr -> [STE.Expr]
+rewrite_to_partially_parallel_all_options s seq_expr = do
+  let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
+  let possible_output_types = rewrite_all_AST_types s seq_expr_out_type
+  let possible_st_programs = map (\trs -> rewrite_to_partially_parallel_type trs seq_expr)
+                             possible_output_types
+  let valid_possible_st_programs = filter (not . Has_Error.has_error) possible_st_programs
+  let possible_st_programs_and_areas = map (\p -> PA p (Comp_Area.get_area p))
+                                       valid_possible_st_programs
+  fmap program possible_st_programs_and_areas
  {-
 
 rewrite_to_partially_parallel_search' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
@@ -686,10 +697,10 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   --base_input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io -- (slowdown_without_ni_factors - no)
   --                                                    (SeqT.SeqT ni ii SeqT.IntT))
   --traceShowM $ "base_input_rewrites: " ++ show base_input_rewrites
-  traceShowM $ "matched_huersitics: " ++ show matches_heuristics
-  traceShowM $ "tr:" ++ show type_rewrites
-  traceShowM $ "index: " ++ show index
-  if isJust matches_heuristics 
+  --traceShowM $ "matched_huersitics: " ++ show matches_heuristics
+  --traceShowM $ "tr:" ++ show type_rewrites
+  --traceShowM $ "index: " ++ show index
+  if False && isJust matches_heuristics 
     then do
     -- need to handle Tseq TSeq case where adding SSeq 1 to bottom 
     let upstream_type_rewrites =
@@ -706,7 +717,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
                type_rewrites_tl
             _ -> error "unpartition heuristics bad"
     sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
-    else if True
+    else if False
     then throwError $ Slowdown_Failure "Not doing real unpartition for now"
     else if length possible_st_trs_and_areas /= 0
     then do
