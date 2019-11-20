@@ -67,7 +67,7 @@ single_map_200_results_all_options = sequence $ fmap (\s -> compile_and_test_wit
 
 single_map_200_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                                 single_map_200 s (Just "map")
-                                                single_map_200_inputs single_map_200_output) [50]
+                                                single_map_200_inputs single_map_200_output) [1]
 stencil_3_1dC_nested in_seq = do
   let first_el = in_seq
   let second_el = shiftC (Proxy @1) first_el
