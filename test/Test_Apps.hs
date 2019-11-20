@@ -41,7 +41,7 @@ apps_tests = testGroup "Full Application Tests"
     (all_success =<< sharpen_results) @? "sharpen failed"
   ]
 
-all_types = [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types, sharpen_results_all_types,
+all_types = sequence [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types, sharpen_results_all_types,
              TS.pyramid_1d_results_all_types]
   
 all_success :: [Fault_Result] -> IO Bool
