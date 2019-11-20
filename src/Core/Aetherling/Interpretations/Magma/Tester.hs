@@ -33,6 +33,10 @@ data Fault_Result = Fault_Success
                       fault_exit_code :: Int
                       } deriving (Show, Eq)
 
+is_success_fault_result :: Fault_Result -> Bool
+is_success_fault_result Fault_Success = True
+is_success_fault_result _ = False
+
 test_circuit_with_fault p inputs output output_latency = do
   result <- test_circuit_with_fault_no_io p Nothing inputs output output_latency
   case result of

@@ -130,7 +130,8 @@ compile_and_test_with_slowdown_all_types shallow_seq_program s base_name inputs 
   let deep_st_progs_lats_indexes = zip [0..] deep_st_programs_and_latencies
   results <- mapM (\(i, ML.Matched_Latency_Result deep_st_program output_latency) -> do
                      let result = test_circuit_with_fault deep_st_program inputs output output_latency
-                     if isJust base_name
+                     res <- result
+                     if isJust base_name && is_success_fault_result res
                      then do
                        let test_verilog_dir = root_dir ++
                              "/experiments/verilog_examples/aetherling_copies/" ++

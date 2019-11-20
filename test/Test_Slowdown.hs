@@ -669,7 +669,10 @@ pyramid_1d_ppar_type_typechecked' =
 pyramid_1d_inputs :: [[Integer]] = [[1..9]]
 pyramid_1d_output :: [Integer] = [5]
 pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      pyramid_1d s Nothing
+                                      pyramid_1d s (Just "pyramid")
+                                      pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
+pyramid_1d_results_all_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
+                                      pyramid_1d s (Just "pyramid")
                                       pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
 pyramid_1d_results_types = sequence $ fmap (\s -> compile_and_test_with_type_rewrites
                                       pyramid_1d s Nothing

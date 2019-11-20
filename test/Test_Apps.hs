@@ -1,6 +1,7 @@
 module Test_Apps where
 import Test.Tasty
 import Test.Tasty.HUnit
+import qualified Test_Slowdown as TS
 import Aetherling.Monad_Helpers
 import Aetherling.Languages.Sequence.Shallow.Expr
 import Aetherling.Languages.Sequence.Shallow.Types
@@ -39,6 +40,9 @@ apps_tests = testGroup "Full Application Tests"
     testCase "sharpen" $
     (all_success =<< sharpen_results) @? "sharpen failed"
   ]
+
+all_types = [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types, sharpen_results_all_types,
+             TS.pyramid_1d_results_all_types]
   
 all_success :: [Fault_Result] -> IO Bool
 all_success results = do
@@ -61,7 +65,7 @@ single_map_200_output :: [Integer] = [6..205]
 single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                                 single_map_200 s (Just "map")
                                                 single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
-single_map_200_results_all_options = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
+single_map_200_results_all_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
                                                 single_map_200 s (Just "map")
                                                 single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
 
