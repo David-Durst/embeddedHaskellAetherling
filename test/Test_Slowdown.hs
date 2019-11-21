@@ -644,10 +644,10 @@ conv_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
 tuple_mul_shallow_no_input_for_pyr in_seq = do
   let kernel_list = fmap Atom_Int [0,1,0]
   let kernel = const_genC (Seq $ listToVector (Proxy @3) kernel_list) in_seq
-  let kernel_and_values = map2C atom_tupleC kernel in_seq
+  let kernel_and_values = map2C atom_tupleC in_seq kernel
   let mul_result = mapC lslC kernel_and_values
   let sum = reduceC addC mul_result
-  let norm_list = fmap Atom_Int [4]
+  let norm_list = fmap Atom_Int [2]
   let norm = const_genC (Seq $ listToVector (Proxy @1) norm_list) in_seq
   let sum_and_norm = map2C atom_tupleC sum norm
   mapC lsrC sum_and_norm
@@ -655,16 +655,16 @@ conv_1d_shallow_no_input_for_pyr in_seq = do
   let stencil = stencil_1dC_test (Proxy @3) in_seq
   mapC tuple_mul_shallow_no_input_for_pyr stencil
 pyramid_1d_shallow_no_input in_seq = do
-  let layer1_blurred = conv_1d_shallow_no_input in_seq
+  let layer1_blurred = conv_1d_shallow_no_input_for_pyr in_seq
   let layer2_input = unpartitionC $ mapC (down_1dC 2) $
         partitionC (Proxy @9) (Proxy @3) Proxy (Proxy @0) layer1_blurred
-  let layer2_blurred = conv_1d_shallow_no_input layer2_input
+  let layer2_blurred = conv_1d_shallow_no_input_for_pyr layer2_input
   unpartitionC $ mapC (down_1dC 2) $ partitionC (Proxy @3) (Proxy @3) Proxy (Proxy @0) layer2_blurred
 pyramid_1d = pyramid_1d_shallow_no_input $ 
   com_input_seq "hi" (Proxy :: Proxy (Seq 27 0 (Seq 1 2 Atom_Int)))
 pyramid_1d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_1d
 pyramid_1d_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s pyramid_1d_seq_idx) [1,3,9,27]
+  fmap (\s -> rewrite_to_partially_parallel s pyramid_1d_seq_idx) [1,3,9,27,81]
 pyramid_1d_ppar_type =
   fmap (\tr -> rewrite_to_partially_parallel_type tr pyramid_1d_seq_idx)
   [[SpaceR 1, SpaceR 1, NonSeqR],
@@ -683,7 +683,7 @@ pyramid_1d_inputs :: [[Integer]] = [[1..27]]
 pyramid_1d_output :: [Integer] = [5,14,23]
 pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_1d s (Just "pyramid")
-                                      pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
+                                      pyramid_1d_inputs pyramid_1d_output) [1,3,9,27,81]
 pyramid_1d_results_all_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
                                       pyramid_1d s (Just "pyramid")
                                       pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
