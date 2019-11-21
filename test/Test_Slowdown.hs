@@ -641,6 +641,19 @@ conv_1d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       conv_1d s Nothing
                                       conv_1d_inputs conv_1d_output) [3]
 
+tuple_mul_shallow_no_input_for_pyr in_seq = do
+  let kernel_list = fmap Atom_Int [0,1,0]
+  let kernel = const_genC (Seq $ listToVector (Proxy @3) kernel_list) in_seq
+  let kernel_and_values = map2C atom_tupleC kernel in_seq
+  let mul_result = mapC lslC kernel_and_values
+  let sum = reduceC addC mul_result
+  let norm_list = fmap Atom_Int [4]
+  let norm = const_genC (Seq $ listToVector (Proxy @1) norm_list) in_seq
+  let sum_and_norm = map2C atom_tupleC sum norm
+  mapC lsrC sum_and_norm
+conv_1d_shallow_no_input_for_pyr in_seq = do
+  let stencil = stencil_1dC_test (Proxy @3) in_seq
+  mapC tuple_mul_shallow_no_input_for_pyr stencil
 pyramid_1d_shallow_no_input in_seq = do
   let layer1_blurred = conv_1d_shallow_no_input in_seq
   let layer2_input = unpartitionC $ mapC (down_1dC 2) $
@@ -666,8 +679,8 @@ pyramid_1d_ppar_type_typechecked =
   fmap check_type pyramid_1d_ppar_type
 pyramid_1d_ppar_type_typechecked' =
   fmap check_type_get_error pyramid_1d_ppar_type
-pyramid_1d_inputs :: [[Integer]] = [[1..9]]
-pyramid_1d_output :: [Integer] = [5]
+pyramid_1d_inputs :: [[Integer]] = [[1..27]]
+pyramid_1d_output :: [Integer] = [5,14,23]
 pyramid_1d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                       pyramid_1d s (Just "pyramid")
                                       pyramid_1d_inputs pyramid_1d_output) [1,3,9,27]
