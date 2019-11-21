@@ -26,6 +26,8 @@ import System.Environment
 import System.Exit
 import System.Directory
 import System.FilePath
+import System.Random
+import System.Random.Shuffle
 import Data.Maybe
 import Debug.Trace
 
@@ -143,6 +145,35 @@ compile_and_test_with_slowdown_all_types shallow_seq_program s base_name inputs 
                   )
              deep_st_progs_lats_indexes
   return results
+
+compile_and_test_with_slowdown_random_types :: (Shallow_Types.Aetherling_Value a,
+                                   Convertible_To_Atom_Strings b,
+                                   Convertible_To_Atom_Strings c) =>
+                                  RH.Rewrite_StateM a -> Int -> Maybe String -> [b] ->
+                                  c -> IO [Fault_Result]
+compile_and_test_with_slowdown_random_types shallow_seq_program s base_name inputs output = do
+  deep_st_programs_and_latencies <- compile_with_slowdown_to_expr_all_options shallow_seq_program s
+  g <- getStdGen
+  let deep_st_progs_lats_indexes =  zip [1..15] deep_st_programs_and_latencies
+  results <- mapM (\(i, ML.Matched_Latency_Result deep_st_program output_latency) -> do
+                     let result = test_circuit_with_fault_idx deep_st_program inputs output output_latency i
+                     res <- result
+                     if isJust base_name && is_success_fault_result res
+                     then do
+                       traceShowM $ "Step was sucessful" ++ show i
+                       let test_verilog_dir = root_dir ++
+                             "/experiments_random/verilog_examples/aetherling_copies/" ++
+                             fromJust base_name
+                       createDirectoryIfMissing True test_verilog_dir
+                       copyFile "vBuild/top.v" (test_verilog_dir ++ "/" ++ fromJust base_name ++ "_" ++ show s ++ "_" ++ show i ++ ".v")
+                       else do
+                       traceShowM $ "Step was unsuccessful" ++ show i
+                       traceShowM $ "python file: " ++ show (python_file res)
+                       return ()
+                     result
+                  )
+             deep_st_progs_lats_indexes
+  return $ [res | res <- results]
 
 
 compile_and_test_with_type_rewrites :: (Shallow_Types.Aetherling_Value a,
@@ -339,7 +370,7 @@ compile_with_slowdown_to_expr shallow_seq_program s = do
   let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
   let deep_st_program =
         rewrite_to_partially_parallel s deep_seq_program_with_indexes
-  let pipelined_program = APR.add_pipeline_registers deep_st_program 2
+  let pipelined_program = APR.add_pipeline_registers deep_st_program 3
   matched_latencies <- ML.match_latencies pipelined_program
   --return matched_latencies
   return $ matched_latencies {
@@ -354,7 +385,7 @@ compile_with_slowdown_to_expr_all_options shallow_seq_program s = do
   let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
   let deep_st_programs =
         rewrite_to_partially_parallel_all_options s deep_seq_program_with_indexes
-  let pipelined_programs = fmap (\p -> APR.add_pipeline_registers p 2) deep_st_programs
+  let pipelined_programs = fmap (\p -> APR.add_pipeline_registers p 3) deep_st_programs
   matched_latencies_list <- mapM ML.match_latencies pipelined_programs
   --return matched_latencies
   return $ fmap (\matched_latencies -> matched_latencies {
@@ -369,7 +400,7 @@ compile_with_type_rewrites_to_expr shallow_seq_program trs = do
   let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
   let deep_st_program =
         rewrite_to_partially_parallel_type trs deep_seq_program_with_indexes
-  let pipelined_program = APR.add_pipeline_registers deep_st_program 2
+  let pipelined_program = APR.add_pipeline_registers deep_st_program 3
   matched_latencies <- ML.match_latencies pipelined_program
   --return matched_latencies
   return $ matched_latencies {
@@ -382,7 +413,7 @@ tst_compile_with_slowdown_to_expr shallow_seq_program s = do
   let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
   let deep_st_program =
         rewrite_to_partially_parallel s deep_seq_program_with_indexes
-  let pipelined_program = APR.add_pipeline_registers deep_st_program 2
+  let pipelined_program = APR.add_pipeline_registers deep_st_program 3
   putStr "pipelined: "
   print_st pipelined_program
   matched_latencies <- ML.match_latencies pipelined_program

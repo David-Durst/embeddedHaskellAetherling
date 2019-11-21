@@ -44,6 +44,8 @@ dependencies:
 - process
 - filepath
 - directory
+- random
+- random-shuffle
 
 ghc-options:
 - -fconstraint-solver-iterations=0

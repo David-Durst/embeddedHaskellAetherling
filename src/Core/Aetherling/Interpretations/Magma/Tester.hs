@@ -48,6 +48,18 @@ test_circuit_with_fault p inputs output output_latency = do
       putStrLn $ "Exit Code: " ++ show exit_code
   return result
   
+test_circuit_with_fault_idx p inputs output output_latency idx = do
+  result <- test_circuit_with_fault_no_io p Nothing inputs output output_latency
+  case result of
+    Fault_Success -> return ()
+    Fault_Failure py_file stdout stderr exit_code -> do
+      --putStrLn $ "idx failed: " ++ show idx
+      putStrLn $ "Failure with file " ++ py_file
+      putStrLn stdout
+      putStrLn stderr
+      putStrLn $ "Exit Code: " ++ show exit_code
+  return result
+  
 test_verilog_with_fault p verilog_path inputs output output_latency = do
   result <- test_circuit_with_fault_no_io p (Just verilog_path)
             inputs output output_latency

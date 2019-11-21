@@ -5,6 +5,7 @@ import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Types
 import qualified Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq_Conv
+import qualified Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions as ST_Conv
 import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Identity
@@ -421,6 +422,24 @@ module_to_string_inner consumer_e@(Shift_ttN no ni io ii shift_amount elem_t pro
   let cur_ref = Magma_Module_Ref cur_ref_name gen_str
                 [Module_Port "I" (TSeqT no io (TSeqT ni ii elem_t))]
                 (Module_Port "O" (TSeqT no io (TSeqT ni ii elem_t)))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Shift_tnN no nis io iis shift_amount elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let replace_brackets x =
+        let
+          repl '[' = "("
+          repl ']' = ",)"
+          repl x = [x]
+        in concatMap repl x
+  let gen_str = "DefineShift_TN(" ++ show no ++ ", " ++ replace_brackets (show nis) ++ ", " ++
+                show io ++ ", " ++ replace_brackets (show iis) ++ ", " ++ show shift_amount ++ ", " ++
+                type_to_python elem_t ++ ", has_valid=True)"
+  let types = ST_Conv.expr_to_types consumer_e
+  let cur_ref = Magma_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (ST_Conv.e_out_type types)]
+                (Module_Port "O" (head $ ST_Conv.e_in_types types))
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(Up_1d_sN n elem_t producer_e cur_idx) = do
