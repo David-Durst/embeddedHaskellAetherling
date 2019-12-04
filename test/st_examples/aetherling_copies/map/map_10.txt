@@ -1,0 +1,12 @@
+module0 (I :: IntT) =
+    n4 = Const_GenN IntV 5 1 IntT
+    n6 = ATupleN IntT IntT I n4
+    n7 = AddN n6
+
+module1 (I :: TSeqT 10 0 (SSeqT 20 IntT)) =
+    n1 = FIFON TSeqT 10 0 (SSeqT 20 IntT) 1 "I"
+    n9 = Map_tN 10 0 (Map_sN 20 module0 I) n1
+    n10 = FIFON TSeqT 10 0 (SSeqT 20 IntT) 1 "n9"
+    n11 = FIFON TSeqT 10 0 (SSeqT 20 IntT) 1 "n10"
+    n12 = FIFON TSeqT 10 0 (SSeqT 20 IntT) 1 "n11"
+

@@ -1,0 +1,12 @@
+module0 (I :: IntT) =
+    n3 = Const_GenN IntV 5 1 IntT
+    n5 = ATupleN IntT IntT I n3
+    n6 = AddN n5
+
+module1 (I :: SSeqT 200 IntT) =
+    n1 = FIFON SSeqT 200 IntT 1 "I"
+    n7 = Map_sN 200 module0 n1
+    n8 = FIFON SSeqT 200 IntT 1 "n7"
+    n9 = FIFON SSeqT 200 IntT 1 "n8"
+    n10 = FIFON SSeqT 200 IntT 1 "n9"
+
