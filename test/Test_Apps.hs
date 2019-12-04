@@ -73,6 +73,8 @@ single_map_200_results_all_types = sequence $ fmap (\s -> compile_and_test_with_
 single_map_200_results_random_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_random_types
                                                 single_map_200 s (Just "map")
                                                 single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
+single_map_200_st_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
+                                      single_map_200 s "map") [1,5,10,20,25,40,50,100,200]
 
 single_map_200_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
                                                 single_map_200 s (Just "map")
