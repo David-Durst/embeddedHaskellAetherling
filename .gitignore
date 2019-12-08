@@ -22,5 +22,6 @@ TAGS
 *.graffle
 vBuild/
 src/Core/Aetherling/Interpretations/Magma/Constants.hs
+src/Core/Aetherling/Interpretations/Chisel/Constants.hs
 parser.out
 parsetab.py
