@@ -1,6 +1,7 @@
 module Aetherling.Interpretations.Magma.Tester where
 import Aetherling.Interpretations.Magma.Expr_To_String
 import Aetherling.Interpretations.Magma.Value_To_String
+import Aetherling.Interpretations.Test_Helpers
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr
@@ -25,23 +26,15 @@ import Debug.Trace
 -- a helper int for stencil values that should be ignored
 int_to_ignore = 253
 
-data Fault_Result = Fault_Success
-                  | Fault_Failure {
-                      python_file :: FilePath,
-                      fault_stdout :: String,
-                      fault_stderr :: String,
-                      fault_exit_code :: Int
-                      } deriving (Show, Eq)
-
-is_success_fault_result :: Fault_Result -> Bool
-is_success_fault_result Fault_Success = True
+is_success_fault_result :: Ex_Test_Result -> Bool
+is_success_fault_result Ex_Test_Success = True
 is_success_fault_result _ = False
 
 test_circuit_with_fault p inputs output output_latency = do
   result <- test_circuit_with_fault_no_io p Nothing inputs output output_latency
   case result of
-    Fault_Success -> return ()
-    Fault_Failure py_file stdout stderr exit_code -> do
+    Ex_Test_Success -> return ()
+    Ex_Test_Failure py_file stdout stderr exit_code -> do
       putStrLn $ "Failure with file " ++ py_file
       putStrLn stdout
       putStrLn stderr
@@ -51,8 +44,8 @@ test_circuit_with_fault p inputs output output_latency = do
 test_circuit_with_fault_idx p inputs output output_latency idx = do
   result <- test_circuit_with_fault_no_io p Nothing inputs output output_latency
   case result of
-    Fault_Success -> return ()
-    Fault_Failure py_file stdout stderr exit_code -> do
+    Ex_Test_Success -> return ()
+    Ex_Test_Failure py_file stdout stderr exit_code -> do
       --putStrLn $ "idx failed: " ++ show idx
       putStrLn $ "Failure with file " ++ py_file
       putStrLn stdout
@@ -64,8 +57,8 @@ test_verilog_with_fault p verilog_path inputs output output_latency = do
   result <- test_circuit_with_fault_no_io p (Just verilog_path)
             inputs output output_latency
   case result of
-    Fault_Success -> return ()
-    Fault_Failure py_file stdout stderr exit_code -> do
+    Ex_Test_Success -> return ()
+    Ex_Test_Failure py_file stdout stderr exit_code -> do
       putStrLn $ "Failure with file " ++ py_file
       putStrLn stdout
       putStrLn stderr
@@ -73,7 +66,7 @@ test_verilog_with_fault p verilog_path inputs output output_latency = do
   return result
 
 test_circuit_with_fault_no_io :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
-  Expr -> Maybe String -> [a] -> b -> Int -> IO Fault_Result 
+  Expr -> Maybe String -> [a] -> b -> Int -> IO Ex_Test_Result 
 test_circuit_with_fault_no_io p verilog_path inputs output output_latency = do
   module_str_data <- module_to_magma_string p
   let p_str = add_test_harness_to_fault_str p module_str_data inputs output
@@ -94,11 +87,11 @@ test_circuit_with_fault_no_io p verilog_path inputs output output_latency = do
                                                 std_err = UseHandle stderr_file}
   exit_code <- waitForProcess phandle
   case exit_code of
-    ExitSuccess -> return Fault_Success
+    ExitSuccess -> return Ex_Test_Success
     ExitFailure c -> do
       stdout_fault <- readFile stdout_name
       stderr_fault <- readFile stderr_name
-      return $ Fault_Failure circuit_file stdout_fault stderr_fault c
+      return $ Ex_Test_Failure circuit_file stdout_fault stderr_fault c
 
 add_test_harness_to_fault_str :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr -> Magma_String_Results -> [a] -> b -> Int -> Bool -> String

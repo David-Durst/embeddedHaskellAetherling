@@ -8,6 +8,7 @@ import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Isomorphisms
 import Aetherling.Interpretations.Latency
+import Aetherling.Interpretations.Test_Helpers
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
@@ -73,9 +74,9 @@ slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
     (all_success =<< striple_to_seq_results) @? "striple to seq slowdowns failed"
   ]
 
-all_success :: [Fault_Result] -> IO Bool
+all_success :: [Ex_Test_Result] -> IO Bool
 all_success results = do
-  let checked_results = all (\x -> x == Fault_Success) results
+  let checked_results = all (\x -> x == Ex_Test_Success) results
   return checked_results
   
 -- input to scheduling algorithm: expr tree

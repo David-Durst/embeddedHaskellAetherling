@@ -3,6 +3,7 @@ import Aetherling.Interpretations.Magma.Constants
 import Aetherling.Interpretations.Magma.Tester
 import Aetherling.Interpretations.Magma.Expr_To_String
 import Aetherling.Interpretations.Magma.Value_To_String
+import Aetherling.Interpretations.Test_Helpers
 import Aetherling.Interpretations.Space_Time_Printer
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Rewrites.Add_Pipeline_Registers as APR
@@ -90,7 +91,7 @@ compile_and_test_with_slowdown :: (Shallow_Types.Aetherling_Value a,
                                    Convertible_To_Atom_Strings b,
                                    Convertible_To_Atom_Strings c) =>
                                   RH.Rewrite_StateM a -> Int -> Maybe String -> [b] ->
-                                  c -> IO Fault_Result
+                                  c -> IO Ex_Test_Result
 compile_and_test_with_slowdown shallow_seq_program s base_name inputs output = do
   ML.Matched_Latency_Result deep_st_program output_latency <-
     compile_with_slowdown_to_expr shallow_seq_program s
@@ -115,18 +116,18 @@ compile_and_test_with_slowdown shallow_seq_program s base_name inputs output = d
           else return ()
         return result
         else do
-        return $ Fault_Failure ("program not slowed correctly for target" ++
+        return $ Ex_Test_Failure ("program not slowed correctly for target" ++
           " slowdown " ++ show s ++ " with actual slowdown " ++ show actual_s) "" "" 0
       else do
-      return $ Fault_Failure "invalid latencies for program" "" "" 0
+      return $ Ex_Test_Failure "invalid latencies for program" "" "" 0
     else do
-    return $ Fault_Failure "invalid types for program" "" "" 0
+    return $ Ex_Test_Failure "invalid types for program" "" "" 0
     
 compile_and_test_with_slowdown_all_types :: (Shallow_Types.Aetherling_Value a,
                                    Convertible_To_Atom_Strings b,
                                    Convertible_To_Atom_Strings c) =>
                                   RH.Rewrite_StateM a -> Int -> Maybe String -> [b] ->
-                                  c -> IO [Fault_Result]
+                                  c -> IO [Ex_Test_Result]
 compile_and_test_with_slowdown_all_types shallow_seq_program s base_name inputs output = do
   deep_st_programs_and_latencies <- compile_with_slowdown_to_expr_all_options shallow_seq_program s
   let deep_st_progs_lats_indexes = zip [0..] deep_st_programs_and_latencies
@@ -150,7 +151,7 @@ compile_and_test_with_slowdown_random_types :: (Shallow_Types.Aetherling_Value a
                                    Convertible_To_Atom_Strings b,
                                    Convertible_To_Atom_Strings c) =>
                                   RH.Rewrite_StateM a -> Int -> Maybe String -> [b] ->
-                                  c -> IO [Fault_Result]
+                                  c -> IO [Ex_Test_Result]
 compile_and_test_with_slowdown_random_types shallow_seq_program s base_name inputs output = do
   deep_st_programs_and_latencies <- compile_with_slowdown_to_expr_all_options shallow_seq_program s
   g <- getStdGen
@@ -180,7 +181,7 @@ compile_and_test_with_type_rewrites :: (Shallow_Types.Aetherling_Value a,
                                    Convertible_To_Atom_Strings b,
                                    Convertible_To_Atom_Strings c) =>
                                   RH.Rewrite_StateM a -> [Type_Rewrite] -> Maybe String -> [b] ->
-                                  c -> IO Fault_Result
+                                  c -> IO Ex_Test_Result
 compile_and_test_with_type_rewrites shallow_seq_program trs base_name inputs output = do
   ML.Matched_Latency_Result deep_st_program output_latency <-
     compile_with_type_rewrites_to_expr shallow_seq_program trs
@@ -205,12 +206,12 @@ compile_and_test_with_type_rewrites shallow_seq_program trs base_name inputs out
           else return ()
         return result
         else do
-        return $ Fault_Failure ("program not slowed correctly for target" ++
+        return $ Ex_Test_Failure ("program not slowed correctly for target" ++
           " slowdown " ++ show trs ++ " with actual slowdown " ++ show actual_s) "" "" 0
       else do
-      return $ Fault_Failure "invalid latencies for program" "" "" 0
+      return $ Ex_Test_Failure "invalid latencies for program" "" "" 0
     else do
-    return $ Fault_Failure "invalid types for program" "" "" 0
+    return $ Ex_Test_Failure "invalid types for program" "" "" 0
   
 compile_with_slowdown :: (Shallow_Types.Aetherling_Value a) =>
                          RH.Rewrite_StateM a -> Int -> String -> IO String
@@ -266,11 +267,11 @@ compile_no_test p = do
                                                 std_err = UseHandle stderr_file}
   exit_code <- waitForProcess phandle
   case exit_code of
-    ExitSuccess -> return Fault_Success
+    ExitSuccess -> return Ex_Test_Success
     ExitFailure c -> do
       stdout_fault <- readFile stdout_name
       stderr_fault <- readFile stderr_name
-      return $ Fault_Failure circuit_file stdout_fault stderr_fault c
+      return $ Ex_Test_Failure circuit_file stdout_fault stderr_fault c
 
 compile_and_write_st_with_slowdown :: (Shallow_Types.Aetherling_Value a) =>
                                   RH.Rewrite_StateM a -> Int -> String -> IO String 
@@ -338,7 +339,7 @@ compile_and_test_verilog :: (Shallow_Types.Aetherling_Value a,
                                    Convertible_To_Atom_Strings b,
                                    Convertible_To_Atom_Strings c) =>
                                   RH.Rewrite_StateM a -> Int -> [b] -> c ->
-                                  String -> Int -> IO Fault_Result
+                                  String -> Int -> IO Ex_Test_Result
 compile_and_test_verilog shallow_seq_program s inputs output verilog_template
   output_latency = do
   ML.Matched_Latency_Result deep_st_program _ <-
@@ -355,12 +356,12 @@ compile_and_test_verilog shallow_seq_program s inputs output verilog_template
         let verilog_path = verilog_template ++ show s ++ ".v"
         test_verilog_with_fault deep_st_program (root_dir ++ verilog_path) inputs output output_latency
         else do
-        return $ Fault_Failure ("program not slowed correctly for target" ++
+        return $ Ex_Test_Failure ("program not slowed correctly for target" ++
           " slowdown " ++ show s ++ " with actual slowdown " ++ show actual_s) "" "" 0
       else do
-      return $ Fault_Failure "invalid latencies for program" "" "" 0
+      return $ Ex_Test_Failure "invalid latencies for program" "" "" 0
     else do
-    return $ Fault_Failure "invalid types for program" "" "" 0
+    return $ Ex_Test_Failure "invalid types for program" "" "" 0
 
 compile_with_slowdown_to_expr :: (Shallow_Types.Aetherling_Value a) =>
                                  RH.Rewrite_StateM a -> Int -> IO ML.Matched_Latency_Result

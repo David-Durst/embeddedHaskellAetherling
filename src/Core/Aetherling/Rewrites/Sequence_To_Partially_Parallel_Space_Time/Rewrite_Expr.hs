@@ -52,8 +52,8 @@ rewrite_to_partially_parallel' s seq_expr = do
   --traceM ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
   startEvalMemoT $ sequence_to_partially_parallel output_type_slowdowns seq_expr
 -} 
-rewrite_to_partially_parallel_type :: [Type_Rewrite] -> SeqE.Expr -> STE.Expr
-rewrite_to_partially_parallel_type tr seq_expr = do
+rewrite_to_partially_parallel_type_rewrite :: [Type_Rewrite] -> SeqE.Expr -> STE.Expr
+rewrite_to_partially_parallel_type_rewrite tr seq_expr = do
   let (expr_par, state) = runState (evalStateT
                              (runExceptT $ rewrite_to_partially_parallel_type' tr seq_expr)
                              empty_rewrite_data)
@@ -70,8 +70,8 @@ rewrite_to_partially_parallel_type tr seq_expr = do
                        "\ntype_rewrites: " ++ show tr ++
                        "\nslowdown doesn't match result" ++ ST_Print.print_st_str result) No_Index
 
-rewrite_to_partially_parallel_type' :: [Type_Rewrite] -> SeqE.Expr -> Partially_ParallelM STE.Expr
-rewrite_to_partially_parallel_type' tr seq_expr = do
+rewrite_to_partially_parallel_type_rewrite' :: [Type_Rewrite] -> SeqE.Expr -> Partially_ParallelM STE.Expr
+rewrite_to_partially_parallel_type_rewrite' tr seq_expr = do
   --traceShowM $ rewrite_AST_type_debug s seq_expr_out_type
   --traceM ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
   startEvalMemoT $ sequence_to_partially_parallel tr seq_expr
@@ -92,16 +92,16 @@ rewrite_to_partially_parallel s seq_expr = do
                      Seq_Print.print_seq_str seq_expr) No_Index
     else program $ L.minimumBy (\pa pb -> compare (area pa) (area pb)) possible_st_programs_and_areas
     
-rewrite_to_partially_parallel_all_options :: Int -> SeqE.Expr -> [STE.Expr]
-rewrite_to_partially_parallel_all_options s seq_expr = do
+rewrite_to_partially_parallel_slowdown :: Int -> SeqE.Expr -> [Program_And_Area]
+rewrite_to_partially_parallel_slowdown s seq_expr = do
   let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
   let possible_output_types = rewrite_all_AST_types s seq_expr_out_type
-  let possible_st_programs = map (\trs -> rewrite_to_partially_parallel_type trs seq_expr)
-                             possible_output_types
-  let valid_possible_st_programs = filter (not . Has_Error.has_error) possible_st_programs
-  let possible_st_programs_and_areas = map (\p -> PA p (Comp_Area.get_area p))
-                                       valid_possible_st_programs
-  fmap program possible_st_programs_and_areas
+  let possible_st_programs =
+        map (\trs -> rewrite_to_partially_parallel_type_rewrite trs seq_expr)
+        possible_output_types
+  let valid_possible_st_programs =
+        filter (not . Has_Error.has_error) possible_st_programs
+  map (\p -> PA p (Comp_Area.get_area p)) valid_possible_st_programs
  {-
 
 rewrite_to_partially_parallel_search' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
