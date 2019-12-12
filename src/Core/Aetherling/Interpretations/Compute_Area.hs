@@ -189,39 +189,3 @@ area_t (ATupleT t0 t1) = area_t t0 + area_t t1
 area_t (STupleT n t) = n * area_t t
 area_t (SSeqT n t) = n * area_t t
 area_t (TSeqT n _ t) = n * area_t t
-
-normalize_type = merge_layers . strip_empty_layers . replace_stuple_with_sseq
-
-strip_empty_layers :: AST_Type -> AST_Type
-strip_empty_layers (SSeqT 1 t) = strip_empty_layers t
-strip_empty_layers (SSeqT n t) = SSeqT n $ strip_empty_layers t
-strip_empty_layers (TSeqT 1 0 t) = strip_empty_layers t
-strip_empty_layers (TSeqT n i t) = TSeqT n i $ strip_empty_layers t
-strip_empty_layers (STupleT 1 t) = strip_empty_layers t
-strip_empty_layers (STupleT n t) = STupleT n $ strip_empty_layers t
-strip_empty_layers t = t
-
--- merge types where it doesn't change ordering of valids/invalids
-merge_layers :: AST_Type -> AST_Type
-merge_layers (SSeqT no (SSeqT ni t)) = merge_layers $ SSeqT (no*ni) t
-merge_layers (SSeqT no (STupleT ni t)) = merge_layers $ SSeqT (no*ni) t
-merge_layers (TSeqT no io (TSeqT ni 0 t)) = merge_layers $ TSeqT (no*ni) (io*ni) t
-merge_layers (STupleT no (STupleT ni t)) = merge_layers $ SSeqT (no*ni) t
-merge_layers (STupleT no (SSeqT ni t)) = merge_layers $ SSeqT (no*ni) t
-merge_layers (SSeqT no t) = SSeqT no $ merge_layers t
-merge_layers (TSeqT no io t) = TSeqT no io $ merge_layers t
-merge_layers (STupleT no t) = SSeqT no $ merge_layers t
-merge_layers t = t
-
-replace_stuple_with_sseq :: AST_Type -> AST_Type
-replace_stuple_with_sseq (STupleT n t) = SSeqT n $ replace_stuple_with_sseq t
-replace_stuple_with_sseq (SSeqT n t) = SSeqT n $ replace_stuple_with_sseq t
-replace_stuple_with_sseq (TSeqT n i t) = TSeqT n i $ replace_stuple_with_sseq t
-replace_stuple_with_sseq t = t
-
-diff_types :: AST_Type -> AST_Type -> Maybe AST_Type
-diff_types a b | a == b = Nothing
-diff_types (SSeqT na a) (SSeqT nb b) | na == nb = diff_types a b
-diff_types (TSeqT na ia a) (TSeqT nb ib b) | (na == nb) && (ia == ib) = diff_types a b
-diff_types (STupleT na a) (STupleT nb b) | na == nb = diff_types a b
-diff_types a b = Just a

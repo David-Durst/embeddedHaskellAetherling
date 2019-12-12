@@ -11,6 +11,7 @@ import Control.Monad.State as S
 import Control.Monad.Identity
 import Control.Monad.Except
 import Data.Either
+import qualified Safe as Safe
 import System.IO.Temp
 import System.IO
 import System.Process
@@ -268,21 +269,118 @@ compute_latency' (Reduce_tN n _ f _ _) = do
   return $ (n - 1) * (clocks_t f_out_type) + 1
 compute_latency' (FIFON _ delay_clks _ _) = return $ delay_clks
 compute_latency' (ReshapeN in_t out_t _ _) = do
-  let in_t_py_str = type_to_python in_t
-  let out_t_py_str = type_to_python out_t
-  tmp_file <- emptySystemTempFile "latency.txt"
-  stdout_name <- emptySystemTempFile "ignoredstdout_.txt"
-  stdout_file <- openFile stdout_name WriteMode
-  stderr_name <- emptySystemTempFile "ignoredstderr_.txt"
-  stderr_file <- openFile stderr_name WriteMode
-  --callProcess "python" ["-m", "aetherling", tmp_file, "reshape_latency", in_t_py_str, out_t_py_str]
-  let process =
-        proc "python" ["-m", "aetherling", tmp_file,
-                       "reshape_latency", in_t_py_str, out_t_py_str]
-  (_ , _, _, phandle) <- createProcess process { std_out = UseHandle stdout_file,
-                                                std_err = UseHandle stderr_file}
-  waitForProcess phandle
-  latency_str <- readFile tmp_file
-  return (read latency_str :: Int)
+  let in_t_norm = normalize_type in_t
+  let out_t_norm = normalize_type out_t
+  let in_out_diff = diff_types in_t_norm out_t_norm
+  return $ case in_out_diff of
+    Just _ -> get_last_out_for_in in_t out_t
+    _ -> 0
+  where
+    get_last_out_for_in :: AST_Type -> AST_Type -> Int
+    get_last_out_for_in _ _ = undefined
 compute_latency' _ = return 0
 
+data Port_And_Time = PT {port :: Int, time :: Int} deriving (Show, Eq)
+data ST_Element_Locations = ST_Element_Locations {
+  st_coordinates :: [Int],
+  port_and_time :: Port_And_Time
+  } deriving (Show, Eq)
+
+type Flat_Idxs_To_Locations = M.Map Int ST_Element_Locations
+
+data Flat_Idx_State = Flat_Idx_State {
+  next_flat_idx :: Int,
+  idx_to_loc :: Flat_Idxs_To_Locations
+  } deriving (Show, Eq)
+
+empty_flat_idx_state = Flat_Idx_State 0 M.empty
+
+type Flat_Idx_StateM = S.State Flat_Idx_State
+
+update_flat_idx_state :: ST_Element_Locations -> Flat_Idx_StateM ()
+update_flat_idx_state el_locs = do
+  cur_state <- get
+  let cur_idx = next_flat_idx cur_state
+  put $ cur_state {
+    next_flat_idx = cur_idx + 1,
+    idx_to_loc = M.insert cur_idx el_locs (idx_to_loc cur_state)
+    }
+
+compute_element_locations :: AST_Type -> Flat_Idxs_To_Locations
+compute_element_locations t = evalState (compute_element_locations' t)
+                              empty_flat_idx_state
+
+compute_element_locations' :: AST_Type -> Flat_Idx_StateM Flat_Idxs_To_Locations
+compute_element_locations' UnitT = do
+  undefined
+
+data TS_Elem = T_Elem Int Int | S_Elem Int deriving (Show, Eq)
+
+compute_el_locations :: [TS_Elem] -> Flat_Idxs_To_Locations
+compute_el_locations ts_elem_xs = do
+  let num_el = get_num_els ts_elem_xs
+  -- drop the top t or s type as multiplying each index by inner types
+  let ts_elem_tl = Prelude.drop 1 ts_elem_xs
+  let divisors = get_divisors_for_els ts_elem_tl
+  let nested_indices =
+        Prelude.map (compute_nested_indices divisors) [0..num_el - 1]
+  let multipliers = get_multipliers_for_els ts_elem_xs
+  M.fromAscList $
+    Prelude.map (compute_port_and_time multipliers ts_elem_xs) nested_indices
+
+get_num_els :: [TS_Elem] -> Int
+get_num_els [] = 1
+get_num_els (T_Elem n _ : tl) = n * get_num_els tl
+get_num_els (S_Elem n : tl) = n * get_num_els tl
+
+-- divisors indicate how to compute index for each dimension from flat_idx
+get_divisors_for_els :: [TS_Elem] -> [Int]
+get_divisors_for_els [] = []
+get_divisors_for_els (T_Elem n _ : tl) = n * Safe.headDef 1 inner : inner
+  where
+    inner = get_divisors_for_els tl
+get_divisors_for_els (S_Elem n : tl) = n * Safe.headDef 1 inner : inner
+  where
+    inner = get_divisors_for_els tl
+
+compute_nested_indices :: [Int] -> Int -> [Int]
+compute_nested_indices [] flat_idx = [flat_idx]
+compute_nested_indices (hd_divisor : tl_divisors) flat_idx =
+  flat_idx `div` hd_divisor :
+  compute_nested_indices tl_divisors (flat_idx `mod` hd_divisor)
+
+-- multipliers indicate how to compute space and time coordinates from nested
+-- indices
+data ST_Multiplier = ST_Multiplier {s_multiplier :: Int, t_multiplier :: Int}
+  deriving (Show, Eq)
+
+get_multipliers_for_els :: [TS_Elem] -> [ST_Multiplier]
+get_multipliers_for_els [] = []
+get_multipliers_for_els (T_Elem n i : tl) = do
+  let inner = get_multipliers_for_els tl
+  let prior_mul = Safe.headDef (ST_Multiplier 1 1) inner
+  let t_mul = (n+i) * t_multiplier prior_mul
+  prior_mul { t_multiplier = t_mul } : inner
+get_multipliers_for_els (S_Elem n : tl) = do
+  let inner = get_multipliers_for_els tl
+  let prior_mul = Safe.headDef (ST_Multiplier 1 1) inner
+  let t_mul = n * t_multiplier prior_mul
+  prior_mul { t_multiplier = t_mul } : inner
+
+compute_port_and_time :: [ST_Multiplier] -> [TS_Elem] -> [Int] -> Port_And_Time
+compute_port_and_time [] [] [] = PT 0 0
+compute_port_and_time (ST_Multiplier _ t_mul : mul_tl) (T_Elem _ _ : ts_tl)
+  (nested_idx_hd : nested_idx_tl) = do
+  let inner_pt = compute_port_and_time mul_tl ts_tl nested_idx_tl
+  inner_pt {
+    time = t_mul * nested_idx_hd + time inner_pt
+    }
+compute_port_and_time (ST_Multiplier s_mul _ : mul_tl) (S_Elem _ : ts_tl)
+  (nested_idx_hd : nested_idx_tl) = do
+  let inner_pt = compute_port_and_time mul_tl ts_tl nested_idx_tl
+  inner_pt {
+    port = s_mul * nested_idx_hd + port inner_pt
+    }
+compute_port_and_time _ _ _ =
+  error "can't compute port and time, different input arg lengths"
+  
