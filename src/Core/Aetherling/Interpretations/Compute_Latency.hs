@@ -1,4 +1,4 @@
-module Aetherling.Interpretations.Latency where
+module Aetherling.Interpretations.Compute_Latency where
 import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Expr_Builders

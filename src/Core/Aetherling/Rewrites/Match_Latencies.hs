@@ -1,5 +1,5 @@
 module Aetherling.Rewrites.Match_Latencies where
-import Aetherling.Interpretations.Latency
+import Aetherling.Interpretations.Compute_Latency
 import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Expr_Builders
