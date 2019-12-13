@@ -106,32 +106,24 @@ compute_latency e@(Shift_tnN _ _ _ _ _ _ producer _) = memo producer $ compute_l
 compute_latency e@(Up_1d_sN _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Up_1d_tN _ _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Down_1d_sN _ _ _ producer _) = memo producer $ compute_latency producer
-compute_latency e@(Down_1d_tN _ _ _ _ producer _) = do
+compute_latency e@(Down_1d_tN _ _ sel_idx t producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  cur_latency <- lift_memo_rewrite_state $ lift $ return $ compute_latency' e
+  let cur_latency = sel_idx * clocks_t t
   return $ producer_latency + cur_latency
 compute_latency e@(Partition_s_ssN _ _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Partition_t_ttN _ _ _ _ _ producer _) = do
   producer_latency <- memo producer $ compute_latency producer
   let input_output_types = ST_Conv.expr_to_types e
-  let reshape =
-        ReshapeN
-        (head $ ST_Conv.e_in_types input_output_types)
-        (ST_Conv.e_out_type input_output_types)
-        producer No_Index
-  cur_latency <- lift_memo_rewrite_state $ lift $ return $ compute_latency' reshape
-  return $ producer_latency + cur_latency
+  let in_t = (head $ ST_Conv.e_in_types input_output_types)
+  let out_t = (ST_Conv.e_out_type input_output_types)
+  return $ producer_latency + compute_reshape_latency in_t out_t
 compute_latency e@(Unpartition_s_ssN _ _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
   producer_latency <- memo producer $ compute_latency producer
   let input_output_types = ST_Conv.expr_to_types e
-  let reshape =
-        ReshapeN
-        (head $ ST_Conv.e_in_types input_output_types)
-        (ST_Conv.e_out_type input_output_types)
-        producer No_Index
-  cur_latency <- lift_memo_rewrite_state $ lift $ return $ compute_latency' reshape
-  return $ producer_latency + cur_latency
+  let in_t = (head $ ST_Conv.e_in_types input_output_types)
+  let out_t = (ST_Conv.e_out_type input_output_types)
+  return $ producer_latency + compute_reshape_latency in_t out_t
   
 -- these helpers shouldn't exist now that i've written reshape
 compute_latency e@(SerializeN _ _ _ producer _) = do
@@ -154,7 +146,7 @@ compute_latency e@(Map2_sN _ f producer_left producer_right _) = do
   if producer_left_latency == producer_right_latency
     then return $ inner_latency
     else do
-    lift_memo_rewrite_state $ lift $ return $ print_st e
+    print_stM e
     throwError $ Latency_Failure $ "For Map2_sN" ++
          "latency for producer_left " ++ show producer_left_latency ++
          "doesn't equal latency for producer_left " ++ show producer_right_latency
@@ -166,7 +158,7 @@ compute_latency e@(Map2_tN _ _ f producer_left producer_right _) = do
   if producer_left_latency == producer_right_latency
     then return $ inner_latency
     else do
-    lift_memo_rewrite_state $ lift $ return $ print_st e
+    print_stM e
     throwError $ Latency_Failure $ "For Map2_tN" ++
          "latency for producer_left " ++ show producer_left_latency ++
          "doesn't equal latency for producer_left " ++ show producer_right_latency
@@ -179,13 +171,14 @@ compute_latency e@(Reduce_sN _ f producer _) = do
   if inner_latency == 0
     then return $ producer_latency + 1
     else do
-    lift_memo_rewrite_state $ lift $ return $ print_st e
+    print_stM e
     throwError $ Latency_Failure $
          "latency for f " ++ show inner_latency ++
          "inside reduce must be 0 for now "
-compute_latency e@(Reduce_tN _ _ f producer _) = do
+compute_latency e@(Reduce_tN n _ f producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  reduce_latency <- lift_memo_rewrite_state $ lift $ return $ compute_latency' e
+  let f_out_type = ST_Conv.e_out_type $ ST_Conv.expr_to_types f
+  let reduce_latency = (n - 1) * (clocks_t f_out_type) + 1
   cur_lat <- get_cur_latency
   update_latency_state 0
   inner_latency <- compute_latency f
@@ -193,7 +186,7 @@ compute_latency e@(Reduce_tN _ _ f producer _) = do
   if inner_latency == 0
     then return $ producer_latency + reduce_latency
     else do
-    lift_memo_rewrite_state $ lift $ return $ print_st e
+    print_stM e
     throwError $ Latency_Failure $
          "latency for f " ++ show inner_latency ++
          "inside reduce must be 0 for now "
@@ -209,7 +202,7 @@ compute_latency e@(ATupleN _ _ producer_left producer_right _) = do
   if producer_left_latency == producer_right_latency
     then return $ producer_left_latency 
     else do
-    lift_memo_rewrite_state $ lift $ return $ print_st e
+    print_stM e
     throwError $ Latency_Failure $ "For ATupleN " ++
          "latency for producer_left " ++ show producer_left_latency ++
          "doesn't equal latency for producer_left " ++ show producer_right_latency
@@ -219,7 +212,7 @@ compute_latency e@(STupleN _ producer_left producer_right _) = do
   if producer_left_latency == producer_right_latency
     then return $ producer_left_latency
     else do
-    lift_memo_rewrite_state $ lift $ return $ print_st e
+    print_stM e
     throwError $ Latency_Failure $ "For STupleN " ++
          "latency for producer_left " ++ show producer_left_latency ++
          "doesn't equal latency for producer_left " ++ show producer_right_latency
@@ -229,7 +222,7 @@ compute_latency e@(STupleAppendN _ _ producer_left producer_right _) = do
   if producer_left_latency == producer_right_latency
     then return $ producer_left_latency
     else do
-    lift_memo_rewrite_state $ lift $ return $ print_st e
+    print_stM e
     throwError $ Latency_Failure $ "For STupleN " ++
          "latency for producer_left " ++ show producer_left_latency ++
          "doesn't equal latency for producer_left " ++ show producer_right_latency
@@ -241,14 +234,12 @@ compute_latency e@(InputN _ _ _) = do
   get_cur_latency
 compute_latency e@(ErrorN error_msg _) = throwError $ Latency_Failure $
   "Found error node with message: " ++ error_msg
-compute_latency e@(FIFON _ _ producer _) = do
+compute_latency e@(FIFON _ delay_clks producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  cur_latency <- lift_memo_rewrite_state $ lift $ return $ compute_latency' e
-  return $ producer_latency + cur_latency
-compute_latency e@(ReshapeN _ _ producer _) = do
+  return $ producer_latency + delay_clks
+compute_latency e@(ReshapeN in_t out_t producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  cur_latency <- lift_memo_rewrite_state $ lift $ return $ compute_latency' e
-  return $ producer_latency + cur_latency
+  return $ producer_latency + compute_reshape_latency in_t out_t
 
 compute_latency_map e f producer = do
   producer_latency <- memo producer $ compute_latency producer
@@ -256,14 +247,8 @@ compute_latency_map e f producer = do
   inner_latency <- compute_latency f
   return $ inner_latency
 
-compute_latency' :: Expr -> Int
-compute_latency' (Down_1d_tN _ _ sel_idx t _ _) =
-  sel_idx * clocks_t t
-compute_latency' (Reduce_tN n _ f _ _) = do
-  let f_out_type = ST_Conv.e_out_type $ ST_Conv.expr_to_types f
-  (n - 1) * (clocks_t f_out_type) + 1
-compute_latency' (FIFON _ delay_clks _ _) = delay_clks
-compute_latency' (ReshapeN in_t out_t _ _) = do
+compute_reshape_latency :: AST_Type -> AST_Type -> Int
+compute_reshape_latency in_t out_t = do
   let in_t_norm = normalize_type in_t
   let out_t_norm = normalize_type out_t
   let in_out_diff = diff_types in_t_norm out_t_norm
@@ -280,4 +265,3 @@ compute_latency' (ReshapeN in_t out_t _ _) = do
   where
     get_last_out_for_in :: AST_Type -> AST_Type -> Int
     get_last_out_for_in _ _ = undefined
-compute_latency' _ = 0

@@ -45,6 +45,10 @@ print_st :: Expr -> IO ()
 print_st e = do
   putStrLn $ print_st_str e
   
+print_stM :: (Monad m) => Expr -> m ()
+print_stM e = do
+  traceShowM $ print_st_str e
+  
 print_st_str :: Expr -> String
 print_st_str e = do
   let lines = execState (runExceptT $ startEvalMemoT $ print_module e) empty_print_data
