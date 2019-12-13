@@ -108,7 +108,7 @@ compute_latency e@(Up_1d_tN _ _ _ producer _) = memo producer $ compute_latency 
 compute_latency e@(Down_1d_sN _ _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Down_1d_tN _ _ sel_idx t producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  let cur_latency = sel_idx * clocks_t t
+  let cur_latency = compute_down_latency sel_idx t
   return $ producer_latency + cur_latency
 compute_latency e@(Partition_s_ssN _ _ _ producer _) = memo producer $ compute_latency producer
 compute_latency e@(Partition_t_ttN _ _ _ _ _ producer _) = do
@@ -177,8 +177,7 @@ compute_latency e@(Reduce_sN _ f producer _) = do
          "inside reduce must be 0 for now "
 compute_latency e@(Reduce_tN n _ f producer _) = do
   producer_latency <- memo producer $ compute_latency producer
-  let f_out_type = ST_Conv.e_out_type $ ST_Conv.expr_to_types f
-  let reduce_latency = (n - 1) * (clocks_t f_out_type) + 1
+  let reduce_latency = compute_reduce_latency n f
   cur_lat <- get_cur_latency
   update_latency_state 0
   inner_latency <- compute_latency f
@@ -246,6 +245,14 @@ compute_latency_map e f producer = do
   update_latency_state producer_latency
   inner_latency <- compute_latency f
   return $ inner_latency
+
+compute_down_latency :: Int -> AST_Type -> Int
+compute_down_latency sel_idx t = sel_idx * clocks_t t
+
+compute_reduce_latency :: Int -> Expr -> Int
+compute_reduce_latency n f = do
+  let f_out_type = ST_Conv.e_out_type $ ST_Conv.expr_to_types f
+  (n - 1) * (clocks_t f_out_type) + 1
 
 compute_reshape_latency :: AST_Type -> AST_Type -> Int
 compute_reshape_latency in_t out_t = do
