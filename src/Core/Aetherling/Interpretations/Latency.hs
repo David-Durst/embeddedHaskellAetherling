@@ -273,7 +273,14 @@ compute_latency' (ReshapeN in_t out_t _ _) = do
   let out_t_norm = normalize_type out_t
   let in_out_diff = diff_types in_t_norm out_t_norm
   return $ case in_out_diff of
-    Just _ -> get_last_out_for_in in_t out_t
+    Just _ -> do
+      let flat_idx_to_in_locations = M.toAscList $ compute_element_locations in_t
+      let flat_idx_to_out_locations = M.toAscList $ compute_element_locations out_t
+      let get_times = Prelude.map (\(_, location) -> time $ port_and_time location)
+      let out_in_times = zip (get_times flat_idx_to_out_locations)
+                         (get_times flat_idx_to_in_locations)
+      -- add 1 as 1 clock delay from reading/writing to memories
+      1 + (maximum $ Prelude.map (\(x,y) -> x-y) out_in_times) 
     _ -> 0
   where
     get_last_out_for_in :: AST_Type -> AST_Type -> Int
@@ -307,17 +314,8 @@ update_flat_idx_state el_locs = do
     }
 
 compute_element_locations :: AST_Type -> Flat_Idxs_To_Locations
-compute_element_locations t = evalState (compute_element_locations' t)
-                              empty_flat_idx_state
-
-compute_element_locations' :: AST_Type -> Flat_Idx_StateM Flat_Idxs_To_Locations
-compute_element_locations' UnitT = do
-  undefined
-
-data TS_Elem = T_Elem Int Int | S_Elem Int deriving (Show, Eq)
-
-compute_el_locations :: [TS_Elem] -> Flat_Idxs_To_Locations
-compute_el_locations ts_elem_xs = do
+compute_element_locations t = do
+  let ts_elem_xs = st_types_to_ts_elem_list t
   let num_el = get_num_els ts_elem_xs
   -- drop the top t or s type as multiplying each index by inner types
   let ts_elem_tl = Prelude.drop 1 ts_elem_xs
@@ -325,8 +323,21 @@ compute_el_locations ts_elem_xs = do
   let nested_indices =
         Prelude.map (compute_nested_indices divisors) [0..num_el - 1]
   let multipliers = get_multipliers_for_els ts_elem_xs
-  M.fromAscList $
-    Prelude.map (compute_port_and_time multipliers ts_elem_xs) nested_indices
+  M.fromAscList $ zip [0..num_el-1] $
+    Prelude.map (\nested_index ->
+                   ST_Element_Locations nested_index
+                   (compute_port_and_time multipliers ts_elem_xs nested_index))
+    nested_indices
+
+data TS_Elem = T_Elem Int Int | S_Elem Int deriving (Show, Eq)
+st_types_to_ts_elem_list :: AST_Type -> [TS_Elem]
+st_types_to_ts_elem_list UnitT = []
+st_types_to_ts_elem_list BitT = []
+st_types_to_ts_elem_list IntT = []
+st_types_to_ts_elem_list (ATupleT _ _) = []
+st_types_to_ts_elem_list (STupleT n t) = S_Elem n : st_types_to_ts_elem_list t
+st_types_to_ts_elem_list (SSeqT n t) = S_Elem n : st_types_to_ts_elem_list t
+st_types_to_ts_elem_list (TSeqT n i t) = T_Elem n i : st_types_to_ts_elem_list t
 
 get_num_els :: [TS_Elem] -> Int
 get_num_els [] = 1
