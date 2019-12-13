@@ -11,6 +11,7 @@ import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Exp
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import qualified Aetherling.Languages.Sequence.Shallow.Types as Shallow_Types
+import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions as ST_Conv
@@ -38,15 +39,25 @@ import qualified Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions as S
 --      (i) kratos will be run using this option as well as external systems like spatial
 --   (c) chisel tests
 
-compile_with_slowdown_to_expr :: (Shallow_Types.Aetherling_Value a) =>
-                                 RH.Rewrite_StateM a -> Either Int [Type_Rewrite] -> IO ML.Matched_Latency_Result
-compile_with_slowdown_to_expr shallow_seq_program s_or_tr = do
+compile_with_type_rewrite_to_expr :: (Shallow_Types.Aetherling_Value a) =>
+                                     RH.Rewrite_StateM a -> [Type_Rewrite] ->
+                                     IO ML.Matched_Latency_Result
+compile_with_type_rewrite_to_expr shallow_seq_program tr = do
+  let deep_seq_program_with_indexes =
+        lower_seq_shallow_to_deep_indexed shallow_seq_program
+  let deep_st_program =
+        rewrite_to_partially_parallel_type_rewrite tr deep_seq_program_with_indexes
+  add_registers deep_st_program
+
+lower_seq_shallow_to_deep_indexed :: (Shallow_Types.Aetherling_Value a) =>
+                                  RH.Rewrite_StateM a -> SeqE.Expr
+lower_seq_shallow_to_deep_indexed shallow_seq_program = do
   let deep_seq_program_no_indexes =
         Seq_SToD.seq_shallow_to_deep shallow_seq_program
-  let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
-  let deep_st_program = case s_or_tr of
-        Left s -> rewrite_to_partially_parallel s deep_seq_program_with_indexes
-        Right tr -> rewrite_to_partially_parallel_type tr deep_seq_program_with_indexes
+  add_indexes deep_seq_program_no_indexes
+  
+add_registers :: STE.Expr -> IO ML.Matched_Latency_Result
+add_registers deep_st_program = do
   let pipelined_program = APR.add_pipeline_registers deep_st_program 3
   matched_latencies <- ML.match_latencies pipelined_program
   return $ matched_latencies {

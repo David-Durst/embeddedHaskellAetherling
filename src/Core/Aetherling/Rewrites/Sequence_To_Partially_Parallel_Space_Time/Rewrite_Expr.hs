@@ -55,7 +55,7 @@ rewrite_to_partially_parallel' s seq_expr = do
 rewrite_to_partially_parallel_type_rewrite :: [Type_Rewrite] -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel_type_rewrite tr seq_expr = do
   let (expr_par, state) = runState (evalStateT
-                             (runExceptT $ rewrite_to_partially_parallel_type' tr seq_expr)
+                             (runExceptT $ rewrite_to_partially_parallel_type_rewrite' tr seq_expr)
                              empty_rewrite_data)
                  empty_ppar_state
   --trace ("num_calls : " ++ (show $ num_calls state)) $
@@ -82,7 +82,7 @@ rewrite_to_partially_parallel :: Int -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel s seq_expr = do
   let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
   let possible_output_types = rewrite_all_AST_types s seq_expr_out_type
-  let possible_st_programs = map (\trs -> rewrite_to_partially_parallel_type trs seq_expr)
+  let possible_st_programs = map (\trs -> rewrite_to_partially_parallel_type_rewrite trs seq_expr)
                              possible_output_types
   let valid_possible_st_programs = filter (not . Has_Error.has_error) possible_st_programs
   let possible_st_programs_and_areas = map (\p -> PA p (Comp_Area.get_area p))
@@ -686,7 +686,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   --traceShowM $ "lengths possible_trs_for_in_seq: " ++ show (fmap length possible_trs_for_in_seq)
   let possible_input_trs = map (\(tr0 : tr1 : _) -> tr0 : tr1 : type_rewrites_tl) possible_trs_for_in_seq
   --traceShowM $ "possible_input_trs: " ++ show possible_input_trs
-  let possible_st_programs = map (\trs -> (trs, rewrite_to_partially_parallel_type trs producer))
+  let possible_st_programs = map (\trs -> (trs, rewrite_to_partially_parallel_type_rewrite trs producer))
                              possible_input_trs
   --traceShowM $ "possible_st_programs: " ++ show possible_st_programs
   let valid_possible_st_programs = filter (not . Has_Error.has_error . snd) possible_st_programs

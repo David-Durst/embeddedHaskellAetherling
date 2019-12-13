@@ -384,8 +384,8 @@ compile_with_slowdown_to_expr_all_options shallow_seq_program s = do
   let deep_seq_program_no_indexes =
         Seq_SToD.seq_shallow_to_deep shallow_seq_program
   let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
-  let deep_st_programs =
-        rewrite_to_partially_parallel_all_options s deep_seq_program_with_indexes
+  let deep_st_programs = undefined
+        --rewrite_to_partially_parallel_all_options s deep_seq_program_with_indexes
   let pipelined_programs = fmap (\p -> APR.add_pipeline_registers p 3) deep_st_programs
   matched_latencies_list <- mapM ML.match_latencies pipelined_programs
   --return matched_latencies
@@ -400,7 +400,7 @@ compile_with_type_rewrites_to_expr shallow_seq_program trs = do
         Seq_SToD.seq_shallow_to_deep shallow_seq_program
   let deep_seq_program_with_indexes = add_indexes deep_seq_program_no_indexes
   let deep_st_program =
-        rewrite_to_partially_parallel_type trs deep_seq_program_with_indexes
+        rewrite_to_partially_parallel_type_rewrite trs deep_seq_program_with_indexes
   let pipelined_program = APR.add_pipeline_registers deep_st_program 3
   matched_latencies <- ML.match_latencies pipelined_program
   --return matched_latencies
