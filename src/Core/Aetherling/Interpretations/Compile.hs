@@ -6,7 +6,7 @@ import qualified Aetherling.Monad_Helpers as MH
 import qualified Aetherling.Rewrites.Sequence_Shallow_To_Deep as Seq_SToD
 import qualified Aetherling.Rewrites.Match_Latencies as ML
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Type_To_Slowdown
-import qualified Aetherling.Interpretations.Latency as CL
+import qualified Aetherling.Interpretations.Compute_Latency as CL
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 import Aetherling.Rewrites.Sequence_Assign_Indexes
@@ -41,7 +41,7 @@ import qualified Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions as S
 
 compile_with_type_rewrite_to_expr :: (Shallow_Types.Aetherling_Value a) =>
                                      RH.Rewrite_StateM a -> [Type_Rewrite] ->
-                                     IO ML.Matched_Latency_Result
+                                     ML.Matched_Latency_Result
 compile_with_type_rewrite_to_expr shallow_seq_program tr = do
   let deep_seq_program_with_indexes =
         lower_seq_shallow_to_deep_indexed shallow_seq_program
@@ -56,10 +56,10 @@ lower_seq_shallow_to_deep_indexed shallow_seq_program = do
         Seq_SToD.seq_shallow_to_deep shallow_seq_program
   add_indexes deep_seq_program_no_indexes
   
-add_registers :: STE.Expr -> IO ML.Matched_Latency_Result
+add_registers :: STE.Expr -> ML.Matched_Latency_Result
 add_registers deep_st_program = do
   let pipelined_program = APR.add_pipeline_registers deep_st_program 3
-  matched_latencies <- ML.match_latencies pipelined_program
-  return $ matched_latencies {
+  let matched_latencies = ML.match_latencies pipelined_program
+  matched_latencies {
     ML.new_expr = MCF.merge_consts_and_fifos $ ML.new_expr matched_latencies
     }
