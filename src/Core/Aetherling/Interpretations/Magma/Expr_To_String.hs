@@ -90,8 +90,8 @@ disable_valid = do
   lift $ put $ cur_data { cur_module_valid = False }
   return $ cur_module_valid cur_data
 
-magma_prelude :: IO String
-magma_prelude = return $
+magma_prelude :: String
+magma_prelude =
   "import fault\n" ++
   "import aetherling.helpers.fault_helpers as fault_helpers\n" ++
   "from aetherling.space_time import *\n" ++
@@ -99,13 +99,9 @@ magma_prelude = return $
   "import magma as m" ++
   "\n"
 
-magma_epilogue :: IO String
-magma_epilogue = return $
-  "fault_helpers.compile(Main)\n"
-
 print_magma :: Expr -> IO ()
 print_magma e = do
-  prelude <- magma_prelude
+  let prelude = magma_prelude
   putStrLn prelude
   let lines = execState (runExceptT $ startEvalMemoT $ print_module e) empty_print_data
   putStrLn $ foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
@@ -121,19 +117,19 @@ data Magma_String_Results = Magma_String_Results {
 error_module_ref = Magma_Module_Ref "ERR_VAR_NAME" "ERR_GEN_CALL" []
                    (Module_Port "ERR_OUT" IntT)
                    
-module_to_magma_string :: Expr -> IO Magma_String_Results
+module_to_magma_string :: Expr -> Magma_String_Results
 module_to_magma_string e = do
-  prelude <- magma_prelude
+  let prelude = magma_prelude
   let (outer_module_ref, lines) = runState (runExceptT $ startEvalMemoT $ print_module e) empty_print_data
   if isLeft outer_module_ref
-    then return $ Magma_String_Results
+    then Magma_String_Results
          (RH.rw_msg $ fromLeft undefined outer_module_ref)
          error_module_ref
     else do
     let mod_body = foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
     let mod_def = "Main = Module_" ++ (show $ next_module_index lines - 1) ++ "\n"
    -- epilogue <- magma_epilogue
-    return $ Magma_String_Results
+    Magma_String_Results
       (prelude ++ "\n" ++ mod_body ++ mod_def)
       (fromRight undefined outer_module_ref)
 
