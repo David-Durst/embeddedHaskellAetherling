@@ -1,5 +1,5 @@
 module Aetherling.Interpretations.Backend_Execute.Magma.Expr_To_String where
-import Aetherling.Interpretations.Backend_Execute.Magma.Value_To_String
+import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr

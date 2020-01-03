@@ -1,4 +1,4 @@
-module Aetherling.Interpretations.Backend_Execute.Magma.Value_To_String where
+module Aetherling.Interpretations.Backend_Execute.Value_To_String where
 import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
@@ -17,6 +17,11 @@ data ST_Val_To_String_Config = ST_Val_To_String_Config {
   }
 
 magma_conf = ST_Val_To_String_Config (\x y -> show_no_quotes (x,y)) show_no_quotes
+chisel_conf = ST_Val_To_String_Config
+  (\x y -> "Array(" ++ x ++ ", " ++ y ++ ")")
+  (\x -> "Array(" ++
+    (foldl (\result_s new_s -> result_s ++ "," ++ new_s) (head x) (tail x)) ++
+    ")")
 
 convert_seq_val_to_st_val_string ::
   Convertible_To_Atom_Strings a => a -> AST_Type ->
