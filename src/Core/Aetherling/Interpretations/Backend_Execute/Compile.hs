@@ -1,5 +1,5 @@
-module Aetherling.Interpretations.Compile where
-import Aetherling.Interpretations.Magma.Constants
+module Aetherling.Interpretations.Backend_Execute.Compile where
+import Aetherling.Interpretations.Backend_Execute.Magma.Constants
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Rewrites.Add_Pipeline_Registers as APR
 import qualified Aetherling.Rewrites.Merge_Const_FIFOs as MCF
@@ -12,7 +12,7 @@ import qualified Aetherling.Interpretations.Space_Time_Printer as ST_Print
 import qualified Aetherling.Interpretations.Compute_Latency as CL
 import qualified Aetherling.Interpretations.Has_Error as Has_Error
 import qualified Aetherling.Interpretations.Compute_Area as Comp_Area
-import qualified Aetherling.Interpretations.Magma.Expr_To_String as M_Expr_To_Str
+import qualified Aetherling.Interpretations.Backend_Execute.Magma.Expr_To_String as M_Expr_To_Str
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types
@@ -74,11 +74,11 @@ data Test_Args a b = Test_Args {test_inputs :: [a], test_output :: b}
 -- | Compile a shallowly embedded sequence language program to a backend
 -- representation. Then, run that backend representation through a verilog
 -- simulator with the specified input. Return if the output matches the input.
-compile_and_test :: (Shallow_Types.Aetherling_Value a) =>
+test_with_backend :: (Shallow_Types.Aetherling_Value a) =>
                      RH.Rewrite_StateM a -> [b] -> c ->
                      Slowdown_Target -> Language_Target ->
                      String -> Except Compiler_Error [IO Process_Result]
-compile_and_test shallow_seq_program s_target l_target output_name_template = do
+test_with_backend shallow_seq_program s_target l_target output_name_template = do
   -- need to make convertible_to_atom_strings language generic
   -- don't need to bring generate_fault_input_output_for_st_program in from Tester
   -- each language's tester will need to call that as the tester will take a convertible_to_atom_strings [b] input and convertible_to_atom_stirngs c output

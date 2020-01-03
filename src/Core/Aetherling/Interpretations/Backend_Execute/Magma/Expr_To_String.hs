@@ -1,5 +1,5 @@
-module Aetherling.Interpretations.Magma.Expr_To_String where
-import Aetherling.Interpretations.Magma.Value_To_String
+module Aetherling.Interpretations.Backend_Execute.Magma.Expr_To_String where
+import Aetherling.Interpretations.Backend_Execute.Magma.Value_To_String
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr
@@ -364,7 +364,7 @@ module_to_string_inner consumer_e@(Lut_GenN lut_table lut_type producer_e cur_id
 module_to_string_inner consumer_e@(Const_GenN constant t delay cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   let const_values_str =
-        convert_seq_val_to_st_val_string (flatten_ast_value constant) t
+        convert_seq_val_to_st_val_string (flatten_ast_value constant) t magma_conf
   let replace_brackets x =
         let
           repl '[' = "("

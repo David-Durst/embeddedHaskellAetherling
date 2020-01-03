@@ -1,4 +1,4 @@
-module Aetherling.Interpretations.Magma.Value_To_String where
+module Aetherling.Interpretations.Backend_Execute.Magma.Value_To_String where
 import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
@@ -11,11 +11,19 @@ data ST_Val_String = ST_Val_String {
   st_valids :: [Bool]
   } deriving (Show, Eq)
 
+data ST_Val_To_String_Config = ST_Val_To_String_Config {
+  make_tuple_string_for_backend :: String -> String -> String,
+  make_array_string_for_backend :: [String] -> String
+  }
+
+magma_conf = ST_Val_To_String_Config (\x y -> show_no_quotes (x,y)) show_no_quotes
+
 convert_seq_val_to_st_val_string ::
-  Convertible_To_Atom_Strings a => a -> AST_Type -> ST_Val_String
-convert_seq_val_to_st_val_string seq_val st_type = do
+  Convertible_To_Atom_Strings a => a -> AST_Type ->
+  ST_Val_To_String_Config -> ST_Val_String
+convert_seq_val_to_st_val_string seq_val st_type conf = do
   -- get the mapping from flat_idx to value as a string
-  let flat_val_strs = convert_to_flat_atom_list seq_val
+  let flat_val_strs = convert_to_flat_atom_list seq_val conf
   let flat_val_idx_to_str :: M.Map Int String =
         M.fromList $ zip [0..] flat_val_strs
 
@@ -28,31 +36,36 @@ convert_seq_val_to_st_val_string seq_val st_type = do
   -- these are nested for both space and time
   -- issue: if 1 input per clock, then need to remove the space dimension
   -- as each input port is not vectorized
-  let st_val_string = show_no_quotes $ remove_sseq_length_one st_vals
+  let st_val_string = make_array_string_for_backend conf $
+                      remove_sseq_length_one st_vals
   ST_Val_String st_val_string valid_clks
   
 class Convertible_To_Atom_Strings a where
-  convert_to_flat_atom_list :: a -> [String]
+  convert_to_flat_atom_list :: a -> ST_Val_To_String_Config -> [String]
 
 instance Convertible_To_Atom_Strings Integer where
-  convert_to_flat_atom_list x = [show x]
+  convert_to_flat_atom_list x _ = [show x]
 
 instance Convertible_To_Atom_Strings Bool where
-  convert_to_flat_atom_list x = [show x]
+  convert_to_flat_atom_list x _ = [show x]
   
 instance (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) => Convertible_To_Atom_Strings (a, b) where
-  convert_to_flat_atom_list (x, y) = [show_no_quotes $ (head $ convert_to_flat_atom_list x,
-                                          head $ convert_to_flat_atom_list y)]
+  convert_to_flat_atom_list (x, y) conf =
+    [make_tuple_string_for_backend conf
+      (head $ convert_to_flat_atom_list x conf)
+      (head $ convert_to_flat_atom_list y conf)]
 
 instance (Convertible_To_Atom_Strings a) => Convertible_To_Atom_Strings [a] where
-  convert_to_flat_atom_list xs = concat $ map convert_to_flat_atom_list xs
+  convert_to_flat_atom_list xs conf = concat $
+    map (\x -> convert_to_flat_atom_list x conf) xs
 
 instance Convertible_To_Atom_Strings AST_Atoms where
-  convert_to_flat_atom_list (BitA b) = [show b]
-  convert_to_flat_atom_list (IntA i) = [show i]
-  convert_to_flat_atom_list (ATupleA x y) =
-    [show_no_quotes $ (head $ convert_to_flat_atom_list x,
-                        head $ convert_to_flat_atom_list y)]
+  convert_to_flat_atom_list (BitA b) _ = [show b]
+  convert_to_flat_atom_list (IntA i) _ = [show i]
+  convert_to_flat_atom_list (ATupleA x y) conf =
+    [make_tuple_string_for_backend conf
+      (head $ convert_to_flat_atom_list x conf)
+      (head $ convert_to_flat_atom_list y conf)]
 
 -- these atoms are just used to convert between
 -- the atoms in AST_Value and the string representations from Convertible_To_Atom_Strings

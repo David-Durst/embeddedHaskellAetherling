@@ -1,4 +1,4 @@
-module Aetherling.Interpretations.Magma.Compile where
+module Aetherling.Interpretations.Backend_Compile.Magma.Compile where
 {-
 import Aetherling.Interpretations.Magma.Constants
 import Aetherling.Interpretations.Magma.Tester

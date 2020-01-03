@@ -1,0 +1,3 @@
+module Aetherling.Interpretations.Backend_Compile.Magma.Constants where
+
+root_dir = "/home/david/dev/embeddedHaskellAetherling/"

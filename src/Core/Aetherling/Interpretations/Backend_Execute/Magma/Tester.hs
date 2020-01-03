@@ -1,7 +1,7 @@
-module Aetherling.Interpretations.Magma.Tester where
-import Aetherling.Interpretations.Magma.Expr_To_String
-import Aetherling.Interpretations.Magma.Value_To_String
-import Aetherling.Interpretations.Test_Helpers
+module Aetherling.Interpretations.Backend_Compile.Magma.Tester where
+import Aetherling.Interpretations.Backend_Compile.Magma.Expr_To_String
+import Aetherling.Interpretations.Backend_Compile.Magma.Value_To_String
+import Aetherling.Interpretations.Backend_Compile.Test_Helpers
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr
