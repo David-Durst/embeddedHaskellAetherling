@@ -1,7 +1,7 @@
-module Aetherling.Interpretations.Backend_Compile.Magma.Tester where
-import Aetherling.Interpretations.Backend_Compile.Magma.Expr_To_String
-import Aetherling.Interpretations.Backend_Compile.Magma.Value_To_String
-import Aetherling.Interpretations.Backend_Compile.Test_Helpers
+module Aetherling.Interpretations.Backend_Execute.Magma.Tester where
+import Aetherling.Interpretations.Backend_Execute.Magma.Expr_To_String
+import Aetherling.Interpretations.Backend_Execute.Magma.Value_To_String
+import Aetherling.Interpretations.Backend_Execute.Test_Helpers
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Monad_Helpers as MH
 import Aetherling.Languages.Space_Time.Deep.Expr
@@ -197,10 +197,10 @@ generate_fault_input_output_for_st_program p inputs output = do
   let in_types_and_values = zip (e_in_types p_types) inputs
   
   let fault_inputs = map (\(t, v) ->
-                           convert_seq_val_to_st_val_string v t)
+                           convert_seq_val_to_st_val_string v t magma_conf)
                      in_types_and_values
   let ST_Val_String fault_output valid_out =
-        convert_seq_val_to_st_val_string output (e_out_type p_types)
+        convert_seq_val_to_st_val_string output (e_out_type p_types) magma_conf
   Fault_IO (map st_values fault_inputs) (map st_valids fault_inputs)
     fault_output valid_out (length valid_out)
 
