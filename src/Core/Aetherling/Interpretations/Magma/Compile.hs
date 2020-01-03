@@ -1,4 +1,5 @@
 module Aetherling.Interpretations.Magma.Compile where
+{-
 import Aetherling.Interpretations.Magma.Constants
 import Aetherling.Interpretations.Magma.Tester
 import Aetherling.Interpretations.Magma.Expr_To_String
@@ -423,3 +424,5 @@ tst_compile_with_slowdown_to_expr shallow_seq_program s = do
   return $ matched_latencies {
     ML.new_expr = MCF.merge_consts_and_fifos $ ML.new_expr matched_latencies
     }
+
+-}

@@ -74,9 +74,7 @@ data Test_Args a b = Test_Args {test_inputs :: [a], test_output :: b}
 -- | Compile a shallowly embedded sequence language program to a backend
 -- representation. Then, run that backend representation through a verilog
 -- simulator with the specified input. Return if the output matches the input.
-compile_and_test :: (Shallow_Types.Aetherling_Value a,
-                     Convertible_To_Atom_Strings b,
-                     Convertible_To_Atom_Strings c) =>
+compile_and_test :: (Shallow_Types.Aetherling_Value a) =>
                      RH.Rewrite_StateM a -> [b] -> c ->
                      Slowdown_Target -> Language_Target ->
                      String -> Except Compiler_Error [IO Process_Result]

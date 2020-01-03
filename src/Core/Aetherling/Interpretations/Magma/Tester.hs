@@ -68,7 +68,7 @@ test_verilog_with_fault p verilog_path inputs output output_latency = do
 test_circuit_with_fault_no_io :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr -> Maybe String -> [a] -> b -> Int -> IO Ex_Test_Result 
 test_circuit_with_fault_no_io p verilog_path inputs output output_latency = do
-  module_str_data <- module_to_magma_string p
+  let module_str_data = module_to_magma_string p
   let p_str = add_test_harness_to_fault_str p module_str_data inputs output
               output_latency (isJust verilog_path)
   circuit_file <- emptySystemTempFile "ae_circuit.py"

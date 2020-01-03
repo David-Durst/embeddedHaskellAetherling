@@ -11,7 +11,7 @@ import qualified Aetherling.Monad_Helpers as MH
 import qualified Aetherling.Rewrites.Sequence_Shallow_To_Deep as Seq_SToD
 import qualified Aetherling.Rewrites.Match_Latencies as ML
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Type_To_Slowdown
-import qualified Aetherling.Interpretations.Latency as CL
+import qualified Aetherling.Interpretations.Compute_Latency as CL
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 import Aetherling.Rewrites.Sequence_Assign_Indexes
