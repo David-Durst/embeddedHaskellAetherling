@@ -47,6 +47,7 @@ dependencies:
 - random
 - random-shuffle
 - safe
+- filepath
 
 ghc-options:
 - -fconstraint-solver-iterations=0

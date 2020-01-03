@@ -1,4 +1,5 @@
 module Aetherling.Interpretations.Compile where
+import Aetherling.Interpretations.Magma.Constants
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Rewrites.Add_Pipeline_Registers as APR
 import qualified Aetherling.Rewrites.Merge_Const_FIFOs as MCF
@@ -23,8 +24,16 @@ import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions as ST_Conv
 import qualified Data.List as L
-import Data.Maybe
 import Control.Monad.Except
+import System.IO.Temp
+import System.IO
+import System.Process
+import System.Environment
+import System.Exit
+import System.Directory
+import System.FilePath
+import Data.Maybe
+import Debug.Trace
 
 -- things this module needs to do:
 -- 1. compile Seq to ST IR deep embedding to backend given a slowdown
@@ -61,6 +70,95 @@ data Slowdown_Target =
   deriving (Show, Eq)
 
 data Test_Args a b = Test_Args {test_inputs :: [a], test_output :: b}
+
+-- | Compile a shallowly embedded sequence language program to a backend
+-- representation. Then, run that backend representation through a verilog
+-- simulator with the specified input. Return if the output matches the input.
+compile_and_test :: (Shallow_Types.Aetherling_Value a,
+                     Convertible_To_Atom_Strings b,
+                     Convertible_To_Atom_Strings c) =>
+                     RH.Rewrite_StateM a -> [b] -> c ->
+                     Slowdown_Target -> Language_Target ->
+                     String -> Except Compiler_Error [IO Process_Result]
+compile_and_test shallow_seq_program s_target l_target output_name_template = do
+  -- need to make convertible_to_atom_strings language generic
+  -- don't need to bring generate_fault_input_output_for_st_program in from Tester
+  -- each language's tester will need to call that as the tester will take a convertible_to_atom_strings [b] input and convertible_to_atom_stirngs c output
+  -- this will call compile_to_string and then add_test_harness depending on language target
+  -- then it will check if a verilog file is needed and copy if necessary
+  -- finally, it will call the normal run_python and convert the result to a Test_Success
+  undefined
+
+-- | Compile a shallowly embedded sequence language program to a backend
+-- representation. Then, run that backend to produce verilog if the backend
+-- can produce verilog (ie isn't Text)
+compile_to_file :: (Shallow_Types.Aetherling_Value a) =>
+                     RH.Rewrite_StateM a -> Slowdown_Target -> Language_Target ->
+                     String -> Except Compiler_Error [IO Process_Result]
+compile_to_file shallow_seq_program s_target l_target output_name_template = do
+  -- get the strings for each program
+  program_strs <- compile_to_string shallow_seq_program s_target l_target
+  -- now append to each program the code to print out verilog
+  let verilog_names = map (\i -> output_name_template ++ "_" ++ show i ++ ".v") [0..]
+  let program_strs_with_verilog_printing =
+        case l_target of
+          Magma -> do
+            let programs_and_verilog_names = zip program_strs verilog_names
+            map (\(p_str, v_name) -> p_str ++ "\n" ++
+                  M_Expr_To_Str.magma_verilog_output_epilogue v_name)
+              programs_and_verilog_names
+          Chisel -> error "Chisel compilation not yet supported"
+          Text -> program_strs
+  let compute_output_file_name i =
+        case l_target of
+          Magma -> root_dir ++ "/test/magma_examples/" ++
+                   output_name_template ++ "_" ++ show i ++ ".py"
+          Chisel -> root_dir ++ "/test/chisel_examples/" ++
+                   output_name_template ++ "_" ++ show i ++ ".scala"
+          Text -> root_dir ++ "/test/st_examples/" ++
+                   output_name_template ++ "_" ++ show i ++ ".txt"
+  return $ map (\(p_str, idx) -> do
+                  let output_file_name = (compute_output_file_name idx)
+                  case l_target of
+                    Magma ->
+                      run_python p_str output_file_name
+                    Chisel -> error "Chisel compilation not yet supported"
+                    Text -> do
+                      write_file_ae p_str output_file_name
+                      return $ Process_Result ExitSuccess "" ""
+               )
+    (zip program_strs_with_verilog_printing [0..])
+
+write_file_ae :: String -> String -> IO ()
+write_file_ae file_name p_str = do
+  createDirectoryIfMissing True $ takeDirectory file_name
+  writeFile file_name p_str
+      
+-- | Save a file with a path, run it through a python interpreter,
+-- and return the result
+run_python :: String -> String -> IO Process_Result
+run_python p_str file_name = do
+  write_file_ae file_name p_str
+  stdout_name <- emptySystemTempFile "ae_circuit_fault_stdout.txt"
+  stdout_file <- openFile stdout_name WriteMode
+  stderr_name <- emptySystemTempFile "ae_circuit_fault_stderr.txt"
+  stderr_file <- openFile stderr_name WriteMode
+  let process =
+        (proc "python" [file_name]) {
+        std_out = UseHandle stdout_file,
+        std_err = UseHandle stderr_file
+        }
+  (_ , _, _, phandle) <- createProcess process
+  exit_code <- waitForProcess phandle
+  stdout_text <- readFile stdout_name
+  stderr_text <- readFile stderr_name
+  return $ Process_Result exit_code stdout_text stderr_text
+
+data Process_Result = Process_Result {
+  exit_code :: ExitCode,
+  proc_stdout :: String,
+  proc_stderr :: String
+  } deriving (Show, Eq)
 
 -- | Compile a shallowly embedding sequence language program to an STIR
 -- program with a desired throughput in a string representation that can

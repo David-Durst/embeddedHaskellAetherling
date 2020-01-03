@@ -99,6 +99,10 @@ magma_prelude =
   "import magma as m" ++
   "\n"
 
+magma_verilog_output_epilogue :: String -> String
+magma_verilog_output_epilogue output_name =
+  "fault_helpers.compile(Main(), \"" ++ output_name ++ "\")"
+
 print_magma :: Expr -> IO ()
 print_magma e = do
   let prelude = magma_prelude
