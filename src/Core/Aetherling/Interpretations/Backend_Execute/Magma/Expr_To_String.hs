@@ -30,7 +30,7 @@ data Magma_Data = Magma_Data {
   modules :: [String],
   cur_module_inputs :: [Module_Port],
   cur_module_output :: Module_Port,
-  -- all modules other than reduce use valid
+  -- all modules other than operator inside reduce use valid
   cur_module_valid :: Bool,
   next_module_index :: Int,
   -- first module's name is top

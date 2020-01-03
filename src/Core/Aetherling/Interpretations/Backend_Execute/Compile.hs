@@ -1,5 +1,6 @@
 module Aetherling.Interpretations.Backend_Execute.Compile where
 import Aetherling.Interpretations.Backend_Execute.Magma.Constants
+import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Rewrites.Add_Pipeline_Registers as APR
 import qualified Aetherling.Rewrites.Merge_Const_FIFOs as MCF
@@ -74,11 +75,17 @@ data Test_Args a b = Test_Args {test_inputs :: [a], test_output :: b}
 -- | Compile a shallowly embedded sequence language program to a backend
 -- representation. Then, run that backend representation through a verilog
 -- simulator with the specified input. Return if the output matches the input.
-test_with_backend :: (Shallow_Types.Aetherling_Value a) =>
-                     RH.Rewrite_StateM a -> [b] -> c ->
+test_with_backend :: (Shallow_Types.Aetherling_Value a,
+                     Convertible_To_Atom_Strings b,
+                     Convertible_To_Atom_Strings c) =>
+                     RH.Rewrite_StateM a -> 
                      Slowdown_Target -> Language_Target ->
-                     String -> Except Compiler_Error [IO Process_Result]
-test_with_backend shallow_seq_program s_target l_target output_name_template = do
+                     String -> [b] -> c ->
+                     Except Compiler_Error [IO Process_Result]
+test_with_backend shallow_seq_program s_target l_target output_name_template
+  inputs output = do
+  -- get the strings for each program
+  program_strs <- compile_to_string shallow_seq_program s_target l_target
   -- need to make convertible_to_atom_strings language generic
   -- don't need to bring generate_fault_input_output_for_st_program in from Tester
   -- each language's tester will need to call that as the tester will take a convertible_to_atom_strings [b] input and convertible_to_atom_stirngs c output
