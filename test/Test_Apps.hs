@@ -1,4 +1,5 @@
 module Test_Apps where
+{-
 import Test.Tasty
 import Test.Tasty.HUnit
 import qualified Test_Slowdown as TS
@@ -8,7 +9,7 @@ import Aetherling.Languages.Sequence.Shallow.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Isomorphisms
-import Aetherling.Interpretations.Latency
+import Aetherling.Interpretations.Compute_Latency
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
@@ -17,8 +18,7 @@ import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Exp
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
-import Aetherling.Interpretations.Magma.Compile
-import Aetherling.Interpretations.Magma.Tester
+import Aetherling.Interpretations.Backend_Execute.Compile
 import Control.Applicative
 import Data.Proxy
 import Data.Traversable
@@ -28,28 +28,23 @@ import GHC.TypeLits.Extra
 apps_tests = testGroup "Full Application Tests"
   [
     testCase "map" $
-    (all_success =<< single_map_200_results) @? "map failed",
+    (TS.all_success single_map_200_results) @? "map failed",
     testCase "single 3x3 convolution" $
-    (all_success =<< conv_2d_results) @? "single 3x3 convolution failed",
+    (TS.all_success conv_2d_results) @? "single 3x3 convolution failed",
     testCase "pyramid" $
-    (all_success =<< TS.pyramid_1d_results) @? "pyramid failed",
+    (TS.all_success TS.pyramid_1d_results) @? "pyramid failed",
     testCase "conv 3x3 to 2x2" $
-    (all_success =<< conv_2d_b2b_results) @? "conv 3x3 to 2x2 failed",
+    (TS.all_success conv_2d_b2b_results) @? "conv 3x3 to 2x2 failed",
     testCase "conv 3x3 to 3x3" $
-    (all_success =<< conv_2d_3x3_repeat_b2b_results) @? "conv 3x3 to 3x3 failed",
+    (TS.all_success conv_2d_3x3_repeat_b2b_results) @? "conv 3x3 to 3x3 failed",
     testCase "sharpen" $
-    (all_success =<< sharpen_results) @? "sharpen failed"
+    (TS.all_success sharpen_results) @? "sharpen failed"
   ]
 
 all_types = sequence [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types, sharpen_results_all_types,
              TS.pyramid_1d_results_all_types]
             
 random_types = sequence [single_map_200_results_random_types, conv_2d_results_random_types, conv_2d_b2b_results_random_types, sharpen_results_random_types]
-  
-all_success :: [Fault_Result] -> IO Bool
-all_success results = do
-  let checked_results = all (\x -> x == Fault_Success) results
-  return checked_results
   
 add_5 atom_in = do
   let const = const_genC (Atom_Int 5) atom_in
@@ -576,3 +571,5 @@ big_conv_2d_st_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdow
                                       big_conv_2d s "conv2d") big_conv_2d_slowdowns
 big_conv_2d_verilog_prints = sequence $ fmap (\s -> compile_with_slowdown
                                       big_conv_2d s "conv2d") big_conv_2d_slowdowns
+
+-}

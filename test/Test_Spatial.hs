@@ -1,4 +1,5 @@
 module Test_Spatial where
+{-
 import Test_Apps
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -8,7 +9,7 @@ import Aetherling.Languages.Sequence.Shallow.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Isomorphisms
-import Aetherling.Interpretations.Latency
+import Aetherling.Interpretations.Compute_Latency
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
@@ -17,8 +18,7 @@ import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Exp
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
-import Aetherling.Interpretations.Magma.Compile
-import Aetherling.Interpretations.Magma.Tester
+import Aetherling.Interpretations.Backend_Execute.Compile
 import Data.Proxy
 import Data.Traversable
 import GHC.TypeLits
@@ -45,3 +45,4 @@ sharpen_spatial_verilog = sequence $ fmap (\(s, d) -> compile_and_test_verilog s
                                       sharpen_inputs sharpen_output
                                                    "test/verilog_examples/spatial/sharpen/sharpen_" d)
                                  [(16,100), (8,100), (4,100), (2,100)]
+-}
