@@ -83,7 +83,7 @@ test_with_backend :: (Shallow_Types.Aetherling_Value a,
                      RH.Rewrite_StateM a -> 
                      Slowdown_Target -> Language_Target ->
                      String -> [b] -> c ->
-                     Except Compiler_Error (IO [Process_Result])
+                     Except Compiler_Error (IO [Test_Helpers.Test_Result])
 test_with_backend shallow_seq_program s_target l_target output_name_template
   inputs output = do
   -- get STIR expr for each program
@@ -108,7 +108,7 @@ test_with_backend shallow_seq_program s_target l_target output_name_template
                   case l_target of
                     Magma -> do
                       process_result <- run_python test_str circuit_file
-                      undefined
+                      process_result_to_test_result process_result circuit_file
                     Chisel -> error "Chisel compilation not yet supported"
                     Text -> error "Can't run tests with Text backend."
                )
