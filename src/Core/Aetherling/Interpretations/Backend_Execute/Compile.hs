@@ -83,9 +83,10 @@ test_with_backend :: (Shallow_Types.Aetherling_Value a,
                      RH.Rewrite_StateM a -> 
                      Slowdown_Target -> Language_Target ->
                      String -> [b] -> c ->
+                     Maybe String ->
                      Except Compiler_Error (IO [Test_Helpers.Test_Result])
 test_with_backend shallow_seq_program s_target l_target output_name_template
-  inputs output = do
+  inputs output verilog_path = do
   -- get STIR expr for each program
   deep_st_programs <- compile_to_expr shallow_seq_program s_target
   let expr_latencies = map CL.compute_latency deep_st_programs
@@ -95,18 +96,21 @@ test_with_backend shallow_seq_program s_target l_target output_name_template
           Magma -> do
             let modules_str_data =
                   map (M_Expr_To_Str.module_to_magma_string) deep_st_programs
-            let modules_expr_str_data_latency =
+            let exprs_and_str_data_and_latencies =
                   zip3 deep_st_programs modules_str_data expr_latencies
             map (\(p_expr, p_str, p_latency) ->
                    M_Tester.add_test_harness_to_fault_str p_expr p_str
-                   inputs output p_latency False)
-              modules_expr_str_data_latency
+                   inputs output p_latency (isJust verilog_path))
+              exprs_and_str_data_and_latencies
           Chisel -> error "Chisel compilation not yet supported"
           Text -> error "Can't run tests with Text backend."
   return $ sequence $ map (\test_str -> do
                   circuit_file <- emptySystemTempFile "ae_circuit.py"
                   case l_target of
                     Magma -> do
+                      if isJust verilog_path
+                        then copyFile (fromJust verilog_path) ("vBuild/top.v")
+                        else return ()
                       process_result <- run_python test_str circuit_file
                       process_result_to_test_result process_result circuit_file
                     Chisel -> error "Chisel compilation not yet supported"
