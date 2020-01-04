@@ -29,7 +29,7 @@ int_to_ignore = 253
 is_success_fault_result :: Test_Result -> Bool
 is_success_fault_result Test_Success = True
 is_success_fault_result _ = False
-
+{-
 test_circuit_with_fault p inputs output output_latency = do
   result <- test_circuit_with_fault_no_io p Nothing inputs output output_latency
   case result of
@@ -92,7 +92,7 @@ test_circuit_with_fault_no_io p verilog_path inputs output output_latency = do
       stdout_fault <- readFile stdout_name
       stderr_fault <- readFile stderr_name
       return $ Test_Failure circuit_file stdout_fault stderr_fault c
-
+-}
 add_test_harness_to_fault_str :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr -> Magma_String_Results -> [a] -> b -> Int -> Bool -> String
 add_test_harness_to_fault_str p module_str_data inputs output output_latency

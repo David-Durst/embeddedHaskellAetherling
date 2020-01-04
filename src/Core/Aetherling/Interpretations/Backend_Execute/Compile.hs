@@ -1,5 +1,7 @@
 module Aetherling.Interpretations.Backend_Execute.Compile where
 import Aetherling.Interpretations.Backend_Execute.Magma.Constants
+import qualified Aetherling.Interpretations.Backend_Execute.Test_Helpers as Test_Helpers
+import qualified Aetherling.Interpretations.Backend_Execute.Magma.Tester as M_Tester
 import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Rewrites.Add_Pipeline_Registers as APR
@@ -81,39 +83,66 @@ test_with_backend :: (Shallow_Types.Aetherling_Value a,
                      RH.Rewrite_StateM a -> 
                      Slowdown_Target -> Language_Target ->
                      String -> [b] -> c ->
-                     Except Compiler_Error [IO Process_Result]
+                     Except Compiler_Error (IO [Process_Result])
 test_with_backend shallow_seq_program s_target l_target output_name_template
   inputs output = do
-  -- get the strings for each program
-  program_strs <- compile_to_string shallow_seq_program s_target l_target
+  -- get STIR expr for each program
+  deep_st_programs <- compile_to_expr shallow_seq_program s_target
+  let expr_latencies = map CL.compute_latency deep_st_programs
+  -- convert each STIR expr to a string for the backend with an added test hardness
+  let test_strs =
+        case l_target of
+          Magma -> do
+            let modules_str_data =
+                  map (M_Expr_To_Str.module_to_magma_string) deep_st_programs
+            let modules_expr_str_data_latency =
+                  zip3 deep_st_programs modules_str_data expr_latencies
+            map (\(p_expr, p_str, p_latency) ->
+                   M_Tester.add_test_harness_to_fault_str p_expr p_str
+                   inputs output p_latency False)
+              modules_expr_str_data_latency
+          Chisel -> error "Chisel compilation not yet supported"
+          Text -> error "Can't run tests with Text backend."
+  return $ sequence $ map (\test_str -> do
+                  circuit_file <- emptySystemTempFile "ae_circuit.py"
+                  case l_target of
+                    Magma -> do
+                      process_result <- run_python test_str circuit_file
+                      undefined
+                    Chisel -> error "Chisel compilation not yet supported"
+                    Text -> error "Can't run tests with Text backend."
+               )
+    test_strs
+
   -- need to make convertible_to_atom_strings language generic
   -- don't need to bring generate_fault_input_output_for_st_program in from Tester
   -- each language's tester will need to call that as the tester will take a convertible_to_atom_strings [b] input and convertible_to_atom_stirngs c output
   -- this will call compile_to_string and then add_test_harness depending on language target
   -- then it will check if a verilog file is needed and copy if necessary
   -- finally, it will call the normal run_python and convert the result to a Test_Success
-  undefined
 
 -- | Compile a shallowly embedded sequence language program to a backend
 -- representation. Then, run that backend to produce verilog if the backend
 -- can produce verilog (ie isn't Text)
 compile_to_file :: (Shallow_Types.Aetherling_Value a) =>
                      RH.Rewrite_StateM a -> Slowdown_Target -> Language_Target ->
-                     String -> Except Compiler_Error [IO Process_Result]
+                     String -> Except Compiler_Error (IO [Process_Result])
 compile_to_file shallow_seq_program s_target l_target output_name_template = do
-  -- get the strings for each program
-  program_strs <- compile_to_string shallow_seq_program s_target l_target
+  -- get STIR expr for each program
+  deep_st_programs <- compile_to_expr shallow_seq_program s_target
   -- now append to each program the code to print out verilog
   let verilog_names = map (\i -> output_name_template ++ "_" ++ show i ++ ".v") [0..]
   let program_strs_with_verilog_printing =
         case l_target of
           Magma -> do
+            let program_strs = map (M_Expr_To_Str.module_str .
+                                    M_Expr_To_Str.module_to_magma_string) deep_st_programs
             let programs_and_verilog_names = zip program_strs verilog_names
             map (\(p_str, v_name) -> p_str ++ "\n" ++
                   M_Expr_To_Str.magma_verilog_output_epilogue v_name)
               programs_and_verilog_names
           Chisel -> error "Chisel compilation not yet supported"
-          Text -> program_strs
+          Text -> map ST_Print.print_st_str deep_st_programs
   let compute_output_file_name i =
         case l_target of
           Magma -> root_dir ++ "/test/magma_examples/" ++
@@ -122,7 +151,7 @@ compile_to_file shallow_seq_program s_target l_target output_name_template = do
                    output_name_template ++ "_" ++ show i ++ ".scala"
           Text -> root_dir ++ "/test/st_examples/" ++
                    output_name_template ++ "_" ++ show i ++ ".txt"
-  return $ map (\(p_str, idx) -> do
+  return $ sequence $ map (\(p_str, idx) -> do
                   let output_file_name = (compute_output_file_name idx)
                   case l_target of
                     Magma ->
@@ -160,19 +189,34 @@ run_python p_str file_name = do
   return $ Process_Result exit_code stdout_text stderr_text
 
 data Process_Result = Process_Result {
-  exit_code :: ExitCode,
+  proc_exit_code :: ExitCode,
   proc_stdout :: String,
   proc_stderr :: String
   } deriving (Show, Eq)
 
+process_result_to_test_result :: Process_Result -> FilePath ->
+                                 IO Test_Helpers.Test_Result
+process_result_to_test_result process_result test_file = do
+  case proc_exit_code process_result of
+    ExitSuccess -> return Test_Helpers.Test_Success
+    ExitFailure exit_code -> do
+      putStrLn $ "Failure with file " ++ test_file
+      let stdout = proc_stdout process_result
+      putStrLn $ "stdout: \n" ++ stdout
+      let stderr = proc_stderr process_result
+      putStrLn $ "stderr: \n" ++ stderr
+      putStrLn $ "Exit Code: " ++ show exit_code
+      return $ Test_Helpers.Test_Failure test_file stdout stderr exit_code
+
 -- | Compile a shallowly embedding sequence language program to an STIR
--- program with a desired throughput in a string representation that can
--- be run through a target backend.
-compile_to_string :: (Shallow_Types.Aetherling_Value a) =>
-                     RH.Rewrite_StateM a -> Slowdown_Target -> Language_Target ->
-                     Except Compiler_Error [String]
-compile_to_string shallow_seq_program s_target l_target = do
-  deep_st_programs <- case s_target of
+-- program with a desired throughput with all passes applied.
+-- This is a frontend for the three types of Seq Shallow to STIR compilers
+-- that also does error checking.
+compile_to_expr :: (Shallow_Types.Aetherling_Value a) =>
+                     RH.Rewrite_StateM a -> Slowdown_Target -> 
+                     Except Compiler_Error [STE.Expr]
+compile_to_expr shallow_seq_program s_target = do
+  case s_target of
         Min_Area_With_Slowdown_Factor s -> do
           let deep_st_to_be_checked =
                 compile_with_slowdown_to_expr shallow_seq_program s
@@ -193,12 +237,6 @@ compile_to_string shallow_seq_program s_target l_target = do
           case check_compiler_errors s deep_st_to_be_checked of
             Nothing -> return [deep_st_to_be_checked]
             Just err -> throwError err
-  return $ case l_target of
-    Magma ->
-      map (M_Expr_To_Str.module_str .
-            M_Expr_To_Str.module_to_magma_string) deep_st_programs
-    Text -> map ST_Print.print_st_str deep_st_programs
-    _ -> error "Chisel compilation not yet supported"
 
 data Compiler_Error = Type_Mismatch
   | Latency_Mismatch
