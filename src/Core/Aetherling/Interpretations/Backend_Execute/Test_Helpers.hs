@@ -10,7 +10,9 @@ data Test_Result = Test_Success
                       test_stdout :: String,
                       test_stderr :: String,
                       test_exit_code :: Int
-                      } deriving (Show, Eq)
+                      }
+                  | Compiler_Failure
+                 deriving (Show, Eq)
 
 data Tester_IO = Tester_IO {
   tester_inputs :: [String],

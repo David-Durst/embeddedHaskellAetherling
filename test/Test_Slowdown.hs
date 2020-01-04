@@ -76,16 +76,11 @@ slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
     (all_success striple_to_seq_results) @? "striple to seq slowdowns failed"
   ]
 
-all_success :: Except Compiler_Error [IO [Test_Result]] -> IO Bool
-all_success results_inner_io_or_error_monad = do
-  let results_inner_io_or_error = runExcept results_inner_io_or_error_monad
-  if isLeft results_inner_io_or_error
-    then return False
-    else do
-    let results_inner_io = fromRight undefined results_inner_io_or_error
-    results <- sequence results_inner_io
-    let checked_results = all (\x -> x == Test_Success) $ concat results
-    return checked_results
+all_success :: IO [[Test_Result]] -> IO Bool
+all_success results_io = do
+  results <- results_io
+  let checked_results = all (\x -> x == Test_Success) $ concat results
+  return checked_results
   
 -- input to scheduling algorithm: expr tree
 -- output to scheduling algorithm: amount to slow down each node

@@ -91,11 +91,14 @@ test_with_backend :: (Shallow_Types.Aetherling_Value a,
                      Slowdown_Target -> Language_Target ->
                      Verilog_Test_Arg ->
                      [b] -> c ->
-                     Except Compiler_Error (IO [Test_Helpers.Test_Result])
+                     IO [Test_Helpers.Test_Result]
 test_with_backend shallow_seq_program s_target l_target verilog_conf
   inputs output = do
   -- get STIR expr for each program
-  deep_st_programs <- compile_to_expr shallow_seq_program s_target
+  let deep_st_programs =
+        case (runExcept $ compile_to_expr shallow_seq_program s_target) of
+          Left x -> error $ "Compiler Error: " ++ show x
+          Right x -> x
   let expr_latencies = map CL.compute_latency deep_st_programs
   -- convert each STIR expr to a string for the backend with an added test hardness
   let test_strs =
@@ -111,25 +114,31 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
               exprs_and_str_data_and_latencies
           Chisel -> error "Chisel compilation not yet supported"
           Text -> error "Can't run tests with Text backend."
-  return $ sequence $ map (\(test_str, idx) -> do
-                  circuit_file <- emptySystemTempFile "ae_circuit.py"
-                  case l_target of
-                    Magma -> do
-                      if use_verilog_sim_source verilog_conf
-                        then copyFile
-                             (get_verilog_sim_source verilog_conf)
-                             ("vBuild/top.v")
-                        else return ()
-                      process_result <- run_python test_str circuit_file
-                      if save_gen_verilog verilog_conf
-                        then copy_verilog_file
-                             (get_verilog_save_name verilog_conf) s_target idx
-                        else return ()
-                      process_result_to_test_result process_result circuit_file
-                    Chisel -> error "Chisel compilation not yet supported"
-                    Text -> error "Can't run tests with Text backend."
-               )
-    (zip test_strs [0..])
+  sequence $ map
+    (\(test_str, idx) -> do
+        circuit_file <- emptySystemTempFile "ae_circuit.py"
+        case l_target of
+          Magma -> do
+            if use_verilog_sim_source verilog_conf
+              then copyFile (get_verilog_sim_source verilog_conf)
+                   ("vBuild/top.v")
+              else return ()
+            process_result <- run_python test_str circuit_file
+            if save_gen_verilog verilog_conf
+              then copy_verilog_file
+                   (get_verilog_save_name verilog_conf) s_target idx
+              else return ()
+            process_result_to_test_result process_result circuit_file
+          Chisel -> error "Chisel compilation not yet supported"
+          Text -> error "Can't run tests with Text backend."
+    ) (zip test_strs [0..])
+
+add_io_to_except :: Except a b -> ExceptT a IO b
+add_io_to_except except = do
+  let result = runExcept except
+  case result of
+    Left x -> throwError x
+    Right x -> return x
 
 use_verilog_sim_source (Verilog_Sim_Source _) = True
 use_verilog_sim_source _ = False
@@ -161,10 +170,11 @@ int_to_ignore = 253
 -- can produce verilog (ie isn't Text)
 compile_to_file :: (Shallow_Types.Aetherling_Value a) =>
                      RH.Rewrite_StateM a -> Slowdown_Target -> Language_Target ->
-                     String -> Except Compiler_Error (IO [Process_Result])
+                     String -> ExceptT Compiler_Error IO [Process_Result]
 compile_to_file shallow_seq_program s_target l_target output_name_template = do
   -- get STIR expr for each program
-  deep_st_programs <- compile_to_expr shallow_seq_program s_target
+  deep_st_programs <- add_io_to_except $
+                      compile_to_expr shallow_seq_program s_target
   -- now append to each program the code to print out verilog
   let verilog_names = map (\i -> output_name_template ++ "_" ++ show i ++ ".v") [0..]
   let program_strs_with_verilog_printing =
@@ -186,17 +196,17 @@ compile_to_file shallow_seq_program s_target l_target output_name_template = do
                    output_name_template ++ "_" ++ show i ++ ".scala"
           Text -> root_dir ++ "/test/st_examples/" ++
                    output_name_template ++ "_" ++ show i ++ ".txt"
-  return $ sequence $ map (\(p_str, idx) -> do
-                  let output_file_name = (compute_output_file_name idx)
-                  case l_target of
-                    Magma ->
-                      run_python p_str output_file_name
-                    Chisel -> error "Chisel compilation not yet supported"
-                    Text -> do
-                      write_file_ae p_str output_file_name
-                      return $ Process_Result ExitSuccess "" ""
-               )
-    (zip program_strs_with_verilog_printing [0..])
+  lift $ sequence $ map
+    (\(p_str, idx) -> do
+        let output_file_name = (compute_output_file_name idx)
+        case l_target of
+          Magma ->
+            run_python p_str output_file_name
+          Chisel -> error "Chisel compilation not yet supported"
+          Text -> do
+            write_file_ae p_str output_file_name
+            return $ Process_Result ExitSuccess "" ""
+    ) (zip program_strs_with_verilog_printing [0..])
 
 write_file_ae :: String -> String -> IO ()
 write_file_ae file_name p_str = do
