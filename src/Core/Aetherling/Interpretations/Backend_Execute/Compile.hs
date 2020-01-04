@@ -63,11 +63,13 @@ import Debug.Trace
 --   (c) chisel tests
 
 data Language_Target = Magma | Chisel | Text deriving (Show, Eq)
+text_backend = Text
 
 data Verilog_Test_Arg = Verilog_Sim_Source String
   | Save_Gen_Verilog String
   | No_Verilog
   deriving (Show, Eq)
+verilog_sim_source str = Verilog_Sim_Source $ root_dir ++ str
 
 data Slowdown_Target =
   -- this target is the minimum area circuit with a slowdown factor
