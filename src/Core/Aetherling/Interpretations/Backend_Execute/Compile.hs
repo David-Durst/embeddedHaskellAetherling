@@ -64,6 +64,11 @@ import Debug.Trace
 
 data Language_Target = Magma | Chisel | Text deriving (Show, Eq)
 
+data Verilog_Test_Arg = Verilog_Sim_Source String
+  | Save_Gen_Verilog String
+  | No_Verilog
+  deriving (Show, Eq)
+
 data Slowdown_Target =
   -- this target is the minimum area circuit with a slowdown factor
   Min_Area_With_Slowdown_Factor Int
@@ -82,11 +87,11 @@ test_with_backend :: (Shallow_Types.Aetherling_Value a,
                      Convertible_To_Atom_Strings c) =>
                      RH.Rewrite_StateM a -> 
                      Slowdown_Target -> Language_Target ->
-                     String -> [b] -> c ->
-                     Maybe String ->
+                     Verilog_Test_Arg ->
+                     [b] -> c ->
                      Except Compiler_Error (IO [Test_Helpers.Test_Result])
-test_with_backend shallow_seq_program s_target l_target output_name_template
-  inputs output verilog_path = do
+test_with_backend shallow_seq_program s_target l_target verilog_conf
+  inputs output = do
   -- get STIR expr for each program
   deep_st_programs <- compile_to_expr shallow_seq_program s_target
   let expr_latencies = map CL.compute_latency deep_st_programs
@@ -100,23 +105,47 @@ test_with_backend shallow_seq_program s_target l_target output_name_template
                   zip3 deep_st_programs modules_str_data expr_latencies
             map (\(p_expr, p_str, p_latency) ->
                    M_Tester.add_test_harness_to_fault_str p_expr p_str
-                   inputs output p_latency (isJust verilog_path))
+                   inputs output p_latency (use_verilog_sim_source verilog_conf))
               exprs_and_str_data_and_latencies
           Chisel -> error "Chisel compilation not yet supported"
           Text -> error "Can't run tests with Text backend."
-  return $ sequence $ map (\test_str -> do
+  return $ sequence $ map (\(test_str, idx) -> do
                   circuit_file <- emptySystemTempFile "ae_circuit.py"
                   case l_target of
                     Magma -> do
-                      if isJust verilog_path
-                        then copyFile (fromJust verilog_path) ("vBuild/top.v")
+                      if use_verilog_sim_source verilog_conf
+                        then copyFile
+                             (get_verilog_sim_source verilog_conf)
+                             ("vBuild/top.v")
                         else return ()
                       process_result <- run_python test_str circuit_file
+                      if save_gen_verilog verilog_conf
+                        then copy_verilog_file
+                             (get_verilog_save_name verilog_conf) s_target idx
+                        else return ()
                       process_result_to_test_result process_result circuit_file
                     Chisel -> error "Chisel compilation not yet supported"
                     Text -> error "Can't run tests with Text backend."
                )
-    test_strs
+    (zip test_strs [0..])
+
+use_verilog_sim_source (Verilog_Sim_Source _) = True
+use_verilog_sim_source _ = False
+
+get_verilog_sim_source (Verilog_Sim_Source name) = name
+get_verilog_sim_source _ = ""
+
+save_gen_verilog (Save_Gen_Verilog _) = True
+save_gen_verilog _ = False
+
+get_verilog_save_name (Save_Gen_Verilog name) = name
+get_verilog_save_name _ = ""
+
+wrap_single_s s = Min_Area_With_Slowdown_Factor s
+
+-- a helper int for values that should be ignored by tester as they
+-- indicate invalid in shift (and thus stencil)
+int_to_ignore = 253
 
   -- need to make convertible_to_atom_strings language generic
   -- don't need to bring generate_fault_input_output_for_st_program in from Tester
@@ -171,6 +200,20 @@ write_file_ae :: String -> String -> IO ()
 write_file_ae file_name p_str = do
   createDirectoryIfMissing True $ takeDirectory file_name
   writeFile file_name p_str
+  
+test_verilog_dir = root_dir ++
+                   "/test/verilog_examples/aetherling_copies/" 
+copy_verilog_file :: String -> Slowdown_Target -> Int -> IO ()
+copy_verilog_file name (Min_Area_With_Slowdown_Factor s) idx = do
+  createDirectoryIfMissing True test_verilog_dir
+  copyFile "vBuild/top.v"
+    (test_verilog_dir ++ "/" ++ name ++ "/" ++ name ++ "_" ++ show s ++ "_" ++
+     show idx ++ ".v")
+copy_verilog_file name (All_With_Slowdown_Factor s) idx =
+  copy_verilog_file name (Min_Area_With_Slowdown_Factor s) idx
+copy_verilog_file name (Type_Rewrites trs) idx =
+  copy_verilog_file (name ++ "_trs")
+  (Min_Area_With_Slowdown_Factor $ product_tr_periods trs) idx
       
 -- | Save a file with a path, run it through a python interpreter,
 -- and return the result
@@ -281,13 +324,8 @@ compile_with_slowdown_to_expr shallow_seq_program s = do
         lower_seq_shallow_to_deep_indexed shallow_seq_program
   let possible_st_programs_and_areas =
         rewrite_to_partially_parallel_slowdown s deep_seq_program_with_indexes
-  let deep_st_program = if length possible_st_programs_and_areas == 0
-        then STE.ErrorN ("No possible rewrites for slowdown " ++ show s ++
-                         " of program \n" ++
-                         Seq_Print.print_seq_str deep_seq_program_with_indexes)
-             MH.No_Index
-        else program $ L.minimumBy (\pa pb -> compare (area pa) (area pb))
-             possible_st_programs_and_areas
+  let deep_st_program = get_expr_with_min_area s deep_seq_program_with_indexes
+                        possible_st_programs_and_areas 
   add_registers deep_st_program
   
 compile_with_slowdown_to_all_possible_expr :: (Shallow_Types.Aetherling_Value a) =>

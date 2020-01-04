@@ -78,20 +78,6 @@ rewrite_to_partially_parallel_type_rewrite' tr seq_expr = do
 
 data Program_And_Area = PA { program :: STE.Expr, area :: Int }
   deriving (Show, Eq)
-rewrite_to_partially_parallel :: Int -> SeqE.Expr -> STE.Expr
-rewrite_to_partially_parallel s seq_expr = do
-  let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
-  let possible_output_types = rewrite_all_AST_types s seq_expr_out_type
-  let possible_st_programs = map (\trs -> rewrite_to_partially_parallel_type_rewrite trs seq_expr)
-                             possible_output_types
-  let valid_possible_st_programs = filter (not . Has_Error.has_error) possible_st_programs
-  let possible_st_programs_and_areas = map (\p -> PA p (Comp_Area.get_area p))
-                                       valid_possible_st_programs
-  if length possible_st_programs_and_areas == 0
-    then STE.ErrorN ("No possible rewrites for slowdown " ++ show s ++ " of program \n" ++
-                     Seq_Print.print_seq_str seq_expr) No_Index
-    else program $ L.minimumBy (\pa pb -> compare (area pa) (area pb)) possible_st_programs_and_areas
-    
 rewrite_to_partially_parallel_slowdown :: Int -> SeqE.Expr -> [Program_And_Area]
 rewrite_to_partially_parallel_slowdown s seq_expr = do
   let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
@@ -102,6 +88,18 @@ rewrite_to_partially_parallel_slowdown s seq_expr = do
   let valid_possible_st_programs =
         filter (not . Has_Error.has_error) possible_st_programs
   map (\p -> PA p (Comp_Area.get_area p)) valid_possible_st_programs
+
+-- | Helper function to get the ST expr with the min area of those generated
+-- by rewrite_to_partially_parallel_slowdown
+get_expr_with_min_area :: Int -> SeqE.Expr -> [Program_And_Area] -> STE.Expr
+get_expr_with_min_area s seq_expr possible_st_programs_and_areas = 
+  if length possible_st_programs_and_areas == 0
+    then STE.ErrorN ("No possible rewrites for slowdown " ++ show s ++
+                     " of program \n" ++
+                     Seq_Print.print_seq_str seq_expr) No_Index
+    else program $
+         L.minimumBy (\pa pb -> compare (area pa) (area pb))
+         possible_st_programs_and_areas
  {-
 
 rewrite_to_partially_parallel_search' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr

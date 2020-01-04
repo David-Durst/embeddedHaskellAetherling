@@ -23,9 +23,6 @@ import System.Directory
 import Data.Maybe
 import Debug.Trace
 
--- a helper int for stencil values that should be ignored
-int_to_ignore = 253
-
 is_success_fault_result :: Test_Result -> Bool
 is_success_fault_result Test_Success = True
 is_success_fault_result _ = False
