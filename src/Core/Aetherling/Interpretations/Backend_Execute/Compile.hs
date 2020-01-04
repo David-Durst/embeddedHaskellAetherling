@@ -217,10 +217,13 @@ test_verilog_dir = root_dir ++
                    "/test/verilog_examples/aetherling_copies/" 
 copy_verilog_file :: String -> Slowdown_Target -> Int -> IO ()
 copy_verilog_file name (Min_Area_With_Slowdown_Factor s) idx = do
-  createDirectoryIfMissing True test_verilog_dir
+  -- test verilog dir is the directory of all the verilog output
+  -- each design indicated by name gets its own folder
+  -- so the different throughputs can be in the same folder
+  let file_dir = test_verilog_dir ++ "/" ++ name
+  createDirectoryIfMissing True file_dir
   copyFile "vBuild/top.v"
-    (test_verilog_dir ++ "/" ++ name ++ "/" ++ name ++ "_" ++ show s ++ "_" ++
-     show idx ++ ".v")
+    (file_dir ++ "/" ++ name ++ "_" ++ show s ++ "_" ++ show idx ++ ".v")
 copy_verilog_file name (All_With_Slowdown_Factor s) idx =
   copy_verilog_file name (Min_Area_With_Slowdown_Factor s) idx
 copy_verilog_file name (Type_Rewrites trs) idx =

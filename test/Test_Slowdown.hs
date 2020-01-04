@@ -103,9 +103,9 @@ single_map_output :: [Integer] = [0,1,2,3]
 single_map_results = sequence $
   fmap (\s -> test_with_backend
               single_map (wrap_single_s s)
-              Magma No_Verilog
+              Magma (Save_Gen_Verilog "single_map")
               single_map_inputs single_map_output) [1,2,4]
-single_map_verilog_path = "test/verilog_examples/aetherling_copies/single_map/single_map_4.v"
+single_map_verilog_path = "test/verilog_examples/aetherling_copies/single_map/single_map_4_0.v"
 single_map_ae_verilog = sequence $
   fmap (\s -> test_with_backend
               single_map (wrap_single_s s)
