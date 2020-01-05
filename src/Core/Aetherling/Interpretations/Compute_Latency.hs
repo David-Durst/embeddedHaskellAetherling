@@ -270,19 +270,8 @@ compute_reshape_latency in_t out_t = do
       -- they also need to be delayed so that all elements are output
       -- only after they are input aka preserving causality
       let flat_idx_to_undelayed_out_locations = compute_element_locations out_t
-      -- add 1 as 1 clock delay from reading/writing to memories
       get_output_delay flat_idx_to_in_locations
         flat_idx_to_undelayed_out_locations
-      {-
-      let flat_idx_to_out_locations = M.toAscList $
-                                      delay_output_times
-                                      flat_idx_to_in_locations_map
-                                      flat_idx_to_undelayed_out_locations
-      let get_times = Prelude.map (\(_, location) -> time $ port_and_time location)
-      let out_in_times = zip (get_times flat_idx_to_out_locations)
-                         (get_times flat_idx_to_in_locations)
--}
-      --1 + (maximum $ Prelude.map (\(x,y) -> x-y) out_in_times) 
     _ -> 0
   where
     get_last_out_for_in :: AST_Type -> AST_Type -> Int
