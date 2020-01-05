@@ -56,32 +56,6 @@ get_output_delay idxs_to_input_locs idxs_to_undelayed_output_locs = do
   -- passes. everything just gets delayed by max of the per node min delays
   maximum $ map (\(out_time, in_time) -> in_time - out_time) $
         M.toList min_delayed_output_time_per_node_given_neighborhood
-  
-  {-
-  -- breaking apart into time-indepenent nodes and min delayed output times
-  let output_nodes = M.keys min_delayed_output_time_per_node_given_neighborhood
-  let min_delay_output_times = traceShowId $ 
-        map (\k -> min_delayed_output_time_per_node_given_neighborhood M.! k)
-        output_nodes
-  -- this does forward pass ensure output times delayed relative to each other
-  let delayed_output_time_with_holes = reverse $
-        foldl (\output_times next_to_delay ->
-                 if next_to_delay > head output_times
-                 then next_to_delay : output_times
-                 else head output_times + 1 : output_times
-              ) ([head min_delay_output_times]) (tail min_delay_output_times)
-  -- equivalent backwards pass to remove holes
-  -- first get the last delayed output time
-  -- then get the offset from last undelayed output time to the first undelayed output time
-  -- use these to compute the delay of the first output time
-  let last_element_output_time = last delayed_output_time_with_holes
-  
-  let undelayed_out_times = M.keys undelayed_out_to_input_times
-  let max_undelayed_out_time = maximum undelayed_out_times
-  let min_undelayed_out_time = minimum undelayed_out_times
-  let undelayed_offset = max_undelayed_out_time - min_undelayed_out_time
-  last_element_output_time - undelayed_offset
-  -}
 
 -- | compute a map from flat idx to nested st coordinates and port and time,
 -- aka flat st coordinates
