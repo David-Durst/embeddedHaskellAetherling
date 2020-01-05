@@ -689,8 +689,13 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   --traceShowM $ "possible_st_programs: " ++ show possible_st_programs
   let valid_possible_st_programs = filter (not . Has_Error.has_error . snd) possible_st_programs
   --traceShowM $ "valid_possible_st_programs: " ++ show valid_possible_st_programs
-  let possible_st_trs_and_areas = map (\(tr, p) -> (tr, Comp_Area.get_area p))
-                                       valid_possible_st_programs
+  -- when computing area include the reshape as different types will mean different
+  -- resahpe area costs
+  let possible_st_trs_and_areas = map
+        (\(tr, p) -> do
+            let p_with_reshape = STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types p) out_t_ppar p index
+            (tr, Comp_Area.get_area p_with_reshape)
+        ) valid_possible_st_programs
   --traceShowM $ "valid_possible_st_trs_and_areas: " ++ show possible_st_trs_and_areas
   --base_input_rewrites <- lift $ rewrite_AST_type slowdown (SeqT.SeqT no io -- (slowdown_without_ni_factors - no)
   --                                                    (SeqT.SeqT ni ii SeqT.IntT))
