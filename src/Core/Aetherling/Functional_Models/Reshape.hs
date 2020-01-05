@@ -3,6 +3,7 @@ import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Languages.Space_Time.Deep.Expr
 import Safe
 import qualified Data.Map as M
+import qualified Data.List as L
 
 data Port_And_Time = PT {port :: Int, time :: Int} deriving (Show, Eq)
 data ST_Element_Locations = ST_Element_Locations {
@@ -10,8 +11,72 @@ data ST_Element_Locations = ST_Element_Locations {
   port_and_time :: Port_And_Time
   } deriving (Show, Eq)
 
+data ST_Element_Input_And_Output_Times = ST_Elem_IO_Times {
+  input_time :: Int,
+  output_time :: Int
+  } deriving (Show, Eq)
+
 type Flat_Idxs_To_Locations = M.Map Int ST_Element_Locations
 
+-- | compute when the first output comes relative to the first input.
+-- this is a complex calculation in order to preserve causality
+-- (see get_output_latencies in Aetherling's magma code and Section 5 of
+-- the streaming arbitrary permutations paper for more info on this)
+get_output_delay :: Flat_Idxs_To_Locations -> Flat_Idxs_To_Locations -> Int
+get_output_delay idxs_to_input_locs idxs_to_undelayed_output_locs = do
+  let idxs = M.keys idxs_to_input_locs
+  -- for each flat element, get the input and undelayed output clock
+  let input_and_undelayed_out_times =
+        map (\idx -> ST_Elem_IO_Times
+                     (time $ port_and_time $ idxs_to_input_locs M.! idx)
+                     (time $ port_and_time $ idxs_to_undelayed_output_locs M.! idx))
+        idxs
+  -- for each undelayed output clock, get all the inputs
+  -- this is called the neighborhood in Magma implementation and is the incoming
+  -- edges for a node in the paper's bipartite graph
+  let undelayed_out_to_input_times = M.fromAscList $
+        map (\xs -> (output_time $ head xs, map input_time xs)) $
+        L.groupBy (\x y -> (output_time x) == (output_time y)) $
+        L.sortBy (\x y -> compare (output_time x) (output_time y))
+        input_and_undelayed_out_times
+  -- for each undelayed output time (aka output node in the bipartite graph
+  -- from paper)
+  -- get the least delayed output time necessary for it to preserve causality
+  -- and come after all inputs in its neighborhood.
+  -- adding 1 to account for writing to memory.
+  -- this is per_node_min_latencies in Magma.
+  -- This only considers the neighborhood so it's a min estimate.
+  -- later code will need to ensure all outputs are delayed relative to each
+  -- other
+  let min_delayed_output_time_per_node_given_neighborhood =
+        M.map (+1) $ 
+        M.map maximum undelayed_out_to_input_times
+  -- breaking apart into time-indepenent nodes and min delayed output times
+  let output_nodes = M.keys min_delayed_output_time_per_node_given_neighborhood
+  let min_delay_output_times =
+        map (\k -> min_delayed_output_time_per_node_given_neighborhood M.! k)
+        output_nodes
+  -- this does forward pass ensure output times delayed relative to each other
+  let delayed_output_time_with_holes = reverse $
+        foldl (\output_times next_to_delay ->
+                 if next_to_delay > head output_times
+                 then next_to_delay : output_times
+                 else head output_times + 1 : output_times
+              ) ([head min_delay_output_times]) (tail min_delay_output_times)
+  -- equivalent backwards pass to remove holes
+  -- first get the last delayed output time
+  -- then get the offset from last undelayed output time to the first undelayed output time
+  -- use these to compute the delay of the first output time
+  let last_element_output_time = last delayed_output_time_with_holes
+  
+  let undelayed_out_times = M.keys undelayed_out_to_input_times
+  let max_undelayed_out_time = maximum undelayed_out_times
+  let min_undelayed_out_time = minimum undelayed_out_times
+  let undelayed_offset = max_undelayed_out_time - min_undelayed_out_time
+  last_element_output_time - undelayed_offset
+
+-- | compute a map from flat idx to nested st coordinates and port and time,
+-- aka flat st coordinates
 compute_element_locations :: AST_Type -> Flat_Idxs_To_Locations
 compute_element_locations t = do
   let ts_elem_xs = st_types_to_ts_elem_list t
@@ -29,6 +94,9 @@ compute_element_locations t = do
     nested_indices
 
 data TS_Elem = T_Elem Int Int | S_Elem Int deriving (Show, Eq)
+-- | Convert an AST_Type to a form that is easier to do timing computations on:
+-- it merges types that are identical for timing purposes (like STuple and SSeq)
+-- and removes atoms
 st_types_to_ts_elem_list :: AST_Type -> [TS_Elem]
 st_types_to_ts_elem_list UnitT = []
 st_types_to_ts_elem_list BitT = []
@@ -53,6 +121,8 @@ get_divisors_for_els (S_Elem n : tl) = n * Safe.headDef 1 inner : inner
   where
     inner = get_divisors_for_els tl
 
+-- given a flat index and divisors indicating dimensions,
+-- compute the nested st index
 compute_nested_indices :: [Int] -> Int -> [Int]
 compute_nested_indices [] flat_idx = [flat_idx]
 compute_nested_indices (hd_divisor : tl_divisors) flat_idx =
@@ -77,6 +147,10 @@ get_multipliers_for_els (S_Elem n : tl) = do
   let t_mul = n * t_multiplier prior_mul
   prior_mul { s_multiplier = t_mul } : inner
 
+-- | compute the flat space-time coordinates (port and time)
+-- given derivatives of the AST Type - multipliers for how many elements are
+-- below each layer of the type and TS_Eleme which describe if the current
+-- layer is in space or time
 compute_port_and_time :: [ST_Multiplier] -> [TS_Elem] -> [Int] -> Port_And_Time
 compute_port_and_time [] [] [] = PT 0 0
 compute_port_and_time (ST_Multiplier _ t_mul : mul_tl) (T_Elem _ _ : ts_tl)

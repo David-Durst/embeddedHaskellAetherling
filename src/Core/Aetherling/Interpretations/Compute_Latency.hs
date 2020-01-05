@@ -41,7 +41,9 @@ get_ops_latencies e = do
                         empty_rewrite_data
                       )
                       empty_latency_state
-  fromRight M.empty computed_latencies
+  if isRight computed_latencies
+    then fromRight M.empty computed_latencies
+    else error $ show $ fromLeft undefined computed_latencies
   
 compute_latency :: Expr -> Int
 compute_latency e = do
@@ -52,7 +54,9 @@ compute_latency e = do
                         empty_rewrite_data
                       )
                       empty_latency_state
-  fromRight undefined computed_latency
+  if isRight computed_latency
+    then fromRight undefined computed_latency
+    else error $ show $ fromLeft undefined computed_latency
 
 -- need to track cur_latency so that map inputs can check they latency of input
 -- to outer map
@@ -261,13 +265,24 @@ compute_reshape_latency in_t out_t = do
   let in_out_diff = diff_types in_t_norm out_t_norm
   case in_out_diff of
     Just _ -> do
-      let flat_idx_to_in_locations = M.toAscList $ compute_element_locations in_t
-      let flat_idx_to_out_locations = M.toAscList $ compute_element_locations out_t
+      let flat_idx_to_in_locations = compute_element_locations in_t
+      -- computing out locations in isolation is insufficient
+      -- they also need to be delayed so that all elements are output
+      -- only after they are input aka preserving causality
+      let flat_idx_to_undelayed_out_locations = compute_element_locations out_t
+      -- add 1 as 1 clock delay from reading/writing to memories
+      get_output_delay flat_idx_to_in_locations
+        flat_idx_to_undelayed_out_locations
+      {-
+      let flat_idx_to_out_locations = M.toAscList $
+                                      delay_output_times
+                                      flat_idx_to_in_locations_map
+                                      flat_idx_to_undelayed_out_locations
       let get_times = Prelude.map (\(_, location) -> time $ port_and_time location)
       let out_in_times = zip (get_times flat_idx_to_out_locations)
                          (get_times flat_idx_to_in_locations)
-      -- add 1 as 1 clock delay from reading/writing to memories
-      1 + (maximum $ Prelude.map (\(x,y) -> x-y) out_in_times) 
+-}
+      --1 + (maximum $ Prelude.map (\(x,y) -> x-y) out_in_times) 
     _ -> 0
   where
     get_last_out_for_in :: AST_Type -> AST_Type -> Int
