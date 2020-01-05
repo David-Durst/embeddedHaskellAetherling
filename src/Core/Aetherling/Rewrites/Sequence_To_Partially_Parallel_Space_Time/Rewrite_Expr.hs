@@ -703,6 +703,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   --traceShowM $ "matched_huersitics: " ++ show matches_heuristics
   --traceShowM $ "tr:" ++ show type_rewrites
   --traceShowM $ "index: " ++ show index
+  -- NOTE: DISABLING HEURISTICS FOR NOW
   if False && isJust matches_heuristics 
     then do
     -- need to handle Tseq TSeq case where adding SSeq 1 to bottom 
