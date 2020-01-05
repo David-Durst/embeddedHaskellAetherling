@@ -176,26 +176,30 @@ compile_to_file shallow_seq_program s_target l_target output_name_template = do
   deep_st_programs <- add_io_to_except $
                       compile_to_expr shallow_seq_program s_target
   -- now append to each program the code to print out verilog
-  let verilog_names = map (\i -> output_name_template ++ "_" ++ show i ++ ".v") [0..]
+  let s_str = slowdown_target_to_file_name_string s_target
+  let verilog_names = map (\i -> output_name_template ++ "_" ++ s_str ++ "_" ++
+                            show i ++ ".v") [0..length deep_st_programs - 1]
+  let compute_output_file_name i = do
+        let (l_target_dir, l_file_ending) =
+              case l_target of
+                Magma -> ("magma_examples", ".py")
+                Chisel -> ("chisel_examples", ".scala")
+                Text -> ("st_examples", ".txt")
+        root_dir ++ "/test/no_bench/" ++ l_target_dir ++ "/" ++
+          output_name_template ++ "/" ++
+          output_name_template ++ "_" ++ s_str ++ "_" ++ show i ++ l_file_ending
   let program_strs_with_verilog_printing =
         case l_target of
           Magma -> do
             let program_strs = map (M_Expr_To_Str.module_str .
-                                    M_Expr_To_Str.module_to_magma_string) deep_st_programs
-            let programs_and_verilog_names = zip program_strs verilog_names
-            map (\(p_str, v_name) -> p_str ++ "\n" ++
-                  M_Expr_To_Str.magma_verilog_output_epilogue v_name)
-              programs_and_verilog_names
+                                    M_Expr_To_Str.module_to_magma_string)
+                               deep_st_programs
+            map (\(p_str, idx) -> p_str ++ "\n" ++
+                  M_Expr_To_Str.magma_verilog_output_epilogue
+                  (replaceExtension "v" $ compute_output_file_name idx)
+                ) (zip program_strs [0..])
           Chisel -> error "Chisel compilation not yet supported"
           Text -> map ST_Print.print_st_str deep_st_programs
-  let compute_output_file_name i =
-        case l_target of
-          Magma -> root_dir ++ "/test/magma_examples/" ++
-                   output_name_template ++ "_" ++ show i ++ ".py"
-          Chisel -> root_dir ++ "/test/chisel_examples/" ++
-                   output_name_template ++ "_" ++ show i ++ ".scala"
-          Text -> root_dir ++ "/test/st_examples/" ++
-                   output_name_template ++ "_" ++ show i ++ ".txt"
   lift $ sequence $ map
     (\(p_str, idx) -> do
         let output_file_name = (compute_output_file_name idx)
@@ -216,19 +220,21 @@ write_file_ae file_name p_str = do
 test_verilog_dir = root_dir ++
                    "/test/verilog_examples/aetherling_copies/" 
 copy_verilog_file :: String -> Slowdown_Target -> Int -> IO ()
-copy_verilog_file name (Min_Area_With_Slowdown_Factor s) idx = do
+copy_verilog_file name s_target idx = do
   -- test verilog dir is the directory of all the verilog output
   -- each design indicated by name gets its own folder
   -- so the different throughputs can be in the same folder
   let file_dir = test_verilog_dir ++ "/" ++ name
   createDirectoryIfMissing True file_dir
+  let s_str = slowdown_target_to_file_name_string s_target
   copyFile "vBuild/top.v"
-    (file_dir ++ "/" ++ name ++ "_" ++ show s ++ "_" ++ show idx ++ ".v")
-copy_verilog_file name (All_With_Slowdown_Factor s) idx =
-  copy_verilog_file name (Min_Area_With_Slowdown_Factor s) idx
-copy_verilog_file name (Type_Rewrites trs) idx =
-  copy_verilog_file (name ++ "_trs")
-  (Min_Area_With_Slowdown_Factor $ product_tr_periods trs) idx
+    (file_dir ++ "/" ++ name ++ "_" ++ s_str ++ "_" ++ show idx ++ ".v")
+
+slowdown_target_to_file_name_string :: Slowdown_Target -> String
+slowdown_target_to_file_name_string (Min_Area_With_Slowdown_Factor s) = show s
+slowdown_target_to_file_name_string (All_With_Slowdown_Factor s) = show s
+slowdown_target_to_file_name_string (Type_Rewrites trs) =
+  show (product_tr_periods trs)
       
 -- | Save a file with a path, run it through a python interpreter,
 -- and return the result
