@@ -1,5 +1,4 @@
 module Test_Apps where
-{-
 import Test.Tasty
 import Test.Tasty.HUnit
 import qualified Test_Slowdown as TS
@@ -43,9 +42,7 @@ apps_tests = testGroup "Full Application Tests"
 
 all_types = sequence [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types, sharpen_results_all_types,
              TS.pyramid_1d_results_all_types]
-            
-random_types = sequence [single_map_200_results_random_types, conv_2d_results_random_types, conv_2d_b2b_results_random_types, sharpen_results_random_types]
-  
+
 add_5 atom_in = do
   let const = const_genC (Atom_Int 5) atom_in
   let tupled = atom_tupleC atom_in const
@@ -54,26 +51,36 @@ single_map_200 =
   mapC' (Proxy @200) add_5 $
   com_input_seq "I" (Proxy :: Proxy (Seq 200 0 Atom_Int))
 single_map_200_seq_idx = add_indexes $ seq_shallow_to_deep single_map_200
-single_map_200_ppar = fmap (\s -> rewrite_to_partially_parallel s single_map_200_seq_idx) [1,5,10,20,25,40,50,100,200]
+single_map_200_ppar = fmap
+  (\s -> compile_with_slowdown_to_expr single_map_200 s)
+  [1,5,10,20,25,40,50,100,200]
 single_map_200_ppar_typechecked = fmap check_type single_map_200_ppar
 single_map_200_inputs :: [[Integer]] = [[1..200]]
 single_map_200_output :: [Integer] = [6..205]
 -- sequence used to flip [] and IO so can print from command line
-single_map_200_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                                single_map_200 s (Just "map")
-                                                single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
-single_map_200_results_all_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
-                                                single_map_200 s (Just "map")
-                                                single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
-single_map_200_results_random_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_random_types
-                                                single_map_200 s (Just "map")
-                                                single_map_200_inputs single_map_200_output) [1,5,10,20,25,40,50,100,200]
-single_map_200_st_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
-                                      single_map_200 s "map") [1,5,10,20,25,40,50,100,200]
+single_map_200_results = sequence $
+  fmap (\s -> test_with_backend
+              single_map_200 (wrap_single_s s)
+              Magma (Save_Gen_Verilog "map")
+              single_map_200_inputs single_map_200_output)
+  [1,5,10,20,25,40,50,100,200]
+single_map_200_results_all_types = sequence $
+  fmap (\s -> test_with_backend
+              single_map_200 (All_With_Slowdown_Factor s)
+              Magma (Save_Gen_Verilog "map")
+              single_map_200_inputs single_map_200_output)
+  [1,5,10,20,25,40,50,100,200]
+single_map_200_st_prints = sequence $
+  fmap (\s -> compile_to_file
+              single_map_200 (wrap_single_s s)
+              text_backend "map")
+  [1,5,10,20,25,40,50,100,200]
 
-single_map_200_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                                single_map_200 s (Just "map")
-                                                single_map_200_inputs single_map_200_output) [1]
+single_map_200_results' = sequence $
+  fmap (\s -> test_with_backend
+              single_map_200 (wrap_single_s s)
+              Magma (Save_Gen_Verilog "map")
+              single_map_200_inputs single_map_200_output) [1]
 stencil_3_1dC_nested in_seq = do
   let first_el = in_seq
   let second_el = shiftC (Proxy @1) first_el
@@ -96,7 +103,7 @@ stencil_2d_test = stencil_3x3_2dC_test (Proxy @4) $
   com_input_seq "hi" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 stencil_2d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_2d_test
 stencil_2d_test_ppar = 
-  fmap (\s -> rewrite_to_partially_parallel s stencil_2d_test_seq_idx) [1,2,4,8,16,48,144]
+  fmap (\s -> compile_with_slowdown_to_expr stencil_2d_test s) [1,2,4,8,16,48,144]
 stencil_2d_test_ppar_typechecked =
   fmap check_type stencil_2d_test_ppar
 stencil_2d_test_ppar_typechecked' =
@@ -130,12 +137,18 @@ stencil_2d_output :: [[[Integer]]] = [
   | k <- reverse $ [0..2]
   ] | r <- [1..row_size], c <- [1..row_size]]
 -- need to come back and check why slowest version uses a reduce_s
-stencil_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      stencil_2d_test s Nothing
-                                      stencil_2d_inputs stencil_2d_output) [1,2,4,8,16,48,144]
-stencil_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      stencil_2d_test s Nothing
-                                      stencil_2d_inputs stencil_2d_output) [144]
+stencil_2d_results = sequence $
+  fmap (\s -> test_with_backend
+              stencil_2d_test (wrap_single_s s)
+              Magma No_Verilog
+              stencil_2d_inputs stencil_2d_output)
+  [1,2,4,8,16,48,144]
+stencil_2d_results' = sequence $
+  fmap (\s -> test_with_backend
+              stencil_2d_test (wrap_single_s s)
+              Magma No_Verilog
+              stencil_2d_inputs stencil_2d_output)
+  [144]
 
                      
 -- need thse for Integer and Int versions
@@ -157,16 +170,18 @@ tuple_2d_mul = tuple_2d_mul_shallow_no_input $
   com_input_seq "I" (Proxy :: Proxy (Seq 3 0 (Seq 3 0 Atom_Int)))
 tuple_2d_mul_seq_idx = add_indexes $ seq_shallow_to_deep tuple_2d_mul
 tuple_2d_mul_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s tuple_2d_mul_seq_idx) [1,3,9]
+  fmap (\s -> compile_with_slowdown_to_expr tuple_2d_mul s) [1,3,9]
 tuple_2d_mul_ppar_typechecked =
   fmap check_type tuple_2d_mul_ppar
 tuple_2d_mul_ppar_typechecked' =
   fmap check_type_get_error tuple_2d_mul_ppar
 tuple_2d_mul_inputs :: [[[Integer]]] = [[[1,2,3],[4,5,6],[7,8,9]]]
 tuple_2d_mul_output :: [Integer] = [5]
-tuple_2d_mul_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      tuple_2d_mul s Nothing
-                                      tuple_2d_mul_inputs tuple_2d_mul_output) [1,3,9]
+tuple_2d_mul_results = sequence $
+  fmap (\s -> test_with_backend
+              tuple_2d_mul (wrap_single_s s)
+              Magma No_Verilog
+              tuple_2d_mul_inputs tuple_2d_mul_output) [1,3,9]
 
 conv_2d_shallow_no_input in_col in_seq = do
   let stencil = stencil_3x3_2dC_test in_col in_seq
@@ -175,7 +190,7 @@ conv_2d = conv_2d_shallow_no_input (Proxy @4) $
   com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d
 conv_2d_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s conv_2d_seq_idx) [1,2,4,8,16,48,144]
+  fmap (\s -> compile_with_slowdown_to_expr conv_2d s) [1,2,4,8,16,48,144]
 conv_2d_ppar_typechecked =
   fmap check_type conv_2d_ppar
 conv_2d_ppar_typechecked' =
@@ -196,22 +211,29 @@ conv_2d_output :: [Integer] = [
   | window <- stencil_2d_output,
     let window_flat = concat window,
     let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
-conv_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      conv_2d s (Just "conv2d")
-                                      conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
-conv_2d_results_all_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
-                                      conv_2d s (Just "conv2d")
-                                      conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
-conv_2d_results_random_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_random_types
-                                      conv_2d s (Just "conv2d")
-                                      conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
-conv_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      conv_2d s Nothing
-                                      conv_2d_inputs conv_2d_output) [144]
-conv_2d_st_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
-                                      conv_2d s "conv2d") [1,2,4,8,16,48,144]
-conv_2d_verilog_prints = sequence $ fmap (\s -> compile_with_slowdown
-                                      conv_2d s "conv2d") [1,2,4,8,16,48,144]
+conv_2d_results = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d (wrap_single_s s)
+              Magma (Save_Gen_Verilog "conv2d")
+              conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
+conv_2d_results_all_types = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d (All_With_Slowdown_Factor s)
+              Magma (Save_Gen_Verilog "conv2d")
+              conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
+conv_2d_results' = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d (wrap_single_s s)
+              Magma No_Verilog
+              conv_2d_inputs conv_2d_output) [144]
+conv_2d_st_prints = sequence $
+  fmap (\s -> compile_to_file
+              conv_2d (wrap_single_s s)
+              text_backend "conv2d") [1,2,4,8,16,48,144]
+conv_2d_verilog_prints = sequence $
+  fmap (\s -> compile_to_file
+              conv_2d (wrap_single_s s)
+              text_backend "conv2d") [1,2,4,8,16,48,144]
 
 
 
@@ -228,19 +250,19 @@ down_from_pyramid_2d = down_from_pyramid_2d_no_input $
   com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 down_from_pyramid_2d_seq_idx = add_indexes $ seq_shallow_to_deep down_from_pyramid_2d
 down_from_pyramid_2d_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s down_from_pyramid_2d_seq_idx) [1,2,4,8,16,32,64]
+  fmap (\s -> compile_with_slowdown_to_expr down_from_pyramid_2d s) [1,2,4,8,16,32,64]
 down_and_upstream = STE.seq_in_st $ STE.seq_in_st $ down_from_pyramid_2d_ppar !! 5
 just_down = down_and_upstream {
   STE.seq_in = STE.InputN (STT.TSeqT 4 0 (STT.TSeqT 2 0 (
                                      STT.TSeqT 4 0 (STT.SSeqT 1 (STT.SSeqT 1 STT.IntT)))))
            "I" (Index 37) }
-just_down_latency = print_latency just_down
+just_down_latency = compute_latency just_down
 big_reshape_and_upstream = STE.seq_in_st $ down_from_pyramid_2d_ppar !! 5
 just_big_reshape = big_reshape_and_upstream {
   STE.seq_in = STE.InputN (STT.TSeqT 4 0 (STT.TSeqT 1 1 (
                                      STT.TSeqT 4 0 (STT.SSeqT 1 (STT.SSeqT 1 STT.IntT)))))
            "I" (Index 37) }
-just_big_reshape_latency = print_latency just_big_reshape
+just_big_reshape_latency = compute_latency just_big_reshape
 down_from_pyramid_2d_ppar_typechecked =
   fmap check_type down_from_pyramid_2d_ppar
 down_from_pyramid_2d_ppar_typechecked' =
@@ -250,9 +272,11 @@ down_from_pyramid_2d_output :: [Integer] =
   down_generator [1..64]
   --conv_generator $ stencil_generator 8 [1..]
   --down_generator  $ conv_generator $ stencil_generator 8 [1..] 
-down_from_pyramid_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      down_from_pyramid_2d s Nothing 
-                                      down_from_pyramid_2d_inputs down_from_pyramid_2d_output) [192]
+down_from_pyramid_2d_results = sequence $
+  fmap (\s -> test_with_backend
+              down_from_pyramid_2d (wrap_single_s s)
+              Magma No_Verilog
+              down_from_pyramid_2d_inputs down_from_pyramid_2d_output) [192]
 
 
 first_layer_pyr_shallow_no_input in_seq = do
@@ -267,7 +291,7 @@ first_layer_pyr = first_layer_pyr_shallow_no_input $
   com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 first_layer_pyr_seq_idx = add_indexes $ seq_shallow_to_deep first_layer_pyr
 first_layer_pyr_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s first_layer_pyr_seq_idx) [1,2,4,8,16,32,64,192,576]
+  fmap (\s -> compile_with_slowdown_to_expr first_layer_pyr s) [1,2,4,8,16,32,64,192,576]
 first_layer_pyr_ppar_typechecked =
   fmap check_type first_layer_pyr_ppar
 first_layer_pyr_ppar_typechecked' =
@@ -275,18 +299,30 @@ first_layer_pyr_ppar_typechecked' =
 first_layer_pyr_inputs :: [[Integer]] = [[1..row_size_pyramid*row_size_pyramid]]
 first_layer_pyr_output :: [Integer] =
   down_generator  $ conv_generator $ stencil_generator 8 [1..] 
-first_layer_pyr_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      first_layer_pyr s Nothing
-                                      first_layer_pyr_inputs first_layer_pyr_output) [1,2,4,8,16,32,64,192,576]
-first_layer_pyr_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      first_layer_pyr s Nothing
-                                      first_layer_pyr_inputs first_layer_pyr_output) [2,4,8,16,32,64,192,576]
-first_layer_pyr_results'' = sequence $ fmap (\s -> compile_with_slowdown
-                                      first_layer_pyr s "pyramid") [1]
-first_layer_pyr_results''' = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      first_layer_pyr s Nothing
-                                      first_layer_pyr_inputs first_layer_pyr_output) [576]
-  
+first_layer_pyr_results = sequence $
+  fmap (\s -> test_with_backend
+              first_layer_pyr (wrap_single_s s)
+              Magma No_Verilog
+              first_layer_pyr_inputs first_layer_pyr_output)
+  [1,2,4,8,16,32,64,192,576]
+first_layer_pyr_results' = sequence $
+  fmap (\s -> test_with_backend 
+              first_layer_pyr (wrap_single_s s)
+              Magma No_Verilog
+              first_layer_pyr_inputs first_layer_pyr_output)
+  [2,4,8,16,32,64,192,576]
+first_layer_pyr_results'' = sequence $
+  fmap (\s -> test_with_backend
+              first_layer_pyr (wrap_single_s s)
+              Magma (Save_Gen_Verilog "pyramid")
+              first_layer_pyr_inputs first_layer_pyr_output) [1]
+first_layer_pyr_results''' = sequence $
+  fmap (\s -> test_with_backend
+              first_layer_pyr (wrap_single_s s)
+              Magma (Save_Gen_Verilog "pyramid")
+              first_layer_pyr_inputs first_layer_pyr_output) [576]
+
+
 pyramid_2d_shallow_no_input in_seq = do
   let layer1_blurred = conv_2d_shallow_no_input (Proxy @8) in_seq
   let layer1_drop_cols = unpartitionC $ mapC (down_1dC 1) $
@@ -306,7 +342,7 @@ pyramid_2d = pyramid_2d_shallow_no_input $
   com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 pyramid_2d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_2d
 pyramid_2d_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s pyramid_2d_seq_idx) [1,2,4,8,16,32,64,192,576]
+  fmap (\s -> compile_with_slowdown_to_expr pyramid_2d s) [1,2,4,8,16,32,64,192,576]
 pyramid_2d_ppar_typechecked =
   fmap check_type pyramid_2d_ppar
 pyramid_2d_ppar_typechecked' =
@@ -322,19 +358,30 @@ pyramid_2d_inputs :: [[Integer]] = [[1..row_size_pyramid*row_size_pyramid]]
 pyramid_2d_output :: [Integer] =
   down_generator $ conv_generator $ stencil_generator 4 $
   down_generator  $ conv_generator $ stencil_generator 8 [1..] 
-pyramid_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      pyramid_2d s (Just "pyramid")
-                                      pyramid_2d_inputs pyramid_2d_output) [1,2,4,8,16,32,64,192,576]
-pyramid_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      pyramid_2d s (Just "pyramid")
-                                      pyramid_2d_inputs pyramid_2d_output) [2,4,8,16,32,64,192,576]
-pyramid_2d_results'' = sequence $ fmap (\s -> compile_with_slowdown
-                                      pyramid_2d s "pyramid") [1]
-pyramid_2d_results''' = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      pyramid_2d s (Just "pyramid")
-                                      pyramid_2d_inputs pyramid_2d_output) [576]
-pyramid_2d_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
-                                      pyramid_2d s "pyramid2dhueristic") [1,2,4,8,16,32,64,192,576]
+pyramid_2d_results = sequence $
+  fmap (\s -> test_with_backend 
+              pyramid_2d (wrap_single_s s)
+              Magma (Save_Gen_Verilog "pyramid")
+              pyramid_2d_inputs pyramid_2d_output) [1,2,4,8,16,32,64,192,576]
+pyramid_2d_results' = sequence $
+  fmap (\s -> test_with_backend
+              pyramid_2d (wrap_single_s s)
+              Magma (Save_Gen_Verilog "pyramid")
+              pyramid_2d_inputs pyramid_2d_output) [2,4,8,16,32,64,192,576]
+pyramid_2d_results'' = sequence $
+  fmap (\s -> test_with_backend
+              pyramid_2d (wrap_single_s s)
+              Magma (Save_Gen_Verilog "pyramid")
+              pyramid_2d_inputs pyramid_2d_output) [1]
+pyramid_2d_results''' = sequence $
+  fmap (\s -> test_with_backend
+              pyramid_2d (wrap_single_s s)
+              Magma (Save_Gen_Verilog "pyramid")
+              pyramid_2d_inputs pyramid_2d_output) [576]
+pyramid_2d_prints = sequence $
+  fmap (\s -> compile_to_file
+              pyramid_2d (wrap_single_s s)
+              text_backend "pyramid2dhueristic") [1,2,4,8,16,32,64,192,576]
 
 
   
@@ -390,7 +437,7 @@ conv_2d_b2b = conv_2d_b2b_shallow_no_input (Proxy @4) $
   com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 conv_2d_b2b_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d_b2b
 conv_2d_b2b_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s conv_2d_b2b_seq_idx) [1,2,4,8,16,48,144]
+  fmap (\s -> compile_with_slowdown_to_expr conv_2d_b2b s) [1,2,4,8,16,48,144]
 conv_2d_b2b_ppar_typechecked =
   fmap check_type conv_2d_b2b_ppar
 conv_2d_b2b_ppar_typechecked' =
@@ -408,23 +455,30 @@ conv_2d_b2b_inputs :: [[Integer]] = stencil_2d_inputs
 conv_2d_b2b_output :: [Integer] =
   conv_2x2_generator $ stencil_2x2_generator 4 $
   conv_generator $ stencil_generator 4 [1.. row_size*row_size]
-conv_2d_b2b_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      conv_2d_b2b s (Just "conv2d_b2b")
-                                      conv_2d_b2b_inputs conv_2d_b2b_output) [1,2,4,8,16,48,144]
-conv_2d_b2b_results_all_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
-                                      conv_2d_b2b s (Just "conv2d_b2b")
-                                      conv_2d_b2b_inputs conv_2d_b2b_output) [1,2,4,8,16,48,144]
-conv_2d_b2b_results_random_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_random_types
-                                      conv_2d_b2b s (Just "conv2d_b2b")
-                                      conv_2d_b2b_inputs conv_2d_b2b_output) [1,2,4,8,16,48,144]
+conv_2d_b2b_results = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d_b2b (wrap_single_s s)
+              Magma (Save_Gen_Verilog "conv2d_b2b")
+              conv_2d_b2b_inputs conv_2d_b2b_output) [1,2,4,8,16,48,144]
+conv_2d_b2b_results_all_types = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d_b2b (All_With_Slowdown_Factor s)
+              Magma (Save_Gen_Verilog "conv2d_b2b")
+              conv_2d_b2b_inputs conv_2d_b2b_output) [1,2,4,8,16,48,144]
 
-conv_2d_b2b_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      conv_2d_b2b s (Just "conv2d_b2b")
-                                      conv_2d_b2b_inputs conv_2d_b2b_output) [144]
-conv_2d_b2b_print_st = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
-                                      conv_2d_b2b s "conv2d_b2b") [1,2,4,8,16,48,144]
-conv_2d_b2b_compile = sequence $ fmap (\s -> compile_with_slowdown
-                                      conv_2d_b2b s "conv2d_b2b") [1,2,4,8,16,48,144]
+conv_2d_b2b_results' = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d_b2b (wrap_single_s s)
+              Magma (Save_Gen_Verilog "conv2d_b2b")
+              conv_2d_b2b_inputs conv_2d_b2b_output) [144]
+conv_2d_b2b_print_st = sequence $ 
+  fmap (\s -> compile_to_file
+              pyramid_2d (wrap_single_s s)
+              text_backend "conv2d_b2b") [1,2,4,8,16,48,144]
+conv_2d_b2b_compile = sequence $ 
+  fmap (\s -> compile_to_file
+              pyramid_2d (wrap_single_s s)
+              Magma "conv2d_b2b") [1,2,4,8,16,48,144]
 
 
 conv_2d_3x3_repeat_b2b_shallow_no_input in_col in_seq = do
@@ -436,7 +490,7 @@ conv_2d_3x3_repeat_b2b = conv_2d_3x3_repeat_b2b_shallow_no_input (Proxy @4) $
   com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 conv_2d_3x3_repeat_b2b_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d_3x3_repeat_b2b
 conv_2d_3x3_repeat_b2b_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s conv_2d_3x3_repeat_b2b_seq_idx) [1,2,4,8,16,48,144]
+  fmap (\s -> compile_with_slowdown_to_expr conv_2d_3x3_repeat_b2b s) [1,2,4,8,16,48,144]
 conv_2d_3x3_repeat_b2b_ppar_typechecked =
   fmap check_type conv_2d_3x3_repeat_b2b_ppar
 conv_2d_3x3_repeat_b2b_ppar_typechecked' =
@@ -445,12 +499,18 @@ conv_2d_3x3_repeat_b2b_inputs :: [[Integer]] = stencil_2d_inputs
 conv_2d_3x3_repeat_b2b_output :: [Integer] =
   conv_generator $ stencil_generator 4 $
   conv_generator $ stencil_generator 4 [1.. row_size*row_size]
-conv_2d_3x3_repeat_b2b_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      conv_2d_3x3_repeat_b2b s (Just "conv2d_b2b_3x3_repeat")
-                                      conv_2d_3x3_repeat_b2b_inputs conv_2d_3x3_repeat_b2b_output) [1,2,4,8,16,48,144]
+conv_2d_3x3_repeat_b2b_results = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d_3x3_repeat_b2b (wrap_single_s s)
+              Magma (Save_Gen_Verilog "conv2d_b2b_3x3_repeat")
+              conv_2d_3x3_repeat_b2b_inputs conv_2d_3x3_repeat_b2b_output)
+  [1,2,4,8,16,48,144]
 
-conv_2d_3x3_repeat_b2b_print_st = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
-                                      conv_2d_3x3_repeat_b2b s "conv2d_b2b_3x3_repeat") [1,2,4,8,16,48,144]
+conv_2d_3x3_repeat_b2b_print_st = sequence $
+  fmap (\s -> compile_to_file
+              conv_2d_3x3_repeat_b2b (wrap_single_s s)
+              Magma "conv2d_b2b_3x3_repeat") [1,2,4,8,16,48,144]
+
 t_const :: Integer
 t_const = 15
 t_const' = 15
@@ -492,7 +552,7 @@ sharpen_one_pixel_map = sharpen_one_pixel_map_no_input
 sharpen_one_pixel_map_deep = seq_shallow_to_deep sharpen_one_pixel_map
 sharpen_one_pixel_map_seq_idx = add_indexes $ seq_shallow_to_deep sharpen_one_pixel_map
 sharpen_one_pixel_map_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s sharpen_one_pixel_map_seq_idx) [1,2]
+  fmap (\s -> compile_with_slowdown_to_expr sharpen_one_pixel_map s) [1,2]
 sharpen_one_pixel_map_ppar_typechecked =
   fmap check_type sharpen_one_pixel_map_ppar
 sharpen_one_pixel_map_ppar_typechecked' =
@@ -502,9 +562,11 @@ sharpen_one_pixel_map_output :: [Integer] =
   zipWith sharpen_one_pixel'
   (sharpen_one_pixel_map_inputs !! 0) 
   (sharpen_one_pixel_map_inputs !! 1)
-sharpen_one_pixel_map_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      sharpen_one_pixel_map s Nothing
-                                      sharpen_one_pixel_map_inputs sharpen_one_pixel_map_output) [1,2]
+sharpen_one_pixel_map_results = sequence $
+  fmap (\s -> test_with_backend
+              sharpen_one_pixel_map (wrap_single_s s)
+              Magma No_Verilog
+              sharpen_one_pixel_map_inputs sharpen_one_pixel_map_output) [1,2]
 
 sharpen_shallow_no_input in_col in_seq = do
   let first_stencil = stencil_3x3_2dC_test in_col in_seq
@@ -522,7 +584,7 @@ sharpen = sharpen_shallow_no_input (Proxy @4) $
   com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 sharpen_seq_idx = add_indexes $ seq_shallow_to_deep sharpen
 sharpen_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s sharpen_seq_idx) [1,2,4,8,16,48,144]
+  fmap (\s -> compile_with_slowdown_to_expr sharpen s) [1,2,4,8,16,48,144]
 sharpen_ppar_typechecked =
   fmap check_type sharpen_ppar
 sharpen_ppar_typechecked' =
@@ -532,20 +594,25 @@ sharpen_output :: [Integer] =
   zipWith sharpen_one_pixel' 
   (conv_generator $ stencil_generator 4 (sharpen_inputs !! 0))
   (sharpen_inputs !! 0)
-sharpen_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      sharpen s (Just "sharpen")
-                                      sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
-sharpen_results_one = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      sharpen s (Just "sharpen")
-                                      sharpen_inputs sharpen_output) [48]
-sharpen_results_all_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_all_types
-                                      sharpen s (Just "sharpen")
-                                      sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
-sharpen_results_random_types = sequence $ fmap (\s -> compile_and_test_with_slowdown_random_types
-                                      sharpen s (Just "sharpen")
-                                      sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
-sharpen_results' = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
-                                      sharpen s "sharpen") [1,2,4,8,16,48,144]
+sharpen_results = sequence $
+  fmap (\s -> test_with_backend 
+              sharpen (wrap_single_s s)
+              Magma (Save_Gen_Verilog "sharpen")
+              sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
+sharpen_results_one = sequence $
+  fmap (\s -> test_with_backend
+              sharpen (wrap_single_s s)
+              Magma (Save_Gen_Verilog "sharpen")
+              sharpen_inputs sharpen_output) [48]
+sharpen_results_all_types = sequence $
+  fmap (\s -> test_with_backend 
+              sharpen (All_With_Slowdown_Factor s)
+              Magma (Save_Gen_Verilog "sharpen")
+              sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
+sharpen_print_st = sequence $
+  fmap (\s -> compile_to_file
+              sharpen (wrap_single_s s)
+              text_backend "sharpen") [1,2,4,8,16,48,144]
 
 row_size_big = 17
 big_conv_2d = conv_2d_shallow_no_input (Proxy @17) $ 
@@ -553,7 +620,7 @@ big_conv_2d = conv_2d_shallow_no_input (Proxy @17) $
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
 big_conv_2d_slowdowns = [289 `div` 2, 289, 289 *3, 289*9]
 big_conv_2d_ppar =
-  fmap (\s -> rewrite_to_partially_parallel s big_conv_2d_seq_idx) big_conv_2d_slowdowns
+  fmap (\s -> compile_with_slowdown_to_expr big_conv_2d s) big_conv_2d_slowdowns
 big_conv_2d_ppar_typechecked =
   fmap check_type big_conv_2d_ppar
 big_conv_2d_ppar_typechecked' =
@@ -561,15 +628,21 @@ big_conv_2d_ppar_typechecked' =
 big_conv_2d_inputs :: [[Integer]] = [[1..row_size_big*row_size_big]]
 big_conv_2d_output :: [Integer] =
   conv_generator $ stencil_generator row_size_big [1.. row_size_big*row_size_big]
-big_conv_2d_results = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      big_conv_2d s (Just "big_conv2d")
-                                      big_conv_2d_inputs big_conv_2d_output) big_conv_2d_slowdowns
-big_conv_2d_results' = sequence $ fmap (\s -> compile_and_test_with_slowdown
-                                      big_conv_2d s Nothing
-                                      big_conv_2d_inputs big_conv_2d_output) [289]
-big_conv_2d_st_prints = sequence $ fmap (\s -> compile_and_write_st_with_slowdown
-                                      big_conv_2d s "conv2d") big_conv_2d_slowdowns
-big_conv_2d_verilog_prints = sequence $ fmap (\s -> compile_with_slowdown
-                                      big_conv_2d s "conv2d") big_conv_2d_slowdowns
-
--}
+big_conv_2d_results = sequence $
+  fmap (\s -> test_with_backend
+              big_conv_2d (wrap_single_s s)
+              Magma (Save_Gen_Verilog "big_conv2d")
+              big_conv_2d_inputs big_conv_2d_output) big_conv_2d_slowdowns
+big_conv_2d_results' = sequence $
+  fmap (\s -> test_with_backend
+              big_conv_2d (wrap_single_s s)
+              Magma No_Verilog
+              big_conv_2d_inputs big_conv_2d_output) [289]
+big_conv_2d_st_prints = sequence $
+  fmap (\s -> compile_to_file
+              big_conv_2d (wrap_single_s s)
+              text_backend "conv2d") big_conv_2d_slowdowns
+big_conv_2d_verilog_prints = sequence $
+  fmap (\s -> compile_to_file
+              big_conv_2d (wrap_single_s s)
+              Magma "conv2d") big_conv_2d_slowdowns
