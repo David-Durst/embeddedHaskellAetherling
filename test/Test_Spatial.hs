@@ -24,6 +24,7 @@ import Data.Traversable
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 
+-- NEED TO BE ABLE TO PASS CUSTOM LATENCY INTO THE USE CUSTOM VERILOG PATHWAY
 
 single_map_200_spatial_verilog = sequence $ fmap (\(s, d) -> compile_and_test_verilog single_map_200 s
                                                    single_map_200_inputs single_map_200_output
