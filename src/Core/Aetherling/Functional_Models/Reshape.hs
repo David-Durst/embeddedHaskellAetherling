@@ -4,6 +4,7 @@ import Aetherling.Languages.Space_Time.Deep.Expr
 import Safe
 import qualified Data.Map as M
 import qualified Data.List as L
+import Debug.Trace
 
 data Port_And_Time = PT {port :: Int, time :: Int} deriving (Show, Eq)
 data ST_Element_Locations = ST_Element_Locations {
@@ -49,11 +50,17 @@ get_output_delay idxs_to_input_locs idxs_to_undelayed_output_locs = do
   -- later code will need to ensure all outputs are delayed relative to each
   -- other
   let min_delayed_output_time_per_node_given_neighborhood =
-        M.map (+1) $ 
+        M.map (+1) $
         M.map maximum undelayed_out_to_input_times
+  -- get the maximum of these mins. This is equivalent to the forward and backward
+  -- passes. everything just gets delayed by max of the per node min delays
+  maximum $ map (\(out_time, in_time) -> in_time - out_time) $
+        M.toList min_delayed_output_time_per_node_given_neighborhood
+  
+  {-
   -- breaking apart into time-indepenent nodes and min delayed output times
   let output_nodes = M.keys min_delayed_output_time_per_node_given_neighborhood
-  let min_delay_output_times =
+  let min_delay_output_times = traceShowId $ 
         map (\k -> min_delayed_output_time_per_node_given_neighborhood M.! k)
         output_nodes
   -- this does forward pass ensure output times delayed relative to each other
@@ -74,6 +81,7 @@ get_output_delay idxs_to_input_locs idxs_to_undelayed_output_locs = do
   let min_undelayed_out_time = minimum undelayed_out_times
   let undelayed_offset = max_undelayed_out_time - min_undelayed_out_time
   last_element_output_time - undelayed_offset
+  -}
 
 -- | compute a map from flat idx to nested st coordinates and port and time,
 -- aka flat st coordinates
