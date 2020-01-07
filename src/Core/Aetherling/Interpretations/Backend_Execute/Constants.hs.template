@@ -1,4 +1,4 @@
-module Aetherling.Interpretations.Backend_Execute.Chisel.Constants where
+module Aetherling.Interpretations.Backend_Execute.Constants where
 
 root_dir = "/Users/durst/dev/W17-8/haskellAetherling/Aetherling/"
 chisel_dir = "/Users/durst/dev/W17-8/chisel/chiselAetherling/"

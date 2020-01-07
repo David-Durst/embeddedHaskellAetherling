@@ -1,5 +1,5 @@
 module Aetherling.Interpretations.Backend_Execute.Compile where
-import Aetherling.Interpretations.Backend_Execute.Magma.Constants
+import Aetherling.Interpretations.Backend_Execute.Constants
 import qualified Aetherling.Interpretations.Backend_Execute.Test_Helpers as Test_Helpers
 import qualified Aetherling.Interpretations.Backend_Execute.Magma.Tester as M_Tester
 import Aetherling.Interpretations.Backend_Execute.Value_To_String
