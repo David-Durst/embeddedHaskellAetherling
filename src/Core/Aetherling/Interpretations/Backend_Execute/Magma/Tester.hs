@@ -1,5 +1,6 @@
 module Aetherling.Interpretations.Backend_Execute.Magma.Tester where
 import Aetherling.Interpretations.Backend_Execute.Magma.Expr_To_String
+import Aetherling.Interpretations.Backend_Execute.Expr_To_String_Helpers
 import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import Aetherling.Interpretations.Backend_Execute.Test_Helpers
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
@@ -26,70 +27,7 @@ import Debug.Trace
 is_success_fault_result :: Test_Result -> Bool
 is_success_fault_result Test_Success = True
 is_success_fault_result _ = False
-{-
-test_circuit_with_fault p inputs output output_latency = do
-  result <- test_circuit_with_fault_no_io p Nothing inputs output output_latency
-  case result of
-    Test_Success -> return ()
-    Test_Failure py_file stdout stderr exit_code -> do
-      putStrLn $ "Failure with file " ++ py_file
-      putStrLn stdout
-      putStrLn stderr
-      putStrLn $ "Exit Code: " ++ show exit_code
-  return result
-  
-test_circuit_with_fault_idx p inputs output output_latency idx = do
-  result <- test_circuit_with_fault_no_io p Nothing inputs output output_latency
-  case result of
-    Test_Success -> return ()
-    Test_Failure py_file stdout stderr exit_code -> do
-      --putStrLn $ "idx failed: " ++ show idx
-      putStrLn $ "Failure with file " ++ py_file
-      putStrLn stdout
-      putStrLn stderr
-      putStrLn $ "Exit Code: " ++ show exit_code
-  return result
-  
-test_verilog_with_fault p verilog_path inputs output output_latency = do
-  result <- test_circuit_with_fault_no_io p (Just verilog_path)
-            inputs output output_latency
-  case result of
-    Test_Success -> return ()
-    Test_Failure py_file stdout stderr exit_code -> do
-      putStrLn $ "Failure with file " ++ py_file
-      putStrLn stdout
-      putStrLn stderr
-      putStrLn $ "Exit Code: " ++ show exit_code
-  return result
 
-test_circuit_with_fault_no_io :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
-  Expr -> Maybe String -> [a] -> b -> Int -> IO Test_Result 
-test_circuit_with_fault_no_io p verilog_path inputs output output_latency = do
-  let module_str_data = module_to_magma_string p
-  let p_str = add_test_harness_to_fault_str p module_str_data inputs output
-              output_latency (isJust verilog_path)
-  circuit_file <- emptySystemTempFile "ae_circuit.py"
-  if isJust verilog_path
-    then copyFile (fromJust verilog_path) ("vBuild/top.v")
-    else return ()
-  --traceShowM circuit_file
-  writeFile circuit_file p_str
-  stdout_name <- emptySystemTempFile "ae_circuit_fault_stdout.txt"
-  stdout_file <- openFile stdout_name WriteMode
-  stderr_name <- emptySystemTempFile "ae_circuit_fault_stderr.txt"
-  stderr_file <- openFile stderr_name WriteMode
-  let process =
-        proc "python" [circuit_file]
-  (_ , _, _, phandle) <- createProcess process { std_out = UseHandle stdout_file,
-                                                std_err = UseHandle stderr_file}
-  exit_code <- waitForProcess phandle
-  case exit_code of
-    ExitSuccess -> return Test_Success
-    ExitFailure c -> do
-      stdout_fault <- readFile stdout_name
-      stderr_fault <- readFile stderr_name
-      return $ Test_Failure circuit_file stdout_fault stderr_fault c
--}
 add_test_harness_to_fault_str :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr -> Magma_String_Results -> [a] -> b -> Int -> Bool -> String
 add_test_harness_to_fault_str p module_str_data inputs output output_latency

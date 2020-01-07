@@ -16,6 +16,7 @@ import qualified Aetherling.Interpretations.Compute_Latency as CL
 import qualified Aetherling.Interpretations.Has_Error as Has_Error
 import qualified Aetherling.Interpretations.Compute_Area as Comp_Area
 import qualified Aetherling.Interpretations.Backend_Execute.Magma.Expr_To_String as M_Expr_To_Str
+import qualified Aetherling.Interpretations.Backend_Execute.Expr_To_String_Helpers as H_Expr_To_Str
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types
@@ -191,7 +192,7 @@ compile_to_file shallow_seq_program s_target l_target output_name_template = do
   let program_strs_with_verilog_printing =
         case l_target of
           Magma -> do
-            let program_strs = map (M_Expr_To_Str.module_str .
+            let program_strs = map (H_Expr_To_Str.module_str .
                                     M_Expr_To_Str.module_to_magma_string)
                                deep_st_programs
             map (\(p_str, idx) -> p_str ++ "\n" ++
