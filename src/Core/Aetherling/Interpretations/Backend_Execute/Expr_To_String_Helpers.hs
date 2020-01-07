@@ -15,10 +15,7 @@ data Module_Port = Module_Port {
   port_name :: String,
   -- this is the type of the port
   port_type :: AST_Type
-  } deriving Eq
-
-instance Show Module_Port where
-  show (Module_Port name t) = "\'" ++ name ++ "\', In(" ++ type_to_python t ++ ".magma_repr())"
+  } deriving (Eq, Show)
 
 data Backend_Module_Data = Backend_Module_Data {
   cur_module_output_lines :: [String],
@@ -96,3 +93,10 @@ data Backend_Module_Ref = Backend_Module_Ref {
   in_ports :: [Module_Port],
   out_port :: Module_Port
   } deriving (Show, Eq)
+
+error_module_ref = Backend_Module_Ref "ERR_VAR_NAME" "ERR_GEN_CALL" []
+                   (Module_Port "ERR_OUT" IntT)
+
+print_index :: DAG_Index -> String
+print_index No_Index = show No_Index
+print_index (Index i) = show i

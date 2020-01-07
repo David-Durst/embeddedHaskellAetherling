@@ -38,9 +38,6 @@ print_magma e = do
   --putStrLn epilogue
 
 
-error_module_ref = Backend_Module_Ref "ERR_VAR_NAME" "ERR_GEN_CALL" []
-                   (Module_Port "ERR_OUT" IntT)
-                   
 module_to_magma_string :: Expr -> Magma_String_Results
 module_to_magma_string e = do
   let prelude = magma_prelude
@@ -72,6 +69,7 @@ print_module new_module = do
         }
   lift $ put inner_data
   
+  -- a reference to the last operator in the module (the result)
   cur_module_result_ref <- module_to_string_inner new_module
 
   -- get state after executing inside module
@@ -96,9 +94,10 @@ print_module new_module = do
           else cur_module_name
     let cur_inputs_str =
           if length cur_inputs >= 1
-          then foldl (\x y -> x ++ ", " ++ show y)
-              (show $ head $ cur_inputs) (tail $ cur_inputs) ++
-              ", "
+          then foldl (\x y -> x ++ ", " ++ "\'" ++ port_name y ++ "\', In(" ++
+                       type_to_python (port_type y) ++ ".magma_repr())")
+               "" cur_inputs ++
+               ", "
           else ""
     let cur_output_str = "'O', " ++ "Out(" ++
                         ((type_to_python $ port_type $
@@ -693,10 +692,6 @@ module_to_string_inner consumer_e@(ReshapeN in_t out_t producer_e cur_idx) = do
   print_unary_operator cur_ref producer_ref
   return cur_ref
 
-print_index :: DAG_Index -> String
-print_index No_Index = show No_Index
-print_index (Index i) = show i
-
 print_unary_operator :: Backend_Module_Ref -> Backend_Module_Ref -> Memo_Print_StateM Backend_Module_Ref ()
 print_unary_operator cur_ref producer_ref = do
   add_to_cur_module $ var_name cur_ref ++ " = " ++ gen_call cur_ref ++ "()"
@@ -750,3 +745,19 @@ print_binary_operator cur_ref producer_ref_left producer_ref_right = do
     else return ()
 
 get_output_port cur_ref_name = return $ cur_ref_name ++ ".O"
+
+type_to_python :: AST_Type -> String
+type_to_python UnitT = "undefined"
+type_to_python BitT = "ST_Bit()"
+type_to_python IntT = "ST_Int()"
+type_to_python (ATupleT t0 t1) =
+  "ST_Atom_Tuple(" ++
+  type_to_python t0 ++ ", " ++
+  type_to_python t1 ++
+  ")"
+type_to_python (STupleT n t) =
+  "ST_SSeq_Tuple(" ++ show n ++ ", " ++ type_to_python t ++ ")"
+type_to_python (SSeqT n t) =
+  "ST_SSeq(" ++ show n ++ ", " ++ type_to_python t ++ ")"
+type_to_python (TSeqT n i t) =
+  "ST_TSeq(" ++ show n ++ ", " ++ show i ++ ", " ++ type_to_python t ++ ")"

@@ -101,22 +101,6 @@ valid_clocks_t (STupleT n t) = valid_clocks_t t
 valid_clocks_t (SSeqT n t) = valid_clocks_t t
 valid_clocks_t (TSeqT n _ t) = n * valid_clocks_t t
 
-type_to_python :: AST_Type -> String
-type_to_python UnitT = "undefined"
-type_to_python BitT = "ST_Bit()"
-type_to_python IntT = "ST_Int()"
-type_to_python (ATupleT t0 t1) =
-  "ST_Atom_Tuple(" ++
-  type_to_python t0 ++ ", " ++
-  type_to_python t1 ++
-  ")"
-type_to_python (STupleT n t) =
-  "ST_SSeq_Tuple(" ++ show n ++ ", " ++ type_to_python t ++ ")"
-type_to_python (SSeqT n t) =
-  "ST_SSeq(" ++ show n ++ ", " ++ type_to_python t ++ ")"
-type_to_python (TSeqT n i t) =
-  "ST_TSeq(" ++ show n ++ ", " ++ show i ++ ", " ++ type_to_python t ++ ")"
-
 normalize_type = merge_layers . strip_empty_layers . replace_stuple_with_sseq
 
 strip_empty_layers :: AST_Type -> AST_Type
