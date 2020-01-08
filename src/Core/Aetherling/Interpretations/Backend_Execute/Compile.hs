@@ -16,6 +16,7 @@ import qualified Aetherling.Interpretations.Compute_Latency as CL
 import qualified Aetherling.Interpretations.Has_Error as Has_Error
 import qualified Aetherling.Interpretations.Compute_Area as Comp_Area
 import qualified Aetherling.Interpretations.Backend_Execute.Magma.Expr_To_String as M_Expr_To_Str
+import qualified Aetherling.Interpretations.Backend_Execute.Chisel.Expr_To_String as C_Expr_To_Str
 import qualified Aetherling.Interpretations.Backend_Execute.Expr_To_String_Helpers as H_Expr_To_Str
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
@@ -124,9 +125,10 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
               then copyFile (get_verilog_sim_source verilog_conf)
                    ("vBuild/top.v")
               else return ()
-            process_result <- run_python test_str circuit_file
+            write_file_ae circuit_file test_str
+            process_result <- run_process "python" [circuit_file] Nothing
             if save_gen_verilog verilog_conf
-              then copy_verilog_file
+              then copy_verilog_file "vBuild/top.v"
                    (get_verilog_save_name verilog_conf) s_target idx
               else return ()
             process_result_to_test_result process_result circuit_file
@@ -177,10 +179,71 @@ compile_to_file shallow_seq_program s_target l_target output_name_template = do
   deep_st_programs <- add_io_to_except $
                       compile_to_expr shallow_seq_program s_target
   -- now append to each program the code to print out verilog
-  let s_str = slowdown_target_to_file_name_string s_target
   let verilog_names = map (\i -> output_name_template ++ "_" ++ s_str ++ "_" ++
                             show i ++ ".v") [0..length deep_st_programs - 1]
-  let compute_output_file_name i = do
+  case l_target of
+    Magma -> do
+      compile_to_magma deep_st_programs
+    Chisel -> do
+      undefined
+      --compile_to_chisel deep_st_programs
+    Text -> compile_to_text deep_st_programs
+    where
+      -- | the next three are helpers for compile_to_file for each backend
+      compile_to_magma :: [STE.Expr] ->
+                          ExceptT Compiler_Error IO [Process_Result]
+      compile_to_magma deep_st_programs  = do
+        let program_strs = map (H_Expr_To_Str.module_str .
+                                M_Expr_To_Str.module_to_magma_string)
+                           deep_st_programs
+        lift $ sequence $ map (\(p_str, idx) -> do
+                let output_file_name = compute_output_file_name idx
+                let p_str_with_verilog_out = p_str ++ "\n" ++
+                      M_Expr_To_Str.magma_verilog_output_epilogue
+                      (replaceExtension "v" output_file_name)
+                write_file_ae output_file_name p_str_with_verilog_out
+                run_process "python" [output_file_name] Nothing
+            ) (zip program_strs [0..])
+      compile_to_chisel :: [STE.Expr] ->
+                          ExceptT Compiler_Error IO [Process_Result]
+      compile_to_chisel deep_st_programs  = do
+        let program_strs = map (H_Expr_To_Str.module_str .
+                                C_Expr_To_Str.module_to_chisel_string)
+                           deep_st_programs
+        lift $ sequence $
+          map (\(p_str, idx) -> do
+                  let output_file_name = compute_output_file_name idx
+                  let verilog_file_name = replaceExtension "v" output_file_name
+                  -- this puts the output_file in the chisel dir for sbt
+                  let chisel_file_name = chisel_dir </> chisel_top_src_path </>
+                                         "top.scala"
+                  write_file_ae output_file_name p_str
+                  -- copy the written file to chisel dir so sbt can find it
+                  copyFile output_file_name chisel_file_name
+                  sbt_result <- run_process "sbt" [chisel_file_name]
+                                (Just chisel_dir)
+                  -- only copy file if sbt ran successfully
+                  case proc_exit_code sbt_result of
+                    ExitSuccess -> do
+                      copy_verilog_file (chisel_dir </> "Top.v")
+                        output_name_template s_target idx
+                      return sbt_result
+                    ExitFailure _ -> return sbt_result
+              ) (zip program_strs [0..])
+      compile_to_text :: [STE.Expr] ->
+                         ExceptT Compiler_Error IO [Process_Result]
+      compile_to_text deep_st_programs =
+        lift $ sequence $
+        map (\(p_expr,idx) -> do
+                let p_str = ST_Print.print_st_str p_expr
+                let output_file_name = compute_output_file_name idx
+                write_file_ae output_file_name p_str
+                return $ Process_Result ExitSuccess "" ""
+            ) (zip deep_st_programs [0..])
+          
+      s_str = slowdown_target_to_file_name_string s_target
+      compute_output_file_name :: Int -> String
+      compute_output_file_name i = do
         let (l_target_dir, l_file_ending) =
               case l_target of
                 Magma -> ("magma_examples", ".py")
@@ -189,29 +252,7 @@ compile_to_file shallow_seq_program s_target l_target output_name_template = do
         root_dir ++ "/test/no_bench/" ++ l_target_dir ++ "/" ++
           output_name_template ++ "/" ++
           output_name_template ++ "_" ++ s_str ++ "_" ++ show i ++ l_file_ending
-  let program_strs_with_verilog_printing =
-        case l_target of
-          Magma -> do
-            let program_strs = map (H_Expr_To_Str.module_str .
-                                    M_Expr_To_Str.module_to_magma_string)
-                               deep_st_programs
-            map (\(p_str, idx) -> p_str ++ "\n" ++
-                  M_Expr_To_Str.magma_verilog_output_epilogue
-                  (replaceExtension "v" $ compute_output_file_name idx)
-                ) (zip program_strs [0..])
-          Chisel -> error "Chisel compilation not yet supported"
-          Text -> map ST_Print.print_st_str deep_st_programs
-  lift $ sequence $ map
-    (\(p_str, idx) -> do
-        let output_file_name = (compute_output_file_name idx)
-        case l_target of
-          Magma ->
-            run_python p_str output_file_name
-          Chisel -> error "Chisel compilation not yet supported"
-          Text -> do
-            write_file_ae p_str output_file_name
-            return $ Process_Result ExitSuccess "" ""
-    ) (zip program_strs_with_verilog_printing [0..])
+  
 
 write_file_ae :: String -> String -> IO ()
 write_file_ae file_name p_str = do
@@ -219,16 +260,16 @@ write_file_ae file_name p_str = do
   writeFile file_name p_str
   
 test_verilog_dir = root_dir ++
-                   "/test/verilog_examples/aetherling_copies/" 
-copy_verilog_file :: String -> Slowdown_Target -> Int -> IO ()
-copy_verilog_file name s_target idx = do
+                   "/test/verilog_examples/aetherling_copies/"
+copy_verilog_file :: FilePath -> String -> Slowdown_Target -> Int -> IO ()
+copy_verilog_file source_file name s_target idx = do
   -- test verilog dir is the directory of all the verilog output
   -- each design indicated by name gets its own folder
   -- so the different throughputs can be in the same folder
   let file_dir = test_verilog_dir ++ "/" ++ name
   createDirectoryIfMissing True file_dir
   let s_str = slowdown_target_to_file_name_string s_target
-  copyFile "vBuild/top.v"
+  copyFile source_file
     (file_dir ++ "/" ++ name ++ "_" ++ s_str ++ "_" ++ show idx ++ ".v")
 
 slowdown_target_to_file_name_string :: Slowdown_Target -> String
@@ -237,17 +278,15 @@ slowdown_target_to_file_name_string (All_With_Slowdown_Factor s) = show s
 slowdown_target_to_file_name_string (Type_Rewrites trs) =
   show (product_tr_periods trs)
       
--- | Save a file with a path, run it through a python interpreter,
--- and return the result
-run_python :: String -> String -> IO Process_Result
-run_python p_str file_name = do
-  write_file_ae file_name p_str
-  stdout_name <- emptySystemTempFile "ae_circuit_fault_stdout.txt"
+run_process :: String -> [String] -> Maybe FilePath -> IO Process_Result
+run_process process_name process_args cwd = do
+  stdout_name <- emptySystemTempFile "ae_stdout.txt"
   stdout_file <- openFile stdout_name WriteMode
-  stderr_name <- emptySystemTempFile "ae_circuit_fault_stderr.txt"
+  stderr_name <- emptySystemTempFile "ae_stderr.txt"
   stderr_file <- openFile stderr_name WriteMode
   let process =
-        (proc "python" [file_name]) {
+        (proc process_name process_args) {
+        cwd = cwd,
         std_out = UseHandle stdout_file,
         std_err = UseHandle stderr_file
         }

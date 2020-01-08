@@ -29,7 +29,7 @@ is_success_fault_result Test_Success = True
 is_success_fault_result _ = False
 
 add_test_harness_to_fault_str :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
-  Expr -> Magma_String_Results -> [a] -> b -> Int -> Bool -> String
+  Expr -> Backend_String_Results -> [a] -> b -> Int -> Bool -> String
 add_test_harness_to_fault_str p module_str_data inputs output output_latency
   is_verilog = do
   let p_types = expr_to_outer_types p

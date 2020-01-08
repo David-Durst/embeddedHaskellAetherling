@@ -82,7 +82,7 @@ disable_valid = do
   lift $ put $ cur_data { cur_module_valid = False }
   return $ cur_module_valid cur_data
 
-data Magma_String_Results = Magma_String_Results {
+data Backend_String_Results = Backend_String_Results {
   module_str :: String,
   module_outer_results :: Backend_Module_Ref
   } deriving (Show, Eq)

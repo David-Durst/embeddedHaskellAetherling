@@ -38,19 +38,19 @@ print_magma e = do
   --putStrLn epilogue
 
 
-module_to_magma_string :: Expr -> Magma_String_Results
+module_to_magma_string :: Expr -> Backend_String_Results
 module_to_magma_string e = do
   let prelude = magma_prelude
   let (outer_module_ref, lines) = runState (runExceptT $ startEvalMemoT $ print_module e) empty_print_data
   if isLeft outer_module_ref
-    then Magma_String_Results
+    then Backend_String_Results
          (RH.rw_msg $ fromLeft undefined outer_module_ref)
          error_module_ref
     else do
     let mod_body = foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
     let mod_def = "Main = Module_" ++ (show $ next_module_index lines - 1) ++ "\n"
    -- epilogue <- magma_epilogue
-    Magma_String_Results
+    Backend_String_Results
       (prelude ++ "\n" ++ mod_body ++ mod_def)
       (fromRight undefined outer_module_ref)
 

@@ -22,12 +22,26 @@ chisel_prelude =
   "import aetherling.types._\n" ++
   "import chisel3._\n\n"
 
-chisel_verilog_output_epilogue :: String -> String
-chisel_verilog_output_epilogue output_name =
-  "object HelloWorld extends App {\n" ++
+chisel_verilog_output_epilogue :: String
+chisel_verilog_output_epilogue =
+  "object Top extends App {\n" ++
   tab_str ++ "chisel3.Driver.execute(Array[String](), () => new Top)\n" ++
   "}"
 
+module_to_chisel_string :: Expr -> Backend_String_Results
+module_to_chisel_string e = do
+  let prelude = chisel_prelude
+  let (outer_module_ref, lines) = runState (runExceptT $ startEvalMemoT $ print_module e) empty_print_data
+  if isLeft outer_module_ref
+    then Backend_String_Results
+         (RH.rw_msg $ fromLeft undefined outer_module_ref)
+         error_module_ref
+    else do
+    let mod_body = foldl (++) "" $ fmap (\line -> line ++ "\n") $ modules lines
+   -- epilogue <- magma_epilogue
+    Backend_String_Results
+      (prelude ++ "\n" ++ mod_body)
+      (fromRight undefined outer_module_ref)
 
 -- this handles creating a module
 print_module :: Expr -> Memo_Print_StateM Backend_Module_Ref Backend_Module_Ref
@@ -60,7 +74,9 @@ print_module new_module = do
     return $ Backend_Module_Ref (cur_module_last_op_no_assign end_data) "" cur_inputs (out_port cur_module_result_ref)
     else do
     let cur_module_index = next_module_index end_data
-    let cur_module_name = "Module_" ++ show cur_module_index
+    let cur_module_name = if is_top_module start_data
+          then "Top"
+          else "Module_" ++ show cur_module_index
 
     -- module declaration as scala class
     let interface_str = 
