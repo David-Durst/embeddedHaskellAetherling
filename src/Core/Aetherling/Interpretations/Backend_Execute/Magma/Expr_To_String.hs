@@ -94,10 +94,9 @@ print_module new_module = do
           else cur_module_name
     let cur_inputs_str =
           if length cur_inputs >= 1
-          then foldl (\x y -> x ++ ", " ++ "\'" ++ port_name y ++ "\', In(" ++
-                       type_to_python (port_type y) ++ ".magma_repr())")
-               "" cur_inputs ++
-               ", "
+          then foldl (\x y -> x ++ "\'" ++ port_name y ++ "\', In(" ++
+                       type_to_python (port_type y) ++ ".magma_repr()),")
+               "" cur_inputs
           else ""
     let cur_output_str = "'O', " ++ "Out(" ++
                         ((type_to_python $ port_type $
