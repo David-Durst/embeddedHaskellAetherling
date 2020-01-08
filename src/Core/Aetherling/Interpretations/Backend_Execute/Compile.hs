@@ -128,7 +128,7 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
             write_file_ae circuit_file test_str
             process_result <- run_process "python" [circuit_file] Nothing
             if save_gen_verilog verilog_conf
-              then copy_verilog_file "vBuild/top.v"
+              then copy_verilog_file "vBuild/top.v" test_verilog_dir
                    (get_verilog_save_name verilog_conf) s_target idx
               else return ()
             process_result_to_test_result process_result circuit_file
@@ -173,8 +173,18 @@ int_to_ignore = 253
 -- can produce verilog (ie isn't Text)
 compile_to_file :: (Shallow_Types.Aetherling_Value a) =>
                      RH.Rewrite_StateM a -> Slowdown_Target -> Language_Target ->
-                     String -> ExceptT Compiler_Error IO [Process_Result]
+                     String -> IO [Process_Result]
 compile_to_file shallow_seq_program s_target l_target output_name_template = do
+  result <- runExceptT $ compile_to_file' shallow_seq_program s_target
+            l_target output_name_template
+  case result of
+    Left x -> error $ "Compiler Error: " ++ show x
+    Right x -> return x
+  
+compile_to_file' :: (Shallow_Types.Aetherling_Value a) =>
+                     RH.Rewrite_StateM a -> Slowdown_Target -> Language_Target ->
+                     String -> ExceptT Compiler_Error IO [Process_Result]
+compile_to_file' shallow_seq_program s_target l_target output_name_template = do
   -- get STIR expr for each program
   deep_st_programs <- add_io_to_except $
                       compile_to_expr shallow_seq_program s_target
@@ -185,8 +195,7 @@ compile_to_file shallow_seq_program s_target l_target output_name_template = do
     Magma -> do
       compile_to_magma deep_st_programs
     Chisel -> do
-      undefined
-      --compile_to_chisel deep_st_programs
+      compile_to_chisel deep_st_programs
     Text -> compile_to_text deep_st_programs
     where
       -- | the next three are helpers for compile_to_file for each backend
@@ -226,6 +235,7 @@ compile_to_file shallow_seq_program s_target l_target output_name_template = do
                   case proc_exit_code sbt_result of
                     ExitSuccess -> do
                       copy_verilog_file (chisel_dir </> "Top.v")
+                        (takeDirectory $ takeDirectory output_file_name)
                         output_name_template s_target idx
                       return sbt_result
                     ExitFailure _ -> return sbt_result
@@ -261,12 +271,12 @@ write_file_ae file_name p_str = do
   
 test_verilog_dir = root_dir ++
                    "/test/verilog_examples/aetherling_copies/"
-copy_verilog_file :: FilePath -> String -> Slowdown_Target -> Int -> IO ()
-copy_verilog_file source_file name s_target idx = do
+copy_verilog_file :: FilePath -> String -> String -> Slowdown_Target -> Int -> IO ()
+copy_verilog_file source_file verilog_dir name s_target idx = do
   -- test verilog dir is the directory of all the verilog output
   -- each design indicated by name gets its own folder
   -- so the different throughputs can be in the same folder
-  let file_dir = test_verilog_dir ++ "/" ++ name
+  let file_dir = verilog_dir ++ "/" ++ name
   createDirectoryIfMissing True file_dir
   let s_str = slowdown_target_to_file_name_string s_target
   copyFile source_file

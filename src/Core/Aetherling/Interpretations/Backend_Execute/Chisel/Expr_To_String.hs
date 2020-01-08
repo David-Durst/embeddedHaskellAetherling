@@ -184,6 +184,8 @@ module_to_string_inner consumer_e@(Map_tN n i f producer_e cur_idx) = do
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str map_in_ports map_out_port
   print_unary_operator cur_ref producer_ref
   return cur_ref
+module_to_string_inner consumer_e = error $ "don't support yet: " ++
+                                    show consumer_e 
   
 print_unary_operator :: Backend_Module_Ref -> Backend_Module_Ref ->
                         Memo_Print_StateM Backend_Module_Ref ()
