@@ -236,9 +236,7 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                                 (root_dir ++
                                  "/src/Core/Aetherling/Interpretations/" ++
                                  "Backend_Execute/Chisel/compile_chisel.sh " ++
-                                 chisel_dir)
-                                Nothing
-
+                                 chisel_dir) Nothing
                   -- only copy file if sbt ran successfully
                   case proc_exit_code sbt_result of
                     ExitSuccess -> do
