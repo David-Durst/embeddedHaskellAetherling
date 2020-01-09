@@ -82,7 +82,8 @@ print_module new_module = do
       next_module_index = next_module_index end_data,
       modules = modules end_data
       }
-    return $ Backend_Module_Ref (cur_module_last_op_no_assign end_data) "" cur_inputs (out_port cur_module_result_ref)
+    return $ Backend_Module_Ref (cur_module_last_op_no_assign end_data) ""
+      (in_ports cur_module_result_ref) (out_port cur_module_result_ref)
     else do
     let cur_module_index = next_module_index end_data
     let cur_module_name = "Module_" ++ show cur_module_index
