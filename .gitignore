@@ -21,7 +21,6 @@ TAGS
 .dir-locals.el
 *.graffle
 vBuild/
-src/Core/Aetherling/Interpretations/Backend_Execute/Magma/Constants.hs
-src/Core/Aetherling/Interpretations/Backend_Execute/Chisel/Constants.hs
+src/Core/Aetherling/Interpretations/Backend_Execute/Constants.hs
 parser.out
 parsetab.py
