@@ -126,7 +126,7 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
                    ("vBuild/top.v")
               else return ()
             write_file_ae circuit_file test_str
-            process_result <- run_process "python" [circuit_file] Nothing
+            process_result <- run_process ("python " ++ circuit_file) Nothing
             if save_gen_verilog verilog_conf
               then copy_verilog_file "vBuild/top.v" test_verilog_dir
                    (get_verilog_save_name verilog_conf) s_target idx
@@ -211,7 +211,7 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                       M_Expr_To_Str.magma_verilog_output_epilogue
                       (replaceExtension "v" output_file_name)
                 write_file_ae output_file_name p_str_with_verilog_out
-                run_process "python" [output_file_name] Nothing
+                run_process ("python " ++ output_file_name) Nothing
             ) (zip program_strs [0..])
       compile_to_chisel :: [STE.Expr] ->
                           ExceptT Compiler_Error IO [Process_Result]
@@ -232,9 +232,13 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                   write_file_ae output_file_name p_str_with_verilog_out
                   -- copy the written file to chisel dir so sbt can find it
                   copyFile output_file_name chisel_file_name
-                  sbt_result <- run_process "sbt"
-                                ["\'runMain aetherling.Modules.Top\'"]
-                                (Just chisel_dir)
+                  sbt_result <- run_process
+                                (root_dir ++
+                                 "/src/Core/Aetherling/Interpretations/" ++
+                                 "Backend_Execute/Chisel/compile_chisel.sh " ++
+                                 chisel_dir)
+                                Nothing
+
                   -- only copy file if sbt ran successfully
                   case proc_exit_code sbt_result of
                     ExitSuccess -> do
@@ -292,14 +296,14 @@ slowdown_target_to_file_name_string (All_With_Slowdown_Factor s) = show s
 slowdown_target_to_file_name_string (Type_Rewrites trs) =
   show (product_tr_periods trs)
       
-run_process :: String -> [String] -> Maybe FilePath -> IO Process_Result
-run_process process_name process_args cwd = do
+run_process :: String -> Maybe FilePath -> IO Process_Result
+run_process process_str cwd = do
   stdout_name <- emptySystemTempFile "ae_stdout.txt"
   stdout_file <- openFile stdout_name WriteMode
   stderr_name <- emptySystemTempFile "ae_stderr.txt"
   stderr_file <- openFile stderr_name WriteMode
   let process =
-        (proc process_name process_args) {
+        (shell process_str) {
         cwd = cwd,
         std_out = UseHandle stdout_file,
         std_err = UseHandle stderr_file
