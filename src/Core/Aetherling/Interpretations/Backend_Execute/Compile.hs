@@ -226,11 +226,14 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                   -- this puts the output_file in the chisel dir for sbt
                   let chisel_file_name = chisel_dir ++ "/" ++
                                          chisel_top_src_path ++ "/" ++
-                                         "top.scala"
-                  write_file_ae output_file_name p_str
+                                         "Top.scala"
+                  let p_str_with_verilog_out = p_str ++ "\n" ++
+                        C_Expr_To_Str.chisel_verilog_output_epilogue
+                  write_file_ae output_file_name p_str_with_verilog_out
                   -- copy the written file to chisel dir so sbt can find it
                   copyFile output_file_name chisel_file_name
-                  sbt_result <- run_process "sbt" [chisel_file_name]
+                  sbt_result <- run_process "sbt"
+                                ["\'runMain aetherling.Modules.Top\'"]
                                 (Just chisel_dir)
                   -- only copy file if sbt ran successfully
                   case proc_exit_code sbt_result of
