@@ -224,7 +224,8 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                   let output_file_name = compute_output_file_name idx
                   let verilog_file_name = replaceExtension "v" output_file_name
                   -- this puts the output_file in the chisel dir for sbt
-                  let chisel_file_name = chisel_dir </> chisel_top_src_path </>
+                  let chisel_file_name = chisel_dir ++ "/" ++
+                                         chisel_top_src_path ++ "/" ++
                                          "top.scala"
                   write_file_ae output_file_name p_str
                   -- copy the written file to chisel dir so sbt can find it

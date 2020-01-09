@@ -143,7 +143,7 @@ module_to_string_inner consumer_e@(AbsN producer_e cur_idx) = do
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Abs" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "I" IntT] (Module_Port "O" IntT)
+                [Module_Port "in" IntT] (Module_Port "out" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
@@ -152,7 +152,7 @@ module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Not" ++ valid_str ++ "()")
-                [Module_Port "I" BitT] (Module_Port "O" BitT)
+                [Module_Port "in" BitT] (Module_Port "out" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
   
@@ -184,13 +184,37 @@ module_to_string_inner consumer_e@(Map_tN n i f producer_e cur_idx) = do
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str map_in_ports map_out_port
   print_unary_operator cur_ref producer_ref
   return cur_ref
+
+
+module_to_string_inner (InputN t name cur_idx) = do
+  cur_data <- lift get
+  lift $ put $ cur_data {
+    cur_module_inputs = cur_module_inputs cur_data ++ [Module_Port name t]
+    }
+  return $ Backend_Module_Ref "cls" "" [] (Module_Port name t)
+module_to_string_inner e@(ErrorN msg cur_idx) = do
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module $ "ERROR " ++ msg
+  incr_num_non_inputs_cur_module $ "ERROR " ++ msg
+  return $ Backend_Module_Ref cur_ref_name "" [Module_Port "error" BitT]
+    (Module_Port "error" BitT)
+module_to_string_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "FIFO(" ++ type_to_chisel t ++
+                ", " ++ show delay_clks ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "in" t] (Module_Port "out" t)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e = error $ "don't support yet: " ++
                                     show consumer_e 
   
 print_unary_operator :: Backend_Module_Ref -> Backend_Module_Ref ->
                         Memo_Print_StateM Backend_Module_Ref ()
 print_unary_operator cur_ref producer_ref = do
-  add_to_cur_module $ var_name cur_ref ++ " = " ++ gen_call cur_ref
+  add_to_cur_module $ "val " ++ var_name cur_ref ++ " = Module(new " ++
+    gen_call cur_ref ++ ")"
   update_output $ out_port cur_ref
   let producer_out_str = var_name producer_ref ++ "." ++
                          (port_name $ out_port producer_ref) 
@@ -212,7 +236,8 @@ print_unary_operator cur_ref producer_ref = do
 print_binary_operator :: Backend_Module_Ref -> Backend_Module_Ref ->
                          Backend_Module_Ref -> Memo_Print_StateM Backend_Module_Ref ()
 print_binary_operator cur_ref producer_ref_left producer_ref_right = do
-  add_to_cur_module $ var_name cur_ref ++ " = " ++ gen_call cur_ref
+  add_to_cur_module $ "val " ++ var_name cur_ref ++ " = Module(new " ++
+    gen_call cur_ref ++ ")"
   update_output $ out_port cur_ref
   let producer_out_str_left = var_name producer_ref_left ++ "." ++
                               (port_name $ out_port producer_ref_left) 
@@ -230,7 +255,7 @@ print_binary_operator cur_ref producer_ref_left producer_ref_right = do
     then do
     let producer_valid_str_left =
           if var_name producer_ref_left == "cls"
-          then "cls.valid_up"
+          then "valid_up"
           else var_name producer_ref_left ++ ".valid_down"
     let producer_valid_str_right =
           if var_name producer_ref_right == "cls"
