@@ -30,7 +30,8 @@ add_test_harness_to_fault_str p module_str_data inputs output output_latency
   is_verilog = do
   let p_types = expr_to_outer_types p
   let num_ports = length $ in_ports $ module_outer_results $ module_str_data
-  let fault_io = generate_tester_input_output_for_st_program p inputs output
+  let fault_io = generate_tester_input_output_for_st_program magma_conf
+                 p inputs output
   -- these are nested for both space and time
   -- issue: if 1 input per clock, then need to remove the space dimension
   let f_inputs = foldl (++) "" $
