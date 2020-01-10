@@ -45,7 +45,7 @@ convert_seq_val_to_st_val_string seq_val st_type conf = do
   -- issue: if 1 input per clock, then need to remove the space dimension
   -- as each input port is not vectorized
   let st_val_string = make_array_string_for_backend conf $
-                      remove_sseq_length_one st_vals
+                      remove_sseq_length_one conf st_vals
   ST_Val_String st_val_string valid_clks
   
 class Convertible_To_Atom_Strings a where
@@ -101,12 +101,13 @@ data ST_Val_Index = ST_Val_Index {
   flat_t :: Int
   } deriving (Show, Eq)
 
-remove_sseq_length_one :: [[String]] -> [String]
-remove_sseq_length_one ts_vals | length ts_vals == 0 = []
-remove_sseq_length_one ts_vals |
+remove_sseq_length_one :: ST_Val_To_String_Config -> [[String]] -> [String]
+remove_sseq_length_one _ ts_vals | length ts_vals == 0 = []
+remove_sseq_length_one _ ts_vals |
   length (ts_vals !! 0) == 1 =
   map (\sseq -> sseq !! 0) ts_vals
-remove_sseq_length_one ts_vals = map show_no_quotes ts_vals
+remove_sseq_length_one conf ts_vals =
+  map (make_array_string_for_backend conf) ts_vals
 
 show_no_quotes :: Show a => a -> String
 show_no_quotes = filter (\x -> x /= '\"') . show
