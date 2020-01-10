@@ -150,7 +150,6 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
                 circuit_file ++ " " ++
                 chisel_dir
               ) Nothing
-            traceShowM process_result
             if save_gen_verilog verilog_conf
               then copy_verilog_file
                    (chisel_dir ++ "/test_run_dir/top/*/Top.v") test_verilog_dir

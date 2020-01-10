@@ -75,7 +75,7 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
         tab_str ++ "val run_clks = " ++ show (tester_clocks chisel_io) ++ "\n" ++
         tab_str ++ "val pipeline_clks = " ++ show output_latency ++ "\n" ++
         tab_str ++ "val total_clks = run_clks + pipeline_clks\n" ++
-        tab_str ++ "for(f_clk <- 0 to total_clks) {\n" ++
+        tab_str ++ "for(f_clk <- 0 to (total_clks - 1)) {\n" ++
         tab_str ++ tab_str ++ "println(s\"clk: $f_clk\")\n"
   let test_inputs = foldl (++) "" $
         map (\i -> do
