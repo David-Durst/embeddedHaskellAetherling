@@ -222,7 +222,7 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
         lift $ sequence $
           map (\(p_str, idx) -> do
                   let output_file_name = compute_output_file_name idx
-                  let verilog_file_name = replaceExtension "v" output_file_name
+                  let verilog_file_name = replaceExtension output_file_name "v"
                   -- this puts the output_file in the chisel dir for sbt
                   let chisel_file_name = chisel_dir ++ "/" ++
                                          chisel_top_src_path ++ "/" ++
@@ -230,21 +230,14 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                   let p_str_with_verilog_out = p_str ++ "\n" ++
                         C_Expr_To_Str.chisel_verilog_output_epilogue
                   write_file_ae output_file_name p_str_with_verilog_out
-                  -- copy the written file to chisel dir so sbt can find it
-                  copyFile output_file_name chisel_file_name
-                  sbt_result <- run_process
-                                (root_dir ++
-                                 "/src/Core/Aetherling/Interpretations/" ++
-                                 "Backend_Execute/Chisel/compile_chisel.sh " ++
-                                 chisel_dir) Nothing
-                  -- only copy file if sbt ran successfully
-                  case proc_exit_code sbt_result of
-                    ExitSuccess -> do
-                      copy_verilog_file (chisel_dir </> "Top.v")
-                        (takeDirectory $ takeDirectory output_file_name)
-                        output_name_template s_target idx
-                      return sbt_result
-                    ExitFailure _ -> return sbt_result
+                  run_process
+                    (root_dir ++
+                      "/src/Core/Aetherling/Interpretations/" ++
+                      "Backend_Execute/Chisel/compile_chisel.sh " ++
+                      output_file_name ++ " " ++
+                      chisel_dir ++ " " ++
+                      verilog_file_name
+                    ) Nothing
               ) (zip program_strs [0..])
       compile_to_text :: [STE.Expr] ->
                          ExceptT Compiler_Error IO [Process_Result]
