@@ -24,26 +24,27 @@ import System.Directory
 import Data.Maybe
 import Debug.Trace
 
-chisel_test_spec_wrapper :: String -> String
-chisel_test_spec_wrapper body =
-  "package aetherling.modules\n\n" ++
-  "import aetherling.modules.helpers._\n" ++
-  "import aetherling.modules.higherorder._\n" ++
+chisel_test_spec_wrapper :: String -> String -> String
+chisel_test_spec_wrapper src_body test_body =
+  src_body ++ "\n\n" ++
   "import aetherling.modules._\n" ++
-  "import aetherling.types._\n" ++
-  "import chisel3._\n" ++
   "import chisel3.iotesters.ChiselFlatSpec\n\n" ++
-  "class TopTest(c: Top) extends NestedPeekPokeTester(c) {" ++
-  body ++ "}\n\n" ++
+  "class TopTest(c: Top) extends NestedPeekPokeTester(c) {\n" ++
+  test_body ++ "}\n\n" ++
   "class TopTester extends ChiselFlatSpec {\n" ++
   tab_str ++ "\"Top\" should \"behave correctly\" in {\n" ++ 
   tab_str ++ tab_str ++ "iotesters.Driver.execute(Array(\"--backend-name\"," ++
-  " \"verilator\"), () => new Top())) {\n" ++
+  " \"verilator\",\"--target-dir\",\"test_run_dir/top\"), () => new Top()) {\n" ++
   tab_str ++ tab_str ++ tab_str ++ "c => new TopTest(c)\n" ++
   tab_str ++ tab_str ++ "} should be(true)\n" ++
   tab_str ++ "}\n" ++
   "}"
 
+array_of_bools_to_chisel_string :: [Bool] -> String
+array_of_bools_to_chisel_string arr =
+  make_array_string_for_backend chisel_conf $
+  convert_to_flat_atom_list arr chisel_conf
+  
 add_test_harness_to_chisel_str :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr -> Backend_String_Results -> [a] -> b -> Int -> Bool -> String
 add_test_harness_to_chisel_str p module_str_data inputs output output_latency
@@ -58,17 +59,19 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
         map (\i -> tab_str ++ "val chisel_inputs" ++ show i ++ " = " ++
               show_no_quotes (tester_inputs chisel_io !! i) ++ "\n" ++
               tab_str ++ "val chisel_inputs" ++ show i ++ "_valid = " ++
-              show_no_quotes (tester_valid_in chisel_io !! i) ++ "\n"
+              array_of_bools_to_chisel_string (tester_valid_in chisel_io !! i) ++
+              "\n"
             )
         [0..num_ports - 1]
   let f_output = tab_str ++ "val chisel_output = " ++
                  tester_output chisel_io ++ "\n" ++
                  tab_str ++ "val chisel_output_valid = " ++
-                 show_no_quotes (tester_valid_out chisel_io) ++ "\n"
+                 array_of_bools_to_chisel_string (tester_valid_out chisel_io) ++
+                 "\n"
 
   let test_start =
         tab_str ++ "poke_nested(c.valid_up, 1.B)\n" ++
-        tab_str ++ "val output_counter = 0\n" ++
+        tab_str ++ "var output_counter = 0\n" ++
         tab_str ++ "val run_clks = " ++ show (tester_clocks chisel_io) ++ "\n" ++
         tab_str ++ "val pipeline_clks = " ++ show output_latency ++ "\n" ++
         tab_str ++ "val total_clks = run_clks + pipeline_clks\n" ++
@@ -78,20 +81,22 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
         map (\i -> do
                 let i_port_name = (port_name $
                                    (in_ports $ module_outer_results module_str_data) !! i)
-                tab_str ++ tab_str ++ "if (f_clk < run_clks " ++
-                  " && chisel_inputs" ++ show i ++ "_valid[f_clk]) {\n" ++
+                tab_str ++ tab_str ++ "val port" ++ show i ++ " = c." ++
+                  i_port_name ++ "\n" ++ 
+                  tab_str ++ tab_str ++ "if (f_clk < run_clks " ++
+                  " && chisel_inputs" ++ show i ++ "_valid(f_clk)) {\n" ++
 
                   tab_str ++ tab_str ++ tab_str ++
                   "poke_nested(c." ++ i_port_name ++
                   ", chisel_inputs" ++ show i ++ "(f_clk))\n" ++
 
-                  tab_str ++ tab_str ++ "}"
+                  tab_str ++ tab_str ++ "}\n"
             ) [0..num_ports - 1]
   let test_print = tab_str ++ tab_str ++
         case num_ports of
-          0 -> "peek_nullary_module(c)\n"
-          1 -> "peek_unary_module(c)\n"
-          _ -> "peek_binary_module(c)\n"
+          0 -> "peek_nullary_module(c, c.out)\n"
+          1 -> "peek_unary_module(c, port0, c.out)\n"
+          _ -> "peek_binary_module(c, port0, port1, c.out)\n"
   let output_port_name = port_name $ out_port $
                          module_outer_results module_str_data
   let test_output_counter_incr =
@@ -109,11 +114,12 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
                     tab_str ++ tab_str ++ tab_str ++
                     "expect_nested(c." ++ output_port_name ++
                     ", chisel_output(output_counter))\n" ++
-                    tab_str ++ tab_str ++ "}"
+                    tab_str ++ tab_str ++ "}\n"
   let test_step = tab_str ++ tab_str ++ "step(1)\n"
+  let test_end = tab_str ++ "}\n"
   let test_body =
-        (module_str module_str_data) ++ f_inputs ++ f_output ++
+        f_inputs ++ f_output ++
         test_start ++ test_inputs ++ test_print ++
         test_output_counter_incr ++ test_valid_down_check ++
-        test_output ++ test_step
-  chisel_test_spec_wrapper test_body
+        test_output ++ test_step ++ test_end
+  chisel_test_spec_wrapper (module_str module_str_data) test_body

@@ -105,6 +105,11 @@ single_map_results = sequence $
               single_map (wrap_single_s s)
               Magma (Save_Gen_Verilog "single_map")
               single_map_inputs single_map_output) [1,2,4]
+single_map_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              single_map (wrap_single_s s)
+              Chisel (No_Verilog)
+              single_map_inputs single_map_output) [1]
 single_map_verilog_path = "test/verilog_examples/aetherling_copies/single_map/single_map_4_0.v"
 single_map_ae_verilog = sequence $
   fmap (\s -> test_with_backend
@@ -112,7 +117,7 @@ single_map_ae_verilog = sequence $
               Magma (verilog_sim_source single_map_verilog_path)
               single_map_inputs single_map_output
        ) [4]
-single_map_chisel = sequence $
+single_map_save_chisel = sequence $
   fmap (\s -> compile_to_file
               single_map (wrap_single_s s)
               Chisel "single_map_chisel") [1,2,4]

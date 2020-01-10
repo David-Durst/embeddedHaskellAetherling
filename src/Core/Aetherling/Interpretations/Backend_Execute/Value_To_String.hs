@@ -5,6 +5,7 @@ import Aetherling.Languages.Space_Time.Deep.Types
 import qualified Data.Map.Strict as M
 import Data.List
 import Debug.Trace
+import Data.Char
 
 data ST_Val_String = ST_Val_String {
   st_values :: String,
@@ -12,12 +13,14 @@ data ST_Val_String = ST_Val_String {
   } deriving (Show, Eq)
 
 data ST_Val_To_String_Config = ST_Val_To_String_Config {
+  make_bool_string_for_backend :: Bool -> String,
   make_tuple_string_for_backend :: String -> String -> String,
   make_array_string_for_backend :: [String] -> String
   }
 
-magma_conf = ST_Val_To_String_Config (\x y -> show_no_quotes (x,y)) show_no_quotes
-chisel_conf = ST_Val_To_String_Config
+magma_conf = ST_Val_To_String_Config show (\x y -> show_no_quotes (x,y))
+             show_no_quotes
+chisel_conf = ST_Val_To_String_Config (map toLower . show)
   (\x y -> "Array(" ++ x ++ ", " ++ y ++ ")")
   (\x -> "Array(" ++
     (foldl (\result_s new_s -> result_s ++ "," ++ new_s) (head x) (tail x)) ++
@@ -52,9 +55,10 @@ instance Convertible_To_Atom_Strings Integer where
   convert_to_flat_atom_list x _ = [show x]
 
 instance Convertible_To_Atom_Strings Bool where
-  convert_to_flat_atom_list x _ = [show x]
+  convert_to_flat_atom_list x conf = [make_bool_string_for_backend conf $ x]
   
-instance (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) => Convertible_To_Atom_Strings (a, b) where
+instance (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
+  Convertible_To_Atom_Strings (a, b) where
   convert_to_flat_atom_list (x, y) conf =
     [make_tuple_string_for_backend conf
       (head $ convert_to_flat_atom_list x conf)
@@ -65,7 +69,8 @@ instance (Convertible_To_Atom_Strings a) => Convertible_To_Atom_Strings [a] wher
     map (\x -> convert_to_flat_atom_list x conf) xs
 
 instance Convertible_To_Atom_Strings AST_Atoms where
-  convert_to_flat_atom_list (BitA b) _ = [show b]
+  convert_to_flat_atom_list (BitA b) conf =
+    [make_bool_string_for_backend conf $ b]
   convert_to_flat_atom_list (IntA i) _ = [show i]
   convert_to_flat_atom_list (ATupleA x y) conf =
     [make_tuple_string_for_backend conf

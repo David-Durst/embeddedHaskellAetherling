@@ -2,6 +2,7 @@ module Aetherling.Interpretations.Backend_Execute.Compile where
 import Aetherling.Interpretations.Backend_Execute.Constants
 import qualified Aetherling.Interpretations.Backend_Execute.Test_Helpers as Test_Helpers
 import qualified Aetherling.Interpretations.Backend_Execute.Magma.Tester as M_Tester
+import qualified Aetherling.Interpretations.Backend_Execute.Chisel.Tester as C_Tester
 import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import qualified Aetherling.Rewrites.Rewrite_Helpers as RH
 import qualified Aetherling.Rewrites.Add_Pipeline_Registers as APR
@@ -114,7 +115,15 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
                    M_Tester.add_test_harness_to_fault_str p_expr p_str
                    inputs output p_latency (use_verilog_sim_source verilog_conf))
               exprs_and_str_data_and_latencies
-          Chisel -> error "Chisel compilation not yet supported"
+          Chisel -> do
+            let modules_str_data =
+                  map (C_Expr_To_Str.module_to_chisel_string) deep_st_programs
+            let exprs_and_str_data_and_latencies =
+                  zip3 deep_st_programs modules_str_data expr_latencies
+            map (\(p_expr, p_str, p_latency) ->
+                   C_Tester.add_test_harness_to_chisel_str p_expr p_str
+                   inputs output p_latency (use_verilog_sim_source verilog_conf))
+              exprs_and_str_data_and_latencies
           Text -> error "Can't run tests with Text backend."
   sequence $ map
     (\(test_str, idx) -> do
@@ -132,7 +141,22 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
                    (get_verilog_save_name verilog_conf) s_target idx
               else return ()
             process_result_to_test_result process_result circuit_file
-          Chisel -> error "Chisel compilation not yet supported"
+          Chisel -> do
+            write_file_ae circuit_file test_str
+            process_result <- run_process
+              (root_dir ++
+                "/src/Core/Aetherling/Interpretations/" ++
+                "Backend_Execute/Chisel/test_chisel.sh " ++
+                circuit_file ++ " " ++
+                chisel_dir
+              ) Nothing
+            traceShowM process_result
+            if save_gen_verilog verilog_conf
+              then copy_verilog_file
+                   (chisel_dir ++ "/test_run_dir/top/*/Top.v") test_verilog_dir
+                   (get_verilog_save_name verilog_conf) s_target idx
+              else return ()
+            process_result_to_test_result process_result circuit_file
           Text -> error "Can't run tests with Text backend."
     ) (zip test_strs [0..])
 
