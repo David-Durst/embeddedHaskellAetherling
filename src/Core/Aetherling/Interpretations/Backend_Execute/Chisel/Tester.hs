@@ -33,13 +33,13 @@ chisel_test_spec_wrapper body =
   "import aetherling.types._\n" ++
   "import chisel3._\n" ++
   "import chisel3.iotesters.ChiselFlatSpec\n\n" ++
-  "class PipelinedAdderTest(c: Top) extends NestedPeekPokeTester(c) {" ++
+  "class TopTest(c: Top) extends NestedPeekPokeTester(c) {" ++
   body ++ "}\n\n" ++
   "class TopTester extends ChiselFlatSpec {\n" ++
   tab_str ++ "\"Top\" should \"behave correctly\" in {\n" ++ 
   tab_str ++ tab_str ++ "iotesters.Driver.execute(Array(\"--backend-name\"," ++
-  " \"verilator\"), () => new TopAtomTuple(STInt(8), STInt(8))) {\n" ++
-  tab_str ++ tab_str ++ tab_str ++ "c => new AtomTupleUnitTester(c)\n" ++
+  " \"verilator\"), () => new Top())) {\n" ++
+  tab_str ++ tab_str ++ tab_str ++ "c => new TopTest(c)\n" ++
   tab_str ++ tab_str ++ "} should be(true)\n" ++
   tab_str ++ "}\n" ++
   "}"
