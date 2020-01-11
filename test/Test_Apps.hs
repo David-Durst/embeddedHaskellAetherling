@@ -64,6 +64,12 @@ single_map_200_results = sequence $
               Magma (Save_Gen_Verilog "map")
               single_map_200_inputs single_map_200_output)
   [1,5,10,20,25,40,50,100,200]
+single_map_200_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              single_map_200 (wrap_single_s s)
+              Chisel No_Verilog
+              single_map_200_inputs single_map_200_output)
+  [1]
 single_map_200_results_all_types = sequence $
   fmap (\s -> test_with_backend
               single_map_200 (All_With_Slowdown_Factor s)

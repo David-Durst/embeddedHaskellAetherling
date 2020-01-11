@@ -269,7 +269,6 @@ module_to_string_inner consumer_e@(IfN t producer_e cur_idx) = do
   print_unary_operator cur_ref producer_ref
   return cur_ref
 
--- need to fix from here until map
 -- generators
 module_to_string_inner consumer_e@(Lut_GenN lut_table lut_type producer_e cur_idx) = do
   throwError $ RH.Print_Failure "Lut_GenN not printable"

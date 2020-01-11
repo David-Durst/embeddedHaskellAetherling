@@ -64,7 +64,23 @@ print_module new_module = do
 
   -- get state after executing inside module
   end_data <- lift get
-  let cur_inputs = sortBy (\x y -> compare (port_name x) (port_name y)) $ cur_module_inputs end_data
+  let cur_inputs_not_checked_for_top =
+        sortBy (\x y -> compare (port_name x) (port_name y)) $
+        cur_module_inputs end_data
+        
+  -- need to use in rather port name for interal modules in order
+  -- to satisfy Unary/Binary interface traits
+  let compute_module_port_name idx port = if is_top_module start_data
+        then port_name port
+        else if length cur_inputs_not_checked_for_top == 0 then "in"
+        else "in" ++ show idx
+
+  let cur_inputs = map (\(port, idx) ->
+                          port {
+                           port_name = compute_module_port_name idx port
+                           }
+                       ) (zip cur_inputs_not_checked_for_top [0..])
+        
   if cur_module_num_non_inputs end_data == 1 && (not $ is_top_module start_data)
     then do
     -- setup for outer module
@@ -89,8 +105,13 @@ print_module new_module = do
     -}
     use_valids <- use_valid_port
     let valid_ports_str = if use_valids then " with ValidInterface" else ""
+    let port_trait = if is_top_module start_data then "" else
+          case length cur_inputs of
+            0 -> " with NullaryInterface"
+            1 -> " with UnaryInterface"
+            _ -> " with BinaryInterface"
     let module_class_string = "class " ++ cur_module_name ++ "() extends " ++
-          "MultiIOModule " ++ valid_ports_str ++ " {\n"
+          "MultiIOModule " ++ port_trait ++ valid_ports_str ++ " {\n"
 
     -- chisel interface declaration of module IO ports
     let cur_inputs_str =
@@ -99,7 +120,7 @@ print_module new_module = do
                        tab_str ++ "val " ++ port_name next_port ++
                        " = IO(Input(" ++ type_to_chisel (port_type next_port) ++
                        ".chiselRepr()))\n")
-              "" cur_inputs 
+              "" cur_inputs
           else ""
     let cur_output_str = tab_str ++ "val out = IO(Output(" ++
                          (type_to_chisel $ port_type $
@@ -150,6 +171,16 @@ module_to_string_inner consumer_e@(AbsN producer_e cur_idx) = do
                 [Module_Port "in" IntT] (Module_Port "out" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
+module_to_string_inner consumer_e@(AddN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = if use_valids then "" else "NoValid"
+  let cur_ref = Backend_Module_Ref cur_ref_name ("Add" ++ valid_str ++
+                                                 "(STInt(" ++ int_width ++ "))")
+                [Module_Port "in" IntT] (Module_Port "out" IntT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
@@ -160,6 +191,23 @@ module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
   print_unary_operator cur_ref producer_ref
   return cur_ref
   
+-- generators
+module_to_string_inner consumer_e@(Const_GenN constant t delay cur_idx) = do
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let const_values_str =
+        convert_seq_val_to_st_val_string (flatten_ast_value constant)
+        (TSeqT 1 0 t) chisel_hardware_conf
+  let gen_str = "Module(new Const(" ++ type_to_chisel t ++
+                ", " ++ st_values const_values_str ++
+                ", " ++ show delay ++ "))"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [] (Module_Port "out" t)
+  add_to_cur_module $ "val " ++ var_name cur_ref ++ " = " ++ gen_call cur_ref
+  update_output $ Module_Port "out" t
+  let cur_ref_valid_str = var_name cur_ref ++ ".valid_up"
+  add_to_cur_module $ cur_ref_valid_str ++ " := valid_up"
+  return cur_ref
+
 -- higher order operators
 module_to_string_inner consumer_e@(Map_sN n f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
@@ -189,6 +237,51 @@ module_to_string_inner consumer_e@(Map_tN n i f producer_e cur_idx) = do
   print_unary_operator cur_ref producer_ref
   return cur_ref
 
+module_to_string_inner consumer_e@(Map2_sN n f producer0_e producer1_e cur_idx) = do
+  producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
+  producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
+  Backend_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let valid_str = if use_valids then "" else "NoValid"
+  let gen_str = "Map2S" ++ valid_str ++ "(new " ++ f_name ++ ")"
+  let map_in_ports =
+        map (\port -> port {port_type = SSeqT n (port_type port)}) f_in_ports
+  let map_out_port = f_out_port {port_type = SSeqT n (port_type f_out_port)}
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str map_in_ports map_out_port
+  print_binary_operator cur_ref producer0_ref producer1_ref
+  return cur_ref
+
+module_to_string_inner consumer_e@(Map2_tN n i f producer0_e producer1_e cur_idx) = do
+  producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
+  producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
+  Backend_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = show use_valids
+  let valid_str = if use_valids then "" else "NoValid"
+  let gen_str = "Map2T" ++ valid_str ++ "(new " ++ f_name ++ ")"
+  let map_in_ports =
+        map (\port -> port {port_type = TSeqT n i (port_type port)}) f_in_ports
+  let map_out_port = f_out_port {port_type = TSeqT n i (port_type f_out_port)}
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str map_in_ports map_out_port
+  print_binary_operator cur_ref producer0_ref producer1_ref
+  return cur_ref
+  
+module_to_string_inner consumer_e@(ATupleN t0 t1 producer0_e producer1_e cur_idx) = do
+  producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
+  producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = if use_valids then "" else "NoValid"
+  let gen_str = "AtomTuple" ++ valid_str ++ "(" ++ type_to_chisel t0 ++ ", " ++
+                type_to_chisel t1 ++ ")"
+  let tup_in_ports = [Module_Port "in0" t0, Module_Port "in1" t1]
+  let tup_out_port = Module_Port "out" (ATupleT t0 t1)
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str tup_in_ports tup_out_port
+  print_binary_operator cur_ref producer0_ref producer1_ref
+  return cur_ref
 
 module_to_string_inner (InputN t name cur_idx) = do
   cur_data <- lift get

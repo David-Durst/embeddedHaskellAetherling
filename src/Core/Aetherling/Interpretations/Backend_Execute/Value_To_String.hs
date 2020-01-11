@@ -13,16 +13,24 @@ data ST_Val_String = ST_Val_String {
   } deriving (Show, Eq)
 
 data ST_Val_To_String_Config = ST_Val_To_String_Config {
+  make_integer_string_for_backend :: Integer -> String,
   make_bool_string_for_backend :: Bool -> String,
   make_tuple_string_for_backend :: String -> String -> String,
   make_array_string_for_backend :: [String] -> String
   }
 
-magma_conf = ST_Val_To_String_Config show (\x y -> show_no_quotes (x,y))
+magma_conf = ST_Val_To_String_Config show show (\x y -> show_no_quotes (x,y))
              show_no_quotes
-chisel_conf = ST_Val_To_String_Config (map toLower . show)
+chisel_conf = ST_Val_To_String_Config show (map toLower . show)
   (\x y -> "Array(" ++ x ++ ", " ++ y ++ ")")
   (\x -> "Array(" ++
+    (foldl (\result_s new_s -> result_s ++ "," ++ new_s) (head x) (tail x)) ++
+    ")")
+chisel_hardware_conf = ST_Val_To_String_Config
+  (\x -> show x ++ ".U")
+  (\x -> (map toLower . show) x ++ ".B")
+  (\x y -> "VecInit(" ++ x ++ ", " ++ y ++ ")")
+  (\x -> "VecInit(" ++
     (foldl (\result_s new_s -> result_s ++ "," ++ new_s) (head x) (tail x)) ++
     ")")
 
@@ -52,10 +60,10 @@ class Convertible_To_Atom_Strings a where
   convert_to_flat_atom_list :: a -> ST_Val_To_String_Config -> [String]
 
 instance Convertible_To_Atom_Strings Integer where
-  convert_to_flat_atom_list x _ = [show x]
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf x]
 
 instance Convertible_To_Atom_Strings Bool where
-  convert_to_flat_atom_list x conf = [make_bool_string_for_backend conf $ x]
+  convert_to_flat_atom_list x conf = [make_bool_string_for_backend conf x]
   
 instance (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Convertible_To_Atom_Strings (a, b) where
@@ -71,7 +79,8 @@ instance (Convertible_To_Atom_Strings a) => Convertible_To_Atom_Strings [a] wher
 instance Convertible_To_Atom_Strings AST_Atoms where
   convert_to_flat_atom_list (BitA b) conf =
     [make_bool_string_for_backend conf $ b]
-  convert_to_flat_atom_list (IntA i) _ = [show i]
+  convert_to_flat_atom_list (IntA i) conf =
+    [make_integer_string_for_backend conf i]
   convert_to_flat_atom_list (ATupleA x y) conf =
     [make_tuple_string_for_backend conf
       (head $ convert_to_flat_atom_list x conf)
