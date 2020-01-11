@@ -12,6 +12,7 @@ data ST_Val_String = ST_Val_String {
   st_valids :: [Bool]
   } deriving (Show, Eq)
 
+int_width = "8"
 data ST_Val_To_String_Config = ST_Val_To_String_Config {
   make_integer_string_for_backend :: Integer -> String,
   make_bool_string_for_backend :: Bool -> String,
@@ -27,7 +28,7 @@ chisel_conf = ST_Val_To_String_Config show (map toLower . show)
     (foldl (\result_s new_s -> result_s ++ "," ++ new_s) (head x) (tail x)) ++
     ")")
 chisel_hardware_conf = ST_Val_To_String_Config
-  (\x -> show x ++ ".U")
+  (\x -> show x ++ ".U(" ++ int_width ++ ".W)")
   (\x -> (map toLower . show) x ++ ".B")
   (\x y -> "VecInit(" ++ x ++ ", " ++ y ++ ")")
   (\x -> "VecInit(" ++

@@ -64,22 +64,8 @@ print_module new_module = do
 
   -- get state after executing inside module
   end_data <- lift get
-  let cur_inputs_not_checked_for_top =
-        sortBy (\x y -> compare (port_name x) (port_name y)) $
-        cur_module_inputs end_data
-        
-  -- need to use in rather port name for interal modules in order
-  -- to satisfy Unary/Binary interface traits
-  let compute_module_port_name idx port = if is_top_module start_data
-        then port_name port
-        else if length cur_inputs_not_checked_for_top == 0 then "in"
-        else "in" ++ show idx
-
-  let cur_inputs = map (\(port, idx) ->
-                          port {
-                           port_name = compute_module_port_name idx port
-                           }
-                       ) (zip cur_inputs_not_checked_for_top [0..])
+  let cur_inputs = sortBy (\x y -> compare (port_name x) (port_name y)) $
+                   cur_module_inputs end_data
         
   if cur_module_num_non_inputs end_data == 1 && (not $ is_top_module start_data)
     then do
@@ -105,11 +91,10 @@ print_module new_module = do
     -}
     use_valids <- use_valid_port
     let valid_ports_str = if use_valids then " with ValidInterface" else ""
-    let port_trait = if is_top_module start_data then "" else
-          case length cur_inputs of
-            0 -> " with NullaryInterface"
-            1 -> " with UnaryInterface"
-            _ -> " with BinaryInterface"
+    let port_trait = case length cur_inputs of
+                       0 -> " with NullaryInterface"
+                       1 -> " with UnaryInterface"
+                       _ -> " with BinaryInterface"
     let module_class_string = "class " ++ cur_module_name ++ "() extends " ++
           "MultiIOModule " ++ port_trait ++ valid_ports_str ++ " {\n"
 
@@ -122,7 +107,7 @@ print_module new_module = do
                        ".chiselRepr()))\n")
               "" cur_inputs
           else ""
-    let cur_output_str = tab_str ++ "val out = IO(Output(" ++
+    let cur_output_str = tab_str ++ "val O = IO(Output(" ++
                          (type_to_chisel $ port_type $
                            out_port cur_module_result_ref) ++ ".chiselRepr()))\n"
 
@@ -131,9 +116,8 @@ print_module new_module = do
                       cur_module_output_lines end_data
 
     -- wire up operator in body to output ports
-    let cur_module_result_str = var_name cur_module_result_ref ++ "." ++
-                                (port_name $ out_port cur_module_result_ref)
-    let module_wire_output = tab_str ++ "out := "  ++ cur_module_result_str ++ "\n"
+    let cur_module_result_str = get_module_out_port_str cur_module_result_ref
+    let module_wire_output = tab_str ++ "O := "  ++ cur_module_result_str ++ "\n"
     let cur_module_valid_str = var_name cur_module_result_ref ++ ".valid_down"
     let module_valid_output =
           if use_valids
@@ -154,10 +138,10 @@ print_module new_module = do
     --traceShowM $ "module " ++ cur_module_name
     --traceShowM $ show cur_inputs
     --traceShowM $ show cur_module_result_ref
-    return $ Backend_Module_Ref (cur_module_name ++ "()") "" cur_inputs (out_port cur_module_result_ref)
+    return $ Backend_Module_Ref (cur_module_name ++ "()") "" cur_inputs
+      (out_port cur_module_result_ref)
 
 
-int_width = "8"
 -- this handles the strings inside a module
 module_to_string_inner :: Expr -> Memo_Print_StateM Backend_Module_Ref Backend_Module_Ref
 module_to_string_inner (IdN producer_e cur_idx) = throwError $ RH.Print_Failure "id not supported to chisel"
@@ -168,7 +152,7 @@ module_to_string_inner consumer_e@(AbsN producer_e cur_idx) = do
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Abs" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "in" IntT] (Module_Port "out" IntT)
+                [Module_Port "I" IntT] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(AddN producer_e cur_idx) = do
@@ -178,7 +162,7 @@ module_to_string_inner consumer_e@(AddN producer_e cur_idx) = do
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Add" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "in" IntT] (Module_Port "out" IntT)
+                [Module_Port "I" IntT] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
@@ -187,25 +171,30 @@ module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Not" ++ valid_str ++ "()")
-                [Module_Port "in" BitT] (Module_Port "out" BitT)
+                [Module_Port "I" BitT] (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
   
 -- generators
 module_to_string_inner consumer_e@(Const_GenN constant t delay cur_idx) = do
-  let cur_ref_name = "n" ++ print_index cur_idx
+  -- the chisel const_gen is not a module. It's just a function that
+  -- adds some properties. Therefore, it doesn't get wrapped in a Module
+  -- with a new call
+  let cur_ref_name = "const" ++ print_index cur_idx
   let const_values_str =
         convert_seq_val_to_st_val_string (flatten_ast_value constant)
         (TSeqT 1 0 t) chisel_hardware_conf
-  let gen_str = "Module(new Const(" ++ type_to_chisel t ++
+  let gen_str = "Const(" ++ type_to_chisel t ++
                 ", " ++ st_values const_values_str ++
-                ", " ++ show delay ++ "))"
+                ", " ++ show delay ++ ", valid_up)"
+  let out_port_name = (cur_ref_name ++ "_O")
+  let cur_ref_valid_str = cur_ref_name ++ "_valid_up"
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
-                [] (Module_Port "out" t)
-  add_to_cur_module $ "val " ++ var_name cur_ref ++ " = " ++ gen_call cur_ref
-  update_output $ Module_Port "out" t
-  let cur_ref_valid_str = var_name cur_ref ++ ".valid_up"
-  add_to_cur_module $ cur_ref_valid_str ++ " := valid_up"
+                [] (Module_Port out_port_name t)
+  add_to_cur_module $ "val (" ++ out_port_name ++ ", " ++
+    cur_ref_name ++ "_valid_down) = " ++ gen_call cur_ref
+  update_output $ Module_Port out_port_name t
+  -- no need for valid_up wiring as valid is passed to function call
   return cur_ref
 
 -- higher order operators
@@ -277,8 +266,8 @@ module_to_string_inner consumer_e@(ATupleN t0 t1 producer0_e producer1_e cur_idx
   let valid_str = if use_valids then "" else "NoValid"
   let gen_str = "AtomTuple" ++ valid_str ++ "(" ++ type_to_chisel t0 ++ ", " ++
                 type_to_chisel t1 ++ ")"
-  let tup_in_ports = [Module_Port "in0" t0, Module_Port "in1" t1]
-  let tup_out_port = Module_Port "out" (ATupleT t0 t1)
+  let tup_in_ports = [Module_Port "I0" t0, Module_Port "I1" t1]
+  let tup_out_port = Module_Port "O" (ATupleT t0 t1)
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str tup_in_ports tup_out_port
   print_binary_operator cur_ref producer0_ref producer1_ref
   return cur_ref
@@ -301,7 +290,7 @@ module_to_string_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
   let gen_str = "FIFO(" ++ type_to_chisel t ++
                 ", " ++ show delay_clks ++ ")"
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
-                [Module_Port "in" t] (Module_Port "out" t)
+                [Module_Port "I" t] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e = error $ "don't support yet: " ++
@@ -341,29 +330,33 @@ print_binary_operator cur_ref producer_ref_left producer_ref_right = do
                             (port_name $ in_ports cur_ref !! 0) 
   let cur_ref_in_str_right = var_name cur_ref ++ "." ++
                              (port_name $ in_ports cur_ref !! 1) 
-  add_to_cur_module $ producer_out_str_left ++ " := " ++ cur_ref_in_str_left
-  add_to_cur_module $ producer_out_str_right ++ " := " ++ cur_ref_in_str_right
+  add_to_cur_module $ cur_ref_in_str_left ++ " := " ++ producer_out_str_left
+  add_to_cur_module $ cur_ref_in_str_right ++ " := " ++ producer_out_str_right
   incr_num_non_inputs_cur_module $ gen_call cur_ref
   valid_bool <- use_valid_port
   if valid_bool
     then do
-    let producer_valid_str_left =
-          if var_name producer_ref_left == "cls"
-          then "valid_up"
-          else var_name producer_ref_left ++ ".valid_down"
-    let producer_valid_str_right =
-          if var_name producer_ref_right == "cls"
-          then "cls.valid_up"
-          else var_name producer_ref_right ++ ".valid_down"
-    let producer_valid_str = producer_valid_str_left ++ " & " ++ producer_valid_str_right
+    let producer_valid_str_left = get_module_valid_down_str producer_ref_left
+    let producer_valid_str_right = get_module_valid_down_str producer_ref_right
+    let producer_valid_str = producer_valid_str_left ++ " & " ++
+                             producer_valid_str_right
     let cur_ref_valid_str = var_name cur_ref ++ ".valid_up"
     add_to_cur_module $ cur_ref_valid_str ++ " := " ++ producer_valid_str
     else return ()
 
 get_module_out_port_str :: Backend_Module_Ref -> String
 get_module_out_port_str ref | var_name ref == "cls" = port_name $ out_port ref
+get_module_out_port_str ref | isPrefixOf "const" (var_name ref) =
+                              port_name $ out_port ref
 get_module_out_port_str ref =
   var_name ref ++ "." ++ (port_name $ out_port ref)
+  
+get_module_valid_down_str :: Backend_Module_Ref -> String
+get_module_valid_down_str ref | var_name ref == "cls" = "valid_up"
+get_module_valid_down_str ref | isPrefixOf "const" (var_name ref) =
+                              var_name ref ++ "_valid_down"
+get_module_valid_down_str ref =
+  var_name ref ++ "." ++ "valid_down"
 
 type_to_chisel :: AST_Type -> String
 type_to_chisel UnitT = "undefined"

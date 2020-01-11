@@ -161,7 +161,6 @@ print_module new_module = do
     return $ Backend_Module_Ref (cur_module_name ++ "()") "" cur_inputs (out_port cur_module_result_ref)
 
 
-int_width = "8"
 -- this handles the strings inside a module
 module_to_string_inner :: Expr -> Memo_Print_StateM Backend_Module_Ref Backend_Module_Ref
 module_to_string_inner (IdN producer_e cur_idx) = throwError $ RH.Print_Failure "id not supported to magma"

@@ -81,9 +81,7 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
         map (\i -> do
                 let i_port_name = (port_name $
                                    (in_ports $ module_outer_results module_str_data) !! i)
-                tab_str ++ tab_str ++ "val port" ++ show i ++ " = c." ++
-                  i_port_name ++ "\n" ++ 
-                  tab_str ++ tab_str ++ "if (f_clk < run_clks " ++
+                tab_str ++ tab_str ++ "if (f_clk < run_clks " ++
                   " && chisel_inputs" ++ show i ++ "_valid(f_clk)) {\n" ++
 
                   tab_str ++ tab_str ++ tab_str ++
@@ -94,9 +92,9 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
             ) [0..num_ports - 1]
   let test_print = tab_str ++ tab_str ++
         case num_ports of
-          0 -> "peek_nullary_module(c, c.out)\n"
-          1 -> "peek_unary_module(c, port0, c.out)\n"
-          _ -> "peek_binary_module(c, port0, port1, c.out)\n"
+          0 -> "peek_nullary_module(c)\n"
+          1 -> "peek_unary_module(c)\n"
+          _ -> "peek_binary_module(c)\n"
   let output_port_name = port_name $ out_port $
                          module_outer_results module_str_data
   let test_output_counter_incr =
