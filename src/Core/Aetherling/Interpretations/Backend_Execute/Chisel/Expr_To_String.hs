@@ -118,7 +118,7 @@ print_module new_module = do
     -- wire up operator in body to output ports
     let cur_module_result_str = get_module_out_port_str cur_module_result_ref
     let module_wire_output = tab_str ++ "O := "  ++ cur_module_result_str ++ "\n"
-    let cur_module_valid_str = var_name cur_module_result_ref ++ ".valid_down"
+    let cur_module_valid_str = get_module_valid_down_str cur_module_result_ref
     let module_valid_output =
           if use_valids
           then tab_str ++ "valid_down := " ++ cur_module_valid_str ++ "\n"
@@ -310,10 +310,7 @@ print_unary_operator cur_ref producer_ref = do
   valid_bool <- use_valid_port
   if valid_bool
     then do
-    let producer_valid_str =
-          if var_name producer_ref == "cls"
-          then "valid_up"
-          else var_name producer_ref ++ ".valid_down"
+    let producer_valid_str = get_module_valid_down_str producer_ref
     let cur_ref_valid_str = var_name cur_ref ++ ".valid_up"
     add_to_cur_module $ cur_ref_valid_str ++ " := " ++ producer_valid_str
     else return ()
