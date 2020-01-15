@@ -370,7 +370,6 @@ module_to_string_inner consumer_e@(Up_1d_tN n i elem_t producer_e cur_idx) = do
                 [Module_Port "I" (TSeqT 1 (i+n-1) elem_t)] (Module_Port "O" (TSeqT n i elem_t))
   print_unary_operator cur_ref producer_ref
   return cur_ref
--- no need for downsample module. This doesn't do anything with current clock approach
 module_to_string_inner consumer_e@(Down_1d_sN n sel_idx elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx

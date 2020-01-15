@@ -260,6 +260,46 @@ module_to_string_inner consumer_e@(Const_GenN constant t delay cur_idx) = do
   return cur_ref
 
 -- sequence operators
+module_to_string_inner consumer_e@(Up_1d_sN n elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "UpS(" ++ show n ++ ", " ++
+                type_to_chisel elem_t ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT n elem_t)]
+                (Module_Port "O" (SSeqT 1 elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Up_1d_tN n i elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "UpT(" ++ show n ++ ", " ++ show i ++ ", " ++
+                type_to_chisel elem_t ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (TSeqT 1 (i+n-1) elem_t)]
+                (Module_Port "O" (TSeqT n i elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Down_1d_sN n sel_idx elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "DownS(" ++ show n ++ ", " ++ show sel_idx ++ ", " ++
+                type_to_chisel elem_t ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT n elem_t)]
+                (Module_Port "O" (SSeqT 1 elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Down_1d_tN n i sel_idx elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "DownT(" ++ show n ++ ", " ++ show i ++ ", " ++ show sel_idx ++
+                ", " ++ type_to_chisel elem_t ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (TSeqT n i elem_t)]
+                (Module_Port "O" (TSeqT 1 (n+i-1) elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 
 -- higher order operators
 module_to_string_inner consumer_e@(Map_sN n f producer_e cur_idx) = do
