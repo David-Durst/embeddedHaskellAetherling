@@ -155,6 +155,15 @@ module_to_string_inner consumer_e@(AbsN producer_e cur_idx) = do
                 [Module_Port "I" IntT] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
+module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = if use_valids then "" else "NoValid"
+  let cur_ref = Backend_Module_Ref cur_ref_name ("Not" ++ valid_str ++ "()")
+                [Module_Port "I" BitT] (Module_Port "O" BitT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(AddN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
@@ -165,13 +174,66 @@ module_to_string_inner consumer_e@(AddN producer_e cur_idx) = do
                 [Module_Port "I" IntT] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(SubN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
-  let cur_ref = Backend_Module_Ref cur_ref_name ("Not" ++ valid_str ++ "()")
-                [Module_Port "I" BitT] (Module_Port "O" BitT)
+  let cur_ref = Backend_Module_Ref cur_ref_name ("Sub" ++ valid_str ++
+                                                 "(STInt(" ++ int_width ++ "))")
+                [Module_Port "I" IntT] (Module_Port "O" IntT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(LSRN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = if use_valids then "" else "NoValid"
+  let cur_ref = Backend_Module_Ref cur_ref_name ("RShift" ++ valid_str ++
+                                                 "(STInt(" ++ int_width ++ "))")
+                [Module_Port "I" IntT] (Module_Port "O" IntT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(LSLN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = if use_valids then "" else "NoValid"
+  let cur_ref = Backend_Module_Ref cur_ref_name ("LShift" ++ valid_str ++
+                                                 "(STInt(" ++ int_width ++ "))")
+                [Module_Port "I" IntT] (Module_Port "O" IntT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(LtN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = if use_valids then "" else "NoValid"
+  let cur_ref = Backend_Module_Ref cur_ref_name ("Lt" ++ valid_str ++
+                                                 "(STInt(" ++ int_width ++ "))")
+                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" BitT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = if use_valids then "" else "NoValid"
+  let cur_ref = Backend_Module_Ref cur_ref_name ("Eq" ++ valid_str ++
+                                                 "(" ++ type_to_chisel t ++ "))")
+                [Module_Port "I" (port_type $ out_port producer_ref)]
+                (Module_Port "O" BitT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(IfN t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = if use_valids then "" else "NoValid"
+  let cur_ref = Backend_Module_Ref cur_ref_name ("If" ++ valid_str ++
+                                                 "(" ++ type_to_chisel t ++ ")")
+                [Module_Port "I" (ATupleT BitT (ATupleT t t))]
+                (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
   
@@ -196,6 +258,8 @@ module_to_string_inner consumer_e@(Const_GenN constant t delay cur_idx) = do
   update_output $ Module_Port out_port_name t
   -- no need for valid_up wiring as valid is passed to function call
   return cur_ref
+
+-- sequence operators
 
 -- higher order operators
 module_to_string_inner consumer_e@(Map_sN n f producer_e cur_idx) = do

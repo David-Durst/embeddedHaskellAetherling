@@ -246,6 +246,11 @@ lt_test_results = sequence $
               lt_test (wrap_single_s s)
               Magma No_Verilog
               lt_test_inputs lt_test_outputs) [1,2,4]
+lt_test_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              lt_test (wrap_single_s s)
+              Chisel No_Verilog
+              lt_test_inputs lt_test_outputs) [1,2,4]
   
 if_lt_atom_test x = do
   let one = const_genC (Atom_Int 1) x
@@ -267,6 +272,11 @@ if_lt_test_results = sequence $
   fmap (\s -> test_with_backend 
               if_lt_test (wrap_single_s s)
               Magma No_Verilog
+              if_lt_test_inputs if_lt_test_outputs) [1,2,4]
+if_lt_test_results_chisel = sequence $
+  fmap (\s -> test_with_backend 
+              if_lt_test (wrap_single_s s)
+              Chisel No_Verilog
               if_lt_test_inputs if_lt_test_outputs) [1,2,4]
   
 -- tests basic multi-rate
