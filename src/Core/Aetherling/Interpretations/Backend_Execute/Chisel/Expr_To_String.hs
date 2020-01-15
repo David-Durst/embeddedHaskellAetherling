@@ -234,7 +234,7 @@ module_to_string_inner consumer_e@(Map2_sN n f producer0_e producer1_e cur_idx) 
   use_valids <- use_valid_port
   let valid_str = show use_valids
   let valid_str = if use_valids then "" else "NoValid"
-  let gen_str = "Map2S" ++ valid_str ++ "(new " ++ f_name ++ ")"
+  let gen_str = "Map2S" ++ valid_str ++ "(" ++ show n ++ ",new " ++ f_name ++ ")"
   let map_in_ports =
         map (\port -> port {port_type = SSeqT n (port_type port)}) f_in_ports
   let map_out_port = f_out_port {port_type = SSeqT n (port_type f_out_port)}
