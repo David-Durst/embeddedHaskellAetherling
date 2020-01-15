@@ -138,6 +138,11 @@ two_maps_results = sequence $
               two_maps (wrap_single_s s)
               Magma No_Verilog
               two_maps_inputs two_maps_output) [1,2,4]
+two_maps_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              two_maps (wrap_single_s s)
+              Chisel No_Verilog
+              two_maps_inputs two_maps_output) [1,2,4]
                    
 tuple_simple_no_input input0 input1 =
   atom_tupleC input0 input1
@@ -162,7 +167,7 @@ diamond_map_no_input input = do
   let tuple = map2C atom_tupleC branch input
   mapC addC tuple
 diamond_map = diamond_map_no_input $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
 diamond_map_seq_idx = add_indexes $ seq_shallow_to_deep diamond_map
 diamond_map_ppar = fmap
   (\s -> compile_with_slowdown_to_expr diamond_map s) [1,2,4]
@@ -174,10 +179,15 @@ diamond_map_results = sequence $
               diamond_map (wrap_single_s s)
               Magma No_Verilog
               diamond_map_inputs diamond_map_output) [1,2,4]
+diamond_map_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              diamond_map (wrap_single_s s)
+              Chisel No_Verilog
+              diamond_map_inputs diamond_map_output) [1,2,4]
 
 single_map_underutil = 
   mapC' (Proxy @4) absC $ -- [4]
-  com_input_seq "hi" (Proxy :: Proxy (Seq 4 4 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 4 Atom_Int))
 single_map_underutil_seq_idx = add_indexes $ seq_shallow_to_deep single_map_underutil
 single_map_underutil_ppar = fmap
   (\s -> compile_with_slowdown_to_expr single_map_underutil s) [1,2,4,8]
@@ -189,11 +199,19 @@ single_map_underutil_results = sequence $
               single_map_underutil (wrap_single_s s)
               Magma No_Verilog
               single_map_underutil_inputs single_map_underutil_output) [1,2,4,8]
+single_map_underutil_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              single_map_underutil (wrap_single_s s)
+              Chisel No_Verilog
+              single_map_underutil_inputs single_map_underutil_output) [1,2,4,8]
 
 const_test =
   const_genC (list_to_seq (Proxy @9) $ fmap Atom_Int [0..8] :: Seq 9 0 Atom_Int) $
   com_input "not_used" (Proxy :: Proxy Atom_Int)
 const_test_seq_idx = add_indexes $ seq_shallow_to_deep const_test
+-- why does this test have latency 3 for 1 input reg and 3 out?
+-- because the input never gets added since no input to reg
+-- the output only has 2 regs since 1 of 3 gets folded into const
 const_test_ppar = fmap
   (\s -> compile_with_slowdown_to_expr const_test s) [1,3,9]
 const_test_ppar_typechecked = fmap check_type const_test_ppar
@@ -203,6 +221,11 @@ const_test_results = sequence $
   fmap (\s -> test_with_backend 
               const_test (wrap_single_s s)
               Magma No_Verilog
+              const_test_inputs const_test_outputs) [1,3,9]
+const_test_results_chisel = sequence $
+  fmap (\s -> test_with_backend 
+              const_test (wrap_single_s s)
+              Chisel No_Verilog
               const_test_inputs const_test_outputs) [1,3,9]
 
 lt_atom_test x = do
@@ -250,7 +273,7 @@ if_lt_test_results = sequence $
 map_to_up = 
   mapC' (Proxy @1) absC >>> -- [1]
   up_1dC (Proxy @4) $ -- [4]
-  com_input_seq "hi" (Proxy :: Proxy (Seq 1 3 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 1 3 Atom_Int))
 map_to_up_seq_idx = add_indexes $ seq_shallow_to_deep map_to_up
 map_to_up_ppar = fmap (\s -> compile_with_slowdown_to_expr map_to_up s) [1,2,4]
 map_to_up_ppar_typechecked = fmap check_type map_to_up_ppar
@@ -288,7 +311,7 @@ up_to_down_results' = sequence $
 nested_map_to_top_level_up = 
   mapC' (Proxy @1) (mapC' (Proxy @4) absC) >>> -- [1]
   up_1dC (Proxy @4) $ -- [4]
-  com_input_seq "hi" (Proxy :: Proxy (Seq 1 5 (Seq 4 0 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 1 5 (Seq 4 0 Atom_Int)))
 -- note: the reason the output is a seminly unecessary split on the outer seq
 -- for the slowest schedule is that there are still 2 invalid clocks not used
 -- and I say partially parallel for those, becuase not fully slowed down
@@ -312,7 +335,7 @@ nested_map_to_top_level_up_results = sequence $
 nested_map_to_nested_up =
   mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
   mapC' (Proxy @4) (up_1dC (Proxy @4)) $ -- [4]
-  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 1 5 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 (Seq 1 5 Atom_Int)))
 nested_map_to_nested_up_seq_idx = add_indexes $ seq_shallow_to_deep nested_map_to_nested_up
 nested_map_to_nested_up_ppar =
   fmap (\s -> compile_with_slowdown_to_expr
@@ -331,7 +354,7 @@ nested_map_to_nested_up_results = sequence $
 partition_to_flat_map = 
   partitionC (Proxy @2) (Proxy @2) (Proxy @2) (Proxy @2) >>>
   mapC (mapC absC) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 4 12 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 12 Atom_Int))
 partition_to_flat_map_seq_idx = add_indexes $ seq_shallow_to_deep partition_to_flat_map
 partition_to_flat_map_ppar =
   fmap (\s -> compile_with_slowdown_to_expr
@@ -349,7 +372,7 @@ map_to_unpartition =
   mapC (mapC absC) >>>
   unpartitionC' (Proxy @2) (Proxy @2) >>>
   mapC absC $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 2 6 (Seq 2 0 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2 6 (Seq 2 0 Atom_Int)))
 map_to_unpartition_seq_idx = add_indexes $ seq_shallow_to_deep map_to_unpartition
 map_to_unpartition_ppar =
   fmap (\s -> compile_with_slowdown_to_expr
@@ -371,7 +394,7 @@ double_up =
    partitionC (Proxy @1) (Proxy @8) Proxy (Proxy @0) >>> -- in : [6], out : [1, 6] or in : [[2, 3]] out : [1, [2, 3]] (this doesn't work as can't slow input down by 5, so must not be able to slow output down by 5) or in : [[2, 3]] out : []
    up_1dC (Proxy @4)) >>>
    unpartitionC $ -- [5, 6]
-  com_input_seq "hi" (Proxy :: Proxy (Seq 2 30 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2 30 Atom_Int))
 double_up_seq_idx = add_indexes $ seq_shallow_to_deep double_up
 double_up_ppar =
   fmap (\s -> compile_with_slowdown_to_expr
@@ -391,7 +414,7 @@ down_over_nested_to_down_over_flattened =
   (down_1dC' (Proxy @4) 0 >>>
    unpartitionC' (Proxy @1) (Proxy @4) >>>
    down_1dC' (Proxy @4) 0) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 16 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 Atom_Int))
 down_over_nested_to_down_over_flattened_seq_idx = add_indexes $
   seq_shallow_to_deep down_over_nested_to_down_over_flattened
 down_over_nested_to_down_over_flattened_ppar =
@@ -447,7 +470,7 @@ tuple_sum_shallow_no_input in_seq = do
   let kernel_and_values = map2C atom_tupleC kernel in_seq
   mapC addC kernel_and_values
 tuple_sum = tuple_sum_shallow_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
 tuple_sum_seq_idx = add_indexes $ seq_shallow_to_deep tuple_sum
 tuple_sum_ppar =
   fmap (\s -> compile_with_slowdown_to_expr tuple_sum s) [1,2,4]
@@ -470,7 +493,7 @@ tuple_reduce_no_input in_seq = do
   let muled_pairs = mapC mulC kernel_and_values
   reduceC addC muled_pairs
 tuple_reduce = tuple_reduce_no_input $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 8 0 Atom_Int))
 tuple_reduce_seq_idx = add_indexes $ seq_shallow_to_deep tuple_reduce
 tuple_reduce_ppar =
   fmap (\s -> compile_with_slowdown_to_expr tuple_reduce s) [1,2,4,8]
@@ -497,7 +520,7 @@ fst_snd_sum_no_input in_seq = do
   let kernel_and_values_again = map2C atom_tupleC kernel_again in_seq_again
   mapC addC kernel_and_values_again
 fst_snd_sum = fst_snd_sum_no_input $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 8 0 Atom_Int))
 fst_snd_sum_seq_idx = add_indexes $ seq_shallow_to_deep fst_snd_sum
 fst_snd_sum_ppar =
   fmap (\s -> compile_with_slowdown_to_expr fst_snd_sum s) [1,2,4,8]
@@ -516,7 +539,7 @@ fst_snd_sum_results = sequence $
 
 seq_to_stuple = 
   mapC seq_to_seq_tupleC $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
 seq_to_stuple_seq_idx = add_indexes $ seq_shallow_to_deep seq_to_stuple
 seq_to_stuple_ppar = 
   fmap (\s -> compile_with_slowdown_to_expr seq_to_stuple s) [1,2,4,8,16]
@@ -534,7 +557,7 @@ seq_to_stuple_results = sequence $
 
 stuple_to_seq = 
   mapC seq_tuple_to_seqC $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 1 3 (Seq_Tuple 4 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 (Seq 1 3 (Seq_Tuple 4 Atom_Int))))
 stuple_to_seq_seq_idx = add_indexes $ seq_shallow_to_deep stuple_to_seq
 stuple_to_seq_ppar = 
   fmap (\s -> compile_with_slowdown_to_expr stuple_to_seq s) [1,2,4,8,16]
@@ -560,7 +583,7 @@ stuple_to_seq_results' = sequence $
 seq_and_stuple_no_input = 
   mapC (seq_to_seq_tupleC >>> seq_tuple_to_seqC)
 seq_and_stuple = seq_and_stuple_no_input $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
 seq_and_stuple_seq_idx = add_indexes $ seq_shallow_to_deep $ seq_and_stuple
 seq_and_stuple_ppar = 
   fmap (\s -> compile_with_slowdown_to_expr seq_and_stuple s) [1,2,4,8,16]
@@ -583,7 +606,7 @@ striple_to_seq_shallow in_seq = do
   let triple = map2C (map2C seq_tuple_appendC) pair in_seq
   mapC seq_tuple_to_seqC triple
 striple_to_seq = striple_to_seq_shallow $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 8 0 (Seq 1 2 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 8 0 (Seq 1 2 Atom_Int)))
 striple_to_seq_seq_idx = add_indexes $ seq_shallow_to_deep striple_to_seq
 striple_to_seq_ppar =
   fmap (\s -> compile_with_slowdown_to_expr striple_to_seq s) [1,2,4,8,24]
@@ -614,7 +637,7 @@ stencil_1dC_internal_test in_seq = do
   let partitioned_tuple = partitionC (Proxy :: Proxy n) (Proxy :: Proxy 1) (Proxy :: Proxy 0) (Proxy :: Proxy i) window_tuple
   mapC seq_tuple_to_seqC partitioned_tuple
 stencil_1d_internal_test = stencil_1dC_internal_test $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 100 200 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 100 200 Atom_Int))
 stencil_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_internal_test
 stencil_1d_internal_ppar =
   fmap (\s -> compile_with_slowdown_to_expr stencil_1d_internal_test s)
@@ -638,7 +661,7 @@ conv_1d_internal_shallow_no_input in_seq = do
   let conv_result = mapC tuple_mul_internal_shallow_no_input stencil
   unpartitionC conv_result
 conv_1d_internal = conv_1d_internal_shallow_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 10 20 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 10 20 Atom_Int))
 conv_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep conv_1d_internal
 conv_1d_internal_ppar =
   fmap (\s -> compile_with_slowdown_to_expr conv_1d_internal s) [1,3,5,6,10,30]
@@ -651,7 +674,7 @@ stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   mapC seq_tuple_to_seqC tuple
 stencil_1dC_test _ _ = undefined
 stencil_1d_test = stencil_1dC_test (Proxy @3) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 100 0 (Seq 1 2 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 100 0 (Seq 1 2 Atom_Int)))
 stencil_1d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_test
 stencil_1d_test_ppar = 
   fmap (\s -> compile_with_slowdown_to_expr stencil_1d_test s) [1,2,5,10,30,100,300]
@@ -695,7 +718,7 @@ conv_1d_shallow_no_input in_seq = do
   let stencil = stencil_1dC_test (Proxy @3) in_seq
   mapC tuple_mul_shallow_no_input stencil
 conv_1d = conv_1d_shallow_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 5 0 (Seq 1 2 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 5 0 (Seq 1 2 Atom_Int)))
 conv_1d_seq_idx = add_indexes $ seq_shallow_to_deep conv_1d
 conv_1d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr conv_1d s) [1,3,5,15]
@@ -736,7 +759,7 @@ pyramid_1d_shallow_no_input in_seq = do
   let layer2_blurred = conv_1d_shallow_no_input_for_pyr layer2_input
   unpartitionC $ mapC (down_1dC 2) $ partitionC (Proxy @3) (Proxy @3) Proxy (Proxy @0) layer2_blurred
 pyramid_1d = pyramid_1d_shallow_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 27 0 (Seq 1 2 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 27 0 (Seq 1 2 Atom_Int)))
 pyramid_1d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_1d
 pyramid_1d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr pyramid_1d s) [1,3,9,27,81]
@@ -787,126 +810,10 @@ pyramid_1d_prints = sequence $
 map_reduce_nested = seq_shallow_to_deep $
   mapC (mapC absC) >>>
   mapC (reduceC addC) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 9 0 (Seq 9 0 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 9 0 (Seq 9 0 Atom_Int)))
 map_reduce_seq_idx = add_indexes map_reduce_nested
 map_reduce_ppar = 
   fmap (\s -> rewrite_to_partially_parallel s map_reduce_seq_idx) [1,3,9]
 map_reduce_ppar_typechecked =
   fmap check_type map_reduce_ppar
 -}
--- END OF ACTUALLY TESTED THINGS
--- multiple unpartitions into a multi-rate
-multi_unpartition_with_multi_rate = seq_shallow_to_deep $
-  (mapC' (Proxy @3) (unpartitionC' (Proxy @2) (Proxy @5)) >>>
-   unpartitionC' (Proxy @3) (Proxy @10) >>>
-   down_1dC' (Proxy @30) 0) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 3 0 (Seq 2 0 (Seq 5 0 Atom_Int))))
-
-multi_partition_with_multi_rate = seq_shallow_to_deep $
-  (up_1dC (Proxy @30) >>>
-   partitionC (Proxy @3) (Proxy @10) (Proxy @0) (Proxy @0)  >>>
-   mapC' (Proxy @3) (partitionC (Proxy @2) (Proxy @5) (Proxy @0) (Proxy @0) )) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 1 29 Atom_Int))
-  
--- multiple unpartitions into a multi-rate, using fewer factors to show
--- can't split map between fully sequential 0 invalid clocks and
--- fully sequential with all invalid clocks
-multi_unpartition_with_multi_rate_cant_split = seq_shallow_to_deep $
-  (mapC' (Proxy @2) (mapC' (Proxy @2) absC) >>>
-   unpartitionC' (Proxy @2) (Proxy @2) >>>
-   partitionC (Proxy @1) (Proxy @4) Proxy (Proxy @0) >>>
-   up_1dC (Proxy @4)) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 2 6 Atom_Int)))
-
-  -- down 6 >>> up 6
-matching_down_up = seq_shallow_to_deep $
-  (down_1dC' (Proxy @6) 0 >>>
-   up_1dC (Proxy @6)) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 6 0 Atom_Int))
-  
-  -- down 7 >>> up 5
-mismatched_down_up = seq_shallow_to_deep $
-  (down_1dC' (Proxy @7) 0 >>>
-   up_1dC (Proxy @5)) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 7 0 Atom_Int))
-
-
-  -- map 4 of map 6 abs into map 4 of down_1d 6 - test which policy to use when downsample by 6 and 8
-matched_nested_abs_down = seq_shallow_to_deep $
-  (mapC' (Proxy @4) (mapC' (Proxy @6) absC) >>>
-   mapC' (Proxy @4) (down_1dC' (Proxy @6) 0)) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 6 0 Atom_Int)))
-
-  -- multi-rate to map
-  -- why won't the max approach without global solving for i work here?
-  -- slow down by 8. Max n is 8, so think I can slow outer down by 8.
-  -- this fails for slwoding down down 2 as end up partially parallelizing it
-  -- I end up slowing down the down by 2 and then splitting the seq 8 that I'm downsampling
-  -- into a tseq 4 and sseq 2.  This doesn't match how the map 8 abs is serialized without splitting
-multi_rate_to_map = seq_shallow_to_deep $
-  (down_1dC' (Proxy @2) 0 >>>
-   unpartitionC' (Proxy @1) (Proxy @8) >>>
-   mapC' (Proxy @8) absC) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 8 0 Atom_Int)))
-
-nested_down_to_down = seq_shallow_to_deep $
-  (mapC' (Proxy @2) (down_1dC' (Proxy @3) 0) >>>
-   unpartitionC' (Proxy @2) (Proxy @1) >>>
-   down_1dC' (Proxy @2) 0) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 2 0 (Seq 3 0 Atom_Int)))
-
-down_unpartition_down = seq_shallow_to_deep $
-  (down_1dC' (Proxy @4) 0 >>>
-   unpartitionC' (Proxy @1) (Proxy @4) >>>
-   down_1dC' (Proxy @4) 0) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
-
-f_sbv :: IO SatResult
-f_sbv = sat $ do
-      x <- sInteger "x"
-      constrain $ x .< 200
-
-f_add_sbv :: Int -> IO SatResult
-f_add_sbv x = sat $ do
-  in_no <- sInteger "in_no"
-  constrain $ in_no .== (fromIntegral x) + 1
-  
-f_comp_sbv :: Int -> IO SatResult
-f_comp_sbv x = sat $ do
-  in_no <- sInteger "in_no"
-  in_ni <- sInteger "in_ni"
-  in_io <- sInteger "in_io"
-  in_ii <- sInteger "in_ii"
-  constrain $ in_no .== (fromIntegral x)
-  constrain $ in_ni .== 300
-  constrain $ 300 .== (in_no * in_ii) + (in_io * (in_ni + in_ii))
-  constrain $ in_io .<= 600
-  constrain $ in_ii .<= 600
-  constrain $ in_io .>= 0
-  constrain $ in_ii .>= 0
-
-  -- map 4 abs >>> partition 4 1 >>> up_1d 4  - nullset in second nesting
-
-  -- map 8 abs >>> partition 4 2 >>> map 4 (map 2 abs)
-
-  -- note: only way for a factor in the below structure to not be equal is if: multi-rate, which goes from n to 1 or 1 to n, or partition, which requires that factors across two layers for one index in lists equal to factor in 1 layer for before parittion/after unpartition
-  -- algorithm - create a datastructure where - list for each layer of program. FOr each layer's list, create a list of elements with 1 per operator
-  -- enter a nullset if an operator doesn't exist at a layer
-  -- slowdown by s - if s >= max(layer lengths) and s `mod` length == 0 for all lengths in a layer, then slow down all op's for this layer by s and then try slowdown by remaining amount at lower layers
-  --            else if s <= min(layer lengths) and length `mod` s == 0 for all lenghts in a layer, then split all ops for this layer and slow down by s. Done
-  --            else if s > min(layer lengths) and s < max(layer lengths) and length `mod` s == 0 or s `mod` length == 0 for all, then split current layer, then split max layer, slow it by s, and propagate s to lower layers only for those with s > min(layer lengths). Since only way this can occur is partition, will have factors at lower layers for those ops where rest of s can be applied
-  --            else if last layer, then go up
-  -- on way up, if remaining s is greater than all remaining parallaleism for that layer, then underudtil for that layer and stop
-  -- if reach top and s is not 1, fail
-  -- if underutil at layer below one that a node has lengths for, propagate unduertilization up using the underutil formulas for partition and unpartition
-
-  -- this algorithm doesn't work. The layers don't have consistent amount of nesting
-  -- so figuring out the max for one layer doesn't account for how that max
-  -- will be distributed over other layers with partition/unpartition.
-  -- the global solve for i does this as it makes it clear how to solve for all levels.
-
-
-
-  -- new algorithm:
-  -- try to rewrite each node from top to bottom, keeping track of either sseq, tseq, or split output
-  -- each node accepts its 

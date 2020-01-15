@@ -30,8 +30,8 @@ chisel_conf = ST_Val_To_String_Config show (map toLower . show)
 chisel_hardware_conf = ST_Val_To_String_Config
   (\x -> show x ++ ".U(" ++ int_width ++ ".W)")
   (\x -> (map toLower . show) x ++ ".B")
-  (\x y -> "VecInit(" ++ x ++ ", " ++ y ++ ")")
-  (\x -> "VecInit(" ++
+  (\x y -> "Const.make_vec(" ++ x ++ ", " ++ y ++ ")")
+  (\x -> "Const.make_vec(" ++
     (foldl (\result_s new_s -> result_s ++ "," ++ new_s) (head x) (tail x)) ++
     ")")
 
