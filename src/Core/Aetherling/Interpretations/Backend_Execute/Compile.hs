@@ -143,18 +143,20 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
             process_result_to_test_result process_result circuit_file
           Chisel -> do
             write_file_ae circuit_file test_str
+            let save_file_args = if save_gen_verilog verilog_conf
+                  then do
+                  let name = get_verilog_save_name verilog_conf
+                  let verilog_file = test_verilog_dir ++ "/" ++
+                        params_to_file_name name s_target idx ++ ".v"
+                  takeDirectory verilog_file ++ " " ++ verilog_file
+                  else ""
             process_result <- run_process
               (root_dir ++
                 "/src/Core/Aetherling/Interpretations/" ++
                 "Backend_Execute/Chisel/test_chisel.sh " ++
                 circuit_file ++ " " ++
-                chisel_dir
+                chisel_dir ++ " " ++ save_file_args
               ) Nothing
-            if save_gen_verilog verilog_conf
-              then copy_verilog_file
-                   (chisel_dir ++ "/test_run_dir/top/*/Top.v") test_verilog_dir
-                   (get_verilog_save_name verilog_conf) s_target idx
-              else return ()
             process_result_to_test_result process_result circuit_file
           Text -> error "Can't run tests with Text backend."
     ) (zip test_strs [0..])
@@ -272,7 +274,7 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                 write_file_ae output_file_name p_str
                 return $ Process_Result ExitSuccess "" ""
             ) (zip deep_st_programs [0..])
-          
+
       s_str = slowdown_target_to_file_name_string s_target
       compute_output_file_name :: Int -> String
       compute_output_file_name i = do
@@ -282,15 +284,14 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                 Chisel -> ("chisel_examples", ".scala")
                 Text -> ("st_examples", ".txt")
         root_dir ++ "/test/no_bench/" ++ l_target_dir ++ "/" ++
-          output_name_template ++ "/" ++
-          output_name_template ++ "_" ++ s_str ++ "_" ++ show i ++ l_file_ending
-  
+          params_to_file_name output_name_template s_target i ++
+          l_file_ending
 
 write_file_ae :: String -> String -> IO ()
 write_file_ae file_name p_str = do
   createDirectoryIfMissing True $ takeDirectory file_name
   writeFile file_name p_str
-  
+
 test_verilog_dir = root_dir ++
                    "/test/verilog_examples/aetherling_copies/"
 copy_verilog_file :: FilePath -> String -> String -> Slowdown_Target -> Int -> IO ()
@@ -300,9 +301,13 @@ copy_verilog_file source_file verilog_dir name s_target idx = do
   -- so the different throughputs can be in the same folder
   let file_dir = verilog_dir ++ "/" ++ name
   createDirectoryIfMissing True file_dir
-  let s_str = slowdown_target_to_file_name_string s_target
   copyFile source_file
-    (file_dir ++ "/" ++ name ++ "_" ++ s_str ++ "_" ++ show idx ++ ".v")
+    (verilog_dir ++ "/" ++ params_to_file_name name s_target idx ++ ".v")
+
+params_to_file_name :: String -> Slowdown_Target -> Int -> String
+params_to_file_name base_name s_target idx =
+  base_name ++ "/" ++ base_name ++ "_" ++
+  slowdown_target_to_file_name_string s_target ++ "_" ++ show idx
 
 slowdown_target_to_file_name_string :: Slowdown_Target -> String
 slowdown_target_to_file_name_string (Min_Area_With_Slowdown_Factor s) = show s
