@@ -39,7 +39,6 @@ add_pipeline_registers' e@(InputN t _ _) maybe_num_end_registers = do
   add_pipeline_registers_if_last maybe_num_end_registers $
     FIFON t 1 e reg_idx
 add_pipeline_registers' e@(Const_GenN _ t _ _) maybe_num_end_registers = do
-  reg_idx <- get_cur_index
   add_pipeline_registers_if_last maybe_num_end_registers e
 add_pipeline_registers' e@(Map2_sN _ _ producer_left producer_right _)
   maybe_num_end_registers = do
@@ -96,7 +95,7 @@ add_pipeline_registers_if_last :: Maybe Int -> Expr -> Memo_Rewrite_StateM Expr 
 add_pipeline_registers_if_last Nothing e = return e
 add_pipeline_registers_if_last (Just 0) e = return e
 add_pipeline_registers_if_last (Just n) e = do
-  reg_idx <- get_cur_index
   pipelined_n_minus_1_e <- add_pipeline_registers_if_last (Just $ n-1) e
+  reg_idx <- get_cur_index
   let t = ST_Conv.e_out_type $ ST_Conv.expr_to_types e
   return $ FIFON t 1 pipelined_n_minus_1_e reg_idx
