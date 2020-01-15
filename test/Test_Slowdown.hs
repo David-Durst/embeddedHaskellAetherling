@@ -108,7 +108,7 @@ single_map_results = sequence $
 single_map_results_chisel = sequence $
   fmap (\s -> test_with_backend
               single_map (wrap_single_s s)
-              Chisel (No_Verilog)
+              Chisel (Save_Gen_Verilog "single_map")
               single_map_inputs single_map_output) [1,2,4]
 single_map_verilog_path = "test/verilog_examples/aetherling_copies/single_map/single_map_4_0.v"
 single_map_ae_verilog = sequence $
