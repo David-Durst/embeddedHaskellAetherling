@@ -294,6 +294,11 @@ map_to_up_results = sequence $
               map_to_up (wrap_single_s s)
               Magma No_Verilog
               map_to_up_inputs map_to_up_output) [1,2,4]
+map_to_up_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              map_to_up (wrap_single_s s)
+              Chisel No_Verilog
+              map_to_up_inputs map_to_up_output) [1,2,4]
 
 -- test two multi-rates of different rates
 up_to_down = 
@@ -309,6 +314,11 @@ up_to_down_results = sequence $
   fmap (\s -> test_with_backend
               up_to_down (wrap_single_s s)
               Magma No_Verilog
+              up_to_down_inputs up_to_down_output) [1,5]
+up_to_down_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              up_to_down (wrap_single_s s)
+              Chisel No_Verilog
               up_to_down_inputs up_to_down_output) [1,5]
   
 up_to_down_results' = sequence $
@@ -340,6 +350,12 @@ nested_map_to_top_level_up_results = sequence $
               Magma No_Verilog
               nested_map_to_top_level_up_inputs nested_map_to_top_level_up_output)
   [1,2,4,8,16]
+nested_map_to_top_level_up_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              nested_map_to_top_level_up (wrap_single_s s)
+              Chisel No_Verilog
+              nested_map_to_top_level_up_inputs nested_map_to_top_level_up_output)
+  [1,2,4,8,16]
 
 
 nested_map_to_nested_up =
@@ -358,6 +374,11 @@ nested_map_to_nested_up_results = sequence $
   fmap (\s -> test_with_backend
               nested_map_to_nested_up (wrap_single_s s)
               Magma No_Verilog
+              nested_map_to_nested_up_inputs nested_map_to_nested_up_output) [1,2,4,8,16]
+nested_map_to_nested_up_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              nested_map_to_nested_up (wrap_single_s s)
+              Chisel No_Verilog
               nested_map_to_nested_up_inputs nested_map_to_nested_up_output) [1,2,4,8,16]
 
 -- testing basic partitioning
