@@ -351,7 +351,7 @@ process_result_to_test_result process_result test_file = do
       let stderr = proc_stderr process_result
       putStrLn $ "stderr: \n" ++ stderr
       putStrLn $ "Exit Code: " ++ show exit_code
-      return $ Test_Helpers.Test_Failure test_file stdout stderr exit_code
+      return $ Test_Helpers.Test_Failure test_file exit_code
 
 -- | Compile a shallowly embedding sequence language program to an STIR
 -- program with a desired throughput with all passes applied.
