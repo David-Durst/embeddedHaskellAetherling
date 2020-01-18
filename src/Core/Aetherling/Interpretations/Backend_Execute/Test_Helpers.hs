@@ -7,8 +7,6 @@ import Aetherling.Interpretations.Backend_Execute.Value_To_String
 data Test_Result = Test_Success
                   | Test_Failure {
                       python_file :: FilePath,
-                      test_stdout :: String,
-                      test_stderr :: String,
                       test_exit_code :: Int
                       }
                   | Compiler_Failure
