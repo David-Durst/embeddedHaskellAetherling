@@ -521,6 +521,11 @@ tuple_reverse_results = sequence $
               tuple_reverse (wrap_single_s s)
               Magma No_Verilog
               tuple_reverse_inputs tuple_reverse_output) [1,2,4]
+tuple_reverse_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              tuple_reverse (wrap_single_s s)
+              Chisel No_Verilog
+              tuple_reverse_inputs tuple_reverse_output) [1,2,4]
                     
 tuple_sum_shallow_no_input in_seq = do
   let kernel_list = fmap Atom_Int [1,2,3,4]
@@ -542,6 +547,11 @@ tuple_sum_results = sequence $
   fmap (\s -> test_with_backend
               tuple_sum (wrap_single_s s)
               Magma No_Verilog
+              tuple_sum_inputs tuple_sum_output) [1,2,4]
+tuple_sum_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              tuple_sum (wrap_single_s s)
+              Chisel No_Verilog
               tuple_sum_inputs tuple_sum_output) [1,2,4]
 
 tuple_reduce_no_input in_seq = do

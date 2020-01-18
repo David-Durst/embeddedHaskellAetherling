@@ -390,6 +390,27 @@ module_to_string_inner consumer_e@(Map2_tN n i f producer0_e producer1_e cur_idx
   print_binary_operator cur_ref producer0_ref producer1_ref
   return cur_ref
   
+-- tuple operators
+module_to_string_inner consumer_e@(FstN t0 t1 producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let tuple_type = ATupleT t0 t1
+  let gen_str = "Fst(" ++ type_to_chisel tuple_type ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" tuple_type] (Module_Port "O" t0)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+  
+module_to_string_inner consumer_e@(SndN t0 t1 producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let tuple_type = ATupleT t0 t1
+  let gen_str = "Snd(" ++ type_to_chisel tuple_type ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" tuple_type] (Module_Port "O" t1)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+
 module_to_string_inner consumer_e@(ATupleN t0 t1 producer0_e producer1_e cur_idx) = do
   producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
   producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
@@ -402,6 +423,52 @@ module_to_string_inner consumer_e@(ATupleN t0 t1 producer0_e producer1_e cur_idx
   let tup_out_port = Module_Port "O" (ATupleT t0 t1)
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str tup_in_ports tup_out_port
   print_binary_operator cur_ref producer0_ref producer1_ref
+  return cur_ref
+
+module_to_string_inner consumer_e@(STupleN elem_t producer0_e producer1_e cur_idx) = do
+  producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
+  producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "SSeqTupleCreator(" ++ type_to_chisel elem_t ++ ")"
+  let tup_in_ports = [Module_Port "I0" elem_t, Module_Port "I1" elem_t]
+  let tup_out_port = Module_Port "O" (STupleT 2 elem_t)
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str tup_in_ports tup_out_port
+  print_binary_operator cur_ref producer0_ref producer1_ref
+  return cur_ref
+ 
+module_to_string_inner consumer_e@(STupleAppendN out_len elem_t producer0_e producer1_e cur_idx) = do
+  producer0_ref <- memo producer0_e $ module_to_string_inner producer0_e
+  producer1_ref <- memo producer1_e $ module_to_string_inner producer1_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "SSeqTupleAppender(" ++ type_to_chisel elem_t ++ ", " ++
+                (show $ out_len - 1) ++ ")"
+  let tup_in_ports = [Module_Port "I0" (SSeqT (out_len - 1) elem_t), Module_Port "I1" elem_t]
+  let tup_out_port = Module_Port "O" (STupleT out_len elem_t)
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str tup_in_ports tup_out_port
+  print_binary_operator cur_ref producer0_ref producer1_ref
+  return cur_ref
+  
+module_to_string_inner consumer_e@(STupleToSSeqN tuple_len elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "SSeqTupleToSSeq(" ++ type_to_chisel elem_t ++ ", " ++
+                show tuple_len ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (STupleT tuple_len elem_t)]
+                (Module_Port "O" (SSeqT tuple_len elem_t))
+  print_unary_operator cur_ref producer_ref
+  cur_data <- lift get
+  return cur_ref
+
+module_to_string_inner consumer_e@(SSeqToSTupleN tuple_len elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "SSeqToSSeqTuple(" ++ type_to_chisel elem_t ++ ", " ++
+                show tuple_len ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT tuple_len elem_t)]
+                (Module_Port "O" (STupleT tuple_len elem_t))
+  print_unary_operator cur_ref producer_ref
   return cur_ref
 
 module_to_string_inner (InputN t name cur_idx) = do
