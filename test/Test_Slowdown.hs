@@ -448,6 +448,14 @@ double_up_results = sequence $
               double_up (wrap_single_s s)
               Magma No_Verilog
               double_up_inputs double_up_output) [1,2,4,8,16,32]
+double_up_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              double_up (wrap_single_s s)
+              Chisel No_Verilog
+              -- not using other throuhgputs as they require reshape
+              -- that isn't a passthrough
+              -- and I haven't implemented that for chisel yet
+              double_up_inputs double_up_output) [1,8,32]
 
 
 down_over_nested_to_down_over_flattened = 
@@ -477,6 +485,15 @@ down_over_nested_to_down_over_flattened_results = sequence $
               (wrap_single_s s) Magma No_Verilog
               down_over_nested_to_down_over_flattened_inputs
               down_over_nested_to_down_over_flattened_output) [1,2,4,8,16]
+down_over_nested_to_down_over_flattened_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              down_over_nested_to_down_over_flattened
+              (wrap_single_s s) Chisel No_Verilog
+              down_over_nested_to_down_over_flattened_inputs
+              -- not using other throuhgputs as they require reshape
+              -- that isn't a passthrough
+              -- and I haven't implemented that for chisel yet
+              down_over_nested_to_down_over_flattened_output) [1,16]
 down_over_nested_to_down_over_flattened_results' = sequence $
   fmap (\s -> test_with_backend
               down_over_nested_to_down_over_flattened
