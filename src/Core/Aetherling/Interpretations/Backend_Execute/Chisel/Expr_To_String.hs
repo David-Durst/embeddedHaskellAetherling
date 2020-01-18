@@ -300,6 +300,34 @@ module_to_string_inner consumer_e@(Down_1d_tN n i sel_idx elem_t producer_e cur_
                 (Module_Port "O" (TSeqT 1 (n+i-1) elem_t))
   print_unary_operator cur_ref producer_ref
   return cur_ref
+module_to_string_inner consumer_e@(Partition_s_ssN no ni elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "PartitionS(" ++ show no ++ ", " ++ show ni ++ ", " ++
+                type_to_chisel elem_t ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT (no*ni) elem_t)]
+                (Module_Port "O" (SSeqT no (SSeqT ni elem_t)))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Partition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
+  module_to_string_inner
+    (ReshapeN (TSeqT (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) elem_t)
+     (TSeqT no io (TSeqT ni ii elem_t)) producer_e cur_idx)
+module_to_string_inner consumer_e@(Unpartition_s_ssN no ni elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "UnpartitionS(" ++ show no ++ ", " ++ show ni ++ ", " ++
+                type_to_chisel elem_t ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT no (SSeqT ni elem_t))]
+                (Module_Port "O" (SSeqT (no*ni) elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Unpartition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
+  module_to_string_inner (ReshapeN (TSeqT no io (TSeqT ni ii elem_t))
+                          (TSeqT (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) elem_t)
+                          producer_e cur_idx)
 
 -- higher order operators
 module_to_string_inner consumer_e@(Map_sN n f producer_e cur_idx) = do
@@ -395,6 +423,21 @@ module_to_string_inner consumer_e@(FIFON t delay_clks producer_e cur_idx) = do
                 ", " ++ show delay_clks ++ ")"
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
                 [Module_Port "I" t] (Module_Port "O" t)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(ReshapeN in_t out_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let in_t_norm = normalize_type in_t
+  let out_t_norm = normalize_type out_t
+  let in_out_diff = diff_types in_t_norm out_t_norm
+  let gen_str = case in_out_diff of
+        Just _ -> "Reshape(" ++ type_to_chisel in_t ++
+                ", " ++ type_to_chisel out_t ++ ")"
+        Nothing -> "Passthrough(" ++ type_to_chisel in_t ++
+                ", " ++ type_to_chisel out_t ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" in_t] (Module_Port "O" out_t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e = error $ "don't support yet: " ++

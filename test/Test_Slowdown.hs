@@ -398,6 +398,11 @@ partition_to_flat_map_results = sequence $
               partition_to_flat_map (wrap_single_s s)
               Magma No_Verilog
               partition_to_flat_inputs partition_to_flat_output) [1,2,4,8,16]
+partition_to_flat_map_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              partition_to_flat_map (wrap_single_s s)
+              Chisel No_Verilog
+              partition_to_flat_inputs partition_to_flat_output) [1,2,4,8,16]
 
 map_to_unpartition =
   mapC (mapC absC) >>>
@@ -415,6 +420,11 @@ map_to_unpartition_results = sequence $
   fmap (\s -> test_with_backend
               map_to_unpartition (wrap_single_s s)
               Magma No_Verilog
+              map_to_unpartition_inputs map_to_unpartition_output) [1,2,4,8,16]
+map_to_unpartition_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              map_to_unpartition (wrap_single_s s)
+              Chisel No_Verilog
               map_to_unpartition_inputs map_to_unpartition_output) [1,2,4,8,16]
 
 -- combining multi-rate with partitioning

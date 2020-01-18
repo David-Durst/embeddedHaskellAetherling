@@ -398,11 +398,6 @@ module_to_string_inner consumer_e@(Partition_s_ssN no ni elem_t producer_e cur_i
                 (Module_Port "O" (SSeqT no (SSeqT ni elem_t)))
   print_unary_operator cur_ref producer_ref
   return cur_ref
-{-
-module_to_string_inner consumer_e@(Partition_t_ttN no ni io 0 elem_t producer_e cur_idx) = do
-  producer_ref <- memo producer_e $ module_to_string_inner producer_e
-  return producer_ref
--}
 module_to_string_inner consumer_e@(Partition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
   module_to_string_inner
     (ReshapeN (TSeqT (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) elem_t)
