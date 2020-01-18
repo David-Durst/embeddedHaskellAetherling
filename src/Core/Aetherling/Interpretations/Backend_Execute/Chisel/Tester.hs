@@ -86,7 +86,8 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
 
                   tab_str ++ tab_str ++ tab_str ++
                   "poke_nested(c." ++ i_port_name ++
-                  ", chisel_inputs" ++ show i ++ "(f_clk))\n" ++
+                  ", nest_indexed_seq(chisel_inputs" ++ show i ++ "(f_clk)," ++
+                  "compute_num_atoms_per_sseq_layer(c." ++ i_port_name ++ ")))\n" ++
 
                   tab_str ++ tab_str ++ "}\n"
             ) [0..num_ports - 1]
@@ -111,7 +112,9 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
                     " chisel_output_valid(output_counter)){\n" ++
                     tab_str ++ tab_str ++ tab_str ++
                     "expect_nested(c." ++ output_port_name ++
-                    ", chisel_output(output_counter))\n" ++
+                    ", nest_indexed_seq(chisel_output(output_counter)," ++
+                    "compute_num_atoms_per_sseq_layer(c." ++
+                    output_port_name ++ ")))\n" ++
                     tab_str ++ tab_str ++ "}\n"
   let test_step = tab_str ++ tab_str ++ "step(1)\n"
   let test_end = tab_str ++ "}\n"
