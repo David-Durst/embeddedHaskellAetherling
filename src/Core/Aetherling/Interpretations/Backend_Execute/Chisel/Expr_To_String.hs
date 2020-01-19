@@ -416,7 +416,8 @@ module_to_string_inner consumer_e@(Reduce_sN n f producer_e cur_idx) = do
   Backend_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   set_valid old_valid
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "ReduceS(" ++ show n ++ ", new " ++ f_name ++ ")"
+  let gen_str = "ReduceS(" ++ show n ++ ", new " ++ f_name ++
+                ", " ++ (type_to_chisel $ port_type $ f_out_port) ++ ")"
   let red_in_ports = [Module_Port "I"
                       (SSeqT n $ extract_tuple_element $ port_type $
                        head f_in_ports)]
@@ -435,7 +436,8 @@ module_to_string_inner consumer_e@(Reduce_tN n i f producer_e cur_idx) = do
   Backend_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
   set_valid old_valid
   let cur_ref_name = "n" ++ print_index cur_idx
-  let gen_str = "ReduceT(" ++ show n ++ ", " ++ show i ++ ", new " ++ f_name ++ ")"
+  let gen_str = "ReduceT(" ++ show n ++ ", " ++ show i ++ ", new " ++ f_name ++
+                ", " ++ (type_to_chisel $ port_type $ f_out_port) ++ ")"
   let red_in_ports = [Module_Port "I"
                       (TSeqT n i $ extract_tuple_element $ port_type $
                        head f_in_ports)]
