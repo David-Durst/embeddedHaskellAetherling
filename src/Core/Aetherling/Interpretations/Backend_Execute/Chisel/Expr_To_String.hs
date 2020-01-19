@@ -348,7 +348,44 @@ module_to_string_inner consumer_e@(Unpartition_t_ttN no ni io ii elem_t producer
   module_to_string_inner (ReshapeN (TSeqT no io (TSeqT ni ii elem_t))
                           (TSeqT (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) elem_t)
                           producer_e cur_idx)
-
+module_to_string_inner consumer_e@(Add_1_sN f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  Backend_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "Add1S(new " ++ f_name ++ ")"
+  let add_out_port = f_out_port {port_type = TSeqT 1 0 (port_type f_out_port)}
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str f_in_ports add_out_port
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Add_1_0_tN f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  Backend_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "Add10T(new " ++ f_name ++ ")"
+  let add_out_port = f_out_port {port_type = TSeqT 1 0 (port_type f_out_port)}
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str f_in_ports add_out_port
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Remove_1_sN f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  Backend_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "Remove1S(new " ++ f_name ++ ")"
+  let remove_in_ports =
+        map (\port -> port {port_type = SSeqT 1 (port_type port)}) f_in_ports
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str remove_in_ports f_out_port
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Remove_1_0_tN f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  Backend_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "Remove10T(new " ++ f_name ++ ")"
+  let remove_in_ports =
+        map (\port -> port {port_type = TSeqT 1 0 (port_type port)}) f_in_ports
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str remove_in_ports f_out_port
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 -- higher order operators
 module_to_string_inner consumer_e@(Map_sN n f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e

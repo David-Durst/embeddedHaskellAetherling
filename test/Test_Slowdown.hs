@@ -632,6 +632,11 @@ seq_to_stuple_results = sequence $
               seq_to_stuple (wrap_single_s s)
               Magma No_Verilog
               seq_to_stuple_inputs seq_to_stuple_output) [1,2,4,8,16]
+seq_to_stuple_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              seq_to_stuple (wrap_single_s s)
+              Chisel No_Verilog
+              seq_to_stuple_inputs seq_to_stuple_output) [1,2,4,8,16]
 
 stuple_to_seq = 
   mapC seq_tuple_to_seqC $
@@ -651,6 +656,11 @@ stuple_to_seq_results = sequence $
   fmap (\s -> test_with_backend
               stuple_to_seq (wrap_single_s s)
               Magma No_Verilog
+              stuple_to_seq_inputs stuple_to_seq_output) [1,2,4,8,16]
+stuple_to_seq_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              stuple_to_seq (wrap_single_s s)
+              Chisel No_Verilog
               stuple_to_seq_inputs stuple_to_seq_output) [1,2,4,8,16]
 stuple_to_seq_results' = sequence $
   fmap (\s -> test_with_backend
@@ -678,6 +688,11 @@ seq_and_stuple_results = sequence $
               seq_and_stuple (wrap_single_s s)
               Magma No_Verilog
               seq_and_stuple_inputs seq_and_stuple_output) [1,2,4,8,16]
+seq_and_stuple_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              seq_and_stuple (wrap_single_s s)
+              Chisel No_Verilog
+              seq_and_stuple_inputs seq_and_stuple_output) [1,2,4,8,16]
 
 striple_to_seq_shallow in_seq = do
   let pair = map2C (map2C seq_tupleC) in_seq in_seq
@@ -700,6 +715,11 @@ striple_to_seq_results = sequence $
   fmap (\s -> test_with_backend
               striple_to_seq (wrap_single_s s)
               Magma No_Verilog
+              striple_to_seq_inputs striple_to_seq_output) [1,2,4,8,24]
+striple_to_seq_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              striple_to_seq (wrap_single_s s)
+              Chisel No_Verilog
               striple_to_seq_inputs striple_to_seq_output) [1,2,4,8,24]
 
 stencil_1dC_internal_test :: forall m n n0 a .

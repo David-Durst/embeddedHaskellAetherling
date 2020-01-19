@@ -445,7 +445,7 @@ module_to_string_inner consumer_e@(Add_1_0_tN f producer_e cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = show use_valids
-  let gen_str = "DefineAdd_1_S(" ++ f_name ++ "," ++ valid_str ++ ")"
+  let gen_str = "DefineAdd_1_0_T(" ++ f_name ++ "," ++ valid_str ++ ")"
   let add_out_port = f_out_port {port_type = TSeqT 1 0 (port_type f_out_port)}
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str f_in_ports add_out_port
   print_unary_operator cur_ref producer_ref
@@ -468,7 +468,7 @@ module_to_string_inner consumer_e@(Remove_1_0_tN f producer_e cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = show use_valids
-  let gen_str = "DefineRemove_1_S(" ++ f_name ++ "," ++ valid_str ++ ")"
+  let gen_str = "DefineRemove_1_0_T(" ++ f_name ++ "," ++ valid_str ++ ")"
   let remove_in_ports =
         map (\port -> port {port_type = TSeqT 1 0 (port_type port)}) f_in_ports
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str remove_in_ports f_out_port
