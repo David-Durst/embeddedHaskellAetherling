@@ -127,9 +127,9 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
           Text -> error "Can't run tests with Text backend."
   sequence $ map
     (\(test_str, idx) -> do
-        circuit_file <- emptySystemTempFile "ae_circuit.py"
         case l_target of
           Magma -> do
+            circuit_file <- emptySystemTempFile "ae_circuit.py"
             if use_verilog_sim_source verilog_conf
               then copyFile (get_verilog_sim_source verilog_conf)
                    ("vBuild/top.v")
@@ -142,6 +142,7 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
               else return ()
             process_result_to_test_result process_result circuit_file
           Chisel -> do
+            circuit_file <- emptySystemTempFile "ae_circuit.scala"
             write_file_ae circuit_file test_str
             let save_file_args = if save_gen_verilog verilog_conf
                   then do
