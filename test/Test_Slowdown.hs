@@ -577,6 +577,11 @@ tuple_reduce_results = sequence $
               tuple_reduce (wrap_single_s s)
               Magma No_Verilog
               tuple_reduce_inputs tuple_reduce_output) [1,2,4,8]
+tuple_reduce_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              tuple_reduce (wrap_single_s s)
+              Chisel No_Verilog
+              tuple_reduce_inputs tuple_reduce_output) [1,2,4,8]
 
 
 fst_snd_sum_no_input in_seq = do
@@ -603,6 +608,11 @@ fst_snd_sum_results = sequence $
   fmap (\s -> test_with_backend
               fst_snd_sum (wrap_single_s s)
               Magma No_Verilog
+              fst_snd_sum_inputs fst_snd_sum_output) [1,2,4,8]
+fst_snd_sum_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              fst_snd_sum (wrap_single_s s)
+              Chisel No_Verilog
               fst_snd_sum_inputs fst_snd_sum_output) [1,2,4,8]
 
 seq_to_stuple = 

@@ -171,7 +171,7 @@ module_to_string_inner consumer_e@(AddN producer_e cur_idx) = do
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Add" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "I" IntT] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(SubN producer_e cur_idx) = do
@@ -181,7 +181,27 @@ module_to_string_inner consumer_e@(SubN producer_e cur_idx) = do
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Sub" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "I" IntT] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(MulN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = if use_valids then "" else "NoValid"
+  let cur_ref = Backend_Module_Ref cur_ref_name ("Mul" ++ valid_str ++
+                                                 "(STInt(" ++ int_width ++ "))")
+                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(DivN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  use_valids <- use_valid_port
+  let valid_str = if use_valids then "" else "NoValid"
+  let cur_ref = Backend_Module_Ref cur_ref_name ("Div" ++ valid_str ++
+                                                 "(STInt(" ++ int_width ++ "))")
+                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(LSRN producer_e cur_idx) = do
@@ -389,6 +409,44 @@ module_to_string_inner consumer_e@(Map2_tN n i f producer0_e producer1_e cur_idx
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str map_in_ports map_out_port
   print_binary_operator cur_ref producer0_ref producer1_ref
   return cur_ref
+
+module_to_string_inner consumer_e@(Reduce_sN n f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  old_valid <- disable_valid
+  Backend_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  set_valid old_valid
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "ReduceS(" ++ show n ++ ", new " ++ f_name ++ ")"
+  let red_in_ports = [Module_Port "I"
+                      (SSeqT n $ extract_tuple_element $ port_type $
+                       head f_in_ports)]
+  let red_out_port = f_out_port {port_type = SSeqT 1 (port_type f_out_port)}
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str red_in_ports red_out_port
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+  where
+    extract_tuple_element :: AST_Type -> AST_Type
+    extract_tuple_element (ATupleT t0 _) = t0
+    extract_tuple_element _ = undefined
+
+module_to_string_inner consumer_e@(Reduce_tN n i f producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  old_valid <- disable_valid
+  Backend_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
+  set_valid old_valid
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "ReduceT(" ++ show n ++ ", " ++ show i ++ ", new " ++ f_name ++ ")"
+  let red_in_ports = [Module_Port "I"
+                      (TSeqT n i $ extract_tuple_element $ port_type $
+                       head f_in_ports)]
+  let red_out_port = f_out_port {port_type = TSeqT 1 (n+i-1) (port_type f_out_port)}
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str red_in_ports red_out_port
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+  where
+    extract_tuple_element :: AST_Type -> AST_Type
+    extract_tuple_element (ATupleT t0 _) = t0
+    extract_tuple_element _ = undefined
   
 -- tuple operators
 module_to_string_inner consumer_e@(FstN t0 t1 producer_e cur_idx) = do
