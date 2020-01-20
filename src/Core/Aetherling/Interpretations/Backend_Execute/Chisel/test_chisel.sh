@@ -2,7 +2,7 @@ set -o xtrace
 cp $1 ${2}/src/test/scala/aetherling/modules/Top.scala
 cd $2
 sbt test:assembly
-java -Xmx4G -cp target/scala-2.12/aetherling.jar org.scalatest.tools.Runner -s aetherling.modules.TopTester -t "Top should behave correctly" -o
+java -Xmx6G -cp target/scala-2.12/aetherling.jar org.scalatest.tools.Runner -s aetherling.modules.TopTester -t "Top should behave correctly" -o
 # sbt -mem 2048 "testOnly aetherling.modules.TopTester"
 test_result=$?
 

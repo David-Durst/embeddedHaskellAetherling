@@ -503,12 +503,12 @@ conv_2d_b2b_results' = sequence $
   fmap (\s -> test_with_backend
               conv_2d_b2b (wrap_single_s s)
               Magma (Save_Gen_Verilog "conv2d_b2b")
-              conv_2d_b2b_inputs conv_2d_b2b_output) [1]
+              conv_2d_b2b_inputs conv_2d_b2b_output) [2]
 conv_2d_b2b_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               conv_2d_b2b (wrap_single_s s)
               Chisel (Save_Gen_Verilog "conv2d_b2b")
-              conv_2d_b2b_inputs conv_2d_b2b_output) [1]
+              conv_2d_b2b_inputs conv_2d_b2b_output) [2]
 conv_2d_b2b_print_st = sequence $ 
   fmap (\s -> compile_to_file
               pyramid_2d (wrap_single_s s)
@@ -543,6 +543,18 @@ conv_2d_3x3_repeat_b2b_results = sequence $
               Magma (Save_Gen_Verilog "conv2d_b2b_3x3_repeat")
               conv_2d_3x3_repeat_b2b_inputs conv_2d_3x3_repeat_b2b_output)
   [1,2,4,8,16,48,144]
+conv_2d_3x3_repeat_b2b_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d_3x3_repeat_b2b (wrap_single_s s)
+              Chisel (Save_Gen_Verilog "conv2d_b2b_3x3_repeat")
+              conv_2d_3x3_repeat_b2b_inputs conv_2d_3x3_repeat_b2b_output)
+  [1,2,4,8,16,48,144]
+conv_2d_3x3_repeat_b2b_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d_3x3_repeat_b2b (wrap_single_s s)
+              Chisel (Save_Gen_Verilog "conv2d_b2b_3x3_repeat")
+              conv_2d_3x3_repeat_b2b_inputs conv_2d_3x3_repeat_b2b_output)
+  [2]
 
 conv_2d_3x3_repeat_b2b_print_st = sequence $
   fmap (\s -> compile_to_file
@@ -636,6 +648,11 @@ sharpen_results = sequence $
   fmap (\s -> test_with_backend 
               sharpen (wrap_single_s s)
               Magma (Save_Gen_Verilog "sharpen")
+              sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
+sharpen_results_chisel = sequence $
+  fmap (\s -> test_with_backend 
+              sharpen (wrap_single_s s)
+              Chisel (Save_Gen_Verilog "sharpen")
               sharpen_inputs sharpen_output) [1,2,4,8,16,48,144]
 sharpen_results_one = sequence $
   fmap (\s -> test_with_backend
