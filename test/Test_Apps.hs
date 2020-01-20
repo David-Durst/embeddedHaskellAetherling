@@ -106,7 +106,7 @@ stencil_3x3_2dC_test in_col in_img = do
   let triple = map2C (map2C seq_tuple_appendC) tuple first_row_shifted
   mapC seq_tuple_to_seqC triple
 stencil_2d_test = stencil_3x3_2dC_test (Proxy @4) $
-  com_input_seq "hi" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 stencil_2d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_2d_test
 stencil_2d_test_ppar = 
   fmap (\s -> compile_with_slowdown_to_expr stencil_2d_test s) [1,2,4,8,16,48,144]
@@ -147,6 +147,12 @@ stencil_2d_results = sequence $
   fmap (\s -> test_with_backend
               stencil_2d_test (wrap_single_s s)
               Magma No_Verilog
+              stencil_2d_inputs stencil_2d_output)
+  [1,2,4,8,16,48,144]
+stencil_2d_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              stencil_2d_test (wrap_single_s s)
+              Chisel No_Verilog
               stencil_2d_inputs stencil_2d_output)
   [1,2,4,8,16,48,144]
 stencil_2d_results' = sequence $
@@ -253,7 +259,7 @@ down_from_pyramid_2d_no_input in_seq = do
         partitionC (Proxy @8) (Proxy @4) Proxy (Proxy @0) layer1_drop_cols
   --layer1_blurred
 down_from_pyramid_2d = down_from_pyramid_2d_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 down_from_pyramid_2d_seq_idx = add_indexes $ seq_shallow_to_deep down_from_pyramid_2d
 down_from_pyramid_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr down_from_pyramid_2d s) [1,2,4,8,16,32,64]
@@ -294,7 +300,7 @@ first_layer_pyr_shallow_no_input in_seq = do
         partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) $
         partitionC (Proxy @8) (Proxy @4) Proxy (Proxy @0) layer1_drop_cols
 first_layer_pyr = first_layer_pyr_shallow_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 first_layer_pyr_seq_idx = add_indexes $ seq_shallow_to_deep first_layer_pyr
 first_layer_pyr_ppar =
   fmap (\s -> compile_with_slowdown_to_expr first_layer_pyr s) [1,2,4,8,16,32,64,192,576]
@@ -345,7 +351,7 @@ pyramid_2d_shallow_no_input in_seq = do
         partitionC (Proxy @2) (Proxy @2) Proxy (Proxy @0) $
         partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) layer2_drop_cols
 pyramid_2d = pyramid_2d_shallow_no_input $ 
-  com_input_seq "hi" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 pyramid_2d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_2d
 pyramid_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr pyramid_2d s) [1,2,4,8,16,32,64,192,576]
