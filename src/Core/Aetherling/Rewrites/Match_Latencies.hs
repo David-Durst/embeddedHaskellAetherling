@@ -77,10 +77,26 @@ match_latencies' e@(Const_GenN _ _ delay _) = do
 
 -- sequence operators
 match_latencies' e@(Shift_sN _ _ _ producer _) = match_combinational_op e producer
-match_latencies' e@(Shift_tN _ _ _ _ producer _) = match_combinational_op e producer
-match_latencies' e@(Shift_tsN _ _ _ _ _ producer _) = match_combinational_op e producer
-match_latencies' e@(Shift_ttN _ _ _ _ _ _ producer _) = match_combinational_op e producer
-match_latencies' e@(Shift_tnN _ _ _ _ _ _ producer _) = match_combinational_op e producer
+match_latencies' e@(Shift_tN _ _ _ _ producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 2
+    }
+match_latencies' e@(Shift_tsN _ _ _ _ _ producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 2
+    }
+match_latencies' e@(Shift_ttN _ _ _ _ _ _ producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 2
+    }
+match_latencies' e@(Shift_tnN _ _ _ _ _ _ producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 2
+    }
 match_latencies' e@(Up_1d_sN _ _ producer _) = match_combinational_op e producer
 match_latencies' e@(Up_1d_tN _ _ _ producer _) = match_combinational_op e producer
 match_latencies' e@(Down_1d_sN _ _ _ producer _) = match_combinational_op e producer

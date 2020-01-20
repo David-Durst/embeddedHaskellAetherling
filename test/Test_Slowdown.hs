@@ -721,6 +721,35 @@ striple_to_seq_results_chisel = sequence $
               striple_to_seq (wrap_single_s s)
               Chisel No_Verilog
               striple_to_seq_inputs striple_to_seq_output) [1,2,4,8,24]
+  
+shift_one_shallow in_seq = do
+  shiftC (Proxy @4) in_seq
+shift_one = shift_one_shallow $
+  com_input_seq "I" (Proxy :: Proxy (Seq 8 0 (Seq 1 2 Atom_Int)))
+shift_one_seq_idx = add_indexes $ seq_shallow_to_deep shift_one
+shift_one_ppar =
+  fmap (\s -> compile_with_slowdown_to_expr shift_one s) [1,2,4,8,24]
+shift_one_ppar_typechecked =
+  fmap check_type shift_one_ppar
+shift_one_ppar_typechecked' =
+  fmap check_type_get_error shift_one_ppar
+shift_one_inputs :: [[Integer]] = [[1..8]]
+--shift_one_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
+shift_one_output :: [[Integer]] = [[int_to_ignore, int_to_ignore, int_to_ignore, int_to_ignore] ++ [1..4]]
+-- need to come back and check why slowest version uses a reduce_s
+shift_one_results = sequence $
+  fmap (\s -> test_with_backend
+              shift_one (wrap_single_s s)
+              Magma No_Verilog
+              shift_one_inputs shift_one_output) [1,2,4,8,24]
+-- NOTE: NEED TO FAKE COST OF SHIFT_S IN ORDER FOR THIS TEST TO
+-- USE ANY OTHER SHIFT AS OTHERWISE COST MODEL WILL JUST ADD MORE
+-- DELAYS TO INNER SEQ RATHER THAN CHANGING SHIFT
+shift_one_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              shift_one (wrap_single_s s)
+              Chisel No_Verilog
+              shift_one_inputs shift_one_output) [1,2,4,8,24]
 
 stencil_1dC_internal_test :: forall m n n0 a .
                          (Sequence_Language m, Aetherling_Value a,

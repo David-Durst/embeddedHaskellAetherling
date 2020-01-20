@@ -283,7 +283,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   producer_ppar <- sequence_to_partially_parallel_with_reshape type_rewrites producer
   ppar_unary_seq_operator type_rewrites
-    (STE.Shift_ttN tr0_n tr1_n tr0_i tr1_i shift_amount elem_t_ppar) producer
+    (STE.Shift_tnN tr0_n [tr1_n] tr0_i [tr1_i] shift_amount elem_t_ppar) producer
 
 sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
                                                  (SplitNestedR (TimeR tr1_n tr1_i)

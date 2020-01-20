@@ -103,10 +103,18 @@ compute_latency' e@(Const_GenN _ _ delay _) = return delay
 
 -- sequence operators
 compute_latency' e@(Shift_sN _ _ _ producer _) = memo producer $ compute_latency' producer
-compute_latency' e@(Shift_tN _ _ _ _ producer _) = memo producer $ compute_latency' producer
-compute_latency' e@(Shift_tsN _ _ _ _ _ producer _) = memo producer $ compute_latency' producer
-compute_latency' e@(Shift_ttN _ _ _ _ _ _ producer _) = memo producer $ compute_latency' producer
-compute_latency' e@(Shift_tnN _ _ _ _ _ _ producer _) = memo producer $ compute_latency' producer
+compute_latency' e@(Shift_tN _ _ _ _ producer _) = do
+  producer_latency <- memo producer $ compute_latency' producer
+  return $ producer_latency + 2
+compute_latency' e@(Shift_tsN _ _ _ _ _ producer _) = do
+  producer_latency <- memo producer $ compute_latency' producer
+  return $ producer_latency + 2
+compute_latency' e@(Shift_ttN _ _ _ _ _ _ producer _) = do
+  producer_latency <- memo producer $ compute_latency' producer
+  return $ producer_latency + 2
+compute_latency' e@(Shift_tnN _ _ _ _ _ _ producer _) = do
+  producer_latency <- memo producer $ compute_latency' producer
+  return $ producer_latency + 2
 compute_latency' e@(Up_1d_sN _ _ producer _) = memo producer $ compute_latency' producer
 compute_latency' e@(Up_1d_tN _ _ _ producer _) = memo producer $ compute_latency' producer
 compute_latency' e@(Down_1d_sN _ _ _ producer _) = memo producer $ compute_latency' producer
