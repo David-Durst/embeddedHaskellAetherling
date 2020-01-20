@@ -143,6 +143,11 @@ two_maps_results_chisel = sequence $
               two_maps (wrap_single_s s)
               Chisel No_Verilog
               two_maps_inputs two_maps_output) [1,2,4]
+two_maps_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              two_maps (wrap_single_s s)
+              Chisel No_Verilog
+              two_maps_inputs two_maps_output) [1]
                    
 tuple_simple_no_input input0 input1 =
   atom_tupleC input0 input1

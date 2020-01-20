@@ -166,7 +166,7 @@ stencil_2d_results' = sequence $
               stencil_2d_test (wrap_single_s s)
               Magma No_Verilog
               stencil_2d_inputs stencil_2d_output)
-  [144]
+  [1]
 
                      
 -- need thse for Integer and Int versions
@@ -199,6 +199,11 @@ tuple_2d_mul_results = sequence $
   fmap (\s -> test_with_backend
               tuple_2d_mul (wrap_single_s s)
               Magma No_Verilog
+              tuple_2d_mul_inputs tuple_2d_mul_output) [1,3,9]
+tuple_2d_mul_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              tuple_2d_mul (wrap_single_s s)
+              Chisel No_Verilog
               tuple_2d_mul_inputs tuple_2d_mul_output) [1,3,9]
 
 conv_2d_shallow_no_input in_col in_seq = do
@@ -233,6 +238,11 @@ conv_2d_results = sequence $
   fmap (\s -> test_with_backend
               conv_2d (wrap_single_s s)
               Magma (Save_Gen_Verilog "conv2d")
+              conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
+conv_2d_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d (wrap_single_s s)
+              Chisel (Save_Gen_Verilog "conv2d")
               conv_2d_inputs conv_2d_output) [1,2,4,8,16,48,144]
 conv_2d_results_all_types = sequence $
   fmap (\s -> test_with_backend
@@ -478,6 +488,11 @@ conv_2d_b2b_results = sequence $
               conv_2d_b2b (wrap_single_s s)
               Magma (Save_Gen_Verilog "conv2d_b2b")
               conv_2d_b2b_inputs conv_2d_b2b_output) [1,2,4,8,16,48,144]
+conv_2d_b2b_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d_b2b (wrap_single_s s)
+              Chisel (Save_Gen_Verilog "conv2d_b2b")
+              conv_2d_b2b_inputs conv_2d_b2b_output) [1,2,4,8,16,48,144]
 conv_2d_b2b_results_all_types = sequence $
   fmap (\s -> test_with_backend
               conv_2d_b2b (All_With_Slowdown_Factor s)
@@ -488,7 +503,12 @@ conv_2d_b2b_results' = sequence $
   fmap (\s -> test_with_backend
               conv_2d_b2b (wrap_single_s s)
               Magma (Save_Gen_Verilog "conv2d_b2b")
-              conv_2d_b2b_inputs conv_2d_b2b_output) [144]
+              conv_2d_b2b_inputs conv_2d_b2b_output) [1]
+conv_2d_b2b_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d_b2b (wrap_single_s s)
+              Chisel (Save_Gen_Verilog "conv2d_b2b")
+              conv_2d_b2b_inputs conv_2d_b2b_output) [1]
 conv_2d_b2b_print_st = sequence $ 
   fmap (\s -> compile_to_file
               pyramid_2d (wrap_single_s s)
