@@ -405,6 +405,16 @@ module_to_string_inner consumer_e@(Add_1_sN f producer_e cur_idx) = do
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str f_in_ports add_out_port
   print_unary_operator cur_ref producer_ref
   return cur_ref
+module_to_string_inner consumer_e@(SerializeN n i elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "Serialize(" ++ show n ++ ", " ++ show i ++ ", " ++
+                type_to_chisel elem_t ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (TSeqT 1 ((n - 1) + i) (STupleT n elem_t))]
+                (Module_Port "O" (TSeqT n i elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(Add_1_0_tN f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   Backend_Module_Ref f_name f_gen_call f_in_ports f_out_port <- memo f $ print_module f
