@@ -723,7 +723,7 @@ striple_to_seq_results_chisel = sequence $
               striple_to_seq_inputs striple_to_seq_output) [1,2,4,8,24]
   
 shift_one_shallow in_seq = do
-  shiftC (Proxy @4) in_seq
+  shiftC (Proxy @1) in_seq
 shift_one = shift_one_shallow $
   com_input_seq "I" (Proxy :: Proxy (Seq 8 0 (Seq 1 2 Atom_Int)))
 shift_one_seq_idx = add_indexes $ seq_shallow_to_deep shift_one
@@ -735,7 +735,7 @@ shift_one_ppar_typechecked' =
   fmap check_type_get_error shift_one_ppar
 shift_one_inputs :: [[Integer]] = [[1..8]]
 --shift_one_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
-shift_one_output :: [[Integer]] = [[int_to_ignore, int_to_ignore, int_to_ignore, int_to_ignore] ++ [1..4]]
+shift_one_output :: [[Integer]] = [[int_to_ignore] ++ [1..7]]--[[int_to_ignore, int_to_ignore, int_to_ignore, int_to_ignore] ++ [1..4]]
 -- need to come back and check why slowest version uses a reduce_s
 shift_one_results = sequence $
   fmap (\s -> test_with_backend

@@ -19,6 +19,7 @@ chisel_prelude :: String
 chisel_prelude =
   "package aetherling.modules\n" ++
   "import aetherling.modules.helpers._\n" ++
+  "import aetherling.modules.shift._\n" ++
   "import aetherling.modules.higherorder._\n" ++
   "import aetherling.types._\n" ++
   "import chisel3._\n\n"
@@ -258,6 +259,53 @@ module_to_string_inner consumer_e@(IfN t producer_e cur_idx) = do
   return cur_ref
   
 -- generators
+module_to_string_inner consumer_e@(Shift_sN n shift_amount elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "ShiftS(" ++ show n ++ ", " ++ show shift_amount ++
+                ", " ++ type_to_chisel elem_t ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (SSeqT n elem_t)] (Module_Port "O" (SSeqT n elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Shift_tN n i shift_amount elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "ShiftT(" ++ show n ++ ", " ++ show i ++ ", " ++
+                show shift_amount ++ ", " ++ type_to_chisel elem_t ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (TSeqT n i elem_t)] (Module_Port "O" (TSeqT n i elem_t))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Shift_tsN no io ni shift_amount elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let gen_str = "ShiftTS(" ++ show no ++ ", " ++ show io ++ ", " ++
+                show ni ++ ", " ++ show shift_amount ++ ", " ++
+                type_to_chisel elem_t ++ ")"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (TSeqT no io (SSeqT ni elem_t))]
+                (Module_Port "O" (TSeqT no io (SSeqT ni elem_t)))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Shift_tnN no nis io iis shift_amount elem_t producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ module_to_string_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  let replace_brackets x =
+        let
+          repl '[' = "Array("
+          repl ']' = ")"
+          repl x = [x]
+        in concatMap repl x
+  let gen_str = "ShiftTN(" ++ show no ++ ", " ++ replace_brackets (show nis) ++ ", " ++
+                show io ++ ", " ++ replace_brackets (show iis) ++ ", " ++ show shift_amount ++ ", " ++
+                type_to_chisel elem_t ++ ")"
+  let types = ST_Conv.expr_to_types consumer_e
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [Module_Port "I" (ST_Conv.e_out_type types)]
+                (Module_Port "O" (head $ ST_Conv.e_in_types types))
+  print_unary_operator cur_ref producer_ref
+  return cur_ref
 module_to_string_inner consumer_e@(Const_GenN constant t delay cur_idx) = do
   -- the chisel const_gen is not a module. It's just a function that
   -- adds some properties. Therefore, it doesn't get wrapped in a Module
