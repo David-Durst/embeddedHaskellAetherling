@@ -1,7 +1,7 @@
 set -o xtrace
 cp $1 ${2}/src/test/scala/aetherling/modules/Top.scala
 cd $2
-sbt "testOnly aetherling.modules.TopTester"
+sbt -mem 2048 "testOnly aetherling.modules.TopTester"
 test_result=$?
 
 if [ $# -gt 2 ]

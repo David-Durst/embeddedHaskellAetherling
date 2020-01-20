@@ -155,6 +155,12 @@ stencil_2d_results_chisel = sequence $
               Chisel No_Verilog
               stencil_2d_inputs stencil_2d_output)
   [1,2,4,8,16,48,144]
+stencil_2d_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              stencil_2d_test (wrap_single_s s)
+              Chisel No_Verilog
+              stencil_2d_inputs stencil_2d_output)
+  [1]
 stencil_2d_results' = sequence $
   fmap (\s -> test_with_backend
               stencil_2d_test (wrap_single_s s)
