@@ -671,12 +671,12 @@ sharpen_print_st = sequence $
               sharpen (wrap_single_s s)
               text_backend "sharpen") [1,2,4,8,16,48,144]
 
-row_size_big :: Integer = 17
+row_size_big :: Integer = 64
 img_size_big :: Int = fromInteger $ row_size_big*row_size_big
-big_conv_2d = conv_2d_shallow_no_input (Proxy @17) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 289 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+big_conv_2d = conv_2d_shallow_no_input (Proxy @64) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 4096 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
-big_conv_2d_slowdowns = speed_to_slow [17] (toInteger img_size_big)--[16, 8, 4, 2, 1, 1 % 3, 1 % 9] --[1,2,4,8,16,32,64,img_size_big `div` 2, img_size_big, img_size_big *3]--, img_size_big*9]
+big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3, 1 % 9] (toInteger img_size_big)-- --[1,2,4,8,16,32,64,img_size_big `div` 2, img_size_big, img_size_big *3]--, img_size_big*9]
 big_conv_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_conv_2d s) big_conv_2d_slowdowns
 big_conv_2d_ppar_typechecked =

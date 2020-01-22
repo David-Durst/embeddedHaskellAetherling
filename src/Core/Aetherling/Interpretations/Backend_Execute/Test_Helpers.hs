@@ -49,7 +49,12 @@ better_stencil_generator row_size inputs = do
   let get_input r c = if (r < 0) || (c < 0) || (r >= row_size) || (c >= col_size)
         then int_to_ignore
         else (inputs_2d !! fromInteger r) !! c
-  undefined
+  [
+    [
+      [
+        get_input (r - stencil_r) (c - stencil_c)
+      | stencil_c <- [2,1..0]] | stencil_r <- [2,1..0]]
+    | r <- [0..row_size-1], c <- [0..col_size-1]]
 
 int_to_3char :: PrintfArg a => a -> String
 int_to_3char x = printf "%03d" x
