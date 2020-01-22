@@ -9,6 +9,7 @@ import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Languages.Isomorphisms
 import Aetherling.Interpretations.Compute_Latency
+import Aetherling.Interpretations.Backend_Execute.Test_Helpers
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
@@ -23,6 +24,7 @@ import Data.Proxy
 import Data.Traversable
 import GHC.TypeLits
 import GHC.TypeLits.Extra
+import Data.Ratio
 
 apps_tests = testGroup "Full Application Tests"
   [
@@ -222,14 +224,14 @@ conv_2d_inputs :: [[Integer]] = stencil_2d_inputs
 conv_generator :: [[[Integer]]] -> [Integer]
 conv_generator stencil_2d_output = [
   if window_valid
-  then (sum $ zipWith (*) window_flat hask_kernel') `mod` 255 `div` 16
+  then (sum $ zipWith (*) window_flat hask_kernel') `mod` 256 `div` 16
   else int_to_ignore
   | window <- stencil_2d_output,
     let window_flat = concat window,
     let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
 conv_2d_output :: [Integer] = [
   if window_valid
-  then (sum $ zipWith (*) window_flat hask_kernel') `mod` 255 `div` 16
+  then (sum $ zipWith (*) window_flat hask_kernel') `mod` 256 `div` 16
   else int_to_ignore
   | window <- stencil_2d_output,
     let window_flat = concat window,
@@ -669,12 +671,12 @@ sharpen_print_st = sequence $
               sharpen (wrap_single_s s)
               text_backend "sharpen") [1,2,4,8,16,48,144]
 
-row_size_big :: Integer = 64 
+row_size_big :: Integer = 17
 img_size_big :: Int = fromInteger $ row_size_big*row_size_big
-big_conv_2d = conv_2d_shallow_no_input (Proxy @64) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 4096 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+big_conv_2d = conv_2d_shallow_no_input (Proxy @17) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 289 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
-big_conv_2d_slowdowns = [1,2,4,8,16,32,64,img_size_big `div` 2, img_size_big, img_size_big *3]--, img_size_big*9]
+big_conv_2d_slowdowns = speed_to_slow [17] (toInteger img_size_big)--[16, 8, 4, 2, 1, 1 % 3, 1 % 9] --[1,2,4,8,16,32,64,img_size_big `div` 2, img_size_big, img_size_big *3]--, img_size_big*9]
 big_conv_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_conv_2d s) big_conv_2d_slowdowns
 big_conv_2d_ppar_typechecked =
@@ -698,12 +700,12 @@ big_conv_2d_results' = sequence $
   fmap (\s -> test_with_backend
               big_conv_2d (wrap_single_s s)
               Magma No_Verilog
-              big_conv_2d_inputs big_conv_2d_output) [289]
+              big_conv_2d_inputs big_conv_2d_output) [big_conv_2d_slowdowns !! 0]
 big_conv_2d_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               big_conv_2d (wrap_single_s s)
               Chisel (Save_Gen_Verilog "big_conv2d")
-              big_conv_2d_inputs big_conv_2d_output) [big_conv_2d_slowdowns !! 1]
+              big_conv_2d_inputs big_conv_2d_output) [big_conv_2d_slowdowns !! 0]
 big_conv_2d_st_prints = sequence $
   fmap (\s -> compile_to_file
               big_conv_2d (wrap_single_s s)
@@ -712,3 +714,4 @@ big_conv_2d_verilog_prints = sequence $
   fmap (\s -> compile_to_file
               big_conv_2d (wrap_single_s s)
               Magma "conv2d") big_conv_2d_slowdowns
+

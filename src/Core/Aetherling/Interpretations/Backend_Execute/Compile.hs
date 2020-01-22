@@ -183,10 +183,6 @@ get_verilog_save_name _ = ""
 
 wrap_single_s s = Min_Area_With_Slowdown_Factor s
 
--- a helper int for values that should be ignored by tester as they
--- indicate invalid in shift (and thus stencil)
-int_to_ignore = 253
-
   -- need to make convertible_to_atom_strings language generic
   -- don't need to bring generate_fault_input_output_for_st_program in from Tester
   -- each language's tester will need to call that as the tester will take a convertible_to_atom_strings [b] input and convertible_to_atom_stirngs c output

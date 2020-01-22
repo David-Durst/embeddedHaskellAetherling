@@ -3,6 +3,9 @@ import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Interpretations.Backend_Execute.Value_To_String
+import Data.Ratio
+import Data.List.Split
+import Text.Printf
 
 data Test_Result = Test_Success
                   | Test_Failure {
@@ -35,3 +38,25 @@ generate_tester_input_output_for_st_program conf p inputs output = do
         convert_seq_val_to_st_val_string output (e_out_type p_types) conf
   Tester_IO (map st_values tester_inputs) (map st_valids tester_inputs)
     tester_output valid_out (length valid_out)
+
+speed_to_slow :: [Ratio Integer] -> Integer -> [Int]
+speed_to_slow speed_ups image_size = map (\speed_up -> fromInteger $ numerator $ (fromIntegral image_size) / speed_up) speed_ups
+
+better_stencil_generator :: Integer -> [Integer] -> [[[Integer]]]
+better_stencil_generator row_size inputs = do
+  let inputs_2d = chunksOf (fromInteger row_size) inputs
+  let col_size = length inputs `div` fromInteger row_size
+  let get_input r c = if (r < 0) || (c < 0) || (r >= row_size) || (c >= col_size)
+        then int_to_ignore
+        else (inputs_2d !! fromInteger r) !! c
+  undefined
+
+int_to_3char :: PrintfArg a => a -> String
+int_to_3char x = printf "%03d" x
+
+print_linear_matrix row_length matrix =
+  sequence $ map print $ map (map int_to_3char) $ chunksOf row_length matrix
+  
+-- a helper int for values that should be ignored by tester as they
+-- indicate invalid in shift (and thus stencil)
+int_to_ignore = 253
