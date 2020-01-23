@@ -119,31 +119,7 @@ stencil_2d_test_ppar_typechecked' =
 row_size = 4
 stencil_2d_inputs :: [[Integer]] = [[1..row_size*row_size]]
 offset_if_valid offset i = if i > offset then i - offset else int_to_ignore
-stencil_generator :: Integer -> [Integer] -> [[[Integer]]]
-stencil_generator row_size inputs = [
-  [
-    if r - k > 0
-    then 
-      [
-        if c > 2 then inputs !! ((fromIntegral $ (r-k-1) * row_size + (c-2)) -1) else int_to_ignore,
-        if (c > 1) && (c <= row_size + 1) then inputs !! ((fromIntegral $ (r-k-1) * row_size + (c-1)) -1) else int_to_ignore,
-        if c <= row_size then inputs !! ((fromIntegral $ (r-k-1) * row_size + c) - 1) else int_to_ignore
-      ]
-    else [int_to_ignore, int_to_ignore, int_to_ignore]
-  | k <- reverse $ [0..2]
-  ] | r <- [1..row_size], c <- [1..row_size]]
-stencil_2d_output :: [[[Integer]]] = [
-  [
-    if r - k > 0
-    then 
-      [
-        if c > 2 then (r-k-1) * row_size + (c-2) else int_to_ignore,
-        if (c > 1) && (c <= row_size + 1) then (r-k-1) * row_size + (c-1) else int_to_ignore,
-        if c <= row_size then (r-k-1) * row_size + c else int_to_ignore
-      ]
-    else [int_to_ignore, int_to_ignore, int_to_ignore]
-  | k <- reverse $ [0..2]
-  ] | r <- [1..row_size], c <- [1..row_size]]
+stencil_2d_output = stencil_generator row_size [1..row_size*row_size]
 -- need to come back and check why slowest version uses a reduce_s
 stencil_2d_results = sequence $
   fmap (\s -> test_with_backend
@@ -160,15 +136,15 @@ stencil_2d_results_chisel = sequence $
 stencil_2d_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               stencil_2d_test (wrap_single_s s)
-              Chisel No_Verilog
+              Chisel (Save_Gen_Verilog "chisel_stencil_2d") 
               stencil_2d_inputs stencil_2d_output)
-  [1]
+  [2]
 stencil_2d_results' = sequence $
   fmap (\s -> test_with_backend
               stencil_2d_test (wrap_single_s s)
-              Magma No_Verilog
+              Magma (Save_Gen_Verilog "magma_stencil_2d")
               stencil_2d_inputs stencil_2d_output)
-  [1]
+  [2]
 
                      
 -- need thse for Integer and Int versions
@@ -672,20 +648,21 @@ sharpen_print_st = sequence $
               text_backend "sharpen") [1,2,4,8,16,48,144]
 
 row_size_big :: Integer = 64
+col_size_big :: Integer = 48
 img_size_big :: Int = fromInteger $ row_size_big*row_size_big
 big_conv_2d = conv_2d_shallow_no_input (Proxy @64) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 4096 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 3072 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
-big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3, 1 % 9] (toInteger img_size_big)-- --[1,2,4,8,16,32,64,img_size_big `div` 2, img_size_big, img_size_big *3]--, img_size_big*9]
+big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big)-- --[1,2,4,8,16,32,64,img_size_big `div` 2, img_size_big, img_size_big *3]--, img_size_big*9]
 big_conv_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_conv_2d s) big_conv_2d_slowdowns
 big_conv_2d_ppar_typechecked =
   fmap check_type big_conv_2d_ppar
 big_conv_2d_ppar_typechecked' =
   fmap check_type_get_error big_conv_2d_ppar
-big_conv_2d_inputs :: [[Integer]] = [[1..row_size_big*row_size_big]]
+big_conv_2d_inputs :: [[Integer]] = [[1..row_size_big*col_size_big]]
 big_conv_2d_output :: [Integer] =
-  conv_generator $ stencil_generator row_size_big [1.. row_size_big*row_size_big]
+  conv_generator $ stencil_generator row_size_big [1.. row_size_big*col_size_big]
 big_conv_2d_results = sequence $
   fmap (\s -> test_with_backend
               big_conv_2d (wrap_single_s s)
