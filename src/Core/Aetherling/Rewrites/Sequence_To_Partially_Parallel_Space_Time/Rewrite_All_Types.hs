@@ -107,9 +107,8 @@ get_all_slowdowns_of_all_levels (hd_factor:tail_factors) num_levels = do
     apply_slowdown_to_all_levels s [] = []
 get_all_slowdowns_of_all_levels [] num_levels =
   S.singleton $ replicate num_levels 1
-
-rewrite_all_AST_types :: Int -> SeqT.AST_Type -> [Out_Type_Rewrites]
-rewrite_all_AST_types s seq_t = do
+  
+all_possible_slowdowns_per_level' s seq_t = do
   let l = num_seq_layers seq_t
   let s_factors = S.toList $ ae_factorize s
   -- for each s, get all levels it can be at
@@ -131,10 +130,21 @@ rewrite_all_AST_types s seq_t = do
         fmap (fmap level_factor_vals_to_total_slowdown) all_possible_slowdown_factors_per_level
   --traceShowM all_possible_slowdowns_per_level_with_dups
   -- sending to set to remove duplicate distributions of factors
-  let all_possible_slowdowns_per_level = S.toList $ S.fromList $
+  S.toList $ S.fromList $
         fmap (sortBy (\x y -> compare (level_v x) (level_v y)))
         all_possible_slowdowns_per_level_with_dups
-  --traceShowM all_possible_slowdowns_per_level
+
+rewrite_all_AST_types :: Int -> SeqT.AST_Type -> [Out_Type_Rewrites]
+rewrite_all_AST_types s seq_t = do
+  let l = num_seq_layers seq_t
+  let s_factors = S.toList $ ae_factorize s
+  let all_possible_slowdowns_per_level_ints = S.toList $
+        get_all_slowdowns_of_all_levels s_factors l
+  let all_possible_slowdowns_per_level =
+        map (\slowdowns_list ->
+                map (\(slowdown, level_index) -> LFVP level_index slowdown)
+                (zip slowdowns_list [0..])
+            ) all_possible_slowdowns_per_level_ints
   -- get all possible slowdowns for each factor distribution
   let unordered_results =
         concat $ fmap (\l_and_s_xs -> rewrite_AST_type_given_slowdowns l_and_s_xs 0 seq_t)
