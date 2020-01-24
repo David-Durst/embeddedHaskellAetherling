@@ -76,6 +76,38 @@ rewrite_all_AST_types_debug s seq_t = do
   return $ concat $ fmap (\l_and_s_xs -> rewrite_AST_type_given_slowdowns l_and_s_xs 0 seq_t)
     all_possible_slowdowns_per_level
     
+all_possible_s s seq_t = do
+  let l = num_seq_layers seq_t
+  let s_factors = S.toList $ ae_factorize s
+  -- for each s, get all levels it can be at
+  let s_for_each_level = groupBy factor_eq $ sortBy factor_cmp
+        [ LFP x y | x <- [0..l-1], y <- s_factors]
+  --traceShowM s_for_each_level
+  -- each inner list is a possible distribution of factors among levels without using a factor twice
+  -- collection of lists is all possible distributions of factors among all levels
+  crossr s_for_each_level
+
+-- | recursive algorithm that recurs on the slowdown factors
+-- base case is to assign 1 to each level.
+-- inductive case is for each element of the set output from the prior set,
+-- make n new elements (n is number of levels) where each layer is multiplied by
+-- slowdown factor.
+get_all_slowdowns_of_all_levels :: [Factor] -> Int -> S.Set [Int]
+get_all_slowdowns_of_all_levels (hd_factor:tail_factors) num_levels = do
+  let slowdowns_for_prior_factors = S.toList $ get_all_slowdowns_of_all_levels
+                                    tail_factors num_levels
+  S.fromList $ concatMap
+    (apply_slowdown_to_all_levels $ factor_val hd_factor)
+    slowdowns_for_prior_factors
+  where
+    apply_slowdown_to_all_levels :: Int -> [Int] -> [[Int]]
+    apply_slowdown_to_all_levels s (hd_levels:tl_levels) =
+      [s*hd_levels:tl_levels] ++
+      (map (\xs -> [hd_levels] ++ xs) $ apply_slowdown_to_all_levels s tl_levels)
+    apply_slowdown_to_all_levels s [] = []
+get_all_slowdowns_of_all_levels [] num_levels =
+  S.singleton $ replicate num_levels 1
+
 rewrite_all_AST_types :: Int -> SeqT.AST_Type -> [Out_Type_Rewrites]
 rewrite_all_AST_types s seq_t = do
   let l = num_seq_layers seq_t
