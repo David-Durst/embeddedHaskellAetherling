@@ -114,7 +114,6 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
             mapM (\(p_expr, p_str, p_latency) -> do
                     tester_files <- Test_Helpers.generate_and_save_tester_io_for_st_program
                                     p_expr inputs output
-                    traceShowM tester_files
                     return $ M_Tester.add_test_harness_to_fault_str p_expr p_str
                       inputs output p_latency (use_verilog_sim_source verilog_conf)
                       tester_files

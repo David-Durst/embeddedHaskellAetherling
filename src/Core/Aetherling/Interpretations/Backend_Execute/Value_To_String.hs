@@ -20,6 +20,8 @@ data ST_Val_To_String_Config = ST_Val_To_String_Config {
   make_array_string_for_backend :: [String] -> String
   }
 
+json_conf = ST_Val_To_String_Config show (map toLower . show) (\x y -> show_no_quotes (x,y))
+             show_no_quotes
 magma_conf = ST_Val_To_String_Config show show (\x y -> show_no_quotes (x,y))
              show_no_quotes
 chisel_conf = ST_Val_To_String_Config show (map toLower . show)

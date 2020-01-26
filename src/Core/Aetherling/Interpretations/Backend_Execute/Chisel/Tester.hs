@@ -58,27 +58,27 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
   -- issue: if 1 input per clock, then need to remove the space dimension
   let f_inputs = foldl (++) "" $
         map (\i -> tab_str ++ "val chisel_inputs" ++ show i ++
-              " = Source.fromFile(" ++
+              " = JsonParser(Source.fromFile(\"" ++
               show_no_quotes (test_path $ tester_inputs_fp tester_io_paths !! i) ++
-              ").getLines.mkString.convertTo[IndexedSeq[" ++
+              "\").getLines.mkString).convertTo[IndexedSeq[" ++
               (if (nested_array $ tester_inputs_fp tester_io_paths !! i)
-                then "IndexedSeq[Int]" else "Int") ++ "]\n" ++
+                then "IndexedSeq[Int]" else "Int") ++ "]]\n" ++
               tab_str ++ "val chisel_inputs" ++ show i ++ "_valid = " ++
-              " = Source.fromFile(" ++
+              " JsonParser(Source.fromFile(\"" ++
               show_no_quotes (tester_valid_in_fp tester_io_paths !! i) ++
-              ").getLines.mkString.convertTo[IndexedSeq[Boolean]]\n"
+              "\").getLines.mkString).convertTo[IndexedSeq[Boolean]]\n"
             )
         [0..num_ports - 1]
   let f_output = tab_str ++ "val chisel_output = " ++
-                 " = Source.fromFile(" ++
+                 " JsonParser(Source.fromFile(\"" ++
                  show_no_quotes (test_path $ tester_output_fp tester_io_paths) ++
-                 ").getLines.mkString.convertTo[IndexedSeq[" ++
+                 "\").getLines.mkString).convertTo[IndexedSeq[" ++
                  (if (nested_array $ tester_output_fp tester_io_paths)
-                  then "IndexedSeq[Int]" else "Int") ++ "]\n" ++
+                  then "IndexedSeq[Int]" else "Int") ++ "]]\n" ++
                  tab_str ++ "val chisel_output_valid = " ++
-                 " = Source.fromFile(" ++
+                 " JsonParser(Source.fromFile(\"" ++
                  show_no_quotes (tester_valid_out_fp tester_io_paths) ++
-                 ").getLines.mkString.convertTo[IndexedSeq[Boolean]]\n"
+                 "\").getLines.mkString).convertTo[IndexedSeq[Boolean]]\n"
 
   let test_start =
         tab_str ++ "poke_nested(c.valid_up, 1.B)\n" ++

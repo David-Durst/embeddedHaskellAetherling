@@ -8,6 +8,7 @@ import System.IO
 import Data.Ratio
 import Data.List.Split
 import Text.Printf
+import Debug.Trace
 
 data Test_Result = Test_Success
                   | Test_Failure {
@@ -54,18 +55,22 @@ generate_and_save_tester_io_for_st_program p inputs output = do
   test_out_valid_file_name <- emptySystemTempFile "ae_out_valid.json"
 
   -- write the IO strings to files
-  let tester_strings = generate_tester_input_output_for_st_program magma_conf p
+  let tester_strings = generate_tester_input_output_for_st_program json_conf p
                        inputs output
   let input_strs = tester_inputs tester_strings
   mapM (\(file_name, idx) ->
           writeFile file_name (input_strs !! idx)
       ) (zip test_input_file_names [0..])
   mapM (\(file_name, idx) ->
-          writeFile file_name (show_no_quotes $ tester_valid_in tester_strings !! idx)
+          writeFile file_name (show_no_quotes $
+                               map (make_bool_string_for_backend json_conf) $
+                               tester_valid_in tester_strings !! idx)
       ) (zip test_in_valid_file_names [0..])
   let output_str = tester_output tester_strings
   writeFile test_output_file_name output_str
-  writeFile test_out_valid_file_name (show_no_quotes $ tester_valid_out tester_strings)
+  writeFile test_out_valid_file_name (show_no_quotes $
+                                      map (make_bool_string_for_backend json_conf) $
+                                      tester_valid_out tester_strings)
 
   -- compute whether input and outputs are nested
   let inputs_nested = map (\input_str -> (head $ tail input_str) == '[')

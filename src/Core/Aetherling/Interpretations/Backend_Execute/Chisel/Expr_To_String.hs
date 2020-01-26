@@ -23,6 +23,7 @@ chisel_prelude =
   "import aetherling.modules.higherorder._\n" ++
   "import aetherling.types._\n" ++
   "import chisel3._\n" ++
+  "import scala.io.Source\n" ++
   "import spray.json._\n" ++
   "import DefaultJsonProtocol._\n\n" 
 
