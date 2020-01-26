@@ -46,28 +46,39 @@ array_of_bools_to_chisel_string arr =
   convert_to_flat_atom_list arr chisel_conf
   
 add_test_harness_to_chisel_str :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
-  Expr -> Backend_String_Results -> [a] -> b -> Int -> Bool -> String
+  Expr -> Backend_String_Results -> [a] -> b -> Int -> Bool -> Tester_Files -> String
 add_test_harness_to_chisel_str p module_str_data inputs output output_latency
-  is_verilog = do
+  is_verilog tester_io_paths = do
   let p_types = expr_to_outer_types p
   let num_ports = length $ in_ports $ module_outer_results $ module_str_data
   let chisel_io = generate_tester_input_output_for_st_program chisel_conf
                  p inputs output
+                 --"val myObject = jsonAst.convertTo[MyObjectType]"
   -- these are nested for both space and time
   -- issue: if 1 input per clock, then need to remove the space dimension
   let f_inputs = foldl (++) "" $
-        map (\i -> tab_str ++ "val chisel_inputs" ++ show i ++ " = " ++
-              show_no_quotes (tester_inputs chisel_io !! i) ++ "\n" ++
+        map (\i -> tab_str ++ "val chisel_inputs" ++ show i ++
+              " = Source.fromFile(" ++
+              show_no_quotes (test_path $ tester_inputs_fp tester_io_paths !! i) ++
+              ").getLines.mkString.convertTo[IndexedSeq[" ++
+              (if (nested_array $ tester_inputs_fp tester_io_paths !! i)
+                then "IndexedSeq[Int]" else "Int") ++ "]\n" ++
               tab_str ++ "val chisel_inputs" ++ show i ++ "_valid = " ++
-              array_of_bools_to_chisel_string (tester_valid_in chisel_io !! i) ++
-              "\n"
+              " = Source.fromFile(" ++
+              show_no_quotes (tester_valid_in_fp tester_io_paths !! i) ++
+              ").getLines.mkString.convertTo[IndexedSeq[Boolean]]\n"
             )
         [0..num_ports - 1]
   let f_output = tab_str ++ "val chisel_output = " ++
-                 tester_output chisel_io ++ "\n" ++
+                 " = Source.fromFile(" ++
+                 show_no_quotes (test_path $ tester_output_fp tester_io_paths) ++
+                 ").getLines.mkString.convertTo[IndexedSeq[" ++
+                 (if (nested_array $ tester_output_fp tester_io_paths)
+                  then "IndexedSeq[Int]" else "Int") ++ "]\n" ++
                  tab_str ++ "val chisel_output_valid = " ++
-                 array_of_bools_to_chisel_string (tester_valid_out chisel_io) ++
-                 "\n"
+                 " = Source.fromFile(" ++
+                 show_no_quotes (tester_valid_out_fp tester_io_paths) ++
+                 ").getLines.mkString.convertTo[IndexedSeq[Boolean]]\n"
 
   let test_start =
         tab_str ++ "poke_nested(c.valid_up, 1.B)\n" ++

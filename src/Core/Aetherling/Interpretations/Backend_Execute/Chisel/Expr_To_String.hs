@@ -22,7 +22,9 @@ chisel_prelude =
   "import aetherling.modules.shift._\n" ++
   "import aetherling.modules.higherorder._\n" ++
   "import aetherling.types._\n" ++
-  "import chisel3._\n\n"
+  "import chisel3._\n" ++
+  "import spray.json._\n" ++
+  "import DefaultJsonProtocol._\n\n" 
 
 chisel_verilog_output_epilogue :: String
 chisel_verilog_output_epilogue =

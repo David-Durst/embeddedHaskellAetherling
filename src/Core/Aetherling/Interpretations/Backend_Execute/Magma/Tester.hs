@@ -25,38 +25,37 @@ import Data.Maybe
 import Debug.Trace
 
 add_test_harness_to_fault_str :: (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
-  Expr -> Backend_String_Results -> [a] -> b -> Int -> Bool -> String
+  Expr -> Backend_String_Results -> [a] -> b -> Int -> Bool -> Tester_Files -> String
 add_test_harness_to_fault_str p module_str_data inputs output output_latency
-  is_verilog = do
+  is_verilog fault_io_paths = do
   let p_types = expr_to_outer_types p
   let num_ports = length $ in_ports $ module_outer_results $ module_str_data
-  let fault_io = generate_tester_input_output_for_st_program magma_conf
-                 p inputs output
   -- these are nested for both space and time
   -- issue: if 1 input per clock, then need to remove the space dimension
   let f_inputs = foldl (++) "" $
-        map (\i -> "fault_inputs" ++ show i ++ " = " ++
-              show_no_quotes (tester_inputs fault_io !! i) ++ "\n" ++
-              "fault_inputs" ++ show i ++ "_valid = " ++
-              show_no_quotes (tester_valid_in fault_io !! i) ++ "\n"
+        map (\i -> "fault_inputs" ++ show i ++ " = json.load(open(\"" ++
+              show_no_quotes (test_path $ tester_inputs_fp fault_io_paths !! i) ++ "\"))\n" ++
+              "fault_inputs" ++ show i ++ "_valid = json.load(open(\"" ++
+              show_no_quotes (tester_valid_in_fp fault_io_paths !! i) ++ "\"))\n"
             )
         [0..num_ports - 1]
-  let f_output = "fault_output = " ++ tester_output fault_io ++ "\n"
-  let f_output_valid = "fault_output_valid = " ++
-                       show_no_quotes (tester_valid_out fault_io) ++ "\n"
+  let f_output = "fault_output = json.load(open(\"" ++
+                 (test_path $ tester_output_fp fault_io_paths) ++ "\"))\n"
+  let f_output_valid = "fault_output_valid = json.load(open(\"" ++
+                       tester_valid_out_fp fault_io_paths ++ "\"))\n"
   let test_start =
         "if __name__ == '__main__':\n" ++
         tab_str ++ "mod = Main()\n" ++
         tab_str ++ "tester = fault.Tester(mod, clock(mod.CLK))\n" ++
         tab_str ++ "tester.circuit.valid_up = 1\n" ++
         tab_str ++ "output_counter = 0\n" ++
-        tab_str ++ "for f_clk in range(" ++ show (tester_clocks fault_io) ++
+        tab_str ++ "for f_clk in range(" ++ show (tester_clocks_files fault_io_paths) ++
         " + " ++ show output_latency ++ "):\n" ++
         tab_str ++ tab_str ++ "tester.print('clk: {}\\n'.format(f_clk))\n"
   let test_inputs = foldl (++) "" $
         map (\i -> do
                 let i_port_name = (port_name $ (in_ports $ module_outer_results module_str_data) !! i)
-                tab_str ++ tab_str ++ "if f_clk < " ++ show (tester_clocks fault_io) ++
+                tab_str ++ tab_str ++ "if f_clk < " ++ show (tester_clocks_files fault_io_paths) ++
                   " and fault_inputs" ++ show i ++ "_valid[f_clk]:\n" ++
                   tab_str ++ tab_str ++ tab_str ++
                   "fault_helpers.set_nested_port(tester, tester.circuit." ++

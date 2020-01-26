@@ -3,6 +3,8 @@ import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Interpretations.Backend_Execute.Value_To_String
+import System.IO.Temp
+import System.IO
 import Data.Ratio
 import Data.List.Split
 import Text.Printf
@@ -22,6 +24,60 @@ data Tester_IO = Tester_IO {
   tester_valid_out :: [Bool],
   tester_clocks :: Int
   } deriving (Show, Eq)
+
+data Test_File_Data = Test_File_Data {
+  test_path :: FilePath,
+  nested_array :: Bool
+  } deriving (Show, Eq)
+
+data Tester_Files = Tester_Files {
+  tester_inputs_fp :: [Test_File_Data],
+  tester_valid_in_fp :: [FilePath],
+  tester_output_fp :: Test_File_Data,
+  tester_valid_out_fp :: FilePath,
+  tester_clocks_files :: Int
+  } deriving (Show, Eq)
+
+generate_and_save_tester_io_for_st_program ::
+  (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
+  Expr -> [a] -> b -> IO Tester_Files
+generate_and_save_tester_io_for_st_program p inputs output = do
+  let num_in_ports = length $ e_in_types $ expr_to_outer_types p
+  -- generate files
+  test_input_file_names <-
+    mapM (\idx -> emptySystemTempFile ("ae_input_" ++ show idx ++ ".json"))
+    [0..num_in_ports-1]
+  test_in_valid_file_names <-
+    mapM (\idx -> emptySystemTempFile ("ae_in_valid_" ++ show idx ++ ".json"))
+    [0..num_in_ports-1]
+  test_output_file_name <- emptySystemTempFile "ae_output.json"
+  test_out_valid_file_name <- emptySystemTempFile "ae_out_valid.json"
+
+  -- write the IO strings to files
+  let tester_strings = generate_tester_input_output_for_st_program magma_conf p
+                       inputs output
+  let input_strs = tester_inputs tester_strings
+  mapM (\(file_name, idx) ->
+          writeFile file_name (input_strs !! idx)
+      ) (zip test_input_file_names [0..])
+  mapM (\(file_name, idx) ->
+          writeFile file_name (show_no_quotes $ tester_valid_in tester_strings !! idx)
+      ) (zip test_in_valid_file_names [0..])
+  let output_str = tester_output tester_strings
+  writeFile test_output_file_name output_str
+  writeFile test_out_valid_file_name (show_no_quotes $ tester_valid_out tester_strings)
+
+  -- compute whether input and outputs are nested
+  let inputs_nested = map (\input_str -> (head $ tail input_str) == '[')
+                      input_strs
+  let output_nested = (head $ tail output_str) == '['
+  let inputs_file_data =
+        map (\(input_path, is_nested) -> Test_File_Data input_path is_nested)
+        (zip test_input_file_names inputs_nested)
+  let output_file_data = Test_File_Data test_output_file_name output_nested
+
+  return $ Tester_Files inputs_file_data test_in_valid_file_names
+    output_file_data test_out_valid_file_name (tester_clocks tester_strings)
 
 generate_tester_input_output_for_st_program ::
   (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>

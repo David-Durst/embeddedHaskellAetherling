@@ -134,6 +134,16 @@ all_possible_slowdowns_per_level' s seq_t = do
         fmap (sortBy (\x y -> compare (level_v x) (level_v y)))
         all_possible_slowdowns_per_level_with_dups
 
+rewrite_all_AST_types' s seq_t = do
+  let l = num_seq_layers seq_t
+  let s_factors = S.toList $ ae_factorize s
+  let all_possible_slowdowns_per_level_ints = S.toList $
+        get_all_slowdowns_of_all_levels s_factors l
+  map (\slowdowns_list ->
+          map (\(slowdown, level_index) -> LFVP level_index slowdown)
+          (zip slowdowns_list [0..])
+      ) all_possible_slowdowns_per_level_ints
+    
 rewrite_all_AST_types :: Int -> SeqT.AST_Type -> [Out_Type_Rewrites]
 rewrite_all_AST_types s seq_t = do
   let l = num_seq_layers seq_t
@@ -145,12 +155,14 @@ rewrite_all_AST_types s seq_t = do
                 map (\(slowdown, level_index) -> LFVP level_index slowdown)
                 (zip slowdowns_list [0..])
             ) all_possible_slowdowns_per_level_ints
+  --let all_possible_slowdowns_per_level = all_possible_slowdowns_per_level' s seq_t
   -- get all possible slowdowns for each factor distribution
   let unordered_results =
         concat $ fmap (\l_and_s_xs -> rewrite_AST_type_given_slowdowns l_and_s_xs 0 seq_t)
         all_possible_slowdowns_per_level
-  sortBy (\trs0 trs1 -> compare (rewrite_nesting_depth trs0) (rewrite_nesting_depth trs1))
-    unordered_results
+  --sortBy (\trs0 trs1 -> compare (rewrite_nesting_depth trs0) (rewrite_nesting_depth trs1))
+  --  unordered_results
+  unordered_results
 
 rewrite_AST_type_given_slowdowns :: [Level_Factor_Val_Pair] -> Int ->
                                     SeqT.AST_Type -> [Out_Type_Rewrites]

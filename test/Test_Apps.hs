@@ -692,3 +692,11 @@ big_conv_2d_verilog_prints = sequence $
               big_conv_2d (wrap_single_s s)
               Magma "conv2d") big_conv_2d_slowdowns
 
+
+big_tests = testGroup "Big Tests"
+  [
+    testCase "single big 3x3 convolution chisel" $
+    (TS.all_success big_conv_2d_results_chisel') @? "single 3x3 convolution failed",
+    testCase "single big 3x3 convolution magma" $
+    (TS.all_success big_conv_2d_results') @? "single 3x3 convolution failed"
+  ]

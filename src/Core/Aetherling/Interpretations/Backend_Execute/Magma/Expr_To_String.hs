@@ -20,7 +20,8 @@ magma_prelude =
   "import aetherling.helpers.fault_helpers as fault_helpers\n" ++
   "from aetherling.space_time import *\n" ++
   "from aetherling.space_time.reshape_st import DefineReshape_ST\n" ++
-  "import magma as m" ++
+  "import magma as m\n" ++
+  "import json\n" ++
   "\n"
 
 magma_verilog_output_epilogue :: String -> String

@@ -104,25 +104,34 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
           Right x -> x
   let expr_latencies = map CL.compute_latency deep_st_programs
   -- convert each STIR expr to a string for the backend with an added test hardness
-  let test_strs =
+  test_strs <-
         case l_target of
           Magma -> do
             let modules_str_data =
                   map (M_Expr_To_Str.module_to_magma_string) deep_st_programs
             let exprs_and_str_data_and_latencies =
                   zip3 deep_st_programs modules_str_data expr_latencies
-            map (\(p_expr, p_str, p_latency) ->
-                   M_Tester.add_test_harness_to_fault_str p_expr p_str
-                   inputs output p_latency (use_verilog_sim_source verilog_conf))
+            mapM (\(p_expr, p_str, p_latency) -> do
+                    tester_files <- Test_Helpers.generate_and_save_tester_io_for_st_program
+                                    p_expr inputs output
+                    traceShowM tester_files
+                    return $ M_Tester.add_test_harness_to_fault_str p_expr p_str
+                      inputs output p_latency (use_verilog_sim_source verilog_conf)
+                      tester_files
+                )
               exprs_and_str_data_and_latencies
           Chisel -> do
             let modules_str_data =
                   map (C_Expr_To_Str.module_to_chisel_string) deep_st_programs
             let exprs_and_str_data_and_latencies =
                   zip3 deep_st_programs modules_str_data expr_latencies
-            map (\(p_expr, p_str, p_latency) ->
-                   C_Tester.add_test_harness_to_chisel_str p_expr p_str
-                   inputs output p_latency (use_verilog_sim_source verilog_conf))
+            mapM (\(p_expr, p_str, p_latency) -> do
+                     tester_files <- Test_Helpers.generate_and_save_tester_io_for_st_program
+                                     p_expr inputs output
+                     return $ C_Tester.add_test_harness_to_chisel_str p_expr p_str
+                       inputs output p_latency (use_verilog_sim_source verilog_conf)
+                       tester_files
+                 )
               exprs_and_str_data_and_latencies
           Text -> error "Can't run tests with Text backend."
   sequence $ map
