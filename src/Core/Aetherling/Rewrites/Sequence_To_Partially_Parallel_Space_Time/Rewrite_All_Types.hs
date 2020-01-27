@@ -160,9 +160,8 @@ rewrite_all_AST_types s seq_t = do
   let unordered_results =
         concat $ fmap (\l_and_s_xs -> rewrite_AST_type_given_slowdowns l_and_s_xs 0 seq_t)
         all_possible_slowdowns_per_level
-  --sortBy (\trs0 trs1 -> compare (rewrite_nesting_depth trs0) (rewrite_nesting_depth trs1))
-  --  unordered_results
-  unordered_results
+  sortBy (\trs0 trs1 -> compare (rewrite_nesting_depth trs0) (rewrite_nesting_depth trs1))
+    unordered_results
 
 rewrite_AST_type_given_slowdowns :: [Level_Factor_Val_Pair] -> Int ->
                                     SeqT.AST_Type -> [Out_Type_Rewrites]
