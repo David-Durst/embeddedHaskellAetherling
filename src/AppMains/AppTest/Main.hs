@@ -50,11 +50,12 @@ import System.TimeIt
 import Data.Ratio
 
 main = do
-  putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 4
-  --let possible_output_types = rewrite_all_AST_types (1920 * 1080 `div` 16)  $
-  --                            Seq_Conv.e_out_type $ Seq_Conv.expr_to_outer_types $ big_conv_2d_seq_idx
-  --putStrLn "output_types length"
-  --timeIt $ putStrLn $ show $ length possible_output_types
+  --putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 4
+  let possible_output_types = rewrite_all_AST_types 480  $
+                              SeqT 480 0 (SeqT 1 2 (SeqT 1 2 seq_int))
+                              --Seq_Conv.e_out_type $ Seq_Conv.expr_to_outer_types $ big_conv_2d_seq_idx
+  putStrLn "output_types length"
+  timeIt $ putStrLn $ show $ length possible_output_types
   --
   --let possible_st_programs =
   --      map (\trs -> rewrite_to_partially_parallel_type_rewrite trs big_conv_2d_seq_idx)

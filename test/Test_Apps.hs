@@ -684,7 +684,7 @@ big_conv_2d_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               big_conv_2d (wrap_single_s s)
               Chisel (Save_Gen_Verilog "big_conv2d")
-              big_conv_2d_inputs big_conv_2d_output) [big_conv_2d_slowdowns !! 0]
+              big_conv_2d_inputs big_conv_2d_output) [big_conv_2d_slowdowns !! 5]
 big_conv_2d_st_prints = sequence $
   fmap (\s -> compile_to_file
               big_conv_2d (wrap_single_s s)
@@ -749,9 +749,9 @@ big_tests = testGroup "Big Tests"
     --testCase "single big 3x3 convolution magma" $
     --(TS.all_success big_conv_2d_results') @? "single 3x3 convolution failed"
     testCase "single big 3x3 convolution chisel" $
-    (TS.all_success big_conv_2d_results_chisel) @? "single 3x3 convolution chisel failed",
-    testCase "big 3x3 conv to 2x2 conv chisel" $
-    (TS.all_success big_conv_2d_b2b_results_chisel) @? "big 3x3 conv to 2x2 conv chisel failed",
-    testCase "big sharpen chisel" $
-    (TS.all_success big_sharpen_results_chisel) @? "big sharpen chisel failed"
+    (TS.all_success big_conv_2d_results_chisel') @? "single 3x3 convolution chisel failed"
+    --testCase "big 3x3 conv to 2x2 conv chisel" $
+    --(TS.all_success big_conv_2d_b2b_results_chisel) @? "big 3x3 conv to 2x2 conv chisel failed",
+    --testCase "big sharpen chisel" $
+    --(TS.all_success big_sharpen_results_chisel) @? "big sharpen chisel failed"
   ]
