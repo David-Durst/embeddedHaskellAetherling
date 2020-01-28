@@ -93,13 +93,18 @@ rewrite_to_partially_parallel_slowdown s seq_expr = do
 -- by rewrite_to_partially_parallel_slowdown
 get_expr_with_min_area :: Int -> SeqE.Expr -> [Program_And_Area] -> STE.Expr
 get_expr_with_min_area s seq_expr possible_st_programs_and_areas = 
-  if length possible_st_programs_and_areas == 0
+  if null possible_st_programs_and_areas
     then STE.ErrorN ("No possible rewrites for slowdown " ++ show s ++
                      " of program \n" ++
                      Seq_Print.print_seq_str seq_expr) No_Index
     else program $
-         L.minimumBy (\pa pb -> compare (area pa) (area pb))
-         possible_st_programs_and_areas
+         L.foldl' (\p_min_so_far p_new ->
+                   if (area p_min_so_far <= area p_new)
+                   then p_min_so_far
+                   else p_new
+                   )
+         (head possible_st_programs_and_areas)
+         (tail possible_st_programs_and_areas)
  {-
 
 rewrite_to_partially_parallel_search' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
