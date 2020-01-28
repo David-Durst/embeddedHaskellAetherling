@@ -40,6 +40,7 @@ import System.Directory
 import System.FilePath
 import Data.Maybe
 import Debug.Trace
+import Data.Time
 
 -- things this module needs to do:
 -- 1. compile Seq to ST IR deep embedding to backend given a slowdown
@@ -97,6 +98,9 @@ test_with_backend :: (Shallow_Types.Aetherling_Value a,
                      IO [Test_Helpers.Test_Result]
 test_with_backend shallow_seq_program s_target l_target verilog_conf
   inputs output = do
+  traceShowM s_target
+  time <- getZonedTime
+  traceShowM time
   -- get STIR expr for each program
   let deep_st_programs =
         case (runExcept $ compile_to_expr shallow_seq_program s_target) of

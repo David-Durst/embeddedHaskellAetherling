@@ -32,6 +32,8 @@ import Aetherling.Interpretations.Compute_Latency
 import Aetherling.Interpretations.Backend_Execute.Test_Helpers
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
+import qualified Aetherling.Interpretations.Compute_Area as Comp_Area
+import qualified Aetherling.Interpretations.Has_Error as Has_Error
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
 import Aetherling.Rewrites.Rewrite_Helpers
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
@@ -48,19 +50,31 @@ import System.TimeIt
 import Data.Ratio
 
 main = do
-  --putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 0
-  let possible_output_types = rewrite_all_AST_types (1920 * 1080 `div` 16)  $
-                              Seq_Conv.e_out_type $ Seq_Conv.expr_to_outer_types $ big_conv_2d_seq_idx
-  putStrLn "output_types length"
-  timeIt $ putStrLn $ show $ length possible_output_types
-  let possible_st_programs =
-        map (\trs -> rewrite_to_partially_parallel_type_rewrite trs big_conv_2d_seq_idx)
-        possible_output_types
-  putStrLn "possible st_programs length"
-  timeIt $ putStrLn $ show $ length possible_st_programs
-  let deep_st_program = get_expr_with_min_area s deep_seq_program_with_indexes
-                        possible_st_programs_and_areas 
-  putStrLn "exactly 1 st_programs"
+  putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 4
+  --let possible_output_types = rewrite_all_AST_types (1920 * 1080 `div` 16)  $
+  --                            Seq_Conv.e_out_type $ Seq_Conv.expr_to_outer_types $ big_conv_2d_seq_idx
+  --putStrLn "output_types length"
+  --timeIt $ putStrLn $ show $ length possible_output_types
+  --
+  --let possible_st_programs =
+  --      map (\trs -> rewrite_to_partially_parallel_type_rewrite trs big_conv_2d_seq_idx)
+  --      possible_output_types
+  --putStrLn "possible st_programs length"
+  --timeIt $ putStrLn $ show $ length possible_st_programs
+  
+  --let valid_possible_st_programs =
+  --      filter (not . Has_Error.has_error) possible_st_programs
+  --let possible_st_programs_and_areas = map (\p -> PA p (Comp_Area.get_area p)) valid_possible_st_programs
+  --putStrLn "possible st_programs and areas length"
+  --timeIt $ putStrLn $ show $ length possible_st_programs_and_areas
+  --
+  --let deep_st_program = get_expr_with_min_area (1920 * 1080 `div` 16) big_conv_2d_seq_idx
+  --                      possible_st_programs_and_areas 
+  --putStrLn "exactly 1 st_programs"
+  --putStrLn $ show $ e_out_type $ expr_to_outer_types_st deep_st_program
+  --
+  --putStrLn "exactly 1 st_programs with registers"
+  --putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ add_registers deep_st_program
   return ()
   
 stencil_3_1dC_nested in_seq = do

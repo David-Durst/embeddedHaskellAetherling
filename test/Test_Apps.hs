@@ -649,7 +649,7 @@ sharpen_print_st = sequence $
 
 row_size_big :: Integer = 1920
 col_size_big :: Integer = 1080
-img_size_big :: Int = fromInteger $ row_size_big*row_size_big
+img_size_big :: Int = fromInteger $ col_size_big*row_size_big
 big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
   com_input_seq "I" (Proxy :: Proxy (Seq 2073600 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
