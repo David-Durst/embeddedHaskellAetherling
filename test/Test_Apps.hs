@@ -15,7 +15,7 @@ import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
 import Aetherling.Rewrites.Rewrite_Helpers
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
-import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import Aetherling.Interpretations.Backend_Execute.Compile
@@ -51,7 +51,7 @@ add_5 atom_in = do
   addC tupled
 single_map_200 = 
   mapC' (Proxy @200) add_5 $
-  com_input_seq "I" (Proxy :: Proxy (Seq 200 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 200 Atom_Int))
 single_map_200_seq_idx = add_indexes $ seq_shallow_to_deep single_map_200
 single_map_200_ppar = fmap
   (\s -> compile_with_slowdown_to_expr single_map_200 s)
@@ -89,17 +89,14 @@ single_map_200_results' = sequence $
               single_map_200 (wrap_single_s s)
               Magma (Save_Gen_Verilog "map")
               single_map_200_inputs single_map_200_output) [1]
-stencil_3_1dC_nested :: forall m n n0 a .
-                         (Sequence_Language m, Aetherling_Value a,
-                          KnownNat n, KnownNat n0, (n0 + 1) ~ n) =>
-                      m (Seq n (n GHC.TypeLits.* 2) a) -> m (Seq n 0 (Seq 3 0 a))
+
 stencil_3_1dC_nested in_seq = do
   let shifted_once = shiftC (Proxy @1) in_seq
   let shifted_twice = shiftC (Proxy @1) shifted_once
   let window_tuple = map2C seq_tuple_appendC
                      (map2C seq_tupleC in_seq shifted_once)
                      shifted_twice
-  let partitioned_tuple = partitionC (Proxy :: Proxy n) (Proxy :: Proxy 1) (Proxy :: Proxy 0) (Proxy :: Proxy i) window_tuple
+  let partitioned_tuple = partitionC Proxy (Proxy @1) window_tuple
   mapC seq_tuple_to_seqC partitioned_tuple
   
 stencil_3x3_2dC_test in_col in_img = do
@@ -113,7 +110,7 @@ stencil_3x3_2dC_test in_col in_img = do
   let triple = seq_tuple_appendC tuple first_row_shifted
   seq_tuple_to_seqC triple
 stencil_2d_test = stencil_3x3_2dC_test (Proxy @4) $
-  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 Atom_Int))
 stencil_2d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_2d_test
 stencil_2d_test_ppar = 
   fmap (\s -> compile_with_slowdown_to_expr stencil_2d_test s) [1,2,4,8,16,48,144]
@@ -168,7 +165,7 @@ tuple_2d_mul_shallow_no_input in_seq = do
   let sum_and_norm = map2C (map2C atom_tupleC) sum norm
   mapC (mapC lsrC) sum_and_norm
 tuple_2d_mul = tuple_2d_mul_shallow_no_input $
-  com_input_seq "I" (Proxy :: Proxy (Seq 3 0 (Seq 3 0 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 3 (Seq 3 Atom_Int)))
 tuple_2d_mul_seq_idx = add_indexes $ seq_shallow_to_deep tuple_2d_mul
 tuple_2d_mul_ppar =
   fmap (\s -> compile_with_slowdown_to_expr tuple_2d_mul s) [1,3,9]
@@ -193,7 +190,7 @@ conv_2d_shallow_no_input in_col in_seq = do
   let stencil = stencil_3x3_2dC_test in_col in_seq
   mapC tuple_2d_mul_shallow_no_input stencil
 conv_2d = conv_2d_shallow_no_input (Proxy @4) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 (Seq 1 (Seq 1 Atom_Int))))
 conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d
 conv_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr conv_2d s) [1,2,4,8,16,48,144]
@@ -258,7 +255,7 @@ down_from_pyramid_2d_no_input in_seq = do
         partitionC (Proxy @8) (Proxy @4) Proxy (Proxy @0) layer1_drop_cols
   --layer1_blurred
 down_from_pyramid_2d = down_from_pyramid_2d_no_input $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 64 (Seq 1 (Seq 1 Atom_Int))))
 down_from_pyramid_2d_seq_idx = add_indexes $ seq_shallow_to_deep down_from_pyramid_2d
 down_from_pyramid_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr down_from_pyramid_2d s) [1,2,4,8,16,32,64]
@@ -299,7 +296,7 @@ first_layer_pyr_shallow_no_input in_seq = do
         partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) $
         partitionC (Proxy @8) (Proxy @4) Proxy (Proxy @0) layer1_drop_cols
 first_layer_pyr = first_layer_pyr_shallow_no_input $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 64 (Seq 1 (Seq 1 Atom_Int))))
 first_layer_pyr_seq_idx = add_indexes $ seq_shallow_to_deep first_layer_pyr
 first_layer_pyr_ppar =
   fmap (\s -> compile_with_slowdown_to_expr first_layer_pyr s) [1,2,4,8,16,32,64,192,576]
@@ -350,7 +347,7 @@ pyramid_2d_shallow_no_input in_seq = do
         partitionC (Proxy @2) (Proxy @2) Proxy (Proxy @0) $
         partitionC (Proxy @4) (Proxy @2) Proxy (Proxy @0) layer2_drop_cols
 pyramid_2d = pyramid_2d_shallow_no_input $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 64 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 64 (Seq 1 (Seq 1 Atom_Int))))
 pyramid_2d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_2d
 pyramid_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr pyramid_2d s) [1,2,4,8,16,32,64,192,576]
@@ -445,7 +442,7 @@ conv_2d_b2b_shallow_no_input in_col in_seq = do
   let second_stencil = stencil_2x2_2dC_test in_col first_conv
   mapC tuple_2d_2x2_mul_shallow_no_input second_stencil
 conv_2d_b2b = conv_2d_b2b_shallow_no_input (Proxy @4) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 (Seq 1 (Seq 1 Atom_Int))))
 conv_2d_b2b_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d_b2b
 conv_2d_b2b_ppar =
   fmap (\s -> compile_with_slowdown_to_expr conv_2d_b2b s) [1,2,4,8,16,48,144]
@@ -508,7 +505,7 @@ conv_2d_3x3_repeat_b2b_shallow_no_input in_col in_seq = do
   let second_stencil = stencil_3x3_2dC_test in_col first_conv
   mapC tuple_2d_mul_shallow_no_input second_stencil
 conv_2d_3x3_repeat_b2b = conv_2d_3x3_repeat_b2b_shallow_no_input (Proxy @4) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 (Seq 1 (Seq 1 Atom_Int))))
 conv_2d_3x3_repeat_b2b_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d_3x3_repeat_b2b
 conv_2d_3x3_repeat_b2b_ppar =
   fmap (\s -> compile_with_slowdown_to_expr conv_2d_3x3_repeat_b2b s) [1,2,4,8,16,48,144]
@@ -616,7 +613,7 @@ sharpen_shallow_no_input in_col in_seq = do
   {-
 -- haskell doesn't like it when both this and big sharpen are uncommented for unknown reason
 sharpen = sharpen_shallow_no_input (Proxy @4) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 (Seq 1 (Seq 1 Atom_Int))))
 sharpen_seq_idx = add_indexes $ seq_shallow_to_deep sharpen
 sharpen_ppar =
   fmap (\s -> compile_with_slowdown_to_expr sharpen s) [1,2,4,8,16,48,144]
@@ -658,7 +655,7 @@ row_size_big :: Integer = 1920
 col_size_big :: Integer = 1080
 img_size_big :: Int = fromInteger $ col_size_big*row_size_big
 big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 (Seq 1 (Seq 1 Atom_Int))))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
 big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big)-- --[1,2,4,8,16,32,64,img_size_big `div` 2, img_size_big, img_size_big *3]--, img_size_big*9]
 big_conv_2d_ppar =
@@ -700,7 +697,7 @@ big_conv_2d_verilog_prints = sequence $
               Magma "conv2d") big_conv_2d_slowdowns
 
 big_conv_2d_b2b = conv_2d_b2b_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 (Seq 1 (Seq 1 Atom_Int))))
 big_conv_2d_b2b_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d_b2b
 big_conv_2d_b2b_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_conv_2d_b2b s) big_conv_2d_slowdowns
@@ -725,7 +722,7 @@ big_conv_2d_b2b_results_chisel = sequence $
               big_conv_2d_b2b_inputs big_conv_2d_b2b_output) big_conv_2d_slowdowns
 
 big_sharpen = sharpen_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 (Seq 1 (Seq 1 Atom_Int))))
 big_sharpen_seq_idx = add_indexes $ seq_shallow_to_deep big_sharpen
 big_sharpen_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_sharpen s) [1,2,4,8,16,48,144]

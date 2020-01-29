@@ -14,7 +14,7 @@ import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
 import Aetherling.Rewrites.Rewrite_Helpers
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
-import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import Aetherling.Interpretations.Backend_Execute.Compile
@@ -93,7 +93,7 @@ all_success results_io = do
 -- two most basic examples
 single_map = 
   mapC' (Proxy @4) absC $ -- [4]
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 Atom_Int))
 single_map_seq_idx = add_indexes $ seq_shallow_to_deep single_map
 single_map_ppar = fmap (\s -> compile_with_slowdown_to_expr single_map s) [1,2,4]
 single_map_ppar_typechecked = fmap check_type single_map_ppar
@@ -126,7 +126,7 @@ single_map_save_chisel = sequence $
 two_maps = 
   mapC' (Proxy @4) absC >>>
   mapC absC $ -- [4]
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 Atom_Int))
 two_maps_seq_idx = add_indexes $ seq_shallow_to_deep two_maps
 two_maps_ppar = fmap (\s -> compile_with_slowdown_to_expr two_maps s) [1,2,4]
 two_maps_ppar_typechecked = fmap check_type two_maps_ppar
@@ -161,8 +161,8 @@ tuple_simple_ppar = compile_with_slowdown_to_expr tuple_simple 2
 tuple_map_no_input input0 input1 =
   map2C atom_tupleC input0 input1
 tuple_map = tuple_map_no_input
-               (com_input "l_int_seq" (Proxy :: Proxy (Seq 4 0 Atom_Int))) 
-               (com_input "l_bit_seq" (Proxy :: Proxy (Seq 4 0 Atom_Bit))) 
+               (com_input "l_int_seq" (Proxy :: Proxy (Seq 4 Atom_Int))) 
+               (com_input "l_bit_seq" (Proxy :: Proxy (Seq 4 Atom_Bit))) 
 tuple_map_seq_idx = add_indexes $ seq_shallow_to_deep tuple_map
 tuple_map_ppar = fmap (\s -> compile_with_slowdown_to_expr tuple_map s) [1,2,4]
 tuple_map_ppar_typechecked = fmap check_type tuple_map_ppar
@@ -172,7 +172,7 @@ diamond_map_no_input input = do
   let tuple = map2C atom_tupleC branch input
   mapC addC tuple
 diamond_map = diamond_map_no_input $
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 Atom_Int))
 diamond_map_seq_idx = add_indexes $ seq_shallow_to_deep diamond_map
 diamond_map_ppar = fmap
   (\s -> compile_with_slowdown_to_expr diamond_map s) [1,2,4]
@@ -192,7 +192,7 @@ diamond_map_results_chisel = sequence $
 
 single_map_underutil = 
   mapC' (Proxy @4) absC $ -- [4]
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 4 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 Atom_Int))
 single_map_underutil_seq_idx = add_indexes $ seq_shallow_to_deep single_map_underutil
 single_map_underutil_ppar = fmap
   (\s -> compile_with_slowdown_to_expr single_map_underutil s) [1,2,4,8]
@@ -211,7 +211,7 @@ single_map_underutil_results_chisel = sequence $
               single_map_underutil_inputs single_map_underutil_output) [1,2,4,8]
 
 const_test =
-  const_genC (list_to_seq (Proxy @9) $ fmap Atom_Int [0..8] :: Seq 9 0 Atom_Int) $
+  const_genC (list_to_seq (Proxy @9) $ fmap Atom_Int [0..8] :: Seq 9 Atom_Int) $
   com_input "not_used" (Proxy :: Proxy Atom_Int)
 const_test_seq_idx = add_indexes $ seq_shallow_to_deep const_test
 -- why does this test have latency 3 for 1 input reg and 3 out?
@@ -238,7 +238,7 @@ lt_atom_test x = do
   ltC $ atom_tupleC x one
 lt_test =
   mapC' (Proxy @4) lt_atom_test $
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 Atom_Int))
 lt_test_seq_idx = add_indexes $ seq_shallow_to_deep lt_test
 lt_test_ppar = fmap
   (\s -> compile_with_slowdown_to_expr lt_test s) [1,2,4]
@@ -265,7 +265,7 @@ if_lt_atom_test x = do
   ifC (atom_tupleC bool (atom_tupleC three two))
 if_lt_test =
   mapC' (Proxy @4) if_lt_atom_test $
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 Atom_Int))
 if_lt_test_seq_idx = add_indexes $ seq_shallow_to_deep if_lt_test
 if_lt_test_ppar = fmap
   (\s -> compile_with_slowdown_to_expr if_lt_test s) [1,2,4]
@@ -288,7 +288,7 @@ if_lt_test_results_chisel = sequence $
 map_to_up = 
   mapC' (Proxy @1) absC >>> -- [1]
   up_1dC (Proxy @4) $ -- [4]
-  com_input_seq "I" (Proxy :: Proxy (Seq 1 3 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 1 Atom_Int))
 map_to_up_seq_idx = add_indexes $ seq_shallow_to_deep map_to_up
 map_to_up_ppar = fmap (\s -> compile_with_slowdown_to_expr map_to_up s) [1,2,4]
 map_to_up_ppar_typechecked = fmap check_type map_to_up_ppar
@@ -309,7 +309,7 @@ map_to_up_results_chisel = sequence $
 up_to_down = 
   down_1dC' (Proxy @5) 0 >>>
   up_1dC (Proxy @4) $
-  com_input_seq "I" (Proxy :: Proxy (Seq 5 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 5 Atom_Int))
 up_to_down_seq_idx = add_indexes $ seq_shallow_to_deep up_to_down
 up_to_down_ppar = fmap (\s -> compile_with_slowdown_to_expr up_to_down s) [1,5]
 up_to_down_ppar_typechecked = fmap check_type up_to_down_ppar
@@ -336,7 +336,7 @@ up_to_down_results' = sequence $
 nested_map_to_top_level_up = 
   mapC' (Proxy @1) (mapC' (Proxy @4) absC) >>> -- [1]
   up_1dC (Proxy @4) $ -- [4]
-  com_input_seq "I" (Proxy :: Proxy (Seq 1 5 (Seq 4 0 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 1 (Seq 4 Atom_Int)))
 -- note: the reason the output is a seminly unecessary split on the outer seq
 -- for the slowest schedule is that there are still 2 invalid clocks not used
 -- and I say partially parallel for those, becuase not fully slowed down
@@ -366,7 +366,7 @@ nested_map_to_top_level_up_results_chisel = sequence $
 nested_map_to_nested_up =
   mapC' (Proxy @4) (mapC' (Proxy @1) absC) >>> -- [1]
   mapC' (Proxy @4) (up_1dC (Proxy @4)) $ -- [4]
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 (Seq 1 5 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 (Seq 1 Atom_Int)))
 nested_map_to_nested_up_seq_idx = add_indexes $ seq_shallow_to_deep nested_map_to_nested_up
 nested_map_to_nested_up_ppar =
   fmap (\s -> compile_with_slowdown_to_expr
@@ -388,9 +388,9 @@ nested_map_to_nested_up_results_chisel = sequence $
 
 -- testing basic partitioning
 partition_to_flat_map = 
-  partitionC (Proxy @2) (Proxy @2) (Proxy @2) (Proxy @2) >>>
+  partitionC (Proxy @2) (Proxy @2) >>>
   mapC (mapC absC) $
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 12 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 Atom_Int))
 partition_to_flat_map_seq_idx = add_indexes $ seq_shallow_to_deep partition_to_flat_map
 partition_to_flat_map_ppar =
   fmap (\s -> compile_with_slowdown_to_expr
@@ -413,7 +413,7 @@ map_to_unpartition =
   mapC (mapC absC) >>>
   unpartitionC' (Proxy @2) (Proxy @2) >>>
   mapC absC $
-  com_input_seq "I" (Proxy :: Proxy (Seq 2 6 (Seq 2 0 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2 (Seq 2 Atom_Int)))
 map_to_unpartition_seq_idx = add_indexes $ seq_shallow_to_deep map_to_unpartition
 map_to_unpartition_ppar =
   fmap (\s -> compile_with_slowdown_to_expr
@@ -434,13 +434,13 @@ map_to_unpartition_results_chisel = sequence $
 
 -- combining multi-rate with partitioning
 double_up =
-  partitionC (Proxy @2) (Proxy @1) (Proxy @0) (Proxy @15) >>>
+  partitionC (Proxy @2) (Proxy @1) >>>
   (mapC' (Proxy @2) (up_1dC (Proxy @4)) >>> -- [2, 3]
    unpartitionC >>> -- in : [2, 3], out : [6]
-   partitionC (Proxy @1) (Proxy @8) Proxy (Proxy @0) >>> -- in : [6], out : [1, 6] or in : [[2, 3]] out : [1, [2, 3]] (this doesn't work as can't slow input down by 5, so must not be able to slow output down by 5) or in : [[2, 3]] out : []
+   partitionC (Proxy @1) (Proxy @8) >>> -- in : [6], out : [1, 6] or in : [[2, 3]] out : [1, [2, 3]] (this doesn't work as can't slow input down by 5, so must not be able to slow output down by 5) or in : [[2, 3]] out : []
    up_1dC (Proxy @4)) >>>
    unpartitionC $ -- [5, 6]
-  com_input_seq "I" (Proxy :: Proxy (Seq 2 30 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2 Atom_Int))
 double_up_seq_idx = add_indexes $ seq_shallow_to_deep double_up
 double_up_ppar =
   fmap (\s -> compile_with_slowdown_to_expr
@@ -464,11 +464,11 @@ double_up_results_chisel = sequence $
 
 
 down_over_nested_to_down_over_flattened = 
-  partitionC (Proxy @4) (Proxy @4) (Proxy @0) (Proxy @0) >>>
+  partitionC (Proxy @4) (Proxy @4) >>>
   (down_1dC' (Proxy @4) 0 >>>
    unpartitionC' (Proxy @1) (Proxy @4) >>>
    down_1dC' (Proxy @4) 0) $
-  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 Atom_Int))
 down_over_nested_to_down_over_flattened_seq_idx = add_indexes $
   seq_shallow_to_deep down_over_nested_to_down_over_flattened
 down_over_nested_to_down_over_flattened_ppar =
@@ -510,8 +510,8 @@ down_over_nested_to_down_over_flattened_results' = sequence $
 tuple_reverse_shallow_no_input in_seq0 in_seq1 = do
   map2C (\x y -> sndC $ atom_tupleC y x) in_seq0 in_seq1
 tuple_reverse = tuple_reverse_shallow_no_input
-  (com_input_seq "I0" (Proxy :: Proxy (Seq 4 0 Atom_Int)))
-  (com_input_seq "I1" (Proxy :: Proxy (Seq 4 0 Atom_Int)))
+  (com_input_seq "I0" (Proxy :: Proxy (Seq 4 Atom_Int)))
+  (com_input_seq "I1" (Proxy :: Proxy (Seq 4 Atom_Int)))
 tuple_reverse_seq_idx = add_indexes $ seq_shallow_to_deep tuple_reverse
 tuple_reverse_ppar =
   fmap (\s -> compile_with_slowdown_to_expr tuple_reverse s) [1,2,4]
@@ -538,7 +538,7 @@ tuple_sum_shallow_no_input in_seq = do
   let kernel_and_values = map2C atom_tupleC kernel in_seq
   mapC addC kernel_and_values
 tuple_sum = tuple_sum_shallow_no_input $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 Atom_Int))
 tuple_sum_seq_idx = add_indexes $ seq_shallow_to_deep tuple_sum
 tuple_sum_ppar =
   fmap (\s -> compile_with_slowdown_to_expr tuple_sum s) [1,2,4]
@@ -566,7 +566,7 @@ tuple_reduce_no_input in_seq = do
   let muled_pairs = mapC mulC kernel_and_values
   reduceC addC muled_pairs
 tuple_reduce = tuple_reduce_no_input $
-  com_input_seq "I" (Proxy :: Proxy (Seq 8 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 8 Atom_Int))
 tuple_reduce_seq_idx = add_indexes $ seq_shallow_to_deep tuple_reduce
 tuple_reduce_ppar =
   fmap (\s -> compile_with_slowdown_to_expr tuple_reduce s) [1,2,4,8]
@@ -598,7 +598,7 @@ fst_snd_sum_no_input in_seq = do
   let kernel_and_values_again = map2C atom_tupleC kernel_again in_seq_again
   mapC addC kernel_and_values_again
 fst_snd_sum = fst_snd_sum_no_input $
-  com_input_seq "I" (Proxy :: Proxy (Seq 8 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 8 Atom_Int))
 fst_snd_sum_seq_idx = add_indexes $ seq_shallow_to_deep fst_snd_sum
 fst_snd_sum_ppar =
   fmap (\s -> compile_with_slowdown_to_expr fst_snd_sum s) [1,2,4,8]
@@ -622,7 +622,7 @@ fst_snd_sum_results_chisel = sequence $
 
 seq_to_stuple = 
   mapC seq_to_seq_tupleC $
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 (Seq 4 Atom_Int)))
 seq_to_stuple_seq_idx = add_indexes $ seq_shallow_to_deep seq_to_stuple
 seq_to_stuple_ppar = 
   fmap (\s -> compile_with_slowdown_to_expr seq_to_stuple s) [1,2,4,8,16]
@@ -645,7 +645,7 @@ seq_to_stuple_results_chisel = sequence $
 
 stuple_to_seq = 
   mapC seq_tuple_to_seqC $
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 (Seq 1 3 (Seq_Tuple 4 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 (Seq 1 (Seq_Tuple 4 Atom_Int))))
 stuple_to_seq_seq_idx = add_indexes $ seq_shallow_to_deep stuple_to_seq
 stuple_to_seq_ppar = 
   fmap (\s -> compile_with_slowdown_to_expr stuple_to_seq s) [1,2,4,8,16]
@@ -676,7 +676,7 @@ stuple_to_seq_results' = sequence $
 seq_and_stuple_no_input = 
   mapC (seq_to_seq_tupleC >>> seq_tuple_to_seqC)
 seq_and_stuple = seq_and_stuple_no_input $
-  com_input_seq "I" (Proxy :: Proxy (Seq 4 0 (Seq 4 0 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4 (Seq 4 Atom_Int)))
 seq_and_stuple_seq_idx = add_indexes $ seq_shallow_to_deep $ seq_and_stuple
 seq_and_stuple_ppar = 
   fmap (\s -> compile_with_slowdown_to_expr seq_and_stuple s) [1,2,4,8,16]
@@ -704,7 +704,7 @@ striple_to_seq_shallow in_seq = do
   let triple = map2C (map2C seq_tuple_appendC) pair in_seq
   mapC seq_tuple_to_seqC triple
 striple_to_seq = striple_to_seq_shallow $
-  com_input_seq "I" (Proxy :: Proxy (Seq 8 0 (Seq 1 2 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 8 (Seq 1 Atom_Int)))
 striple_to_seq_seq_idx = add_indexes $ seq_shallow_to_deep striple_to_seq
 striple_to_seq_ppar =
   fmap (\s -> compile_with_slowdown_to_expr striple_to_seq s) [1,2,4,8,24]
@@ -733,7 +733,7 @@ shift_one_shallow in_seq = do
   let x = shiftC (Proxy @1) y
   shiftC (Proxy @1) x
 shift_one = shift_one_shallow $
-  com_input_seq "I" (Proxy :: Proxy (Seq 4096 0 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 4096 Atom_Int))
 shift_one_seq_idx = add_indexes $ seq_shallow_to_deep shift_one
 shift_slowdowns = speed_to_slow [16, 8, 4, 2, 1] shift_length
 shift_one_ppar =
@@ -760,20 +760,16 @@ shift_one_results_chisel = sequence $
               Chisel No_Verilog
               shift_one_inputs shift_one_output) shift_slowdowns
 
-stencil_1dC_internal_test :: forall m n n0 a .
-                         (Sequence_Language m, Aetherling_Value a,
-                          KnownNat n, KnownNat n0, (n0 + 1) ~ n) =>
-                      m (Seq n (n GHC.TypeLits.* 2) a) -> m (Seq n 0 (Seq 3 0 a))
 stencil_1dC_internal_test in_seq = do
   let shifted_once = shiftC (Proxy @1) in_seq
   let shifted_twice = shiftC (Proxy @1) shifted_once
   let window_tuple = map2C seq_tuple_appendC
                      (map2C seq_tupleC in_seq shifted_once)
                      shifted_twice
-  let partitioned_tuple = partitionC (Proxy :: Proxy n) (Proxy :: Proxy 1) (Proxy :: Proxy 0) (Proxy :: Proxy i) window_tuple
+  let partitioned_tuple = partitionC Proxy (Proxy :: Proxy 1) window_tuple
   mapC seq_tuple_to_seqC partitioned_tuple
 stencil_1d_internal_test = stencil_1dC_internal_test $
-  com_input_seq "I" (Proxy :: Proxy (Seq 100 200 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 100 Atom_Int))
 stencil_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_internal_test
 stencil_1d_internal_ppar =
   fmap (\s -> compile_with_slowdown_to_expr stencil_1d_internal_test s)
@@ -797,7 +793,7 @@ conv_1d_internal_shallow_no_input in_seq = do
   let conv_result = mapC tuple_mul_internal_shallow_no_input stencil
   unpartitionC conv_result
 conv_1d_internal = conv_1d_internal_shallow_no_input $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 10 20 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 10 Atom_Int))
 conv_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep conv_1d_internal
 conv_1d_internal_ppar =
   fmap (\s -> compile_with_slowdown_to_expr conv_1d_internal s) [1,3,5,6,10,30]
@@ -810,7 +806,7 @@ stencil_1dC_test window_size in_seq | (natVal window_size) >= 2 = do
   mapC seq_tuple_to_seqC tuple
 stencil_1dC_test _ _ = undefined
 stencil_1d_test = stencil_1dC_test (Proxy @3) $
-  com_input_seq "I" (Proxy :: Proxy (Seq 100 0 (Seq 1 2 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 100 (Seq 1 Atom_Int)))
 stencil_1d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_test
 stencil_1d_test_ppar = 
   fmap (\s -> compile_with_slowdown_to_expr stencil_1d_test s) [1,2,5,10,30,100,300]
@@ -854,7 +850,7 @@ conv_1d_shallow_no_input in_seq = do
   let stencil = stencil_1dC_test (Proxy @3) in_seq
   mapC tuple_mul_shallow_no_input stencil
 conv_1d = conv_1d_shallow_no_input $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 5 0 (Seq 1 2 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 5 (Seq 1 Atom_Int)))
 conv_1d_seq_idx = add_indexes $ seq_shallow_to_deep conv_1d
 conv_1d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr conv_1d s) [1,3,5,15]
@@ -891,11 +887,11 @@ conv_1d_shallow_no_input_for_pyr in_seq = do
 pyramid_1d_shallow_no_input in_seq = do
   let layer1_blurred = conv_1d_shallow_no_input_for_pyr in_seq
   let layer2_input = unpartitionC $ mapC (down_1dC 2) $
-        partitionC (Proxy @9) (Proxy @3) Proxy (Proxy @0) layer1_blurred
+        partitionC (Proxy @9) (Proxy @3) layer1_blurred
   let layer2_blurred = conv_1d_shallow_no_input_for_pyr layer2_input
-  unpartitionC $ mapC (down_1dC 2) $ partitionC (Proxy @3) (Proxy @3) Proxy (Proxy @0) layer2_blurred
+  unpartitionC $ mapC (down_1dC 2) $ partitionC (Proxy @3) (Proxy @3) layer2_blurred
 pyramid_1d = pyramid_1d_shallow_no_input $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 27 0 (Seq 1 2 Atom_Int)))
+  com_input_seq "I" (Proxy :: Proxy (Seq 27 (Seq 1 Atom_Int)))
 pyramid_1d_seq_idx = add_indexes $ seq_shallow_to_deep pyramid_1d
 pyramid_1d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr pyramid_1d s) [1,3,9,27,81]
