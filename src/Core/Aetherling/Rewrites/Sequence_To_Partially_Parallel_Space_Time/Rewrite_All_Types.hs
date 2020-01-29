@@ -73,7 +73,7 @@ rewrite_all_AST_types_debug s seq_t = do
         all_possible_slowdowns_per_level_with_dups
   --traceShowM all_possible_slowdowns_per_level
   -- get all possible slowdowns for each factor distribution
-  return $ concat $ fmap (\l_and_s_xs -> rewrite_AST_type_given_slowdowns l_and_s_xs 0 seq_t)
+  return $ concat $ fmap (\l_and_s_xs -> rewrite_AST_type_given_slowdowns l_and_s_xs 0 seq_t [[]])
     all_possible_slowdowns_per_level
     
 all_possible_s s seq_t = do
@@ -158,61 +158,54 @@ rewrite_all_AST_types s seq_t = do
   --let all_possible_slowdowns_per_level = all_possible_slowdowns_per_level' s seq_t
   -- get all possible slowdowns for each factor distribution
   let unordered_results =
-        concat $ fmap (\l_and_s_xs -> rewrite_AST_type_given_slowdowns l_and_s_xs 0 seq_t)
+        concat $ fmap (\l_and_s_xs -> rewrite_AST_type_given_slowdowns l_and_s_xs 0 seq_t [[]])
         all_possible_slowdowns_per_level
   sortBy (\trs0 trs1 -> compare (rewrite_nesting_depth trs0) (rewrite_nesting_depth trs1))
     unordered_results
 
 rewrite_AST_type_given_slowdowns :: [Level_Factor_Val_Pair] -> Int ->
-                                    SeqT.AST_Type -> [Out_Type_Rewrites]
+                                    SeqT.AST_Type -> [[Type_Rewrite]] ->
+                                    [Out_Type_Rewrites]
 -- first two cases handle where this layer is not being slowed
-rewrite_AST_type_given_slowdowns [] cur_layer (SeqT.SeqT n _ t) = do
-  let inner_rewrite_options = rewrite_AST_type_given_slowdowns [] (cur_layer + 1) t
-  fmap (\trs -> SpaceR n : trs) inner_rewrite_options
-rewrite_AST_type_given_slowdowns lfvps@(LFVP l _:other_s) cur_layer (SeqT.SeqT n _ t) |
+rewrite_AST_type_given_slowdowns [] cur_layer (SeqT.SeqT n _ t) accum = do
+  rewrite_AST_type_given_slowdowns [] (cur_layer + 1) t (map (SpaceR n:) accum)
+rewrite_AST_type_given_slowdowns lfvps@(LFVP l _:other_s) cur_layer (SeqT.SeqT n _ t) accum |
   l /= cur_layer = do
-  let inner_rewrite_options = rewrite_AST_type_given_slowdowns lfvps (cur_layer + 1) t
-  fmap (\trs -> SpaceR n : trs) inner_rewrite_options
-rewrite_AST_type_given_slowdowns (LFVP l 1:other_s) cur_layer (SeqT.SeqT n _ t) = do
-  let inner_rewrite_options = rewrite_AST_type_given_slowdowns other_s (cur_layer + 1) t
-  fmap (\trs -> SpaceR n : trs) inner_rewrite_options
-rewrite_AST_type_given_slowdowns ((LFVP l s):other_s) cur_layer (SeqT.SeqT n _ t) = do
-  let inner_rewrite_options = rewrite_AST_type_given_slowdowns other_s (cur_layer + 1) t
+  rewrite_AST_type_given_slowdowns lfvps (cur_layer + 1) t (map (SpaceR n:) accum)
+rewrite_AST_type_given_slowdowns (LFVP l 1:other_s) cur_layer (SeqT.SeqT n _ t) accum = do
+  rewrite_AST_type_given_slowdowns other_s (cur_layer + 1) t (map (SpaceR n:) accum)
+rewrite_AST_type_given_slowdowns ((LFVP l s):other_s) cur_layer (SeqT.SeqT n _ t) accum = do
   let invalids = s-n
   let t_options =
         if s >= n
-        then fmap (\trs -> TimeR n invalids : trs) inner_rewrite_options
+        then [TimeR n invalids]
         else []
   -- only exploring the tt options with 1 in bottom to allow repeating patterns
-  let tt_options = concat $
-        fmap (\trs ->
-                -- s-n total invalids, divide them up between outer and
-                -- and inner in all possible ways
-                fmap (\io -> 
-                         SplitNestedR (TimeR n io)
-                         (SplitNestedR (TimeR 1 (fromJust $ ii_given_others n 1 io)) NonSeqR) : trs)
-                [io | io <- [0..invalids], isJust (ii_given_others n 1 io)]
-             )
-        inner_rewrite_options
-  let ttt_options = concat $
-        fmap (\trs ->
-                -- s-n total invalids, divide them up between outer and
-                -- and inner in all possible ways
-                fmap (\io -> 
-                         SplitNestedR (TimeR n io)
-                         (SplitNestedR (TimeR 1 (fromJust $ iii_given_others n io))
-                         (SplitNestedR (TimeR 1 (fromJust $ iii_given_others n io)) NonSeqR)) : trs)
-                [io | io <- [0..invalids], isJust (iii_given_others n io)]
-             )
-        inner_rewrite_options
+  let tt_options = 
+        -- s-n total invalids, divide them up between outer and
+        -- and inner in all possible ways
+        fmap (\io -> 
+                 SplitNestedR (TimeR n io)
+                 (SplitNestedR (TimeR 1 (fromJust $ ii_given_others n 1 io)) NonSeqR))
+        [io | io <- [0..invalids], isJust (ii_given_others n 1 io)]
+  let ttt_options =
+        -- s-n total invalids, divide them up between outer and
+        -- and inner in all possible ways
+        fmap (\io -> 
+                 SplitNestedR (TimeR n io)
+                 (SplitNestedR (TimeR 1 (fromJust $ iii_given_others n io))
+                   (SplitNestedR (TimeR 1 (fromJust $ iii_given_others n io)) NonSeqR)))
+        [io | io <- [0..invalids], isJust (iii_given_others n io)]
   let possible_no = filter is_valid [1..n]
   let ts_options =
         if length possible_no == 0
         then []
         else do
           let max_no = maximum possible_no
-          fmap (\trs -> SplitR max_no (s-max_no) (n `div` max_no) : trs) inner_rewrite_options
-  ts_options ++ t_options ++ tt_options ++ ttt_options
+          [SplitR max_no (s-max_no) (n `div` max_no)]
+  rewrite_AST_type_given_slowdowns other_s (cur_layer + 1) t $
+    concatMap (\x -> map (x:) accum)
+    (ts_options ++ t_options ++ tt_options ++ ttt_options)
   where
     is_valid no = (no <= s) && (no >= 0) && (n `mod` no == 0)
     ii_given_others no ni io =
@@ -223,10 +216,10 @@ rewrite_AST_type_given_slowdowns ((LFVP l s):other_s) cur_layer (SeqT.SeqT n _ t
       if (s `mod` (no + io) == 0) && ((isSquare $ s `div` (no + io)))
       then Just $ integerSquareRoot $ (s `div` (no +io)) - 1
       else Nothing
-rewrite_AST_type_given_slowdowns s_xs cur_layer (SeqT.STupleT n t) = do
-  inner_rewrite <- rewrite_AST_type_given_slowdowns s_xs cur_layer t
-  return $ NonSeqR : inner_rewrite
-rewrite_AST_type_given_slowdowns _ _ _ = [[NonSeqR]]
+rewrite_AST_type_given_slowdowns s_xs cur_layer (SeqT.STupleT n t) accum = do
+  rewrite_AST_type_given_slowdowns s_xs cur_layer t (map (NonSeqR:) accum)
+rewrite_AST_type_given_slowdowns _ _ _ accum =
+  (map (reverse . (NonSeqR:)) accum)
 
 rewrite_nesting_depth :: [Type_Rewrite] -> Int
 rewrite_nesting_depth (SpaceR _ : tl) = 1 + rewrite_nesting_depth tl
