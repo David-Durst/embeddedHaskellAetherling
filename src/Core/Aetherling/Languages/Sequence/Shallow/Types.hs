@@ -40,18 +40,15 @@ data Seq_Tuple n a =
   | Seq_Tuple_Edge Expr
   deriving (Show, Eq)
 
-data Seq n i a =
+data Seq n a =
   Seq {sVec :: Vector n a}
   | Seq_Edge Expr
   deriving (Functor, Foldable, Traversable, Show, Eq)
 
-seq_length :: Seq n i a -> Proxy n
+seq_length :: Seq n a -> Proxy n
 seq_length _ = Proxy :: Proxy n
 
-seq_invalid :: Seq n i a -> Proxy i
-seq_invalid _ = Proxy :: Proxy i
-
-instance (KnownNat n, KnownNat i) => Applicative (Seq n i) where
+instance (KnownNat n) => Applicative (Seq n) where
   pure a = (Seq ((pure :: a -> Vector n a) a))
   (Seq f) <*> (Seq a) = Seq (f <*> a)
   _ <*> _ = undefined
@@ -73,7 +70,7 @@ type family Check_Type_Is_Atom_Or_Nested (x :: *) :: Constraint where
   Check_Type_Is_Atom_Or_Nested (Atom_Int) = True ~ True
   Check_Type_Is_Atom_Or_Nested (Atom_Bit) = True ~ True
   Check_Type_Is_Atom_Or_Nested (Atom_Tuple a b) = True ~ True
-  Check_Type_Is_Atom_Or_Nested (Seq _ _ a) = Check_Type_Is_Atom_Or_Nested a
+  Check_Type_Is_Atom_Or_Nested (Seq _ a) = Check_Type_Is_Atom_Or_Nested a
   Check_Type_Is_Atom_Or_Nested x =
     TypeError (ShowType x :<>: Text " is not an atom, a Seq containing atoms,"
               :<>: Text " an SSeq containing atoms, or a TSeq containing atoms.")

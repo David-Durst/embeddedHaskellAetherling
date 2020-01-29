@@ -137,162 +137,142 @@ instance Sequence_Language Rewrite_StateM where
   -- generators
   shiftC shift_amount_proxy input_vec = shiftC' Proxy shift_amount_proxy input_vec
   
-  shiftC' :: forall n r i a . (KnownNat n, KnownNat r, KnownNat i,
-                             Aetherling_Value a) =>
-    Proxy (n+r) -> Proxy r -> Rewrite_StateM (Seq (n+r) i a) -> Rewrite_StateM (Seq (n+r) i a)
+  shiftC' :: forall n r a . (KnownNat n, KnownNat r, Aetherling_Value a) =>
+    Proxy (n+r) -> Proxy r -> Rewrite_StateM (Seq (n+r) a) -> Rewrite_StateM (Seq (n+r) a)
   shiftC' len_proxy shift_amount_proxy inputM = do
     input <- inputM
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ ShiftN len i_val shift a_type x No_Index
+      Seq_Edge x -> return $ Seq_Edge $ ShiftN len shift a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "shiftC" "Seq"
     where
       len = fromInteger $ natVal len_proxy
       shift = fromInteger $ natVal shift_amount_proxy
-      i_val = fromInteger $ natVal (Proxy :: Proxy i)
       a_type = get_AST_type (Proxy :: Proxy a)
   
-  up_1dC :: forall a n i . (KnownNat n, KnownNat i,
-             Aetherling_Value a) =>
-    Proxy (1+n) -> Rewrite_StateM (Seq 1 (n + i) a) -> Rewrite_StateM (Seq (1+n) i a)
+  up_1dC :: forall a n . (KnownNat n, Aetherling_Value a) =>
+    Proxy n -> Rewrite_StateM (Seq 1 a) -> Rewrite_StateM (Seq n a)
   up_1dC len_proxy inputM = do
     input <- inputM
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ Up_1dN len i_val a_type x No_Index
+      Seq_Edge x -> return $ Seq_Edge $ Up_1dN len a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "up_1dC" "Seq"
     where
       len = fromInteger $ natVal len_proxy
-      i_val = fromInteger $ natVal (Proxy :: Proxy i)
       a_type = get_AST_type (Proxy :: Proxy a)
 
   down_1dC sel_idx x = down_1dC' Proxy sel_idx x
   
-  down_1dC' :: forall a n i . (KnownNat n, KnownNat i,
-                Aetherling_Value a) =>
-    Proxy (1+n) -> Int -> Rewrite_StateM (Seq (1+n) i a) ->
-    Rewrite_StateM (Seq 1 (n + i) a)
+  down_1dC' :: forall a n . (KnownNat n, Aetherling_Value a) =>
+    Proxy n -> Int -> Rewrite_StateM (Seq n a) ->
+    Rewrite_StateM (Seq 1 a)
   down_1dC' len_proxy sel_idx inputM = do
     input <- inputM
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ Down_1dN len i_val sel_idx a_type x No_Index
+      Seq_Edge x -> return $ Seq_Edge $ Down_1dN len sel_idx a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "down_1dC" "Seq"
     where
       len = fromInteger $ natVal len_proxy
-      i_val = fromInteger $ natVal (Proxy :: Proxy i)
       a_type = get_AST_type (Proxy :: Proxy a)
   
-  partitionC :: forall no ni io ii a .
+  partitionC :: forall no ni a .
                 (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-                 KnownNat io, KnownNat ii,
                  Aetherling_Value a) =>
-    Proxy no -> Proxy ni -> Proxy io -> Proxy ii ->
-    Rewrite_StateM (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
-                                io GHC.TypeLits.* (ni + ii)) a) ->
-    Rewrite_StateM (Seq no io (Seq ni ii a))
-  partitionC proxyNO proxyNI proxyIO proxyII inputM = do
+    Proxy no -> Proxy ni ->
+    Rewrite_StateM (Seq (no GHC.TypeLits.* ni) a) ->
+    Rewrite_StateM (Seq no (Seq ni a))
+  partitionC proxyNO proxyNI inputM = do
     input <- inputM
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ PartitionN no_val ni_val io_val ii_val a_type x No_Index
+      Seq_Edge x -> return $ Seq_Edge $ PartitionN no_val ni_val a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "partitionC" "Seq"
     where
       no_val = fromInteger $ natVal proxyNO
       ni_val = fromInteger $ natVal proxyNI
-      io_val = fromInteger $ natVal proxyIO
-      ii_val = fromInteger $ natVal proxyII
       a_type = get_AST_type (Proxy :: Proxy a)
 
   unpartitionC x = unpartitionC' Proxy Proxy x
 
-  unpartitionC' :: forall no ni io ii a .
+  unpartitionC' :: forall no ni a .
                    (KnownNat no, KnownNat ni, 1 <= no, 1 <= ni,
-                    KnownNat io, KnownNat ii,
                     Aetherling_Value a) =>
     Proxy no -> Proxy ni ->
-    Rewrite_StateM (Seq no io (Seq ni ii a)) ->
-    Rewrite_StateM (Seq (no GHC.TypeLits.* ni) ((no GHC.TypeLits.* ii) +
-                                   io GHC.TypeLits.* (ni + ii)) a)
+    Rewrite_StateM (Seq no (Seq ni a)) ->
+    Rewrite_StateM (Seq (no GHC.TypeLits.* ni) a)
   unpartitionC' proxyNO proxyNI inputM = do
     input <- inputM
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ UnpartitionN no_val ni_val io_val ii_val a_type x No_Index
+      Seq_Edge x -> return $ Seq_Edge $ UnpartitionN no_val ni_val a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "unpartitionC" "Seq"
     where
       no_val = fromInteger $ natVal proxyNO
       ni_val = fromInteger $ natVal proxyNI
-      io_val = fromInteger $ natVal (Proxy :: Proxy io)
-      ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
       a_type = get_AST_type (Proxy :: Proxy a)
 
   -- higher order operators
   mapC f x = mapC' Proxy f x
 
-  mapC' :: forall n i a b . (KnownNat n, KnownNat i,
+  mapC' :: forall n a b . (KnownNat n,
            Aetherling_Value a,
            Aetherling_Value b) =>
     Proxy n -> (Rewrite_StateM a -> Rewrite_StateM b) ->
-    Rewrite_StateM (Seq n i a) -> Rewrite_StateM (Seq n i b)
+    Rewrite_StateM (Seq n a) -> Rewrite_StateM (Seq n b)
   mapC' len_proxy f inputM = do
     input <- inputM
     f_ast <- f (com_input_any "I")
     let f_edge_maybe = edge_to_maybe_expr f_ast
     case (input, f_edge_maybe) of
-      (Seq_Edge x, Just f_ast_edge) -> return $ Seq_Edge $ MapN len_val i_val f_ast_edge x No_Index
+      (Seq_Edge x, Just f_ast_edge) -> return $ Seq_Edge $ MapN len_val f_ast_edge x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "mapC" "Seq"
     where
       len_val = fromInteger $ natVal len_proxy
-      i_val = fromInteger $ natVal (Proxy :: Proxy i)
 
   map2C f x y = map2C' Proxy f x y
 
-  map2C' :: forall n i a b c . (KnownNat n, KnownNat i,
+  map2C' :: forall n a b c . (KnownNat n,
                                 Aetherling_Value a,
                                 Aetherling_Value b,
                                 Aetherling_Value c) =>
     Proxy n ->
     (Rewrite_StateM a -> Rewrite_StateM b -> Rewrite_StateM c) ->
-    Rewrite_StateM (Seq n i a) -> Rewrite_StateM (Seq n i b) -> Rewrite_StateM (Seq n i c)
+    Rewrite_StateM (Seq n a) -> Rewrite_StateM (Seq n b) -> Rewrite_StateM (Seq n c)
   map2C' len_proxy f input1M input2M = do
     input1 <- input1M
     input2 <- input2M
     f_ast <- f (com_input_any "I0") (com_input_any "I1")
     let f_edge_maybe = edge_to_maybe_expr f_ast
     case (input1, input2, f_edge_maybe) of
-      (Seq_Edge x, Seq_Edge y, Just f_edge) -> return $ Seq_Edge $ Map2N len_val i_val f_edge x y No_Index
+      (Seq_Edge x, Seq_Edge y, Just f_edge) -> return $ Seq_Edge $ Map2N len_val f_edge x y No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "map2C" "Seq Seq"
     where
       len_val = fromInteger $ natVal len_proxy
-      i_val = fromInteger $ natVal (Proxy :: Proxy i)
 
   reduceC f x = reduceC' Proxy f x
 
-  reduceC' :: forall n i a . (KnownNat n, KnownNat i,
-                              Aetherling_Value a) =>
-    Proxy (1+n) -> (Rewrite_StateM (Atom_Tuple a a) -> Rewrite_StateM a) ->
-    Rewrite_StateM (Seq (1+n) i a) -> Rewrite_StateM (Seq 1 (n + i) a)
+  reduceC' :: forall n a . (KnownNat n, Aetherling_Value a) =>
+    Proxy n -> (Rewrite_StateM (Atom_Tuple a a) -> Rewrite_StateM a) ->
+    Rewrite_StateM (Seq n a) -> Rewrite_StateM (Seq 1 a)
   reduceC' len_proxy f inputM = do
     input <- inputM
     f_ast <- f (com_input_any "I")
     let f_edge_maybe = edge_to_maybe_expr f_ast
     case (input, f_edge_maybe) of
-      (Seq_Edge x, Just f_edge) -> return $ Seq_Edge $ ReduceN len_val i_val f_edge x No_Index
+      (Seq_Edge x, Just f_edge) -> return $ Seq_Edge $ ReduceN len_val f_edge x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "reduceC" "Seq"
     where
       len_val = fromInteger $ natVal len_proxy
-      i_val = fromInteger $ natVal (Proxy :: Proxy i)
 
-  reduceC'' :: forall no io ii a . (KnownNat no, KnownNat io, KnownNat ii,
-              Aetherling_Value a) =>
-    (Rewrite_StateM (Seq 1 ii (Atom_Tuple a a)) -> Rewrite_StateM (Seq 1 ii a)) ->
-    Rewrite_StateM (Seq (1+no) io (Seq 1 ii a)) -> Rewrite_StateM (Seq 1 (no + io) (Seq 1 ii a))
+  reduceC'' :: forall no a . (KnownNat no, Aetherling_Value a) =>
+    (Rewrite_StateM (Seq 1 (Atom_Tuple a a)) -> Rewrite_StateM (Seq 1 a)) ->
+    Rewrite_StateM (Seq no (Seq 1 a)) -> Rewrite_StateM (Seq 1 (Seq 1 a))
   reduceC'' f inputM = do
     input <- inputM
     f_ast <- f (com_input_any "I")
     let f_edge_maybe = edge_to_maybe_expr f_ast
     case (input, f_edge_maybe) of
-      (Seq_Edge x, Just f_edge) -> return $ Seq_Edge $ ReduceN len_val io_val f_edge x No_Index
+      (Seq_Edge x, Just f_edge) -> return $ Seq_Edge $ ReduceN len_val f_edge x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "reduceC" "Seq"
     where
-      len_val = fromInteger $ natVal (Proxy :: Proxy (1+no))
-      io_val = fromInteger $ natVal (Proxy :: Proxy io)
+      len_val = fromInteger $ natVal (Proxy :: Proxy no)
 
   fstC :: forall a b . (Check_Type_Is_Atom a, Check_Type_Is_Atom b,
                         Aetherling_Value a,
@@ -352,42 +332,39 @@ instance Sequence_Language Rewrite_StateM where
            No_Index
       else throwError $ Expr_Failure $ fail_message_edge "seq_tupleC" "any"
 
-  zipC :: forall no io ii a l . (Aetherling_Value a, KnownNat l,
-                                 KnownNat no, KnownNat io, KnownNat ii) =>
-    Proxy l -> [Rewrite_StateM (Seq no io (Seq 1 ii a))] ->
-    Rewrite_StateM (Seq no io (Seq 1 ii (Seq_Tuple l a)))
+  zipC :: forall no a l . (Aetherling_Value a, KnownNat l, KnownNat no) =>
+    Proxy l -> [Rewrite_StateM (Seq no (Seq 1 a))] ->
+    Rewrite_StateM (Seq no (Seq 1 (Seq_Tuple l a)))
   zipC len_proxy inputsM | natVal len_proxy > 2 = do
     let inputs = fmap seq_shallow_to_deep inputsM
     let a_type = get_AST_type (Proxy :: Proxy a)
     let no_val = fromInteger $ natVal (Proxy :: Proxy no)
-    let io_val = fromInteger $ natVal (Proxy :: Proxy io)
-    let ii_val = fromInteger $ natVal (Proxy :: Proxy ii)
     -- this will be used after initial step in the fold
     let map_stuple_append out_len in_left in_right = do
           return $
-            Map2N no_val io_val
-            (Map2N 1 ii_val
+            Map2N no_val
+            (Map2N 1
              (STupleAppendN out_len
                a_type
                (InputN (STupleT (out_len - 1) a_type) "I0" No_Index)
                (InputN a_type "I1" No_Index)
                No_Index)
-             (InputN (SeqT 1 ii_val (STupleT (out_len - 1) a_type)) "I0" No_Index)
-             (InputN (SeqT 1 ii_val a_type) "I1" No_Index)
+             (InputN (SeqT 1 (STupleT (out_len - 1) a_type)) "I0" No_Index)
+             (InputN (SeqT 1 a_type) "I1" No_Index)
              No_Index
               )
             in_left in_right No_Index
     -- the initial step in the fold
     let map_stuple_initial = do
           return $
-            Map2N no_val io_val
-            (Map2N 1 ii_val
+            Map2N no_val
+            (Map2N 1
              (STupleN a_type 
                (InputN a_type "I0" No_Index)
                (InputN a_type "I1" No_Index)
                No_Index)
-             (InputN (SeqT 1 ii_val a_type) "I0" No_Index)
-             (InputN (SeqT 1 ii_val a_type) "I1" No_Index)
+             (InputN (SeqT 1 a_type) "I0" No_Index)
+             (InputN (SeqT 1 a_type) "I1" No_Index)
              No_Index
             )
             (inputs !! 0) (inputs !! 1) No_Index
@@ -422,34 +399,30 @@ instance Sequence_Language Rewrite_StateM where
       return $ Seq_Tuple_Edge $ STupleAppendN out_len a_type input1_expr input2_expr No_Index
       else throwError $ Expr_Failure $ fail_message "seq_tuple_appendC" "inputs must be edges"
   
-  seq_tuple_to_seqC :: forall n i a .
-                       (KnownNat n, KnownNat i,
-                        Aetherling_Value a) =>
-    Rewrite_StateM (Seq 1 (n-1+i) (Seq_Tuple n a)) ->
-    Rewrite_StateM (Seq n i a)
+  seq_tuple_to_seqC :: forall n a .
+                       (KnownNat n, Aetherling_Value a) =>
+    Rewrite_StateM (Seq 1 (Seq_Tuple n a)) ->
+    Rewrite_StateM (Seq n a)
   seq_tuple_to_seqC inputM = do
     input <- inputM
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ STupleToSeqN n_val i_val a_type x No_Index
+      Seq_Edge x -> return $ Seq_Edge $ STupleToSeqN n_val a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "seq_tuple_to_seqC" "seq_tuple"
     where
       n_val = fromInteger $ natVal (Proxy :: Proxy n)
-      i_val = fromInteger $ natVal (Proxy :: Proxy i)
       a_type = get_AST_type (Proxy :: Proxy a)
 
-  seq_to_seq_tupleC :: forall n i a .
-                       (KnownNat n, KnownNat i,
-                        Aetherling_Value a) =>
-    Rewrite_StateM (Seq n i a) ->
-    Rewrite_StateM (Seq 1 (n-1+i) (Seq_Tuple n a))
+  seq_to_seq_tupleC :: forall n a .
+                       (KnownNat n, Aetherling_Value a) =>
+    Rewrite_StateM (Seq n a) ->
+    Rewrite_StateM (Seq 1 (Seq_Tuple n a))
   seq_to_seq_tupleC inputM = do
     input <- inputM
     case input of
-      Seq_Edge x -> return $ Seq_Edge $ SeqToSTupleN n_val i_val a_type x No_Index
+      Seq_Edge x -> return $ Seq_Edge $ SeqToSTupleN n_val a_type x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "seq_to_seq_tupleC" "seq"
     where
       n_val = fromInteger $ natVal (Proxy :: Proxy n)
-      i_val = fromInteger $ natVal (Proxy :: Proxy i)
       a_type = get_AST_type (Proxy :: Proxy a)
 
   -- composition operators
@@ -468,8 +441,8 @@ com_input_atom_tuple :: (Aetherling_Value a, Aetherling_Value b) => String ->
   Proxy (Atom_Tuple a b) -> Rewrite_StateM (Atom_Tuple a b)
 com_input_atom_tuple s a_proxy = do
   return $ Atom_Tuple_Edge $ InputN (get_AST_type a_proxy) s No_Index
-com_input_seq :: (KnownNat n, KnownNat i, Aetherling_Value a) => String ->
-  Proxy (Seq n i a) -> Rewrite_StateM (Seq n i a)
+com_input_seq :: (KnownNat n, Aetherling_Value a) => String ->
+  Proxy (Seq n a) -> Rewrite_StateM (Seq n a)
 com_input_seq s a_proxy = do
   return $ Seq_Edge $ InputN (get_AST_type a_proxy) s No_Index
 com_input_any :: Aetherling_Value a => String -> Rewrite_StateM a

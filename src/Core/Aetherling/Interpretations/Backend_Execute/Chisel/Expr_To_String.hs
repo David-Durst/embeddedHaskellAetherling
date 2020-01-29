@@ -383,7 +383,7 @@ module_to_string_inner consumer_e@(Partition_s_ssN no ni elem_t producer_e cur_i
   return cur_ref
 module_to_string_inner consumer_e@(Partition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
   module_to_string_inner
-    (ReshapeN (TSeqT (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) elem_t)
+    (ReshapeN (TSeqT (no*ni) (ST_Conv.invalid_clocks_from_nested no ni io ii) elem_t)
      (TSeqT no io (TSeqT ni ii elem_t)) producer_e cur_idx)
 module_to_string_inner consumer_e@(Unpartition_s_ssN no ni elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
@@ -397,7 +397,7 @@ module_to_string_inner consumer_e@(Unpartition_s_ssN no ni elem_t producer_e cur
   return cur_ref
 module_to_string_inner consumer_e@(Unpartition_t_ttN no ni io ii elem_t producer_e cur_idx) = do
   module_to_string_inner (ReshapeN (TSeqT no io (TSeqT ni ii elem_t))
-                          (TSeqT (no*ni) (Seq_Conv.invalid_clocks_from_nested no ni io ii) elem_t)
+                          (TSeqT (no*ni) (ST_Conv.invalid_clocks_from_nested no ni io ii) elem_t)
                           producer_e cur_idx)
 module_to_string_inner consumer_e@(Add_1_sN f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e

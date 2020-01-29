@@ -20,7 +20,7 @@ import qualified Aetherling.Interpretations.Backend_Execute.Magma.Expr_To_String
 import qualified Aetherling.Interpretations.Backend_Execute.Chisel.Expr_To_String as C_Expr_To_Str
 import qualified Aetherling.Interpretations.Backend_Execute.Expr_To_String_Helpers as H_Expr_To_Str
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
-import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Factors
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import qualified Aetherling.Languages.Sequence.Shallow.Types as Shallow_Types

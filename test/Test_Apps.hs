@@ -25,7 +25,7 @@ import Data.Traversable
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Ratio
-
+{-
 apps_tests = testGroup "Full Application Tests"
   [
     testCase "map" $
@@ -44,7 +44,7 @@ apps_tests = testGroup "Full Application Tests"
 
 all_types = sequence [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types, --sharpen_results_all_types,
              TS.pyramid_1d_results_all_types]
-
+-}
 add_5 atom_in = do
   let const = const_genC (Atom_Int 5) atom_in
   let tupled = atom_tupleC atom_in const
@@ -89,13 +89,18 @@ single_map_200_results' = sequence $
               single_map_200 (wrap_single_s s)
               Magma (Save_Gen_Verilog "map")
               single_map_200_inputs single_map_200_output) [1]
+stencil_3_1dC_nested :: forall m n n0 a .
+                         (Sequence_Language m, Aetherling_Value a,
+                          KnownNat n, KnownNat n0, (n0 + 1) ~ n) =>
+                      m (Seq n (n GHC.TypeLits.* 2) a) -> m (Seq n 0 (Seq 3 0 a))
 stencil_3_1dC_nested in_seq = do
-  let first_el = in_seq
-  let second_el = shiftC (Proxy @1) first_el
-  let third_el = shiftC (Proxy @1) second_el
-  let tuple = map2C (map2C $ map2C seq_tupleC) third_el second_el 
-  let triple = map2C (map2C $ map2C seq_tuple_appendC) tuple first_el 
-  mapC (mapC seq_tuple_to_seqC) triple
+  let shifted_once = shiftC (Proxy @1) in_seq
+  let shifted_twice = shiftC (Proxy @1) shifted_once
+  let window_tuple = map2C seq_tuple_appendC
+                     (map2C seq_tupleC in_seq shifted_once)
+                     shifted_twice
+  let partitioned_tuple = partitionC (Proxy :: Proxy n) (Proxy :: Proxy 1) (Proxy :: Proxy 0) (Proxy :: Proxy i) window_tuple
+  mapC seq_tuple_to_seqC partitioned_tuple
   
 stencil_3x3_2dC_test in_col in_img = do
   let first_row = in_img
@@ -104,11 +109,11 @@ stencil_3x3_2dC_test in_col in_img = do
   let first_row_shifted = stencil_3_1dC_nested first_row
   let second_row_shifted = stencil_3_1dC_nested second_row
   let third_row_shifted = stencil_3_1dC_nested third_row
-  let tuple = map2C (map2C seq_tupleC) third_row_shifted second_row_shifted
-  let triple = map2C (map2C seq_tuple_appendC) tuple first_row_shifted
-  mapC seq_tuple_to_seqC triple
+  let tuple = seq_tupleC third_row_shifted second_row_shifted
+  let triple = seq_tuple_appendC tuple first_row_shifted
+  seq_tuple_to_seqC triple
 stencil_2d_test = stencil_3x3_2dC_test (Proxy @4) $
-  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 0 Atom_Int))
 stencil_2d_test_seq_idx = add_indexes $ seq_shallow_to_deep stencil_2d_test
 stencil_2d_test_ppar = 
   fmap (\s -> compile_with_slowdown_to_expr stencil_2d_test s) [1,2,4,8,16,48,144]
@@ -146,7 +151,7 @@ stencil_2d_results' = sequence $
               stencil_2d_inputs stencil_2d_output)
   [2]
 
-                     
+{-                     
 -- need thse for Integer and Int versions
 hask_kernel :: [[Int]] = [[0,1,0],[1,2,1],[0,1,0]]
 hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
@@ -755,3 +760,4 @@ big_tests = testGroup "Big Tests"
     --testCase "big sharpen chisel" $
     --(TS.all_success big_sharpen_results_chisel) @? "big sharpen chisel failed"
   ]
+-}

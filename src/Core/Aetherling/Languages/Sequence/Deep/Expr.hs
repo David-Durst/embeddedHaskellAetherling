@@ -32,7 +32,6 @@ data Expr =
   -- sequence operators
   | ShiftN {
       n :: Int,
-      i :: Int,
       shift_amount :: Int,
       elem_t :: AST_Type,
       seq_in :: Expr,
@@ -40,14 +39,12 @@ data Expr =
       }
   | Up_1dN {
       n :: Int,
-      i :: Int,
       elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index
       }
   | Down_1dN {
       n :: Int,
-      i :: Int,
       sel_idx :: Int,
       elem_t :: AST_Type,
       seq_in :: Expr,
@@ -56,8 +53,6 @@ data Expr =
   | PartitionN {
       no :: Int,
       ni :: Int,
-      io :: Int,
-      ii :: Int,
       elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index
@@ -65,8 +60,6 @@ data Expr =
   | UnpartitionN {
       no :: Int,
       ni :: Int,
-      io :: Int,
-      ii :: Int,
       elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index
@@ -75,14 +68,12 @@ data Expr =
   -- higher order operators
   | MapN {
       n :: Int,
-      i :: Int,
       f :: Expr,
       seq_in :: Expr,
       index :: DAG_Index
       }
   | Map2N {
       n :: Int,
-      i :: Int,
       f :: Expr,
       seq_in_left :: Expr,
       seq_in_right :: Expr,
@@ -90,7 +81,6 @@ data Expr =
       }
   | ReduceN {
       n :: Int,
-      i :: Int,
       f :: Expr,
       seq_in :: Expr,
       index :: DAG_Index
@@ -131,14 +121,12 @@ data Expr =
       }
   | STupleToSeqN {
       n :: Int,
-      i :: Int,
       tuple_elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index
       }
   | SeqToSTupleN {
       n :: Int,
-      i :: Int,
       tuple_elem_t :: AST_Type,
       seq_in :: Expr,
       index :: DAG_Index

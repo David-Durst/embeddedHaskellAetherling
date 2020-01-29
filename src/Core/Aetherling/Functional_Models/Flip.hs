@@ -2,7 +2,7 @@ module Aetherling.Functional_Models.Flip where
 import Data.List
 import qualified Data.Set as S
 import Debug.Trace
-import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Factors
 
 data Banked_Value = Banked_Value {
   banked_elem :: Int,

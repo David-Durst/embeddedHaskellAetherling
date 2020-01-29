@@ -52,25 +52,25 @@ check_type' consumer_e@(Lut_GenN _ _ producer_e _) =
 check_type' (Const_GenN _ t _) = return t
 
 -- sequence operators
-check_type' consumer_e@(ShiftN _ _ _ _ producer_e _) =
+check_type' consumer_e@(ShiftN _ _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(Up_1dN _ _ _ producer_e _) =
+check_type' consumer_e@(Up_1dN _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(Down_1dN _ _ _ _ producer_e _) = 
+check_type' consumer_e@(Down_1dN _ _ _ producer_e _) = 
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(PartitionN _ _ _ _ _ producer_e _) =
+check_type' consumer_e@(PartitionN _ _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(UnpartitionN _ _ _ _ _ producer_e _) =
+check_type' consumer_e@(UnpartitionN _ _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
 
 -- higher order operators
-check_type' consumer_e@(MapN _ _ f producer_e _) = do
+check_type' consumer_e@(MapN _ f producer_e _) = do
   memo f $ check_type' f
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(Map2N _ _ f producer0_e producer1_e _) = do
+check_type' consumer_e@(Map2N _ f producer0_e producer1_e _) = do
   memo f $ check_type' f
   check_binary_operator consumer_e producer0_e producer1_e
-check_type' consumer_e@(ReduceN _ _ f producer_e _) = do
+check_type' consumer_e@(ReduceN _ f producer_e _) = do
   memo f $ check_type' f
   check_unary_operator consumer_e producer_e
 
@@ -87,9 +87,9 @@ check_type' consumer_e@(STupleN _ producer0_e producer1_e _) = do
 check_type' consumer_e@(STupleAppendN _ _ producer0_e producer1_e _) = do
   check_binary_operator consumer_e producer0_e producer1_e
   
-check_type' consumer_e@(STupleToSeqN _ _ _ producer_e _) =
+check_type' consumer_e@(STupleToSeqN _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(SeqToSTupleN _ _ _ producer_e _) =
+check_type' consumer_e@(SeqToSTupleN _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
   
 check_type' (InputN t _ _) = return t

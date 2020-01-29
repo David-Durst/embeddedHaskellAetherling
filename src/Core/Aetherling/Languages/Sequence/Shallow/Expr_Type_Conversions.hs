@@ -67,20 +67,18 @@ instance (KnownNat n, Aetherling_Value a) =>
   get_input_edge s idx = Seq_Tuple_Edge
                      (InputN (get_AST_type (Proxy :: Proxy (Seq_Tuple n a))) s idx)
 
-instance (KnownNat n, KnownNat i, Aetherling_Value a) =>
-  Aetherling_Value (Seq n i a) where
+instance (KnownNat n, Aetherling_Value a) =>
+  Aetherling_Value (Seq n a) where
   edge_to_maybe_expr (Seq_Edge x) = Just x
   edge_to_maybe_expr _ = Nothing
   expr_to_edge x = Seq_Edge x
-  get_AST_type _ = SeqT nVal iVal (get_AST_type (Proxy :: Proxy a))
+  get_AST_type _ = SeqT nVal (get_AST_type (Proxy :: Proxy a))
     where
       nVal = fromInteger $ natVal (Proxy :: Proxy n)
-      iVal = fromInteger $ natVal (Proxy :: Proxy i)
   get_AST_value (Seq vec) = do
     let elements = V.toList vec
     elements_as_AST_values <- traverse get_AST_value elements
-    let iVal = fromInteger $ natVal (Proxy :: Proxy i)
-    Just $ SeqV elements_as_AST_values iVal
+    Just $ SeqV elements_as_AST_values
   get_AST_value _ = Nothing
   get_input_edge s idx = Seq_Edge
-                     (InputN (get_AST_type (Proxy :: Proxy (Seq n i a))) s idx)
+                     (InputN (get_AST_type (Proxy :: Proxy (Seq n a))) s idx)

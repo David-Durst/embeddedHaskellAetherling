@@ -1,5 +1,5 @@
 module Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types where
-import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Factors
 import Aetherling.Rewrites.Rewrite_Helpers
 import qualified Aetherling.Languages.Sequence.Deep.Types as SeqT
 import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
@@ -13,8 +13,19 @@ import Math.NumberTheory.Primes.Factorisation
 import Math.NumberTheory.Powers.Squares
 import Debug.Trace
 
+data Type_Rewrite =
+  SpaceR { tr_n :: Int}
+  | TimeR { tr_n :: Int, tr_i :: Int}
+  | SplitR { tr_n_outer :: Int, tr_i_outer :: Int, tr_n_inner :: Int }
+  -- this must be a bunch of tseqs with either 0 or 1 sseqs at bottom
+  -- always ended with a nonseqR
+  -- currently only using for two TimeR's
+  | SplitNestedR { tr_head :: Type_Rewrite, tr_tail :: Type_Rewrite }
+  | NonSeqR
+  deriving (Show, Eq)
+
 num_seq_layers :: SeqT.AST_Type -> Int
-num_seq_layers (SeqT.SeqT n i t) = 1 + num_seq_layers t
+num_seq_layers (SeqT.SeqT n t) = 1 + num_seq_layers t
 num_seq_layers (SeqT.STupleT n t) = num_seq_layers t
 num_seq_layers _ = 0
 
@@ -167,14 +178,14 @@ rewrite_AST_type_given_slowdowns :: [Level_Factor_Val_Pair] -> Int ->
                                     SeqT.AST_Type -> [[Type_Rewrite]] ->
                                     [Out_Type_Rewrites]
 -- first two cases handle where this layer is not being slowed
-rewrite_AST_type_given_slowdowns [] cur_layer (SeqT.SeqT n _ t) accum = do
+rewrite_AST_type_given_slowdowns [] cur_layer (SeqT.SeqT n t) accum = do
   rewrite_AST_type_given_slowdowns [] (cur_layer + 1) t (map (SpaceR n:) accum)
-rewrite_AST_type_given_slowdowns lfvps@(LFVP l _:other_s) cur_layer (SeqT.SeqT n _ t) accum |
+rewrite_AST_type_given_slowdowns lfvps@(LFVP l _:other_s) cur_layer (SeqT.SeqT n t) accum |
   l /= cur_layer = do
   rewrite_AST_type_given_slowdowns lfvps (cur_layer + 1) t (map (SpaceR n:) accum)
-rewrite_AST_type_given_slowdowns (LFVP l 1:other_s) cur_layer (SeqT.SeqT n _ t) accum = do
+rewrite_AST_type_given_slowdowns (LFVP l 1:other_s) cur_layer (SeqT.SeqT n t) accum = do
   rewrite_AST_type_given_slowdowns other_s (cur_layer + 1) t (map (SpaceR n:) accum)
-rewrite_AST_type_given_slowdowns ((LFVP l s):other_s) cur_layer (SeqT.SeqT n _ t) accum = do
+rewrite_AST_type_given_slowdowns ((LFVP l s):other_s) cur_layer (SeqT.SeqT n t) accum = do
   let invalids = s-n
   let t_options =
         if s >= n
@@ -198,7 +209,7 @@ rewrite_AST_type_given_slowdowns ((LFVP l s):other_s) cur_layer (SeqT.SeqT n _ t
         [io | io <- [0..invalids], isJust (iii_given_others n io)]
   let possible_no = filter is_valid [1..n]
   let ts_options =
-        if length possible_no == 0
+        if null possible_no
         then []
         else do
           let max_no = maximum possible_no
@@ -229,3 +240,13 @@ rewrite_nesting_depth (SplitNestedR _ NonSeqR : tl) = 1 + rewrite_nesting_depth 
 rewrite_nesting_depth (SplitNestedR _ ntl : tl) = 1 + rewrite_nesting_depth (ntl : tl)
 rewrite_nesting_depth (NonSeqR : tl) = 1 + rewrite_nesting_depth tl
 rewrite_nesting_depth [] = 0
+
+product_tr_periods trs = product (filter (>0) $ fmap get_type_rewrite_periods trs)
+get_type_rewrite_periods :: Type_Rewrite -> Int
+get_type_rewrite_periods (SpaceR _) = 1
+get_type_rewrite_periods (TimeR tr_n tr_i) = tr_n + tr_i
+get_type_rewrite_periods (SplitR tr_no tr_io _) = tr_no + tr_io
+get_type_rewrite_periods (SplitNestedR (TimeR tr_n tr_i) NonSeqR) = tr_n + tr_i
+get_type_rewrite_periods (SplitNestedR tr_hd tr_tl) =
+  get_type_rewrite_periods tr_hd * get_type_rewrite_periods tr_tl
+get_type_rewrite_periods NonSeqR = -1

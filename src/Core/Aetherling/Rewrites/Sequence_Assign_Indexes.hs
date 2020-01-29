@@ -54,25 +54,25 @@ add_indexes' consumer_e@(Const_GenN _ _ _) = do
   return $ consumer_e {index = cur_idx}
 
 -- sequence operators
-add_indexes' consumer_e@(ShiftN _ _ _ _ producer_e _) =
+add_indexes' consumer_e@(ShiftN _ _ _ producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
-add_indexes' consumer_e@(Up_1dN _ _ _ producer_e _) =
+add_indexes' consumer_e@(Up_1dN _ _ producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
-add_indexes' consumer_e@(Down_1dN _ _ _ _ producer_e _) = 
+add_indexes' consumer_e@(Down_1dN _ _ _ producer_e _) = 
   add_index_to_unary_operator consumer_e producer_e
-add_indexes' consumer_e@(PartitionN _ _ _ _ _ producer_e _) =
+add_indexes' consumer_e@(PartitionN _ _ _ producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
-add_indexes' consumer_e@(UnpartitionN _ _ _ _ _ producer_e _) =
+add_indexes' consumer_e@(UnpartitionN _ _ _ producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
 
 -- higher order operators
-add_indexes' consumer_e@(MapN _ _ f producer_e _) = do
+add_indexes' consumer_e@(MapN _ f producer_e _) = do
   f_with_indexes <- add_index_to_subgraph f
   add_index_to_unary_operator (consumer_e {f = f_with_indexes}) producer_e
-add_indexes' consumer_e@(Map2N _ _ f producer0_e producer1_e _) = do
+add_indexes' consumer_e@(Map2N _ f producer0_e producer1_e _) = do
   f_with_indexes <- add_index_to_subgraph f
   add_index_to_binary_operator (consumer_e {f = f_with_indexes}) producer0_e producer1_e
-add_indexes' consumer_e@(ReduceN _ _ f producer_e _) = do
+add_indexes' consumer_e@(ReduceN _ f producer_e _) = do
   f_with_indexes <- add_index_to_subgraph f
   add_index_to_unary_operator (consumer_e {f = f_with_indexes}) producer_e
 
@@ -89,9 +89,9 @@ add_indexes' consumer_e@(STupleN _ producer0_e producer1_e _) = do
 add_indexes' consumer_e@(STupleAppendN _ _ producer0_e producer1_e _) = do
   add_index_to_binary_operator consumer_e producer0_e producer1_e
   
-add_indexes' consumer_e@(STupleToSeqN _ _ _ producer_e _) =
+add_indexes' consumer_e@(STupleToSeqN _ _ producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
-add_indexes' consumer_e@(SeqToSTupleN _ _ _ producer_e _) =
+add_indexes' consumer_e@(SeqToSTupleN _ _ producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
   
 add_indexes' (InputN t n _) = do

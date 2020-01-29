@@ -310,3 +310,9 @@ expr_to_outer_types_binary_operator consumer_op producer_op0 producer_op1 = do
   memo producer_op0 $ expr_to_outer_types' producer_op0
   memo producer_op1 $ expr_to_outer_types' producer_op1
   return $ e_out_type $ expr_to_types consumer_op
+
+invalid_clocks_from_nested :: Int -> Int -> Int -> Int -> Int
+invalid_clocks_from_nested no ni io ii = (no * ii) + (io * (ni + ii))
+
+total_clocks_from_nested :: Int -> Int -> Int -> Int -> Int
+total_clocks_from_nested no ni io ii = (no * (ni + ii)) + (io * (ni + ii))

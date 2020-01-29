@@ -185,62 +185,61 @@ print_inner consumer_e@(Const_GenN constant constant_type cur_idx) = do
   return cur_ref_name
 
 -- sequence operators
-print_inner consumer_e@(ShiftN n i shift_amount elem_t producer_e cur_idx) = do
+print_inner consumer_e@(ShiftN n shift_amount elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "ShiftN " ++ show n ++ " " ++ show i ++
-    " " ++ show shift_amount ++ " " ++ show elem_t ++ " " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "ShiftN " ++ show n ++ " " ++ 
+    show shift_amount ++ " " ++ show elem_t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(Up_1dN n i elem_t producer_e cur_idx) = do
+print_inner consumer_e@(Up_1dN n elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "Up_1dN " ++ show n ++ " " ++ show i ++
-    " " ++ show elem_t ++ " " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "Up_1dN " ++ show n ++ " " ++
+    show elem_t ++ ") " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(Down_1dN n i sel_idx elem_t producer_e cur_idx) = do
+print_inner consumer_e@(Down_1dN n sel_idx elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "Down_1dN " ++ show n ++ " " ++ show i ++
-    " " ++ show sel_idx ++ " " ++ show elem_t ++ " " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "Down_1dN " ++ show n ++ " " ++
+    show sel_idx ++ " " ++ show elem_t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(PartitionN no ni io ii elem_t producer_e cur_idx) = do
+print_inner consumer_e@(PartitionN no ni elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "PartitionN " ++
-    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show ii ++ " " ++
+    show no ++ " " ++ show ni ++ " " ++
     show elem_t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(UnpartitionN no ni io ii elem_t producer_e cur_idx) = do
+print_inner consumer_e@(UnpartitionN no ni elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "UnpartitionN " ++
-    show no ++ " " ++ show ni ++ " " ++ show io ++ " " ++ show ii ++ " " ++
-    show elem_t ++ " " ++ producer_ref
+    show no ++ " " ++ show ni ++ " " ++ show elem_t ++ " " ++ producer_ref
   return cur_ref_name
 
 -- higher order operators
-print_inner consumer_e@(MapN n i f producer_e cur_idx) = do
+print_inner consumer_e@(MapN n f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   f_ref <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "MapN " ++
-    show n ++ " " ++ show i ++ " " ++ f_ref ++ " " ++ producer_ref
+    show n ++ " " ++ f_ref ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(Map2N n i f producer0_e producer1_e cur_idx) = do
+print_inner consumer_e@(Map2N n f producer0_e producer1_e cur_idx) = do
   producer0_ref <- memo producer0_e $ print_inner producer0_e
   producer1_ref <- memo producer1_e $ print_inner producer1_e
   f_ref <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "Map2N " ++
-    show n ++ " " ++ show i ++ " " ++ f_ref ++ " " ++ producer0_ref ++
+    show n ++ " " ++ f_ref ++ " " ++ producer0_ref ++
     " " ++ producer1_ref
   return cur_ref_name
-print_inner consumer_e@(ReduceN n i f producer_e cur_idx) = do
+print_inner consumer_e@(ReduceN n f producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   f_ref <- memo f $ print_module f
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "ReduceN " ++
-    show n ++ " " ++ show i ++ " " ++ f_ref ++ " " ++ producer_ref
+    show n ++ " " ++ f_ref ++ " " ++ producer_ref
   return cur_ref_name
 
 -- tuple operators
@@ -279,19 +278,17 @@ print_inner consumer_e@(STupleAppendN out_len elem_t producer0_e producer1_e cur
     show elem_t ++ " " ++ producer0_ref ++ " " ++ producer1_ref
   return cur_ref_name
   
-print_inner consumer_e@(STupleToSeqN n i elem_t producer_e cur_idx) = do
+print_inner consumer_e@(STupleToSeqN n elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "STupleToSeqN " ++
-    show n ++ " " ++ show i ++ " " ++
-    show elem_t ++ " " ++ producer_ref
+    show n ++ " " ++ show elem_t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(SeqToSTupleN n i elem_t producer_e cur_idx) = do
+print_inner consumer_e@(SeqToSTupleN n elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "SeqToSTupleN " ++
-    show n ++ " " ++ show i ++ " " ++
-    show elem_t ++ " " ++ producer_ref
+    show n ++ " " ++ show elem_t ++ " " ++ producer_ref
   return cur_ref_name
   
 print_inner (InputN t name cur_idx) = do

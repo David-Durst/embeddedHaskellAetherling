@@ -12,7 +12,7 @@ data AST_Type =
   | IntT
   | ATupleT AST_Type AST_Type
   | STupleT Int AST_Type
-  | SeqT Int Int AST_Type
+  | SeqT Int AST_Type
   deriving (Show, Eq, Ord)
 
 seq_int = IntT
@@ -26,5 +26,5 @@ data AST_Value =
   | IntV Int
   | ATupleV AST_Value AST_Value
   | STupleV [AST_Value]
-  | SeqV {vals :: [AST_Value], i_v :: Int}
+  | SeqV {vals :: [AST_Value]}
   deriving (Show, Eq, Ord)
