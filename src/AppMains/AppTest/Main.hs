@@ -4,7 +4,6 @@ import Aetherling.Interpretations.Sequence_Printer
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
 import Aetherling.Rewrites.Sequence_Assign_Indexes
-import Aetherling.Rewrites.Sequence_To_Fully_Parallel_Space_Time
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
 import GHC.TypeLits
 import GHC.TypeLits.Extra
@@ -37,7 +36,7 @@ import qualified Aetherling.Interpretations.Has_Error as Has_Error
 import Aetherling.Rewrites.Sequence_Shallow_To_Deep
 import Aetherling.Rewrites.Rewrite_Helpers
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Expr
-import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_Type
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Factors
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import Aetherling.Interpretations.Backend_Execute.Compile
@@ -50,12 +49,12 @@ import System.TimeIt
 import Data.Ratio
 
 main = do
-  --putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 4
-  let possible_output_types = rewrite_all_AST_types 480  $
-                              SeqT 480 0 (SeqT 1 2 (SeqT 1 2 seq_int))
-                              --Seq_Conv.e_out_type $ Seq_Conv.expr_to_outer_types $ big_conv_2d_seq_idx
-  putStrLn "output_types length"
-  timeIt $ putStrLn $ show $ length possible_output_types
+  putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 4
+  --let possible_output_types = rewrite_all_AST_types 480  $
+   --                           SeqT 480 0 (SeqT 1 2 (SeqT 1 2 seq_int))
+  --Seq_Conv.e_out_type $ Seq_Conv.expr_to_outer_types $ big_conv_2d_seq_idx
+  --putStrLn "output_types length"
+  --timeIt $ putStrLn $ show $ length possible_output_types
   --
   --let possible_st_programs =
   --      map (\trs -> rewrite_to_partially_parallel_type_rewrite trs big_conv_2d_seq_idx)
@@ -79,12 +78,14 @@ main = do
   return ()
   
 stencil_3_1dC_nested in_seq = do
-  let first_el = in_seq
-  let second_el = shiftC (Proxy @1) first_el
-  let third_el = shiftC (Proxy @1) second_el
-  let tuple = map2C (map2C $ map2C seq_tupleC) third_el second_el 
-  let triple = map2C (map2C $ map2C seq_tuple_appendC) tuple first_el 
-  mapC (mapC seq_tuple_to_seqC) triple
+  let shifted_once = shiftC (Proxy @1) in_seq
+  let shifted_twice = shiftC (Proxy @1) shifted_once
+  let window_tuple = map2C seq_tuple_appendC
+                     (map2C seq_tupleC shifted_twice shifted_once)
+                     in_seq
+  let partitioned_tuple = partitionC Proxy (Proxy @1) window_tuple
+  mapC seq_tuple_to_seqC partitioned_tuple
+  
 stencil_3x3_2dC_test in_col in_img = do
   let first_row = in_img
   let second_row = shiftC in_col in_img
@@ -92,9 +93,10 @@ stencil_3x3_2dC_test in_col in_img = do
   let first_row_shifted = stencil_3_1dC_nested first_row
   let second_row_shifted = stencil_3_1dC_nested second_row
   let third_row_shifted = stencil_3_1dC_nested third_row
-  let tuple = map2C (map2C seq_tupleC) third_row_shifted second_row_shifted
-  let triple = map2C (map2C seq_tuple_appendC) tuple first_row_shifted
-  mapC seq_tuple_to_seqC triple
+  let tuple = map2C seq_tupleC third_row_shifted second_row_shifted
+  let triple = map2C seq_tuple_appendC tuple first_row_shifted
+  let partitioned_triple = partitionC Proxy (Proxy @1) triple
+  mapC seq_tuple_to_seqC partitioned_triple
 hask_kernel :: [[Int]] = [[0,1,0],[1,2,1],[0,1,0]]
 hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
 tuple_2d_mul_shallow_no_input in_seq = do
@@ -118,7 +120,7 @@ row_size_big :: Integer = 1920
 col_size_big :: Integer = 1080
 img_size_big :: Int = fromInteger $ row_size_big*row_size_big
 big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 0 (Seq 1 2 (Seq 1 2 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
 big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big)-- --[1,2,4,8,16,32,64,img_size_big `div` 2, img_size_big, img_size_big *3]--, img_size_big*9]
 big_conv_2d_ppar =
