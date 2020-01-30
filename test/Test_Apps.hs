@@ -393,13 +393,14 @@ pyramid_2d_prints = sequence $
               pyramid_2d (wrap_single_s s)
               text_backend "pyramid2dhueristic") [1,2,4,8,16,32,64,192,576]
 
-
+-}
   
 stencil_2_1dC_nested in_seq = do
   let first_el = in_seq
   let second_el = shiftC (Proxy @1) first_el
-  let tuple = map2C (map2C $ map2C seq_tupleC) second_el first_el
-  mapC (mapC seq_tuple_to_seqC) tuple
+  let tuple = map2C seq_tupleC second_el first_el
+  let partitioned_tuple = partitionC Proxy (Proxy @1) tuple
+  mapC seq_tuple_to_seqC partitioned_tuple
   
 stencil_2x2_2dC_test in_col in_img = do
   let first_row = in_img
@@ -407,8 +408,9 @@ stencil_2x2_2dC_test in_col in_img = do
   let third_row = shiftC in_col second_row
   let first_row_shifted = stencil_2_1dC_nested first_row
   let second_row_shifted = stencil_2_1dC_nested second_row
-  let tuple = map2C (map2C $ seq_tupleC) second_row_shifted first_row_shifted
-  mapC seq_tuple_to_seqC tuple
+  let tuple = map2C seq_tupleC second_row_shifted first_row_shifted
+  let partitioned_tuple = partitionC Proxy (Proxy @1) tuple
+  mapC seq_tuple_to_seqC partitioned_tuple
 stencil_2x2_generator :: Integer -> [Integer] -> [[[Integer]]]
 stencil_2x2_generator row_size inputs = [
   [
@@ -440,11 +442,13 @@ tuple_2d_2x2_mul_shallow_no_input in_seq = do
   
 conv_2d_b2b_shallow_no_input in_col in_seq = do
   let first_stencil = stencil_3x3_2dC_test in_col in_seq
-  let first_conv = mapC tuple_2d_mul_shallow_no_input first_stencil
+  let first_conv = unpartitionC $ unpartitionC $
+        mapC tuple_2d_mul_shallow_no_input first_stencil
   let second_stencil = stencil_2x2_2dC_test in_col first_conv
-  mapC tuple_2d_2x2_mul_shallow_no_input second_stencil
+  unpartitionC $ unpartitionC $
+    mapC tuple_2d_2x2_mul_shallow_no_input second_stencil
 conv_2d_b2b = conv_2d_b2b_shallow_no_input (Proxy @4) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 16 (Seq 1 (Seq 1 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 Atom_Int))
 conv_2d_b2b_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d_b2b
 conv_2d_b2b_ppar =
   fmap (\s -> compile_with_slowdown_to_expr conv_2d_b2b s) [1,2,4,8,16,48,144]
@@ -493,21 +497,23 @@ conv_2d_b2b_results_chisel' = sequence $
               conv_2d_b2b_inputs conv_2d_b2b_output) [2]
 conv_2d_b2b_print_st = sequence $ 
   fmap (\s -> compile_to_file
-              pyramid_2d (wrap_single_s s)
+              conv_2d_b2b (wrap_single_s s)
               text_backend "conv2d_b2b") [1,2,4,8,16,48,144]
 conv_2d_b2b_compile = sequence $ 
   fmap (\s -> compile_to_file
-              pyramid_2d (wrap_single_s s)
+              conv_2d_b2b (wrap_single_s s)
               Magma "conv2d_b2b") [1,2,4,8,16,48,144]
 
 
 conv_2d_3x3_repeat_b2b_shallow_no_input in_col in_seq = do
   let first_stencil = stencil_3x3_2dC_test in_col in_seq
-  let first_conv = mapC tuple_2d_mul_shallow_no_input first_stencil
+  let first_conv = unpartitionC $ unpartitionC $
+        mapC tuple_2d_mul_shallow_no_input first_stencil
   let second_stencil = stencil_3x3_2dC_test in_col first_conv
-  mapC tuple_2d_mul_shallow_no_input second_stencil
+  unpartitionC $ unpartitionC $
+    mapC tuple_2d_mul_shallow_no_input second_stencil
 conv_2d_3x3_repeat_b2b = conv_2d_3x3_repeat_b2b_shallow_no_input (Proxy @4) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 16 (Seq 1 (Seq 1 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 Atom_Int))
 conv_2d_3x3_repeat_b2b_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d_3x3_repeat_b2b
 conv_2d_3x3_repeat_b2b_ppar =
   fmap (\s -> compile_with_slowdown_to_expr conv_2d_3x3_repeat_b2b s) [1,2,4,8,16,48,144]
@@ -579,8 +585,8 @@ sharpen_one_pixel' a b = do
 sharpen_one_pixel_map_no_input a_pixel b_pixel = do
   map2C sharpen_one_pixel a_pixel b_pixel 
 sharpen_one_pixel_map = sharpen_one_pixel_map_no_input
-  (com_input_seq "I0" (Proxy :: Proxy (Seq 2 0 Atom_Int)))
-  (com_input_seq "I1" (Proxy :: Proxy (Seq 2 0 Atom_Int)))
+  (com_input_seq "I0" (Proxy :: Proxy (Seq 2 Atom_Int)))
+  (com_input_seq "I1" (Proxy :: Proxy (Seq 2 Atom_Int)))
 sharpen_one_pixel_map_deep = seq_shallow_to_deep sharpen_one_pixel_map
 sharpen_one_pixel_map_seq_idx = add_indexes $ seq_shallow_to_deep sharpen_one_pixel_map
 sharpen_one_pixel_map_ppar =
@@ -602,7 +608,8 @@ sharpen_one_pixel_map_results = sequence $
 
 sharpen_shallow_no_input in_col in_seq = do
   let first_stencil = stencil_3x3_2dC_test in_col in_seq
-  let branch_a = mapC tuple_2d_mul_shallow_no_input first_stencil
+  let branch_a = unpartitionC $ unpartitionC $
+        mapC tuple_2d_mul_shallow_no_input first_stencil
   let branch_b = in_seq
   {-
   let b_sub_a = map2C (map2C $ map2C $ \x y -> (subC $ atom_tupleC x y)) branch_b branch_a
@@ -611,11 +618,11 @@ sharpen_shallow_no_input in_col in_seq = do
   let passed_threshold = mapC (mapC $ mapC $ (\x -> ltC $ atom_tupleC t_const x)) abs_b_sub_a
    -}
   --let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a (const_genC (Atom_Int 0) in_seq)))
-  map2C (map2C (map2C sharpen_one_pixel)) branch_a branch_b
-  {-
+  map2C sharpen_one_pixel branch_a branch_b
 -- haskell doesn't like it when both this and big sharpen are uncommented for unknown reason
+{-
 sharpen = sharpen_shallow_no_input (Proxy @4) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 16 (Seq 1 (Seq 1 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 Atom_Int))
 sharpen_seq_idx = add_indexes $ seq_shallow_to_deep sharpen
 sharpen_ppar =
   fmap (\s -> compile_with_slowdown_to_expr sharpen s) [1,2,4,8,16,48,144]
@@ -653,7 +660,7 @@ sharpen_print_st = sequence $
               sharpen (wrap_single_s s)
               text_backend "sharpen") [1,2,4,8,16,48,144]
 -}
--}
+
 row_size_big :: Integer = 1920
 col_size_big :: Integer = 1080
 img_size_big :: Int = fromInteger $ col_size_big*row_size_big
@@ -699,9 +706,8 @@ big_conv_2d_verilog_prints = sequence $
               big_conv_2d (wrap_single_s s)
               Magma "conv2d") big_conv_2d_slowdowns
 
-{-
 big_conv_2d_b2b = conv_2d_b2b_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 (Seq 1 (Seq 1 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
 big_conv_2d_b2b_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d_b2b
 big_conv_2d_b2b_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_conv_2d_b2b s) big_conv_2d_slowdowns
@@ -726,7 +732,7 @@ big_conv_2d_b2b_results_chisel = sequence $
               big_conv_2d_b2b_inputs big_conv_2d_b2b_output) big_conv_2d_slowdowns
 
 big_sharpen = sharpen_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 (Seq 1 (Seq 1 Atom_Int))))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
 big_sharpen_seq_idx = add_indexes $ seq_shallow_to_deep big_sharpen
 big_sharpen_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_sharpen s) [1,2,4,8,16,48,144]
@@ -755,10 +761,9 @@ big_tests = testGroup "Big Tests"
     --testCase "single big 3x3 convolution magma" $
     --(TS.all_success big_conv_2d_results') @? "single 3x3 convolution failed"
     testCase "single big 3x3 convolution chisel" $
-    (TS.all_success big_conv_2d_results_chisel') @? "single 3x3 convolution chisel failed"
+    (TS.all_success big_conv_2d_results_chisel) @? "single 3x3 convolution chisel failed"
     --testCase "big 3x3 conv to 2x2 conv chisel" $
     --(TS.all_success big_conv_2d_b2b_results_chisel) @? "big 3x3 conv to 2x2 conv chisel failed",
     --testCase "big sharpen chisel" $
     --(TS.all_success big_sharpen_results_chisel) @? "big sharpen chisel failed"
   ]
--}
