@@ -595,6 +595,15 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr0_no tr0_io tr0_ni) 
   add_index (STE.ReshapeN in_t_ppar out_t_ppar) producer_ppar
 -}
 
+sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr_n 0) :
+                                              type_rewrites_tl)
+  seq_e@(SeqE.UnpartitionN no ni elem_t producer _) |
+  tr_n == no && 1 == ni = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  let upstream_type_rewrites = tr0 : TimeR 1 0 : type_rewrites_tl
+  sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : type_rewrites_tl)
   seq_e@(SeqE.UnpartitionN no ni elem_t producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
@@ -612,6 +621,15 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr_no tr_io tr_ni) :
   add_output_rewrite_for_node seq_e type_rewrites
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   let upstream_type_rewrites = TimeR tr_no tr_io : SpaceR tr_ni : type_rewrites_tl
+  sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+  
+sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr_no tr_io tr_ni) :
+                                              type_rewrites_tl)
+  seq_e@(SeqE.UnpartitionN no ni elem_t producer _) |
+  tr_no*tr_ni == no && 1 == ni = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  let upstream_type_rewrites = tr0 : SpaceR 1 : type_rewrites_tl
   sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
   
 sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
@@ -728,7 +746,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
 
   -- just get possible type rewrites for the input two seqs, rest aren't changed by unpartition
   let unparititioned_in_seq = SeqT.SeqT no (SeqT.SeqT ni SeqT.IntT)
-  --traceShowM "unpartition"
+  --traceShowM $ "unpartition " ++ show no ++ " " ++ show ni
   --traceShowM $ "slowdown: " ++ show slowdown
   --traceShowM $ "type_rewrites: " ++ show type_rewrites
   let possible_trs_for_in_seq = rewrite_all_AST_types slowdown unparititioned_in_seq

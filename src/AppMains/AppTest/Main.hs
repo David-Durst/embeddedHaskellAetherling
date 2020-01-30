@@ -49,7 +49,7 @@ import System.TimeIt
 import Data.Ratio
 
 main = do
-  putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 4
+  putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 5
   --let possible_output_types = rewrite_all_AST_types 480  $
    --                           SeqT 480 0 (SeqT 1 2 (SeqT 1 2 seq_int))
   --Seq_Conv.e_out_type $ Seq_Conv.expr_to_outer_types $ big_conv_2d_seq_idx
@@ -119,7 +119,7 @@ conv_2d_shallow_no_input in_col in_seq = do
 
 row_size_big :: Integer = 1920
 col_size_big :: Integer = 1080
-img_size_big :: Int = fromInteger $ row_size_big*row_size_big
+img_size_big :: Int = fromInteger $ col_size_big*row_size_big
 big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
   com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
