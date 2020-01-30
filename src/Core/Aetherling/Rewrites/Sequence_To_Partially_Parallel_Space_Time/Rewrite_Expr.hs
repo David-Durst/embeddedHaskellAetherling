@@ -605,6 +605,15 @@ sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : type_rewrites_
   ppar_unary_seq_operator upstream_type_rewrites
     (STE.Unpartition_s_ssN no ni elem_t_ppar) producer
     
+sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr_no tr_io tr_ni) :
+                                              type_rewrites_tl)
+  seq_e@(SeqE.UnpartitionN no ni elem_t producer _) |
+  tr_no == no && tr_ni == ni = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
+  let upstream_type_rewrites = TimeR tr_no tr_io : SpaceR tr_ni : type_rewrites_tl
+  sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+  
 sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
                                                  (SplitNestedR (TimeR tr1_n tr1_i) NonSeqR))
                                                : type_rewrites_tl)
@@ -616,6 +625,49 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_
   -- and unpartition must accept same no and ni regardless of invalid clocks
   let upstream_type_rewrites = TimeR tr0_n tr0_i : TimeR tr1_n tr1_i : type_rewrites_tl
   sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+  
+sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
+                                                 (SplitNestedR (TimeR tr1_n tr1_i)
+                                                 (SplitNestedR (TimeR tr2_n tr2_i) NonSeqR)))
+                                               : type_rewrites_tl)
+  seq_e@(SeqE.UnpartitionN no ni elem_t producer index) |
+  -- when both tr1_n and tr2_n are 1, this will match but not sure
+  -- whether to group tr1_n with tr0_n or tr2_n, below tries both
+  tr0_n == no && tr1_n*tr2_n == ni = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  let types = Seq_Conv.expr_to_types seq_e
+  -- ppar_AST_type applies the type_rewrites to match downstream
+  out_t_ppar <- ppar_AST_type type_rewrites (Seq_Conv.e_out_type types)
+  -- two possible upstream rewrites, either timeR on outside or inside
+  let outer_time_upstream_type_rewrites =
+        TimeR tr0_n tr0_i :
+        (SplitNestedR (TimeR tr1_n tr1_i) (SplitNestedR (TimeR tr2_n tr2_i) NonSeqR)) :
+        type_rewrites_tl
+  let inner_time_upstream_type_rewrites =
+        (SplitNestedR (TimeR tr0_n tr0_i) (SplitNestedR (TimeR tr1_n tr1_i) NonSeqR)) :
+        TimeR tr2_n tr2_i :
+        type_rewrites_tl
+  let possible_input_trs = [outer_time_upstream_type_rewrites,
+                            inner_time_upstream_type_rewrites]
+  let possible_st_programs = map (\trs -> (trs, rewrite_to_partially_parallel_type_rewrite trs producer))
+                             possible_input_trs
+  let valid_possible_st_programs = filter (not . Has_Error.has_error . snd) possible_st_programs
+  --traceShowM $ "valid_possible_st_programs: " ++ show valid_possible_st_programs
+  -- when computing area include the reshape as different types will mean different
+  -- resahpe area costs
+  let possible_st_trs_and_areas = map
+        (\(tr, p) -> do
+            let p_with_reshape = STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types p) out_t_ppar p index
+            (tr, Comp_Area.get_area p_with_reshape)
+        ) valid_possible_st_programs
+
+  if null possible_st_trs_and_areas
+    then throwError $ Slowdown_Failure "Unpartition has no valid upstreams"
+    else do
+    let min_tr = fst $ L.minimumBy (\pa pb -> compare (snd pa) (snd pb)) possible_st_trs_and_areas
+    in_t_ppar <- ppar_AST_type min_tr (head $ Seq_Conv.e_in_types types)
+    ppar_unary_seq_operator min_tr
+      (STE.ReshapeN in_t_ppar out_t_ppar) producer
 
 -- use these computations if I'm wrong about TimeR always being fully sequential
 -- for Unpartition no ni io ii into a TimeR tr_no tr_io
@@ -678,7 +730,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let unparititioned_in_seq = SeqT.SeqT no (SeqT.SeqT ni SeqT.IntT)
   --traceShowM "unpartition"
   --traceShowM $ "slowdown: " ++ show slowdown
-  --traceShowM $ "type_rewrites_tl: " ++ show type_rewrites_tl
+  --traceShowM $ "type_rewrites: " ++ show type_rewrites
   let possible_trs_for_in_seq = rewrite_all_AST_types slowdown unparititioned_in_seq
   --traceShowM $ "possible_trs_for_in_seq: " ++ show possible_trs_for_in_seq
   --traceShowM $ "lengths possible_trs_for_in_seq: " ++ show (fmap length possible_trs_for_in_seq)
@@ -730,6 +782,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
     ppar_unary_seq_operator min_tr
       (STE.ReshapeN in_t_ppar out_t_ppar) producer
     else throwError $ Slowdown_Failure "Unpartition has no valid upstreams"
+
 {-
   -- rewrite inputs to get same throuhgput of output,
   -- but this can be in whatever nesting structure rewrite_AST_type chooses

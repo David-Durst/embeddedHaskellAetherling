@@ -114,7 +114,8 @@ tuple_2d_mul_shallow_no_input in_seq = do
   
 conv_2d_shallow_no_input in_col in_seq = do
   let stencil = stencil_3x3_2dC_test in_col in_seq
-  mapC tuple_2d_mul_shallow_no_input stencil
+  let conv_result = mapC tuple_2d_mul_shallow_no_input stencil
+  unpartitionC (unpartitionC conv_result)
 
 row_size_big :: Integer = 1920
 col_size_big :: Integer = 1080
