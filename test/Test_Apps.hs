@@ -195,6 +195,8 @@ conv_2d = conv_2d_shallow_no_input (Proxy @4) $
 conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d
 conv_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr conv_2d s) [1,2,4,8,16,48,144]
+conv_2d_ppar_all_48 =
+  compile_with_slowdown_to_all_possible_expr conv_2d 48
 conv_2d_ppar_typechecked =
   fmap check_type conv_2d_ppar
 conv_2d_ppar_typechecked' =

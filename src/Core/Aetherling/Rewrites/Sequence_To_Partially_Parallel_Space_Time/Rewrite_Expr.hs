@@ -423,6 +423,31 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
     get_scheduled_down NonSeqR _ _ _ = throwError $
       Slowdown_Failure "can't get nonseq for down_1d input"
 
+-- first two partitions are special cases where SSeq 1 (TSeq) where can
+-- move SSeq cheaply, unlike other 
+sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR 1) : tr1@(TimeR tr_ni tr_ii) : type_rewrites_tl)
+  seq_e@(SeqE.PartitionN no ni elem_t producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  let types = Seq_Conv.expr_to_types seq_e
+  out_t_ppar <- ppar_AST_type type_rewrites (Seq_Conv.e_out_type types)
+  let upstream_type_rewrites = SplitR tr_ni tr_ii 1 : type_rewrites_tl
+  in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
+  producer_ppar <- sequence_to_partially_parallel_with_reshape
+                   upstream_type_rewrites producer
+  add_index (STE.ReshapeN in_t_ppar out_t_ppar) producer_ppar
+  
+sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr_no tr_io 1) : tr1@(TimeR tr_ni tr_ii) : type_rewrites_tl)
+  seq_e@(SeqE.PartitionN no ni elem_t producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  let types = Seq_Conv.expr_to_types seq_e
+  out_t_ppar <- ppar_AST_type type_rewrites (Seq_Conv.e_out_type types)
+  let upstream_type_rewrites = SplitNestedR (TimeR tr_no tr_io)
+                               (SplitNestedR (TimeR tr_ni tr_ii) NonSeqR) : type_rewrites_tl
+  in_t_ppar <- ppar_AST_type upstream_type_rewrites (head $ Seq_Conv.e_in_types types)
+  producer_ppar <- sequence_to_partially_parallel_with_reshape
+                   upstream_type_rewrites producer
+  add_index (STE.ReshapeN in_t_ppar out_t_ppar) producer_ppar
+  
 sequence_to_partially_parallel type_rewrites@(tr0@(SpaceR tr_no) : tr1@(SpaceR tr_ni) : type_rewrites_tl)
   seq_e@(SeqE.PartitionN no ni elem_t producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
