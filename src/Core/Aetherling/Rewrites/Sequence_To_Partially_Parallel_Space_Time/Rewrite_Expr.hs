@@ -100,6 +100,28 @@ get_expr_with_min_area s seq_expr possible_st_programs_and_areas =
     else program $
          L.minimumBy (\pa pb -> compare (area pa) (area pb))
          possible_st_programs_and_areas
+         
+rewrite_to_partially_parallel_slowdown_min_area_program :: Int -> SeqE.Expr -> STE.Expr
+rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
+  let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
+  let possible_output_types = rewrite_all_AST_types s seq_expr_out_type
+  if null possible_output_types
+    then STE.ErrorN ("No possible rewrites for slowdown " ++ show s ++
+                     " of program \n" ++
+                     Seq_Print.print_seq_str seq_expr) No_Index
+    else do
+    let first_out_tr = head possible_output_types
+    let first_st_expr = rewrite_to_partially_parallel_type_rewrite first_out_tr
+                        seq_expr
+    let other_trs = tail possible_output_types
+    program $ L.foldl' (\(PA min_st_expr min_st_area) next_tr -> do
+                   let next_st_expr = rewrite_to_partially_parallel_type_rewrite
+                                      next_tr seq_expr
+                   let next_st_area = Comp_Area.get_area next_st_expr
+                   if min_st_area <= next_st_area && (not $ Has_Error.has_error min_st_expr)
+                     then PA min_st_expr min_st_area
+                     else PA next_st_expr next_st_area
+               ) (PA first_st_expr (Comp_Area.get_area first_st_expr)) other_trs
  {-
 
 rewrite_to_partially_parallel_search' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
@@ -716,7 +738,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_
         ) valid_possible_st_programs
 
   if null possible_st_trs_and_areas
-    then throwError $ Slowdown_Failure "Unpartition has no valid upstreams"
+    then throwError $ Slowdown_Failure $ "Unpartition has no valid upstreams" ++ show possible_st_programs
     else do
     let min_tr = fst $ L.minimumBy (\pa pb -> compare (snd pa) (snd pb)) possible_st_trs_and_areas
     in_t_ppar <- ppar_AST_type min_tr (head $ Seq_Conv.e_in_types types)
@@ -790,6 +812,30 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   --traceShowM $ "lengths possible_trs_for_in_seq: " ++ show (fmap length possible_trs_for_in_seq)
   let possible_input_trs = map (\(tr0 : tr1 : _) -> tr0 : tr1 : type_rewrites_tl) possible_trs_for_in_seq
   --traceShowM $ "possible_input_trs: " ++ show possible_input_trs
+  reshape_idx <- get_cur_index
+  return $ if null possible_input_trs
+        then STE.ErrorN ("No possible rewrites for unpartition with " ++ show type_rewrites ++
+                         " of program \n" ++
+                         Seq_Print.print_seq_str seq_e) No_Index
+        else do
+        let first_out_tr = head possible_input_trs
+        let first_st_expr = rewrite_to_partially_parallel_type_rewrite first_out_tr
+                            producer
+        let first_st_with_reshape =
+              STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types first_st_expr)
+              out_t_ppar first_st_expr reshape_idx
+        let other_trs = tail possible_input_trs
+        program $ L.foldl' (\(PA min_st_expr min_st_area) next_tr -> do
+                               let next_st_expr = rewrite_to_partially_parallel_type_rewrite
+                                                  next_tr producer
+                               let next_st_expr_with_reshape = 
+                                     STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types next_st_expr)
+                                     out_t_ppar next_st_expr reshape_idx
+                               let next_st_area = Comp_Area.get_area next_st_expr_with_reshape
+                               if min_st_area <= next_st_area && (not $ Has_Error.has_error min_st_expr)
+                                 then PA min_st_expr min_st_area
+                                 else PA next_st_expr_with_reshape next_st_area
+                           ) (PA first_st_with_reshape (Comp_Area.get_area first_st_with_reshape)) other_trs
   let possible_st_programs = map (\trs -> (trs, rewrite_to_partially_parallel_type_rewrite trs producer))
                              possible_input_trs
   --traceShowM $ "possible_st_programs: " ++ show possible_st_programs

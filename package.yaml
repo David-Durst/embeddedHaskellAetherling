@@ -93,7 +93,6 @@ executables:
     source-dirs:
     - src/AppMains/AppTest/
     ghc-options:
-    - -rtsopts
     - -fprof-auto
     - -threaded
     - -with-rtsopts=-N
@@ -163,7 +162,6 @@ tests:
     - test/ 
     ghc-options:
     - -threaded
-    - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - Aetherling

@@ -14,13 +14,14 @@ import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import Data.List
 
 main :: IO ()
---main = defaultMain tests
-main = do
+main = defaultMain tests
+--main = do
+--  error "hi"
 --  putStrLn "hi"
 -- putStrLn $ show $ length $ rewrite_all_AST_types 25600 $ Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions.e_out_type  $ Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions.expr_to_outer_types big_conv_2d_seq_idx
 --  putStrLn $ show $ length $ tester_inputs $ generate_tester_input_output_for_st_program  json_conf (big_conv_2d_ppar !! 1)  big_conv_2d_inputs  big_conv_2d_output
   --putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 0
-  print_st $ big_conv_2d_ppar !! 6
+--  print_st $ big_conv_2d_ppar !! 6
 
 tests :: TestTree
 --tests = testGroup "Top Level Aetherling Tests" [slowdown_tests, apps_tests]

@@ -431,10 +431,9 @@ compile_with_slowdown_to_expr :: (Shallow_Types.Aetherling_Value a) =>
 compile_with_slowdown_to_expr shallow_seq_program s = do
   let deep_seq_program_with_indexes =
         lower_seq_shallow_to_deep_indexed shallow_seq_program
-  let possible_st_programs_and_areas =
-        rewrite_to_partially_parallel_slowdown s deep_seq_program_with_indexes
-  let deep_st_program = get_expr_with_min_area s deep_seq_program_with_indexes
-                        possible_st_programs_and_areas
+  let deep_st_program =
+        rewrite_to_partially_parallel_slowdown_min_area_program
+        s deep_seq_program_with_indexes
   if Has_Error.has_error deep_st_program
     then deep_st_program
     else add_registers deep_st_program
