@@ -656,6 +656,14 @@ sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr_n 0) :
   let in_t_ppar = ST_Conv.e_out_type $ ST_Conv.expr_to_types producer_ppar
   cur_idx <- get_cur_index
   return $ STE.ReshapeN in_t_ppar out_t_ppar producer_ppar cur_idx
+{-  
+sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr_n tr_i) :
+                                              type_rewrites_tl)
+  seq_e@(SeqE.UnpartitionN no ni elem_t producer _) |
+  tr_n == no && 1 == ni = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  throwError $ Slowdown_Failure "this unpartition will create bad reshape, not exploring for now"
+-}
 
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : type_rewrites_tl)
   seq_e@(SeqE.UnpartitionN no ni elem_t producer _) = do
@@ -813,10 +821,8 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let possible_input_trs = map (\(tr0 : tr1 : _) -> tr0 : tr1 : type_rewrites_tl) possible_trs_for_in_seq
   --traceShowM $ "possible_input_trs: " ++ show possible_input_trs
   reshape_idx <- get_cur_index
-  return $ if null possible_input_trs
-        then STE.ErrorN ("No possible rewrites for unpartition with " ++ show type_rewrites ++
-                         " of program \n" ++
-                         Seq_Print.print_seq_str seq_e) No_Index
+  let (min_tr, min_area) = if null possible_input_trs
+        then (undefined, -1)
         else do
         let first_out_tr = head possible_input_trs
         let first_st_expr = rewrite_to_partially_parallel_type_rewrite first_out_tr
@@ -825,17 +831,27 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
               STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types first_st_expr)
               out_t_ppar first_st_expr reshape_idx
         let other_trs = tail possible_input_trs
-        program $ L.foldl' (\(PA min_st_expr min_st_area) next_tr -> do
-                               let next_st_expr = rewrite_to_partially_parallel_type_rewrite
-                                                  next_tr producer
-                               let next_st_expr_with_reshape = 
-                                     STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types next_st_expr)
-                                     out_t_ppar next_st_expr reshape_idx
-                               let next_st_area = Comp_Area.get_area next_st_expr_with_reshape
-                               if min_st_area <= next_st_area && (not $ Has_Error.has_error min_st_expr)
-                                 then PA min_st_expr min_st_area
-                                 else PA next_st_expr_with_reshape next_st_area
-                           ) (PA first_st_with_reshape (Comp_Area.get_area first_st_with_reshape)) other_trs
+        L.foldl' (\(min_tr, min_st_area) next_tr -> do
+                     let next_st_expr = rewrite_to_partially_parallel_type_rewrite
+                                        next_tr producer
+                     let next_st_expr_with_reshape = 
+                           STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types next_st_expr)
+                           out_t_ppar next_st_expr reshape_idx
+                     let next_st_area = Comp_Area.get_area next_st_expr_with_reshape
+                     if min_st_area <= next_st_area || Has_Error.has_error next_st_expr
+                       then (min_tr, min_st_area)
+                       else (next_tr, next_st_area)
+                 ) (first_out_tr, (Comp_Area.get_area first_st_with_reshape)) other_trs
+  if min_area == -1
+    then throwError $ Slowdown_Failure 
+         ("No possible rewrites for unpartition with " ++ show type_rewrites ++
+           " of program \n" ++
+           Seq_Print.print_seq_str seq_e)
+    else do
+    in_t_ppar <- ppar_AST_type min_tr (head $ Seq_Conv.e_in_types types)
+    ppar_unary_seq_operator min_tr
+      (STE.ReshapeN in_t_ppar out_t_ppar) producer
+   {- 
   let possible_st_programs = map (\trs -> (trs, rewrite_to_partially_parallel_type_rewrite trs producer))
                              possible_input_trs
   --traceShowM $ "possible_st_programs: " ++ show possible_st_programs
@@ -882,6 +898,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
     ppar_unary_seq_operator min_tr
       (STE.ReshapeN in_t_ppar out_t_ppar) producer
     else throwError $ Slowdown_Failure "Unpartition has no valid upstreams"
+-}
 
 {-
   -- rewrite inputs to get same throuhgput of output,
