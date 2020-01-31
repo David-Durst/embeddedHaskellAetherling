@@ -656,14 +656,13 @@ sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr_n 0) :
   let in_t_ppar = ST_Conv.e_out_type $ ST_Conv.expr_to_types producer_ppar
   cur_idx <- get_cur_index
   return $ STE.ReshapeN in_t_ppar out_t_ppar producer_ppar cur_idx
-{-  
+  
 sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr_n tr_i) :
                                               type_rewrites_tl)
   seq_e@(SeqE.UnpartitionN no ni elem_t producer _) |
   tr_n == no && 1 == ni = do
   add_output_rewrite_for_node seq_e type_rewrites
   throwError $ Slowdown_Failure "this unpartition will create bad reshape, not exploring for now"
--}
 
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : type_rewrites_tl)
   seq_e@(SeqE.UnpartitionN no ni elem_t producer _) = do
