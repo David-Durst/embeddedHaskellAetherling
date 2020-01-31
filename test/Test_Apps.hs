@@ -413,18 +413,6 @@ stencil_2x2_2dC_test in_col in_img = do
   let tuple = map2C seq_tupleC second_row_shifted first_row_shifted
   let partitioned_tuple = partitionC Proxy (Proxy @1) tuple
   mapC seq_tuple_to_seqC partitioned_tuple
-stencil_2x2_generator :: Integer -> [Integer] -> [[[Integer]]]
-stencil_2x2_generator row_size inputs = [
-  [
-    if r - k > 0
-    then 
-      [
-        if c > 1 then inputs !! ((fromIntegral $ (r-k-1) * row_size + (c-1)) -1) else int_to_ignore,
-        if c <= row_size then inputs !! ((fromIntegral $ (r-k-1) * row_size + c) - 1) else int_to_ignore
-      ]
-    else [int_to_ignore, int_to_ignore]
-  | k <- reverse $ [0..1]
-  ] | r <- [1..row_size], c <- [1..row_size]]
 
 -- need thse for Integer and Int versions
 hask_kernel_2x2 :: [[Int]] = [[0,2],[1,0]]
@@ -669,7 +657,7 @@ img_size_big :: Int = fromInteger $ col_size_big*row_size_big
 big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
   com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
-big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big)-- --[1,2,4,8,16,32,64,img_size_big `div` 2, img_size_big, img_size_big *3]--, img_size_big*9]
+big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big)
 big_conv_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_conv_2d s) big_conv_2d_slowdowns
 big_conv_2d_ppar_typechecked =
@@ -708,8 +696,12 @@ big_conv_2d_verilog_prints = sequence $
               big_conv_2d (wrap_single_s s)
               Magma "conv2d") big_conv_2d_slowdowns
 
-big_conv_2d_b2b = conv_2d_b2b_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
+row_size_big_b2b = 64
+col_size_big_b2b = 48
+img_size_big_b2b :: Int = fromInteger $ col_size_big_b2b*row_size_big_b2b
+big_conv_2d_b2b_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big_b2b)
+big_conv_2d_b2b = conv_2d_b2b_shallow_no_input (Proxy @64) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 3072 Atom_Int))
 big_conv_2d_b2b_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d_b2b
 big_conv_2d_b2b_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_conv_2d_b2b s) big_conv_2d_slowdowns
@@ -718,20 +710,20 @@ big_conv_2d_b2b_ppar_typechecked =
 big_conv_2d_b2b_ppar_typechecked' =
   fmap check_type_get_error big_conv_2d_b2b_ppar
 
-big_conv_2d_b2b_inputs :: [[Integer]] = [[1..row_size_big*col_size_big]]
+big_conv_2d_b2b_inputs :: [[Integer]] = [[1..row_size_big_b2b*col_size_big_b2b]]
 big_conv_2d_b2b_output :: [Integer] =
-  conv_2x2_generator $ stencil_2x2_generator row_size_big $
-  conv_generator $ stencil_generator row_size_big [1..row_size_big*col_size_big]
+  conv_2x2_generator $ stencil_2x2_generator row_size_big_b2b $
+  conv_generator $ stencil_generator row_size_big_b2b [1..row_size_big_b2b*col_size_big_b2b]
 big_conv_2d_b2b_results = sequence $
   fmap (\s -> test_with_backend
               big_conv_2d_b2b (wrap_single_s s)
               Magma (Save_Gen_Verilog "big_conv2d_b2b")
-              big_conv_2d_b2b_inputs big_conv_2d_b2b_output) big_conv_2d_slowdowns
+              big_conv_2d_b2b_inputs big_conv_2d_b2b_output) big_conv_2d_b2b_slowdowns
 big_conv_2d_b2b_results_chisel = sequence $
   fmap (\s -> test_with_backend
               big_conv_2d_b2b (wrap_single_s s)
               Chisel (Save_Gen_Verilog "big_conv2d_b2b")
-              big_conv_2d_b2b_inputs big_conv_2d_b2b_output) big_conv_2d_slowdowns
+              big_conv_2d_b2b_inputs big_conv_2d_b2b_output) big_conv_2d_b2b_slowdowns
 
 big_sharpen = sharpen_shallow_no_input (Proxy @1920) $ 
   com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
