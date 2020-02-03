@@ -22,11 +22,11 @@ for circuit_path in ${circuit_dir_path}/*/*/*.v; do
     echo -n "${system}" >> ${results_temp}
     echo -n "|${circuit_name}" >> ${results_temp}
     echo -n "|${circuit_par}" >> ${results_temp}
-    hierarchical_results=$(sed -n -E "s/\|[^\(]top.*\(top\)\s*(.*)$/\1/p" $last_build_dir/utilization_h.txt)
-    slices_results=$(sed -n -E "s/\|\s+Slice\s+\|([^\|]+\|).*$/\1/p" $last_build_dir/utilization.txt)
-    slicel_results=$(sed -n -E "s/\|\s+SLICEL\s+\|([^\|]+\|).*$/\1/p" $last_build_dir/utilization.txt)
-    slicem_results=$(sed -n -E "s/\|\s+SLICEM\s+\|([^\|]+\|).*$/\1/p" $last_build_dir/utilization.txt)
-    timing_results=$(sed -n -E "s/^Slack.*:\s*(-?.*ns).*/\1/p" $last_build_dir/timing.txt)
+    hierarchical_results=$(sed -n -E "s/\|[^\(]top.*\(top\)\s*(.*)$/\1/pI" $last_build_dir/utilization_h.txt)
+    slices_results=$(sed -n -E "s/\|\s+Slice\s+\|([^\|]+\|).*$/\1/pI" $last_build_dir/utilization.txt)
+    slicel_results=$(sed -n -E "s/\|\s+SLICEL\s+\|([^\|]+\|).*$/\1/pI" $last_build_dir/utilization.txt)
+    slicem_results=$(sed -n -E "s/\|\s+SLICEM\s+\|([^\|]+\|).*$/\1/pI" $last_build_dir/utilization.txt)
+    timing_results=$(sed -n -E "s/^Slack.*:\s*(-?.*ns).*/\1/pI" $last_build_dir/timing.txt)
     echo -n "$hierarchical_results" >> ${results_temp}
     echo -n "$slices_results" >> ${results_temp}
     echo -n "$slicel_results" >> ${results_temp}
