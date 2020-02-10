@@ -27,6 +27,8 @@ import qualified Data.Map as M
 import Debug.Trace
 import Data.Time
 import System.IO.Unsafe
+import Control.DeepSeq
+import GHC.Generics (Generic)
 {-
 rewrite_to_partially_parallel_old :: Int -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel_old s seq_expr = do
@@ -76,8 +78,8 @@ rewrite_to_partially_parallel_type_rewrite' tr seq_expr = do
   --traceM ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
   startEvalMemoT $ sequence_to_partially_parallel tr seq_expr
 
-data Program_And_Area = PA { program :: STE.Expr, area :: Int }
-  deriving (Show, Eq)
+data Program_And_Area = PA { program :: !STE.Expr, area :: !Int }
+  deriving (Show, Eq, Generic, NFData)
 rewrite_to_partially_parallel_slowdown :: Int -> SeqE.Expr -> [Program_And_Area]
 rewrite_to_partially_parallel_slowdown s seq_expr = do
   let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
@@ -114,14 +116,15 @@ rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
     let first_st_expr = rewrite_to_partially_parallel_type_rewrite first_out_tr
                         seq_expr
     let other_trs = tail possible_output_types
-    program $ L.foldl' (\(PA min_st_expr min_st_area) next_tr -> do
+    let x = L.foldl' (\(PA min_st_expr min_st_area) next_tr -> do
                    let next_st_expr = rewrite_to_partially_parallel_type_rewrite
                                       next_tr seq_expr
                    let next_st_area = Comp_Area.get_area next_st_expr
-                   if min_st_area <= next_st_area && (not $ Has_Error.has_error min_st_expr)
+                   force $ if min_st_area <= next_st_area && (not $ Has_Error.has_error min_st_expr)
                      then PA min_st_expr min_st_area
                      else PA next_st_expr next_st_area
                ) (PA first_st_expr (Comp_Area.get_area first_st_expr)) other_trs
+    traceShow ("resulting area" ++ show (area x)) $ program x
  {-
 
 rewrite_to_partially_parallel_search' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
@@ -656,13 +659,15 @@ sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr_n 0) :
   let in_t_ppar = ST_Conv.e_out_type $ ST_Conv.expr_to_types producer_ppar
   cur_idx <- get_cur_index
   return $ STE.ReshapeN in_t_ppar out_t_ppar producer_ppar cur_idx
-  
+
+  {-
 sequence_to_partially_parallel type_rewrites@(tr0@(TimeR tr_n tr_i) :
                                               type_rewrites_tl)
   seq_e@(SeqE.UnpartitionN no ni elem_t producer _) |
   tr_n == no && 1 == ni = do
   add_output_rewrite_for_node seq_e type_rewrites
   throwError $ Slowdown_Failure "this unpartition will create bad reshape, not exploring for now"
+-}
 
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_no) : type_rewrites_tl)
   seq_e@(SeqE.UnpartitionN no ni elem_t producer _) = do
@@ -811,7 +816,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
 
   -- just get possible type rewrites for the input two seqs, rest aren't changed by unpartition
   let unparititioned_in_seq = SeqT.SeqT no (SeqT.SeqT ni SeqT.IntT)
-  --traceShowM $ "unpartition " ++ show no ++ " " ++ show ni
+  traceShowM $ "unpartition " ++ show no ++ " " ++ show ni
   --traceShowM $ "slowdown: " ++ show slowdown
   --traceShowM $ "type_rewrites: " ++ show type_rewrites
   let possible_trs_for_in_seq = rewrite_all_AST_types slowdown unparititioned_in_seq
@@ -830,14 +835,14 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
               STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types first_st_expr)
               out_t_ppar first_st_expr reshape_idx
         let other_trs = tail possible_input_trs
-        L.foldl' (\(min_tr, min_st_area) next_tr -> do
+        L.foldl' (\(!min_tr, !min_st_area) next_tr -> do
                      let next_st_expr = rewrite_to_partially_parallel_type_rewrite
                                         next_tr producer
                      let next_st_expr_with_reshape = 
                            STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types next_st_expr)
                            out_t_ppar next_st_expr reshape_idx
                      let next_st_area = Comp_Area.get_area next_st_expr_with_reshape
-                     if min_st_area <= next_st_area || Has_Error.has_error next_st_expr
+                     force $ if min_st_area <= next_st_area || Has_Error.has_error next_st_expr
                        then (min_tr, min_st_area)
                        else (next_tr, next_st_area)
                  ) (first_out_tr, (Comp_Area.get_area first_st_with_reshape)) other_trs

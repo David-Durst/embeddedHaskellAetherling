@@ -3,6 +3,8 @@ import qualified Control.Monad.State as S
 import Control.Monad.Identity
 import Debug.Trace
 import qualified Data.Map as M
+import Control.DeepSeq
+import GHC.Generics (Generic)
 
 fail_message :: String -> String -> String
 fail_message fName tName = fName ++ " must receive " ++ tName ++
@@ -15,7 +17,7 @@ fail_message_edge fName tName = fName ++ " must receive " ++ tName ++
 
 data DAG_Index = No_Index
   | Index Int
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Generic, NFData)
 
 incr_DAG_index :: DAG_Index -> DAG_Index
 incr_DAG_index No_Index = No_Index

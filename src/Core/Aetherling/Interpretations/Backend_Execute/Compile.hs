@@ -107,6 +107,7 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
           Left x -> error $ "Compiler Error: " ++ show x
           Right x -> x
   let expr_latencies = map CL.compute_latency deep_st_programs
+  traceShowM $ "Expr latencies: " ++ show expr_latencies
   -- convert each STIR expr to a string for the backend with an added test hardness
   test_strs <-
         case l_target of
@@ -137,6 +138,7 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
                  )
               exprs_and_str_data_and_latencies
           Text -> error "Can't run tests with Text backend."
+  traceShowM $ "test string length " ++ (show $ length $ head test_strs)
   sequence $ map
     (\(test_str, idx) -> do
         case l_target of
@@ -155,7 +157,9 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
             process_result_to_test_result process_result circuit_file
           Chisel -> do
             circuit_file <- emptySystemTempFile "ae_circuit.scala"
+            traceShowM "going to write file"
             write_file_ae circuit_file test_str
+            traceShowM "wrote file"
             let save_file_args = if save_gen_verilog verilog_conf
                   then do
                   let name = get_verilog_save_name verilog_conf
@@ -436,7 +440,9 @@ compile_with_slowdown_to_expr shallow_seq_program s = do
         s deep_seq_program_with_indexes
   if Has_Error.has_error deep_st_program
     then deep_st_program
-    else add_registers deep_st_program
+    else do
+    let x = add_registers deep_st_program
+    traceShow (Comp_Area.get_area x) x
   
 compile_with_slowdown_to_all_possible_expr :: (Shallow_Types.Aetherling_Value a) =>
                                               RH.Rewrite_StateM a -> Int ->

@@ -43,6 +43,7 @@ generate_and_save_tester_io_for_st_program ::
   (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr -> [a] -> b -> IO Tester_Files
 generate_and_save_tester_io_for_st_program p inputs output = do
+  traceShowM $ "ports: " ++ (show $ expr_to_outer_types p)
   let num_in_ports = length $ e_in_types $ expr_to_outer_types p
   -- generate files
   test_input_file_names <-
@@ -55,22 +56,30 @@ generate_and_save_tester_io_for_st_program p inputs output = do
   test_out_valid_file_name <- emptySystemTempFile "ae_out_valid.json"
 
   -- write the IO strings to files
+  traceShowM "writing inputs and outputs for test"
   let tester_strings = generate_tester_input_output_for_st_program json_conf p
                        inputs output
   let input_strs = tester_inputs tester_strings
+  traceShowM "writing inputs and outputs for test1"
   mapM (\(file_name, idx) ->
           writeFile file_name (input_strs !! idx)
       ) (zip test_input_file_names [0..])
+  traceShowM "writing inputs and outputs for test2"
   mapM (\(file_name, idx) ->
           writeFile file_name (show_no_quotes $
                                map (make_bool_string_for_backend json_conf) $
                                tester_valid_in tester_strings !! idx)
       ) (zip test_in_valid_file_names [0..])
+  traceShowM "writing inputs and outputs for test3"
   let output_str = tester_output tester_strings
+  traceShowM $ "len of output_str " ++ show (length output_str)
+  traceShowM "writing inputs and outputs for test4"
   writeFile test_output_file_name output_str
+  traceShowM "writing inputs and outputs for test5"
   writeFile test_out_valid_file_name (show_no_quotes $
                                       map (make_bool_string_for_backend json_conf) $
                                       tester_valid_out tester_strings)
+  traceShowM "finished writing inputs and outputs for test"
 
   -- compute whether input and outputs are nested
   let inputs_nested = map (\input_str -> (head $ tail input_str) == '[')
@@ -83,6 +92,63 @@ generate_and_save_tester_io_for_st_program p inputs output = do
 
   return $ Tester_Files inputs_file_data test_in_valid_file_names
     output_file_data test_out_valid_file_name (tester_clocks tester_strings)
+
+
+test_gen_io_for_st ::
+  (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
+  Expr_Types -> [a] -> b -> IO Tester_Files
+test_gen_io_for_st ports inputs output = do
+  let num_in_ports = length $ e_in_types ports
+  -- generate files
+  test_input_file_names <-
+    mapM (\idx -> emptySystemTempFile ("ae_input_" ++ show idx ++ ".json"))
+    [0..num_in_ports-1]
+  test_in_valid_file_names <-
+    mapM (\idx -> emptySystemTempFile ("ae_in_valid_" ++ show idx ++ ".json"))
+    [0..num_in_ports-1]
+  test_output_file_name <- emptySystemTempFile "ae_output.json"
+  test_out_valid_file_name <- emptySystemTempFile "ae_out_valid.json"
+
+  -- write the IO strings to files
+  traceShowM "writing inputs and outputs for test"
+  let tester_strings = generate_tester_input_output_for_st_program json_conf p
+                       inputs output
+  let input_strs = tester_inputs tester_strings
+  traceShowM "writing inputs and outputs for test1"
+  mapM (\(file_name, idx) ->
+          writeFile file_name (input_strs !! idx)
+      ) (zip test_input_file_names [0..])
+  traceShowM "writing inputs and outputs for test2"
+  mapM (\(file_name, idx) ->
+          writeFile file_name (show_no_quotes $
+                               map (make_bool_string_for_backend json_conf) $
+                               tester_valid_in tester_strings !! idx)
+      ) (zip test_in_valid_file_names [0..])
+  traceShowM "writing inputs and outputs for test3"
+  let output_str = tester_output tester_strings
+  traceShowM $ "len of output_str " ++ show (length output_str)
+  traceShowM "writing inputs and outputs for test4"
+  writeFile test_output_file_name output_str
+  traceShowM "writing inputs and outputs for test5"
+  writeFile test_out_valid_file_name (show_no_quotes $
+                                      map (make_bool_string_for_backend json_conf) $
+                                      tester_valid_out tester_strings)
+  traceShowM "finished writing inputs and outputs for test"
+
+  -- compute whether input and outputs are nested
+  let inputs_nested = map (\input_str -> (head $ tail input_str) == '[')
+                      input_strs
+  let output_nested = (head $ tail output_str) == '['
+  let inputs_file_data =
+        map (\(input_path, is_nested) -> Test_File_Data input_path is_nested)
+        (zip test_input_file_names inputs_nested)
+  let output_file_data = Test_File_Data test_output_file_name output_nested
+
+  return $ Tester_Files inputs_file_data test_in_valid_file_names
+    output_file_data test_out_valid_file_name (tester_clocks tester_strings)
+
+
+    
 
 generate_tester_input_output_for_st_program ::
   (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>

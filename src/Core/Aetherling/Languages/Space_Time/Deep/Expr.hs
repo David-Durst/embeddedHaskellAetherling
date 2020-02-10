@@ -1,6 +1,8 @@
 module Aetherling.Languages.Space_Time.Deep.Expr where
 import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Monad_Helpers
+import Control.DeepSeq
+import GHC.Generics (Generic)
 
 data Expr =
   IdN {seq_in :: Expr, index :: DAG_Index}
@@ -276,7 +278,7 @@ data Expr =
        seq_in :: Expr,
        index :: DAG_Index
        }
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Generic, NFData)
 
 is_error_node :: Expr -> Bool
 is_error_node (ErrorN _ _) = True

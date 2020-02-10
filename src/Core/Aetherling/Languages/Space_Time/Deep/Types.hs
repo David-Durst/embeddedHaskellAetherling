@@ -1,4 +1,6 @@
 module Aetherling.Languages.Space_Time.Deep.Types where
+import Control.DeepSeq
+import GHC.Generics (Generic)
 
 data AST_Type =
   UnitT
@@ -8,7 +10,7 @@ data AST_Type =
   | STupleT Int AST_Type
   | SSeqT Int AST_Type
   | TSeqT Int Int AST_Type
-  deriving (Show, Ord, Eq)
+  deriving (Show, Ord, Eq, Generic, NFData)
 
 st_int = IntT
 
@@ -48,7 +50,7 @@ data AST_Value =
   | STupleV [AST_Value]
   | SSeqV [AST_Value]
   | TSeqV {vals :: [AST_Value], i_v :: Int}
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Generic, NFData)
 
 size_int :: Int
 size_int = 8

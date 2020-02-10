@@ -51,9 +51,6 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
   is_verilog tester_io_paths = do
   let p_types = expr_to_outer_types p
   let num_ports = length $ in_ports $ module_outer_results $ module_str_data
-  let chisel_io = generate_tester_input_output_for_st_program chisel_conf
-                 p inputs output
-                 --"val myObject = jsonAst.convertTo[MyObjectType]"
   -- these are nested for both space and time
   -- issue: if 1 input per clock, then need to remove the space dimension
   let f_inputs = foldl (++) "" $
@@ -83,7 +80,7 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
   let test_start =
         tab_str ++ "poke_nested(c.valid_up, 1.B)\n" ++
         tab_str ++ "var output_counter = 0\n" ++
-        tab_str ++ "val run_clks = " ++ show (tester_clocks chisel_io) ++ "\n" ++
+        tab_str ++ "val run_clks = " ++ show (tester_clocks_files tester_io_paths) ++ "\n" ++
         tab_str ++ "val pipeline_clks = " ++ show output_latency ++ "\n" ++
         tab_str ++ "val total_clks = run_clks + pipeline_clks\n" ++
         tab_str ++ "for(f_clk <- 0 to (total_clks - 1)) {\n" ++
