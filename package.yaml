@@ -49,6 +49,7 @@ dependencies:
 - safe
 - filepath
 - timeit
+- deepseq
 
 ghc-options:
 - -O2
@@ -86,6 +87,8 @@ library:
     - Rank2Types
     - InstanceSigs
     - BangPatterns
+    - DeriveGeneric
+    - DeriveAnyClass
 
 executables:
   Aetherling-AppTest-exe:
