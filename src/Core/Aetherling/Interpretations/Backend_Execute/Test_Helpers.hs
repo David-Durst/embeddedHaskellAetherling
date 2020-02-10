@@ -44,7 +44,8 @@ generate_and_save_tester_io_for_st_program ::
   Expr -> [a] -> b -> IO Tester_Files
 generate_and_save_tester_io_for_st_program p inputs output = do
   traceShowM $ "ports: " ++ (show $ expr_to_outer_types p)
-  let num_in_ports = length $ e_in_types $ expr_to_outer_types p
+  let p_types = expr_to_outer_types p
+  let num_in_ports = length $ e_in_types p_types
   -- generate files
   test_input_file_names <-
     mapM (\idx -> emptySystemTempFile ("ae_input_" ++ show idx ++ ".json"))
@@ -57,7 +58,7 @@ generate_and_save_tester_io_for_st_program p inputs output = do
 
   -- write the IO strings to files
   traceShowM "writing inputs and outputs for test"
-  let tester_strings = generate_tester_input_output_for_st_program json_conf p
+  let tester_strings = generate_tester_input_output_for_st_program json_conf p_types
                        inputs output
   let input_strs = tester_inputs tester_strings
   traceShowM "writing inputs and outputs for test1"
@@ -97,8 +98,8 @@ generate_and_save_tester_io_for_st_program p inputs output = do
 test_gen_io_for_st ::
   (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr_Types -> [a] -> b -> IO Tester_Files
-test_gen_io_for_st ports inputs output = do
-  let num_in_ports = length $ e_in_types ports
+test_gen_io_for_st p_types inputs output = do
+  let num_in_ports = length $ e_in_types p_types
   -- generate files
   test_input_file_names <-
     mapM (\idx -> emptySystemTempFile ("ae_input_" ++ show idx ++ ".json"))
@@ -111,8 +112,9 @@ test_gen_io_for_st ports inputs output = do
 
   -- write the IO strings to files
   traceShowM "writing inputs and outputs for test"
-  let tester_strings = generate_tester_input_output_for_st_program json_conf p
+  let tester_strings = generate_tester_input_output_for_st_program json_conf p_types
                        inputs output
+                       {-
   let input_strs = tester_inputs tester_strings
   traceShowM "writing inputs and outputs for test1"
   mapM (\(file_name, idx) ->
@@ -124,6 +126,7 @@ test_gen_io_for_st ports inputs output = do
                                map (make_bool_string_for_backend json_conf) $
                                tester_valid_in tester_strings !! idx)
       ) (zip test_in_valid_file_names [0..])
+-}
   traceShowM "writing inputs and outputs for test3"
   let output_str = tester_output tester_strings
   traceShowM $ "len of output_str " ++ show (length output_str)
@@ -134,7 +137,7 @@ test_gen_io_for_st ports inputs output = do
                                       map (make_bool_string_for_backend json_conf) $
                                       tester_valid_out tester_strings)
   traceShowM "finished writing inputs and outputs for test"
-
+{-
   -- compute whether input and outputs are nested
   let inputs_nested = map (\input_str -> (head $ tail input_str) == '[')
                       input_strs
@@ -146,16 +149,17 @@ test_gen_io_for_st ports inputs output = do
 
   return $ Tester_Files inputs_file_data test_in_valid_file_names
     output_file_data test_out_valid_file_name (tester_clocks tester_strings)
+-}
+  undefined
 
 
     
 
 generate_tester_input_output_for_st_program ::
   (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
-  ST_Val_To_String_Config -> Expr -> [a] -> b -> Tester_IO
-generate_tester_input_output_for_st_program conf p inputs output = do
+  ST_Val_To_String_Config -> Expr_Types -> [a] -> b -> Tester_IO
+generate_tester_input_output_for_st_program conf p_types inputs output = do
   -- get the mapping from flat st to flat_idx
-  let p_types = expr_to_outer_types p
   let in_types_and_values = zip (e_in_types p_types) inputs
 
   let tester_inputs = map (\(t, v) ->
