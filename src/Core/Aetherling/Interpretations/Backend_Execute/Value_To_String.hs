@@ -6,6 +6,8 @@ import qualified Data.Map.Strict as M
 import Data.List
 import Debug.Trace
 import Data.Char
+import Control.Monad.ST
+import Data.Array.ST
 
 data ST_Val_String = ST_Val_String {
   st_values :: String,
@@ -107,10 +109,10 @@ flatten_ast_value (SSeqV vals) = concatMap flatten_ast_value vals
 flatten_ast_value (TSeqV vals _) = concatMap flatten_ast_value vals
 
 data ST_Val_Index = ST_Val_Index {
-  flat_idx :: Int,
-  mv_valid :: Bool,
-  flat_s :: Int,
-  flat_t :: Int
+  flat_idx :: !Int,
+  mv_valid :: !Bool,
+  flat_s :: !Int,
+  flat_t :: !Int
   } deriving (Show, Eq)
 
 remove_sseq_length_one :: ST_Val_To_String_Config -> [[String]] -> [String]
@@ -145,6 +147,28 @@ generate_st_val_idxs_for_st_type t = do
   --let grouped_and_sorted_just_vals = map (map magma_value) grouped_and_sorted_by_s
   -- need to filter out quotes from string printing
   --filter (\x -> x /= '\"') $ show grouped_and_sorted_just_vals
+{-
+data Parallel_Index = Parallel_Index {
+  start_index :: !Int,
+  incr_index :: !Int
+  } deriving (Show, Eq)
+-- | Given a space-time type, get the parallel elements per clock
+-- and how the indexes increment per clock
+get_parallel_indexes_and_increments :: AST_Type -> [Int]
+get_parallel_indexes_and_increments t =
+  
+  undefined
+
+data Flat_ST_Data = Flat_ST {
+  
+                            }
+gen_st_matrix :: Int -> Int -> ST s (STArray s (Int, Int) ST_Val_Index)
+gen_st_matrix rows cols =
+  newArray ((0,0),(rows-1,cols-1)) (ST_Val_Index 0 False 0 0)
+
+-}
+concatMap' :: Foldable t => (a -> [b]) -> t a -> [b]
+concatMap' f = reverse . foldl' (\acc x -> f x ++ acc) []
 
 generate_st_val_idxs_for_st_type' :: AST_Type -> Int -> Int -> Int ->
                                       Int -> Int -> Bool ->
@@ -166,34 +190,34 @@ generate_st_val_idxs_for_st_type' (STupleT n t) total_width
   let element_width = total_width `div` n
   let element_time = total_time
   let element_valid_time = valid_time
-  let element_strs = [generate_st_val_idxs_for_st_type' t
-                      element_width element_time element_valid_time
-                      (cur_space + j*element_width) cur_time
-                      valid
-                      (cur_idx + j*element_width*element_valid_time)
-                     | j <- [0..n-1]]
-  concat element_strs
+  concatMap' 
+    (\j -> generate_st_val_idxs_for_st_type' t
+           element_width element_time element_valid_time
+           (cur_space + j*element_width) cur_time
+           valid
+           (cur_idx + j*element_width*element_valid_time))
+    [0..n-1]
 generate_st_val_idxs_for_st_type' (SSeqT n t) total_width
   total_time valid_time cur_space cur_time valid cur_idx = do
   let element_width = total_width `div` n
   let element_time = total_time
   let element_valid_time = valid_time
-  let element_strs = [generate_st_val_idxs_for_st_type' t
-                      element_width element_time element_valid_time
-                      (cur_space + j*element_width) cur_time
-                      valid
-                      (cur_idx + j*element_width*element_valid_time)
-                     | j <- [0..n-1]]
-  concat element_strs
+  concatMap'
+    (\j -> generate_st_val_idxs_for_st_type' t
+           element_width element_time element_valid_time
+           (cur_space + j*element_width) cur_time
+           valid
+           (cur_idx + j*element_width*element_valid_time))
+    [0..n-1]
 generate_st_val_idxs_for_st_type' (TSeqT n i t) total_width
   total_time valid_time cur_space cur_time valid cur_idx = do
   let element_width = total_width
   let element_time = total_time `div` (n+i)
   let element_valid_time = valid_time `div` n
-  let element_strs = [generate_st_val_idxs_for_st_type' t
-                      element_width element_time element_valid_time
-                      cur_space (cur_time + j * element_time)
-                      (valid && j < n)
-                      (cur_idx + j*element_width*element_valid_time)
-                     | j <- [0..(n+i)-1]]
-  concat element_strs
+  concatMap' 
+    (\j -> generate_st_val_idxs_for_st_type' t
+           element_width element_time element_valid_time
+           cur_space (cur_time + j * element_time)
+           (valid && j < n)
+           (cur_idx + j*element_width*element_valid_time))
+    [0..(n+i)-1]

@@ -149,9 +149,6 @@ stencil_2d_results' = sequence $
               stencil_2d_inputs stencil_2d_output)
   [2]
 
--- need thse for Integer and Int versions
-hask_kernel :: [[Int]] = [[0,1,0],[1,2,1],[0,1,0]]
-hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
 tuple_2d_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @3) $
                     fmap (list_to_seq (Proxy @3)) $
@@ -202,14 +199,6 @@ conv_2d_ppar_typechecked =
 conv_2d_ppar_typechecked' =
   fmap check_type_get_error conv_2d_ppar
 conv_2d_inputs :: [[Integer]] = stencil_2d_inputs
-conv_generator :: [[[Integer]]] -> [Integer]
-conv_generator stencil_2d_output = [
-  if window_valid
-  then (sum $ zipWith (*) window_flat hask_kernel') `mod` 256 `div` 16
-  else int_to_ignore
-  | window <- stencil_2d_output,
-    let window_flat = concat window,
-    let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
 conv_2d_output :: [Integer] = [
   if window_valid
   then (sum $ zipWith (*) window_flat hask_kernel') `mod` 256 `div` 16

@@ -47,9 +47,16 @@ import GHC.TypeLits
 import GHC.TypeLits.Extra
 import System.TimeIt
 import Data.Ratio
+import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
+import Aetherling.Languages.Space_Time.Deep.Types
+import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types
+import Aetherling.Interpretations.Backend_Execute.Test_Helpers
+import Aetherling.Interpretations.Space_Time_Printer
+import Aetherling.Interpretations.Backend_Execute.Value_To_String
+import Data.List
 
 main = do
-  putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 5
+  --putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 5
   --let possible_output_types = rewrite_all_AST_types 480  $
    --                           SeqT 480 0 (SeqT 1 2 (SeqT 1 2 seq_int))
   --Seq_Conv.e_out_type $ Seq_Conv.expr_to_outer_types $ big_conv_2d_seq_idx
@@ -75,7 +82,9 @@ main = do
   --
   --putStrLn "exactly 1 st_programs with registers"
   --putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ add_registers deep_st_program
-  return ()
+  --return ()
+  let p_types = Expr_Types {e_in_types = [TSeqT 622080 0 (TSeqT 1 2 st_int)], e_out_type = TSeqT 622080 0 (TSeqT 1 2 st_int)}
+  test_gen_io_for_st p_types big_conv_2d_inputs big_conv_2d_output
   
 stencil_3_1dC_nested in_seq = do
   let shifted_once = shiftC (Proxy @1) in_seq
@@ -97,8 +106,7 @@ stencil_3x3_2dC_test in_col in_img = do
   let triple = map2C seq_tuple_appendC tuple first_row_shifted
   let partitioned_triple = partitionC Proxy (Proxy @1) triple
   mapC seq_tuple_to_seqC partitioned_triple
-hask_kernel :: [[Int]] = [[0,1,0],[1,2,1],[0,1,0]]
-hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
+
 tuple_2d_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @3) $
                     fmap (list_to_seq (Proxy @3)) $
@@ -118,11 +126,15 @@ conv_2d_shallow_no_input in_col in_seq = do
   unpartitionC (unpartitionC conv_result)
 
 row_size_big :: Integer = 1920
-col_size_big :: Integer = 1080
+col_size_big :: Integer = 324
 img_size_big :: Int = fromInteger $ col_size_big*row_size_big
 big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 622080 Atom_Int))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
 big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big)-- --[1,2,4,8,16,32,64,img_size_big `div` 2, img_size_big, img_size_big *3]--, img_size_big*9]
 big_conv_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_conv_2d s) big_conv_2d_slowdowns
+
+big_conv_2d_inputs :: [[Integer]] = [[1..row_size_big*col_size_big]]
+big_conv_2d_output :: [Integer] =
+  conv_generator $ stencil_generator row_size_big [1.. row_size_big*col_size_big]

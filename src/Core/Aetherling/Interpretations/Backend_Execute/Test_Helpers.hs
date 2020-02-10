@@ -97,7 +97,7 @@ generate_and_save_tester_io_for_st_program p inputs output = do
 
 test_gen_io_for_st ::
   (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
-  Expr_Types -> [a] -> b -> IO Tester_Files
+  Expr_Types -> [a] -> b -> IO ()
 test_gen_io_for_st p_types inputs output = do
   let num_in_ports = length $ e_in_types p_types
   -- generate files
@@ -150,7 +150,6 @@ test_gen_io_for_st p_types inputs output = do
   return $ Tester_Files inputs_file_data test_in_valid_file_names
     output_file_data test_out_valid_file_name (tester_clocks tester_strings)
 -}
-  undefined
 
 
     
@@ -204,6 +203,18 @@ stencil_2x2_generator row_size inputs = do
         get_input (r - stencil_r) (c - stencil_c)
       | stencil_c <- [1,0]] | stencil_r <- [1,0]]
     | r <- [0..num_rows-1], c <- [0..num_cols-1]]
+
+-- need thse for Integer and Int versions
+hask_kernel :: [[Int]] = [[0,1,0],[1,2,1],[0,1,0]]
+hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
+conv_generator :: [[[Integer]]] -> [Integer]
+conv_generator stencil_2d_output = [
+  if window_valid
+  then (sum $ zipWith (*) window_flat hask_kernel') `mod` 256 `div` 16
+  else int_to_ignore
+  | window <- stencil_2d_output,
+    let window_flat = concat window,
+    let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
 
 int_to_3char :: PrintfArg a => a -> String
 int_to_3char x = printf "%03d" x
