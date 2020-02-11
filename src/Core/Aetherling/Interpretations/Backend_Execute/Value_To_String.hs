@@ -6,8 +6,9 @@ import qualified Data.Map.Strict as M
 import Data.List
 import Debug.Trace
 import Data.Char
-import Control.Monad.ST
+import qualified Control.Monad.ST.Strict as STS
 import Data.Array.ST
+import qualified Data.Array as Arr
 
 data ST_Val_String = ST_Val_String {
   st_values :: String,
@@ -135,6 +136,24 @@ generate_st_val_idxs_for_st_type t = do
   let total_width = num_atoms_per_valid_t t
   let total_time = clocks_t t
   let valid_time = valid_clocks_t t
+  --let initial_idxs = newArray ((0,0),(total_time-1,total_width-1)) (ST_Val_Index 0 False 0 0)
+  --set_val_index t total_width total_time valid_time 0 0 True 0 initial_idxs
+  let arr = runSTArray $ initialize_and_set_val_indexes t total_width total_time
+            valid_time
+  [[ arr Arr.! (t, s) | s <- [0..total_width - 1]] | t <- [0..total_time-1]]
+
+initialize_and_set_val_indexes :: AST_Type -> Int -> Int ->
+  Int -> STS.ST s (STArray s (Int, Int) ST_Val_Index)
+initialize_and_set_val_indexes t total_width total_time valid_time = do
+  let idxs = newArray ((0,0),(total_time-1,total_width-1)) (ST_Val_Index 0 False 0 0)
+  set_val_index t total_width total_time valid_time 0 0 True 0 idxs
+  idxs
+  
+generate_st_val_idxs_for_st_type_old :: AST_Type -> [[ST_Val_Index]]
+generate_st_val_idxs_for_st_type_old t = do
+  let total_width = num_atoms_per_valid_t t
+  let total_time = clocks_t t
+  let valid_time = valid_clocks_t t
   let flat_results =
         generate_st_val_idxs_for_st_type' t total_width total_time
         valid_time 0 0 True 0
@@ -152,21 +171,62 @@ data Parallel_Index = Parallel_Index {
   start_index :: !Int,
   incr_index :: !Int
   } deriving (Show, Eq)
+-}
 -- | Given a space-time type, get the parallel elements per clock
 -- and how the indexes increment per clock
-get_parallel_indexes_and_increments :: AST_Type -> [Int]
-get_parallel_indexes_and_increments t =
-  
-  undefined
+set_val_index :: AST_Type -> Int -> Int -> Int ->
+                 Int -> Int -> Bool ->
+                 Int -> STS.ST s (STArray s (Int,Int) ST_Val_Index) -> STS.ST s ()
+set_val_index (STupleT n t) total_width
+  total_time valid_time cur_space cur_time valid cur_idx st_val_idxs = do
+  let element_width = total_width `div` n
+  let element_time = total_time
+  let element_valid_time = valid_time
+  mapM
+    (\j -> set_val_index t
+           element_width element_time element_valid_time
+           (cur_space + j*element_width) cur_time
+           valid
+           (cur_idx + j*element_width*element_valid_time)
+           st_val_idxs
+    )
+    [0..n-1]
+  return ()
+set_val_index (SSeqT n t) total_width
+  total_time valid_time cur_space cur_time valid cur_idx st_val_idxs = do
+  let element_width = total_width `div` n
+  let element_time = total_time
+  let element_valid_time = valid_time
+  mapM
+    (\j -> set_val_index t
+           element_width element_time element_valid_time
+           (cur_space + j*element_width) cur_time
+           valid
+           (cur_idx + j*element_width*element_valid_time)
+           st_val_idxs
+    )
+    [0..n-1]
+  return ()
+set_val_index (TSeqT n i t) total_width
+  total_time valid_time cur_space cur_time valid cur_idx st_val_idxs = do
+  let element_width = total_width
+  let element_time = total_time `div` (n+i)
+  let element_valid_time = valid_time `div` n
+  mapM
+    (\j -> set_val_index t
+           element_width element_time element_valid_time
+           cur_space (cur_time + j * element_time)
+           (valid && j < n)
+           (cur_idx + j*element_width*element_valid_time)
+           st_val_idxs
+    )
+    [0..(n+i)-1]
+  return ()
+set_val_index _ _ _ _ cur_space cur_time valid cur_idx st_val_idxs = do
+  unwrapped_st_val_idxs <- st_val_idxs
+  writeArray unwrapped_st_val_idxs (cur_time, cur_space)
+    (ST_Val_Index cur_idx valid cur_space cur_time)
 
-data Flat_ST_Data = Flat_ST {
-  
-                            }
-gen_st_matrix :: Int -> Int -> ST s (STArray s (Int, Int) ST_Val_Index)
-gen_st_matrix rows cols =
-  newArray ((0,0),(rows-1,cols-1)) (ST_Val_Index 0 False 0 0)
-
--}
 concatMap' :: Foldable t => (a -> [b]) -> t a -> [b]
 concatMap' f = reverse . foldl' (\acc x -> f x ++ acc) []
 
