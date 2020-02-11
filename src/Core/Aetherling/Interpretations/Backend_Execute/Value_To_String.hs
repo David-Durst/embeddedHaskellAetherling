@@ -131,8 +131,8 @@ convert_st_val_idxs_to_vals :: M.Map Int String -> [[ST_Val_Index]] -> [[String]
 convert_st_val_idxs_to_vals idx_to_str st_val_idxs =
   map (map (\st_val_idx -> M.findWithDefault "0" (flat_idx st_val_idx) idx_to_str)) st_val_idxs
 
-generate_st_val_idxs_for_st_type :: AST_Type -> [[ST_Val_Index]]
-generate_st_val_idxs_for_st_type t = do
+generate_st_val_idxs_for_st_type_new :: AST_Type -> [[ST_Val_Index]]
+generate_st_val_idxs_for_st_type_new t = do
   let total_width = num_atoms_per_valid_t t
   let total_time = clocks_t t
   let valid_time = valid_clocks_t t
@@ -149,8 +149,8 @@ initialize_and_set_val_indexes t total_width total_time valid_time = do
   set_val_index t total_width total_time valid_time 0 0 True 0 idxs
   return idxs
   
-generate_st_val_idxs_for_st_type_old :: AST_Type -> [[ST_Val_Index]]
-generate_st_val_idxs_for_st_type_old t = do
+generate_st_val_idxs_for_st_type :: AST_Type -> [[ST_Val_Index]]
+generate_st_val_idxs_for_st_type t = do
   let total_width = num_atoms_per_valid_t t
   let total_time = clocks_t t
   let valid_time = valid_clocks_t t
@@ -182,50 +182,53 @@ set_val_index (STupleT n t) total_width
   let element_width = total_width `div` n
   let element_time = total_time
   let element_valid_time = valid_time
-  mapM
-    (\j -> set_val_index t
+  foldM'
+    (\_ j -> set_val_index t
            element_width element_time element_valid_time
            (cur_space + j*element_width) cur_time
            valid
            (cur_idx + j*element_width*element_valid_time)
            st_val_idxs
-    )
-    [0..n-1]
+    ) () [0..n-1]
   return ()
 set_val_index (SSeqT n t) total_width
   total_time valid_time cur_space cur_time valid cur_idx st_val_idxs = do
   let element_width = total_width `div` n
   let element_time = total_time
   let element_valid_time = valid_time
-  mapM
-    (\j -> set_val_index t
+  foldM'
+    (\_ j -> set_val_index t
            element_width element_time element_valid_time
            (cur_space + j*element_width) cur_time
            valid
            (cur_idx + j*element_width*element_valid_time)
            st_val_idxs
-    )
-    [0..n-1]
+    ) () [0..n-1]
   return ()
 set_val_index (TSeqT n i t) total_width
   total_time valid_time cur_space cur_time valid cur_idx st_val_idxs = do
   let element_width = total_width
   let element_time = total_time `div` (n+i)
   let element_valid_time = valid_time `div` n
-  mapM
-    (\j -> set_val_index t
+  foldM'
+    (\_ j -> set_val_index t
            element_width element_time element_valid_time
            cur_space (cur_time + j * element_time)
            (valid && j < n)
            (cur_idx + j*element_width*element_valid_time)
            st_val_idxs
-    )
-    [0..(n+i)-1]
+    ) () [0..(n+i)-1]
   return ()
 set_val_index _ _ _ _ cur_space cur_time valid cur_idx st_val_idxs = do
   writeArray st_val_idxs (cur_time, cur_space)
     (ST_Val_Index cur_idx valid cur_space cur_time)
-
+    
+foldM' :: (Monad m) => (a -> b -> m a) -> a -> [b] -> m a
+foldM' _ z [] = return z
+foldM' f z (x:xs) = do
+  z' <- f z x
+  z' `seq` foldM' f z' xs
+  
 concatMap' :: Foldable t => (a -> [b]) -> t a -> [b]
 concatMap' f = reverse . foldl' (\acc x -> f x ++ acc) []
 
