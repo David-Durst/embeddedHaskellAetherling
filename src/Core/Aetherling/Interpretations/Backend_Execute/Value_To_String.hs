@@ -145,9 +145,9 @@ generate_st_val_idxs_for_st_type t = do
 initialize_and_set_val_indexes :: AST_Type -> Int -> Int ->
   Int -> STS.ST s (STArray s (Int, Int) ST_Val_Index)
 initialize_and_set_val_indexes t total_width total_time valid_time = do
-  let idxs = newArray ((0,0),(total_time-1,total_width-1)) (ST_Val_Index 0 False 0 0)
+  idxs <- newArray ((0,0),(total_time-1,total_width-1)) (ST_Val_Index 0 False 0 0)
   set_val_index t total_width total_time valid_time 0 0 True 0 idxs
-  idxs
+  return idxs
   
 generate_st_val_idxs_for_st_type_old :: AST_Type -> [[ST_Val_Index]]
 generate_st_val_idxs_for_st_type_old t = do
@@ -176,7 +176,7 @@ data Parallel_Index = Parallel_Index {
 -- and how the indexes increment per clock
 set_val_index :: AST_Type -> Int -> Int -> Int ->
                  Int -> Int -> Bool ->
-                 Int -> STS.ST s (STArray s (Int,Int) ST_Val_Index) -> STS.ST s ()
+                 Int -> STArray s (Int,Int) ST_Val_Index -> STS.ST s ()
 set_val_index (STupleT n t) total_width
   total_time valid_time cur_space cur_time valid cur_idx st_val_idxs = do
   let element_width = total_width `div` n
@@ -223,8 +223,7 @@ set_val_index (TSeqT n i t) total_width
     [0..(n+i)-1]
   return ()
 set_val_index _ _ _ _ cur_space cur_time valid cur_idx st_val_idxs = do
-  unwrapped_st_val_idxs <- st_val_idxs
-  writeArray unwrapped_st_val_idxs (cur_time, cur_space)
+  writeArray st_val_idxs (cur_time, cur_space)
     (ST_Val_Index cur_idx valid cur_space cur_time)
 
 concatMap' :: Foldable t => (a -> [b]) -> t a -> [b]
