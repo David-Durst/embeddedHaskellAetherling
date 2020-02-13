@@ -52,6 +52,7 @@ dependencies:
 - deepseq
 - array
 - massiv
+- text
 
 ghc-options:
 - -O2
