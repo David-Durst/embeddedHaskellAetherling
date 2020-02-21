@@ -54,6 +54,9 @@ dependencies:
 - massiv
 - text
 - proto-lens
+- microlens
+- lens-family
+- bytestring
 
 ghc-options:
 - -O2
