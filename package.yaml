@@ -111,6 +111,8 @@ library:
   other-modules:
     - Proto.Spacetime
     - Proto.Spacetime_Fields
+    - Proto.Sequence
+    - Proto.Sequence_Fields
 
 executables:
   Aetherling-AppTest-exe:
