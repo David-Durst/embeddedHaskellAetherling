@@ -10,6 +10,13 @@ import qualified Control.Monad.ST.Strict as STS
 import Data.Array.ST
 import qualified Data.Array as Arr
 import qualified Data.Text as T
+import qualified Proto.Sequence as PS
+import qualified Proto.Sequence_Fields as PS
+import Data.ProtoLens.Message
+import Data.ProtoLens.Encoding
+import Data.ProtoLens (defMessage)
+import Lens.Family2 ((&), (.~), (^.))
+import qualified Data.ByteString as BS
 
 data ST_Val_String = ST_Val_String {
   st_values :: String,
@@ -87,12 +94,17 @@ convert_seq_val_to_st_val_string' seq_val st_type conf = do
   
 class Convertible_To_Atom_Strings a where
   convert_to_flat_atom_list :: a -> ST_Val_To_String_Config -> [String]
+  convert_to_haskell_proto :: a -> PS.ValueSerialized
 
 instance Convertible_To_Atom_Strings Integer where
   convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf x]
+  convert_to_haskell_proto x = defMessage
+    & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
 
 instance Convertible_To_Atom_Strings Bool where
   convert_to_flat_atom_list x conf = [make_bool_string_for_backend conf x]
+  convert_to_haskell_proto x = defMessage
+    & PS.maybe'elems .~ Just (PS.ValueSerialized'Bit x)
   
 instance (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Convertible_To_Atom_Strings (a, b) where
@@ -100,10 +112,24 @@ instance (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
     [make_tuple_string_for_backend conf
       (head $ convert_to_flat_atom_list x conf)
       (head $ convert_to_flat_atom_list y conf)]
+  convert_to_haskell_proto (x, y) = defMessage
+    & PS.maybe'elems .~ Just (PS.ValueSerialized'Tuple tuple_val)
+    where
+      left_elem = convert_to_haskell_proto x
+      right_elem = convert_to_haskell_proto y
+      tuple_val = defMessage
+        & PS.left .~ left_elem
+        & PS.right .~ right_elem
 
 instance (Convertible_To_Atom_Strings a) => Convertible_To_Atom_Strings [a] where
   convert_to_flat_atom_list xs conf = concat $
     map (\x -> convert_to_flat_atom_list x conf) xs
+  convert_to_haskell_proto xs = defMessage
+    & PS.maybe'elems .~ Just (PS.ValueSerialized'Seq seq_val)
+    where
+      xs_serialized = map convert_to_haskell_proto xs
+      seq_val = defMessage
+                & PS.values .~ xs_serialized
 
 instance Convertible_To_Atom_Strings AST_Atoms where
   convert_to_flat_atom_list (BitA b) conf =
@@ -114,6 +140,7 @@ instance Convertible_To_Atom_Strings AST_Atoms where
     [make_tuple_string_for_backend conf
       (head $ convert_to_flat_atom_list x conf)
       (head $ convert_to_flat_atom_list y conf)]
+  convert_to_haskell_proto _ = error "not supporting converting ast_atoms to proto"
 
 -- these atoms are just used to convert between
 -- the atoms in AST_Value and the string representations from Convertible_To_Atom_Strings

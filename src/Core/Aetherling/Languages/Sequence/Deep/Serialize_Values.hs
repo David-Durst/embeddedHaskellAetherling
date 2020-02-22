@@ -1,5 +1,6 @@
 module Aetherling.Languages.Sequence.Deep.Serialize_Values where
 import Aetherling.Languages.Sequence.Deep.Types
+import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import Proto.Sequence as PS
 import Proto.Sequence_Fields as PS
 import Data.ProtoLens.Message
@@ -62,3 +63,10 @@ load_type' serialized_type = do
         then SeqT n (load_type' $ elem_t_xs !! 0)
         else error "deserializing failed as Seq didn't have 1 elem_T"
     _ -> error "failed match in deserializing"
+
+
+save_value :: Convertible_To_Atom_Strings a => FilePath -> a -> IO ()
+save_value file_path vals = do
+  let serialized_vals = convert_to_haskell_proto vals
+  let byte_str_vals = encodeMessage serialized_vals
+  Data.ByteString.writeFile file_path byte_str_vals
