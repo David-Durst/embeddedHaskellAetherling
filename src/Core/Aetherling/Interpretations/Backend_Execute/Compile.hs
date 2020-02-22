@@ -130,8 +130,18 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
             let exprs_and_str_data_and_latencies =
                   zip3 deep_st_programs modules_str_data expr_latencies
             mapM (\(p_expr, p_str, p_latency) -> do
-                     tester_files <- Test_Helpers.generate_and_save_tester_io_for_st_program
+                     tester_files <- Test_Helpers.generate_tester_io_with_rust
                                      p_expr inputs output
+                     mapM (\(Test_Helpers.Rust_Gen_Params values_proto
+                              type_proto values_json valids_json) -> 
+                              run_process
+                              ("aetherling " ++
+                               values_proto ++ " " ++
+                               type_proto ++ " " ++
+                               values_json ++ " " ++
+                               valids_json
+                            ) Nothing
+                       ) (Test_Helpers.rust_params tester_files)
                      return $ C_Tester.add_test_harness_to_chisel_str p_expr p_str
                        inputs output p_latency (use_verilog_sim_source verilog_conf)
                        tester_files

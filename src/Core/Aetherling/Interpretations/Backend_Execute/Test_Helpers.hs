@@ -1,4 +1,6 @@
 module Aetherling.Interpretations.Backend_Execute.Test_Helpers where
+import qualified Aetherling.Languages.Sequence.Deep.Serialize as SeqSer
+import qualified Aetherling.Languages.Space_Time.Deep.Serialize as STSer
 import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
@@ -9,6 +11,7 @@ import Data.Ratio
 import Data.List.Split
 import Text.Printf
 import Debug.Trace
+import Data.List
 
 data Test_Result = Test_Success
                   | Test_Failure {
@@ -31,13 +34,75 @@ data Test_File_Data = Test_File_Data {
   nested_array :: Bool
   } deriving (Show, Eq)
 
+data Rust_Gen_Params = Rust_Gen_Params {
+  values_proto :: FilePath,
+  type_proto :: FilePath,
+  values_json :: FilePath,
+  valids_json :: FilePath
+  } deriving (Show, Eq)
+
 data Tester_Files = Tester_Files {
   tester_inputs_fp :: [Test_File_Data],
   tester_valid_in_fp :: [FilePath],
   tester_output_fp :: Test_File_Data,
   tester_valid_out_fp :: FilePath,
+  rust_params :: [Rust_Gen_Params],
   tester_clocks_files :: Int
   } deriving (Show, Eq)
+
+
+generate_tester_io_with_rust ::
+  (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
+  Expr -> [a] -> b -> IO Tester_Files
+generate_tester_io_with_rust p inputs output = do
+  traceShowM $ "ports: " ++ (show $ expr_to_outer_types p)
+  let p_types = expr_to_outer_types p
+  let num_in_ports = length $ e_in_types p_types
+  -- generate files
+  test_input_file_names <-
+    mapM (\idx -> emptySystemTempFile ("ae_input_" ++ show idx ++ ".json"))
+    [0..num_in_ports-1]
+  test_in_valid_file_names <-
+    mapM (\idx -> emptySystemTempFile ("ae_in_valid_" ++ show idx ++ ".json"))
+    [0..num_in_ports-1]
+  test_output_file_name <- emptySystemTempFile "ae_output.json"
+  test_out_valid_file_name <- emptySystemTempFile "ae_out_valid.json"
+
+  let test_values_file_names = test_input_file_names ++ [test_output_file_name]
+  let test_valids_file_names = test_in_valid_file_names ++ [test_out_valid_file_name]
+  
+  test_values_proto_file_names <-
+    mapM (\idx -> emptySystemTempFile ("ae_proto_values_" ++ show idx ++ ".bin"))
+    [0..num_in_ports]
+  test_types_proto_file_names <-
+    mapM (\idx -> emptySystemTempFile ("ae_proto_types_" ++ show idx ++ ".bin"))
+    [0..num_in_ports]
+
+  let params = map (\(a, b, c, d) -> Rust_Gen_Params a b c d)
+               (zip4 test_values_proto_file_names test_types_proto_file_names
+                test_values_file_names test_valids_file_names)
+      
+
+  -- write the IO strings to files
+  mapM (\(file_name, input) ->
+          SeqSer.save_value file_name input
+      ) (zip test_values_proto_file_names inputs)
+  SeqSer.save_value (last test_values_proto_file_names) output
+    
+  mapM (\(file_name, t) ->
+          STSer.save_type file_name t
+      ) (zip test_types_proto_file_names (e_in_types p_types ++ [e_out_type p_types]))
+
+  let inputs_nested = map (\t -> num_atoms_per_valid_t t > 1) (e_in_types p_types)
+  let output_nested = num_atoms_per_valid_t (e_out_type p_types) > 1
+  let clks = clocks_t $ e_out_type p_types
+
+  let inputs_fp = map (\(path, nested) -> Test_File_Data path nested)
+                  (zip test_input_file_names inputs_nested)
+  let output_fp = Test_File_Data test_output_file_name output_nested
+
+  return $ Tester_Files inputs_fp test_in_valid_file_names
+    output_fp test_out_valid_file_name params clks
 
 generate_and_save_tester_io_for_st_program ::
   (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
@@ -92,7 +157,7 @@ generate_and_save_tester_io_for_st_program p inputs output = do
   let output_file_data = Test_File_Data test_output_file_name output_nested
 
   return $ Tester_Files inputs_file_data test_in_valid_file_names
-    output_file_data test_out_valid_file_name (tester_clocks tester_strings)
+    output_file_data test_out_valid_file_name [] (tester_clocks tester_strings)
 
 
 test_gen_io_for_st ::
