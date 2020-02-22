@@ -1,4 +1,4 @@
-module Aetherling.Languages.Sequence.Deep.Serialize_Values where
+module Aetherling.Languages.Sequence.Deep.Serialize where
 import Aetherling.Languages.Sequence.Deep.Types
 import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import Proto.Sequence as PS
