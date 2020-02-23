@@ -26,7 +26,8 @@ To get started with the VM:
         ii. Move to the directory containing Aetherling's Haskell implementation
             1. Type the following (without "") in the terminal: "cd /home/pldi/pldi/embeddedHaskellAetherling/"
         iii. Run the test suite
-            1. Type the following (without "") in the terminal: "stack test --test-arguments '--num-threads 1'"
+            1. Type the following (without "" but with '') in the terminal: "stack test --test-arguments '--num-threads 1'"
+            2. Note: this command will take 5-10 minutes.
     b. The unit tests can be found in the file "/home/pldi/pldi/embeddedHaskellAetherling/test/Test_Slowdown.hs"
     c. The applications can be found in the file "/home/pldi/pldi/embeddedHaskellAetherling/test/Test_Apps.hs"
     d. Each unit and application test stresses the following components of the system:
