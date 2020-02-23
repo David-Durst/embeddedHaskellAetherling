@@ -30,5 +30,7 @@ cp $dir/compile.sh $dir/results/
 
 cp -r ${dir}/../test/verilog_examples $dir/results/
 cd $dir/results/
+mkdir -p results
+touch results/log.log
 ./remote.sh verilog_examples/ &> results/log.log
 
