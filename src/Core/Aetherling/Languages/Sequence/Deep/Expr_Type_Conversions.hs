@@ -24,6 +24,8 @@ size_t (SeqT _ _ _) = 0
 data Expr_Types = Expr_Types { e_in_types :: [AST_Type], e_out_type :: AST_Type}
   deriving (Show, Eq, Ord)
 
+print_seq_output_type = putStrLn $ e_out_type $ expr_to_outer_types
+print_seq_input_types = putStrLn $ e_in_types $ expr_to_outer_types
 expr_to_types_seq = expr_to_types
 -- | Convert an Expr to it's input and output tpyes not considering the input
 -- expressions to it
