@@ -2,7 +2,23 @@
 To get started with the VM:
 1. Use VirtualBox version 6.0.10 available at https://www.virtualbox.org/wiki/Download_Old_Builds_6_0
 2. Login using user "pldi" and password "the_pldi".
-3. Run Aetherling's test suite which will schedule 22 unit tests, the 4 applications in the paper, and 2 additional applications.
+3. OPTIONAL: this step is not necessary to complete the rest of the getting started guide. The reviewers may stress the results from the Sequence Language, Space-Time IR, Scheduler, and Rewrite Rules sections of the paper without this step. However, it's required to complete the step-by-step instructions and reproduce the graphs in the Evaluation section. We cannot redistribute the Xilinx Vivado tools with the VM due to their licensing agreement.
+    a. Go to https://www.xilinx.com/member/forms/download/xef-vivado.html?filename=Xilinx_Vivado_SDK_Web_2018.2_0614_1954_Lin64.bin in a browser in the VM
+    b. Create an account with Xilinx and download the Vivado HLx 2018.2: WebPACK and Editions - Linux Self Extracting Web Installer (the software in the above link).
+    c. Open a terminal
+        i. Click the start menu (officially the "Whisker Menu" in XFCE) in the top, left corner of the screen
+        ii. Select "Terminal Emulator" from the options
+    d. Move to the Download directory
+        1. Type the following (without "") in the terminal: 
+            i. "cd /home/pldi/Downloads/"
+            ii. "chmod u+x *.bin"
+            iii. "./X*"
+        2. Follow the GUI installer
+            i. Click "Continue" when offered to download a newer version instead of upgrading to a newer version
+            ii. On step "Select Edition To Install", select "Vivado HL WebPACK" 
+            iii. On the step "Vivado HL Webpack" where you are asked to select which components to install, use the default settings
+            iv. In our experience, the installer takes about 30 minutes to run. Proceed with the rest of the Getting Started Guide while it runs in the background.
+4. Run Aetherling's test suite which will schedule 22 unit tests, the 4 applications in the paper, and 2 additional applications.
     a. Run the suite by executing the following commands in the VM
         i. Open a terminal
             1. Click the start menu (officially the "Whisker Menu" in XFCE) in the top, left corner of the screen
@@ -28,7 +44,7 @@ To get started with the VM:
             3. Simulating the Verilog with Verilator and ensuring that with the inputs specified by the _inputs variable, such as "single_map_inputs", the circuit produces output which has the correct Space-Time type and the values are the same as those specified by the _output variable, such as "single_map_output". 
             4. See "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies" for the resulting verilog files. While these files will exist before running the tests, the tests will overwrite them.
         v. Evaluation (section 8 of paper) - see Step-by-Step Instructions section
-    e. To explore each of the variables discussed in 3.d
+    e. To explore each of the variables discussed in 4.d
         i. Use the Haskell REPL
             1. Start the RPL by typing the following (without "") in the terminal: "stack ghci --test"
             2. The above command should be issued from the directory "/home/pldi/pldi/embeddedHaskellAetherling/" 
