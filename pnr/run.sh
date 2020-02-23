@@ -33,5 +33,5 @@ cd $dir/results/
 mkdir -p results
 touch results/log.log
 ./remote.sh verilog_examples/ &> results/log.log
-python -m aetherling $dir/results_processed.tex graph_results $dir/results.csv $dir/results_guide_all_types.csv
+python -m aetherling $dir/results.csv graph_results
 
