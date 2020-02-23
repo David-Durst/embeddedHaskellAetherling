@@ -75,8 +75,8 @@ To get started with the VM:
         vii. To run fewer designs through Vivado and thus finish pnr/run.sh more quickly, delete some of these files. Note: doing so may break the chart generation code for visualizing the results. You may be required to edit "/home/pldi/pldi/aetherling/aetherling/helpers/pnr_graphs.py" to deal with less data.
     c. When the prior step finishes, the graphs which reproduce figures 11-13 in the paper will be in "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs". Additionally, stdout will contain the data from the graphs in text form.
         i. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_results.pdf" - reproduces figure 11 
-        ii. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_hth.pdf" - reproduces figure 12
-        iii. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_sp.pdf" - reproduces figure 13
+        ii. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_sp.pdf" - reproduces figure 12
+        iii. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_hth.pdf" - reproduces figure 13
         iv. We use the following shorthands in the stdout:
             a. SP - Spatial
             b. HTH - Halide-To-Hardware, ie Halide-HLS
