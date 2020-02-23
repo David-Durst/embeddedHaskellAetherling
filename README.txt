@@ -26,8 +26,8 @@ To get started with the VM:
             1. Emitting an implementation of the Space-Time IR circuit in Magma, a Python HDL.
             2. Running the Magma file to generator Verilog.
             3. Simulating the Verilog with Verilator and ensuring that with the inputs specified by the _inputs variable, such as "single_map_inputs", the circuit produces output which has the correct Space-Time type and the values are the same as those specified by the _output variable, such aas "single_map_outpuot". 
-    e. To explore each of the variables discussed in point 3.d
-        i. Use Haskell REPL
+    e. To explore each of the variables discussed in 3.d
+        i. Use the Haskell REPL
             1. Start the RPL by typing the following (without "") in the terminal: "stack ghci --test"
             2. The above command should be issued from the directory "/home/pldi/pldi/embeddedHaskellAetherling/" 
         ii. Some useful functions in the Haskell terminal are:
@@ -35,7 +35,10 @@ To get started with the VM:
                 1. "print_st (single_map_ppar !! 0)" - example of how to use each. Each _ppar variable is a list of Space-Time IR programs. 
                 Use !! to access one element of the list.
                 1. Note: these programs will not have the registers added for latency match. That is a later pass in the compiler after "compile_with_slowdown_to_expr".
-            2. 
+            2. "print_st_input_types" - This prints a string representation of a Space-Time IR program's input types
+                1. "print_st_input_types (single_map_ppar !! 0)" - example of how to use each.
+            2. "print_st_output_type" - This prints a string representation of a Space-Time IR program's output type
+                1. "print_st_output_type (single_map_ppar !! 0)" - example of how to use each.
         
             
 
