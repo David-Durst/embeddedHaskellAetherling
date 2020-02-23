@@ -33,5 +33,6 @@ cd $dir/results/
 mkdir -p results
 touch results/log.log
 ./remote.sh verilog_examples/ &> results/log.log
+mkdir -p $dir/figs
 python -m aetherling $dir/results.csv graph_results
 

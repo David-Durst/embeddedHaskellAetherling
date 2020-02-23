@@ -25,7 +25,8 @@ To get started with the VM:
         Additionally, each test has a _results variable, such as "single_map_results", which stresses the compiler that lowers from the Space-Time IR to Verilog by:
             1. Emitting an implementation of the Space-Time IR circuit in Magma, a Python HDL.
             2. Running the Magma file to generator Verilog.
-            3. Simulating the Verilog with Verilator and ensuring that with the inputs specified by the _inputs variable, such as "single_map_inputs", the circuit produces output which has the correct Space-Time type and the values are the same as those specified by the _output variable, such aas "single_map_outpuot". 
+            3. Simulating the Verilog with Verilator and ensuring that with the inputs specified by the _inputs variable, such as "single_map_inputs", the circuit produces output which has the correct Space-Time type and the values are the same as those specified by the _output variable, such as "single_map_output". 
+        v. Evaluation (section 8 of paper) - see Step-by-Step Instructions section
     e. To explore each of the variables discussed in 3.d
         i. Use the Haskell REPL
             1. Start the RPL by typing the following (without "") in the terminal: "stack ghci --test"
@@ -43,6 +44,24 @@ To get started with the VM:
             
 
 # Step-by-Step Instructions
+1. To reproduce the experiments in the Evaluation (section 8 of paper)
+    a. Type the following (without "") in the terminal: "cd /home/pldi/pldi/embeddedHaskellAetherling/"
+    b. Type the following (without "") in the terminal: "pnr/run.sh"
+        1. NOTE: This will take between 1 and 4 hours to run. It is doing synthesis and implementation using Xilinx Vivado Design Suite 2018.2 for many designs.
+        2. This step runs synthesis on the verilog files in "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples". 
+        3. The top folders in that directory separate the Aetherling, Halide-HLS (titled halide_to_hardware), and Spatial verilog files. 
+        4. We have included the Halide-HLS and Spatial verilog files generated for the paper. The Aetherling verilog files are regenerated each time the tests are rerun.
+        5. Within each of the aetherling_copies, halide_to_hardware, and spatial folders are the folders for each application in the Evaluation section. These are: map, conv2d, conv2d_b2b, and sharpen. The other apps within the aetherling_copies folder may work but are not part of the paper's results.
+        6. Within each of the app's folders are the verilog files for the app at a specific throughput specified by slowdown. For example, the file "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies/conv2d/conv2d_16.v" has a slowdown of 16, or emits the output at 16th the rate of a pipeline that emitted all output in 1 clock cycle.
+        7. To run fewer designs through Vivado and thus finish pnr/run.sh more quickly, delete some of these files. Note: doing so may break the chart generation code for visualizing the results. You may be required to edit "/home/pldi/pldi/aetherling/aetherling/helpers/pnr_graphs.py" to deal with less data.
+    c. When the prior step finishes, the graphs which reproduce figures 11-13 in the paper will be in "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs". Additionally, stdout will contain the data from the graphs in text form.
+        1. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_results.pdf" - reproduces figure 11 
+        2. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_hth.pdf" - reproduces figure 12
+        3. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_sp.pdf" - reproduces figure 13
+        4. We use the following shorthands in the stdout:
+            a. SP - Spatial
+            b. HTH - Halide-To-Hardware, ie Halide-HLS
+2. 
 
 
 
