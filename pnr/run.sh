@@ -25,9 +25,10 @@ dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 rm -rf $dir/results
 mkdir -p $dir/results
 cp $dir/remote.sh $dir/results/
-scp $dir/constraints*.xdc $dir/results/
-scp $dir/compile.sh $dir/results/
+cp $dir/constraints*.xdc $dir/results/
+cp $dir/compile.sh $dir/results/
 
 cp -r ${dir}/../test/verilog_examples $dir/results/
+cd $dir/results/
 ./remote.sh verilog_examples/ &> results/log.log
 
