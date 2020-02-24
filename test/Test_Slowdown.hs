@@ -584,6 +584,11 @@ tuple_reduce_results = sequence $
               tuple_reduce (wrap_single_s s)
               Magma No_Verilog
               tuple_reduce_inputs tuple_reduce_output) [1,2,4,8]
+tuple_reduce_results' = sequence $
+  fmap (\s -> test_with_backend
+              tuple_reduce (wrap_single_s s)
+              Magma No_Verilog
+              tuple_reduce_inputs tuple_reduce_output) [2]
 tuple_reduce_results_chisel = sequence $
   fmap (\s -> test_with_backend
               tuple_reduce (wrap_single_s s)

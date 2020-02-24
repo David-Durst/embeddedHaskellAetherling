@@ -121,8 +121,8 @@ rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
                                       next_tr seq_expr
                    let next_st_area = Comp_Area.get_area next_st_expr
                    force $ if Has_Error.has_error min_st_expr ||
-                     (next_st_area <= min_st_area &&
-                     (not $ Has_Error.has_error next_st_expr))
+                              (next_st_area <= min_st_area &&
+                               (not $ Has_Error.has_error next_st_expr))
                      then PA next_st_expr next_st_area
                      else PA min_st_expr min_st_area
                ) (PA first_st_expr (Comp_Area.get_area first_st_expr)) other_trs
@@ -1202,22 +1202,26 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
         NonSeqR -> True
         _ -> False
 
-  -- need to know what f_ppar's input type rewrites were
-  -- as those are the inner type rewrites that the map must propagate up
-  f_ppar_in_rewrites_tl_set <- get_input_types_rewrites
-  let f_ppar_in_rewrites_tl = input_rewrites $ head $ S.toList f_ppar_in_rewrites_tl_set
-  
-  -- reset the input type rewrites for the current graph
-  set_input_types_rewrites outer_input_type_rewrites
-  
-  let upstream_type_rewrites = input_rewrite : f_ppar_in_rewrites_tl
-  producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
 
   if bad_input
     then do
     cur_idx <- get_cur_index
     throwError $ Slowdown_Failure "reduce invalid output type rewrite"
-    else get_scheduled_partition input_rewrite f_ppar producer_ppar reshape_to_remove_sseq
+    else do
+    -- need to know what f_ppar's input type rewrites were
+    -- as those are the inner type rewrites that the map must propagate up
+    f_ppar_in_rewrites_tl_set <- get_input_types_rewrites
+    let f_ppar_in_rewrites_tl = input_rewrites $ head $ S.toList f_ppar_in_rewrites_tl_set
+
+    -- reset the input type rewrites for the current graph
+    set_input_types_rewrites outer_input_type_rewrites
+
+    let upstream_type_rewrites = input_rewrite : f_ppar_in_rewrites_tl
+    --traceShowM $ "about to do reduce upstream for op " ++ show producer ++ " with rewrites " ++ show upstream_type_rewrites
+    producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+    --traceShowM "reduce upstream finished"
+    get_scheduled_partition input_rewrite f_ppar producer_ppar reshape_to_remove_sseq
+
   where
     -- note: these type_rewrites represent how the input is rewritten, not the output
     -- like all the type_rewrites passed to sequence_to_partially_parallel
