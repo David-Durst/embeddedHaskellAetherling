@@ -30,6 +30,6 @@ main = defaultMain tests
 tests :: TestTree
 --tests = testGroup "Top Level Aetherling Tests" [slowdown_tests, apps_tests]
 --tests = testGroup "Top Level Aetherling Tests" [apps_tests]
---tests = testGroup "Top Level Aetherling Tests" [slowdown_tests]
-tests = testGroup "Top Level Aetherling Tests" [big_tests]
+tests = testGroup "Top Level Aetherling Tests" [slowdown_tests]
+--tests = testGroup "Top Level Aetherling Tests" [big_tests]
 

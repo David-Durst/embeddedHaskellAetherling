@@ -220,6 +220,7 @@ const_test_seq_idx = add_indexes $ seq_shallow_to_deep const_test
 const_test_ppar = fmap
   (\s -> compile_with_slowdown_to_expr const_test s) [1,3,9]
 const_test_ppar_typechecked = fmap check_type const_test_ppar
+const_test_ppar_typechecked' = fmap check_type_get_error const_test_ppar
 const_test_inputs :: [[Integer]] = []
 const_test_outputs :: [Integer] = [0..8]
 const_test_results = sequence $

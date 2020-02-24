@@ -70,3 +70,8 @@ save_value file_path vals = do
   let serialized_vals = convert_to_haskell_proto vals
   let byte_str_vals = encodeMessage serialized_vals
   Data.ByteString.writeFile file_path byte_str_vals
+
+load_value :: FilePath -> IO ValueSerialized
+load_value file_path = do
+  byte_str_vals <- Data.ByteString.readFile file_path
+  return $ decodeMessageOrDie byte_str_vals

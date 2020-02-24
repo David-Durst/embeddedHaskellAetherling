@@ -124,7 +124,8 @@ rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
                      then PA min_st_expr min_st_area
                      else PA next_st_expr next_st_area
                ) (PA first_st_expr (Comp_Area.get_area first_st_expr)) other_trs
-    traceShow ("resulting area" ++ show (area x)) $ program x
+    --traceShow ("resulting area" ++ show (area x)) $ program x
+    program x
  {-
 
 rewrite_to_partially_parallel_search' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
@@ -1513,6 +1514,18 @@ ppar_AST_value (tr@(SplitR tr_n_outer tr_i_outer tr_n_inner) : type_rewrites_tl)
   let xs_par_chunked = chunksOf tr_n_inner xs_par
   let xs_chunks_as_sseqs = fmap STT.SSeqV xs_par_chunked
   return $ STT.TSeqV xs_chunks_as_sseqs tr_i_outer
+ppar_AST_value (tr@(SplitNestedR (TimeR tr_n tr_i) NonSeqR) : type_rewrites_tl)
+  (SeqT.SeqV xs) = do
+  xs_par <- mapM (ppar_AST_value type_rewrites_tl) xs
+  return $ STT.TSeqV xs_par tr_i
+ppar_AST_value (tr@(SplitNestedR (TimeR tr_n tr_i) tr_tl) : type_rewrites_tl)
+  (SeqT.SeqV xs) = do
+  let chunk_lengths = (length xs) `div` tr_n
+  let xs_chunked = chunksOf chunk_lengths xs
+  xs_par_chunked <- sequence $ fmap (\xs_chunk -> ppar_AST_value
+                              (tr_tl : type_rewrites_tl) (SeqT.SeqV xs_chunk))
+                       xs_chunked
+  return $ STT.TSeqV xs_par_chunked tr_i
 ppar_AST_value (NonSeqR : type_rewrites_tl) (SeqT.STupleV xs) = do
   xs_par <- mapM (ppar_AST_value type_rewrites_tl) xs
   return $ STT.STupleV xs_par

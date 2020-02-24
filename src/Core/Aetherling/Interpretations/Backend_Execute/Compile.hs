@@ -98,16 +98,16 @@ test_with_backend :: (Shallow_Types.Aetherling_Value a,
                      IO [Test_Helpers.Test_Result]
 test_with_backend shallow_seq_program s_target l_target verilog_conf
   inputs output = do
-  traceShowM s_target
-  time <- getZonedTime
-  traceShowM time
+  --traceShowM s_target
+  --time <- getZonedTime
+  --traceShowM time
   -- get STIR expr for each program
   let deep_st_programs =
         case (runExcept $ compile_to_expr shallow_seq_program s_target) of
           Left x -> error $ "Compiler Error: " ++ show x
           Right x -> x
   let expr_latencies = map CL.compute_latency deep_st_programs
-  traceShowM $ "Expr latencies: " ++ show expr_latencies
+  --traceShowM $ "Expr latencies: " ++ show expr_latencies
   -- convert each STIR expr to a string for the backend with an added test hardness
   test_strs <-
         case l_target of
@@ -117,11 +117,21 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
             let exprs_and_str_data_and_latencies =
                   zip3 deep_st_programs modules_str_data expr_latencies
             mapM (\(p_expr, p_str, p_latency) -> do
-                    tester_files <- Test_Helpers.generate_and_save_tester_io_for_st_program
-                                    p_expr inputs output
-                    return $ M_Tester.add_test_harness_to_fault_str p_expr p_str
-                      inputs output p_latency (use_verilog_sim_source verilog_conf)
-                      tester_files
+                     tester_files <- Test_Helpers.generate_tester_io_with_rust
+                                     p_expr inputs output
+                     mapM (\(Test_Helpers.Rust_Gen_Params values_proto
+                              type_proto values_json valids_json) -> 
+                              run_process
+                              ("aetherling " ++
+                               values_proto ++ " " ++
+                               type_proto ++ " " ++
+                               values_json ++ " " ++
+                               valids_json
+                            ) Nothing
+                       ) (Test_Helpers.rust_params tester_files)
+                     return $ M_Tester.add_test_harness_to_fault_str p_expr p_str
+                       inputs output p_latency (use_verilog_sim_source verilog_conf)
+                       tester_files
                 )
               exprs_and_str_data_and_latencies
           Chisel -> do
@@ -148,7 +158,7 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
                  )
               exprs_and_str_data_and_latencies
           Text -> error "Can't run tests with Text backend."
-  traceShowM $ "test string length " ++ (show $ length $ head test_strs)
+  --traceShowM $ "test string length " ++ (show $ length $ head test_strs)
   sequence $ map
     (\(test_str, idx) -> do
         case l_target of
@@ -167,9 +177,9 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
             process_result_to_test_result process_result circuit_file
           Chisel -> do
             circuit_file <- emptySystemTempFile "ae_circuit.scala"
-            traceShowM "going to write file"
+            --traceShowM "going to write file"
             write_file_ae circuit_file test_str
-            traceShowM "wrote file"
+            --traceShowM "wrote file"
             let save_file_args = if save_gen_verilog verilog_conf
                   then do
                   let name = get_verilog_save_name verilog_conf
@@ -451,8 +461,9 @@ compile_with_slowdown_to_expr shallow_seq_program s = do
   if Has_Error.has_error deep_st_program
     then deep_st_program
     else do
-    let x = add_registers deep_st_program
-    traceShow (Comp_Area.get_area x) x
+    --let x = add_registers deep_st_program
+    --traceShow (Comp_Area.get_area x) x
+    add_registers deep_st_program
   
 compile_with_slowdown_to_all_possible_expr :: (Shallow_Types.Aetherling_Value a) =>
                                               RH.Rewrite_StateM a -> Int ->

@@ -55,7 +55,7 @@ generate_tester_io_with_rust ::
   (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Expr -> [a] -> b -> IO Tester_Files
 generate_tester_io_with_rust p inputs output = do
-  traceShowM $ "ports: " ++ (show $ expr_to_outer_types p)
+  --traceShowM $ "ports: " ++ (show $ expr_to_outer_types p)
   let p_types = expr_to_outer_types p
   let num_in_ports = length $ e_in_types p_types
   -- generate files
