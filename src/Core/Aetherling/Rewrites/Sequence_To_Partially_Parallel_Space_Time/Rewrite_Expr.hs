@@ -120,15 +120,28 @@ rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
                    let next_st_expr = rewrite_to_partially_parallel_type_rewrite
                                       next_tr seq_expr
                    let next_st_area = Comp_Area.get_area next_st_expr
+                   let min_st_out_type = ST_Conv.e_out_type $
+                                         ST_Conv.expr_to_types min_st_expr
+                   let next_st_out_type = ST_Conv.e_out_type $
+                                          ST_Conv.expr_to_types next_st_expr
                    force $ if Has_Error.has_error min_st_expr ||
-                              (next_st_area <= min_st_area &&
-                               (not $ Has_Error.has_error next_st_expr))
+                              (next_st_area < min_st_area &&
+                               (not $ Has_Error.has_error next_st_expr)) ||
+                              -- if they produce same program but one has
+                              -- simpler type, take that one
+                              (next_st_area == min_st_area &&
+                               (not $ Has_Error.has_error next_st_expr) && 
+                               (not $ Has_Error.has_error min_st_expr) &&
+                               (STT.num_layers_t next_st_out_type < STT.num_layers_t min_st_out_type)
+                              )
                      then PA next_st_expr next_st_area
                      else PA min_st_expr min_st_area
                ) (PA first_st_expr (Comp_Area.get_area first_st_expr)) other_trs
     --traceShow ("resulting area" ++ show (area x)) $ program x
+    --traceShow ("possible output types" ++ show possible_output_types) $ program x
     program x
  {-
+                   force $ traceShow ("min_st_out_type " ++ show min_st_out_type ++ " min area " ++ show min_st_area ++ " min error " ++ (show $ Has_Error.has_error min_st_expr) ++ (" min layers " ++ (show $ STT.num_layers_t min_st_out_type))) $ traceShow ("next_st_out_type " ++ show next_st_out_type ++ " next_area " ++ show next_st_area ++ " next error " ++ (show $ Has_Error.has_error next_st_expr) ++ (" next layers " ++ (show $ STT.num_layers_t next_st_out_type))) $ if Has_Error.has_error min_st_expr ||
 
 rewrite_to_partially_parallel_search' :: Int -> SeqE.Expr -> Partially_ParallelM STE.Expr
 rewrite_to_partially_parallel_search' s seq_expr = do

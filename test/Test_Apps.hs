@@ -25,7 +25,7 @@ import Data.Traversable
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Ratio
-{-
+
 apps_tests = testGroup "Full Application Tests"
   [
     testCase "map" $
@@ -44,7 +44,7 @@ apps_tests = testGroup "Full Application Tests"
 
 all_types = sequence [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types, --sharpen_results_all_types,
              TS.pyramid_1d_results_all_types]
--}
+
 add_5 atom_in = do
   let const = const_genC (Atom_Int 5) atom_in
   let tupled = atom_tupleC atom_in const

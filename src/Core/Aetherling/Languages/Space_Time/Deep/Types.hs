@@ -138,3 +138,12 @@ diff_types (SSeqT na a) (SSeqT nb b) | na == nb = diff_types a b
 diff_types (TSeqT na ia a) (TSeqT nb ib b) | (na == nb) && (ia == ib) = diff_types a b
 diff_types (STupleT na a) (STupleT nb b) | na == nb = diff_types a b
 diff_types a b = Just a
+
+num_layers_t :: AST_Type -> Int
+num_layers_t UnitT = 1
+num_layers_t BitT = 1
+num_layers_t IntT = 1
+num_layers_t (ATupleT _ _) = 1
+num_layers_t (STupleT n t) = num_layers_t t + 1
+num_layers_t (SSeqT n t) = num_layers_t t + 1
+num_layers_t (TSeqT n i t) = num_layers_t t + 1
