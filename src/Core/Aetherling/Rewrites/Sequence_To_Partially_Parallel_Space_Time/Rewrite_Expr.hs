@@ -120,9 +120,11 @@ rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
                    let next_st_expr = rewrite_to_partially_parallel_type_rewrite
                                       next_tr seq_expr
                    let next_st_area = Comp_Area.get_area next_st_expr
-                   force $ if min_st_area <= next_st_area && (not $ Has_Error.has_error min_st_expr)
-                     then PA min_st_expr min_st_area
-                     else PA next_st_expr next_st_area
+                   force $ if Has_Error.has_error min_st_expr ||
+                     (next_st_area <= min_st_area &&
+                     (not $ Has_Error.has_error next_st_expr))
+                     then PA next_st_expr next_st_area
+                     else PA min_st_expr min_st_area
                ) (PA first_st_expr (Comp_Area.get_area first_st_expr)) other_trs
     --traceShow ("resulting area" ++ show (area x)) $ program x
     program x
@@ -817,7 +819,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
 
   -- just get possible type rewrites for the input two seqs, rest aren't changed by unpartition
   let unparititioned_in_seq = SeqT.SeqT no (SeqT.SeqT ni SeqT.IntT)
-  traceShowM $ "unpartition " ++ show no ++ " " ++ show ni
+  --traceShowM $ "unpartition " ++ show no ++ " " ++ show ni
   --traceShowM $ "slowdown: " ++ show slowdown
   --traceShowM $ "type_rewrites: " ++ show type_rewrites
   let possible_trs_for_in_seq = rewrite_all_AST_types slowdown unparititioned_in_seq
