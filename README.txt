@@ -1,6 +1,7 @@
 # Getting Started Guide 
 To get started with the VM:
 1. Use VirtualBox version 6.0.10 available at https://www.virtualbox.org/wiki/Download_Old_Builds_6_0
+    a. Import the downloaded .ova file using https://docs.oracle.com/cd/E26217_01/E26796/html/qs-import-vm.html
 2. Login using user "pldi" and password "the_pldi".
 3. OPTIONAL: this step is not necessary to complete the rest of the getting started guide. The reviewers may stress the results from the Sequence Language, Space-Time IR, Scheduler, and Rewrite Rules sections of the paper without this step. However, it's required to complete the step-by-step instructions and reproduce the graphs in the Evaluation section. We cannot redistribute the Xilinx Vivado tools with the VM due to their licensing agreement.
     a. Go to https://www.xilinx.com/member/forms/download/xef-vivado.html?filename=Xilinx_Vivado_SDK_Web_2018.2_0614_1954_Lin64.bin in a browser in the VM
