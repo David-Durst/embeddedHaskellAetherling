@@ -7,6 +7,7 @@ import Test_Slowdown
 import Test_Apps
 import Test_Spatial
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
+import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types
 import Aetherling.Interpretations.Backend_Execute.Test_Helpers
 import Aetherling.Interpretations.Space_Time_Printer
@@ -22,10 +23,13 @@ main = defaultMain tests
 --  putStrLn $ show $ length $ tester_inputs $ generate_tester_input_output_for_st_program  json_conf (big_conv_2d_ppar !! 1)  big_conv_2d_inputs  big_conv_2d_output
   --putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ big_conv_2d_ppar !! 0
 --  print_st $ big_conv_2d_ppar !! 6
+--  let p_types = Expr_Types {e_in_types = [TSeqT 2073600 0 (TSeqT 1 2 IntT)], e_out_type = TSeqT 2073600 0 (TSeqT 1 2 IntT)}
+--  test_gen_io_for_st p_types big_conv_2d_inputs big_conv_2d_output
+--  return ()
 
 tests :: TestTree
---tests = testGroup "Top Level Aetherling Tests" [slowdown_tests, apps_tests]
+tests = testGroup "Top Level Aetherling Tests" [slowdown_tests, apps_tests]
 --tests = testGroup "Top Level Aetherling Tests" [apps_tests]
 --tests = testGroup "Top Level Aetherling Tests" [slowdown_tests]
-tests = testGroup "Top Level Aetherling Tests" [big_tests]
+--tests = testGroup "Top Level Aetherling Tests" [big_tests]
 

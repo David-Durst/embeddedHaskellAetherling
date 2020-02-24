@@ -8,7 +8,7 @@ maintainer:          "davidbdurst@gmail.com"
 copyright:           "2018 David Durst"
 
 extra-source-files:
-- README.md
+- protoAetherling/**/*.proto
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -49,6 +49,14 @@ dependencies:
 - safe
 - filepath
 - timeit
+- deepseq
+- array
+- massiv
+- text
+- proto-lens
+- microlens
+- lens-family
+- bytestring
 
 ghc-options:
 - -O2
@@ -61,7 +69,18 @@ ghc-options:
     #- -Wall - comeback to this, too many warnings right now to handle
     #- -fplugin GHC.TypeLits.KnownNat.Solver
 
+custom-setup:
+  dependencies:
+    - base
+    - Cabal
+    - proto-lens-setup
+
+build-tools: proto-lens-protoc:proto-lens-protoc
+
 library:
+  dependencies:
+  - base
+  - proto-lens-runtime
   source-dirs: src/Core
   default-extensions:
     - DataKinds
@@ -86,6 +105,14 @@ library:
     - Rank2Types
     - InstanceSigs
     - BangPatterns
+    - DeriveGeneric
+    - DeriveAnyClass
+    - OverloadedStrings
+  other-modules:
+    - Proto.Spacetime
+    - Proto.Spacetime_Fields
+    - Proto.Sequence
+    - Proto.Sequence_Fields
 
 executables:
   Aetherling-AppTest-exe:

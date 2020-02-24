@@ -1,4 +1,6 @@
 module Aetherling.Languages.Space_Time.Deep.Types where
+import Control.DeepSeq
+import GHC.Generics (Generic)
 
 data AST_Type =
   UnitT
@@ -8,7 +10,7 @@ data AST_Type =
   | STupleT Int AST_Type
   | SSeqT Int AST_Type
   | TSeqT Int Int AST_Type
-  deriving (Show, Ord, Eq)
+  deriving (Show, Ord, Eq, Generic, NFData)
 
 st_int = IntT
 
@@ -48,7 +50,7 @@ data AST_Value =
   | STupleV [AST_Value]
   | SSeqV [AST_Value]
   | TSeqV {vals :: [AST_Value], i_v :: Int}
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Generic, NFData)
 
 size_int :: Int
 size_int = 8
@@ -136,3 +138,12 @@ diff_types (SSeqT na a) (SSeqT nb b) | na == nb = diff_types a b
 diff_types (TSeqT na ia a) (TSeqT nb ib b) | (na == nb) && (ia == ib) = diff_types a b
 diff_types (STupleT na a) (STupleT nb b) | na == nb = diff_types a b
 diff_types a b = Just a
+
+num_layers_t :: AST_Type -> Int
+num_layers_t UnitT = 1
+num_layers_t BitT = 1
+num_layers_t IntT = 1
+num_layers_t (ATupleT _ _) = 1
+num_layers_t (STupleT n t) = num_layers_t t + 1
+num_layers_t (SSeqT n t) = num_layers_t t + 1
+num_layers_t (TSeqT n i t) = num_layers_t t + 1

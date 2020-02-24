@@ -219,7 +219,10 @@ const_test_seq_idx = add_indexes $ seq_shallow_to_deep const_test
 -- the output only has 2 regs since 1 of 3 gets folded into const
 const_test_ppar = fmap
   (\s -> compile_with_slowdown_to_expr const_test s) [1,3,9]
+const_test_ppar' = fmap
+  (\s -> compile_with_slowdown_to_expr const_test s) [9]
 const_test_ppar_typechecked = fmap check_type const_test_ppar
+const_test_ppar_typechecked' = fmap check_type_get_error const_test_ppar
 const_test_inputs :: [[Integer]] = []
 const_test_outputs :: [Integer] = [0..8]
 const_test_results = sequence $
@@ -292,6 +295,7 @@ map_to_up =
 map_to_up_seq_idx = add_indexes $ seq_shallow_to_deep map_to_up
 map_to_up_ppar = fmap (\s -> compile_with_slowdown_to_expr map_to_up s) [1,2,4]
 map_to_up_ppar_typechecked = fmap check_type map_to_up_ppar
+map_to_up_ppar_typechecked' = fmap check_type_get_error map_to_up_ppar
 map_to_up_inputs :: [[Integer]] = [[2]]
 map_to_up_output :: [Integer] = [2,2,2,2]
 map_to_up_results = sequence $
@@ -582,6 +586,11 @@ tuple_reduce_results = sequence $
               tuple_reduce (wrap_single_s s)
               Magma No_Verilog
               tuple_reduce_inputs tuple_reduce_output) [1,2,4,8]
+tuple_reduce_results' = sequence $
+  fmap (\s -> test_with_backend
+              tuple_reduce (wrap_single_s s)
+              Magma No_Verilog
+              tuple_reduce_inputs tuple_reduce_output) [2]
 tuple_reduce_results_chisel = sequence $
   fmap (\s -> test_with_backend
               tuple_reduce (wrap_single_s s)

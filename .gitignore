@@ -24,3 +24,7 @@ vBuild/
 src/Core/Aetherling/Interpretations/Backend_Execute/Constants.hs
 parser.out
 parsetab.py
+stack.yaml.lock
+target/
+*.prof
+*.hp

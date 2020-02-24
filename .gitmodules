@@ -1,0 +1,3 @@
+[submodule "protoAetherling"]
+	path = protoAetherling
+	url = https://github.com/David-Durst/protoAetherling.git

@@ -12,6 +12,8 @@ import Text.Printf
 import Math.NumberTheory.Primes.Factorisation
 import Math.NumberTheory.Powers.Squares
 import Debug.Trace
+import Control.DeepSeq
+import GHC.Generics (Generic)
 
 data Type_Rewrite =
   SpaceR { tr_n :: Int}
@@ -22,7 +24,7 @@ data Type_Rewrite =
   -- currently only using for two TimeR's
   | SplitNestedR { tr_head :: Type_Rewrite, tr_tail :: Type_Rewrite }
   | NonSeqR
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic, NFData)
 
 num_seq_layers :: SeqT.AST_Type -> Int
 num_seq_layers (SeqT.SeqT n t) = 1 + num_seq_layers t
