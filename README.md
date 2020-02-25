@@ -11,7 +11,7 @@ To build this part of the project:
 2. Clone this repo
 1. Copy `src/Core/Aetherling/Interpretations/Backend_Execute/Constants.hs.template` to `src/Core/Aetherling/Interpretations/Backend_Execute/Constants.hs` and update
 `root_dir` to point to the top folder of this repository on your system.
-    1. Optionally, update `chisel_dir` to point to [the chisel backend](https://github.com/David-Durst/chiselAetherling) to use Chisel instead of CoreIR and verilog.
+    1. Optionally, update `chisel_dir` to point to [the chisel backend](https://github.com/David-Durst/chiselAetherling) to use Chisel instead of Magma/CoreIR.
 3. Build the repo:
 ```
 stack build
