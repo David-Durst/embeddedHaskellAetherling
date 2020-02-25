@@ -109,6 +109,10 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
   let expr_latencies = map CL.compute_latency deep_st_programs
   --traceShowM $ "Expr latencies: " ++ show expr_latencies
   -- convert each STIR expr to a string for the backend with an added test hardness
+  let one_program = case s_target of
+        Min_Area_With_Slowdown_Factor s -> True
+        All_With_Slowdown_Factor s -> False
+        Type_Rewrites trs -> True
   test_strs <-
         case l_target of
           Magma -> do
@@ -172,7 +176,7 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
             process_result <- run_process ("python " ++ circuit_file) Nothing
             if save_gen_verilog verilog_conf
               then copy_verilog_file "vBuild/top.v" test_verilog_dir
-                   (get_verilog_save_name verilog_conf) s_target idx
+                   (get_verilog_save_name verilog_conf) s_target idx one_program
               else return ()
             process_result_to_test_result process_result circuit_file
           Chisel -> do
@@ -184,7 +188,7 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
                   then do
                   let name = get_verilog_save_name verilog_conf
                   let verilog_file = test_verilog_dir ++ "/" ++
-                        params_to_file_name name s_target idx ++ ".v"
+                        params_to_file_name name s_target idx one_program ++ ".v"
                   takeDirectory verilog_file ++ " " ++ verilog_file
                   else ""
             process_result <- run_process
@@ -247,8 +251,6 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
   deep_st_programs <- add_io_to_except $
                       compile_to_expr shallow_seq_program s_target
   -- now append to each program the code to print out verilog
-  let verilog_names = map (\i -> output_name_template ++ "_" ++ s_str ++ "_" ++
-                            show i ++ ".v") [0..length deep_st_programs - 1]
   case l_target of
     Magma -> do
       compile_to_magma deep_st_programs
@@ -256,6 +258,10 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
       compile_to_chisel deep_st_programs
     Text -> compile_to_text deep_st_programs
     where
+      one_program = case s_target of
+                      Min_Area_With_Slowdown_Factor s -> True
+                      All_With_Slowdown_Factor s -> False
+                      Type_Rewrites trs -> True
       -- | the next three are helpers for compile_to_file for each backend
       compile_to_magma :: [STE.Expr] ->
                           ExceptT Compiler_Error IO [Process_Result]
@@ -264,7 +270,7 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                                 M_Expr_To_Str.module_to_magma_string)
                            deep_st_programs
         lift $ sequence $ map (\(p_str, idx) -> do
-                let output_file_name = compute_output_file_name idx
+                let output_file_name = compute_output_file_name idx one_program
                 let p_str_with_verilog_out = p_str ++ "\n" ++
                       M_Expr_To_Str.magma_verilog_output_epilogue
                       (replaceExtension "v" output_file_name)
@@ -279,7 +285,7 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                            deep_st_programs
         lift $ sequence $
           map (\(p_str, idx) -> do
-                  let output_file_name = compute_output_file_name idx
+                  let output_file_name = compute_output_file_name idx one_program
                   let verilog_file_name = replaceExtension output_file_name "v"
                   -- this puts the output_file in the chisel dir for sbt
                   let chisel_file_name = chisel_dir ++ "/" ++
@@ -303,21 +309,21 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
         lift $ sequence $
         map (\(p_expr,idx) -> do
                 let p_str = ST_Print.print_st_str p_expr
-                let output_file_name = compute_output_file_name idx
+                let output_file_name = compute_output_file_name idx one_program
                 write_file_ae output_file_name p_str
                 return $ Process_Result ExitSuccess "" ""
             ) (zip deep_st_programs [0..])
 
       s_str = slowdown_target_to_file_name_string s_target
-      compute_output_file_name :: Int -> String
-      compute_output_file_name i = do
+      compute_output_file_name :: Int -> Bool -> String
+      compute_output_file_name i exclude_index = do
         let (l_target_dir, l_file_ending) =
               case l_target of
                 Magma -> ("magma_examples", ".py")
                 Chisel -> ("chisel_examples", ".scala")
                 Text -> ("st_examples", ".txt")
         root_dir ++ "/test/no_bench/" ++ l_target_dir ++ "/" ++
-          params_to_file_name output_name_template s_target i ++
+          params_to_file_name output_name_template s_target i exclude_index ++
           l_file_ending
 
 write_file_ae :: String -> String -> IO ()
@@ -327,18 +333,22 @@ write_file_ae file_name p_str = do
 
 test_verilog_dir = root_dir ++
                    "/test/verilog_examples/aetherling_copies/"
-copy_verilog_file :: FilePath -> String -> String -> Slowdown_Target -> Int -> IO ()
-copy_verilog_file source_file verilog_dir name s_target idx = do
+copy_verilog_file :: FilePath -> String -> String -> Slowdown_Target -> Int ->
+                     Bool -> IO ()
+copy_verilog_file source_file verilog_dir name s_target idx one_program = do
   -- test verilog dir is the directory of all the verilog output
   -- each design indicated by name gets its own folder
   -- so the different throughputs can be in the same folder
   let file_dir = verilog_dir ++ "/" ++ name
   createDirectoryIfMissing True file_dir
   copyFile source_file
-    (verilog_dir ++ "/" ++ params_to_file_name name s_target idx ++ ".v")
+    (verilog_dir ++ "/" ++ params_to_file_name name s_target idx one_program ++ ".v")
 
-params_to_file_name :: String -> Slowdown_Target -> Int -> String
-params_to_file_name base_name s_target idx =
+params_to_file_name :: String -> Slowdown_Target -> Int -> Bool -> String
+params_to_file_name base_name s_target idx True =
+  base_name ++ "/" ++ base_name ++ "_" ++
+  slowdown_target_to_file_name_string s_target
+params_to_file_name base_name s_target idx False =
   base_name ++ "/" ++ base_name ++ "_" ++
   slowdown_target_to_file_name_string s_target ++ "_" ++ show idx
 
