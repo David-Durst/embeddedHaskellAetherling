@@ -37,9 +37,9 @@ apps_tests = testGroup "Full Application Tests"
     testCase "conv 3x3 to 2x2" $
     (TS.all_success conv_2d_b2b_results) @? "conv 3x3 to 2x2 failed",
     testCase "conv 3x3 to 3x3" $
-    (TS.all_success conv_2d_3x3_repeat_b2b_results) @? "conv 3x3 to 3x3 failed"--,
-    --testCase "sharpen" $
-    --(TS.all_success sharpen_results) @? "sharpen failed"
+    (TS.all_success conv_2d_3x3_repeat_b2b_results) @? "conv 3x3 to 3x3 failed",
+    testCase "sharpen" $
+    (TS.all_success sharpen_results) @? "sharpen failed"
   ]
 
 all_types = sequence [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types, --sharpen_results_all_types,
@@ -225,7 +225,12 @@ conv_2d_results' = sequence $
   fmap (\s -> test_with_backend
               conv_2d (wrap_single_s s)
               Magma No_Verilog
-              conv_2d_inputs conv_2d_output) [144]
+              conv_2d_inputs conv_2d_output) [16]
+conv_2d_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              conv_2d (wrap_single_s s)
+              Chisel No_Verilog
+              conv_2d_inputs conv_2d_output) [16]
 conv_2d_st_prints = sequence $
   fmap (\s -> compile_to_file
               conv_2d (wrap_single_s s)
@@ -599,8 +604,8 @@ sharpen_shallow_no_input in_col in_seq = do
   --let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a (const_genC (Atom_Int 0) in_seq)))
   map2C sharpen_one_pixel branch_a branch_b
 -- haskell doesn't like it when both this and big sharpen are uncommented for unknown reason
-{-
-sharpen = sharpen_shallow_no_input (Proxy @4) $ 
+
+sharpen = sharpen_shallow_no_input (Proxy @4) $
   com_input_seq "I" (Proxy :: Proxy (Seq 16 Atom_Int))
 sharpen_seq_idx = add_indexes $ seq_shallow_to_deep sharpen
 sharpen_ppar =
@@ -638,8 +643,7 @@ sharpen_print_st = sequence $
   fmap (\s -> compile_to_file
               sharpen (wrap_single_s s)
               text_backend "sharpen") [1,2,4,8,16,48,144]
--}
-
+{-
 row_size_big :: Integer = 1920
 col_size_big :: Integer = 1080
 img_size_big :: Int = fromInteger $ col_size_big*row_size_big
@@ -751,3 +755,4 @@ big_tests = testGroup "Big Tests"
     testCase "big sharpen chisel" $
     (TS.all_success big_sharpen_results_chisel) @? "big sharpen chisel failed"
   ]
+-}
