@@ -9,8 +9,13 @@ backend that compiles to CoreIR and Verilog.
 To build this part of the project:
 1. Install the latest version of [stack](https://docs.haskellstack.org/en/stable/README/)
 2. Clone this repo
-1. Copy `src/Core/Aetherling/Interpretations/Magma/Constants.hs.template` to `src/Core/Aetherling/Interpretations/Magma/Constants.hs` and update
-the file path to point to the top folder of this repository on your system.
+1. Copy `src/Core/Aetherling/Interpretations/Backend_Execute/Constants.hs.template` to `src/Core/Aetherling/Interpretations/Backend_Execute/Constants.hs` and update
+`root_dir` to point to the top folder of this repository on your system.
+    1. Optionally, update `chisel_dir` to point to [the chisel backend](https://github.com/David-Durst/chiselAetherling) to use Chisel instead of CoreIR and verilog.
+3. Build the repo:
+```
+stack build
+```
 3. Explore the IR by running the following command which starts a Haskell interpreter with all files loaded except thoses in `test/`:
 ```
 stack ghci
