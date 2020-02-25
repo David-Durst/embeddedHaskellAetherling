@@ -80,8 +80,6 @@ tuple_2d_mul_shallow_no_input in_seq = do
   let sum_and_norm = map2C (map2C atom_tupleC) sum norm
   mapC (mapC lsrC) sum_and_norm
 
-hask_kernel_2x2 :: [[Int]] = [[0,2],[1,0]]
-hask_kernel'_2x2 :: [Integer] = [1,4,2,1]
 tuple_2d_2x2_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @2) $
                     fmap (list_to_seq (Proxy @2)) $
@@ -168,15 +166,6 @@ big_conv_2d_b2b_ppar_typechecked =
   fmap check_type big_conv_2d_b2b_ppar
 big_conv_2d_b2b_ppar_typechecked' =
   fmap check_type_get_error big_conv_2d_b2b_ppar
-
-conv_2x2_generator :: [[[Integer]]] -> [Integer]
-conv_2x2_generator stencil_2d_output = [
-  if window_valid
-  then (sum $ zipWith (*) window_flat hask_kernel'_2x2) `mod` 255 `div` 8
-  else int_to_ignore
-  | window <- stencil_2d_output,
-    let window_flat = concat window,
-    let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
 
 big_conv_2d_b2b_inputs :: [[Integer]] = [[1..row_size_big_b2b*col_size_big_b2b]]
 big_conv_2d_b2b_output :: [Integer] =

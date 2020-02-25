@@ -281,6 +281,19 @@ conv_generator stencil_2d_output = [
     let window_flat = concat window,
     let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
 
+-- need thse for Integer and Int versions
+hask_kernel_2x2 :: [[Int]] = [[0,2],[1,0]]
+hask_kernel'_2x2 :: [Integer] = [1,4,2,1]
+
+conv_2x2_generator :: [[[Integer]]] -> [Integer]
+conv_2x2_generator stencil_2d_output = [
+  if window_valid
+  then (sum $ zipWith (*) window_flat hask_kernel'_2x2) `mod` 256 `div` 8
+  else int_to_ignore
+  | window <- stencil_2d_output,
+    let window_flat = concat window,
+    let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
+
 int_to_3char :: PrintfArg a => a -> String
 int_to_3char x = printf "%03d" x
 

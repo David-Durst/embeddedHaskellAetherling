@@ -408,9 +408,6 @@ stencil_2x2_2dC_test in_col in_img = do
   let partitioned_tuple = partitionC Proxy (Proxy @1) tuple
   mapC seq_tuple_to_seqC partitioned_tuple
 
--- need thse for Integer and Int versions
-hask_kernel_2x2 :: [[Int]] = [[0,2],[1,0]]
-hask_kernel'_2x2 :: [Integer] = [1,4,2,1]
 tuple_2d_2x2_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @2) $
                     fmap (list_to_seq (Proxy @2)) $
@@ -441,14 +438,6 @@ conv_2d_b2b_ppar_typechecked =
 conv_2d_b2b_ppar_typechecked' =
   fmap check_type_get_error conv_2d_b2b_ppar
 
-conv_2x2_generator :: [[[Integer]]] -> [Integer]
-conv_2x2_generator stencil_2d_output = [
-  if window_valid
-  then (sum $ zipWith (*) window_flat hask_kernel'_2x2) `mod` 255 `div` 8
-  else int_to_ignore
-  | window <- stencil_2d_output,
-    let window_flat = concat window,
-    let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
 conv_2d_b2b_inputs :: [[Integer]] = stencil_2d_inputs
 conv_2d_b2b_output :: [Integer] =
   conv_2x2_generator $ stencil_2x2_generator 4 $
