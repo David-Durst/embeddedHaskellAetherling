@@ -841,8 +841,8 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let possible_input_trs = map (\(tr0 : tr1 : _) -> tr0 : tr1 : type_rewrites_tl) possible_trs_for_in_seq
   --traceShowM $ "possible_input_trs: " ++ show possible_input_trs
   reshape_idx <- get_cur_index
-  let (min_tr, min_area) = if null possible_input_trs
-        then (undefined, -1)
+  let (min_tr, min_area, _) = if null possible_input_trs
+        then (undefined, -1, undefined)
         else do
         let first_out_tr = head possible_input_trs
         let first_st_expr = rewrite_to_partially_parallel_type_rewrite first_out_tr
@@ -851,17 +851,30 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
               STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types first_st_expr)
               out_t_ppar first_st_expr reshape_idx
         let other_trs = tail possible_input_trs
-        L.foldl' (\(!min_tr, !min_st_area) next_tr -> do
+        L.foldl' (\(!min_tr, !min_st_area, !min_st_expr) next_tr -> do
                      let next_st_expr = rewrite_to_partially_parallel_type_rewrite
                                         next_tr producer
                      let next_st_expr_with_reshape = 
                            STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types next_st_expr)
                            out_t_ppar next_st_expr reshape_idx
                      let next_st_area = Comp_Area.get_area next_st_expr_with_reshape
-                     force $ if min_st_area <= next_st_area || Has_Error.has_error next_st_expr
-                       then (min_tr, min_st_area)
-                       else (next_tr, next_st_area)
-                 ) (first_out_tr, (Comp_Area.get_area first_st_with_reshape)) other_trs
+                     let min_st_out_type = ST_Conv.e_out_type $
+                                           ST_Conv.expr_to_types min_st_expr
+                     let next_st_out_type = ST_Conv.e_out_type $
+                                            ST_Conv.expr_to_types next_st_expr
+                     force $ if Has_Error.has_error min_st_expr ||
+                                (next_st_area < min_st_area &&
+                                 (not $ Has_Error.has_error next_st_expr)) ||
+                                -- if they produce same program but one has
+                                -- simpler type, take that one
+                                (next_st_area == min_st_area &&
+                                 (not $ Has_Error.has_error next_st_expr) && 
+                                 (not $ Has_Error.has_error min_st_expr) &&
+                                 (STT.num_layers_t next_st_out_type < STT.num_layers_t min_st_out_type)
+                                )
+                             then (next_tr, next_st_area, next_st_expr)
+                             else (min_tr, min_st_area, min_st_expr)
+                 ) (first_out_tr, (Comp_Area.get_area first_st_with_reshape), first_st_expr) other_trs
   if min_area == -1
     then throwError $ Slowdown_Failure 
          ("No possible rewrites for unpartition with " ++ show type_rewrites ++
