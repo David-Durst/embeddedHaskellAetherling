@@ -107,14 +107,14 @@ conv_2d_b2b_shallow_no_input in_col in_seq = do
   unpartitionC $ unpartitionC $
     mapC tuple_2d_2x2_mul_shallow_no_input second_stencil
 
-row_size_conv2d_big :: Integer = 8--1920
-col_size_conv2d_big :: Integer = 8--1080
+row_size_conv2d_big :: Integer = 1920
+col_size_conv2d_big :: Integer = 1080
 img_size_conv2d_big :: Int = fromInteger $ col_size_conv2d_big*row_size_conv2d_big
-big_conv_2d = conv_2d_shallow_no_input (Proxy @8) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 64 Atom_Int))
+big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
---big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_conv2d_big)
-big_conv_2d_slowdowns = speed_to_slow [1] (toInteger img_size_conv2d_big)
+big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_conv2d_big)
+--big_conv_2d_slowdowns = speed_to_slow [1] (toInteger img_size_conv2d_big)
 big_conv_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_conv_2d s) big_conv_2d_slowdowns
 big_conv_2d_ppar_typechecked =
@@ -245,12 +245,10 @@ big_tests = testGroup "Big Tests"
   [
     --testCase "single big 3x3 convolution magma" $
     --(TS.all_success big_conv_2d_results') @? "single 3x3 convolution failed"
-    {-
     testCase "single big 3x3 convolution chisel" $
     (TS.all_success big_conv_2d_results_chisel) @? "single 3x3 convolution chisel failed",
     testCase "big 3x3 conv to 2x2 conv chisel" $
     (TS.all_success big_conv_2d_b2b_results_chisel) @? "big 3x3 conv to 2x2 conv chisel failed",
--}
     testCase "big sharpen chisel" $
     (TS.all_success big_sharpen_results_chisel) @? "big sharpen chisel failed"
   ]
