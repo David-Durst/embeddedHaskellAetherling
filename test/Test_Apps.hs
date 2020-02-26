@@ -28,17 +28,17 @@ import Data.Ratio
 
 apps_tests = testGroup "Full Application Tests"
   [
-    testCase "map" $
+    testCase "MAP in paper" $
     (TS.all_success single_map_200_results) @? "map failed",
-    testCase "single 3x3 convolution" $
+    testCase "CONV in paper - single 3x3 convolution" $
     (TS.all_success conv_2d_results) @? "single 3x3 convolution failed",
     testCase "pyramid" $
     (TS.all_success TS.pyramid_1d_results) @? "pyramid failed",
-    testCase "conv 3x3 to 2x2" $
+    testCase "CONVB2B in paper - conv 3x3 to 2x2" $
     (TS.all_success conv_2d_b2b_results) @? "conv 3x3 to 2x2 failed",
     testCase "conv 3x3 to 3x3" $
     (TS.all_success conv_2d_3x3_repeat_b2b_results) @? "conv 3x3 to 3x3 failed",
-    testCase "sharpen" $
+    testCase "SHARPEN in paper" $
     (TS.all_success sharpen_results) @? "sharpen failed"
   ]
 
