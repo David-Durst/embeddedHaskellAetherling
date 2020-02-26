@@ -107,22 +107,23 @@ conv_2d_b2b_shallow_no_input in_col in_seq = do
   unpartitionC $ unpartitionC $
     mapC tuple_2d_2x2_mul_shallow_no_input second_stencil
 
-row_size_big :: Integer = 17--1920
-col_size_big :: Integer = 17--1080
-img_size_big :: Int = fromInteger $ col_size_big*row_size_big
-big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
+row_size_conv2d_big :: Integer = 8--1920
+col_size_conv2d_big :: Integer = 8--1080
+img_size_conv2d_big :: Int = fromInteger $ col_size_conv2d_big*row_size_conv2d_big
+big_conv_2d = conv_2d_shallow_no_input (Proxy @8) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 64 Atom_Int))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
-big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big)
+--big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_conv2d_big)
+big_conv_2d_slowdowns = speed_to_slow [1] (toInteger img_size_conv2d_big)
 big_conv_2d_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_conv_2d s) big_conv_2d_slowdowns
 big_conv_2d_ppar_typechecked =
   fmap check_type big_conv_2d_ppar
 big_conv_2d_ppar_typechecked' =
   fmap check_type_get_error big_conv_2d_ppar
-big_conv_2d_inputs :: [[Integer]] = [[1..row_size_big*col_size_big]]
+big_conv_2d_inputs :: [[Integer]] = [[i*5 | i <- [1..row_size_conv2d_big*col_size_conv2d_big]]]
 big_conv_2d_output :: [Integer] =
-  conv_generator $ stencil_generator row_size_big [1.. row_size_big*col_size_big]
+  conv_generator $ stencil_generator row_size_conv2d_big (big_conv_2d_inputs !! 0)
 big_conv_2d_results = sequence $
   fmap (\s -> test_with_backend
               big_conv_2d (wrap_single_s s)
@@ -186,11 +187,13 @@ big_conv_2d_b2b_results_chisel = sequence $
 t_const' = 15
 sharpen_one_pixel a_pixel b_pixel = do
   let b_sub_a = subC $ atom_tupleC b_pixel a_pixel
+  let a_sub_b = subC $ atom_tupleC a_pixel b_pixel
   let const_0 = (const_genC (Atom_Int 0) a_pixel)
-  let abs_b_sub_a = absC b_sub_a
   let t_constC = const_genC (Atom_Int t_const') a_pixel
-  let passed_threshold = ltC $ atom_tupleC t_constC abs_b_sub_a
-  let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a const_0))
+  let passed_threshold_b_sub_a = ltC $ atom_tupleC t_constC b_sub_a
+  let passed_threshold_a_sub_b = ltC $ atom_tupleC t_constC a_sub_b
+  let passed_thresholds = orC $ atom_tupleC passed_threshold_a_sub_b passed_threshold_b_sub_a
+  let h = ifC (atom_tupleC passed_thresholds (atom_tupleC b_sub_a const_0))
   let alpha_h = lsrC $ atom_tupleC h (const_genC (Atom_Int 2) a_pixel)
   addC $ atom_tupleC b_pixel alpha_h
 
@@ -208,31 +211,35 @@ sharpen_shallow_no_input in_col in_seq = do
   --let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a (const_genC (Atom_Int 0) in_seq)))
   map2C sharpen_one_pixel branch_a branch_b
 
-big_sharpen = sharpen_shallow_no_input (Proxy @17) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 289 Atom_Int))
+row_size_sharpen_big :: Integer = 1920
+col_size_sharpen_big :: Integer = 1080
+img_size_sharpen_big :: Int = fromInteger $ col_size_sharpen_big*row_size_sharpen_big
+big_sharpen = sharpen_shallow_no_input (Proxy @1920) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
 big_sharpen_seq_idx = add_indexes $ seq_shallow_to_deep big_sharpen
-big_sharpen_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big_b2b)
+big_sharpen_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_sharpen_big)
+--big_sharpen_slowdowns = speed_to_slow [1] (toInteger img_size_sharpen_big)
 big_sharpen_ppar =
   fmap (\s -> compile_with_slowdown_to_expr big_sharpen s) big_sharpen_slowdowns
 big_sharpen_ppar_typechecked =
   fmap check_type big_sharpen_ppar
 big_sharpen_ppar_typechecked' =
   fmap check_type_get_error big_sharpen_ppar
-big_sharpen_inputs :: [[Integer]] = [[i * 5 | i <- [1..row_size_big * col_size_big]]]
+big_sharpen_inputs :: [[Integer]] = [[i * 5 | i <- [1..row_size_sharpen_big * col_size_sharpen_big]]]
 big_sharpen_output :: [Integer] =
   zipWith sharpen_one_pixel' 
-  (conv_generator $ stencil_generator row_size_big (big_sharpen_inputs !! 0))
+  (conv_generator $ stencil_generator row_size_sharpen_big (big_sharpen_inputs !! 0))
   (big_sharpen_inputs !! 0)
 big_sharpen_results = sequence $
   fmap (\s -> test_with_backend 
               big_sharpen (wrap_single_s s)
               Magma (Save_Gen_Verilog "big_sharpen")
-              big_sharpen_inputs big_sharpen_output) big_conv_2d_slowdowns
+              big_sharpen_inputs big_sharpen_output) big_sharpen_slowdowns
 big_sharpen_results_chisel = sequence $
   fmap (\s -> test_with_backend 
               big_sharpen (wrap_single_s s)
               Chisel (Save_Gen_Verilog "big_sharpen")
-              big_sharpen_inputs big_sharpen_output) big_conv_2d_slowdowns
+              big_sharpen_inputs big_sharpen_output) big_sharpen_slowdowns
 
 big_tests = testGroup "Big Tests"
   [

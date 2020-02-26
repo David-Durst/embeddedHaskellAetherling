@@ -12,6 +12,8 @@ class Monad m => Sequence_Language m where
   idC :: (Aetherling_Value a, Check_Type_Is_Atom a) => m a -> m a
   absC :: m Atom_Int -> m Atom_Int
   notC :: m Atom_Bit -> m Atom_Bit
+  andC :: m (Atom_Tuple Atom_Bit Atom_Bit) -> m Atom_Bit
+  orC :: m (Atom_Tuple Atom_Bit Atom_Bit) -> m Atom_Bit
 
   -- binary operators
   addC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int

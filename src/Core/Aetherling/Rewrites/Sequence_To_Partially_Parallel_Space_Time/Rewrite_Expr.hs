@@ -241,6 +241,12 @@ sequence_to_partially_parallel type_rewrites seq_e@(SeqE.AbsN producer _) = do
 sequence_to_partially_parallel type_rewrites seq_e@(SeqE.NotN producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   ppar_atom_operator type_rewrites STE.NotN producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.AndN producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  ppar_atom_operator type_rewrites STE.AndN producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.OrN producer _) = do
+  add_output_rewrite_for_node seq_e type_rewrites
+  ppar_atom_operator type_rewrites STE.OrN producer
 sequence_to_partially_parallel type_rewrites seq_e@(SeqE.AddN producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   ppar_atom_operator type_rewrites STE.AddN producer

@@ -32,6 +32,8 @@ expr_to_types (IdN in_e _) = Expr_Types [input_type] input_type
   where input_type = e_out_type $ expr_to_types in_e
 expr_to_types (AbsN _ _) = Expr_Types [IntT] IntT
 expr_to_types (NotN _ _) = Expr_Types [BitT] BitT
+expr_to_types (AndN _ _) = Expr_Types [ATupleT BitT BitT] BitT
+expr_to_types (OrN _ _) = Expr_Types [ATupleT BitT BitT] BitT
 expr_to_types (AddN _ _) = Expr_Types [ATupleT IntT IntT] IntT
 expr_to_types (SubN _ _) = Expr_Types [ATupleT IntT IntT] IntT
 expr_to_types (MulN _ _) = Expr_Types [ATupleT IntT IntT] IntT
@@ -126,6 +128,10 @@ expr_to_outer_types' (IdN producer_e _) = expr_to_outer_types' producer_e
 expr_to_outer_types' consumer_e@(AbsN producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(NotN producer_e _) =
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' consumer_e@(AndN producer_e _) =
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' consumer_e@(OrN producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(AddN producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e

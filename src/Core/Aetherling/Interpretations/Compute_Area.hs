@@ -34,6 +34,12 @@ get_area' e@(AbsN producer _) = do
 get_area' e@(NotN producer _) = do
   producer_latency <- memo producer $ get_area' producer
   return $ producer_latency + 1
+get_area' e@(AndN producer _) = do
+  producer_latency <- memo producer $ get_area' producer
+  return $ producer_latency + 1
+get_area' e@(OrN producer _) = do
+  producer_latency <- memo producer $ get_area' producer
+  return $ producer_latency + 1
 get_area' e@(AddN producer _) = do
   producer_latency <- memo producer $ get_area' producer
   return $ producer_latency + 1

@@ -27,6 +27,10 @@ add_indexes' consumer_e@(AbsN producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
 add_indexes' consumer_e@(NotN producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
+add_indexes' consumer_e@(AndN producer_e _) =
+  add_index_to_unary_operator consumer_e producer_e
+add_indexes' consumer_e@(OrN producer_e _) =
+  add_index_to_unary_operator consumer_e producer_e
 add_indexes' consumer_e@(AddN producer_e _) =
   add_index_to_unary_operator consumer_e producer_e
 add_indexes' consumer_e@(SubN producer_e _) =

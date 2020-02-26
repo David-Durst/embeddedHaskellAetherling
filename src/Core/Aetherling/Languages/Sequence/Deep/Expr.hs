@@ -6,6 +6,8 @@ data Expr =
   IdN {seq_in :: Expr, index :: DAG_Index}
   | AbsN {seq_in :: Expr, index :: DAG_Index}
   | NotN {seq_in :: Expr, index :: DAG_Index}
+  | AndN {seq_in :: Expr, index :: DAG_Index}
+  | OrN {seq_in :: Expr, index :: DAG_Index}
   | AddN {seq_in :: Expr, index :: DAG_Index}
   | SubN {seq_in :: Expr, index :: DAG_Index}
   | MulN {seq_in :: Expr, index :: DAG_Index}

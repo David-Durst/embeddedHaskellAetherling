@@ -301,7 +301,7 @@ sharpen_one_pixel' :: Integer -> Integer -> Integer
 sharpen_one_pixel' a b = do
   let a_8 :: Word8 = fromIntegral a
   let b_8 :: Word8 = fromIntegral b
-  let h = if (abs $ b_8 - a_8) > (fromIntegral t_const) then b_8 - a_8 else 0
+  let h = if (b_8 - a_8) > (fromIntegral t_const) || (a_8 - b_8) > (fromIntegral t_const) then b_8 - a_8 else 0
   fromIntegral $ if a == int_to_ignore then a_8 else b_8 + (h `div` 4)
   
 sharpen_one_pixel'_integer :: Integer -> Integer -> Integer

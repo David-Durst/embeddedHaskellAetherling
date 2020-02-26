@@ -51,6 +51,8 @@ match_latencies' e@(AbsN producer _) = do
     latency = latency this_comb_latency + 1
     }
 match_latencies' e@(NotN producer _) = match_combinational_op e producer
+match_latencies' e@(AndN producer _) = match_combinational_op e producer
+match_latencies' e@(OrN producer _) = match_combinational_op e producer
 match_latencies' e@(AddN producer _) = match_combinational_op e producer
 match_latencies' e@(SubN producer _) = match_combinational_op e producer
 match_latencies' e@(MulN producer _) = do
