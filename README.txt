@@ -16,7 +16,8 @@ To get started with the VM:
         1. Type the following (without "") in the terminal: 
             i. "cd /home/pldi/Downloads/"
             ii. "chmod u+x *.bin"
-            iii. "./X*"
+            iii. "sudo ./X*"
+                1. Reminder: the password is "the_pldi".
         2. Follow the GUI installer
             i. Click "Continue" when offered to download a newer version instead of upgrading to a newer version
             ii. On step "Select Edition To Install", select "Vivado HL WebPACK" 
