@@ -4,6 +4,9 @@ To get started with the VM:
     a. Import the downloaded .ova file using https://docs.oracle.com/cd/E26217_01/E26796/html/qs-import-vm.html
 2. Login using user "pldi" and password "the_pldi".
 3. OPTIONAL: this step is not necessary to complete the rest of the getting started guide. The reviewers may stress the results from the Sequence Language, Space-Time IR, Scheduler, and Rewrite Rules sections of the paper without this step. However, it's required to complete the step-by-step instructions and reproduce the graphs in the Evaluation section. We cannot redistribute the Xilinx Vivado tools with the VM due to their licensing agreement.
+    a. Open a web browser
+        i. Click the start menu (officially the "Whisker Menu" in XFCE) in the top, left corner of the screen
+        ii. Select "Web Browser" from the options
     a. Go to https://www.xilinx.com/member/forms/download/xef-vivado.html?filename=Xilinx_Vivado_SDK_Web_2018.2_0614_1954_Lin64.bin in a browser in the VM
     b. Create an account with Xilinx and download the Vivado HLx 2018.2: WebPACK and Editions - Linux Self Extracting Web Installer (the software in the above link).
     c. Open a terminal
@@ -81,6 +84,7 @@ To get started with the VM:
         iv. We use the following shorthands in the stdout:
             a. SP - Spatial
             b. HTH - Halide-To-Hardware, ie Halide-HLS
+    d. Note: the graphs are slightly different from those in the paper. In the paper, Halide-HLS and Spatial used 2.3-9.1x more area. In these charts, Halide-HLS and Spatial use 2.2-8.6x less area. Additionally, in some cases Aetherling's advantage has improved. One example of this is the CONV example at throughput 1. These minor differences are due to some small changes we made in the implementations of some of the operators.
 2. To explore the scheduler and rewrite rules code, look at "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Rewrites/Sequence_To_Partially_Parallel_Space_Time/Rewrite_Expr.hs". 
     a. The top function in this file is "rewrite_to_partially_parallel". It converts a Sequence Language expression into a Space-Time IR expression with a target throughput.
     b. The rewrite rules are implemented in the function "sequence_to_partially_parallel".
