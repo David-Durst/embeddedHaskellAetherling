@@ -107,8 +107,8 @@ conv_2d_b2b_shallow_no_input in_col in_seq = do
   unpartitionC $ unpartitionC $
     mapC tuple_2d_2x2_mul_shallow_no_input second_stencil
 
-row_size_big :: Integer = 1920
-col_size_big :: Integer = 1080
+row_size_big :: Integer = 17--1920
+col_size_big :: Integer = 17--1080
 img_size_big :: Int = fromInteger $ col_size_big*row_size_big
 big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
   com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
@@ -183,8 +183,6 @@ big_conv_2d_b2b_results_chisel = sequence $
               big_conv_2d_b2b_inputs big_conv_2d_b2b_output) big_conv_2d_b2b_slowdowns
 
 
-t_const :: Integer
-t_const = 15
 t_const' = 15
 sharpen_one_pixel a_pixel b_pixel = do
   let b_sub_a = subC $ atom_tupleC b_pixel a_pixel
@@ -195,10 +193,6 @@ sharpen_one_pixel a_pixel b_pixel = do
   let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a const_0))
   let alpha_h = lsrC $ atom_tupleC h (const_genC (Atom_Int 2) a_pixel)
   addC $ atom_tupleC b_pixel alpha_h
-sharpen_one_pixel' :: Integer -> Integer -> Integer
-sharpen_one_pixel' a b = do
-  let h = if (abs $ b - a) > t_const then b - a else 0
-  if a == int_to_ignore then a else b + (h `div` 4)
 
 sharpen_shallow_no_input in_col in_seq = do
   let first_stencil = stencil_3x3_2dC_test in_col in_seq
@@ -214,11 +208,11 @@ sharpen_shallow_no_input in_col in_seq = do
   --let h = ifC (atom_tupleC passed_threshold (atom_tupleC b_sub_a (const_genC (Atom_Int 0) in_seq)))
   map2C sharpen_one_pixel branch_a branch_b
 
-big_sharpen = sharpen_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
+big_sharpen = sharpen_shallow_no_input (Proxy @17) $ 
+  com_input_seq "I" (Proxy :: Proxy (Seq 289 Atom_Int))
 big_sharpen_seq_idx = add_indexes $ seq_shallow_to_deep big_sharpen
 big_sharpen_ppar =
-  fmap (\s -> compile_with_slowdown_to_expr big_sharpen s) [1,2,4,8,16,48,144]
+  fmap (\s -> compile_with_slowdown_to_expr big_sharpen s) [1,17]--[1,2,4,8,16,48,144]
 big_sharpen_ppar_typechecked =
   fmap check_type big_sharpen_ppar
 big_sharpen_ppar_typechecked' =
@@ -243,10 +237,12 @@ big_tests = testGroup "Big Tests"
   [
     --testCase "single big 3x3 convolution magma" $
     --(TS.all_success big_conv_2d_results') @? "single 3x3 convolution failed"
+    {-
     testCase "single big 3x3 convolution chisel" $
     (TS.all_success big_conv_2d_results_chisel) @? "single 3x3 convolution chisel failed",
     testCase "big 3x3 conv to 2x2 conv chisel" $
     (TS.all_success big_conv_2d_b2b_results_chisel) @? "big 3x3 conv to 2x2 conv chisel failed",
+-}
     testCase "big sharpen chisel" $
     (TS.all_success big_sharpen_results_chisel) @? "big sharpen chisel failed"
   ]

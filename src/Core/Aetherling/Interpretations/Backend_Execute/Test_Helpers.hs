@@ -12,6 +12,7 @@ import Data.List.Split
 import Text.Printf
 import Debug.Trace
 import Data.List
+import Data.Word
 
 data Test_Result = Test_Success
                   | Test_Failure {
@@ -294,6 +295,20 @@ conv_2x2_generator stencil_2d_output = [
     let window_flat = concat window,
     let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
 
+t_const :: Integer
+t_const = 15
+sharpen_one_pixel' :: Integer -> Integer -> Integer
+sharpen_one_pixel' a b = do
+  let a_8 :: Word8 = fromIntegral a
+  let b_8 :: Word8 = fromIntegral b
+  let h = if (abs $ b_8 - a_8) > (fromIntegral t_const) then b_8 - a_8 else 0
+  fromIntegral $ if a == int_to_ignore then a_8 else b_8 + (h `div` 4)
+  
+sharpen_one_pixel'_integer :: Integer -> Integer -> Integer
+sharpen_one_pixel'_integer a b = do
+  let h = if (abs $ b - a) > t_const then b - a else 0
+  if a == int_to_ignore then a else b + (h `div` 4)
+  
 int_to_3char :: PrintfArg a => a -> String
 int_to_3char x = printf "%03d" x
 

@@ -522,8 +522,6 @@ conv_2d_3x3_repeat_b2b_print_st = sequence $
               conv_2d_3x3_repeat_b2b (wrap_single_s s)
               Magma "conv2d_b2b_3x3_repeat") [1,2,4,8,16,48,144]
 
-t_const :: Integer
-t_const = 15
 t_const' = 15
 sharpen_one_pixel a_pixel b_pixel = do
   let b_sub_a = subC $ atom_tupleC b_pixel a_pixel
@@ -551,10 +549,6 @@ sharpen_one_pixel a_pixel b_pixel = do
   --addC $ atom_tupleC h b_sub_a
   b_sub_a
 -}
-sharpen_one_pixel' :: Integer -> Integer -> Integer
-sharpen_one_pixel' a b = do
-  let h = if (abs $ b - a) > t_const then b - a else 0
-  if a == int_to_ignore then a else b + (h `div` 4)
 sharpen_one_pixel_map_no_input a_pixel b_pixel = do
   map2C sharpen_one_pixel a_pixel b_pixel 
 sharpen_one_pixel_map = sharpen_one_pixel_map_no_input
