@@ -211,8 +211,9 @@ sharpen_shallow_no_input in_col in_seq = do
 big_sharpen = sharpen_shallow_no_input (Proxy @17) $ 
   com_input_seq "I" (Proxy :: Proxy (Seq 289 Atom_Int))
 big_sharpen_seq_idx = add_indexes $ seq_shallow_to_deep big_sharpen
+big_sharpen_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big_b2b)
 big_sharpen_ppar =
-  fmap (\s -> compile_with_slowdown_to_expr big_sharpen s) [1,17]--[1,2,4,8,16,48,144]
+  fmap (\s -> compile_with_slowdown_to_expr big_sharpen s) big_sharpen_slowdowns
 big_sharpen_ppar_typechecked =
   fmap check_type big_sharpen_ppar
 big_sharpen_ppar_typechecked' =
