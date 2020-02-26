@@ -12,6 +12,8 @@ import Debug.Trace
 data Expr_Types = Expr_Types { e_in_types :: [AST_Type], e_out_type :: AST_Type}
   deriving (Show, Eq, Ord)
 
+print_st_output_type e = putStrLn $ show $ e_out_type $ expr_to_outer_types e
+print_st_input_types e = putStrLn $ show $ e_in_types $ expr_to_outer_types e
 expr_to_types_st = expr_to_types
 -- | Convert an Expr to it's input and output tpyes not considering the input
 -- expressions to it
