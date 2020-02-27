@@ -3,7 +3,7 @@ To get started with the VM:
 1. Use VirtualBox version 6.0.10 available at https://www.virtualbox.org/wiki/Download_Old_Builds_6_0
     a. Import the downloaded .ova file using https://docs.oracle.com/cd/E26217_01/E26796/html/qs-import-vm.html
 2. Login using user "pldi" and password "the_pldi".
-3. OPTIONAL: this step is not necessary to complete the rest of the getting started guide. The reviewers may stress the results from the Sequence Language, Space-Time IR, Scheduler, and Rewrite Rules sections of the paper without this step. However, it's required to complete the step-by-step instructions and reproduce the graphs in the Evaluation section. We cannot redistribute the Xilinx Vivado tools with the VM due to their licensing agreement.
+3. Install Xilinx Vivado 2018.2. Note: this step is not necessary to complete the rest of the getting started guide. The reviewers may stress the results from Lseq, Lst, Scheduler, and Rewrite Rules sections of the paper without this step. However, it's required to complete the step-by-step instructions and reproduce the graphs in the Evaluation section. We cannot redistribute the Xilinx Vivado tools with the VM due to their licensing agreement.
     a. Open a web browser
         i. Click the start menu (officially the "Whisker Menu" in XFCE) in the top, left corner of the screen
         ii. Select "Web Browser" from the options
@@ -22,6 +22,7 @@ To get started with the VM:
             i. Click "Continue" when offered to download a newer version instead of upgrading to a newer version
             ii. On step "Select Edition To Install", select "Vivado HL WebPACK" 
             iii. On the step "Vivado HL Webpack" where you are asked to select which components to install, use the default settings
+            iv. Click "Yes" when asked if the installer should create the "/opt/Xilinx" directory.
             iv. In our experience, the installer takes about 30 minutes to run. Proceed with the rest of the Getting Started Guide while it runs in the background.
 4. Run Aetherling's test suite which will schedule 22 unit tests, the 4 applications in the paper, and 2 additional applications.
     a. Run the suite by executing the following commands in the VM
@@ -37,53 +38,100 @@ To get started with the VM:
     b. The unit tests can be found in the file "/home/pldi/pldi/embeddedHaskellAetherling/test/Test_Slowdown.hs"
     c. The applications can be found in the file "/home/pldi/pldi/embeddedHaskellAetherling/test/Test_Apps.hs"
     d. Each unit and application test stresses the following components of the system:
-        i. Sequence Language (section 3 of paper) - each is written shallow embedding of the sequence language in Haskell
+        i. Lseq (section 3 of paper) - each is written shallow embedding of Lseq in Haskell
             1. See section 7 of the paper for the discussion and references on shallow and deep embeddings
-        ii. Space-Time IR (section 4 of paper) - each test has a _ppar variable which contains different Space-Time IR versions of the program at different throughputs.
-        iii. Rewrite Rules (section 5 of paper) and Scheduling (section 6 of paper) - the _ppar variable produces the Space-Time IR versions by calling
+        ii. Lst (section 4 of paper) - each test has a _ppar variable which contains different Lst versions of the program at different throughputs.
+        iii. Rewrite Rules (section 5 of paper) and Scheduling (section 6 of paper) - the _ppar variable produces the Lst versions by calling
         "compile_with_throughput_to_expr". One such variable is "single_map_ppar" in Test_Slowdown.hs.
         This function calls code in "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Rewrites/Sequence_To_Partially_Parallel_Space_Time/Rewrite_Expr.hs" which implements the scheduler using the rewrite rules. 
-        iv. Implementation (section 7 of paper) - the prior points stress the Sequence Language and Space-Time IR implementations. 
-        Additionally, each test has a _results variable, such as "single_map_results", which stresses the compiler that lowers from the Space-Time IR to Verilog by:
-            1. Emitting an implementation of the Space-Time IR circuit in Magma, a Python HDL.
+        iv. Implementation (section 7 of paper) - the prior points stress the Lseq and Lst implementations. 
+        Additionally, each test has a _results variable, such as "single_map_results", which stresses the compiler that lowers from Lst to Verilog by:
+            1. Emitting an implementation of the Lst circuit in Magma, a Python HDL.
             2. Running the Magma file to generator Verilog.
             3. Simulating the Verilog with Verilator and ensuring that with the inputs specified by the _inputs variable, such as "single_map_inputs", the circuit produces output which has the correct Space-Time type and the values are the same as those specified by the _output variable, such as "single_map_output". 
             4. See "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies" for the resulting verilog files. While these files will exist before running the tests, the tests will overwrite them.
         v. Evaluation (section 8 of paper) - see Step-by-Step Instructions section
-    e. To explore each of the variables discussed in 4.d
-        i. Use the Haskell REPL
-            1. Start the RPL by typing the following (without "") in the terminal: "stack ghci --test"
-            2. The above command should be issued from the directory "/home/pldi/pldi/embeddedHaskellAetherling/" 
-        ii. Some useful functions in the Haskell terminal are:
-            1. "print_st" - This prints a string representation of a Space-Time IR program.
-                1. "print_st (single_map_ppar !! 0)" - example of how to use each. Each _ppar variable is a list of Space-Time IR programs. 
-                Use !! to access one element of the list.
-            2. "print_st_input_types" - This prints a string representation of a Space-Time IR program's input types
-                1. "print_st_input_types (single_map_ppar !! 0)" - example of how to use each.
-            2. "print_st_output_type" - This prints a string representation of a Space-Time IR program's output type
-                1. "print_st_output_type (single_map_ppar !! 0)" - example of how to use each.
         
             
 
 # Step-by-Step Instructions
-1. To reproduce the experiments in the Evaluation (section 8 of paper)
-    a. Type the following (without "") in the terminal: "cd /home/pldi/pldi/embeddedHaskellAetherling/"
-    b. Type the following (without "") in the terminal: "pnr/run.sh"
-        i. NOTE: This will take between 1 and 2 hours to run. It is doing synthesis and implementation using Xilinx Vivado Design Suite 2018.2 for many designs.
-        ii. This step runs synthesis on the verilog files in "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples". 
-        iii. The top folders in that directory separate the Aetherling, Halide-HLS (titled halide_to_hardware), and Spatial verilog files. 
-        iv. We have included the Halide-HLS and Spatial verilog files generated for the paper. The Aetherling verilog files are regenerated each time the tests are rerun.
-        v. Within each of the aetherling_copies, halide_to_hardware, and spatial folders are the folders for each application in the Evaluation section. These are: map, conv2d, conv2d_b2b, and sharpen. The other apps within the aetherling_copies folder may work but are not part of the paper's results.
-        vi. Within each of the app's folders are the verilog files for the app at a specific throughput specified by number of clock cycles. For example, the file "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies/conv2d/conv2d_16.v" emits the output over 16 clock cycles.
-        vii. To run fewer designs through Vivado and thus finish pnr/run.sh more quickly, delete some of these files. Note: doing so may break the chart generation code for visualizing the results. You may be required to edit "/home/pldi/pldi/aetherling/aetherling/helpers/pnr_graphs.py" to deal with less data.
-    c. When the prior step finishes, the graphs which reproduce figures 11-13 in the paper will be in "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs". Additionally, stdout will contain the data from the graphs in text form. Ignore warnings printed to stdout before the data.
-        i. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_results.pdf" - reproduces figure 11 
-        ii. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_sp.pdf" - reproduces figure 12
-        iii. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_hth.pdf" - reproduces figure 13
-        iv. We use the following shorthands in the stdout:
-            a. SP - Spatial
-            b. HTH - Halide-To-Hardware, ie Halide-HLS
-    d. Note: the graphs are slightly different from those in the paper. In the paper, Halide-HLS and Spatial used 2.3-9.1x more area. In these charts, Halide-HLS and Spatial use 2.2-8.6x less area. Additionally, in some cases Aetherling's advantage has improved. One example of this is the CONV example at throughput 1. These minor differences are due to some small changes we made in the implementations of some of the operators.
+Please evaluate this artifact based on its support for the following claims in the paper
+
+## Lseq (Section 3 of Paper)
+Claim: The input language (Lseq) is a functional language with standard data-parallel operations on finite length sequences.
+Lseq is constrained so that Aetherling can transform all valid programs into hardware implementations. 
+
+How supported: The examples in "Test_Slowdown.hs" and "Test_Apps.hs" demonstrate Lseq and that the programs can be compiled to hardware implementations.
+Look at the type signatures of the operators "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Languages/Sequence/Shallow/Expr.hs" to see that they are on finite length sequences.
+
+### Lst (Section 4 of Paper)
+Claim: The operator's of the intermediate language (Lst) correspond to streaming hardware modules. The types of the operators encode the throughput of the hardware interfaces and the exact clock cycles when elements are consumed or produced.
+
+How supported: Look at the _ppar variables discussed in section 4.d.iii of the getting started guide. These will show the Lst programs along with their types.
+To explore each of the variables discussed in 4.d
+1. Use the Haskell REPL
+    a. Start the REPL by typing the following (without "") in the terminal: "stack ghci --test"
+    b. The above command should be issued from the directory "/home/pldi/pldi/embeddedHaskellAetherling/" 
+2. Use the following functions in the REPL to explore the _ppar variables. 
+    a. "print_st" - This prints a string representation of a Lst program.
+        i. "print_st (single_map_ppar !! 0)" - This prints the single map Lst program scheduled at 1 pixel outputted per clock.
+        Each _ppar variable is a list of Lst programs.
+        For example, the programs in single_map_ppar have throughputs of 1, 2, and 4 Ints emitted per clock.
+        Use !! to access one element of the list.
+    b. "print_st_input_types" - This prints a string representation of a Lst program's input types
+        ii. "print_st_input_types (single_map_ppar !! 0)" - This prints the input types of the single map Lst program scheduled at 1 pixel outputted per clock.
+    c. "print_st_output_type" - This prints a string representation of a Lst program's output type
+        iii. "print_st_output_type (single_map_ppar !! 0)" - example of how to use each.
+
+## Rewrite Rules and Scheduling (Sections 5 and 6 of Paper)
+Claim: The scheduling algorithm
+1. accepts a Lseq program P and a desired hardware circuit throughput T
+2. uses the rewrite rules
+3. produces an equivalent Lst program with throughput T.
+
+How supported:
+1. Look at the _ppar variables discussed in section 4.d.iii of the getting started guide. These will show the result of applying the scheduling algorithm. The tests demonstrate that these have the correct inputs and outputs.
+2. Look at the scheduler and rewrite rules implementation in "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Rewrites/Sequence_To_Partially_Parallel_Space_Time/Rewrite_Expr.hs". 
+    a. The top function in this file is "rewrite_to_partially_parallel". It converts a Sequence Language expression into a Space-Time IR expression with a target throughput.
+    b. The rewrite rules are implemented in the function "sequence_to_partially_parallel".
+
+## Evaluation (Section 8 of Paper)
+Claim: Aetherling can schedule basic image processing programs.
+The resulting designs are more area efficient than those produced by recent systems that
+generate image processing hardware from high-level language descriptions 
+
+Now supported: To reproduce the experiments in the Evaluation (section 8 of paper)
+
+1. Type the following (without "") in the terminal: "cd /home/pldi/pldi/embeddedHaskellAetherling/"
+2. Type the following (without "") in the terminal: "pnr/run.sh"
+    a. NOTE: This will take between 1 and 2 hours to run. It is doing synthesis and implementation using Xilinx Vivado Design Suite 2018.2 for many designs.
+    b. This step runs synthesis on the verilog files in "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples". 
+    c. The top folders in that directory separate the Aetherling, Halide-HLS (titled halide_to_hardware), and Spatial verilog files. 
+    d. We have included the Halide-HLS and Spatial verilog files generated for the paper. The Aetherling verilog files are regenerated each time the tests are rerun.
+    e. Within each of the aetherling_copies, halide_to_hardware, and spatial folders are the folders for each application in the Evaluation section. These are: map, conv2d, conv2d_b2b, and sharpen. The other apps within the aetherling_copies folder may work but are not part of the paper's results.
+    f. Within each of the app's folders are the verilog files for the app at a specific throughput specified by number of clock cycles. For example, the file "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies/conv2d/conv2d_16.v" emits the output over 16 clock cycles.
+    g. To run fewer designs through Vivado and thus finish pnr/run.sh more quickly, delete some of these files. Note: doing so may break the chart generation code for visualizing the results. You may be required to edit "/home/pldi/pldi/aetherling/aetherling/helpers/pnr_graphs.py" to deal with less data.
+3. When the prior step finishes, the graphs which reproduce figures 11-13 in the paper will be in "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs". Additionally, stdout will contain the data from the graphs in text form. Ignore warnings printed to stdout before the data.
+    a. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_results.pdf" - reproduces figure 11 
+    b. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_sp.pdf" - reproduces figure 12
+    c. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_hth.pdf" - reproduces figure 13
+    d. We use the following shorthands in the stdout:
+        i. SP - Spatial
+        ii. HTH - Halide-To-Hardware, ie Halide-HLS
+4. Note: the graphs are slightly different from those in the paper. In the paper, Halide-HLS and Spatial used 2.3-9.1x more area. In these charts, Halide-HLS and Spatial use 2.2-8.6x less area. Additionally, in some cases Aetherling's advantage has improved. One example of this is the CONV example at throughput 1. These minor differences are due to some small changes we made in the implementations of some of the operators.
+
+
+space-time aware type system encodes hardware interfaces:
+erators in Lst correspond to streaming hardware modules. Lst
+defines the interfaces to these modules using space-time sequence types which not only encode the length of sequences
+communicated between modules, but when elements in the
+sequence are communicated
+    1. Throughput of sequence element consumption and production
+    2. Clock cof the operato models the throughput and area of a program’s hardware implementation. A key aspect of Lst
+are space-time aware sequence types that define the
+parallelism and throughput of hardware interfaces by
+encoding when sequence elements are produced in
+addition to sequence length.
 2. To explore the scheduler and rewrite rules code, look at "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Rewrites/Sequence_To_Partially_Parallel_Space_Time/Rewrite_Expr.hs". 
     a. The top function in this file is "rewrite_to_partially_parallel". It converts a Sequence Language expression into a Space-Time IR expression with a target throughput.
     b. The rewrite rules are implemented in the function "sequence_to_partially_parallel".
