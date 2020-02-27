@@ -3,7 +3,11 @@ To get started with the VM:
 1. Use VirtualBox version 6.0.10 available at https://www.virtualbox.org/wiki/Download_Old_Builds_6_0
     a. Import the downloaded .ova file using https://docs.oracle.com/cd/E26217_01/E26796/html/qs-import-vm.html
 2. Login using user "pldi" and password "the_pldi".
-3. Install Xilinx Vivado 2018.2. Note: this step is not necessary to complete the rest of the getting started guide. The reviewers may stress the results from Lseq, Lst, Scheduler, and Rewrite Rules sections of the paper without this step. However, it's required to complete the step-by-step instructions and reproduce the graphs in the Evaluation section. We cannot redistribute the Xilinx Vivado tools with the VM due to their licensing agreement.
+3. Install Xilinx Vivado 2018.2.
+Note: this step is not necessary to complete the rest of the getting started guide.
+The reviewers may stress the results from the Lseq, Lst, Scheduler, and Rewrite Rules sections of the paper without this step.
+However, it's required to complete the step-by-step instructions and reproduce the graphs in the Evaluation section.
+We cannot redistribute the Xilinx Vivado tools with the VM due to their licensing agreement.
     a. Open a web browser
         i. Click the start menu (officially the "Whisker Menu" in XFCE) in the top, left corner of the screen
         ii. Select "Web Browser" from the options
