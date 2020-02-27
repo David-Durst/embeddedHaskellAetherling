@@ -1524,8 +1524,8 @@ endmodule
 module ReduceParallel_n3 (input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O, input clk);
 wire [7:0] renamedForReduce_inst0_out;
 wire [7:0] renamedForReduce_inst1_out;
-renamedForReduce_unq1 renamedForReduce_inst0(.clk(clk), .in0(I_2), .in1(renamedForReduce_inst1_out), .out(renamedForReduce_inst0_out));
-renamedForReduce_unq1 renamedForReduce_inst1(.clk(clk), .in0(I_0), .in1(I_1), .out(renamedForReduce_inst1_out));
+renamedForReduce_unq1 renamedForReduce_inst0(.clk(clk), .in0(I_0), .in1(renamedForReduce_inst1_out), .out(renamedForReduce_inst0_out));
+renamedForReduce_unq1 renamedForReduce_inst1(.clk(clk), .in0(I_2), .in1(I_1), .out(renamedForReduce_inst1_out));
 assign O = renamedForReduce_inst0_out;
 endmodule
 

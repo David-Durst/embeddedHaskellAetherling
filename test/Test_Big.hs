@@ -113,10 +113,10 @@ img_size_conv2d_big :: Int = fromInteger $ col_size_conv2d_big*row_size_conv2d_b
 big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
   com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
-big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_conv2d_big)
+big_conv_2d_throughputs = [16, 8, 4, 2, 1, 1 % 3]
 --big_conv_2d_slowdowns = speed_to_slow [1] (toInteger img_size_conv2d_big)
 big_conv_2d_ppar =
-  fmap (\s -> compile_with_slowdown_to_expr big_conv_2d s) big_conv_2d_slowdowns
+  fmap (\s -> compile_with_throughput_to_expr big_conv_2d s) big_conv_2d_throughputs
 big_conv_2d_ppar_typechecked =
   fmap check_type big_conv_2d_ppar
 big_conv_2d_ppar_typechecked' =
@@ -126,43 +126,43 @@ big_conv_2d_output :: [Integer] =
   conv_generator $ stencil_generator row_size_conv2d_big (big_conv_2d_inputs !! 0)
 big_conv_2d_results = sequence $
   fmap (\s -> test_with_backend
-              big_conv_2d (wrap_single_s s)
+              big_conv_2d (wrap_single_t s)
               Magma (Save_Gen_Verilog "big_conv2d")
-              big_conv_2d_inputs big_conv_2d_output) big_conv_2d_slowdowns
+              big_conv_2d_inputs big_conv_2d_output) big_conv_2d_throughputs
 big_conv_2d_results_chisel = sequence $
   fmap (\s -> test_with_backend
-              big_conv_2d (wrap_single_s s)
+              big_conv_2d (wrap_single_t s)
               Chisel (Save_Gen_Verilog "big_conv2d")
-              big_conv_2d_inputs big_conv_2d_output) big_conv_2d_slowdowns
+              big_conv_2d_inputs big_conv_2d_output) big_conv_2d_throughputs
 big_conv_2d_results' = sequence $
   fmap (\s -> test_with_backend
-              big_conv_2d (wrap_single_s s)
+              big_conv_2d (wrap_single_t s)
               Magma No_Verilog
-              big_conv_2d_inputs big_conv_2d_output) [big_conv_2d_slowdowns !! 0]
+              big_conv_2d_inputs big_conv_2d_output) [big_conv_2d_throughputs !! 0]
 big_conv_2d_results_chisel' = sequence $
   fmap (\s -> test_with_backend
-              big_conv_2d (wrap_single_s s)
+              big_conv_2d (wrap_single_t s)
               Chisel (Save_Gen_Verilog "big_conv2d")
-              big_conv_2d_inputs big_conv_2d_output) [big_conv_2d_slowdowns !! 5]
+              big_conv_2d_inputs big_conv_2d_output) [big_conv_2d_throughputs !! 5]
 big_conv_2d_st_prints = sequence $
   fmap (\s -> compile_to_file
-              big_conv_2d (wrap_single_s s)
-              text_backend "conv2d") big_conv_2d_slowdowns
+              big_conv_2d (wrap_single_t s)
+              text_backend "conv2d") big_conv_2d_throughputs
 big_conv_2d_verilog_prints = sequence $
   fmap (\s -> compile_to_file
-              big_conv_2d (wrap_single_s s)
-              Magma "conv2d") big_conv_2d_slowdowns
+              big_conv_2d (wrap_single_t s)
+              Magma "conv2d") big_conv_2d_throughputs
 
 row_size_big_b2b = 1920
 col_size_big_b2b = 1080
 img_size_big_b2b :: Int = fromInteger $ col_size_big_b2b*row_size_big_b2b
-big_conv_2d_b2b_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big_b2b)
+big_conv_2d_b2b_throughputs = [16, 8, 4, 2, 1, 1 % 3]
 --big_conv_2d_b2b_slowdowns = speed_to_slow [1 % 3] (toInteger img_size_big_b2b)
 big_conv_2d_b2b = conv_2d_b2b_shallow_no_input (Proxy @1920) $ 
   com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
 big_conv_2d_b2b_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d_b2b
 big_conv_2d_b2b_ppar =
-  fmap (\s -> compile_with_slowdown_to_expr big_conv_2d_b2b s) big_conv_2d_slowdowns
+  fmap (\s -> compile_with_throughput_to_expr big_conv_2d_b2b s) big_conv_2d_b2b_throughputs
 big_conv_2d_b2b_ppar_typechecked =
   fmap check_type big_conv_2d_b2b_ppar
 big_conv_2d_b2b_ppar_typechecked' =
@@ -174,14 +174,14 @@ big_conv_2d_b2b_output :: [Integer] =
   conv_generator $ stencil_generator row_size_big_b2b [1..row_size_big_b2b*col_size_big_b2b]
 big_conv_2d_b2b_results = sequence $
   fmap (\s -> test_with_backend
-              big_conv_2d_b2b (wrap_single_s s)
+              big_conv_2d_b2b (wrap_single_t s)
               Magma (Save_Gen_Verilog "big_conv2d_b2b")
-              big_conv_2d_b2b_inputs big_conv_2d_b2b_output) big_conv_2d_b2b_slowdowns
+              big_conv_2d_b2b_inputs big_conv_2d_b2b_output) big_conv_2d_b2b_throughputs
 big_conv_2d_b2b_results_chisel = sequence $
   fmap (\s -> test_with_backend
-              big_conv_2d_b2b (wrap_single_s s)
+              big_conv_2d_b2b (wrap_single_t s)
               Chisel (Save_Gen_Verilog "big_conv2d_b2b")
-              big_conv_2d_b2b_inputs big_conv_2d_b2b_output) big_conv_2d_b2b_slowdowns
+              big_conv_2d_b2b_inputs big_conv_2d_b2b_output) big_conv_2d_b2b_throughputs
 
 
 t_const' = 15
@@ -217,10 +217,10 @@ img_size_sharpen_big :: Int = fromInteger $ col_size_sharpen_big*row_size_sharpe
 big_sharpen = sharpen_shallow_no_input (Proxy @1920) $ 
   com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
 big_sharpen_seq_idx = add_indexes $ seq_shallow_to_deep big_sharpen
-big_sharpen_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_sharpen_big)
+big_sharpen_throughputs = [16, 8, 4, 2, 1, 1 % 3]
 --big_sharpen_slowdowns = speed_to_slow [1] (toInteger img_size_sharpen_big)
 big_sharpen_ppar =
-  fmap (\s -> compile_with_slowdown_to_expr big_sharpen s) big_sharpen_slowdowns
+  fmap (\s -> compile_with_throughput_to_expr big_sharpen s) big_sharpen_throughputs
 big_sharpen_ppar_typechecked =
   fmap check_type big_sharpen_ppar
 big_sharpen_ppar_typechecked' =
@@ -232,14 +232,14 @@ big_sharpen_output :: [Integer] =
   (big_sharpen_inputs !! 0)
 big_sharpen_results = sequence $
   fmap (\s -> test_with_backend 
-              big_sharpen (wrap_single_s s)
+              big_sharpen (wrap_single_t s)
               Magma (Save_Gen_Verilog "big_sharpen")
-              big_sharpen_inputs big_sharpen_output) big_sharpen_slowdowns
+              big_sharpen_inputs big_sharpen_output) big_sharpen_throughputs
 big_sharpen_results_chisel = sequence $
   fmap (\s -> test_with_backend 
-              big_sharpen (wrap_single_s s)
+              big_sharpen (wrap_single_t s)
               Chisel (Save_Gen_Verilog "big_sharpen")
-              big_sharpen_inputs big_sharpen_output) big_sharpen_slowdowns
+              big_sharpen_inputs big_sharpen_output) big_sharpen_throughputs
 
 big_tests = testGroup "Big Tests"
   [

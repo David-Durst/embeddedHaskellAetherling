@@ -41,9 +41,8 @@ To get started with the VM:
             1. See section 7 of the paper for the discussion and references on shallow and deep embeddings
         ii. Space-Time IR (section 4 of paper) - each test has a _ppar variable which contains different Space-Time IR versions of the program at different throughputs.
         iii. Rewrite Rules (section 5 of paper) and Scheduling (section 6 of paper) - the _ppar variable produces the Space-Time IR versions by calling
-        "compile_with_slowdown_to_expr". One such variable is "single_map_ppar" in Test_Slowdown.hs.
-        This function implementes the scheduler using the rewrite rules. The slowdown argument (the "s" variable in each expression in the code)
-        specifies the target output throughput by stating that it should be s times less than the throughput necessary to emit the entire output in a single clock cycle.
+        "compile_with_throughput_to_expr". One such variable is "single_map_ppar" in Test_Slowdown.hs.
+        This function calls code in "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Rewrites/Sequence_To_Partially_Parallel_Space_Time/Rewrite_Expr.hs" which implements the scheduler using the rewrite rules. 
         iv. Implementation (section 7 of paper) - the prior points stress the Sequence Language and Space-Time IR implementations. 
         Additionally, each test has a _results variable, such as "single_map_results", which stresses the compiler that lowers from the Space-Time IR to Verilog by:
             1. Emitting an implementation of the Space-Time IR circuit in Magma, a Python HDL.
@@ -59,7 +58,6 @@ To get started with the VM:
             1. "print_st" - This prints a string representation of a Space-Time IR program.
                 1. "print_st (single_map_ppar !! 0)" - example of how to use each. Each _ppar variable is a list of Space-Time IR programs. 
                 Use !! to access one element of the list.
-                1. Note: these programs will not have the registers added for latency match. That is a later pass in the compiler after "compile_with_slowdown_to_expr".
             2. "print_st_input_types" - This prints a string representation of a Space-Time IR program's input types
                 1. "print_st_input_types (single_map_ppar !! 0)" - example of how to use each.
             2. "print_st_output_type" - This prints a string representation of a Space-Time IR program's output type
@@ -76,7 +74,7 @@ To get started with the VM:
         iii. The top folders in that directory separate the Aetherling, Halide-HLS (titled halide_to_hardware), and Spatial verilog files. 
         iv. We have included the Halide-HLS and Spatial verilog files generated for the paper. The Aetherling verilog files are regenerated each time the tests are rerun.
         v. Within each of the aetherling_copies, halide_to_hardware, and spatial folders are the folders for each application in the Evaluation section. These are: map, conv2d, conv2d_b2b, and sharpen. The other apps within the aetherling_copies folder may work but are not part of the paper's results.
-        vi. Within each of the app's folders are the verilog files for the app at a specific throughput specified by slowdown. For example, the file "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies/conv2d/conv2d_16.v" has a slowdown of 16, or emits the output at 16th the rate of a pipeline that emitted all output in 1 clock cycle.
+        vi. Within each of the app's folders are the verilog files for the app at a specific throughput specified by number of clock cycles. For example, the file "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies/conv2d/conv2d_16.v" emits the output over 16 clock cycles.
         vii. To run fewer designs through Vivado and thus finish pnr/run.sh more quickly, delete some of these files. Note: doing so may break the chart generation code for visualizing the results. You may be required to edit "/home/pldi/pldi/aetherling/aetherling/helpers/pnr_graphs.py" to deal with less data.
     c. When the prior step finishes, the graphs which reproduce figures 11-13 in the paper will be in "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs". Additionally, stdout will contain the data from the graphs in text form. Ignore warnings printed to stdout before the data.
         i. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_results.pdf" - reproduces figure 11 

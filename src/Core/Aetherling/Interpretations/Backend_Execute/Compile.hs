@@ -25,9 +25,11 @@ import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import qualified Aetherling.Languages.Sequence.Shallow.Types as Shallow_Types
 import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
+import qualified Aetherling.Languages.Sequence.Deep.Types as SeqT
 import qualified Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq_Conv
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
+import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import qualified Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions as ST_Conv
 import qualified Data.List as L
 import Control.Monad.Except
@@ -41,6 +43,7 @@ import System.FilePath
 import Data.Maybe
 import Debug.Trace
 import Data.Time
+import Data.Ratio
 
 -- things this module needs to do:
 -- 1. compile Seq to ST IR deep embedding to backend given a slowdown
@@ -75,9 +78,10 @@ data Verilog_Test_Arg = Verilog_Sim_Source String
   deriving (Show, Eq)
 verilog_sim_source str = Verilog_Sim_Source $ root_dir ++ str
 
-data Slowdown_Target =
+data Throughput_Target =
   -- this target is the minimum area circuit with a slowdown factor
   Min_Area_With_Slowdown_Factor Int
+  | Min_Area_With_Throughput (Ratio Integer)
   -- this target is all circuits with a slowdown factor
   | All_With_Slowdown_Factor Int
   | Type_Rewrites [Type_Rewrite]
@@ -85,18 +89,36 @@ data Slowdown_Target =
 
 data Test_Args a b = Test_Args {test_inputs :: [a], test_output :: b}
 
--- | Compile a shallowly embedded sequence language program to a backend
--- representation. Then, run that backend representation through a verilog
--- simulator with the specified input. Return if the output matches the input.
 test_with_backend :: (Shallow_Types.Aetherling_Value a,
                      Convertible_To_Atom_Strings b,
                      Convertible_To_Atom_Strings c) =>
                      RH.Rewrite_StateM a -> 
-                     Slowdown_Target -> Language_Target ->
+                     Throughput_Target -> Language_Target ->
                      Verilog_Test_Arg ->
                      [b] -> c ->
                      IO [Test_Helpers.Test_Result]
+test_with_backend shallow_seq_program (Min_Area_With_Throughput throughput) l_target verilog_conf
+  inputs output = do
+  let out_len = num_atoms output
+  
+  let slowdown = head $ Test_Helpers.speed_to_slow [throughput] (toInteger out_len)
+  test_with_backend' shallow_seq_program (Min_Area_With_Slowdown_Factor slowdown) l_target verilog_conf inputs output
 test_with_backend shallow_seq_program s_target l_target verilog_conf
+  inputs output = do
+  test_with_backend' shallow_seq_program s_target l_target verilog_conf inputs output
+  
+-- | Compile a shallowly embedded sequence language program to a backend
+-- representation. Then, run that backend representation through a verilog
+-- simulator with the specified input. Return if the output matches the input.
+test_with_backend' :: (Shallow_Types.Aetherling_Value a,
+                     Convertible_To_Atom_Strings b,
+                     Convertible_To_Atom_Strings c) =>
+                     RH.Rewrite_StateM a -> 
+                     Throughput_Target -> Language_Target ->
+                     Verilog_Test_Arg ->
+                     [b] -> c ->
+                     IO [Test_Helpers.Test_Result]
+test_with_backend' shallow_seq_program s_target l_target verilog_conf
   inputs output = do
   --traceShowM s_target
   --time <- getZonedTime
@@ -111,6 +133,7 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
   -- convert each STIR expr to a string for the backend with an added test hardness
   let one_program = case s_target of
         Min_Area_With_Slowdown_Factor s -> True
+        Min_Area_With_Throughput _ -> error "call test_with_backend not test_with_backend' with speedups"
         All_With_Slowdown_Factor s -> False
         Type_Rewrites trs -> True
   test_strs <-
@@ -221,7 +244,7 @@ save_gen_verilog _ = False
 get_verilog_save_name (Save_Gen_Verilog name) = name
 get_verilog_save_name _ = ""
 
-wrap_single_s s = Min_Area_With_Slowdown_Factor s
+wrap_single_t throughput = Min_Area_With_Throughput throughput
 
   -- need to make convertible_to_atom_strings language generic
   -- don't need to bring generate_fault_input_output_for_st_program in from Tester
@@ -234,7 +257,7 @@ wrap_single_s s = Min_Area_With_Slowdown_Factor s
 -- representation. Then, run that backend to produce verilog if the backend
 -- can produce verilog (ie isn't Text)
 compile_to_file :: (Shallow_Types.Aetherling_Value a) =>
-                     RH.Rewrite_StateM a -> Slowdown_Target -> Language_Target ->
+                     RH.Rewrite_StateM a -> Throughput_Target -> Language_Target ->
                      String -> IO [Process_Result]
 compile_to_file shallow_seq_program s_target l_target output_name_template = do
   result <- runExceptT $ compile_to_file' shallow_seq_program s_target
@@ -244,7 +267,7 @@ compile_to_file shallow_seq_program s_target l_target output_name_template = do
     Right x -> return x
   
 compile_to_file' :: (Shallow_Types.Aetherling_Value a) =>
-                     RH.Rewrite_StateM a -> Slowdown_Target -> Language_Target ->
+                     RH.Rewrite_StateM a -> Throughput_Target -> Language_Target ->
                      String -> ExceptT Compiler_Error IO [Process_Result]
 compile_to_file' shallow_seq_program s_target l_target output_name_template = do
   -- get STIR expr for each program
@@ -260,6 +283,7 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
     where
       one_program = case s_target of
                       Min_Area_With_Slowdown_Factor s -> True
+                      Min_Area_With_Throughput _ -> error "call compile_to_file not compile_to_file' with speedups"
                       All_With_Slowdown_Factor s -> False
                       Type_Rewrites trs -> True
       -- | the next three are helpers for compile_to_file for each backend
@@ -333,7 +357,7 @@ write_file_ae file_name p_str = do
 
 test_verilog_dir = root_dir ++
                    "/test/verilog_examples/aetherling_copies/"
-copy_verilog_file :: FilePath -> String -> String -> Slowdown_Target -> Int ->
+copy_verilog_file :: FilePath -> String -> String -> Throughput_Target -> Int ->
                      Bool -> IO ()
 copy_verilog_file source_file verilog_dir name s_target idx one_program = do
   -- test verilog dir is the directory of all the verilog output
@@ -344,7 +368,7 @@ copy_verilog_file source_file verilog_dir name s_target idx one_program = do
   copyFile source_file
     (verilog_dir ++ "/" ++ params_to_file_name name s_target idx one_program ++ ".v")
 
-params_to_file_name :: String -> Slowdown_Target -> Int -> Bool -> String
+params_to_file_name :: String -> Throughput_Target -> Int -> Bool -> String
 params_to_file_name base_name s_target idx True =
   base_name ++ "/" ++ base_name ++ "_" ++
   slowdown_target_to_file_name_string s_target
@@ -352,8 +376,9 @@ params_to_file_name base_name s_target idx False =
   base_name ++ "/" ++ base_name ++ "_" ++
   slowdown_target_to_file_name_string s_target ++ "_" ++ show idx
 
-slowdown_target_to_file_name_string :: Slowdown_Target -> String
+slowdown_target_to_file_name_string :: Throughput_Target -> String
 slowdown_target_to_file_name_string (Min_Area_With_Slowdown_Factor s) = show s
+slowdown_target_to_file_name_string (Min_Area_With_Throughput s) = error "don't call slowdown_target_to_file_name_string with speedup"
 slowdown_target_to_file_name_string (All_With_Slowdown_Factor s) = show s
 slowdown_target_to_file_name_string (Type_Rewrites trs) =
   show (product_tr_periods trs)
@@ -402,28 +427,34 @@ process_result_to_test_result process_result test_file = do
 -- This is a frontend for the three types of Seq Shallow to STIR compilers
 -- that also does error checking.
 compile_to_expr :: (Shallow_Types.Aetherling_Value a) =>
-                     RH.Rewrite_StateM a -> Slowdown_Target -> 
+                     RH.Rewrite_StateM a -> Throughput_Target -> 
                      Except Compiler_Error [STE.Expr]
 compile_to_expr shallow_seq_program s_target = do
   case s_target of
         Min_Area_With_Slowdown_Factor s -> do
           let deep_st_to_be_checked =
                 compile_with_slowdown_to_expr shallow_seq_program s
-          case check_compiler_errors s deep_st_to_be_checked of
+          case check_compiler_errors_with_slowdown s deep_st_to_be_checked of
+            Nothing -> return [deep_st_to_be_checked]
+            Just err -> throwError err
+        Min_Area_With_Throughput s -> do
+          let deep_st_to_be_checked =
+                compile_with_throughput_to_expr shallow_seq_program s
+          case check_compiler_errors_with_throughput s deep_st_to_be_checked of
             Nothing -> return [deep_st_to_be_checked]
             Just err -> throwError err
         All_With_Slowdown_Factor s -> do
           let deep_sts_to_be_checked =
                 compile_with_slowdown_to_all_possible_expr shallow_seq_program s
           case filter isJust $
-               map (check_compiler_errors s) deep_sts_to_be_checked of
+               map (check_compiler_errors_with_slowdown s) deep_sts_to_be_checked of
             [] -> return deep_sts_to_be_checked
             errs -> throwError $ Multiple_Errors $ map fromJust errs
         Type_Rewrites trs -> do
           let deep_st_to_be_checked =
                 compile_with_type_rewrite_to_expr shallow_seq_program trs
           let s = product_tr_periods trs
-          case check_compiler_errors s deep_st_to_be_checked of
+          case check_compiler_errors_with_slowdown s deep_st_to_be_checked of
             Nothing -> return [deep_st_to_be_checked]
             Just err -> throwError err
 
@@ -433,8 +464,17 @@ data Compiler_Error = Type_Mismatch
   | Multiple_Errors [Compiler_Error]
   deriving (Show, Eq)
 
-check_compiler_errors :: Int -> STE.Expr -> Maybe Compiler_Error
-check_compiler_errors s program = do
+check_compiler_errors_with_throughput :: Ratio Integer -> STE.Expr -> Maybe Compiler_Error
+check_compiler_errors_with_throughput throughput program = do
+  let out_st_t = ST_Conv.e_out_type $
+                  ST_Conv.expr_to_types program
+  
+  let out_len = STT.num_atoms_total_t out_st_t
+  let s = head $ Test_Helpers.speed_to_slow [throughput] (toInteger out_len)
+  check_compiler_errors_with_slowdown s program
+  
+check_compiler_errors_with_slowdown :: Int -> STE.Expr -> Maybe Compiler_Error
+check_compiler_errors_with_slowdown s program = do
   if check_type program
     then do
     if CL.check_latency program
@@ -459,6 +499,23 @@ compile_with_type_rewrite_to_expr shallow_seq_program tr = do
   if Has_Error.has_error deep_st_program
     then deep_st_program
     else add_registers deep_st_program
+    
+compile_with_throughput_to_expr :: (Shallow_Types.Aetherling_Value a) =>
+                                     RH.Rewrite_StateM a -> Ratio Integer ->
+                                     STE.Expr
+compile_with_throughput_to_expr shallow_seq_program throughput = do
+  let deep_seq_program_with_indexes =
+        lower_seq_shallow_to_deep_indexed shallow_seq_program
+  let s = head $ Test_Helpers.speed_and_expr_to_slow [throughput] deep_seq_program_with_indexes
+  let deep_st_program =
+        rewrite_to_partially_parallel_slowdown_min_area_program
+        s deep_seq_program_with_indexes
+  if Has_Error.has_error deep_st_program
+    then deep_st_program
+    else do
+    --let x = add_registers deep_st_program
+    --traceShow (Comp_Area.get_area x) x
+    add_registers deep_st_program
   
 compile_with_slowdown_to_expr :: (Shallow_Types.Aetherling_Value a) =>
                                      RH.Rewrite_StateM a -> Int ->

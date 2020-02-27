@@ -1,6 +1,9 @@
 module Aetherling.Interpretations.Backend_Execute.Test_Helpers where
 import qualified Aetherling.Languages.Sequence.Deep.Serialize as SeqSer
 import qualified Aetherling.Languages.Space_Time.Deep.Serialize as STSer
+import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
+import qualified Aetherling.Languages.Sequence.Deep.Types as SeqT
+import qualified Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq_Conv
 import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
@@ -237,6 +240,14 @@ generate_tester_input_output_for_st_program conf p_types inputs output = do
 
 speed_to_slow :: [Ratio Integer] -> Integer -> [Int]
 speed_to_slow speed_ups image_size = map (\speed_up -> fromInteger $ numerator $ (fromIntegral image_size) / speed_up) speed_ups
+
+speed_and_expr_to_slow :: [Ratio Integer] -> SeqE.Expr -> [Int]
+speed_and_expr_to_slow speedups e = do
+  let out_seq_t = Seq_Conv.e_out_type $
+                  Seq_Conv.expr_to_types e
+  
+  let out_len = SeqT.num_atoms_total_t_seq out_seq_t
+  speed_to_slow speedups (toInteger out_len)
 
 stencil_generator :: Integer -> [Integer] -> [[[Integer]]]
 stencil_generator row_size inputs = do

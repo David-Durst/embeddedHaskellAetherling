@@ -95,16 +95,19 @@ convert_seq_val_to_st_val_string' seq_val st_type conf = do
 class Convertible_To_Atom_Strings a where
   convert_to_flat_atom_list :: a -> ST_Val_To_String_Config -> [String]
   convert_to_haskell_proto :: a -> PS.ValueSerialized
+  num_atoms :: a -> Int
 
 instance Convertible_To_Atom_Strings Integer where
   convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf x]
   convert_to_haskell_proto x = defMessage
     & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
+  num_atoms _ = 1
 
 instance Convertible_To_Atom_Strings Bool where
   convert_to_flat_atom_list x conf = [make_bool_string_for_backend conf x]
   convert_to_haskell_proto x = defMessage
     & PS.maybe'elems .~ Just (PS.ValueSerialized'Bit x)
+  num_atoms _ = 1
   
 instance (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
   Convertible_To_Atom_Strings (a, b) where
@@ -120,6 +123,7 @@ instance (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
       tuple_val = defMessage
         & PS.left .~ left_elem
         & PS.right .~ right_elem
+  num_atoms _ = 1
 
 instance (Convertible_To_Atom_Strings a) => Convertible_To_Atom_Strings [a] where
   convert_to_flat_atom_list xs conf = concat $
@@ -130,6 +134,8 @@ instance (Convertible_To_Atom_Strings a) => Convertible_To_Atom_Strings [a] wher
       xs_serialized = map convert_to_haskell_proto xs
       seq_val = defMessage
                 & PS.values .~ xs_serialized
+  num_atoms [] = 0
+  num_atoms l@(x:xs) = length l * num_atoms x
 
 instance Convertible_To_Atom_Strings AST_Atoms where
   convert_to_flat_atom_list (BitA b) conf =
@@ -141,6 +147,7 @@ instance Convertible_To_Atom_Strings AST_Atoms where
       (head $ convert_to_flat_atom_list x conf)
       (head $ convert_to_flat_atom_list y conf)]
   convert_to_haskell_proto _ = error "not supporting converting ast_atoms to proto"
+  num_atoms _ = error "not supporting num_atoms on ast_toms"
 
 -- these atoms are just used to convert between
 -- the atoms in AST_Value and the string representations from Convertible_To_Atom_Strings

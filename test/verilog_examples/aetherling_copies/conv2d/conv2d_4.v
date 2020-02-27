@@ -1860,7 +1860,7 @@ module ReduceParallel_n3_unq1 (input [7:0] I_0_0, input [7:0] I_1_0, input [7:0]
 wire [7:0] renamedForReduce_inst0_out_0;
 wire [7:0] renamedForReduce_inst1_out_0;
 renamedForReduce_unq1 renamedForReduce_inst0(.in0_0(I_0_0), .in1_0(renamedForReduce_inst1_out_0), .out_0(renamedForReduce_inst0_out_0));
-renamedForReduce_unq1 renamedForReduce_inst1(.in0_0(I_1_0), .in1_0(I_2_0), .out_0(renamedForReduce_inst1_out_0));
+renamedForReduce_unq1 renamedForReduce_inst1(.in0_0(I_2_0), .in1_0(I_1_0), .out_0(renamedForReduce_inst1_out_0));
 assign O_0 = renamedForReduce_inst0_out_0;
 endmodule
 

@@ -113,7 +113,7 @@ module coreir_mux #(parameter width = 1) (input [width-1:0] in0, input [width-1:
   assign out = sel ? in1 : in0;
 endmodule
 
-module coreir_mem #(parameter has_init = 1'b0, parameter depth = 1, parameter width = 1) (input clk, input [width-1:0] wdata, input [$clog2(depth)-1:0] waddr, input wen, output [width-1:0] rdata, input [$clog2(depth)-1:0] raddr);
+module coreir_mem #(parameter has_init = 0, parameter depth = 1, parameter width = 1) (input clk, input [width-1:0] wdata, input [$clog2(depth)-1:0] waddr, input wen, output [width-1:0] rdata, input [$clog2(depth)-1:0] raddr);
   reg [width-1:0] data[depth-1:0];
   always @(posedge clk) begin
     if (wen) begin
@@ -274,7 +274,7 @@ endmodule
 
 module RAM1x8 (input CLK, input [0:0] RADDR, output [7:0] RDATA, input [0:0] WADDR, input [7:0] WDATA, input WE);
 wire [7:0] coreir_mem1x8_inst0_rdata;
-coreir_mem #(.depth(1), .has_init(1'b0), .width(8)) coreir_mem1x8_inst0(.clk(CLK), .raddr(RADDR), .rdata(coreir_mem1x8_inst0_rdata), .waddr(WADDR), .wdata(WDATA), .wen(WE));
+coreir_mem #(.depth(1), .has_init(0), .width(8)) coreir_mem1x8_inst0(.clk(CLK), .raddr(RADDR), .rdata(coreir_mem1x8_inst0_rdata), .waddr(WADDR), .wdata(WDATA), .wen(WE));
 assign RDATA = coreir_mem1x8_inst0_rdata;
 endmodule
 
@@ -290,7 +290,7 @@ endmodule
 
 module RAM1x32 (input CLK, input [0:0] RADDR, output [31:0] RDATA, input [0:0] WADDR, input [31:0] WDATA, input WE);
 wire [31:0] coreir_mem1x32_inst0_rdata;
-coreir_mem #(.depth(1), .has_init(1'b0), .width(32)) coreir_mem1x32_inst0(.clk(CLK), .raddr(RADDR), .rdata(coreir_mem1x32_inst0_rdata), .waddr(WADDR), .wdata(WDATA), .wen(WE));
+coreir_mem #(.depth(1), .has_init(0), .width(32)) coreir_mem1x32_inst0(.clk(CLK), .raddr(RADDR), .rdata(coreir_mem1x32_inst0_rdata), .waddr(WADDR), .wdata(WDATA), .wen(WE));
 assign RDATA = coreir_mem1x32_inst0_rdata;
 endmodule
 
@@ -920,7 +920,7 @@ wire [2:0] value_out;
 Mux2xOutBits3 Mux2xOutBits3_inst0(.I0(enable_mux_O), .I1(const_0_3_out), .O(Mux2xOutBits3_inst0_O), .S(RESET));
 coreir_const #(.value(3'h0), .width(3)) const_0_3(.out(const_0_3_out));
 Mux2xOutBits3 enable_mux(.I0(value_out), .I1(I), .O(enable_mux_O), .S(CE));
-coreir_reg #(.clk_posedge(1'b1), .init(3'h0), .width(3)) value(.clk(CLK), .in(Mux2xOutBits3_inst0_O), .out(value_out));
+coreir_reg #(.clk_posedge(1), .init(3'h0), .width(3)) value(.clk(CLK), .in(Mux2xOutBits3_inst0_O), .out(value_out));
 assign O = value_out;
 endmodule
 
@@ -938,7 +938,7 @@ wire [1:0] value_out;
 Mux2xOutBits2 Mux2xOutBits2_inst0(.I0(enable_mux_O), .I1(const_0_2_out), .O(Mux2xOutBits2_inst0_O), .S(RESET));
 coreir_const #(.value(2'h0), .width(2)) const_0_2(.out(const_0_2_out));
 Mux2xOutBits2 enable_mux(.I0(value_out), .I1(I), .O(enable_mux_O), .S(CE));
-coreir_reg #(.clk_posedge(1'b1), .init(2'h0), .width(2)) value(.clk(CLK), .in(Mux2xOutBits2_inst0_O), .out(value_out));
+coreir_reg #(.clk_posedge(1), .init(2'h0), .width(2)) value(.clk(CLK), .in(Mux2xOutBits2_inst0_O), .out(value_out));
 assign O = value_out;
 endmodule
 
@@ -956,7 +956,7 @@ wire [0:0] value_out;
 Mux2xOutBits1 Mux2xOutBits1_inst0(.I0(enable_mux_O), .I1(const_0_1_out), .O(Mux2xOutBits1_inst0_O), .S(RESET));
 coreir_const #(.value(1'h0), .width(1)) const_0_1(.out(const_0_1_out));
 Mux2xOutBits1 enable_mux(.I0(value_out), .I1(I), .O(enable_mux_O), .S(CE));
-coreir_reg #(.clk_posedge(1'b1), .init(1'h0), .width(1)) value(.clk(CLK), .in(Mux2xOutBits1_inst0_O), .out(value_out));
+coreir_reg #(.clk_posedge(1), .init(1'h0), .width(1)) value(.clk(CLK), .in(Mux2xOutBits1_inst0_O), .out(value_out));
 assign O = value_out;
 endmodule
 
@@ -1795,7 +1795,7 @@ endmodule
 
 module DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse (input CLK, input I, output O);
 wire [0:0] reg_P_inst0_out;
-coreir_reg #(.clk_posedge(1'b1), .init(1'h0), .width(1)) reg_P_inst0(.clk(CLK), .in(I), .out(reg_P_inst0_out));
+coreir_reg #(.clk_posedge(1), .init(1'h0), .width(1)) reg_P_inst0(.clk(CLK), .in(I), .out(reg_P_inst0_out));
 assign O = reg_P_inst0_out[0];
 endmodule
 
@@ -2150,8 +2150,8 @@ endmodule
 module ReduceParallel_n3 (input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O);
 wire [7:0] renamedForReduce_inst0_out;
 wire [7:0] renamedForReduce_inst1_out;
-renamedForReduce renamedForReduce_inst0(.in0(I_1), .in1(renamedForReduce_inst1_out), .out(renamedForReduce_inst0_out));
-renamedForReduce renamedForReduce_inst1(.in0(I_2), .in1(I_0), .out(renamedForReduce_inst1_out));
+renamedForReduce renamedForReduce_inst0(.in0(I_0), .in1(renamedForReduce_inst1_out), .out(renamedForReduce_inst0_out));
+renamedForReduce renamedForReduce_inst1(.in0(I_2), .in1(I_1), .out(renamedForReduce_inst1_out));
 assign O = renamedForReduce_inst0_out;
 endmodule
 
@@ -2161,7 +2161,7 @@ wire [7:0] Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0;
 wire [0:0] reg_P_inst0_out;
 ReduceParallel_n3 ReduceParallel_n3_inst0(.I_0(I_0), .I_1(I_1), .I_2(I_2), .O(ReduceParallel_n3_inst0_O));
 Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0(.CLK(CLK), .I_0(ReduceParallel_n3_inst0_O), .O_0(Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0));
-coreir_reg #(.clk_posedge(1'b1), .init(1'h0), .width(1)) reg_P_inst0(.clk(CLK), .in(valid_up), .out(reg_P_inst0_out));
+coreir_reg #(.clk_posedge(1), .init(1'h0), .width(1)) reg_P_inst0(.clk(CLK), .in(valid_up), .out(reg_P_inst0_out));
 assign O_0 = Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0;
 assign valid_down = reg_P_inst0_out[0];
 endmodule
@@ -2202,7 +2202,7 @@ module ReduceParallel_n3_unq1 (input [7:0] I_0_0, input [7:0] I_1_0, input [7:0]
 wire [7:0] renamedForReduce_inst0_out_0;
 wire [7:0] renamedForReduce_inst1_out_0;
 renamedForReduce_unq1 renamedForReduce_inst0(.in0_0(I_0_0), .in1_0(renamedForReduce_inst1_out_0), .out_0(renamedForReduce_inst0_out_0));
-renamedForReduce_unq1 renamedForReduce_inst1(.in0_0(I_1_0), .in1_0(I_2_0), .out_0(renamedForReduce_inst1_out_0));
+renamedForReduce_unq1 renamedForReduce_inst1(.in0_0(I_2_0), .in1_0(I_1_0), .out_0(renamedForReduce_inst1_out_0));
 assign O_0 = renamedForReduce_inst0_out_0;
 endmodule
 
@@ -2212,7 +2212,7 @@ wire [7:0] Register_Array_1_Array_1_Array_8_Bit___t_0init_FalseCE_FalseRESET_ins
 wire [0:0] reg_P_inst0_out;
 ReduceParallel_n3_unq1 ReduceParallel_n3_inst0(.I_0_0(I_0_0), .I_1_0(I_1_0), .I_2_0(I_2_0), .O_0(ReduceParallel_n3_inst0_O_0));
 Register_Array_1_Array_1_Array_8_Bit___t_0init_FalseCE_FalseRESET Register_Array_1_Array_1_Array_8_Bit___t_0init_FalseCE_FalseRESET_inst0(.CLK(CLK), .I_0_0(ReduceParallel_n3_inst0_O_0), .O_0_0(Register_Array_1_Array_1_Array_8_Bit___t_0init_FalseCE_FalseRESET_inst0_O_0_0));
-coreir_reg #(.clk_posedge(1'b1), .init(1'h0), .width(1)) reg_P_inst0(.clk(CLK), .in(valid_up), .out(reg_P_inst0_out));
+coreir_reg #(.clk_posedge(1), .init(1'h0), .width(1)) reg_P_inst0(.clk(CLK), .in(valid_up), .out(reg_P_inst0_out));
 assign O_0_0 = Register_Array_1_Array_1_Array_8_Bit___t_0init_FalseCE_FalseRESET_inst0_O_0_0;
 assign valid_down = reg_P_inst0_out[0];
 endmodule
@@ -2330,7 +2330,7 @@ module Add8_cin (input CIN, input [7:0] I0, input [7:0] I1, output [7:0] O);
 wire bit_const_0_None_out;
 wire [7:0] coreir_add8_inst0_out;
 wire [7:0] coreir_add8_inst1_out;
-corebit_const #(.value(1'b0)) bit_const_0_None(.out(bit_const_0_None_out));
+corebit_const #(.value(0)) bit_const_0_None(.out(bit_const_0_None_out));
 coreir_add #(.width(8)) coreir_add8_inst0(.in0(coreir_add8_inst1_out), .in1(I1), .out(coreir_add8_inst0_out));
 coreir_add #(.width(8)) coreir_add8_inst1(.in0({bit_const_0_None_out,bit_const_0_None_out,bit_const_0_None_out,bit_const_0_None_out,bit_const_0_None_out,bit_const_0_None_out,bit_const_0_None_out,CIN}), .in1(I0), .out(coreir_add8_inst1_out));
 assign O = coreir_add8_inst0_out;
@@ -2342,7 +2342,7 @@ wire [7:0] Invert8_inst0_out;
 wire bit_const_1_None_out;
 Add8_cin Add8_cin_inst0(.CIN(bit_const_1_None_out), .I0(I0), .I1(Invert8_inst0_out), .O(Add8_cin_inst0_O));
 coreir_not #(.width(8)) Invert8_inst0(.in(I1), .out(Invert8_inst0_out));
-corebit_const #(.value(1'b1)) bit_const_1_None(.out(bit_const_1_None_out));
+corebit_const #(.value(1)) bit_const_1_None(.out(bit_const_1_None_out));
 assign O = Add8_cin_inst0_O;
 endmodule
 
