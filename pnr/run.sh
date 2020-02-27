@@ -1,4 +1,5 @@
 #!/bin/bash -x
+export PATH="/opt/Xilinx/Vivado/2018.2/bin:$PATH"
 user=$1
 
 if [ -z "$user" ]; then
@@ -21,12 +22,17 @@ else
 fi
 
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-ssh $user@kiwi "rm -rf results"
-ssh $user@kiwi "mkdir -p results"
-scp $dir/remote.sh $user@kiwi:
-scp $dir/constraints*.xdc $user@kiwi:
-scp $dir/compile.sh $user@kiwi:
+rm -rf $dir/results
+mkdir -p $dir/results
+cp $dir/remote.sh $dir/results/
+cp $dir/constraints*.xdc $dir/results/
+cp $dir/compile.sh $dir/results/
 
-scp -r ${dir}/../test/verilog_examples $user@kiwi:
-ssh $user@kiwi "tmux new -d -s pnr './remote.sh verilog_examples/ &> results/log.log'"
+cp -r ${dir}/../test/verilog_examples $dir/results/
+cd $dir/results/
+mkdir -p results
+touch results/log.log
+./remote.sh verilog_examples/ &> results/log.log
+mkdir -p $dir/figs
+python -m aetherling $dir/results.csv graph_results
 
