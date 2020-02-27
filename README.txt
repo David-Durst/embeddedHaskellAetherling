@@ -112,6 +112,9 @@ How supported: To reproduce the experiments in the Evaluation (section 8 of pape
     f. Within each of the app's folders are the verilog files for the app at a throughput specified by number of clock cycles. For example, the file "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies/conv2d/conv2d_16.v" emits the output over 16 clock cycles.
     g. To run fewer designs through Vivado and thus finish pnr/run.sh more quickly, delete some of these files. Note: doing so may break the chart generation code for visualizing the results. You may be required to edit "/home/pldi/pldi/aetherling/aetherling/helpers/pnr_graphs.py" to deal with less data.
 3. When the prior step finishes, the graphs which reproduce figures 11-13 in the paper will be in "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs". Additionally, stdout will contain the data from the graphs in text form. Ignore warnings printed to stdout before the data.
+    a. Open a file browser 
+        i. Click the start menu (officially the "Whisker Menu" in XFCE) in the top, left corner of the screen
+        ii. Select "File Manager" from the options
     a. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_results.pdf" - reproduces figure 11 
     b. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_sp.pdf" - reproduces figure 12
     c. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_hth.pdf" - reproduces figure 13
