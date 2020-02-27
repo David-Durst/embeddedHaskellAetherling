@@ -45,7 +45,7 @@ We cannot redistribute the Xilinx Vivado tools with the VM due to their licensin
         i. Lseq (section 3 of paper) - each unit test is written in the shallow embedding of Lseq in Haskell.
             1. See section 7 of the paper for the discussion and references on shallow and deep embeddings.
             1. See "single_map" in Test_Slowdown.hs for an example Lseq program. Note that mapC is polymoprhic over sequence length, so com_input_seq is used to specify the input sequence length. The rest of the sequence lengths are then inferred by Haskell's type checker.
-        ii. Lst (section 4 of paper) - each test has a _ppar variable which contains different Lst versions of the program at different throughputs.
+        ii. Lst (section 4 of paper) - each test has a _ppar variable which contains different Lst versions of the program at different throughputs. The step-by-step instructions explain how to interact with these variables.
         iii. Rewrite Rules (section 5 of paper) and Scheduling (section 6 of paper) - the _ppar variable produces the Lst versions by calling "compile_with_throughput_to_expr".
         One such variable is "single_map_ppar" in Test_Slowdown.hs.
         This function calls code in "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Rewrites/Sequence_To_Partially_Parallel_Space_Time/Rewrite_Expr.hs" which implements the scheduler using the rewrite rules. 
@@ -69,37 +69,48 @@ How supported: The examples in "Test_Slowdown.hs" and "Test_Apps.hs" demonstrate
 Look at the type signatures of the operators "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Languages/Sequence/Shallow/Expr.hs" to see that they are on finite length sequences.
 
 ### Lst (Section 4 of Paper)
-Claim: The operator's of the intermediate language (Lst) correspond to streaming hardware modules. The types of the operators encode the throughput of the hardware interfaces and the exact clock cycles when elements are consumed or produced.
+Claim: Programs in the intermediate language (Lst) correspond to statically scheduled, streaming hardware.
+Operators in the language have correspond to hardware modules with computable properties such as throughput, area, and delay.
+The types of the operators encode the throughput of the hardware interfaces and the exact clock cycles when elements are consumed or produced.
 
-How supported: Look at the _ppar variables discussed in section 4.d.iii of the getting started guide. These will show the Lst programs along with their types.
-To explore each of the variables discussed in 4.d
+How supported: The results of the evaluation section (see below) provide experimental evidence that the operators compile to statically scheduled, streaming hardware modules.
+Additionally, the _ppar variables, discussed in section 4.d.iii of the getting started guide, demonstrate the Lst programs and their types.
+To explore each of the _ppar variables:
 1. Use the Haskell REPL
-    a. Start the REPL by typing the following (without "") in the terminal: "stack ghci --test"
-    b. The above command should be issued from the directory "/home/pldi/pldi/embeddedHaskellAetherling/" 
+    a. Open a terminal where the current working directory is "/home/pldi/pldi/embeddedHaskellAetherling/" 
+    b. Start the REPL by typing the following (without "") in the terminal: "stack ghci --test"
 2. Use the following functions in the REPL to explore the _ppar variables. 
     a. "print_st" - This prints a string representation of a Lst program.
-        i. "print_st (single_map_ppar !! 0)" - This prints the single map Lst program scheduled at 1 pixel outputted per clock.
+        i. "print_st (single_map_ppar !! 0)" - This prints the single map Lst program scheduled at 1 pixel emitted per clock.
         Each _ppar variable is a list of Lst programs.
         For example, the programs in single_map_ppar have throughputs of 1, 2, and 4 Ints emitted per clock.
         Use !! to access one element of the list.
-    b. "print_st_input_types" - This prints a string representation of a Lst program's input types
-        ii. "print_st_input_types (single_map_ppar !! 0)" - This prints the input types of the single map Lst program scheduled at 1 pixel outputted per clock.
-    c. "print_st_output_type" - This prints a string representation of a Lst program's output type
+    b. "get_area" - This prints the area approximation of a program. Note: in the paper's appendix we compute area as a tuple of storage and compute.
+    We have found that a scalar value is a sufficient approximation.
+    This function returns a scalar.
+        i. "get_area (single_map_ppar !! 0)" - This prints a scalar value that approximate the area of the single map Lst program scheduled at 1 pixel emitted per clock.
+    c. "compute_latency" - This prints the delay of a program.
+        i. "compute_latency (single_map_ppar !! 0)" - This prints the delay of the single map Lst program scheduled at 1 pixel emitted per clock.
+    d. "print_st_input_types" - This prints a string representation of a Lst program's input types. Throughput is computable from Lst types.
+        i. "print_st_input_types (single_map_ppar !! 0)" - This prints the input type of the single map Lst program scheduled at 1 pixel outputted per clock. Types is plural in the function call because some programs may have multiple inputs.
+    e. "print_st_output_type" - This prints a string representation of a Lst program's output type
         iii. "print_st_output_type (single_map_ppar !! 0)" - example of how to use each.
 
 ## Rewrite Rules and Scheduling (Sections 5 and 6 of Paper)
 Claim: The scheduling algorithm
-1. accepts a Lseq program P and a desired hardware circuit throughput T
+1. accepts an Lseq program P and a desired throughput T
 2. uses the rewrite rules
-3. produces an equivalent Lst program with throughput T.
+3. produces an efficient Lst program with throughput T that is equivalent up to isomorphism.
 
 How supported:
-1. Look at the _ppar variables discussed in section 4.d.iii of the getting started guide. These show the Lst programs that result from the scheduling algorithm. The tests demonstrate that these have the correct inputs and outputs.
+1. Look at the _ppar variables discussed in section 4.d.iii of the getting started guide.
+These show the Lst programs that result from the scheduling algorithm.
 2. Look at the _results variables in the same files as the _ppar variables.
-These are the unit and application tests. The tests schedule Lseq programs to Lst programs with different throughputs.
-Then the tests experimentally verify that the rewrite rules and scheduler preserve semantics up to isomorphism by checking that the resulting Verilog circuits produce isomorphic output for an isomorphic input.
+These are the unit and application tests.
+The tests schedule Lseq programs to Lst programs with different throughputs.
+Then the tests experimentally verify that the rewrite rules and scheduler preserve semantics up to isomorphism by checking that the resulting Verilog circuits produce correct output for an input.
 The inputs and output are specified in Lseq and converted into isomorphic Lst values for each Lst program.
-3. Look at the results of the evaluation section (see below) for experimental evidence that the scheduler and rewrite rules produce efficient hardware.
+3. Look at the results of the Evaluation section (see below) for experimental evidence that the scheduler and rewrite rules produce efficient hardware.
 
 ## Evaluation (Section 8 of Paper)
 Claim: Aetherling can schedule basic image processing programs.
