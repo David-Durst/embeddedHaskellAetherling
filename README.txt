@@ -47,7 +47,7 @@ To get started with the VM:
         iv. Implementation (section 7 of paper) - the prior points stress the Lseq and Lst implementations. 
         Additionally, each test has a _results variable, such as "single_map_results", which stresses the compiler that lowers from Lst to Verilog by:
             1. Emitting an implementation of the Lst circuit in Magma, a Python HDL.
-            2. Running the Magma file to generator Verilog.
+            2. Running the Magma file to generate Verilog.
             3. Simulating the Verilog with Verilator and ensuring that with the inputs specified by the _inputs variable, such as "single_map_inputs", the circuit produces output which has the correct Space-Time type and the values are the same as those specified by the _output variable, such as "single_map_output". 
             4. See "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies" for the resulting verilog files. While these files will exist before running the tests, the tests will overwrite them.
         v. Evaluation (section 8 of paper) - see Step-by-Step Instructions section
