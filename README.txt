@@ -5,7 +5,7 @@ To get started with the VM:
 2. Login using user "pldi" and password "the_pldi".
 3. Install Xilinx Vivado 2018.2.
 Note: this step is not necessary to complete the rest of the getting started guide.
-The reviewers may stress the results from the Lseq, Lst, Scheduler, and Rewrite Rules sections of the paper without this step.
+The reviewers may stress the Lseq, Lst, Scheduler, and Rewrite Rules sections of the paper without this step.
 However, it's required to complete the step-by-step instructions and reproduce the graphs in the Evaluation section.
 We cannot redistribute the Xilinx Vivado tools with the VM due to their licensing agreement.
     a. Open a web browser
