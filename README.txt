@@ -56,7 +56,6 @@ We cannot redistribute the Xilinx Vivado tools with the VM due to their licensin
             3. Simulating the Verilog with Verilator and checking the checking the correctness of the resulting circuit. The simulation accepts the inputs specified by the _inputs variable, such as "single_map_inputs", and verifies that the output matches the values specified by the _output variable, such as "single_map_output". Additionally, the simulator verifies that the input and output match the specifications of the Lst types.
             4. See "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies" for the resulting verilog files. While these files will exist before running the tests, the tests will overwrite them.
         v. Evaluation (section 8 of paper) - see Step-by-Step Instructions section
-        
             
 
 # Step-by-Step Instructions
