@@ -92,7 +92,7 @@ all_success results_io = do
 
 -- two most basic examples
 single_map = 
-  mapC' (Proxy @4) absC $ -- [4]
+  mapC absC $ -- [4]
   com_input_seq "I" (Proxy :: Proxy (Seq 4 Atom_Int))
 single_map_seq_idx = add_indexes $ seq_shallow_to_deep single_map
 single_map_ppar = fmap (\s -> compile_with_throughput_to_expr single_map s) [1,2,4]
