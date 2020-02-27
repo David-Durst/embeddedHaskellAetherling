@@ -90,17 +90,18 @@ Claim: The scheduling algorithm
 3. produces an equivalent Lst program with throughput T.
 
 How supported:
-1. Look at the _ppar variables discussed in section 4.d.iii of the getting started guide. These will show the result of applying the scheduling algorithm. The tests demonstrate that these have the correct inputs and outputs.
-2. Look at the scheduler and rewrite rules implementation in "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Rewrites/Sequence_To_Partially_Parallel_Space_Time/Rewrite_Expr.hs". 
-    a. The top function in this file is "rewrite_to_partially_parallel". It converts a Sequence Language expression into a Space-Time IR expression with a target throughput.
-    b. The rewrite rules are implemented in the function "sequence_to_partially_parallel".
+1. Look at the _ppar variables discussed in section 4.d.iii of the getting started guide. These show the Lst programs that result from the scheduling algorithm. The tests demonstrate that these have the correct inputs and outputs.
+2. Look at the _results variables in the same files as the _ppar variables.
+These are the unit and application tests. The tests schedule Lseq programs to Lst programs with different throughputs.
+Then the tests experimentally verify that the rewrite rules and scheduler preserve semantics up to isomorphism by checking that the resulting Verilog circuits produce isomorphic output for an isomorphic input.
+The inputs and output are specified in Lseq and converted into isomorphic Lst values for each Lst program.
+3. Look at the results of the evaluation section (see below) for experimental evidence that the scheduler and rewrite rules produce efficient hardware.
 
 ## Evaluation (Section 8 of Paper)
 Claim: Aetherling can schedule basic image processing programs.
-The resulting designs are more area efficient than those produced by recent systems that
-generate image processing hardware from high-level language descriptions 
+The resulting designs are more area efficient than those produced by recent systems that generate image processing hardware from high-level language descriptions.
 
-Now supported: To reproduce the experiments in the Evaluation (section 8 of paper):
+How supported: To reproduce the experiments in the Evaluation (section 8 of paper):
 1. Type the following (without "") in the terminal: "cd /home/pldi/pldi/embeddedHaskellAetherling/"
 2. Type the following (without "") in the terminal: "pnr/run.sh"
     a. NOTE: This will take between 1 and 2 hours to run. It is doing synthesis and implementation using Xilinx Vivado Design Suite 2018.2 for many designs.
