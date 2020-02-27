@@ -44,7 +44,8 @@ echo "report_utilization -hierarchical -file utilization_h.txt" >> system.tcl
 echo "report_utilization -file utilization.txt" >> system.tcl
 vivado -mode batch -source 'system.tcl' -nojournal -log 'vivado.log' > /dev/null
 echo $BUILDDIR"/vivado.log" 
-echo $BUILDDIR > ~/last_builddir.log
+cd -
+echo $BUILDDIR > last_builddir.log
 #bootgen -image $DIR/../axi/boot.bif -arch zynqmp -process_bitstream bin
 
 #cp system.bit.bin $OUTFILE
