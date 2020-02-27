@@ -100,8 +100,7 @@ Claim: Aetherling can schedule basic image processing programs.
 The resulting designs are more area efficient than those produced by recent systems that
 generate image processing hardware from high-level language descriptions 
 
-Now supported: To reproduce the experiments in the Evaluation (section 8 of paper)
-
+Now supported: To reproduce the experiments in the Evaluation (section 8 of paper):
 1. Type the following (without "") in the terminal: "cd /home/pldi/pldi/embeddedHaskellAetherling/"
 2. Type the following (without "") in the terminal: "pnr/run.sh"
     a. NOTE: This will take between 1 and 2 hours to run. It is doing synthesis and implementation using Xilinx Vivado Design Suite 2018.2 for many designs.
@@ -119,20 +118,3 @@ Now supported: To reproduce the experiments in the Evaluation (section 8 of pape
         i. SP - Spatial
         ii. HTH - Halide-To-Hardware, ie Halide-HLS
 4. Note: the graphs are slightly different from those in the paper. In the paper, Halide-HLS and Spatial used 2.3-9.1x more area. In these charts, Halide-HLS and Spatial use 2.2-8.6x less area. Additionally, in some cases Aetherling's advantage has improved. One example of this is the CONV example at throughput 1. These minor differences are due to some small changes we made in the implementations of some of the operators.
-
-
-space-time aware type system encodes hardware interfaces:
-erators in Lst correspond to streaming hardware modules. Lst
-defines the interfaces to these modules using space-time sequence types which not only encode the length of sequences
-communicated between modules, but when elements in the
-sequence are communicated
-    1. Throughput of sequence element consumption and production
-    2. Clock cof the operato models the throughput and area of a program’s hardware implementation. A key aspect of Lst
-are space-time aware sequence types that define the
-parallelism and throughput of hardware interfaces by
-encoding when sequence elements are produced in
-addition to sequence length.
-2. To explore the scheduler and rewrite rules code, look at "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Rewrites/Sequence_To_Partially_Parallel_Space_Time/Rewrite_Expr.hs". 
-    a. The top function in this file is "rewrite_to_partially_parallel". It converts a Sequence Language expression into a Space-Time IR expression with a target throughput.
-    b. The rewrite rules are implemented in the function "sequence_to_partially_parallel".
-3. To explore the shallow and deep embeddings of the Sequence Language and Space-Time IR, look at the code contained within "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Languages".
