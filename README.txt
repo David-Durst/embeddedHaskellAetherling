@@ -70,7 +70,7 @@ Look at the type signatures of the operators "/home/pldi/pldi/embeddedHaskellAet
 
 ### Lst (Section 4 of Paper)
 Claim: Programs in the intermediate language (Lst) correspond to statically scheduled, streaming hardware.
-Operators in the language have correspond to hardware modules with computable properties such as throughput, area, and delay.
+Operators in the language correspond to hardware modules with computable properties such as throughput, area, and delay.
 The types of the operators encode the throughput of the hardware interfaces and the exact clock cycles when elements are consumed or produced.
 
 How supported: The results of the evaluation section (see below) provide experimental evidence that the operators compile to statically scheduled, streaming hardware modules.
