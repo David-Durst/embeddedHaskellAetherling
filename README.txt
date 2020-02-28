@@ -46,9 +46,8 @@ We cannot redistribute the Xilinx Vivado tools with the VM due to their licensin
             1. See section 7 of the paper for the discussion and references on shallow and deep embeddings.
             1. See "single_map" in Test_Slowdown.hs for an example Lseq program. Note that mapC is polymoprhic over sequence length, so com_input_seq is used to specify the input sequence length. The rest of the sequence lengths are then inferred by Haskell's type checker.
         ii. Lst (section 4 of paper) - each test has a _ppar variable which contains different Lst versions of the program at different throughputs. The step-by-step instructions explain how to interact with these variables.
-        iii. Rewrite Rules (section 5 of paper) and Scheduling (section 6 of paper) - the _ppar variable produces the Lst versions by calling "compile_with_throughput_to_expr".
+        iii. Rewrite Rules (section 5 of paper) and Scheduling (section 6 of paper) - the _ppar variable produces the Lst versions using the scheduler and rewrite rules.
         One such variable is "single_map_ppar" in Test_Slowdown.hs.
-        This function calls code in "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Rewrites/Sequence_To_Partially_Parallel_Space_Time/Rewrite_Expr.hs" which implements the scheduler using the rewrite rules. 
         iv. Implementation (section 7 of paper) - the prior points stress the Lseq and Lst implementations. 
         Additionally, each test has a _results variable, such as "single_map_results", which stresses the compiler that lowers from Lst to Verilog by:
             1. Emitting an implementation of the Lst circuit in Magma, a Python HDL.
@@ -85,6 +84,7 @@ To explore each of the _ppar variables:
         Each _ppar variable is a list of Lst programs.
         For example, the programs in single_map_ppar have throughputs of 1, 2, and 4 Ints emitted per clock.
         Use !! to access one element of the list.
+        Note that the FIFO operators represent the delay matching registers (Section 7 of paper) necessary for correctness and pipeline registers necessary for Vivado. 
     b. "get_area" - This prints the area approximation of a program. Note: in the paper's appendix we compute area as a tuple of storage and compute.
     We have found that a scalar value is a sufficient approximation.
     This function returns a scalar.
@@ -94,7 +94,7 @@ To explore each of the _ppar variables:
     d. "print_st_input_types" - This prints a string representation of a Lst program's input types. Throughput is computable from Lst types.
         i. "print_st_input_types (single_map_ppar !! 0)" - This prints the input type of the single map Lst program scheduled at 1 pixel outputted per clock. Types is plural in the function call because some programs may have multiple inputs.
     e. "print_st_output_type" - This prints a string representation of a Lst program's output type
-        iii. "print_st_output_type (single_map_ppar !! 0)" - example of how to use each.
+        iii. "print_st_output_type (single_map_ppar !! 0)" - This prints the output type of the single map Lst program scheduled at 1 pixel outputted per clock.
 
 ## Rewrite Rules and Scheduling (Sections 5 and 6 of Paper)
 Claim: The scheduling algorithm
@@ -137,3 +137,6 @@ How supported: To reproduce the experiments in the Evaluation (section 8 of pape
         i. SP - Spatial
         ii. HTH - Halide-To-Hardware, ie Halide-HLS
 4. Note: the graphs are slightly different from those in the paper. In the paper, Halide-HLS and Spatial used 2.3-9.1x more area. In these charts, Halide-HLS and Spatial use 2.2-8.6x more area. Additionally, in some cases Aetherling's advantage has improved. One example of this is the CONV example at throughput 1. These minor differences are due to some small changes we made in the implementations of some of the operators.
+
+## Claims Not Supported
+All the major claims of the paper are supported.
