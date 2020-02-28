@@ -88,7 +88,7 @@ To explore each of the _ppar variables:
     b. "get_area" - This prints the area approximation of a program. Note: in the paper's appendix we compute area as a tuple of storage and compute.
     We have found that a scalar value is a sufficient approximation.
     This function returns a scalar.
-        i. "get_area (single_map_ppar !! 0)" - This prints a scalar value that approximate the area of the single map Lst program scheduled at 1 pixel emitted per clock.
+        i. "get_area (single_map_ppar !! 0)" - This prints a scalar value that approximates the area of the single map Lst program scheduled at 1 pixel emitted per clock.
     c. "compute_latency" - This prints the delay of a program.
         i. "compute_latency (single_map_ppar !! 0)" - This prints the delay of the single map Lst program scheduled at 1 pixel emitted per clock.
     d. "print_st_input_types" - This prints a string representation of a Lst program's input types. Throughput is computable from Lst types.
