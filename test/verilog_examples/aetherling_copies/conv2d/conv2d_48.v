@@ -1,3 +1,10 @@
+module stupleToSSeq_tTSeq_3_0_Int__n3 (input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output valid_down, input valid_up);
+assign O_0 = I_0;
+assign O_1 = I_1;
+assign O_2 = I_2;
+assign valid_down = valid_up;
+endmodule
+
 module sseqTupleCreator_tTSeq_3_0_Int_ (input [7:0] I0, input [7:0] I1, output [7:0] O_0, output [7:0] O_1, output valid_down, input valid_up);
 assign O_0 = I0;
 assign O_1 = I1;
@@ -181,6 +188,10 @@ assign out_1 = {in[15],in[14],in[13],in[12],in[11],in[10],in[9],in[8]};
 assign out_2 = {in[23],in[22],in[21],in[20],in[19],in[18],in[17],in[16]};
 endmodule
 
+module \aetherlinglib_hydrate__hydratedTypeBit81 (input [7:0] in, output [7:0] out_0);
+assign out_0 = {in[7],in[6],in[5],in[4],in[3],in[2],in[1],in[0]};
+endmodule
+
 module \aetherlinglib_hydrate__hydratedTypeBit8 (input [7:0] in, output [7:0] out);
 assign out = {in[7],in[6],in[5],in[4],in[3],in[2],in[1],in[0]};
 endmodule
@@ -216,6 +227,18 @@ coreir_const #(.value(1'h0), .width(1)) const_0_1(.out(const_0_1_out));
 assign O = const_0_1_out;
 endmodule
 
+module Remove_1_S (input [7:0] I_0_0, input [7:0] I_0_1, input [7:0] I_0_2, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output valid_down, input valid_up);
+wire [7:0] stupleToSSeq_tTSeq_3_0_Int__n3_inst0_O_0;
+wire [7:0] stupleToSSeq_tTSeq_3_0_Int__n3_inst0_O_1;
+wire [7:0] stupleToSSeq_tTSeq_3_0_Int__n3_inst0_O_2;
+wire stupleToSSeq_tTSeq_3_0_Int__n3_inst0_valid_down;
+stupleToSSeq_tTSeq_3_0_Int__n3 stupleToSSeq_tTSeq_3_0_Int__n3_inst0(.I_0(I_0_0), .I_1(I_0_1), .I_2(I_0_2), .O_0(stupleToSSeq_tTSeq_3_0_Int__n3_inst0_O_0), .O_1(stupleToSSeq_tTSeq_3_0_Int__n3_inst0_O_1), .O_2(stupleToSSeq_tTSeq_3_0_Int__n3_inst0_O_2), .valid_down(stupleToSSeq_tTSeq_3_0_Int__n3_inst0_valid_down), .valid_up(valid_up));
+assign O_0 = stupleToSSeq_tTSeq_3_0_Int__n3_inst0_O_0;
+assign O_1 = stupleToSSeq_tTSeq_3_0_Int__n3_inst0_O_1;
+assign O_2 = stupleToSSeq_tTSeq_3_0_Int__n3_inst0_O_2;
+assign valid_down = stupleToSSeq_tTSeq_3_0_Int__n3_inst0_valid_down;
+endmodule
+
 module RShift_Atom (input [7:0] I__0, input [7:0] I__1, output [7:0] O, output valid_down, input valid_up);
 wire [7:0] lshr8_inst0_out;
 coreir_lshr #(.width(8)) lshr8_inst0(.in0(I__0), .in1(I__1), .out(lshr8_inst0_out));
@@ -239,18 +262,6 @@ RAM1x8 RAM1x8_inst0(.CLK(CLK), .RADDR(RADDR), .RDATA(RAM1x8_inst0_RDATA), .WADDR
 assign RDATA = hydrate_tArray_8_Bit__inst0_out;
 endmodule
 
-module Passthrough_tInTSeq_1_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_1_0_TSeq_1_2_Int__ (input [7:0] I_0, output [7:0] O, output valid_down, input valid_up);
-assign O = I_0;
-assign valid_down = valid_up;
-endmodule
-
-module Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int___ (input [7:0] I_0_0, input [7:0] I_0_1, input [7:0] I_0_2, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output valid_down, input valid_up);
-assign O_0 = I_0_0;
-assign O_1 = I_0_1;
-assign O_2 = I_0_2;
-assign valid_down = valid_up;
-endmodule
-
 module Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int____ (input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O_0_0, output [7:0] O_0_1, output [7:0] O_0_2, output valid_down, input valid_up);
 assign O_0_0 = I_0;
 assign O_0_1 = I_1;
@@ -258,15 +269,13 @@ assign O_0_2 = I_2;
 assign valid_down = valid_up;
 endmodule
 
-module Passthrough_tInTSeq_16_0_TSeq_1_0_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int__ (input [7:0] I, output [7:0] O, output valid_down, input valid_up);
-assign O = I;
+module Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int__ (input [7:0] I_0, output [7:0] O, output valid_down, input valid_up);
+assign O = I_0;
 assign valid_down = valid_up;
 endmodule
 
-module Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____ (input [7:0] I_0_0, input [7:0] I_0_1, input [7:0] I_0_2, output [7:0] O_0_0, output [7:0] O_0_1, output [7:0] O_0_2, output valid_down, input valid_up);
-assign O_0_0 = I_0_0;
-assign O_0_1 = I_0_1;
-assign O_0_2 = I_0_2;
+module Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_Int___ (input [7:0] I_0, output [7:0] O_0, output valid_down, input valid_up);
+assign O_0 = I_0;
 assign valid_down = valid_up;
 endmodule
 
@@ -450,24 +459,6 @@ coreir_reg #(.clk_posedge(1), .init(2'h0), .width(2)) value(.clk(CLK), .in(Mux2x
 assign O = value_out;
 endmodule
 
-module Mux2xOutBits1 (input [0:0] I0, input [0:0] I1, output [0:0] O, input S);
-wire [0:0] coreir_commonlib_mux2x1_inst0_out;
-\commonlib_muxn__N2__width1 coreir_commonlib_mux2x1_inst0(.in_data_0(I0), .in_data_1(I1), .in_sel(S), .out(coreir_commonlib_mux2x1_inst0_out));
-assign O = coreir_commonlib_mux2x1_inst0_out;
-endmodule
-
-module Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1 (input CE, input CLK, input [0:0] I, output [0:0] O, input RESET);
-wire [0:0] Mux2xOutBits1_inst0_O;
-wire [0:0] const_0_1_out;
-wire [0:0] enable_mux_O;
-wire [0:0] value_out;
-Mux2xOutBits1 Mux2xOutBits1_inst0(.I0(enable_mux_O), .I1(const_0_1_out), .O(Mux2xOutBits1_inst0_O), .S(RESET));
-coreir_const #(.value(1'h0), .width(1)) const_0_1(.out(const_0_1_out));
-Mux2xOutBits1 enable_mux(.I0(value_out), .I1(I), .O(enable_mux_O), .S(CE));
-coreir_reg #(.clk_posedge(1), .init(1'h0), .width(1)) value(.clk(CLK), .in(Mux2xOutBits1_inst0_O), .out(value_out));
-assign O = value_out;
-endmodule
-
 module Mux2xNone (input I0, input I1, output O, input S);
 wire [0:0] coreir_commonlib_mux2x1_inst0_out;
 \commonlib_muxn__N2__width1 coreir_commonlib_mux2x1_inst0(.in_data_0(I0), .in_data_1(I1), .in_sel(S), .out(coreir_commonlib_mux2x1_inst0_out));
@@ -518,6 +509,14 @@ assign O = RShift_Atom_inst0_O;
 assign valid_down = RShift_Atom_inst0_valid_down;
 endmodule
 
+module NativeMapParallel_n1_unq4 (input CLK, input [7:0] I_0__0, input [7:0] I_0__1, output [7:0] O_0, output valid_down, input valid_up);
+wire [7:0] Map_T_n1_i2_inst0_O;
+wire Map_T_n1_i2_inst0_valid_down;
+Map_T_n1_i2_unq4 Map_T_n1_i2_inst0(.CLK(CLK), .I__0(I_0__0), .I__1(I_0__1), .O(Map_T_n1_i2_inst0_O), .valid_down(Map_T_n1_i2_inst0_valid_down), .valid_up(valid_up));
+assign O_0 = Map_T_n1_i2_inst0_O;
+assign valid_down = Map_T_n1_i2_inst0_valid_down;
+endmodule
+
 module Map_T_n1_i2_unq3 (input CLK, input [7:0] I0, input [7:0] I1, output [7:0] O__0, output [7:0] O__1, output valid_down, input valid_up);
 wire [7:0] atomTupleCreator_t0Int_t1Int_inst0_O__0;
 wire [7:0] atomTupleCreator_t0Int_t1Int_inst0_O__1;
@@ -526,6 +525,16 @@ atomTupleCreator_t0Int_t1Int atomTupleCreator_t0Int_t1Int_inst0(.I0(I0), .I1(I1)
 assign O__0 = atomTupleCreator_t0Int_t1Int_inst0_O__0;
 assign O__1 = atomTupleCreator_t0Int_t1Int_inst0_O__1;
 assign valid_down = atomTupleCreator_t0Int_t1Int_inst0_valid_down;
+endmodule
+
+module NativeMapParallel_n1_unq3 (input CLK, input [7:0] I0_0, input [7:0] I1_0, output [7:0] O_0__0, output [7:0] O_0__1, output valid_down, input valid_up);
+wire [7:0] Map_T_n1_i2_inst0_O__0;
+wire [7:0] Map_T_n1_i2_inst0_O__1;
+wire Map_T_n1_i2_inst0_valid_down;
+Map_T_n1_i2_unq3 Map_T_n1_i2_inst0(.CLK(CLK), .I0(I0_0), .I1(I1_0), .O__0(Map_T_n1_i2_inst0_O__0), .O__1(Map_T_n1_i2_inst0_O__1), .valid_down(Map_T_n1_i2_inst0_valid_down), .valid_up(valid_up));
+assign O_0__0 = Map_T_n1_i2_inst0_O__0;
+assign O_0__1 = Map_T_n1_i2_inst0_O__1;
+assign valid_down = Map_T_n1_i2_inst0_valid_down;
 endmodule
 
 module Map_T_n1_i2_unq1 (input CLK, input [7:0] I0_0, input [7:0] I0_1, input [7:0] I1, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output valid_down, input valid_up);
@@ -550,52 +559,16 @@ assign O_1 = sseqTupleCreator_tInt_inst0_O_1;
 assign valid_down = sseqTupleCreator_tInt_inst0_valid_down;
 endmodule
 
-module Map_T_n1_i0_unq5 (input CLK, input [7:0] I__0, input [7:0] I__1, output [7:0] O, output valid_down, input valid_up);
-wire [7:0] Map_T_n1_i2_inst0_O;
-wire Map_T_n1_i2_inst0_valid_down;
-Map_T_n1_i2_unq4 Map_T_n1_i2_inst0(.CLK(CLK), .I__0(I__0), .I__1(I__1), .O(Map_T_n1_i2_inst0_O), .valid_down(Map_T_n1_i2_inst0_valid_down), .valid_up(valid_up));
-assign O = Map_T_n1_i2_inst0_O;
-assign valid_down = Map_T_n1_i2_inst0_valid_down;
-endmodule
-
-module Map_T_n1_i0_unq4 (input CLK, input [7:0] I0, input [7:0] I1, output [7:0] O__0, output [7:0] O__1, output valid_down, input valid_up);
-wire [7:0] Map_T_n1_i2_inst0_O__0;
-wire [7:0] Map_T_n1_i2_inst0_O__1;
-wire Map_T_n1_i2_inst0_valid_down;
-Map_T_n1_i2_unq3 Map_T_n1_i2_inst0(.CLK(CLK), .I0(I0), .I1(I1), .O__0(Map_T_n1_i2_inst0_O__0), .O__1(Map_T_n1_i2_inst0_O__1), .valid_down(Map_T_n1_i2_inst0_valid_down), .valid_up(valid_up));
-assign O__0 = Map_T_n1_i2_inst0_O__0;
-assign O__1 = Map_T_n1_i2_inst0_O__1;
-assign valid_down = Map_T_n1_i2_inst0_valid_down;
-endmodule
-
-module Map_T_n1_i0 (input CLK, input [7:0] I0_0, input [7:0] I0_1, input [7:0] I0_2, input [7:0] I1_0, input [7:0] I1_1, input [7:0] I1_2, output [7:0] O_0__0, output [7:0] O_0__1, output [7:0] O_1__0, output [7:0] O_1__1, output [7:0] O_2__0, output [7:0] O_2__1, output valid_down, input valid_up);
-wire [7:0] NativeMapParallel_n3_inst0_O_0__0;
-wire [7:0] NativeMapParallel_n3_inst0_O_0__1;
-wire [7:0] NativeMapParallel_n3_inst0_O_1__0;
-wire [7:0] NativeMapParallel_n3_inst0_O_1__1;
-wire [7:0] NativeMapParallel_n3_inst0_O_2__0;
-wire [7:0] NativeMapParallel_n3_inst0_O_2__1;
-wire NativeMapParallel_n3_inst0_valid_down;
-NativeMapParallel_n3_unq1 NativeMapParallel_n3_inst0(.CLK(CLK), .I0_0(I0_0), .I0_1(I0_1), .I0_2(I0_2), .I1_0(I1_0), .I1_1(I1_1), .I1_2(I1_2), .O_0__0(NativeMapParallel_n3_inst0_O_0__0), .O_0__1(NativeMapParallel_n3_inst0_O_0__1), .O_1__0(NativeMapParallel_n3_inst0_O_1__0), .O_1__1(NativeMapParallel_n3_inst0_O_1__1), .O_2__0(NativeMapParallel_n3_inst0_O_2__0), .O_2__1(NativeMapParallel_n3_inst0_O_2__1), .valid_down(NativeMapParallel_n3_inst0_valid_down), .valid_up(valid_up));
-assign O_0__0 = NativeMapParallel_n3_inst0_O_0__0;
-assign O_0__1 = NativeMapParallel_n3_inst0_O_0__1;
-assign O_1__0 = NativeMapParallel_n3_inst0_O_1__0;
-assign O_1__1 = NativeMapParallel_n3_inst0_O_1__1;
-assign O_2__0 = NativeMapParallel_n3_inst0_O_2__0;
-assign O_2__1 = NativeMapParallel_n3_inst0_O_2__1;
-assign valid_down = NativeMapParallel_n3_inst0_valid_down;
-endmodule
-
 module Map_T_n16_i0_unq5 (input CLK, input [7:0] I_0_0, input [7:0] I_0_1, input [7:0] I_0_2, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output valid_down, input valid_up);
-wire [7:0] Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_O_0;
-wire [7:0] Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_O_1;
-wire [7:0] Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_O_2;
-wire Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_valid_down;
-Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int___ Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0(.I_0_0(I_0_0), .I_0_1(I_0_1), .I_0_2(I_0_2), .O_0(Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_O_0), .O_1(Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_O_1), .O_2(Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_O_2), .valid_down(Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_valid_down), .valid_up(valid_up));
-assign O_0 = Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_O_0;
-assign O_1 = Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_O_1;
-assign O_2 = Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_O_2;
-assign valid_down = Passthrough_tInTSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_1_0_SSeq_3_TSeq_3_0_Int____inst0_valid_down;
+wire [7:0] Remove_1_S_inst0_O_0;
+wire [7:0] Remove_1_S_inst0_O_1;
+wire [7:0] Remove_1_S_inst0_O_2;
+wire Remove_1_S_inst0_valid_down;
+Remove_1_S Remove_1_S_inst0(.I_0_0(I_0_0), .I_0_1(I_0_1), .I_0_2(I_0_2), .O_0(Remove_1_S_inst0_O_0), .O_1(Remove_1_S_inst0_O_1), .O_2(Remove_1_S_inst0_O_2), .valid_down(Remove_1_S_inst0_valid_down), .valid_up(valid_up));
+assign O_0 = Remove_1_S_inst0_O_0;
+assign O_1 = Remove_1_S_inst0_O_1;
+assign O_2 = Remove_1_S_inst0_O_2;
+assign valid_down = Remove_1_S_inst0_valid_down;
 endmodule
 
 module Map_T_n16_i0_unq4 (input CLK, input [7:0] I0_0_0, input [7:0] I0_0_1, input [7:0] I1_0, output [7:0] O_0_0, output [7:0] O_0_1, output [7:0] O_0_2, output valid_down, input valid_up);
@@ -642,9 +615,9 @@ assign O_1 = Map_T_n1_i2_inst0_O_1;
 assign valid_down = Map_T_n1_i2_inst0_valid_down;
 endmodule
 
-module LUT3_128 (input I0, input I1, input I2, output O);
+module LUT3_64 (input I0, input I1, input I2, output O);
 wire coreir_lut3_inst0_out;
-lutN #(.init(8'h80), .N(3)) coreir_lut3_inst0(.in({I2,I1,I0}), .out(coreir_lut3_inst0_out));
+lutN #(.init(8'h40), .N(3)) coreir_lut3_inst0(.in({I2,I1,I0}), .out(coreir_lut3_inst0_out));
 assign O = coreir_lut3_inst0_out;
 endmodule
 
@@ -726,28 +699,6 @@ lutN #(.init(4'h0), .N(2)) coreir_lut2_inst0(.in({I1,I0}), .out(coreir_lut2_inst
 assign O = coreir_lut2_inst0_out;
 endmodule
 
-module LUT_Array_8_Bit_t_3n (input CLK, input [1:0] addr, output [7:0] data);
-wire LUT2_0_inst0_O;
-wire LUT2_0_inst1_O;
-wire LUT2_0_inst2_O;
-wire LUT2_0_inst3_O;
-wire LUT2_0_inst4_O;
-wire LUT2_0_inst5_O;
-wire LUT2_0_inst6_O;
-wire LUT2_1_inst0_O;
-wire [7:0] hydrate_tArray_8_Bit__inst0_out;
-LUT2_0 LUT2_0_inst0(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst0_O));
-LUT2_0 LUT2_0_inst1(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst1_O));
-LUT2_0 LUT2_0_inst2(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst2_O));
-LUT2_0 LUT2_0_inst3(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst3_O));
-LUT2_0 LUT2_0_inst4(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst4_O));
-LUT2_0 LUT2_0_inst5(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst5_O));
-LUT2_0 LUT2_0_inst6(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst6_O));
-LUT2_1 LUT2_1_inst0(.I0(addr[0]), .I1(addr[1]), .O(LUT2_1_inst0_O));
-\aetherlinglib_hydrate__hydratedTypeBit8 hydrate_tArray_8_Bit__inst0(.in({LUT2_0_inst6_O,LUT2_0_inst5_O,LUT2_0_inst4_O,LUT2_0_inst3_O,LUT2_0_inst2_O,LUT2_1_inst0_O,LUT2_0_inst1_O,LUT2_0_inst0_O}), .out(hydrate_tArray_8_Bit__inst0_out));
-assign data = hydrate_tArray_8_Bit__inst0_out;
-endmodule
-
 module LUT_Array_3_Array_8_Bit__t_3n (input CLK, input [1:0] addr, output [7:0] data_0, output [7:0] data_1, output [7:0] data_2);
 wire LUT2_0_inst0_O;
 wire LUT2_0_inst1_O;
@@ -806,10 +757,26 @@ assign data_1 = hydrate_tArray_3_Array_8_Bit___inst0_out_1;
 assign data_2 = hydrate_tArray_3_Array_8_Bit___inst0_out_2;
 endmodule
 
-module LUT1_2 (input I0, output O);
-wire coreir_lut1_inst0_out;
-lutN #(.init(2'h2), .N(1)) coreir_lut1_inst0(.in(I0), .out(coreir_lut1_inst0_out));
-assign O = coreir_lut1_inst0_out;
+module LUT_Array_1_Array_8_Bit__t_3n (input CLK, input [1:0] addr, output [7:0] data_0);
+wire LUT2_0_inst0_O;
+wire LUT2_0_inst1_O;
+wire LUT2_0_inst2_O;
+wire LUT2_0_inst3_O;
+wire LUT2_0_inst4_O;
+wire LUT2_0_inst5_O;
+wire LUT2_0_inst6_O;
+wire LUT2_1_inst0_O;
+wire [7:0] hydrate_tArray_1_Array_8_Bit___inst0_out_0;
+LUT2_0 LUT2_0_inst0(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst0_O));
+LUT2_0 LUT2_0_inst1(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst1_O));
+LUT2_0 LUT2_0_inst2(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst2_O));
+LUT2_0 LUT2_0_inst3(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst3_O));
+LUT2_0 LUT2_0_inst4(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst4_O));
+LUT2_0 LUT2_0_inst5(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst5_O));
+LUT2_0 LUT2_0_inst6(.I0(addr[0]), .I1(addr[1]), .O(LUT2_0_inst6_O));
+LUT2_1 LUT2_1_inst0(.I0(addr[0]), .I1(addr[1]), .O(LUT2_1_inst0_O));
+\aetherlinglib_hydrate__hydratedTypeBit81 hydrate_tArray_1_Array_8_Bit___inst0(.in({LUT2_0_inst6_O,LUT2_0_inst5_O,LUT2_0_inst4_O,LUT2_0_inst3_O,LUT2_0_inst2_O,LUT2_1_inst0_O,LUT2_0_inst1_O,LUT2_0_inst0_O}), .out_0(hydrate_tArray_1_Array_8_Bit___inst0_out_0));
+assign data_0 = hydrate_tArray_1_Array_8_Bit___inst0_out_0;
 endmodule
 
 module LUT1_1 (input I0, output O);
@@ -875,18 +842,6 @@ assign O_0 = Map_T_n3_i0_inst0_O;
 assign O_1 = Map_T_n3_i0_inst1_O;
 assign O_2 = Map_T_n3_i0_inst2_O;
 assign valid_down = and_inst1_out;
-endmodule
-
-module Map_T_n1_i0_unq1 (input CLK, input [7:0] I_0__0, input [7:0] I_0__1, input [7:0] I_1__0, input [7:0] I_1__1, input [7:0] I_2__0, input [7:0] I_2__1, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output valid_down, input valid_up);
-wire [7:0] NativeMapParallel_n3_inst0_O_0;
-wire [7:0] NativeMapParallel_n3_inst0_O_1;
-wire [7:0] NativeMapParallel_n3_inst0_O_2;
-wire NativeMapParallel_n3_inst0_valid_down;
-NativeMapParallel_n3_unq2 NativeMapParallel_n3_inst0(.CLK(CLK), .I_0__0(I_0__0), .I_0__1(I_0__1), .I_1__0(I_1__0), .I_1__1(I_1__1), .I_2__0(I_2__0), .I_2__1(I_2__1), .O_0(NativeMapParallel_n3_inst0_O_0), .O_1(NativeMapParallel_n3_inst0_O_1), .O_2(NativeMapParallel_n3_inst0_O_2), .valid_down(NativeMapParallel_n3_inst0_valid_down), .valid_up(valid_up));
-assign O_0 = NativeMapParallel_n3_inst0_O_0;
-assign O_1 = NativeMapParallel_n3_inst0_O_1;
-assign O_2 = NativeMapParallel_n3_inst0_O_2;
-assign valid_down = NativeMapParallel_n3_inst0_valid_down;
 endmodule
 
 module DFF_init0_has_ceTrue_has_resetFalse_has_async_resetFalse (input CE, input CLK, input I, output O);
@@ -998,27 +953,27 @@ coreir_add #(.width(3)) coreir_add3_inst0(.in0(Register_has_ce_True_has_reset_Tr
 assign O = Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_3_inst0_O;
 endmodule
 
-module Counter3_Mod8CE (input CE, input CLK, output [2:0] O);
+module Counter3_Mod7CE (input CE, input CLK, output [2:0] O);
 wire [2:0] Counter3CER_inst0_O;
-wire LUT3_128_inst0_O;
+wire LUT3_64_inst0_O;
 wire and_inst0_out;
 Counter3CER Counter3CER_inst0(.CE(CE), .CLK(CLK), .O(Counter3CER_inst0_O), .RESET(and_inst0_out));
-LUT3_128 LUT3_128_inst0(.I0(Counter3CER_inst0_O[0]), .I1(Counter3CER_inst0_O[1]), .I2(Counter3CER_inst0_O[2]), .O(LUT3_128_inst0_O));
-corebit_and and_inst0(.in0(LUT3_128_inst0_O), .in1(CE), .out(and_inst0_out));
+LUT3_64 LUT3_64_inst0(.I0(Counter3CER_inst0_O[0]), .I1(Counter3CER_inst0_O[1]), .I2(Counter3CER_inst0_O[2]), .O(LUT3_64_inst0_O));
+corebit_and and_inst0(.in0(LUT3_64_inst0_O), .in1(CE), .out(and_inst0_out));
 assign O = Counter3CER_inst0_O;
 endmodule
 
-module InitialDelayCounter_7 (input CE, input CLK, output valid);
-wire [2:0] Counter3_Mod8CE_inst0_O;
+module InitialDelayCounter_6 (input CE, input CLK, output valid);
+wire [2:0] Counter3_Mod7CE_inst0_O;
 wire and_inst0_out;
-wire [2:0] coreir_const37_inst0_out;
+wire [2:0] coreir_const36_inst0_out;
 wire coreir_eq_3_inst0_out;
 wire coreir_ult3_inst0_out;
-Counter3_Mod8CE Counter3_Mod8CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter3_Mod8CE_inst0_O));
+Counter3_Mod7CE Counter3_Mod7CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter3_Mod7CE_inst0_O));
 corebit_and and_inst0(.in0(CE), .in1(coreir_ult3_inst0_out), .out(and_inst0_out));
-coreir_const #(.value(3'h7), .width(3)) coreir_const37_inst0(.out(coreir_const37_inst0_out));
-coreir_eq #(.width(3)) coreir_eq_3_inst0(.in0(Counter3_Mod8CE_inst0_O), .in1(coreir_const37_inst0_out), .out(coreir_eq_3_inst0_out));
-coreir_ult #(.width(3)) coreir_ult3_inst0(.in0(Counter3_Mod8CE_inst0_O), .in1(coreir_const37_inst0_out), .out(coreir_ult3_inst0_out));
+coreir_const #(.value(3'h6), .width(3)) coreir_const36_inst0(.out(coreir_const36_inst0_out));
+coreir_eq #(.width(3)) coreir_eq_3_inst0(.in0(Counter3_Mod7CE_inst0_O), .in1(coreir_const36_inst0_out), .out(coreir_eq_3_inst0_out));
+coreir_ult #(.width(3)) coreir_ult3_inst0(.in0(Counter3_Mod7CE_inst0_O), .in1(coreir_const36_inst0_out), .out(coreir_ult3_inst0_out));
 assign valid = coreir_eq_3_inst0_out;
 endmodule
 
@@ -1224,64 +1179,7 @@ coreir_ult #(.width(2)) coreir_ult2_inst0(.in0(Counter2_Mod3CE_inst0_O), .in1(co
 assign valid = coreir_eq_2_inst0_out;
 endmodule
 
-module Counter1CER (input CE, input CLK, output [0:0] O, input RESET);
-wire [0:0] Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1_inst0_O;
-wire [0:0] const_1_1_out;
-wire [0:0] coreir_add1_inst0_out;
-Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1 Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1_inst0(.CE(CE), .CLK(CLK), .I(coreir_add1_inst0_out), .O(Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1_inst0_O), .RESET(RESET));
-coreir_const #(.value(1'h1), .width(1)) const_1_1(.out(const_1_1_out));
-coreir_add #(.width(1)) coreir_add1_inst0(.in0(Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1_inst0_O), .in1(const_1_1_out), .out(coreir_add1_inst0_out));
-assign O = Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1_inst0_O;
-endmodule
-
-module Counter1_Mod2CE (input CE, input CLK, output [0:0] O);
-wire [0:0] Counter1CER_inst0_O;
-wire LUT1_2_inst0_O;
-wire and_inst0_out;
-Counter1CER Counter1CER_inst0(.CE(CE), .CLK(CLK), .O(Counter1CER_inst0_O), .RESET(and_inst0_out));
-LUT1_2 LUT1_2_inst0(.I0(Counter1CER_inst0_O[0]), .O(LUT1_2_inst0_O));
-corebit_and and_inst0(.in0(LUT1_2_inst0_O), .in1(CE), .out(and_inst0_out));
-assign O = Counter1CER_inst0_O;
-endmodule
-
-module InitialDelayCounter_1 (input CE, input CLK, output valid);
-wire [0:0] Counter1_Mod2CE_inst0_O;
-wire and_inst0_out;
-wire [0:0] coreir_const11_inst0_out;
-wire coreir_eq_1_inst0_out;
-wire coreir_ult1_inst0_out;
-Counter1_Mod2CE Counter1_Mod2CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter1_Mod2CE_inst0_O));
-corebit_and and_inst0(.in0(CE), .in1(coreir_ult1_inst0_out), .out(and_inst0_out));
-coreir_const #(.value(1'h1), .width(1)) coreir_const11_inst0(.out(coreir_const11_inst0_out));
-coreir_eq #(.width(1)) coreir_eq_1_inst0(.in0(Counter1_Mod2CE_inst0_O), .in1(coreir_const11_inst0_out), .out(coreir_eq_1_inst0_out));
-coreir_ult #(.width(1)) coreir_ult1_inst0(.in0(Counter1_Mod2CE_inst0_O), .in1(coreir_const11_inst0_out), .out(coreir_ult1_inst0_out));
-assign valid = coreir_eq_1_inst0_out;
-endmodule
-
-module Reduce_T_n1_i0 (input CLK, input [7:0] I_0, output [7:0] O_0, output valid_down, input valid_up);
-wire InitialDelayCounter_1_inst0_valid;
-wire [7:0] Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0;
-InitialDelayCounter_1 InitialDelayCounter_1_inst0(.CE(valid_up), .CLK(CLK), .valid(InitialDelayCounter_1_inst0_valid));
-Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0(.CLK(CLK), .I_0(I_0), .O_0(Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0));
-assign O_0 = Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0;
-assign valid_down = InitialDelayCounter_1_inst0_valid;
-endmodule
-
-module Const_tTSeq_1_0_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue (input CLK, output [7:0] O, output valid_down, input valid_up);
-wire [1:0] Counter2_Mod3CE_inst0_O;
-wire InitialDelayCounter_7_inst0_valid;
-wire [7:0] LUT_Array_8_Bit_t_3n_inst0_data;
-wire [0:0] coreir_const11_inst0_out;
-Counter2_Mod3CE Counter2_Mod3CE_inst0(.CE(InitialDelayCounter_7_inst0_valid), .CLK(CLK), .O(Counter2_Mod3CE_inst0_O));
-InitialDelayCounter_7 InitialDelayCounter_7_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_7_inst0_valid));
-LUT_Array_8_Bit_t_3n LUT_Array_8_Bit_t_3n_inst0(.CLK(CLK), .addr(Counter2_Mod3CE_inst0_O), .data(LUT_Array_8_Bit_t_3n_inst0_data));
-Term_Bitt Term_Bitt_inst0(.I(valid_up));
-coreir_const #(.value(1'h1), .width(1)) coreir_const11_inst0(.out(coreir_const11_inst0_out));
-assign O = LUT_Array_8_Bit_t_3n_inst0_data;
-assign valid_down = InitialDelayCounter_7_inst0_valid;
-endmodule
-
-module Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue (input CLK, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output valid_down, input valid_up);
+module Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue (input CLK, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output valid_down, input valid_up);
 wire [1:0] Counter2_Mod3CE_inst0_O;
 wire InitialDelayCounter_2_inst0_valid;
 wire [7:0] LUT_Array_3_Array_8_Bit__t_3n_inst0_data_0;
@@ -1297,6 +1195,20 @@ assign O_0 = LUT_Array_3_Array_8_Bit__t_3n_inst0_data_0;
 assign O_1 = LUT_Array_3_Array_8_Bit__t_3n_inst0_data_1;
 assign O_2 = LUT_Array_3_Array_8_Bit__t_3n_inst0_data_2;
 assign valid_down = InitialDelayCounter_2_inst0_valid;
+endmodule
+
+module Const_tSSeq_1_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue (input CLK, output [7:0] O_0, output valid_down, input valid_up);
+wire [1:0] Counter2_Mod3CE_inst0_O;
+wire InitialDelayCounter_6_inst0_valid;
+wire [7:0] LUT_Array_1_Array_8_Bit__t_3n_inst0_data_0;
+wire [0:0] coreir_const11_inst0_out;
+Counter2_Mod3CE Counter2_Mod3CE_inst0(.CE(InitialDelayCounter_6_inst0_valid), .CLK(CLK), .O(Counter2_Mod3CE_inst0_O));
+InitialDelayCounter_6 InitialDelayCounter_6_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_6_inst0_valid));
+LUT_Array_1_Array_8_Bit__t_3n LUT_Array_1_Array_8_Bit__t_3n_inst0(.CLK(CLK), .addr(Counter2_Mod3CE_inst0_O), .data_0(LUT_Array_1_Array_8_Bit__t_3n_inst0_data_0));
+Term_Bitt Term_Bitt_inst0(.I(valid_up));
+coreir_const #(.value(1'h1), .width(1)) coreir_const11_inst0(.out(coreir_const11_inst0_out));
+assign O_0 = LUT_Array_1_Array_8_Bit__t_3n_inst0_data_0;
+assign valid_down = InitialDelayCounter_6_inst0_valid;
 endmodule
 
 module Add_Atom (input [7:0] I__0, input [7:0] I__1, output [7:0] O);
@@ -1371,18 +1283,6 @@ assign O_2 = Reduce_T_n3_i0_inst2_O;
 assign valid_down = and_inst1_out;
 endmodule
 
-module Map_T_n1_i0_unq2 (input CLK, input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output valid_down, input valid_up);
-wire [7:0] NativeMapParallel_n3_inst0_O_0;
-wire [7:0] NativeMapParallel_n3_inst0_O_1;
-wire [7:0] NativeMapParallel_n3_inst0_O_2;
-wire NativeMapParallel_n3_inst0_valid_down;
-NativeMapParallel_n3_unq3 NativeMapParallel_n3_inst0(.CLK(CLK), .I_0(I_0), .I_1(I_1), .I_2(I_2), .O_0(NativeMapParallel_n3_inst0_O_0), .O_1(NativeMapParallel_n3_inst0_O_1), .O_2(NativeMapParallel_n3_inst0_O_2), .valid_down(NativeMapParallel_n3_inst0_valid_down), .valid_up(valid_up));
-assign O_0 = NativeMapParallel_n3_inst0_O_0;
-assign O_1 = NativeMapParallel_n3_inst0_O_1;
-assign O_2 = NativeMapParallel_n3_inst0_O_2;
-assign valid_down = NativeMapParallel_n3_inst0_valid_down;
-endmodule
-
 module Map_T_n1_i2_unq2 (input CLK, input [7:0] I__0, input [7:0] I__1, output [7:0] O);
 wire [7:0] Add_Atom_inst0_O;
 Add_Atom Add_Atom_inst0(.I__0(I__0), .I__1(I__1), .O(Add_Atom_inst0_O));
@@ -1398,8 +1298,8 @@ endmodule
 module ReduceParallel_n3 (input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O, input clk);
 wire [7:0] renamedForReduce_inst0_out;
 wire [7:0] renamedForReduce_inst1_out;
-renamedForReduce_unq1 renamedForReduce_inst0(.clk(clk), .in0(I_1), .in1(renamedForReduce_inst1_out), .out(renamedForReduce_inst0_out));
-renamedForReduce_unq1 renamedForReduce_inst1(.clk(clk), .in0(I_0), .in1(I_2), .out(renamedForReduce_inst1_out));
+renamedForReduce_unq1 renamedForReduce_inst0(.clk(clk), .in0(I_2), .in1(renamedForReduce_inst1_out), .out(renamedForReduce_inst0_out));
+renamedForReduce_unq1 renamedForReduce_inst1(.clk(clk), .in0(I_0), .in1(I_1), .out(renamedForReduce_inst1_out));
 assign O = renamedForReduce_inst0_out;
 endmodule
 
@@ -1414,70 +1314,56 @@ assign O_0 = Register_Array_1_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0;
 assign valid_down = reg_P_inst0_out[0];
 endmodule
 
-module Map_T_n1_i0_unq3 (input CLK, input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O_0, output valid_down, input valid_up);
+module Module_0 (input CLK, input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O_0, output valid_down, input valid_up);
+wire [7:0] Const_tSSeq_1_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0;
+wire Const_tSSeq_1_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down;
+wire [7:0] Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0;
+wire [7:0] Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_1;
+wire [7:0] Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_2;
+wire Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down;
+wire [7:0] NativeMapParallel_n1_inst0_O_0__0;
+wire [7:0] NativeMapParallel_n1_inst0_O_0__1;
+wire NativeMapParallel_n1_inst0_valid_down;
+wire [7:0] NativeMapParallel_n1_inst1_O_0;
+wire NativeMapParallel_n1_inst1_valid_down;
+wire [7:0] NativeMapParallel_n3_inst0_O_0__0;
+wire [7:0] NativeMapParallel_n3_inst0_O_0__1;
+wire [7:0] NativeMapParallel_n3_inst0_O_1__0;
+wire [7:0] NativeMapParallel_n3_inst0_O_1__1;
+wire [7:0] NativeMapParallel_n3_inst0_O_2__0;
+wire [7:0] NativeMapParallel_n3_inst0_O_2__1;
+wire NativeMapParallel_n3_inst0_valid_down;
+wire [7:0] NativeMapParallel_n3_inst1_O_0;
+wire [7:0] NativeMapParallel_n3_inst1_O_1;
+wire [7:0] NativeMapParallel_n3_inst1_O_2;
+wire NativeMapParallel_n3_inst1_valid_down;
+wire [7:0] NativeMapParallel_n3_inst2_O_0;
+wire [7:0] NativeMapParallel_n3_inst2_O_1;
+wire [7:0] NativeMapParallel_n3_inst2_O_2;
+wire NativeMapParallel_n3_inst2_valid_down;
 wire [7:0] Reduce_S_n3_inst0_O_0;
 wire Reduce_S_n3_inst0_valid_down;
-Reduce_S_n3 Reduce_S_n3_inst0(.CLK(CLK), .I_0(I_0), .I_1(I_1), .I_2(I_2), .O_0(Reduce_S_n3_inst0_O_0), .valid_down(Reduce_S_n3_inst0_valid_down), .valid_up(valid_up));
-assign O_0 = Reduce_S_n3_inst0_O_0;
-assign valid_down = Reduce_S_n3_inst0_valid_down;
-endmodule
-
-module Module_0 (input CLK, input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O, output valid_down, input valid_up);
-wire [7:0] Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0;
-wire [7:0] Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_1;
-wire [7:0] Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_2;
-wire Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down;
-wire [7:0] Const_tTSeq_1_0_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O;
-wire Const_tTSeq_1_0_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down;
-wire [7:0] Map_T_n1_i0_inst0_O_0__0;
-wire [7:0] Map_T_n1_i0_inst0_O_0__1;
-wire [7:0] Map_T_n1_i0_inst0_O_1__0;
-wire [7:0] Map_T_n1_i0_inst0_O_1__1;
-wire [7:0] Map_T_n1_i0_inst0_O_2__0;
-wire [7:0] Map_T_n1_i0_inst0_O_2__1;
-wire Map_T_n1_i0_inst0_valid_down;
-wire [7:0] Map_T_n1_i0_inst1_O_0;
-wire [7:0] Map_T_n1_i0_inst1_O_1;
-wire [7:0] Map_T_n1_i0_inst1_O_2;
-wire Map_T_n1_i0_inst1_valid_down;
-wire [7:0] Map_T_n1_i0_inst2_O_0;
-wire [7:0] Map_T_n1_i0_inst2_O_1;
-wire [7:0] Map_T_n1_i0_inst2_O_2;
-wire Map_T_n1_i0_inst2_valid_down;
-wire [7:0] Map_T_n1_i0_inst3_O_0;
-wire Map_T_n1_i0_inst3_valid_down;
-wire [7:0] Map_T_n1_i0_inst4_O__0;
-wire [7:0] Map_T_n1_i0_inst4_O__1;
-wire Map_T_n1_i0_inst4_valid_down;
-wire [7:0] Map_T_n1_i0_inst5_O;
-wire Map_T_n1_i0_inst5_valid_down;
-wire [7:0] Passthrough_tInTSeq_1_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_1_0_TSeq_1_2_Int___inst0_O;
-wire Passthrough_tInTSeq_1_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_1_0_TSeq_1_2_Int___inst0_valid_down;
-wire [7:0] Reduce_T_n1_i0_inst0_O_0;
-wire Reduce_T_n1_i0_inst0_valid_down;
 wire and_inst0_out;
 wire and_inst1_out;
-Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0(.CLK(CLK), .O_0(Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0), .O_1(Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_1), .O_2(Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_2), .valid_down(Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .valid_up(valid_up));
-Const_tTSeq_1_0_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue Const_tTSeq_1_0_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0(.CLK(CLK), .O(Const_tTSeq_1_0_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .valid_down(Const_tTSeq_1_0_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .valid_up(valid_up));
-Map_T_n1_i0 Map_T_n1_i0_inst0(.CLK(CLK), .I0_0(I_0), .I0_1(I_1), .I0_2(I_2), .I1_0(Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0), .I1_1(Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_1), .I1_2(Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_2), .O_0__0(Map_T_n1_i0_inst0_O_0__0), .O_0__1(Map_T_n1_i0_inst0_O_0__1), .O_1__0(Map_T_n1_i0_inst0_O_1__0), .O_1__1(Map_T_n1_i0_inst0_O_1__1), .O_2__0(Map_T_n1_i0_inst0_O_2__0), .O_2__1(Map_T_n1_i0_inst0_O_2__1), .valid_down(Map_T_n1_i0_inst0_valid_down), .valid_up(and_inst0_out));
-Map_T_n1_i0_unq1 Map_T_n1_i0_inst1(.CLK(CLK), .I_0__0(Map_T_n1_i0_inst0_O_0__0), .I_0__1(Map_T_n1_i0_inst0_O_0__1), .I_1__0(Map_T_n1_i0_inst0_O_1__0), .I_1__1(Map_T_n1_i0_inst0_O_1__1), .I_2__0(Map_T_n1_i0_inst0_O_2__0), .I_2__1(Map_T_n1_i0_inst0_O_2__1), .O_0(Map_T_n1_i0_inst1_O_0), .O_1(Map_T_n1_i0_inst1_O_1), .O_2(Map_T_n1_i0_inst1_O_2), .valid_down(Map_T_n1_i0_inst1_valid_down), .valid_up(Map_T_n1_i0_inst0_valid_down));
-Map_T_n1_i0_unq2 Map_T_n1_i0_inst2(.CLK(CLK), .I_0(Map_T_n1_i0_inst1_O_0), .I_1(Map_T_n1_i0_inst1_O_1), .I_2(Map_T_n1_i0_inst1_O_2), .O_0(Map_T_n1_i0_inst2_O_0), .O_1(Map_T_n1_i0_inst2_O_1), .O_2(Map_T_n1_i0_inst2_O_2), .valid_down(Map_T_n1_i0_inst2_valid_down), .valid_up(Map_T_n1_i0_inst1_valid_down));
-Map_T_n1_i0_unq3 Map_T_n1_i0_inst3(.CLK(CLK), .I_0(Map_T_n1_i0_inst2_O_0), .I_1(Map_T_n1_i0_inst2_O_1), .I_2(Map_T_n1_i0_inst2_O_2), .O_0(Map_T_n1_i0_inst3_O_0), .valid_down(Map_T_n1_i0_inst3_valid_down), .valid_up(Map_T_n1_i0_inst2_valid_down));
-Map_T_n1_i0_unq4 Map_T_n1_i0_inst4(.CLK(CLK), .I0(Passthrough_tInTSeq_1_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_1_0_TSeq_1_2_Int___inst0_O), .I1(Const_tTSeq_1_0_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .O__0(Map_T_n1_i0_inst4_O__0), .O__1(Map_T_n1_i0_inst4_O__1), .valid_down(Map_T_n1_i0_inst4_valid_down), .valid_up(and_inst1_out));
-Map_T_n1_i0_unq5 Map_T_n1_i0_inst5(.CLK(CLK), .I__0(Map_T_n1_i0_inst4_O__0), .I__1(Map_T_n1_i0_inst4_O__1), .O(Map_T_n1_i0_inst5_O), .valid_down(Map_T_n1_i0_inst5_valid_down), .valid_up(Map_T_n1_i0_inst4_valid_down));
-Passthrough_tInTSeq_1_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_1_0_TSeq_1_2_Int__ Passthrough_tInTSeq_1_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_1_0_TSeq_1_2_Int___inst0(.I_0(Reduce_T_n1_i0_inst0_O_0), .O(Passthrough_tInTSeq_1_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_1_0_TSeq_1_2_Int___inst0_O), .valid_down(Passthrough_tInTSeq_1_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_1_0_TSeq_1_2_Int___inst0_valid_down), .valid_up(Reduce_T_n1_i0_inst0_valid_down));
-Reduce_T_n1_i0 Reduce_T_n1_i0_inst0(.CLK(CLK), .I_0(Map_T_n1_i0_inst3_O_0), .O_0(Reduce_T_n1_i0_inst0_O_0), .valid_down(Reduce_T_n1_i0_inst0_valid_down), .valid_up(Map_T_n1_i0_inst3_valid_down));
-corebit_and and_inst0(.in0(valid_up), .in1(Const_tTSeq_1_0_SSeq_3_TSeq_3_0_Int____hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .out(and_inst0_out));
-corebit_and and_inst1(.in0(Passthrough_tInTSeq_1_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_1_0_TSeq_1_2_Int___inst0_valid_down), .in1(Const_tTSeq_1_0_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .out(and_inst1_out));
-assign O = Map_T_n1_i0_inst5_O;
-assign valid_down = Map_T_n1_i0_inst5_valid_down;
+Const_tSSeq_1_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue Const_tSSeq_1_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0(.CLK(CLK), .O_0(Const_tSSeq_1_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0), .valid_down(Const_tSSeq_1_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .valid_up(valid_up));
+Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0(.CLK(CLK), .O_0(Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0), .O_1(Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_1), .O_2(Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_2), .valid_down(Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .valid_up(valid_up));
+NativeMapParallel_n1_unq3 NativeMapParallel_n1_inst0(.CLK(CLK), .I0_0(Reduce_S_n3_inst0_O_0), .I1_0(Const_tSSeq_1_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0), .O_0__0(NativeMapParallel_n1_inst0_O_0__0), .O_0__1(NativeMapParallel_n1_inst0_O_0__1), .valid_down(NativeMapParallel_n1_inst0_valid_down), .valid_up(and_inst1_out));
+NativeMapParallel_n1_unq4 NativeMapParallel_n1_inst1(.CLK(CLK), .I_0__0(NativeMapParallel_n1_inst0_O_0__0), .I_0__1(NativeMapParallel_n1_inst0_O_0__1), .O_0(NativeMapParallel_n1_inst1_O_0), .valid_down(NativeMapParallel_n1_inst1_valid_down), .valid_up(NativeMapParallel_n1_inst0_valid_down));
+NativeMapParallel_n3_unq1 NativeMapParallel_n3_inst0(.CLK(CLK), .I0_0(I_0), .I0_1(I_1), .I0_2(I_2), .I1_0(Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0), .I1_1(Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_1), .I1_2(Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_2), .O_0__0(NativeMapParallel_n3_inst0_O_0__0), .O_0__1(NativeMapParallel_n3_inst0_O_0__1), .O_1__0(NativeMapParallel_n3_inst0_O_1__0), .O_1__1(NativeMapParallel_n3_inst0_O_1__1), .O_2__0(NativeMapParallel_n3_inst0_O_2__0), .O_2__1(NativeMapParallel_n3_inst0_O_2__1), .valid_down(NativeMapParallel_n3_inst0_valid_down), .valid_up(and_inst0_out));
+NativeMapParallel_n3_unq2 NativeMapParallel_n3_inst1(.CLK(CLK), .I_0__0(NativeMapParallel_n3_inst0_O_0__0), .I_0__1(NativeMapParallel_n3_inst0_O_0__1), .I_1__0(NativeMapParallel_n3_inst0_O_1__0), .I_1__1(NativeMapParallel_n3_inst0_O_1__1), .I_2__0(NativeMapParallel_n3_inst0_O_2__0), .I_2__1(NativeMapParallel_n3_inst0_O_2__1), .O_0(NativeMapParallel_n3_inst1_O_0), .O_1(NativeMapParallel_n3_inst1_O_1), .O_2(NativeMapParallel_n3_inst1_O_2), .valid_down(NativeMapParallel_n3_inst1_valid_down), .valid_up(NativeMapParallel_n3_inst0_valid_down));
+NativeMapParallel_n3_unq3 NativeMapParallel_n3_inst2(.CLK(CLK), .I_0(NativeMapParallel_n3_inst1_O_0), .I_1(NativeMapParallel_n3_inst1_O_1), .I_2(NativeMapParallel_n3_inst1_O_2), .O_0(NativeMapParallel_n3_inst2_O_0), .O_1(NativeMapParallel_n3_inst2_O_1), .O_2(NativeMapParallel_n3_inst2_O_2), .valid_down(NativeMapParallel_n3_inst2_valid_down), .valid_up(NativeMapParallel_n3_inst1_valid_down));
+Reduce_S_n3 Reduce_S_n3_inst0(.CLK(CLK), .I_0(NativeMapParallel_n3_inst2_O_0), .I_1(NativeMapParallel_n3_inst2_O_1), .I_2(NativeMapParallel_n3_inst2_O_2), .O_0(Reduce_S_n3_inst0_O_0), .valid_down(Reduce_S_n3_inst0_valid_down), .valid_up(NativeMapParallel_n3_inst2_valid_down));
+corebit_and and_inst0(.in0(valid_up), .in1(Const_tSSeq_3_TSeq_3_0_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .out(and_inst0_out));
+corebit_and and_inst1(.in0(Reduce_S_n3_inst0_valid_down), .in1(Const_tSSeq_1_TSeq_1_2_Int___hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .out(and_inst1_out));
+assign O_0 = NativeMapParallel_n1_inst1_O_0;
+assign valid_down = NativeMapParallel_n1_inst1_valid_down;
 endmodule
 
-module Map_T_n16_i0_unq6 (input CLK, input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O, output valid_down, input valid_up);
-wire [7:0] Module_0_inst0_O;
+module Map_T_n16_i0_unq6 (input CLK, input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O_0, output valid_down, input valid_up);
+wire [7:0] Module_0_inst0_O_0;
 wire Module_0_inst0_valid_down;
-Module_0 Module_0_inst0(.CLK(CLK), .I_0(I_0), .I_1(I_1), .I_2(I_2), .O(Module_0_inst0_O), .valid_down(Module_0_inst0_valid_down), .valid_up(valid_up));
-assign O = Module_0_inst0_O;
+Module_0 Module_0_inst0(.CLK(CLK), .I_0(I_0), .I_1(I_1), .I_2(I_2), .O_0(Module_0_inst0_O_0), .valid_down(Module_0_inst0_valid_down), .valid_up(valid_up));
+assign O_0 = Module_0_inst0_O_0;
 assign valid_down = Module_0_inst0_valid_down;
 endmodule
 
@@ -1505,7 +1391,7 @@ wire [7:0] Map_T_n16_i0_inst11_O_0;
 wire [7:0] Map_T_n16_i0_inst11_O_1;
 wire [7:0] Map_T_n16_i0_inst11_O_2;
 wire Map_T_n16_i0_inst11_valid_down;
-wire [7:0] Map_T_n16_i0_inst12_O;
+wire [7:0] Map_T_n16_i0_inst12_O_0;
 wire Map_T_n16_i0_inst12_valid_down;
 wire [7:0] Map_T_n16_i0_inst2_O_0;
 wire Map_T_n16_i0_inst2_valid_down;
@@ -1530,12 +1416,10 @@ wire [7:0] Map_T_n16_i0_inst8_O_2;
 wire Map_T_n16_i0_inst8_valid_down;
 wire [7:0] Map_T_n16_i0_inst9_O_0;
 wire Map_T_n16_i0_inst9_valid_down;
-wire [7:0] Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_O_0_0;
-wire [7:0] Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_O_0_1;
-wire [7:0] Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_O_0_2;
-wire Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_valid_down;
-wire [7:0] Passthrough_tInTSeq_16_0_TSeq_1_0_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_O;
-wire Passthrough_tInTSeq_16_0_TSeq_1_0_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_valid_down;
+wire [7:0] Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_Int____inst0_O_0;
+wire Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_Int____inst0_valid_down;
+wire [7:0] Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_O;
+wire Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_valid_down;
 wire [7:0] Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0_O_0_0;
 wire [7:0] Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0_O_0_1;
 wire [7:0] Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0_O_0_2;
@@ -1573,14 +1457,14 @@ wire and_inst5_out;
 wire and_inst6_out;
 wire and_inst7_out;
 FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0(.CLK(CLK), .I(I), .O(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .valid_down(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .valid_up(valid_up));
-FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1(.CLK(CLK), .I(Passthrough_tInTSeq_16_0_TSeq_1_0_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_O), .O(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O), .valid_down(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_valid_down), .valid_up(Passthrough_tInTSeq_16_0_TSeq_1_0_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_valid_down));
+FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1(.CLK(CLK), .I(Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_O), .O(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O), .valid_down(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_valid_down), .valid_up(Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_valid_down));
 FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2(.CLK(CLK), .I(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O), .O(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O), .valid_down(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_valid_down), .valid_up(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_valid_down));
 FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3(.CLK(CLK), .I(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O), .O(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O), .valid_down(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_valid_down), .valid_up(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_valid_down));
 Map_T_n16_i0 Map_T_n16_i0_inst0(.CLK(CLK), .I0(Shift_tN_no16_ni0_amt1_tElInt__hasCEFalse_hasResetFalse_hasValidTrue_inst1_O), .I1(Shift_tN_no16_ni0_amt1_tElInt__hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .O_0(Map_T_n16_i0_inst0_O_0), .O_1(Map_T_n16_i0_inst0_O_1), .valid_down(Map_T_n16_i0_inst0_valid_down), .valid_up(and_inst0_out));
 Map_T_n16_i0_unq1 Map_T_n16_i0_inst1(.CLK(CLK), .I0_0(Map_T_n16_i0_inst0_O_0), .I0_1(Map_T_n16_i0_inst0_O_1), .I1(Shift_tN_no16_ni0_amt4_tElInt__hasCEFalse_hasResetFalse_hasValidTrue_inst1_O), .O_0(Map_T_n16_i0_inst1_O_0), .O_1(Map_T_n16_i0_inst1_O_1), .O_2(Map_T_n16_i0_inst1_O_2), .valid_down(Map_T_n16_i0_inst1_valid_down), .valid_up(and_inst1_out));
 Map_T_n16_i0_unq4 Map_T_n16_i0_inst10(.CLK(CLK), .I0_0_0(Map_T_n16_i0_inst6_O_0_0), .I0_0_1(Map_T_n16_i0_inst6_O_0_1), .I1_0(Map_T_n16_i0_inst9_O_0), .O_0_0(Map_T_n16_i0_inst10_O_0_0), .O_0_1(Map_T_n16_i0_inst10_O_0_1), .O_0_2(Map_T_n16_i0_inst10_O_0_2), .valid_down(Map_T_n16_i0_inst10_valid_down), .valid_up(and_inst7_out));
-Map_T_n16_i0_unq5 Map_T_n16_i0_inst11(.CLK(CLK), .I_0_0(Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_O_0_0), .I_0_1(Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_O_0_1), .I_0_2(Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_O_0_2), .O_0(Map_T_n16_i0_inst11_O_0), .O_1(Map_T_n16_i0_inst11_O_1), .O_2(Map_T_n16_i0_inst11_O_2), .valid_down(Map_T_n16_i0_inst11_valid_down), .valid_up(Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_valid_down));
-Map_T_n16_i0_unq6 Map_T_n16_i0_inst12(.CLK(CLK), .I_0(Map_T_n16_i0_inst11_O_0), .I_1(Map_T_n16_i0_inst11_O_1), .I_2(Map_T_n16_i0_inst11_O_2), .O(Map_T_n16_i0_inst12_O), .valid_down(Map_T_n16_i0_inst12_valid_down), .valid_up(Map_T_n16_i0_inst11_valid_down));
+Map_T_n16_i0_unq5 Map_T_n16_i0_inst11(.CLK(CLK), .I_0_0(Map_T_n16_i0_inst10_O_0_0), .I_0_1(Map_T_n16_i0_inst10_O_0_1), .I_0_2(Map_T_n16_i0_inst10_O_0_2), .O_0(Map_T_n16_i0_inst11_O_0), .O_1(Map_T_n16_i0_inst11_O_1), .O_2(Map_T_n16_i0_inst11_O_2), .valid_down(Map_T_n16_i0_inst11_valid_down), .valid_up(Map_T_n16_i0_inst10_valid_down));
+Map_T_n16_i0_unq6 Map_T_n16_i0_inst12(.CLK(CLK), .I_0(Map_T_n16_i0_inst11_O_0), .I_1(Map_T_n16_i0_inst11_O_1), .I_2(Map_T_n16_i0_inst11_O_2), .O_0(Map_T_n16_i0_inst12_O_0), .valid_down(Map_T_n16_i0_inst12_valid_down), .valid_up(Map_T_n16_i0_inst11_valid_down));
 Map_T_n16_i0_unq2 Map_T_n16_i0_inst2(.CLK(CLK), .I_0_0(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0_O_0_0), .I_0_1(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0_O_0_1), .I_0_2(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0_O_0_2), .O_0(Map_T_n16_i0_inst2_O_0), .valid_down(Map_T_n16_i0_inst2_valid_down), .valid_up(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0_valid_down));
 Map_T_n16_i0 Map_T_n16_i0_inst3(.CLK(CLK), .I0(Shift_tN_no16_ni0_amt1_tElInt__hasCEFalse_hasResetFalse_hasValidTrue_inst3_O), .I1(Shift_tN_no16_ni0_amt1_tElInt__hasCEFalse_hasResetFalse_hasValidTrue_inst2_O), .O_0(Map_T_n16_i0_inst3_O_0), .O_1(Map_T_n16_i0_inst3_O_1), .valid_down(Map_T_n16_i0_inst3_valid_down), .valid_up(and_inst2_out));
 Map_T_n16_i0_unq1 Map_T_n16_i0_inst4(.CLK(CLK), .I0_0(Map_T_n16_i0_inst3_O_0), .I0_1(Map_T_n16_i0_inst3_O_1), .I1(Shift_tN_no16_ni0_amt4_tElInt__hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .O_0(Map_T_n16_i0_inst4_O_0), .O_1(Map_T_n16_i0_inst4_O_1), .O_2(Map_T_n16_i0_inst4_O_2), .valid_down(Map_T_n16_i0_inst4_valid_down), .valid_up(and_inst3_out));
@@ -1589,8 +1473,8 @@ Map_T_n16_i0_unq3 Map_T_n16_i0_inst6(.CLK(CLK), .I0_0(Map_T_n16_i0_inst2_O_0), .
 Map_T_n16_i0 Map_T_n16_i0_inst7(.CLK(CLK), .I0(Shift_tN_no16_ni0_amt1_tElInt__hasCEFalse_hasResetFalse_hasValidTrue_inst5_O), .I1(Shift_tN_no16_ni0_amt1_tElInt__hasCEFalse_hasResetFalse_hasValidTrue_inst4_O), .O_0(Map_T_n16_i0_inst7_O_0), .O_1(Map_T_n16_i0_inst7_O_1), .valid_down(Map_T_n16_i0_inst7_valid_down), .valid_up(and_inst5_out));
 Map_T_n16_i0_unq1 Map_T_n16_i0_inst8(.CLK(CLK), .I0_0(Map_T_n16_i0_inst7_O_0), .I0_1(Map_T_n16_i0_inst7_O_1), .I1(FIFO_tTSeq_16_0_TSeq_1_2_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .O_0(Map_T_n16_i0_inst8_O_0), .O_1(Map_T_n16_i0_inst8_O_1), .O_2(Map_T_n16_i0_inst8_O_2), .valid_down(Map_T_n16_i0_inst8_valid_down), .valid_up(and_inst6_out));
 Map_T_n16_i0_unq2 Map_T_n16_i0_inst9(.CLK(CLK), .I_0_0(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst2_O_0_0), .I_0_1(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst2_O_0_1), .I_0_2(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst2_O_0_2), .O_0(Map_T_n16_i0_inst9_O_0), .valid_down(Map_T_n16_i0_inst9_valid_down), .valid_up(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst2_valid_down));
-Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int_____ Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0(.I_0_0(Map_T_n16_i0_inst10_O_0_0), .I_0_1(Map_T_n16_i0_inst10_O_0_1), .I_0_2(Map_T_n16_i0_inst10_O_0_2), .O_0_0(Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_O_0_0), .O_0_1(Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_O_0_1), .O_0_2(Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_O_0_2), .valid_down(Passthrough_tInTSeq_16_0_SSeq_1_STuple_3_TSeq_3_0_Int_____tOutTSeq_16_0_TSeq_1_0_SSeq_1_STuple_3_TSeq_3_0_Int______inst0_valid_down), .valid_up(Map_T_n16_i0_inst10_valid_down));
-Passthrough_tInTSeq_16_0_TSeq_1_0_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int__ Passthrough_tInTSeq_16_0_TSeq_1_0_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0(.I(Map_T_n16_i0_inst12_O), .O(Passthrough_tInTSeq_16_0_TSeq_1_0_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_O), .valid_down(Passthrough_tInTSeq_16_0_TSeq_1_0_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_valid_down), .valid_up(Map_T_n16_i0_inst12_valid_down));
+Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_Int___ Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_Int____inst0(.I_0(Map_T_n16_i0_inst12_O_0), .O_0(Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_Int____inst0_O_0), .valid_down(Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_Int____inst0_valid_down), .valid_up(Map_T_n16_i0_inst12_valid_down));
+Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int__ Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0(.I_0(Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_Int____inst0_O_0), .O(Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_O), .valid_down(Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_TSeq_1_2_Int___inst0_valid_down), .valid_up(Passthrough_tInTSeq_16_0_SSeq_1_TSeq_1_2_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_Int____inst0_valid_down));
 Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int____ Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0(.I_0(Map_T_n16_i0_inst1_O_0), .I_1(Map_T_n16_i0_inst1_O_1), .I_2(Map_T_n16_i0_inst1_O_2), .O_0_0(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0_O_0_0), .O_0_1(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0_O_0_1), .O_0_2(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0_O_0_2), .valid_down(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst0_valid_down), .valid_up(Map_T_n16_i0_inst1_valid_down));
 Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int____ Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst1(.I_0(Map_T_n16_i0_inst4_O_0), .I_1(Map_T_n16_i0_inst4_O_1), .I_2(Map_T_n16_i0_inst4_O_2), .O_0_0(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst1_O_0_0), .O_0_1(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst1_O_0_1), .O_0_2(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst1_O_0_2), .valid_down(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst1_valid_down), .valid_up(Map_T_n16_i0_inst4_valid_down));
 Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int____ Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst2(.I_0(Map_T_n16_i0_inst8_O_0), .I_1(Map_T_n16_i0_inst8_O_1), .I_2(Map_T_n16_i0_inst8_O_2), .O_0_0(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst2_O_0_0), .O_0_1(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst2_O_0_1), .O_0_2(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst2_O_0_2), .valid_down(Passthrough_tInTSeq_16_0_TSeq_1_2_STuple_3_Int____tOutTSeq_16_0_SSeq_1_TSeq_1_2_STuple_3_Int_____inst2_valid_down), .valid_up(Map_T_n16_i0_inst8_valid_down));

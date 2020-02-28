@@ -2596,8 +2596,8 @@ endmodule
 module ReduceParallel_n3 (input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, output [7:0] O);
 wire [7:0] renamedForReduce_inst0_out;
 wire [7:0] renamedForReduce_inst1_out;
-renamedForReduce renamedForReduce_inst0(.in0(I_0), .in1(renamedForReduce_inst1_out), .out(renamedForReduce_inst0_out));
-renamedForReduce renamedForReduce_inst1(.in0(I_2), .in1(I_1), .out(renamedForReduce_inst1_out));
+renamedForReduce renamedForReduce_inst0(.in0(I_2), .in1(renamedForReduce_inst1_out), .out(renamedForReduce_inst0_out));
+renamedForReduce renamedForReduce_inst1(.in0(I_1), .in1(I_0), .out(renamedForReduce_inst1_out));
 assign O = renamedForReduce_inst0_out;
 endmodule
 

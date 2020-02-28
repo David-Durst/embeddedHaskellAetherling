@@ -165,7 +165,7 @@ tuple_2d_mul = tuple_2d_mul_shallow_no_input $
   com_input_seq "I" (Proxy :: Proxy (Seq 3 (Seq 3 Atom_Int)))
 tuple_2d_mul_seq_idx = add_indexes $ seq_shallow_to_deep tuple_2d_mul
 tuple_2d_mul_ppar =
-  fmap (\s -> compile_with_throughput_to_expr tuple_2d_mul s) [1,3,9]
+  fmap (\s -> compile_with_throughput_to_expr tuple_2d_mul s) [1,1%3,1%9]
 tuple_2d_mul_ppar_typechecked =
   fmap check_type tuple_2d_mul_ppar
 tuple_2d_mul_ppar_typechecked' =
@@ -192,6 +192,8 @@ conv_2d = conv_2d_shallow_no_input (Proxy @4) $
 conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep conv_2d
 conv_2d_ppar =
   fmap (\s -> compile_with_throughput_to_expr conv_2d s) [16,8,4,2,1,1%3,1%9]
+conv_2d_ppar' =
+  fmap (\s -> compile_with_slowdown_to_expr conv_2d s) [1,2,4,8,16,48,144]
 conv_2d_ppar_all_48 =
   compile_with_slowdown_to_all_possible_expr conv_2d 48
 conv_2d_ppar_typechecked =

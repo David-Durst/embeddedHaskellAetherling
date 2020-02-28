@@ -16,6 +16,7 @@ import Text.Printf
 import Debug.Trace
 import Data.List
 import Data.Word
+import qualified Data.Vector as Vec
 
 data Test_Result = Test_Success
                   | Test_Failure {
@@ -251,13 +252,13 @@ speed_and_expr_to_slow speedups e = do
 
 stencil_generator :: Integer -> [Integer] -> [[[Integer]]]
 stencil_generator row_size inputs = do
-  let inputs_2d = chunksOf (fromInteger row_size) inputs
+  let inputs_2d = Vec.fromList inputs
   let col_size = toInteger $ length inputs `div` fromInteger row_size
   let num_rows = toInteger $ col_size
   let num_cols = row_size
   let get_input r c = if (r < 0) || (c < 0) 
         then int_to_ignore
-        else (inputs_2d !! fromInteger r) !! (fromInteger c)
+        else (inputs_2d Vec.! (fromInteger (r * row_size + c)))
   [
     [
       [
@@ -267,13 +268,13 @@ stencil_generator row_size inputs = do
     
 stencil_2x2_generator :: Integer -> [Integer] -> [[[Integer]]]
 stencil_2x2_generator row_size inputs = do
-  let inputs_2d = chunksOf (fromInteger row_size) inputs
+  let inputs_2d = Vec.fromList inputs
   let col_size = toInteger $ length inputs `div` fromInteger row_size
   let num_rows = toInteger $ col_size
   let num_cols = row_size
   let get_input r c = if (r < 0) || (c < 0) 
         then int_to_ignore
-        else (inputs_2d !! fromInteger r) !! (fromInteger c)
+        else (inputs_2d Vec.! (fromInteger (r * row_size + c)))
   [
     [
       [

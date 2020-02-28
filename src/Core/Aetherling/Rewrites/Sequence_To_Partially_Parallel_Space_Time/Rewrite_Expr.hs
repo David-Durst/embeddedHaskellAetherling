@@ -112,11 +112,11 @@ rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
                      " of program \n" ++
                      Seq_Print.print_seq_str seq_expr) No_Index
     else do
-    let first_out_tr = head possible_output_types
+    let first_out_tr = traceShow possible_output_types $ head possible_output_types
     let first_st_expr = rewrite_to_partially_parallel_type_rewrite first_out_tr
                         seq_expr
     let other_trs = tail possible_output_types
-    let x = L.foldl' (\(PA min_st_expr min_st_area) next_tr -> do
+    let x = L.foldl' (\(PA min_st_expr min_st_area, !min_tr) next_tr -> do
                    let next_st_expr = rewrite_to_partially_parallel_type_rewrite
                                       next_tr seq_expr
                    let next_st_area = Comp_Area.get_area next_st_expr
@@ -134,12 +134,13 @@ rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
                                (not $ Has_Error.has_error min_st_expr) &&
                                (STT.num_layers_t next_st_out_type < STT.num_layers_t min_st_out_type)
                               )
-                     then PA next_st_expr next_st_area
-                     else PA min_st_expr min_st_area
-               ) (PA first_st_expr (Comp_Area.get_area first_st_expr)) other_trs
+                     then (PA next_st_expr next_st_area, next_tr)
+                     else (PA min_st_expr min_st_area, min_tr)
+               ) (PA first_st_expr (Comp_Area.get_area first_st_expr), first_out_tr) other_trs
     --traceShow ("resulting area" ++ show (area x)) $ program x
     --traceShow ("possible output types" ++ show possible_output_types) $ program x
-    program x
+    traceShow ("min type rewrite" ++ show (snd x) ) $ program $ fst x
+    --program $ fst x
  {-
                    force $ traceShow ("min_st_out_type " ++ show min_st_out_type ++ " min area " ++ show min_st_area ++ " min error " ++ (show $ Has_Error.has_error min_st_expr) ++ (" min layers " ++ (show $ STT.num_layers_t min_st_out_type))) $ traceShow ("next_st_out_type " ++ show next_st_out_type ++ " next_area " ++ show next_st_area ++ " next error " ++ (show $ Has_Error.has_error next_st_expr) ++ (" next layers " ++ (show $ STT.num_layers_t next_st_out_type))) $ if Has_Error.has_error min_st_expr ||
 
@@ -708,7 +709,10 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr_no tr_io tr_ni) :
   add_output_rewrite_for_node seq_e type_rewrites
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   let upstream_type_rewrites = TimeR tr_no tr_io : SpaceR tr_ni : type_rewrites_tl
-  sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+  producer_ppar <- sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+  let in_t_ppar = ST_Conv.e_out_type $ ST_Conv.expr_to_types producer_ppar
+  cur_idx <- get_cur_index
+  return $ STE.ReshapeN in_t_ppar in_t_ppar producer_ppar cur_idx
   
 sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr_no tr_io tr_ni) :
                                               type_rewrites_tl)
@@ -723,18 +727,20 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr_no tr_io tr_ni) :
   let in_t_ppar = ST_Conv.e_out_type $ ST_Conv.expr_to_types producer_ppar
   cur_idx <- get_cur_index
   return $ STE.ReshapeN in_t_ppar out_t_ppar producer_ppar cur_idx
-  
+{- 
 sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
                                                  (SplitNestedR (TimeR tr1_n tr1_i) NonSeqR))
                                                : type_rewrites_tl)
   seq_e@(SeqE.UnpartitionN no ni elem_t producer _) |
   tr0_n == no && tr1_n == ni = do
+  traceShowM "howdy"
   add_output_rewrite_for_node seq_e type_rewrites
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   -- this works as parameters_match makes sure no*ni equals tr_no
   -- and unpartition must accept same no and ni regardless of invalid clocks
   let upstream_type_rewrites = TimeR tr0_n tr0_i : TimeR tr1_n tr1_i : type_rewrites_tl
   sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
+-}
   
 sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
                                                  (SplitNestedR (TimeR tr1_n tr1_i)
