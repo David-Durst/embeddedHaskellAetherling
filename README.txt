@@ -6,7 +6,7 @@ To get started with the VM:
 3. Install Xilinx Vivado 2018.2.
 Note: This step is not necessary to complete the rest of the Getting Started Guide.
 The reviewers may stress parts of the artifact relating to the Lseq, Lst, Scheduler, and Rewrite Rules sections of the paper without this step.
-However, it's required to complete the step-by-step instructions and reproduce the graphs in the Evaluation section.
+However, it's required to complete the Step-by-Step Instructions and reproduce the graphs in the Evaluation section.
 We cannot redistribute the Xilinx Vivado tools with the VM due to their licensing agreement.
     a. Open a web browser
         i. Click the start menu (officially the "Whisker Menu" in XFCE) in the top, left corner of the screen.
@@ -45,7 +45,7 @@ We cannot redistribute the Xilinx Vivado tools with the VM due to their licensin
         i. Lseq (section 3 of paper) - each unit test is written in the shallow embedding of Lseq in Haskell.
             1. See section 7 of the paper for the discussion and references on shallow and deep embeddings.
             1. See "single_map" in Test_Slowdown.hs for an example Lseq program. Note that mapC is polymorphic over sequence length, so com_input_seq is used to specify the input sequence length. The rest of the sequence lengths are then inferred by Haskell's type checker.
-        ii. Lst (section 4 of paper) - each test has a _ppar variable which contains different Lst versions of the program at different throughputs. The step-by-step instructions explain how to interact with these variables.
+        ii. Lst (section 4 of paper) - each test has a _ppar variable which contains different Lst versions of the program at different throughputs. The Step-by-Step Instructions explain how to interact with these variables.
         iii. Rewrite Rules (section 5 of paper) and Scheduling (section 6 of paper) - the _ppar variable produces the Lst versions using the scheduler and rewrite rules.
         One such variable is "single_map_ppar" in Test_Slowdown.hs.
         iv. Implementation (section 7 of paper) - the prior points stress the Lseq and Lst implementations. 
