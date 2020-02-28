@@ -136,7 +136,7 @@ How supported: To reproduce the experiments in the Evaluation (section 8 of pape
     d. We use the following shorthands in the stdout:
         i. SP - Spatial
         ii. HTH - Halide-To-Hardware, ie Halide-HLS
-4. Note: the graphs are slightly different from those in the paper. In the paper, Halide-HLS and Spatial used 2.3-9.1x more area. In these charts, Halide-HLS and Spatial use 2.2-8.6x more area. Additionally, in some cases Aetherling's advantage has improved. One example of this is the CONV example at throughput 1. These minor differences are due to some small changes we made in the implementations of some of the operators.
+4. Note: the graphs are slightly different from those in the paper. In the paper, Halide-HLS and Spatial used 2.3-9.1x more area. In these charts, Halide-HLS and Spatial use 2.2-8.6x more area. Additionally, in some cases Aetherling's advantage has improved. One example of this is the CONV example at throughput 1. These minor differences are due to the fact that the paper's measurements are on an older version of the code. I was not able to resolve this discrepancy before artifact submission deadline.
 
 ## Claims Not Supported
 All the major claims of the paper are supported.
