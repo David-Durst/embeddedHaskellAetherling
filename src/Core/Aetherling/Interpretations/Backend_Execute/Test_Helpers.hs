@@ -255,14 +255,14 @@ stencil_generator row_size inputs = do
   let col_size = toInteger $ length inputs `div` fromInteger row_size
   let num_rows = toInteger $ col_size
   let num_cols = row_size
-  let get_input r c = if (r < 0) || (c < 0) || (r >= row_size) || (c >= col_size)
+  let get_input r c = if (r < 0) || (c < 0)
         then int_to_ignore
         else (inputs_2d !! fromInteger r) !! (fromInteger c)
   [
     [
       [
         get_input (r - stencil_r) (c - stencil_c)
-      | stencil_c <- [2,1..0]] | stencil_r <- [2,1..0]]
+      | stencil_c <- [2,1,0]] | stencil_r <- [2,1,0]]
     | r <- [0..num_rows-1], c <- [0..num_cols-1]]
     
 stencil_2x2_generator :: Integer -> [Integer] -> [[[Integer]]]
@@ -271,7 +271,7 @@ stencil_2x2_generator row_size inputs = do
   let col_size = toInteger $ length inputs `div` fromInteger row_size
   let num_rows = toInteger $ col_size
   let num_cols = row_size
-  let get_input r c = if (r < 0) || (c < 0) || (r >= row_size) || (c >= col_size)
+  let get_input r c = if (r < 0) || (c < 0)
         then int_to_ignore
         else (inputs_2d !! fromInteger r) !! (fromInteger c)
   [
