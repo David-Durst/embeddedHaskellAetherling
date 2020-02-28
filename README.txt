@@ -44,7 +44,7 @@ We cannot redistribute the Xilinx Vivado tools with the VM due to their licensin
     d. Each unit and application test stresses the following components of the system:
         i. Lseq (section 3 of paper) - each unit test is written in the shallow embedding of Lseq in Haskell.
             1. See section 7 of the paper for the discussion and references on shallow and deep embeddings.
-            1. See "single_map" in Test_Slowdown.hs for an example Lseq program. Note that mapC is polymoprhic over sequence length, so com_input_seq is used to specify the input sequence length. The rest of the sequence lengths are then inferred by Haskell's type checker.
+            1. See "single_map" in Test_Slowdown.hs for an example Lseq program. Note that mapC is polymorphic over sequence length, so com_input_seq is used to specify the input sequence length. The rest of the sequence lengths are then inferred by Haskell's type checker.
         ii. Lst (section 4 of paper) - each test has a _ppar variable which contains different Lst versions of the program at different throughputs. The step-by-step instructions explain how to interact with these variables.
         iii. Rewrite Rules (section 5 of paper) and Scheduling (section 6 of paper) - the _ppar variable produces the Lst versions using the scheduler and rewrite rules.
         One such variable is "single_map_ppar" in Test_Slowdown.hs.
@@ -53,7 +53,7 @@ We cannot redistribute the Xilinx Vivado tools with the VM due to their licensin
             1. Emitting an implementation of the Lst circuit in Magma, a Python HDL.
             2. Running the Magma file to generate Verilog.
             3. Simulating the Verilog with Verilator and checking the checking the correctness of the resulting circuit. The simulation accepts the inputs specified by the _inputs variable, such as "single_map_inputs", and verifies that the output matches the values specified by the _output variable, such as "single_map_output". Additionally, the simulator verifies that the input and output match the specifications of the Lst types.
-            4. See "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies" for the resulting verilog files. While these files will exist before running the tests, the tests will overwrite them.
+            4. See "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies" for the resulting Verilog files. While these files will exist before running the tests, the tests will overwrite them.
         v. Evaluation (section 8 of paper) - see Step-by-Step Instructions section
             
 
@@ -120,11 +120,11 @@ How supported: To reproduce the experiments in the Evaluation (section 8 of pape
 1. Type the following (without "") in the terminal: "cd /home/pldi/pldi/embeddedHaskellAetherling/"
 2. Type the following (without "") in the terminal: "pnr/run.sh"
     a. NOTE: This will take between 1 and 2 hours to run. It is doing synthesis and implementation using Xilinx Vivado Design Suite 2018.2 for many designs.
-    b. This step runs synthesis on the verilog files in "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples". 
-    c. The top folders in that directory separate the Aetherling, Halide-HLS (titled halide_to_hardware), and Spatial verilog files. 
-    d. We have included the Halide-HLS and Spatial verilog files generated for the paper. The Aetherling verilog files are regenerated each time the tests are rerun.
+    b. This step runs synthesis on the Verilog files in "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples". 
+    c. The top folders in that directory separate the Aetherling, Halide-HLS (titled halide_to_hardware), and Spatial Verilog files. 
+    d. We have included the Halide-HLS and Spatial Verilog files generated for the paper. The Aetherling Verilog files are regenerated each time the tests are rerun.
     e. Within each of the aetherling_copies, halide_to_hardware, and spatial folders are the folders for each application in the Evaluation section. These are: map, conv2d, conv2d_b2b, and sharpen. The other apps within the aetherling_copies folder may work but are not part of the paper's results.
-    f. Within each of the app's folders are the verilog files for the app at a throughput specified by number of clock cycles. For example, the file "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies/conv2d/conv2d_16.v" emits the output over 16 clock cycles.
+    f. Within each of the app's folders are the Verilog files for the app at a throughput specified by number of clock cycles. For example, the file "/home/pldi/pldi/embeddedHaskellAetherling/test/verilog_examples/aetherling_copies/conv2d/conv2d_16.v" emits the output over 16 clock cycles.
     g. To run fewer designs through Vivado and thus finish pnr/run.sh more quickly, delete some of these files. Note: doing so may break the chart generation code for visualizing the results. You may be required to edit "/home/pldi/pldi/aetherling/aetherling/helpers/pnr_graphs.py" to deal with less data.
 3. When the prior step finishes, the graphs which reproduce figures 11-13 in the paper will be in "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs". Additionally, stdout will contain the data from the graphs in text form. Ignore warnings printed to stdout before the data.
     a. Open a file browser 
