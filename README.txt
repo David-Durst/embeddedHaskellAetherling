@@ -4,7 +4,7 @@ To get started with the VM:
     a. Import the downloaded .ova file using https://docs.oracle.com/cd/E26217_01/E26796/html/qs-import-vm.html
 2. Login using user "pldi" and password "the_pldi".
 3. Install Xilinx Vivado 2018.2.
-Note: this step is not necessary to complete the rest of the getting started guide.
+Note: This step is not necessary to complete the rest of the Getting Started Guide.
 The reviewers may stress parts of the artifact relating to the Lseq, Lst, Scheduler, and Rewrite Rules sections of the paper without this step.
 However, it's required to complete the step-by-step instructions and reproduce the graphs in the Evaluation section.
 We cannot redistribute the Xilinx Vivado tools with the VM due to their licensing agreement.
@@ -73,7 +73,7 @@ Operators in the language correspond to hardware modules with computable propert
 The types of the operators encode the throughput of the hardware interfaces and the exact clock cycles when elements are consumed or produced.
 
 How supported: The results of the evaluation section (see below) provide experimental evidence that the operators compile to statically scheduled, streaming hardware modules.
-Additionally, the _ppar variables, discussed in section 4.d.iii of the getting started guide, demonstrate the Lst programs and their types.
+Additionally, the _ppar variables, discussed in section 4.d.iii of the Getting Started Guide, demonstrate the Lst programs and their types.
 To explore each of the _ppar variables:
 1. Use the Haskell REPL
     a. Open a terminal where the current working directory is "/home/pldi/pldi/embeddedHaskellAetherling/" 
@@ -103,7 +103,7 @@ Claim: The scheduling algorithm
 3. produces an efficient Lst program with throughput T that is equivalent up to isomorphism.
 
 How supported:
-1. Look at the _ppar variables discussed in section 4.d.iii of the getting started guide.
+1. Look at the _ppar variables discussed in section 4.d.iii of the Getting Started Guide.
 These show the Lst programs that result from the scheduling algorithm.
 2. Look at the _results variables in the same files as the _ppar variables.
 These are the unit and application tests.
