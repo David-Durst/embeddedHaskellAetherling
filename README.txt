@@ -138,7 +138,7 @@ Additionally, stdout will contain the data from the graphs in text form. Ignore 
 4. Note: The graphs are slightly different from those in the paper.
 In some cases, the artifact's graphs show that Aetherling's circuits use more area than the graphs in the paper.
 For example, the artifact's reproduction of figure 11 shows that the CONV application at throughput 1/3 pixel per clock uses more area than the figure in the paper.
-Additionally, the artifact's reproductions of figures 12 and 13 show that Halide-HLS and Spatial use 2.2-8.6x more area than Aetherling.
+Additionally, the artifact's reproductions of figures 12 and 13 show that Halide-HLS and Spatial use 2.2-7.8x more area than Aetherling.
 In the paper, we observed that Halide-HLS and Spatial use 2.3-9.1x more area.
 In other cases, the artifact's graphs show that Aetherling's circuits use less area than the graphs in the paper.
 For example, the artifact's reproduction of figure 11 shows that the CONV application at throughput 1 pixel per clock uses less area than the figure in the paper.
