@@ -77,7 +77,7 @@ To explore each of the _ppar variables:
     b. Start the REPL by typing the following (without "") in the terminal: "stack ghci --test"
 2. Use the following functions in the REPL to explore the _ppar variables. 
     a. "print_st" - This prints a string representation of a Lst program.
-        i. "print_st (single_map_ppar !! 0)" - This prints a Lst program with a single map that has been scheduled at 1 Int emitted per clock.
+        i. Example of how to use: "print_st (single_map_ppar !! 0)" - This prints a Lst program with a single map that has been scheduled at 1 Int emitted per clock.
         Each _ppar variable is a list of Lst programs.
         For example, the programs in single_map_ppar have throughputs of 1, 2, and 4 Ints emitted per clock.
         Use !! to access one element of the list.
@@ -85,13 +85,13 @@ To explore each of the _ppar variables:
     b. "get_area" - This prints the area approximation of a program. Note: in the paper's appendix we compute area as a tuple of storage and compute.
     We have found that a scalar value is a sufficient approximation.
     This function returns a scalar.
-        i. "get_area (single_map_ppar !! 0)" - This prints a scalar value that approximates the area of the single map Lst program scheduled at 1 Int emitted per clock.
+        i. Example of how to use: "get_area (single_map_ppar !! 0)" - This prints a scalar value that approximates the area of the single map Lst program scheduled at 1 Int emitted per clock.
     c. "compute_latency" - This prints the delay of a program.
-        i. "compute_latency (single_map_ppar !! 0)" - This prints the delay of the single map Lst program scheduled at 1 Int emitted per clock.
+        i. Example of how to use: "compute_latency (single_map_ppar !! 0)" - This prints the delay of the single map Lst program scheduled at 1 Int emitted per clock.
     d. "print_st_input_types" - This prints a string representation of a Lst program's input types. Throughput is computable from Lst types.
-        i. "print_st_input_types (single_map_ppar !! 0)" - This prints the input type of the single map Lst program scheduled at 1 Int emitted per clock. Types is plural in the function call because some programs may have multiple inputs.
+        i. Example of how to use: "print_st_input_types (single_map_ppar !! 0)" - This prints the input type of the single map Lst program scheduled at 1 Int emitted per clock. Types is plural in the function call because some programs may have multiple inputs.
     e. "print_st_output_type" - This prints a string representation of a Lst program's output type.
-        iii. "print_st_output_type (single_map_ppar !! 0)" - This prints the output type of the single map Lst program scheduled at 1 Int emitted per clock.
+        iii. Example of how to use: "print_st_output_type (single_map_ppar !! 0)" - This prints the output type of the single map Lst program scheduled at 1 Int emitted per clock.
 
 ## Rewrite Rules and Scheduling (Sections 5 and 6 of Paper)
 Claim: The scheduling algorithm
