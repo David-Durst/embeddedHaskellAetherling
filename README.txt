@@ -129,17 +129,19 @@ Additionally, stdout will contain the data from the graphs in text form. Ignore 
     a. Open a file browser.
         i. Click the start menu (officially the "Whisker Menu" in XFCE) in the top, left corner of the screen
         ii. Select "File Manager" from the options
-    a. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_results.pdf" - reproduces figure 11 
-    b. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_sp.pdf" - reproduces figure 12
-    c. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_hth.pdf" - reproduces figure 13
+    a. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_results.pdf" - reproduces figure 11 in paper
+    b. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_sp.pdf" - reproduces figure 12 in paper
+    c. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_hth.pdf" - reproduces figure 13 in paper
     d. We use the following shorthands:
         i. SP - Spatial
         ii. HTH - Halide-To-Hardware, ie Halide-HLS
 4. Note: The graphs are slightly different from those in the paper.
-In the paper, Halide-HLS and Spatial used 2.3-9.1x more area.
-In these charts, Halide-HLS and Spatial use 2.2-8.6x more area.
-Additionally, in some cases Aetherling's advantage has improved.
-One instance of this is the CONV example at throughput 1.
+In some cases, the artifact's graphs show that Aetherling's circuits use more area than the graphs in the paper.
+For example, the artifact's reproduction of figure 11 shows that the CONV application at throughput 1/3 pixel per clock uses more area than the figure in the paper.
+Additionally, the artifact's reproductions of figures 12 and 13 show that Halide-HLS and Spatial use 2.2-8.6x more area than Aetherling.
+In the paper, we observed that Halide-HLS and Spatial use 2.3-9.1x more area.
+In other cases, the artifact's graphs show that Aetherling's circuits use less area than the graphs in the paper.
+For example, the artifact's reproduction of figure 11 shows that the CONV application at throughput 1 pixel per clock uses less area than the figure in the paper.
 These differences are due to the fact that the paper's measurements are based on an older version of Aetherling's code.
 Additionally, some of the differences result from variability in Vivado's optimizations.
 
