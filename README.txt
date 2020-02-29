@@ -139,13 +139,10 @@ Additionally, stdout will contain the data from the graphs in text form. Ignore 
 4. Note: The graphs are slightly different from those in the paper.
 In the paper, Halide-HLS and Spatial used 2.3-9.1x more area.
 In these charts, Halide-HLS and Spatial use 2.2-8.6x more area.
-Additionally, in some cases Aetherling's advantage has improved. One instance of this is the CONV example at throughput 1.
+Additionally, in some cases Aetherling's advantage has improved.
+One instance of this is the CONV example at throughput 1.
 These differences are due to the fact that the paper's measurements are based on an older version of Aetherling's code.
-Additionally, some of the variance results from Vivado's optimizations.
-For the CONV example at 1/3 throughput, Vivado's logs show that the old and new circuits use similar area after an intermediate step known as synthesis. However, the following step, known as implementation, performs optimizations which result in different area numbers for the old and new circuits.
-For the CONV example at 1/3 throughput, Vivado's logs show that the old and new circuits use similar area after an intermediate step known as synthesis. However, the following step, known as implementation, performs optimizations which result in different area numbers for the old and new circuits.
-
-synthesis step but that the following, implementation step which optimizes the circuit produces different area numbers.
+Additionally, some of the differences result from variability in Vivado's optimizations.
 
 ## Claims Not Supported
 All the major claims of the paper are supported.
