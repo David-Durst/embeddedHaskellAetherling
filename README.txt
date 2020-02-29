@@ -63,7 +63,6 @@ Claim: The input language (Lseq) is a functional language with standard data-par
 Lseq is constrained so that Aetherling can transform all valid programs into hardware implementations. 
 
 How supported: The examples in "Test_Slowdown.hs" and "Test_Apps.hs" demonstrate Lseq and that the programs can be compiled to hardware implementations.
-Look at the type signatures of the operators "/home/pldi/pldi/embeddedHaskellAetherling/src/Core/Aetherling/Languages/Sequence/Shallow/Expr.hs" to see that they are on finite length sequences.
 
 ### Lst (Section 4 of Paper)
 Claim: Programs in the intermediate language (Lst) correspond to statically scheduled, streaming hardware.
