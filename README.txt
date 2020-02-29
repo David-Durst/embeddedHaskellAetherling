@@ -82,7 +82,7 @@ To explore each of the _ppar variables:
         For example, the programs in single_map_ppar have throughputs of 1, 2, and 4 Ints emitted per clock.
         Use !! to access one element of the list.
         Note that the FIFO operators represent the delay matching registers (Section 7 of paper) necessary for correctness and pipeline registers necessary for Vivado. 
-    b. "get_area" - This prints the area approximation of a program. Note: in the paper's appendix we compute area as a tuple of storage and compute.
+    b. "get_area" - This prints the area approximation of a program. Note: In the paper's appendix we compute area as a tuple of storage and compute.
     We have found that a scalar value is a sufficient approximation.
     This function returns a scalar.
         i. Example of how to use: "get_area (single_map_ppar !! 0)" - This prints a scalar value that approximates the area of the single map Lst program scheduled at 1 Int emitted per clock.
@@ -91,7 +91,7 @@ To explore each of the _ppar variables:
     d. "print_st_input_types" - This prints a string representation of a Lst program's input types. Throughput is computable from Lst types.
         i. Example of how to use: "print_st_input_types (single_map_ppar !! 0)" - This prints the input type of the single map Lst program scheduled at 1 Int emitted per clock. Types is plural in the function call because some programs may have multiple inputs.
     e. "print_st_output_type" - This prints a string representation of a Lst program's output type.
-        iii. Example of how to use: "print_st_output_type (single_map_ppar !! 0)" - This prints the output type of the single map Lst program scheduled at 1 Int emitted per clock.
+        i. Example of how to use: "print_st_output_type (single_map_ppar !! 0)" - This prints the output type of the single map Lst program scheduled at 1 Int emitted per clock.
 
 ## Rewrite Rules and Scheduling (Sections 5 and 6 of Paper)
 Claim: The scheduling algorithm
@@ -132,7 +132,7 @@ Additionally, stdout will contain the data from the graphs in text form. Ignore 
     a. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_results.pdf" - reproduces figure 11 
     b. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_sp.pdf" - reproduces figure 12
     c. "/home/pldi/pldi/embeddedHaskellAetherling/pnr/figs/ae_versus_hth.pdf" - reproduces figure 13
-    d. We use the following shorthands in the stdout:
+    d. We use the following shorthands:
         i. SP - Spatial
         ii. HTH - Halide-To-Hardware, ie Halide-HLS
 4. Note: The graphs are slightly different from those in the paper.
