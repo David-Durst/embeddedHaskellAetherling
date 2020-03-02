@@ -85,6 +85,7 @@ data Throughput_Target =
   -- this target is all circuits with a slowdown factor
   | All_With_Slowdown_Factor Int
   | Type_Rewrites [Type_Rewrite]
+  | Output_ST_Type STT.AST_Type
   deriving (Show, Eq)
 
 data Test_Args a b = Test_Args {test_inputs :: [a], test_output :: b}
@@ -136,6 +137,7 @@ test_with_backend' shallow_seq_program s_target l_target verilog_conf
         Min_Area_With_Throughput _ -> error "call test_with_backend not test_with_backend' with speedups"
         All_With_Slowdown_Factor s -> False
         Type_Rewrites trs -> True
+        Output_ST_Type _ -> True
   test_strs <-
         case l_target of
           Magma -> do
@@ -286,6 +288,7 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                       Min_Area_With_Throughput _ -> error "call compile_to_file not compile_to_file' with speedups"
                       All_With_Slowdown_Factor s -> False
                       Type_Rewrites trs -> True
+                      Output_ST_Type _ -> True
       -- | the next three are helpers for compile_to_file for each backend
       compile_to_magma :: [STE.Expr] ->
                           ExceptT Compiler_Error IO [Process_Result]
@@ -382,6 +385,7 @@ slowdown_target_to_file_name_string (Min_Area_With_Throughput s) = error "don't 
 slowdown_target_to_file_name_string (All_With_Slowdown_Factor s) = show s
 slowdown_target_to_file_name_string (Type_Rewrites trs) =
   show (product_tr_periods trs)
+slowdown_target_to_file_name_string (Output_ST_Type t) = show $ STT.clocks_t t
       
 run_process :: String -> Maybe FilePath -> IO Process_Result
 run_process process_str cwd = do
@@ -457,6 +461,13 @@ compile_to_expr shallow_seq_program s_target = do
           case check_compiler_errors_with_slowdown s deep_st_to_be_checked of
             Nothing -> return [deep_st_to_be_checked]
             Just err -> throwError err
+        Output_ST_Type st_t -> do
+          let deep_st_to_be_checked =
+                compile_with_st_type_to_expr shallow_seq_program st_t
+          let s = STT.clocks_t st_t
+          case check_compiler_errors_with_slowdown s deep_st_to_be_checked of
+            Nothing -> return [deep_st_to_be_checked]
+            Just err -> throwError err
 
 data Compiler_Error = Type_Mismatch
   | Latency_Mismatch
@@ -494,6 +505,21 @@ compile_with_type_rewrite_to_expr :: (Shallow_Types.Aetherling_Value a) =>
 compile_with_type_rewrite_to_expr shallow_seq_program tr = do
   let deep_seq_program_with_indexes =
         lower_seq_shallow_to_deep_indexed shallow_seq_program
+  let deep_st_program =
+        rewrite_to_partially_parallel_type_rewrite tr deep_seq_program_with_indexes
+  if Has_Error.has_error deep_st_program
+    then deep_st_program
+    else add_registers deep_st_program
+    
+compile_with_st_type_to_expr :: (Shallow_Types.Aetherling_Value a) =>
+                                     RH.Rewrite_StateM a -> STT.AST_Type ->
+                                     STE.Expr
+compile_with_st_type_to_expr shallow_seq_program st_t = do
+  let deep_seq_program_with_indexes =
+        lower_seq_shallow_to_deep_indexed shallow_seq_program
+  let tr = st_type_to_type_rewrite
+            (Seq_Conv.e_out_type $ Seq_Conv.expr_to_types deep_seq_program_with_indexes)
+            st_t
   let deep_st_program =
         rewrite_to_partially_parallel_type_rewrite tr deep_seq_program_with_indexes
   if Has_Error.has_error deep_st_program
