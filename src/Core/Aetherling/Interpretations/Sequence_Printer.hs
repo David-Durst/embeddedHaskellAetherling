@@ -125,6 +125,16 @@ print_inner consumer_e@(NotN producer_e cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "NotN " ++ producer_ref
   return cur_ref_name
+print_inner consumer_e@(AndN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ print_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "AndN " ++ producer_ref
+  return cur_ref_name
+print_inner consumer_e@(OrN producer_e cur_idx) = do
+  producer_ref <- memo producer_e $ print_inner producer_e
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "OrN " ++ producer_ref
+  return cur_ref_name
 print_inner consumer_e@(AddN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx

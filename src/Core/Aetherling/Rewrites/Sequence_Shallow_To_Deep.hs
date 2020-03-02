@@ -46,6 +46,18 @@ instance Sequence_Language Rewrite_StateM where
       _ -> throwError $ Expr_Failure $ fail_message_edge "absC" "Atom_Bit"
 
   -- binary operators
+  andC inputM = do
+    input <- inputM
+    case input of
+      Atom_Tuple_Edge x -> return $ Atom_Bit_Edge $ AndN x No_Index
+      _ -> throwError $ Expr_Failure $ fail_message_edge "andC" "Atom_Tuple Atom_Bit Atom_Bit"
+
+  orC inputM = do
+    input <- inputM
+    case input of
+      Atom_Tuple_Edge x -> return $ Atom_Bit_Edge $ OrN x No_Index
+      _ -> throwError $ Expr_Failure $ fail_message_edge "orC" "Atom_Tuple Atom_Bit Atom_Bit"
+
   addC inputM = do
     input <- inputM
     case input of

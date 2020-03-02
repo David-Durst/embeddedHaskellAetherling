@@ -24,6 +24,8 @@ size_t (SeqT _ _) = 0
 data Expr_Types = Expr_Types { e_in_types :: [AST_Type], e_out_type :: AST_Type}
   deriving (Show, Eq, Ord)
 
+print_seq_output_type e = putStrLn $ show $ e_out_type $ expr_to_outer_types e
+print_seq_input_types e = putStrLn $ show $ e_in_types $ expr_to_outer_types e
 expr_to_types_seq = expr_to_types
 -- | Convert an Expr to it's input and output tpyes not considering the input
 -- expressions to it
@@ -32,6 +34,8 @@ expr_to_types (IdN in_e _) = Expr_Types [input_type] input_type
   where input_type = e_out_type $ expr_to_types in_e
 expr_to_types (AbsN _ _) = Expr_Types [IntT] IntT
 expr_to_types (NotN _ _) = Expr_Types [BitT] BitT
+expr_to_types (AndN _ _) = Expr_Types [ATupleT BitT BitT] BitT
+expr_to_types (OrN _ _) = Expr_Types [ATupleT BitT BitT] BitT
 expr_to_types (AddN _ _) = Expr_Types [ATupleT IntT IntT] IntT
 expr_to_types (SubN _ _) = Expr_Types [ATupleT IntT IntT] IntT
 expr_to_types (MulN _ _) = Expr_Types [ATupleT IntT IntT] IntT
@@ -126,6 +130,10 @@ expr_to_outer_types' (IdN producer_e _) = expr_to_outer_types' producer_e
 expr_to_outer_types' consumer_e@(AbsN producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(NotN producer_e _) =
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' consumer_e@(AndN producer_e _) =
+  expr_to_outer_types_unary_operator consumer_e producer_e
+expr_to_outer_types' consumer_e@(OrN producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(AddN producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e

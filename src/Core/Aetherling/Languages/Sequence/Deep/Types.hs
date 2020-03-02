@@ -28,3 +28,13 @@ data AST_Value =
   | STupleV [AST_Value]
   | SeqV {vals :: [AST_Value]}
   deriving (Show, Eq, Ord)
+
+num_atoms_total_t_seq = num_atoms_total_t
+
+num_atoms_total_t :: AST_Type -> Int
+num_atoms_total_t UnitT = 1
+num_atoms_total_t BitT = 1
+num_atoms_total_t IntT = 1
+num_atoms_total_t (ATupleT t0 t1) = 1
+num_atoms_total_t (STupleT n t) = num_atoms_total_t_seq t
+num_atoms_total_t (SeqT n t) = n * num_atoms_total_t_seq t

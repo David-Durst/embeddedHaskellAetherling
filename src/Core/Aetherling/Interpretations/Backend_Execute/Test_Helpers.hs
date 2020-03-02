@@ -1,6 +1,9 @@
 module Aetherling.Interpretations.Backend_Execute.Test_Helpers where
 import qualified Aetherling.Languages.Sequence.Deep.Serialize as SeqSer
 import qualified Aetherling.Languages.Space_Time.Deep.Serialize as STSer
+import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
+import qualified Aetherling.Languages.Sequence.Deep.Types as SeqT
+import qualified Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq_Conv
 import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
@@ -12,6 +15,8 @@ import Data.List.Split
 import Text.Printf
 import Debug.Trace
 import Data.List
+import Data.Word
+import qualified Data.Vector as Vec
 
 data Test_Result = Test_Success
                   | Test_Failure {
@@ -237,31 +242,39 @@ generate_tester_input_output_for_st_program conf p_types inputs output = do
 speed_to_slow :: [Ratio Integer] -> Integer -> [Int]
 speed_to_slow speed_ups image_size = map (\speed_up -> fromInteger $ numerator $ (fromIntegral image_size) / speed_up) speed_ups
 
+speed_and_expr_to_slow :: [Ratio Integer] -> SeqE.Expr -> [Int]
+speed_and_expr_to_slow speedups e = do
+  let out_seq_t = Seq_Conv.e_out_type $
+                  Seq_Conv.expr_to_types e
+  
+  let out_len = SeqT.num_atoms_total_t_seq out_seq_t
+  speed_to_slow speedups (toInteger out_len)
+
 stencil_generator :: Integer -> [Integer] -> [[[Integer]]]
 stencil_generator row_size inputs = do
-  let inputs_2d = chunksOf (fromInteger row_size) inputs
+  let inputs_2d = Vec.fromList inputs
   let col_size = toInteger $ length inputs `div` fromInteger row_size
   let num_rows = toInteger $ col_size
   let num_cols = row_size
-  let get_input r c = if (r < 0) || (c < 0) || (r >= row_size) || (c >= col_size)
+  let get_input r c = if (r < 0) || (c < 0) 
         then int_to_ignore
-        else (inputs_2d !! fromInteger r) !! (fromInteger c)
+        else (inputs_2d Vec.! (fromInteger (r * row_size + c)))
   [
     [
       [
         get_input (r - stencil_r) (c - stencil_c)
-      | stencil_c <- [2,1..0]] | stencil_r <- [2,1..0]]
+      | stencil_c <- [2,1,0]] | stencil_r <- [2,1,0]]
     | r <- [0..num_rows-1], c <- [0..num_cols-1]]
     
 stencil_2x2_generator :: Integer -> [Integer] -> [[[Integer]]]
 stencil_2x2_generator row_size inputs = do
-  let inputs_2d = chunksOf (fromInteger row_size) inputs
+  let inputs_2d = Vec.fromList inputs
   let col_size = toInteger $ length inputs `div` fromInteger row_size
   let num_rows = toInteger $ col_size
   let num_cols = row_size
-  let get_input r c = if (r < 0) || (c < 0) || (r >= row_size) || (c >= col_size)
+  let get_input r c = if (r < 0) || (c < 0) 
         then int_to_ignore
-        else (inputs_2d !! fromInteger r) !! (fromInteger c)
+        else (inputs_2d Vec.! (fromInteger (r * row_size + c)))
   [
     [
       [
@@ -281,6 +294,33 @@ conv_generator stencil_2d_output = [
     let window_flat = concat window,
     let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
 
+-- need thse for Integer and Int versions
+hask_kernel_2x2 :: [[Int]] = [[0,2],[1,0]]
+hask_kernel'_2x2 :: [Integer] = [1,4,2,1]
+
+conv_2x2_generator :: [[[Integer]]] -> [Integer]
+conv_2x2_generator stencil_2d_output = [
+  if window_valid
+  then (sum $ zipWith (*) window_flat hask_kernel'_2x2) `mod` 256 `div` 8
+  else int_to_ignore
+  | window <- stencil_2d_output,
+    let window_flat = concat window,
+    let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
+
+t_const :: Integer
+t_const = 15
+sharpen_one_pixel' :: Integer -> Integer -> Integer
+sharpen_one_pixel' a b = do
+  let a_8 :: Word8 = fromIntegral a
+  let b_8 :: Word8 = fromIntegral b
+  let h = if (b_8 - a_8) > (fromIntegral t_const) || (a_8 - b_8) > (fromIntegral t_const) then b_8 - a_8 else 0
+  fromIntegral $ if a == int_to_ignore then a_8 else b_8 + (h `div` 4)
+  
+sharpen_one_pixel'_integer :: Integer -> Integer -> Integer
+sharpen_one_pixel'_integer a b = do
+  let h = if (abs $ b - a) > t_const then b - a else 0
+  if a == int_to_ignore then a else b + (h `div` 4)
+  
 int_to_3char :: PrintfArg a => a -> String
 int_to_3char x = printf "%03d" x
 

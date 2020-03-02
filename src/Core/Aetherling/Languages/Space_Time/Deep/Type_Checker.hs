@@ -40,6 +40,10 @@ check_type' consumer_e@(AbsN producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(NotN producer_e _) =
   check_unary_operator consumer_e producer_e
+check_type' consumer_e@(AndN producer_e _) =
+  check_unary_operator consumer_e producer_e
+check_type' consumer_e@(OrN producer_e _) =
+  check_unary_operator consumer_e producer_e
 check_type' consumer_e@(AddN producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(SubN producer_e _) =

@@ -252,3 +252,34 @@ get_type_rewrite_periods (SplitNestedR (TimeR tr_n tr_i) NonSeqR) = tr_n + tr_i
 get_type_rewrite_periods (SplitNestedR tr_hd tr_tl) =
   get_type_rewrite_periods tr_hd * get_type_rewrite_periods tr_tl
 get_type_rewrite_periods NonSeqR = -1
+
+st_type_to_type_rewrite :: SeqT.AST_Type -> STT.AST_Type -> [Type_Rewrite]
+st_type_to_type_rewrite seq_t st_t |
+  (STT.num_atoms_total_t st_t) /= (SeqT.num_atoms_total_t seq_t) =
+  error "can't convert to ST type with different number of atoms"
+st_type_to_type_rewrite SeqT.UnitT _ = [NonSeqR]
+st_type_to_type_rewrite SeqT.IntT _ = [NonSeqR]
+st_type_to_type_rewrite (SeqT.ATupleT _ _) _ = [NonSeqR]
+st_type_to_type_rewrite (SeqT.STupleT n_seq t_seq) (STT.STupleT n_st t_st) |
+  n_seq == n_st =
+    NonSeqR : st_type_to_type_rewrite t_seq t_st
+st_type_to_type_rewrite (SeqT.SeqT n_seq t_seq) (STT.SSeqT n_st t_st) |
+  n_seq == n_st =
+    SpaceR n_st : st_type_to_type_rewrite t_seq t_st
+st_type_to_type_rewrite (SeqT.SeqT n_seq t_seq) (STT.SSeqT n_st t_st) |
+  n_seq `mod` n_st == 0 = do
+    let (fst_tr : other_trs) = st_type_to_type_rewrite
+                               (SeqT.SeqT (n_seq `div` n_st) t_seq) t_st
+    SplitNestedR (SpaceR n_st) fst_tr : other_trs
+st_type_to_type_rewrite (SeqT.SeqT n_seq t_seq) (STT.TSeqT n_st i_st t_st) |
+  n_seq == n_st =
+    TimeR n_st i_st : st_type_to_type_rewrite t_seq t_st
+st_type_to_type_rewrite (SeqT.SeqT n_seq t_seq) (STT.TSeqT n_st i_st t_st) |
+  n_seq `mod` n_st == 0 = do
+    let (fst_tr : other_trs) = st_type_to_type_rewrite
+                               (SeqT.SeqT (n_seq `div` n_st) t_seq) t_st
+    case fst_tr of
+      SpaceR inner_n_st -> SplitR n_st i_st inner_n_st : other_trs
+      _ -> SplitNestedR (TimeR n_st i_st) fst_tr : other_trs
+st_type_to_type_rewrite seq_t st_t = error $ "can't convert " ++ show seq_t ++
+                                     " to " ++ show st_t

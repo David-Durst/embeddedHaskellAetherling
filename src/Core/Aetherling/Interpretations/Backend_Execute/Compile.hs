@@ -25,9 +25,11 @@ import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All
 import Aetherling.Rewrites.Sequence_Assign_Indexes
 import qualified Aetherling.Languages.Sequence.Shallow.Types as Shallow_Types
 import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
+import qualified Aetherling.Languages.Sequence.Deep.Types as SeqT
 import qualified Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq_Conv
 import Aetherling.Languages.Space_Time.Deep.Type_Checker
 import qualified Aetherling.Languages.Space_Time.Deep.Expr as STE
+import qualified Aetherling.Languages.Space_Time.Deep.Types as STT
 import qualified Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions as ST_Conv
 import qualified Data.List as L
 import Control.Monad.Except
@@ -41,6 +43,7 @@ import System.FilePath
 import Data.Maybe
 import Debug.Trace
 import Data.Time
+import Data.Ratio
 
 -- things this module needs to do:
 -- 1. compile Seq to ST IR deep embedding to backend given a slowdown
@@ -75,9 +78,10 @@ data Verilog_Test_Arg = Verilog_Sim_Source String
   deriving (Show, Eq)
 verilog_sim_source str = Verilog_Sim_Source $ root_dir ++ str
 
-data Slowdown_Target =
+data Throughput_Target =
   -- this target is the minimum area circuit with a slowdown factor
   Min_Area_With_Slowdown_Factor Int
+  | Min_Area_With_Throughput (Ratio Integer)
   -- this target is all circuits with a slowdown factor
   | All_With_Slowdown_Factor Int
   | Type_Rewrites [Type_Rewrite]
@@ -85,18 +89,36 @@ data Slowdown_Target =
 
 data Test_Args a b = Test_Args {test_inputs :: [a], test_output :: b}
 
--- | Compile a shallowly embedded sequence language program to a backend
--- representation. Then, run that backend representation through a verilog
--- simulator with the specified input. Return if the output matches the input.
 test_with_backend :: (Shallow_Types.Aetherling_Value a,
                      Convertible_To_Atom_Strings b,
                      Convertible_To_Atom_Strings c) =>
                      RH.Rewrite_StateM a -> 
-                     Slowdown_Target -> Language_Target ->
+                     Throughput_Target -> Language_Target ->
                      Verilog_Test_Arg ->
                      [b] -> c ->
                      IO [Test_Helpers.Test_Result]
+test_with_backend shallow_seq_program (Min_Area_With_Throughput throughput) l_target verilog_conf
+  inputs output = do
+  let out_len = num_atoms output
+  
+  let slowdown = head $ Test_Helpers.speed_to_slow [throughput] (toInteger out_len)
+  test_with_backend' shallow_seq_program (Min_Area_With_Slowdown_Factor slowdown) l_target verilog_conf inputs output
 test_with_backend shallow_seq_program s_target l_target verilog_conf
+  inputs output = do
+  test_with_backend' shallow_seq_program s_target l_target verilog_conf inputs output
+  
+-- | Compile a shallowly embedded sequence language program to a backend
+-- representation. Then, run that backend representation through a verilog
+-- simulator with the specified input. Return if the output matches the input.
+test_with_backend' :: (Shallow_Types.Aetherling_Value a,
+                     Convertible_To_Atom_Strings b,
+                     Convertible_To_Atom_Strings c) =>
+                     RH.Rewrite_StateM a -> 
+                     Throughput_Target -> Language_Target ->
+                     Verilog_Test_Arg ->
+                     [b] -> c ->
+                     IO [Test_Helpers.Test_Result]
+test_with_backend' shallow_seq_program s_target l_target verilog_conf
   inputs output = do
   --traceShowM s_target
   --time <- getZonedTime
@@ -109,6 +131,11 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
   let expr_latencies = map CL.compute_latency deep_st_programs
   --traceShowM $ "Expr latencies: " ++ show expr_latencies
   -- convert each STIR expr to a string for the backend with an added test hardness
+  let one_program = case s_target of
+        Min_Area_With_Slowdown_Factor s -> True
+        Min_Area_With_Throughput _ -> error "call test_with_backend not test_with_backend' with speedups"
+        All_With_Slowdown_Factor s -> False
+        Type_Rewrites trs -> True
   test_strs <-
         case l_target of
           Magma -> do
@@ -172,7 +199,7 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
             process_result <- run_process ("python " ++ circuit_file) Nothing
             if save_gen_verilog verilog_conf
               then copy_verilog_file "vBuild/top.v" test_verilog_dir
-                   (get_verilog_save_name verilog_conf) s_target idx
+                   (get_verilog_save_name verilog_conf) s_target idx one_program
               else return ()
             process_result_to_test_result process_result circuit_file
           Chisel -> do
@@ -184,7 +211,7 @@ test_with_backend shallow_seq_program s_target l_target verilog_conf
                   then do
                   let name = get_verilog_save_name verilog_conf
                   let verilog_file = test_verilog_dir ++ "/" ++
-                        params_to_file_name name s_target idx ++ ".v"
+                        params_to_file_name name s_target idx one_program ++ ".v"
                   takeDirectory verilog_file ++ " " ++ verilog_file
                   else ""
             process_result <- run_process
@@ -217,7 +244,7 @@ save_gen_verilog _ = False
 get_verilog_save_name (Save_Gen_Verilog name) = name
 get_verilog_save_name _ = ""
 
-wrap_single_s s = Min_Area_With_Slowdown_Factor s
+wrap_single_t throughput = Min_Area_With_Throughput throughput
 
   -- need to make convertible_to_atom_strings language generic
   -- don't need to bring generate_fault_input_output_for_st_program in from Tester
@@ -230,7 +257,7 @@ wrap_single_s s = Min_Area_With_Slowdown_Factor s
 -- representation. Then, run that backend to produce verilog if the backend
 -- can produce verilog (ie isn't Text)
 compile_to_file :: (Shallow_Types.Aetherling_Value a) =>
-                     RH.Rewrite_StateM a -> Slowdown_Target -> Language_Target ->
+                     RH.Rewrite_StateM a -> Throughput_Target -> Language_Target ->
                      String -> IO [Process_Result]
 compile_to_file shallow_seq_program s_target l_target output_name_template = do
   result <- runExceptT $ compile_to_file' shallow_seq_program s_target
@@ -240,15 +267,13 @@ compile_to_file shallow_seq_program s_target l_target output_name_template = do
     Right x -> return x
   
 compile_to_file' :: (Shallow_Types.Aetherling_Value a) =>
-                     RH.Rewrite_StateM a -> Slowdown_Target -> Language_Target ->
+                     RH.Rewrite_StateM a -> Throughput_Target -> Language_Target ->
                      String -> ExceptT Compiler_Error IO [Process_Result]
 compile_to_file' shallow_seq_program s_target l_target output_name_template = do
   -- get STIR expr for each program
   deep_st_programs <- add_io_to_except $
                       compile_to_expr shallow_seq_program s_target
   -- now append to each program the code to print out verilog
-  let verilog_names = map (\i -> output_name_template ++ "_" ++ s_str ++ "_" ++
-                            show i ++ ".v") [0..length deep_st_programs - 1]
   case l_target of
     Magma -> do
       compile_to_magma deep_st_programs
@@ -256,6 +281,11 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
       compile_to_chisel deep_st_programs
     Text -> compile_to_text deep_st_programs
     where
+      one_program = case s_target of
+                      Min_Area_With_Slowdown_Factor s -> True
+                      Min_Area_With_Throughput _ -> error "call compile_to_file not compile_to_file' with speedups"
+                      All_With_Slowdown_Factor s -> False
+                      Type_Rewrites trs -> True
       -- | the next three are helpers for compile_to_file for each backend
       compile_to_magma :: [STE.Expr] ->
                           ExceptT Compiler_Error IO [Process_Result]
@@ -264,7 +294,7 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                                 M_Expr_To_Str.module_to_magma_string)
                            deep_st_programs
         lift $ sequence $ map (\(p_str, idx) -> do
-                let output_file_name = compute_output_file_name idx
+                let output_file_name = compute_output_file_name idx one_program
                 let p_str_with_verilog_out = p_str ++ "\n" ++
                       M_Expr_To_Str.magma_verilog_output_epilogue
                       (replaceExtension "v" output_file_name)
@@ -279,7 +309,7 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
                            deep_st_programs
         lift $ sequence $
           map (\(p_str, idx) -> do
-                  let output_file_name = compute_output_file_name idx
+                  let output_file_name = compute_output_file_name idx one_program
                   let verilog_file_name = replaceExtension output_file_name "v"
                   -- this puts the output_file in the chisel dir for sbt
                   let chisel_file_name = chisel_dir ++ "/" ++
@@ -303,21 +333,21 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
         lift $ sequence $
         map (\(p_expr,idx) -> do
                 let p_str = ST_Print.print_st_str p_expr
-                let output_file_name = compute_output_file_name idx
+                let output_file_name = compute_output_file_name idx one_program
                 write_file_ae output_file_name p_str
                 return $ Process_Result ExitSuccess "" ""
             ) (zip deep_st_programs [0..])
 
       s_str = slowdown_target_to_file_name_string s_target
-      compute_output_file_name :: Int -> String
-      compute_output_file_name i = do
+      compute_output_file_name :: Int -> Bool -> String
+      compute_output_file_name i exclude_index = do
         let (l_target_dir, l_file_ending) =
               case l_target of
                 Magma -> ("magma_examples", ".py")
                 Chisel -> ("chisel_examples", ".scala")
                 Text -> ("st_examples", ".txt")
         root_dir ++ "/test/no_bench/" ++ l_target_dir ++ "/" ++
-          params_to_file_name output_name_template s_target i ++
+          params_to_file_name output_name_template s_target i exclude_index ++
           l_file_ending
 
 write_file_ae :: String -> String -> IO ()
@@ -327,23 +357,28 @@ write_file_ae file_name p_str = do
 
 test_verilog_dir = root_dir ++
                    "/test/verilog_examples/aetherling_copies/"
-copy_verilog_file :: FilePath -> String -> String -> Slowdown_Target -> Int -> IO ()
-copy_verilog_file source_file verilog_dir name s_target idx = do
+copy_verilog_file :: FilePath -> String -> String -> Throughput_Target -> Int ->
+                     Bool -> IO ()
+copy_verilog_file source_file verilog_dir name s_target idx one_program = do
   -- test verilog dir is the directory of all the verilog output
   -- each design indicated by name gets its own folder
   -- so the different throughputs can be in the same folder
   let file_dir = verilog_dir ++ "/" ++ name
   createDirectoryIfMissing True file_dir
   copyFile source_file
-    (verilog_dir ++ "/" ++ params_to_file_name name s_target idx ++ ".v")
+    (verilog_dir ++ "/" ++ params_to_file_name name s_target idx one_program ++ ".v")
 
-params_to_file_name :: String -> Slowdown_Target -> Int -> String
-params_to_file_name base_name s_target idx =
+params_to_file_name :: String -> Throughput_Target -> Int -> Bool -> String
+params_to_file_name base_name s_target idx True =
+  base_name ++ "/" ++ base_name ++ "_" ++
+  slowdown_target_to_file_name_string s_target
+params_to_file_name base_name s_target idx False =
   base_name ++ "/" ++ base_name ++ "_" ++
   slowdown_target_to_file_name_string s_target ++ "_" ++ show idx
 
-slowdown_target_to_file_name_string :: Slowdown_Target -> String
+slowdown_target_to_file_name_string :: Throughput_Target -> String
 slowdown_target_to_file_name_string (Min_Area_With_Slowdown_Factor s) = show s
+slowdown_target_to_file_name_string (Min_Area_With_Throughput s) = error "don't call slowdown_target_to_file_name_string with speedup"
 slowdown_target_to_file_name_string (All_With_Slowdown_Factor s) = show s
 slowdown_target_to_file_name_string (Type_Rewrites trs) =
   show (product_tr_periods trs)
@@ -392,28 +427,34 @@ process_result_to_test_result process_result test_file = do
 -- This is a frontend for the three types of Seq Shallow to STIR compilers
 -- that also does error checking.
 compile_to_expr :: (Shallow_Types.Aetherling_Value a) =>
-                     RH.Rewrite_StateM a -> Slowdown_Target -> 
+                     RH.Rewrite_StateM a -> Throughput_Target -> 
                      Except Compiler_Error [STE.Expr]
 compile_to_expr shallow_seq_program s_target = do
   case s_target of
         Min_Area_With_Slowdown_Factor s -> do
           let deep_st_to_be_checked =
                 compile_with_slowdown_to_expr shallow_seq_program s
-          case check_compiler_errors s deep_st_to_be_checked of
+          case check_compiler_errors_with_slowdown s deep_st_to_be_checked of
+            Nothing -> return [deep_st_to_be_checked]
+            Just err -> throwError err
+        Min_Area_With_Throughput s -> do
+          let deep_st_to_be_checked =
+                compile_with_throughput_to_expr shallow_seq_program s
+          case check_compiler_errors_with_throughput s deep_st_to_be_checked of
             Nothing -> return [deep_st_to_be_checked]
             Just err -> throwError err
         All_With_Slowdown_Factor s -> do
           let deep_sts_to_be_checked =
                 compile_with_slowdown_to_all_possible_expr shallow_seq_program s
           case filter isJust $
-               map (check_compiler_errors s) deep_sts_to_be_checked of
+               map (check_compiler_errors_with_slowdown s) deep_sts_to_be_checked of
             [] -> return deep_sts_to_be_checked
             errs -> throwError $ Multiple_Errors $ map fromJust errs
         Type_Rewrites trs -> do
           let deep_st_to_be_checked =
                 compile_with_type_rewrite_to_expr shallow_seq_program trs
           let s = product_tr_periods trs
-          case check_compiler_errors s deep_st_to_be_checked of
+          case check_compiler_errors_with_slowdown s deep_st_to_be_checked of
             Nothing -> return [deep_st_to_be_checked]
             Just err -> throwError err
 
@@ -423,8 +464,17 @@ data Compiler_Error = Type_Mismatch
   | Multiple_Errors [Compiler_Error]
   deriving (Show, Eq)
 
-check_compiler_errors :: Int -> STE.Expr -> Maybe Compiler_Error
-check_compiler_errors s program = do
+check_compiler_errors_with_throughput :: Ratio Integer -> STE.Expr -> Maybe Compiler_Error
+check_compiler_errors_with_throughput throughput program = do
+  let out_st_t = ST_Conv.e_out_type $
+                  ST_Conv.expr_to_types program
+  
+  let out_len = STT.num_atoms_total_t out_st_t
+  let s = head $ Test_Helpers.speed_to_slow [throughput] (toInteger out_len)
+  check_compiler_errors_with_slowdown s program
+  
+check_compiler_errors_with_slowdown :: Int -> STE.Expr -> Maybe Compiler_Error
+check_compiler_errors_with_slowdown s program = do
   if check_type program
     then do
     if CL.check_latency program
@@ -449,6 +499,23 @@ compile_with_type_rewrite_to_expr shallow_seq_program tr = do
   if Has_Error.has_error deep_st_program
     then deep_st_program
     else add_registers deep_st_program
+    
+compile_with_throughput_to_expr :: (Shallow_Types.Aetherling_Value a) =>
+                                     RH.Rewrite_StateM a -> Ratio Integer ->
+                                     STE.Expr
+compile_with_throughput_to_expr shallow_seq_program throughput = do
+  let deep_seq_program_with_indexes =
+        lower_seq_shallow_to_deep_indexed shallow_seq_program
+  let s = head $ Test_Helpers.speed_and_expr_to_slow [throughput] deep_seq_program_with_indexes
+  let deep_st_program =
+        rewrite_to_partially_parallel_slowdown_min_area_program
+        s deep_seq_program_with_indexes
+  if Has_Error.has_error deep_st_program
+    then deep_st_program
+    else do
+    --let x = add_registers deep_st_program
+    --traceShow (Comp_Area.get_area x) x
+    add_registers deep_st_program
   
 compile_with_slowdown_to_expr :: (Shallow_Types.Aetherling_Value a) =>
                                      RH.Rewrite_StateM a -> Int ->

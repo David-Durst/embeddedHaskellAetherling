@@ -83,6 +83,8 @@ compute_latency' e@(AbsN producer _) = do
   producer_latency <- memo producer $ compute_latency' producer
   return $ producer_latency + 1
 compute_latency' e@(NotN producer _) = memo producer $ compute_latency' producer
+compute_latency' e@(AndN producer _) = memo producer $ compute_latency' producer
+compute_latency' e@(OrN producer _) = memo producer $ compute_latency' producer
 compute_latency' e@(AddN producer _) = memo producer $ compute_latency' producer
 compute_latency' e@(SubN producer _) = memo producer $ compute_latency' producer
 compute_latency' e@(MulN producer _) = do

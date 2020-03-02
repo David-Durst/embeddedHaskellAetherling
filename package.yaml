@@ -57,6 +57,7 @@ dependencies:
 - microlens
 - lens-family
 - bytestring
+- vector
 
 ghc-options:
 - -O2

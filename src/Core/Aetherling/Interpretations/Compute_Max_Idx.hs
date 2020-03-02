@@ -33,6 +33,12 @@ compute_max_idx' consumer_e@(AbsN producer_e cur_idx) = do
 compute_max_idx' consumer_e@(NotN producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
+compute_max_idx' consumer_e@(AndN producer_e cur_idx) = do
+  max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
+  return $ max cur_idx max_idx_producer
+compute_max_idx' consumer_e@(OrN producer_e cur_idx) = do
+  max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
+  return $ max cur_idx max_idx_producer
 compute_max_idx' consumer_e@(AddN producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
