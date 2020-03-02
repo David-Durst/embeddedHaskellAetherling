@@ -4,3 +4,6 @@
 [submodule "chiselAetherling"]
 	path = chiselAetherling
 	url = https://github.com/David-Durst/chiselAetherling.git
+[submodule "rustAetherling"]
+	path = rustAetherling
+	url = https://github.com/David-Durst/rustAetherling

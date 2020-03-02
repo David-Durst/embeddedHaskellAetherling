@@ -14,6 +14,16 @@ To build this part of the project:
 ```
 stack build
 ```
+3. Install the Rust intermediate layer
+    1. Install Rust and Cargo:
+    ```
+    curl https://sh.rustup.rs -sSf | sh
+    ```
+    1. Install Aetherling's Rust code
+    ```
+    cd rustAetherling
+    cargo install
+    ```
 3. Explore the IR by running the following command which starts a Haskell interpreter with all files loaded except thoses in `test/`:
 ```
 stack ghci
