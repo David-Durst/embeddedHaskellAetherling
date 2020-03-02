@@ -21,7 +21,9 @@ save_type' (UnitT) =
   defMessage & PS.v .~ PS.Unit
 save_type' (BitT) =
   defMessage & PS.v .~ PS.Bit
-save_type' (IntT) =
+save_type' (Int8T) =
+  defMessage & PS.v .~ PS.Int
+save_type' (Int32T) =
   defMessage & PS.v .~ PS.Int
 save_type' (ATupleT left right) =
   defMessage & PS.v .~ PS.ATuple

@@ -2,6 +2,7 @@ module Aetherling.Languages.Sequence.Shallow.Expr_Type_Conversions where
 import Aetherling.Languages.Sequence.Shallow.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Types
+import Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions
 import Aetherling.Monad_Helpers
 import GHC.TypeLits
 import GHC.TypeLits.Extra
@@ -27,14 +28,30 @@ instance Aetherling_Value Atom_Bit where
   get_AST_value _ = Nothing
   get_input_edge s idx = Atom_Bit_Edge (InputN BitT s idx)
 
-instance Aetherling_Value Atom_Int where
-  edge_to_maybe_expr (Atom_Int_Edge x) = Just x
+instance (KnownNat n, Check_Int_Valid_Length n) =>
+  Aetherling_Value (Atom_Int n) where
+  edge_to_maybe_expr (Atom_Int8_Edge x) = Just x
+  edge_to_maybe_expr (Atom_Int32_Edge x) = Just x
   edge_to_maybe_expr _ = Nothing
-  expr_to_edge x = Atom_Int_Edge x
-  get_AST_type _ = IntT
-  get_AST_value (Atom_Int i) = Just $ IntV i
+  expr_to_edge x | (e_out_type $ expr_to_types x) == Int8T = Atom_Int8_Edge x
+  expr_to_edge x = Atom_Int32_Edge x
+  get_AST_type _ =
+    case bit_width of
+      32 -> Int32T
+      8 -> Int8T
+      _ -> error "can't convert int of wrong length to AST type"
+    where
+      bit_width = fromInteger $ natVal (Proxy :: Proxy n)
+  get_AST_value (Atom_Int8 i) = Just $ Int8V i
+  get_AST_value (Atom_Int32 i) = Just $ Int32V i
   get_AST_value _ = Nothing
-  get_input_edge s idx = Atom_Int_Edge (InputN IntT s idx)
+  get_input_edge s idx = 
+    case bit_width of
+      32 -> Atom_Int32_Edge (InputN Int32T s idx)
+      8 -> Atom_Int8_Edge (InputN Int8T s idx)
+      _ -> error "can't convert int of wrong length to AST type"
+    where
+      bit_width = fromInteger $ natVal (Proxy :: Proxy n)
 
 instance (Aetherling_Value a, Aetherling_Value b) =>
   Aetherling_Value (Atom_Tuple a b) where

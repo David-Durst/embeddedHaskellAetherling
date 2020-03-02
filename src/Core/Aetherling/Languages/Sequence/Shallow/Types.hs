@@ -8,6 +8,7 @@ import Data.Vector.Sized as V
 import Data.Map.Lazy as M
 import Data.Proxy
 import GHC.Exts (Constraint)
+import Data.Word
 
 {-
 Each atomic type has version for simulation.
@@ -25,9 +26,11 @@ data Atom_Bit =
   | Atom_Bit_Edge Expr
   deriving (Show, Eq)
 
-data Atom_Int =
-  Atom_Int Int
-  | Atom_Int_Edge Expr
+data Atom_Int n =
+  Atom_Int8 Word8
+  | Atom_Int32 Word32
+  | Atom_Int8_Edge Expr
+  | Atom_Int32_Edge Expr
   deriving (Show, Eq)
 
 data Atom_Tuple a b =
@@ -57,9 +60,15 @@ instance (KnownNat n) => Applicative (Seq n) where
 Type families for computing whether types satisfy constraints
 -}
 
+type family Check_Int_Valid_Length (x :: Nat) :: Constraint where
+  Check_Int_Valid_Length 32 = True ~ True
+  Check_Int_Valid_Length 8 = True ~ True
+  Check_Int_Valid_Length x =
+    TypeError (ShowType x :<>: Text " is not an 8 or 32 bit int.")
+
 type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom Atom_Unit = True ~ True
-  Check_Type_Is_Atom (Atom_Int) = True ~ True
+  Check_Type_Is_Atom (Atom_Int _) = True ~ True
   Check_Type_Is_Atom (Atom_Bit) = True ~ True
   Check_Type_Is_Atom (Atom_Tuple a b) = True ~ True
   Check_Type_Is_Atom x =
@@ -67,7 +76,7 @@ type family Check_Type_Is_Atom (x :: *) :: Constraint where
 
 type family Check_Type_Is_Atom_Or_Nested (x :: *) :: Constraint where
   Check_Type_Is_Atom_Or_Nested Atom_Unit = True ~ True
-  Check_Type_Is_Atom_Or_Nested (Atom_Int) = True ~ True
+  Check_Type_Is_Atom_Or_Nested (Atom_Int _) = True ~ True
   Check_Type_Is_Atom_Or_Nested (Atom_Bit) = True ~ True
   Check_Type_Is_Atom_Or_Nested (Atom_Tuple a b) = True ~ True
   Check_Type_Is_Atom_Or_Nested (Seq _ a) = Check_Type_Is_Atom_Or_Nested a

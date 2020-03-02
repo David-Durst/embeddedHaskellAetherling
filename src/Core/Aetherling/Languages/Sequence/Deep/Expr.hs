@@ -4,17 +4,17 @@ import Aetherling.Monad_Helpers
 
 data Expr =
   IdN {seq_in :: Expr, index :: DAG_Index}
-  | AbsN {seq_in :: Expr, index :: DAG_Index}
+  | AbsN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
   | NotN {seq_in :: Expr, index :: DAG_Index}
   | AndN {seq_in :: Expr, index :: DAG_Index}
   | OrN {seq_in :: Expr, index :: DAG_Index}
-  | AddN {seq_in :: Expr, index :: DAG_Index}
-  | SubN {seq_in :: Expr, index :: DAG_Index}
-  | MulN {seq_in :: Expr, index :: DAG_Index}
-  | DivN {seq_in :: Expr, index :: DAG_Index}
-  | LSRN {seq_in :: Expr, index :: DAG_Index}
-  | LSLN {seq_in :: Expr, index :: DAG_Index}
-  | LtN {seq_in :: Expr, index :: DAG_Index}
+  | AddN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
+  | SubN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
+  | MulN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
+  | DivN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
+  | LSRN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
+  | LSLN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
+  | LtN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
   | EqN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
   | IfN {t :: AST_Type, seq_in :: Expr, index :: DAG_Index}
 
