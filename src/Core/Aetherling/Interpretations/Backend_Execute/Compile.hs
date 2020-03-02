@@ -247,6 +247,7 @@ get_verilog_save_name (Save_Gen_Verilog name) = name
 get_verilog_save_name _ = ""
 
 wrap_single_t throughput = Min_Area_With_Throughput throughput
+wrap_single_st_type st_t = Output_ST_Type st_t
 
   -- need to make convertible_to_atom_strings language generic
   -- don't need to bring generate_fault_input_output_for_st_program in from Tester
