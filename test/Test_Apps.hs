@@ -55,7 +55,7 @@ single_map_200 =
 single_map_200_seq_idx = add_indexes $ seq_shallow_to_deep single_map_200
 single_map_200_ppar = fmap
   (\s -> compile_with_throughput_to_expr single_map_200 s)
-  [1,5,10,20,25,40,50,100,200]
+  [1,2,4,5,8,10,20,40,200]
 single_map_200_ppar_typechecked = fmap check_type single_map_200_ppar
 single_map_200_inputs :: [[Integer]] = [[1..200]]
 single_map_200_output :: [Integer] = [6..205]
@@ -65,24 +65,24 @@ single_map_200_results = sequence $
               single_map_200 (wrap_single_t s)
               Magma (Save_Gen_Verilog "map")
               single_map_200_inputs single_map_200_output)
-  [1,5,10,20,25,40,50,100,200]
+  [1,2,4,5,8,10,20,40,200]
 single_map_200_results_chisel = sequence $
   fmap (\s -> test_with_backend
               single_map_200 (wrap_single_t s)
               Chisel No_Verilog
               single_map_200_inputs single_map_200_output)
-  [1,5,10,20,25,40,50,100,200]
+  [1,2,4,5,8,10,20,40,200]
 single_map_200_results_all_types = sequence $
   fmap (\s -> test_with_backend
               single_map_200 (All_With_Slowdown_Factor s)
               Magma (Save_Gen_Verilog "map")
               single_map_200_inputs single_map_200_output)
-  [1,5,10,20,25,40,50,100,200]
+  [1,2,4,5,8,10,20,40,200]
 single_map_200_st_prints = sequence $
   fmap (\s -> compile_to_file
               single_map_200 (wrap_single_t s)
               text_backend "map")
-  [1,5,10,20,25,40,50,100,200]
+  [1,2,4,5,8,10,20,40,200]
 
 single_map_200_results' = sequence $
   fmap (\s -> test_with_backend
