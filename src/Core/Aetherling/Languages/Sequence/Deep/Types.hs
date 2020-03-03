@@ -1,7 +1,6 @@
 module Aetherling.Languages.Sequence.Deep.Types where
 import GHC.TypeLits
 import GHC.TypeLits.Extra
-import Data.Vector.Sized as V
 import Data.Map.Lazy as M
 import Data.Proxy
 import GHC.Exts (Constraint)
@@ -20,7 +19,20 @@ data AST_Type =
   | ATupleT AST_Type AST_Type
   | STupleT Int AST_Type
   | SeqT Int AST_Type
-  deriving (Show, Eq, Ord)
+  deriving (Eq, Ord)
+
+instance Show AST_Type where
+  show UnitT = "UnitT"
+  show BitT = "BitT"
+  show Int8T = "Int8T"
+  show UInt8T = "UInt8T"
+  show Int16T = "Int16T"
+  show UInt16T = "UInt16T"
+  show Int32T = "Int32T"
+  show UInt32T = "UInt32T"
+  show (ATupleT t0 t1) = "(ATupleT " ++ show t0 ++ " " ++ show t1 ++ ")"
+  show (STupleT n t) = "(STupleT " ++ show n ++ " " ++ show t ++ ")"
+  show (SeqT n t) = "(SeqT " ++ show n ++ " " ++ show t ++ ")"
 
 seq_int8 = Int8T
 seq_int32 = Int32T

@@ -17,7 +17,21 @@ data AST_Type =
   | STupleT Int AST_Type
   | SSeqT Int AST_Type
   | TSeqT Int Int AST_Type
-  deriving (Show, Ord, Eq, Generic, NFData)
+  deriving (Ord, Eq, Generic, NFData)
+
+instance Show AST_Type where
+  show UnitT = "UnitT"
+  show BitT = "BitT"
+  show Int8T = "Int8T"
+  show UInt8T = "UInt8T"
+  show Int16T = "Int16T"
+  show UInt16T = "UInt16T"
+  show Int32T = "Int32T"
+  show UInt32T = "UInt32T"
+  show (ATupleT t0 t1) = "(ATupleT " ++ show t0 ++ " " ++ show t1 ++ ")"
+  show (STupleT n t) = "(STupleT " ++ show n ++ " " ++ show t ++ ")"
+  show (SSeqT n t) = "(SSeqT " ++ show n ++ " " ++ show t ++ ")"
+  show (TSeqT n i t) = "(TSeqT " ++ show n ++ " " ++ show i ++ " " ++ show t ++ ")"
 
 st_int8 = Int8T
 st_uint8 = UInt8T
