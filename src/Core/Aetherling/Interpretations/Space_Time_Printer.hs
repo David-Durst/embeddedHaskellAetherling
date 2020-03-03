@@ -113,7 +113,7 @@ print_inner (IdN producer_e cur_idx) = do
 print_inner consumer_e@(AbsN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "AbsN " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "AbsN " ++ show t ++ " " ++ producer_ref
   return cur_ref_name
 print_inner consumer_e@(NotN producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
@@ -130,40 +130,40 @@ print_inner consumer_e@(OrN producer_e cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "OrN " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(AddN producer_e cur_idx) = do
+print_inner consumer_e@(AddN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "AddN " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "AddN " ++ show t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(SubN producer_e cur_idx) = do
+print_inner consumer_e@(SubN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "SubN " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "SubN " ++ show t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(MulN producer_e cur_idx) = do
+print_inner consumer_e@(MulN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "MulN " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "MulN " ++ show t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(DivN producer_e cur_idx) = do
+print_inner consumer_e@(DivN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "DivN " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "DivN " ++ show t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(LSRN producer_e cur_idx) = do
+print_inner consumer_e@(LSRN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "LSRN " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "LSRN " ++ show t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(LSLN producer_e cur_idx) = do
+print_inner consumer_e@(LSLN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "LSLN " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "LSLN " ++ show t ++ " " ++ producer_ref
   return cur_ref_name
-print_inner consumer_e@(LtN producer_e cur_idx) = do
+print_inner consumer_e@(LtN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "LtN " ++ producer_ref
+  add_to_cur_module cur_ref_name $ "LtN " ++ show t ++ " " ++ producer_ref
   return cur_ref_name
 print_inner consumer_e@(EqN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
@@ -400,13 +400,13 @@ print_inner consumer_e@(STupleToSSeqN tuple_len elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "STupleToSSeqN " ++
-    show tuple_len ++ " (" ++ show elem_t ++ ") " ++ producer_ref
+    show tuple_len ++ " " ++ show elem_t ++ " " ++ producer_ref
   return cur_ref_name
 print_inner consumer_e@(SSeqToSTupleN tuple_len elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ print_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   add_to_cur_module cur_ref_name $ "SSeqToSTupleN " ++
-    show tuple_len ++ " (" ++ show elem_t ++ ") " ++ producer_ref
+    show tuple_len ++ " " ++ show elem_t ++ " " ++ producer_ref
   return cur_ref_name
   
 print_inner (InputN t name cur_idx) = do

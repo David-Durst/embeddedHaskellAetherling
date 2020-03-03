@@ -101,7 +101,22 @@ print_st_type (ATupleT l r) nesting = do
   l_t_str <- print_st_type l 0
   r_t_str <- print_st_type r 0
   return $ nesting_str nesting ++ "(" ++ l_t_str ++ ", " ++ r_t_str ++ ")"
-print_st_type IntT nesting = do
+print_st_type Int8T nesting = do
+  cur_int <- cur_print_int
+  return $ nesting_str nesting ++ show cur_int
+print_st_type UInt8T nesting = do
+  cur_int <- cur_print_int
+  return $ nesting_str nesting ++ show cur_int
+print_st_type Int16T nesting = do
+  cur_int <- cur_print_int
+  return $ nesting_str nesting ++ show cur_int
+print_st_type UInt16T nesting = do
+  cur_int <- cur_print_int
+  return $ nesting_str nesting ++ show cur_int
+print_st_type Int32T nesting = do
+  cur_int <- cur_print_int
+  return $ nesting_str nesting ++ show cur_int
+print_st_type UInt32T nesting = do
   cur_int <- cur_print_int
   return $ nesting_str nesting ++ show cur_int
 print_st_type BitT nesting = do

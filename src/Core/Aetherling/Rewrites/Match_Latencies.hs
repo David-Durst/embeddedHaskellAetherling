@@ -45,7 +45,7 @@ match_latencies' :: Expr ->
                     Memo_Rewrite_StateTM Matched_Latency_Result
                     Latency_StateM Matched_Latency_Result
 match_latencies' e@(IdN producer _) = match_combinational_op e producer
-match_latencies' e@(AbsN producer _) = do
+match_latencies' e@(AbsN _ producer _) = do
   this_comb_latency <- match_combinational_op e producer
   return $ this_comb_latency {
     latency = latency this_comb_latency + 1
@@ -53,21 +53,59 @@ match_latencies' e@(AbsN producer _) = do
 match_latencies' e@(NotN producer _) = match_combinational_op e producer
 match_latencies' e@(AndN producer _) = match_combinational_op e producer
 match_latencies' e@(OrN producer _) = match_combinational_op e producer
-match_latencies' e@(AddN producer _) = match_combinational_op e producer
-match_latencies' e@(SubN producer _) = match_combinational_op e producer
-match_latencies' e@(MulN producer _) = do
+match_latencies' e@(AddN _ producer _) = match_combinational_op e producer
+match_latencies' e@(SubN _ producer _) = match_combinational_op e producer
+-- mul and div latencies taken from vivado IP for xc7z020
+match_latencies' e@(MulN Int32T producer _) = do
   this_comb_latency <- match_combinational_op e producer
   return $ this_comb_latency {
-    latency = latency this_comb_latency + 2
+    latency = latency this_comb_latency + 6
     }
-match_latencies' e@(DivN producer _) = do
+match_latencies' e@(MulN UInt32T producer _) = do
   this_comb_latency <- match_combinational_op e producer
   return $ this_comb_latency {
-    latency = latency this_comb_latency + 1
+    latency = latency this_comb_latency + 6
     }
-match_latencies' e@(LSRN producer _) = match_combinational_op e producer
-match_latencies' e@(LSLN producer _) = match_combinational_op e producer
-match_latencies' e@(LtN producer _) = match_combinational_op e producer
+match_latencies' e@(MulN _ producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 3
+    }
+match_latencies' e@(DivN Int8T producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 12
+    }
+match_latencies' e@(DivN UInt8T producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 10
+    }
+match_latencies' e@(DivN Int16T producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 20
+    }
+match_latencies' e@(DivN UInt16T producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 18
+    }
+match_latencies' e@(DivN Int32T producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 36
+    }
+match_latencies' e@(DivN UInt32T producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 34
+    }
+match_latencies' e@(DivN t producer _) =
+  error $ "can't match_latency for div with non-int " ++ show t
+match_latencies' e@(LSRN _ producer _) = match_combinational_op e producer
+match_latencies' e@(LSLN _ producer _) = match_combinational_op e producer
+match_latencies' e@(LtN _ producer _) = match_combinational_op e producer
 match_latencies' e@(EqN t producer _) = match_combinational_op e producer
 match_latencies' e@(IfN t producer _) = match_combinational_op e producer
 

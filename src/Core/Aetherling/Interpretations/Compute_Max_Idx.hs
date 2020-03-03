@@ -27,7 +27,7 @@ compute_max_idx' :: Expr -> RH.Memo_Rewrite_StateM DAG_Index DAG_Index
 compute_max_idx' (IdN producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
-compute_max_idx' consumer_e@(AbsN producer_e cur_idx) = do
+compute_max_idx' consumer_e@(AbsN _ producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
 compute_max_idx' consumer_e@(NotN producer_e cur_idx) = do
@@ -39,25 +39,25 @@ compute_max_idx' consumer_e@(AndN producer_e cur_idx) = do
 compute_max_idx' consumer_e@(OrN producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
-compute_max_idx' consumer_e@(AddN producer_e cur_idx) = do
+compute_max_idx' consumer_e@(AddN _ producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
-compute_max_idx' consumer_e@(SubN producer_e cur_idx) = do
+compute_max_idx' consumer_e@(SubN _ producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
-compute_max_idx' consumer_e@(MulN producer_e cur_idx) = do
+compute_max_idx' consumer_e@(MulN _ producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
-compute_max_idx' consumer_e@(DivN producer_e cur_idx) = do
+compute_max_idx' consumer_e@(DivN _ producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
-compute_max_idx' consumer_e@(LSRN producer_e cur_idx) = do
+compute_max_idx' consumer_e@(LSRN _ producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
-compute_max_idx' consumer_e@(LSLN producer_e cur_idx) = do
+compute_max_idx' consumer_e@(LSLN _ producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
-compute_max_idx' consumer_e@(LtN producer_e cur_idx) = do
+compute_max_idx' consumer_e@(LtN _ producer_e cur_idx) = do
   max_idx_producer <- memo producer_e $ compute_max_idx' producer_e
   return $ max cur_idx max_idx_producer
 compute_max_idx' consumer_e@(EqN t producer_e cur_idx) = do

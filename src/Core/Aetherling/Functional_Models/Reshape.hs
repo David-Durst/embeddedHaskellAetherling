@@ -82,7 +82,12 @@ data TS_Elem = T_Elem Int Int | S_Elem Int deriving (Show, Eq)
 st_types_to_ts_elem_list :: AST_Type -> [TS_Elem]
 st_types_to_ts_elem_list UnitT = []
 st_types_to_ts_elem_list BitT = []
-st_types_to_ts_elem_list IntT = []
+st_types_to_ts_elem_list Int8T = []
+st_types_to_ts_elem_list UInt8T = []
+st_types_to_ts_elem_list Int16T = []
+st_types_to_ts_elem_list UInt16T = []
+st_types_to_ts_elem_list Int32T = []
+st_types_to_ts_elem_list UInt32T = []
 st_types_to_ts_elem_list (ATupleT _ _) = []
 st_types_to_ts_elem_list (STupleT n t) = S_Elem n : st_types_to_ts_elem_list t
 st_types_to_ts_elem_list (SSeqT n t) = S_Elem n : st_types_to_ts_elem_list t

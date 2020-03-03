@@ -35,9 +35,8 @@ instance Sequence_Language Rewrite_StateM where
     --add_to_DAG IdN (input_to_maybe_indices x) "idC" "any_input_edge"
   absC inputM = do
     input <- inputM
-    case input of
-      Atom_Int_Edge x -> return $ Atom_Int_Edge $ AbsN x No_Index
-      _ -> throwError $ Expr_Failure $ fail_message_edge "absC" "Atom_Int"
+    let (edge_func, t) = edge_to_edge_func_and_t input
+    return $ edge_func $ AbsN t x No_Index
 
   notC inputM = do
     input <- inputM
@@ -119,7 +118,7 @@ instance Sequence_Language Rewrite_StateM where
       _ -> throwError $ Expr_Failure $ fail_message_edge "ifC" "Atom_Tuple"
       
   -- generators
-  lut_genC :: forall a . Aetherling_Value a => [a] -> Rewrite_StateM Atom_Int ->
+  lut_genC :: forall a . Aetherling_Value a => [a] -> Rewrite_StateM (Atom_Int 8 Signed) ->
     Rewrite_StateM a
   lut_genC table inputM = do
     input <- inputM
@@ -443,9 +442,9 @@ instance Sequence_Language Rewrite_StateM where
 com_input_unit :: String -> Rewrite_StateM Atom_Unit
 com_input_unit s = do
   return $ Atom_Unit_Edge $ InputN UnitT s No_Index
-com_input_int :: String -> Rewrite_StateM Atom_Int
-com_input_int s = do
-  return $ Atom_Int_Edge $ InputN IntT s No_Index
+com_input_int8 :: String -> Rewrite_StateM (Atom_Int 8 Signed)
+com_input_int8 s = do
+  return $ Atom_Int8_Edge $ InputN Int8T s No_Index
 com_input_bit :: String -> Rewrite_StateM Atom_Bit
 com_input_bit s = do
   return $ Atom_Bit_Edge $ InputN BitT s No_Index
@@ -484,3 +483,17 @@ com_input_seq = add_to_DAG (InputN seq_type) (Just []) "com_input_tuple" ""
 
 
 -}
+
+int_edge_to_edge_func_and_t :: Atom_Int n s -> (Expr -> Atom_Int n s, AST_Type)
+int_edge_to_edge_func_and_t (Atom_Int8_Edge _) =
+  (Atom_Int8_Edge, Int8T)
+int_edge_to_edge_func_and_t (Atom_UInt8_Edge _) =
+  (Atom_UInt8_Edge, UInt8T)
+int_edge_to_edge_func_and_t (Atom_Int16_Edge _) =
+  (Atom_Int16_Edge, Int16T)
+int_edge_to_edge_func_and_t (Atom_UInt16_Edge _) =
+  (Atom_UInt16_Edge, UInt16T)
+int_edge_to_edge_func_and_t (Atom_Int32_Edge _) =
+  (Atom_Int32_Edge, Int32T)
+int_edge_to_edge_func_and_t (Atom_UInt32_Edge _) =
+  (Atom_UInt32_Edge, UInt32T)

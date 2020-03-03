@@ -4,7 +4,6 @@ import Aetherling.Languages.Space_Time.Deep.Expr
 import Aetherling.Languages.Space_Time.Deep.Expr_Builders
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions as ST_Conv
 import Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions as Seq_Conv
-import Aetherling.Interpretations.Space_Time_Printer
 import Aetherling.Rewrites.Rewrite_Helpers
 import Aetherling.Monad_Helpers
 import Control.Monad.State as S
@@ -28,66 +27,66 @@ get_area e = do
 
 get_area' :: Expr -> Memo_Rewrite_StateM Int Int
 get_area' e@(IdN producer _) = memo producer $ get_area' producer
-get_area' e@(AbsN producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 1
+get_area' e@(AbsN t producer _) = do
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + size_t t
 get_area' e@(NotN producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 1
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + size_t BitT
 get_area' e@(AndN producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 1
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + size_t BitT
 get_area' e@(OrN producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 1
-get_area' e@(AddN producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 1
-get_area' e@(SubN producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 1
-get_area' e@(MulN producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 8
-get_area' e@(DivN producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 8
-get_area' e@(LSRN producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 8
-get_area' e@(LSLN producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 8
-get_area' e@(LtN producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 4
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + size_t BitT
+get_area' e@(AddN t producer _) = do
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + size_t t
+get_area' e@(SubN t producer _) = do
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + size_t t
+get_area' e@(MulN t producer _) = do
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + 4 * size_t t
+get_area' e@(DivN t producer _) = do
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + 100 * size_t t
+get_area' e@(LSRN t producer _) = do
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + size_t t
+get_area' e@(LSLN t producer _) = do
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + size_t t
+get_area' e@(LtN t producer _) = do
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + size_t t
 get_area' e@(EqN t producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 1
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + size_t t
 get_area' e@(IfN t producer _) = do
-  producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + 2
+  producer_area <- memo producer $ get_area' producer
+  return $ producer_area + size_t BitT
 
 -- generators
 get_area' e@(Lut_GenN _ _ producer _) = memo producer $ get_area' producer
 get_area' e@(Const_GenN _ const_t _ _) = do
-  return $ area_t const_t
+  return $ size_t const_t
   
 
 -- sequence operators
 get_area' e@(Shift_sN _ _ _ producer _) = memo producer $ get_area' producer
 get_area' e@(Shift_tN _ _ shift_amount elem_t producer _) = do
   producer_area <- memo producer $ get_area' producer
-  return $ producer_area + shift_amount * area_t elem_t
+  return $ producer_area + shift_amount * size_t elem_t
 get_area' e@(Shift_tsN _ _ _ shift_amount elem_t producer _) = do
   producer_area <- memo producer $ get_area' producer
-  return $ producer_area + shift_amount * area_t elem_t
+  return $ producer_area + shift_amount * size_t elem_t
 get_area' e@(Shift_ttN _ _ _ _ shift_amount elem_t producer _) = do
   producer_area <- memo producer $ get_area' producer
-  return $ producer_area + shift_amount * area_t elem_t
+  return $ producer_area + shift_amount * size_t elem_t
 get_area' e@(Shift_tnN _ _ _ _ shift_amount elem_t producer _) = do
   producer_area <- memo producer $ get_area' producer
-  return $ producer_area + shift_amount * area_t elem_t
+  return $ producer_area + shift_amount * size_t elem_t
 get_area' e@(Up_1d_sN _ _ producer _) = memo producer $ get_area' producer
 get_area' e@(Up_1d_tN _ _ _ producer _) = memo producer $ get_area' producer
 get_area' e@(Down_1d_sN _ _ _ producer _) = memo producer $ get_area' producer
@@ -115,7 +114,7 @@ get_area' e@(Unpartition_t_ttN _ _ _ _ _ producer _) = do
 -- these helpers shouldn't exist now that i've written reshape
 get_area' e@(SerializeN n _ elem_t producer _) = do
   producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + n * area_t elem_t
+  return $ producer_latency + n * size_t elem_t
 get_area' e@(DeserializeN _ _ _ _ _) = undefined
 get_area' e@(Add_1_sN f producer _) = get_area'_map 1 e f producer
 get_area' e@(Add_1_0_tN f producer _) = get_area'_map 1 e f producer
@@ -143,7 +142,7 @@ get_area' e@(Reduce_tN _ _ f producer _) = do
   producer_area <- memo producer $ get_area' producer
   inner_area <- memo f $ get_area' f
   let out_t = ST_Conv.e_out_type $ ST_Conv.expr_to_types f
-  return $ producer_area + inner_area + area_t out_t
+  return $ producer_area + inner_area + size_t out_t
 
 -- tuple operators
 get_area' e@(FstN _ _ producer _) =
@@ -170,7 +169,7 @@ get_area' e@(InputN _ _ _) = return 0
 get_area' e@(ErrorN error_msg _) = return (-1000000000)
 get_area' e@(FIFON t delay_clks producer _) = do
   producer_latency <- memo producer $ get_area' producer
-  return $ producer_latency + delay_clks * area_t t
+  return $ producer_latency + delay_clks * size_t t
 get_area' e@(ReshapeN in_t out_t producer _) = do
   producer_area <- memo producer $ get_area' producer
   let in_t_norm = normalize_type in_t
@@ -178,7 +177,7 @@ get_area' e@(ReshapeN in_t out_t producer _) = do
   let in_out_diff = diff_types in_t_norm out_t_norm
   let type_area =
         if isJust in_out_diff
-        then area_t $ fromJust in_out_diff
+        then size_t $ fromJust in_out_diff
         else 0
   return $ producer_area + (2 * type_area)
 get_area'_map n e f producer = do
@@ -186,6 +185,7 @@ get_area'_map n e f producer = do
   inner_area <- get_area' f
   return $ producer_area + n * inner_area
 
+{-
 -- | The size in bits of types
 area_t :: AST_Type -> Int
 area_t UnitT = 0
@@ -195,3 +195,4 @@ area_t (ATupleT t0 t1) = area_t t0 + area_t t1
 area_t (STupleT n t) = n * area_t t
 area_t (SSeqT n t) = n * area_t t
 area_t (TSeqT n _ t) = n * area_t t
+-}

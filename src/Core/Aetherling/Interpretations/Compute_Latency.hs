@@ -79,23 +79,46 @@ get_cur_latency = do
 
 compute_latency' :: Expr -> Memo_Rewrite_StateTM Int Latency_StateM Int
 compute_latency' e@(IdN producer _) = memo producer $ compute_latency' producer
-compute_latency' e@(AbsN producer _) = do
+compute_latency' e@(AbsN _ producer _) = do
   producer_latency <- memo producer $ compute_latency' producer
   return $ producer_latency + 1
 compute_latency' e@(NotN producer _) = memo producer $ compute_latency' producer
 compute_latency' e@(AndN producer _) = memo producer $ compute_latency' producer
 compute_latency' e@(OrN producer _) = memo producer $ compute_latency' producer
-compute_latency' e@(AddN producer _) = memo producer $ compute_latency' producer
-compute_latency' e@(SubN producer _) = memo producer $ compute_latency' producer
-compute_latency' e@(MulN producer _) = do
+compute_latency' e@(AddN _ producer _) = memo producer $ compute_latency' producer
+compute_latency' e@(SubN _ producer _) = memo producer $ compute_latency' producer
+-- mul and div latencies taken from vivado IP for xc7z020
+compute_latency' e@(MulN Int32T producer _) = do
   producer_latency <- memo producer $ compute_latency' producer
-  return $ producer_latency + 2
-compute_latency' e@(DivN producer _) = do
+  return $ producer_latency + 6
+compute_latency' e@(MulN UInt32T producer _) = do
   producer_latency <- memo producer $ compute_latency' producer
-  return $ producer_latency + 1
-compute_latency' e@(LSRN producer _) = memo producer $ compute_latency' producer
-compute_latency' e@(LSLN producer _) = memo producer $ compute_latency' producer
-compute_latency' e@(LtN producer _) = memo producer $ compute_latency' producer
+  return $ producer_latency + 6
+compute_latency' e@(MulN _ producer _) = do
+  producer_latency <- memo producer $ compute_latency' producer
+  return $ producer_latency + 3
+compute_latency' e@(DivN Int8T producer _) = do
+  producer_latency <- memo producer $ compute_latency' producer
+  return $ producer_latency + 12
+compute_latency' e@(DivN UInt8T producer _) = do
+  producer_latency <- memo producer $ compute_latency' producer
+  return $ producer_latency + 10
+compute_latency' e@(DivN Int16T producer _) = do
+  producer_latency <- memo producer $ compute_latency' producer
+  return $ producer_latency + 20
+compute_latency' e@(DivN UInt16T producer _) = do
+  producer_latency <- memo producer $ compute_latency' producer
+  return $ producer_latency + 18
+compute_latency' e@(DivN Int32T producer _) = do
+  producer_latency <- memo producer $ compute_latency' producer
+  return $ producer_latency + 36
+compute_latency' e@(DivN UInt32T producer _) = do
+  producer_latency <- memo producer $ compute_latency' producer
+  return $ producer_latency + 34
+compute_latency' e@(DivN t _ _) = error $ "can't compute latency for div with non-int " ++ show t
+compute_latency' e@(LSRN _ producer _) = memo producer $ compute_latency' producer
+compute_latency' e@(LSLN _ producer _) = memo producer $ compute_latency' producer
+compute_latency' e@(LtN _ producer _) = memo producer $ compute_latency' producer
 compute_latency' e@(EqN t producer _) = memo producer $ compute_latency' producer
 compute_latency' e@(IfN t producer _) = memo producer $ compute_latency' producer
 
