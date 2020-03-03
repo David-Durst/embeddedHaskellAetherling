@@ -236,9 +236,10 @@ sequence_to_partially_parallel :: [Type_Rewrite] -> SeqE.Expr ->
 sequence_to_partially_parallel type_rewrites seq_e@(SeqE.IdN producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   ppar_atom_operator type_rewrites STE.IdN producer
-sequence_to_partially_parallel type_rewrites seq_e@(SeqE.AbsN producer _) = do
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.AbsN t_seq producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
-  ppar_atom_operator type_rewrites STE.AbsN producer
+  t_st <- ppar_AST_type [NonSeqR] t_seq
+  ppar_atom_operator type_rewrites (STE.AbsN t_st) producer
 sequence_to_partially_parallel type_rewrites seq_e@(SeqE.NotN producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   ppar_atom_operator type_rewrites STE.NotN producer
@@ -248,27 +249,34 @@ sequence_to_partially_parallel type_rewrites seq_e@(SeqE.AndN producer _) = do
 sequence_to_partially_parallel type_rewrites seq_e@(SeqE.OrN producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   ppar_atom_operator type_rewrites STE.OrN producer
-sequence_to_partially_parallel type_rewrites seq_e@(SeqE.AddN producer _) = do
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.AddN t_seq producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
-  ppar_atom_operator type_rewrites STE.AddN producer
-sequence_to_partially_parallel type_rewrites seq_e@(SeqE.SubN producer _) = do
+  t_st <- ppar_AST_type [NonSeqR] t_seq
+  ppar_atom_operator type_rewrites (STE.AddN t_st) producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.SubN t_seq producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
-  ppar_atom_operator type_rewrites STE.SubN producer
-sequence_to_partially_parallel type_rewrites seq_e@(SeqE.MulN producer _) = do
+  t_st <- ppar_AST_type [NonSeqR] t_seq
+  ppar_atom_operator type_rewrites (STE.SubN t_st) producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.MulN t_seq producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
-  ppar_atom_operator type_rewrites STE.MulN producer
-sequence_to_partially_parallel type_rewrites seq_e@(SeqE.DivN producer _) = do
+  t_st <- ppar_AST_type [NonSeqR] t_seq
+  ppar_atom_operator type_rewrites (STE.MulN t_st) producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.DivN t_seq producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
-  ppar_atom_operator type_rewrites STE.DivN producer
-sequence_to_partially_parallel type_rewrites seq_e@(SeqE.LSRN producer _) = do
+  t_st <- ppar_AST_type [NonSeqR] t_seq
+  ppar_atom_operator type_rewrites (STE.DivN t_st) producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.LSRN t_seq producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
-  ppar_atom_operator type_rewrites STE.LSRN producer
-sequence_to_partially_parallel type_rewrites seq_e@(SeqE.LSLN producer _) = do
+  t_st <- ppar_AST_type [NonSeqR] t_seq
+  ppar_atom_operator type_rewrites (STE.LSRN t_st) producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.LSLN t_seq producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
-  ppar_atom_operator type_rewrites STE.LSLN producer
-sequence_to_partially_parallel type_rewrites seq_e@(SeqE.LtN producer _) = do
+  t_st <- ppar_AST_type [NonSeqR] t_seq
+  ppar_atom_operator type_rewrites (STE.LSLN t_st) producer
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.LtN t_seq producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
-  ppar_atom_operator type_rewrites STE.LtN producer
+  t_st <- ppar_AST_type [NonSeqR] t_seq
+  ppar_atom_operator type_rewrites (STE.LtN t_st) producer
 sequence_to_partially_parallel type_rewrites seq_e@(SeqE.EqN t producer _) = do
   add_output_rewrite_for_node seq_e type_rewrites
   -- can reuse all of type_rewrites in these calls as atom tuples
@@ -843,7 +851,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let slowdown = get_type_rewrite_periods tr
 
   -- just get possible type rewrites for the input two seqs, rest aren't changed by unpartition
-  let unparititioned_in_seq = SeqT.SeqT no (SeqT.SeqT ni SeqT.IntT)
+  let unparititioned_in_seq = SeqT.SeqT no (SeqT.SeqT ni SeqT.Int8T)
   --traceShowM $ "unpartition " ++ show no ++ " " ++ show ni
   --traceShowM $ "slowdown: " ++ show slowdown
   --traceShowM $ "type_rewrites: " ++ show type_rewrites
@@ -1505,7 +1513,12 @@ parameters_match _ _ _ = False
 ppar_AST_type :: [Type_Rewrite] -> SeqT.AST_Type -> Partially_Parallel_MemoM STE.Expr STT.AST_Type
 ppar_AST_type [NonSeqR] SeqT.UnitT = return STT.UnitT
 ppar_AST_type [NonSeqR] SeqT.BitT = return STT.BitT
-ppar_AST_type [NonSeqR] SeqT.IntT = return STT.IntT
+ppar_AST_type [NonSeqR] SeqT.Int8T = return STT.Int8T
+ppar_AST_type [NonSeqR] SeqT.UInt8T = return STT.UInt8T
+ppar_AST_type [NonSeqR] SeqT.Int16T = return STT.Int16T
+ppar_AST_type [NonSeqR] SeqT.UInt16T = return STT.UInt16T
+ppar_AST_type [NonSeqR] SeqT.Int32T = return STT.Int32T
+ppar_AST_type [NonSeqR] SeqT.UInt32T = return STT.UInt32T
 ppar_AST_type [NonSeqR] (SeqT.ATupleT x y) = do
   x_stt <- ppar_AST_type [NonSeqR] x
   y_stt <- ppar_AST_type [NonSeqR] y
@@ -1538,7 +1551,12 @@ ppar_AST_type type_rewrites t = throwError $ Slowdown_Failure $
 ppar_AST_value :: [Type_Rewrite] -> SeqT.AST_Value -> Partially_Parallel_MemoM STE.Expr STT.AST_Value
 ppar_AST_value [NonSeqR] SeqT.UnitV = return STT.UnitV
 ppar_AST_value [NonSeqR] (SeqT.BitV b) = return (STT.BitV b)
-ppar_AST_value [NonSeqR] (SeqT.IntV i) = return (STT.IntV i)
+ppar_AST_value [NonSeqR] (SeqT.Int8V i) = return (STT.Int8V i)
+ppar_AST_value [NonSeqR] (SeqT.UInt8V i) = return (STT.UInt8V i)
+ppar_AST_value [NonSeqR] (SeqT.Int16V i) = return (STT.Int16V i)
+ppar_AST_value [NonSeqR] (SeqT.UInt16V i) = return (STT.UInt16V i)
+ppar_AST_value [NonSeqR] (SeqT.Int32V i) = return (STT.Int32V i)
+ppar_AST_value [NonSeqR] (SeqT.UInt32V i) = return (STT.UInt32V i)
 ppar_AST_value [NonSeqR] (SeqT.ATupleV x y) = do
   x_stv <- ppar_AST_value [NonSeqR] x
   y_stv <- ppar_AST_value [NonSeqR] y

@@ -258,7 +258,12 @@ st_type_to_type_rewrite seq_t st_t |
   (STT.num_atoms_total_t st_t) /= (SeqT.num_atoms_total_t seq_t) =
   error "can't convert to ST type with different number of atoms"
 st_type_to_type_rewrite SeqT.UnitT _ = [NonSeqR]
-st_type_to_type_rewrite SeqT.IntT _ = [NonSeqR]
+st_type_to_type_rewrite SeqT.Int8T _ = [NonSeqR]
+st_type_to_type_rewrite SeqT.UInt8T _ = [NonSeqR]
+st_type_to_type_rewrite SeqT.Int16T _ = [NonSeqR]
+st_type_to_type_rewrite SeqT.UInt16T _ = [NonSeqR]
+st_type_to_type_rewrite SeqT.Int32T _ = [NonSeqR]
+st_type_to_type_rewrite SeqT.UInt32T _ = [NonSeqR]
 st_type_to_type_rewrite (SeqT.ATupleT _ _) _ = [NonSeqR]
 st_type_to_type_rewrite (SeqT.STupleT n_seq t_seq) (STT.STupleT n_st t_st) |
   n_seq == n_st =
