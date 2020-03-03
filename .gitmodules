@@ -1,3 +1,9 @@
 [submodule "protoAetherling"]
 	path = protoAetherling
 	url = https://github.com/David-Durst/protoAetherling.git
+[submodule "chiselAetherling"]
+	path = chiselAetherling
+	url = https://github.com/David-Durst/chiselAetherling.git
+[submodule "rustAetherling"]
+	path = rustAetherling
+	url = https://github.com/David-Durst/rustAetherling

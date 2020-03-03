@@ -21,7 +21,7 @@ save_type' (UnitT) =
   defMessage & PS.v .~ PS.Unit
 save_type' (BitT) =
   defMessage & PS.v .~ PS.Bit
-save_type' (IntT) =
+save_type' (Int8T) =
   defMessage & PS.v .~ PS.Int
 save_type' (ATupleT left right) =
   defMessage & PS.v .~ PS.ATuple
@@ -62,7 +62,7 @@ load_type' serialized_type = do
   case type_version of
     PS.Unit -> UnitT
     PS.Bit -> BitT
-    PS.Int -> IntT
+    PS.Int -> Int8T
     PS.ATuple -> do
       let elem_t_xs = serialized_type ^. PS.children
       if Prelude.length elem_t_xs == 2

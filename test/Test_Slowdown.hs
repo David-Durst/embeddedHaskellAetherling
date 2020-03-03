@@ -129,6 +129,9 @@ two_maps =
   com_input_seq "I" (Proxy :: Proxy (Seq 4 Atom_Int))
 two_maps_seq_idx = add_indexes $ seq_shallow_to_deep two_maps
 two_maps_ppar = fmap (\s -> compile_with_throughput_to_expr two_maps s) [1,2,4]
+two_maps_st = fmap (\s -> compile_with_st_type_to_expr two_maps s)
+              [STT.TSeqT 4 0 STT.st_int, STT.TSeqT 2 2 (STT.SSeqT 2 STT.st_int),
+               STT.SSeqT 4 STT.st_int]
 two_maps_ppar_typechecked = fmap check_type two_maps_ppar
 two_maps_inputs :: [[Integer]] = [[0,-1,2,3]]
 two_maps_output :: [Integer] = [0,1,2,3]
@@ -143,6 +146,11 @@ two_maps_results_chisel = sequence $
               two_maps (wrap_single_t s)
               Chisel No_Verilog
               two_maps_inputs two_maps_output) [1,2,4]
+two_maps_results' = sequence $
+  fmap (\s -> test_with_backend
+              two_maps (wrap_single_st_type s)
+              Magma No_Verilog
+              two_maps_inputs two_maps_output) [STT.TSeqT 2 2 (STT.SSeqT 2 STT.st_int)]
 two_maps_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               two_maps (wrap_single_t s)

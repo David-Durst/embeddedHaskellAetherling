@@ -36,7 +36,7 @@ check_type_get_error e = do
 
 check_type' :: Expr -> Type_Checker_Error AST_Type
 check_type' (IdN producer_e _) = check_type' producer_e
-check_type' consumer_e@(AbsN producer_e _) =
+check_type' consumer_e@(AbsN _ producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(NotN producer_e _) =
   check_unary_operator consumer_e producer_e
@@ -44,19 +44,19 @@ check_type' consumer_e@(AndN producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(OrN producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(AddN producer_e _) =
+check_type' consumer_e@(AddN _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(SubN producer_e _) =
+check_type' consumer_e@(SubN _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(MulN producer_e _) =
+check_type' consumer_e@(MulN _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(DivN producer_e _) =
+check_type' consumer_e@(DivN _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(LtN producer_e _) =
+check_type' consumer_e@(LtN _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(LSRN producer_e _) =
+check_type' consumer_e@(LSRN _ producer_e _) =
   check_unary_operator consumer_e producer_e
-check_type' consumer_e@(LSLN producer_e _) =
+check_type' consumer_e@(LSLN _ producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(EqN _ producer_e _) =
   check_unary_operator consumer_e producer_e

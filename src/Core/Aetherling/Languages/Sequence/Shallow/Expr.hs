@@ -10,19 +10,34 @@ import qualified Data.Vector.Sized as V
 class Monad m => Sequence_Language m where
   -- unary operators
   idC :: (Aetherling_Value a, Check_Type_Is_Atom a) => m a -> m a
-  absC :: m Atom_Int -> m Atom_Int
+  absC :: (Check_Int_Valid_Length n) =>
+          m (Atom_Int n True) -> m (Atom_Int n True)
   notC :: m Atom_Bit -> m Atom_Bit
   andC :: m (Atom_Tuple Atom_Bit Atom_Bit) -> m Atom_Bit
   orC :: m (Atom_Tuple Atom_Bit Atom_Bit) -> m Atom_Bit
 
   -- binary operators
-  addC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int
-  subC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int
-  mulC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int
-  divC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int
-  lsrC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int
-  lslC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Int
-  ltC :: m (Atom_Tuple Atom_Int Atom_Int) -> m Atom_Bit
+  addC :: (Check_Int_Valid_Length n, Check_Is_Bool_Kind is_signed) =>
+          m (Atom_Tuple (Atom_Int n is_signed) (Atom_Int n is_signed)) ->
+          m (Atom_Int n is_signed)
+  subC :: (Check_Int_Valid_Length n, Check_Is_Bool_Kind is_signed) =>
+          m (Atom_Tuple (Atom_Int n is_signed) (Atom_Int n is_signed)) ->
+          m (Atom_Int n is_signed)
+  mulC :: (Check_Int_Valid_Length n, Check_Is_Bool_Kind is_signed) =>
+          m (Atom_Tuple (Atom_Int n is_signed) (Atom_Int n is_signed)) ->
+          m (Atom_Int n is_signed)
+  divC :: (Check_Int_Valid_Length n, Check_Is_Bool_Kind is_signed) =>
+          m (Atom_Tuple (Atom_Int n is_signed) (Atom_Int n is_signed)) ->
+          m (Atom_Int n is_signed)
+  lsrC :: (Check_Int_Valid_Length n, Check_Is_Bool_Kind is_signed) =>
+          m (Atom_Tuple (Atom_Int n is_signed) (Atom_Int n is_signed)) ->
+          m (Atom_Int n is_signed)
+  lslC :: (Check_Int_Valid_Length n, Check_Is_Bool_Kind is_signed) =>
+          m (Atom_Tuple (Atom_Int n is_signed) (Atom_Int n is_signed)) ->
+          m (Atom_Int n is_signed)
+  ltC :: (Check_Int_Valid_Length n, Check_Is_Bool_Kind is_signed) =>
+          m (Atom_Tuple (Atom_Int n is_signed) (Atom_Int n is_signed)) ->
+          m Atom_Bit
   eqC :: (Aetherling_Value a, Check_Type_Is_Atom a, Eq a) =>
     m (Atom_Tuple a a) -> m Atom_Bit
   ifC :: (Aetherling_Value a, Check_Type_Is_Atom a) =>
@@ -30,7 +45,7 @@ class Monad m => Sequence_Language m where
 
   -- generators
   lut_genC :: Aetherling_Value a =>
-    [a] -> m Atom_Int -> m a
+    [a] -> m (Atom_Int 8 False) -> m a
 
   const_genC :: Aetherling_Value a =>
     a -> m b -> m a

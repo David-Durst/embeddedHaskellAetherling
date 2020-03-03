@@ -5,20 +5,6 @@ import Control.Monad.State
 import Aetherling.Monad_Helpers
 import qualified Data.Set as S
 
-size_int :: Int
-size_int = 8
-size_bit :: Int
-size_bit = 1
-
--- | The size in bits of types
-size_t :: AST_Type -> Int
-size_t UnitT = 0
-size_t BitT = size_bit
-size_t IntT = size_int
-size_t (ATupleT t0 t1) = size_t t0 + size_t t1
-size_t (STupleT n t) = n * size_t t
-size_t (SeqT _ _) = 0
-
 -- | input and outputs for an expression when not considering the
 -- input expressions to it
 data Expr_Types = Expr_Types { e_in_types :: [AST_Type], e_out_type :: AST_Type}
@@ -32,22 +18,22 @@ expr_to_types_seq = expr_to_types
 expr_to_types :: Expr -> Expr_Types
 expr_to_types (IdN in_e _) = Expr_Types [input_type] input_type
   where input_type = e_out_type $ expr_to_types in_e
-expr_to_types (AbsN _ _) = Expr_Types [IntT] IntT
+expr_to_types (AbsN t _ _) = Expr_Types [t] t
 expr_to_types (NotN _ _) = Expr_Types [BitT] BitT
 expr_to_types (AndN _ _) = Expr_Types [ATupleT BitT BitT] BitT
 expr_to_types (OrN _ _) = Expr_Types [ATupleT BitT BitT] BitT
-expr_to_types (AddN _ _) = Expr_Types [ATupleT IntT IntT] IntT
-expr_to_types (SubN _ _) = Expr_Types [ATupleT IntT IntT] IntT
-expr_to_types (MulN _ _) = Expr_Types [ATupleT IntT IntT] IntT
-expr_to_types (DivN _ _) = Expr_Types [ATupleT IntT IntT] IntT
-expr_to_types (LSRN _ _) = Expr_Types [ATupleT IntT IntT] IntT
-expr_to_types (LSLN _ _) = Expr_Types [ATupleT IntT IntT] IntT
-expr_to_types (LtN _ _) = Expr_Types [ATupleT IntT IntT] BitT
+expr_to_types (AddN t _ _) = Expr_Types [ATupleT t t] t
+expr_to_types (SubN t _ _) = Expr_Types [ATupleT t t] t
+expr_to_types (MulN t _ _) = Expr_Types [ATupleT t t] t
+expr_to_types (DivN t _ _) = Expr_Types [ATupleT t t] t
+expr_to_types (LSRN t _ _) = Expr_Types [ATupleT t t] t
+expr_to_types (LSLN t _ _) = Expr_Types [ATupleT t t] t
+expr_to_types (LtN t _ _) = Expr_Types [ATupleT t t] BitT
 expr_to_types (EqN t _ _) = Expr_Types [ATupleT t t] BitT
 expr_to_types (IfN t _ _) = Expr_Types [ATupleT BitT (ATupleT t t)] t
 
 -- generators
-expr_to_types (Lut_GenN _ t _ _) = Expr_Types [IntT] t
+expr_to_types (Lut_GenN _ t _ _) = Expr_Types [Int8T] t
 expr_to_types (Const_GenN _ t _) = Expr_Types [] t
 
 -- sequence operators
@@ -127,7 +113,7 @@ expr_to_outer_types e = do
 
 expr_to_outer_types' :: Expr -> Input_TrackerM AST_Type
 expr_to_outer_types' (IdN producer_e _) = expr_to_outer_types' producer_e
-expr_to_outer_types' consumer_e@(AbsN producer_e _) =
+expr_to_outer_types' consumer_e@(AbsN _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(NotN producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
@@ -135,19 +121,19 @@ expr_to_outer_types' consumer_e@(AndN producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(OrN producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(AddN producer_e _) =
+expr_to_outer_types' consumer_e@(AddN _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(SubN producer_e _) =
+expr_to_outer_types' consumer_e@(SubN _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(MulN producer_e _) =
+expr_to_outer_types' consumer_e@(MulN _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(DivN producer_e _) =
+expr_to_outer_types' consumer_e@(DivN _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(LSRN producer_e _) =
+expr_to_outer_types' consumer_e@(LSRN _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(LSLN producer_e _) =
+expr_to_outer_types' consumer_e@(LSLN _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
-expr_to_outer_types' consumer_e@(LtN producer_e _) =
+expr_to_outer_types' consumer_e@(LtN _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e
 expr_to_outer_types' consumer_e@(EqN _ producer_e _) =
   expr_to_outer_types_unary_operator consumer_e producer_e

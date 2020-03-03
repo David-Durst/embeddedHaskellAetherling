@@ -2,6 +2,7 @@ module Aetherling.Languages.Sequence.Shallow.Expr_Type_Conversions where
 import Aetherling.Languages.Sequence.Shallow.Types
 import Aetherling.Languages.Sequence.Deep.Expr
 import Aetherling.Languages.Sequence.Deep.Types
+import Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions
 import Aetherling.Monad_Helpers
 import GHC.TypeLits
 import GHC.TypeLits.Extra
@@ -27,14 +28,41 @@ instance Aetherling_Value Atom_Bit where
   get_AST_value _ = Nothing
   get_input_edge s idx = Atom_Bit_Edge (InputN BitT s idx)
 
-instance Aetherling_Value Atom_Int where
-  edge_to_maybe_expr (Atom_Int_Edge x) = Just x
+instance (KnownNat n, Check_Int_Valid_Length n,
+          KnownNat s, Check_Signed_Or_Unsigned s) =>
+  Aetherling_Value (Atom_Int n s) where
+  edge_to_maybe_expr (Atom_Int8_Edge x) = Just x
+  edge_to_maybe_expr (Atom_Int32_Edge x) = Just x
   edge_to_maybe_expr _ = Nothing
-  expr_to_edge x = Atom_Int_Edge x
-  get_AST_type _ = IntT
-  get_AST_value (Atom_Int i) = Just $ IntV i
+  expr_to_edge x | (e_out_type $ expr_to_types x) == Int8T = Atom_Int8_Edge x
+  expr_to_edge x = Atom_Int32_Edge x
+  get_AST_type _ =
+    case (bit_width, signed_flag) of
+      (8, 0) -> Int8T
+      (8, 1) -> UInt8T
+      (16, 0) -> Int16T
+      (16, 1) -> UInt16T
+      (32, 0) -> Int32T
+      (32, 1) -> UInt32T
+      _ -> error "can't convert int of wrong length or signing to AST type"
+    where
+      bit_width = fromInteger $ natVal (Proxy :: Proxy n)
+      signed_flag = fromInteger $ natVal (Proxy :: Proxy s)
+  get_AST_value (Atom_Int8 i) = Just $ Int8V i
+  get_AST_value (Atom_Int32 i) = Just $ Int32V i
   get_AST_value _ = Nothing
-  get_input_edge s idx = Atom_Int_Edge (InputN IntT s idx)
+  get_input_edge s idx = 
+    case (bit_width, signed_flag) of
+      (8, 0) -> Atom_Int8_Edge (InputN Int8T s idx)
+      (8, 1) -> Atom_UInt8_Edge (InputN UInt8T s idx)
+      (16, 0) -> Atom_Int16_Edge (InputN Int16T s idx)
+      (16, 1) -> Atom_UInt16_Edge (InputN UInt16T s idx)
+      (32, 0) -> Atom_Int32_Edge (InputN Int32T s idx)
+      (32, 1) -> Atom_UInt32_Edge (InputN UInt32T s idx)
+      _ -> error "can't convert int of wrong length or signing to input edge"
+    where
+      bit_width = fromInteger $ natVal (Proxy :: Proxy n)
+      signed_flag = fromInteger $ natVal (Proxy :: Proxy s)
 
 instance (Aetherling_Value a, Aetherling_Value b) =>
   Aetherling_Value (Atom_Tuple a b) where
