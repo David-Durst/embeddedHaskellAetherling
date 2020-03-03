@@ -17,25 +17,32 @@ class Monad m => Sequence_Language m where
   orC :: m (Atom_Tuple Atom_Bit Atom_Bit) -> m Atom_Bit
 
   -- binary operators
-  addC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s) =>
+  addC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+           KnownNat n, KnownNat s) =>
           m (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
           m (Atom_Int n s)
-  subC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s) =>
+  subC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+           KnownNat n, KnownNat s) =>
           m (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
           m (Atom_Int n s)
-  mulC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s) =>
+  mulC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+           KnownNat n, KnownNat s) =>
           m (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
           m (Atom_Int n s)
-  divC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s) =>
+  divC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+           KnownNat n, KnownNat s) =>
           m (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
           m (Atom_Int n s)
-  lsrC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s) =>
+  lsrC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+           KnownNat n, KnownNat s) =>
           m (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
           m (Atom_Int n s)
-  lslC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s) =>
+  lslC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+           KnownNat n, KnownNat s) =>
           m (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
           m (Atom_Int n s)
-  ltC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s) =>
+  ltC :: (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+           KnownNat n, KnownNat s) =>
           m (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
           m Atom_Bit
   eqC :: (Aetherling_Value a, Check_Type_Is_Atom a, Eq a) =>
@@ -45,7 +52,7 @@ class Monad m => Sequence_Language m where
 
   -- generators
   lut_genC :: Aetherling_Value a =>
-    [a] -> m (Atom_Int 8 False) -> m a
+    [a] -> m (Atom_Int 8 Signed) -> m a
 
   const_genC :: Aetherling_Value a =>
     a -> m b -> m a

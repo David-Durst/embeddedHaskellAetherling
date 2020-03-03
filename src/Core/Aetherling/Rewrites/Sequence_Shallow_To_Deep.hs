@@ -35,7 +35,7 @@ instance Sequence_Language Rewrite_StateM where
     --add_to_DAG IdN (input_to_maybe_indices x) "idC" "any_input_edge"
   absC inputM = do
     input <- inputM
-    let (edge_func, t) = edge_to_edge_func_and_t input
+    let (edge_func, t, x) = deconstruct_int_edge input
     return $ edge_func $ AbsN t x No_Index
 
   notC inputM = do
@@ -57,46 +57,95 @@ instance Sequence_Language Rewrite_StateM where
       Atom_Tuple_Edge x -> return $ Atom_Bit_Edge $ OrN x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "orC" "Atom_Tuple Atom_Bit Atom_Bit"
 
+  addC :: forall n s . (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+                        KnownNat n, KnownNat s) =>
+          Rewrite_StateM (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
+          Rewrite_StateM (Atom_Int n s)
   addC inputM = do
     input <- inputM
+    let bit_width = fromInteger $ natVal (Proxy :: Proxy n)
+    let signed_flag = fromInteger $ natVal (Proxy :: Proxy s)
+    let (edge_func, t) = type_data_to_deep_type bit_width signed_flag
     case input of
-      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ AddN x No_Index
+      Atom_Tuple_Edge x -> return $ edge_func $ AddN t x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "addC" "Atom_Tuple Atom_Int Atom_Int"
 
+  subC :: forall n s . (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+                        KnownNat n, KnownNat s) =>
+          Rewrite_StateM (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
+          Rewrite_StateM (Atom_Int n s)
   subC inputM = do
     input <- inputM
+    let bit_width = fromInteger $ natVal (Proxy :: Proxy n)
+    let signed_flag = fromInteger $ natVal (Proxy :: Proxy s)
+    let (edge_func, t) = type_data_to_deep_type bit_width signed_flag
     case input of
-      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ SubN x No_Index
+      Atom_Tuple_Edge x -> return $ edge_func $ SubN t x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "subC" "Atom_Tuple Atom_Int Atom_Int"
 
+  mulC :: forall n s . (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+                        KnownNat n, KnownNat s) =>
+          Rewrite_StateM (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
+          Rewrite_StateM (Atom_Int n s)
   mulC inputM = do
     input <- inputM
+    let bit_width = fromInteger $ natVal (Proxy :: Proxy n)
+    let signed_flag = fromInteger $ natVal (Proxy :: Proxy s)
+    let (edge_func, t) = type_data_to_deep_type bit_width signed_flag
     case input of
-      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ MulN x No_Index
+      Atom_Tuple_Edge x -> return $ edge_func $ MulN t x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "mulC" "Atom_Tuple Atom_Int Atom_Int"
 
+  divC :: forall n s . (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+                        KnownNat n, KnownNat s) =>
+          Rewrite_StateM (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
+          Rewrite_StateM (Atom_Int n s)
   divC inputM = do
     input <- inputM
+    let bit_width = fromInteger $ natVal (Proxy :: Proxy n)
+    let signed_flag = fromInteger $ natVal (Proxy :: Proxy s)
+    let (edge_func, t) = type_data_to_deep_type bit_width signed_flag
     case input of
-      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ DivN x No_Index
+      Atom_Tuple_Edge x -> return $ edge_func $ DivN t x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "divC" "Atom_Tuple Atom_Int Atom_Int"
       
+  lsrC :: forall n s . (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+                        KnownNat n, KnownNat s) =>
+          Rewrite_StateM (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
+          Rewrite_StateM (Atom_Int n s)
   lsrC inputM = do
     input <- inputM
+    let bit_width = fromInteger $ natVal (Proxy :: Proxy n)
+    let signed_flag = fromInteger $ natVal (Proxy :: Proxy s)
+    let (edge_func, t) = type_data_to_deep_type bit_width signed_flag
     case input of
-      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ LSRN x No_Index
+      Atom_Tuple_Edge x -> return $ edge_func $ LSRN t x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "lsrC" "Atom_Tuple Atom_Int Atom_Int"
       
+  lslC :: forall n s . (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+                        KnownNat n, KnownNat s) =>
+          Rewrite_StateM (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
+          Rewrite_StateM (Atom_Int n s)
   lslC inputM = do
     input <- inputM
+    let bit_width = fromInteger $ natVal (Proxy :: Proxy n)
+    let signed_flag = fromInteger $ natVal (Proxy :: Proxy s)
+    let (edge_func, t) = type_data_to_deep_type bit_width signed_flag
     case input of
-      Atom_Tuple_Edge x -> return $ Atom_Int_Edge $ LSLN x No_Index
+      Atom_Tuple_Edge x -> return $ edge_func $ LSLN t x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "lslC" "Atom_Tuple Atom_Int Atom_Int"
       
+  ltC :: forall n s . (Check_Int_Valid_Length n, Check_Signed_Or_Unsigned s,
+                        KnownNat n, KnownNat s) =>
+         Rewrite_StateM (Atom_Tuple (Atom_Int n s) (Atom_Int n s)) ->
+         Rewrite_StateM Atom_Bit
   ltC inputM = do
     input <- inputM
+    let bit_width = fromInteger $ natVal (Proxy :: Proxy n)
+    let signed_flag = fromInteger $ natVal (Proxy :: Proxy s)
+    let (_, t) = type_data_to_deep_type bit_width signed_flag
     case input of
-      Atom_Tuple_Edge x -> return $ Atom_Bit_Edge $ LtN x No_Index
+      Atom_Tuple_Edge x -> return $ Atom_Bit_Edge $ LtN t x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "divC" "Atom_Tuple Atom_Int Atom_Int"
 
   eqC :: forall a . (Aetherling_Value a, Check_Type_Is_Atom a, Eq a) =>
@@ -445,6 +494,21 @@ com_input_unit s = do
 com_input_int8 :: String -> Rewrite_StateM (Atom_Int 8 Signed)
 com_input_int8 s = do
   return $ Atom_Int8_Edge $ InputN Int8T s No_Index
+com_input_uint8 :: String -> Rewrite_StateM (Atom_Int 8 Unsigned)
+com_input_uint8 s = do
+  return $ Atom_UInt8_Edge $ InputN UInt8T s No_Index
+com_input_int16 :: String -> Rewrite_StateM (Atom_Int 16 Signed)
+com_input_int16 s = do
+  return $ Atom_Int16_Edge $ InputN Int16T s No_Index
+com_input_uint16 :: String -> Rewrite_StateM (Atom_Int 16 Unsigned)
+com_input_uint16 s = do
+  return $ Atom_UInt16_Edge $ InputN UInt16T s No_Index
+com_input_int32 :: String -> Rewrite_StateM (Atom_Int 32 Signed)
+com_input_int32 s = do
+  return $ Atom_Int32_Edge $ InputN Int32T s No_Index
+com_input_uint32 :: String -> Rewrite_StateM (Atom_Int 32 Unsigned)
+com_input_uint32 s = do
+  return $ Atom_UInt32_Edge $ InputN UInt32T s No_Index
 com_input_bit :: String -> Rewrite_StateM Atom_Bit
 com_input_bit s = do
   return $ Atom_Bit_Edge $ InputN BitT s No_Index
@@ -484,16 +548,20 @@ com_input_seq = add_to_DAG (InputN seq_type) (Just []) "com_input_tuple" ""
 
 -}
 
-int_edge_to_edge_func_and_t :: Atom_Int n s -> (Expr -> Atom_Int n s, AST_Type)
-int_edge_to_edge_func_and_t (Atom_Int8_Edge _) =
-  (Atom_Int8_Edge, Int8T)
-int_edge_to_edge_func_and_t (Atom_UInt8_Edge _) =
-  (Atom_UInt8_Edge, UInt8T)
-int_edge_to_edge_func_and_t (Atom_Int16_Edge _) =
-  (Atom_Int16_Edge, Int16T)
-int_edge_to_edge_func_and_t (Atom_UInt16_Edge _) =
-  (Atom_UInt16_Edge, UInt16T)
-int_edge_to_edge_func_and_t (Atom_Int32_Edge _) =
-  (Atom_Int32_Edge, Int32T)
-int_edge_to_edge_func_and_t (Atom_UInt32_Edge _) =
-  (Atom_UInt32_Edge, UInt32T)
+deconstruct_int_edge :: Atom_Int n s -> (Expr -> Atom_Int n s, AST_Type, Expr)
+deconstruct_int_edge (Atom_Int8_Edge x) = (Atom_Int8_Edge, Int8T, x)
+deconstruct_int_edge (Atom_UInt8_Edge x) = (Atom_UInt8_Edge, UInt8T, x)
+deconstruct_int_edge (Atom_Int16_Edge x) = (Atom_Int16_Edge, Int16T, x)
+deconstruct_int_edge (Atom_UInt16_Edge x) = (Atom_UInt16_Edge, UInt16T, x)
+deconstruct_int_edge (Atom_Int32_Edge x) = (Atom_Int32_Edge, Int32T, x)
+deconstruct_int_edge (Atom_UInt32_Edge x) = (Atom_UInt32_Edge, UInt32T, x)
+deconstruct_int_edge _ = error "need to pass edge to deconstruct_int_edge"
+
+type_data_to_deep_type :: Int -> Int -> (Expr -> Atom_Int n s, AST_Type)
+type_data_to_deep_type 8 0 = (Atom_Int8_Edge, Int8T)
+type_data_to_deep_type 8 1 = (Atom_UInt8_Edge, UInt8T)
+type_data_to_deep_type 16 0 = (Atom_Int16_Edge, Int16T)
+type_data_to_deep_type 16 1 = (Atom_UInt16_Edge, UInt16T)
+type_data_to_deep_type 32 0 = (Atom_Int32_Edge, Int32T)
+type_data_to_deep_type 32 1 = (Atom_UInt32_Edge, UInt32T)
+type_data_to_deep_type _ _ = error "not valid type data"

@@ -34,7 +34,7 @@ data Backend_Module_Data = Backend_Module_Data {
   cur_module_last_op_no_assign :: String
   } deriving (Show, Eq)
 
-empty_print_data = Backend_Module_Data [] [] [] (Module_Port "ERROR" IntT) True 0 True 0 ""
+empty_print_data = Backend_Module_Data [] [] [] (Module_Port "ERROR" UnitT) True 0 True 0 ""
 
 type Memo_Print_StateM v = DAG_MemoT v (ExceptT RH.Rewrite_Failure (State Backend_Module_Data))
 
@@ -95,7 +95,7 @@ data Backend_Module_Ref = Backend_Module_Ref {
   } deriving (Show, Eq)
 
 error_module_ref = Backend_Module_Ref "ERR_VAR_NAME" "ERR_GEN_CALL" []
-                   (Module_Port "ERR_OUT" IntT)
+                   (Module_Port "ERR_OUT" UnitT)
 
 print_index :: DAG_Index -> String
 print_index No_Index = show No_Index
