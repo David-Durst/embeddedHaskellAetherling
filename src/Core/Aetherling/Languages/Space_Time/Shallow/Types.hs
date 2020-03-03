@@ -6,6 +6,8 @@ import Data.Vector.Sized as V
 import Data.Map.Lazy as M
 import Data.Proxy
 import GHC.Exts (Constraint)
+import Data.Int
+import Data.Word
 
 {-
 Each atomic type has version for simulation.
@@ -23,9 +25,19 @@ data Atom_Bit =
   | Atom_Bit_Edge Expr
   deriving (Show, Eq)
 
-data Atom_Int =
-  Atom_Int Int
-  | Atom_Int_Edge Expr
+data Atom_Int n s =
+  Atom_Int8 Int8
+  | Atom_Int8_Edge Expr
+  | Atom_UInt8 Word8
+  | Atom_UInt8_Edge Expr
+  | Atom_Int16 Int16
+  | Atom_Int16_Edge Expr
+  | Atom_UInt16 Word16
+  | Atom_UInt16_Edge Expr
+  | Atom_Int32 Int32
+  | Atom_Int32_Edge Expr
+  | Atom_UInt32 Word32
+  | Atom_UInt32_Edge Expr
   deriving (Show, Eq)
 
 data Atom_Tuple a b =

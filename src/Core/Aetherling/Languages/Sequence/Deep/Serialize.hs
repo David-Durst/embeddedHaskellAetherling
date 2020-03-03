@@ -52,7 +52,7 @@ load_type' serialized_type = do
   case type_version of
     PS.Unit -> UnitT
     PS.Bit -> BitT
-    PS.Int -> IntT
+    PS.Int -> Int8T
     PS.ATuple -> do
       let elem_t_xs = serialized_type ^. PS.children
       if Prelude.length elem_t_xs == 2

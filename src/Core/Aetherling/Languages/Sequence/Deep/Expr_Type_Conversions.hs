@@ -5,16 +5,6 @@ import Control.Monad.State
 import Aetherling.Monad_Helpers
 import qualified Data.Set as S
 
--- | The size in bits of types
-size_t :: AST_Type -> Int
-size_t UnitT = 0
-size_t BitT = 1
-size_t Int8T = 8
-size_t Int32T = 32
-size_t (ATupleT t0 t1) = size_t t0 + size_t t1
-size_t (STupleT n t) = n * size_t t
-size_t (SeqT _ _) = 0
-
 -- | input and outputs for an expression when not considering the
 -- input expressions to it
 data Expr_Types = Expr_Types { e_in_types :: [AST_Type], e_out_type :: AST_Type}
