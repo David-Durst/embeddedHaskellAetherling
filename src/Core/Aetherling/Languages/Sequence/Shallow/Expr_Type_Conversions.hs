@@ -28,41 +28,89 @@ instance Aetherling_Value Atom_Bit where
   get_AST_value _ = Nothing
   get_input_edge s idx = Atom_Bit_Edge (InputN BitT s idx)
 
-instance (KnownNat n, Check_Int_Valid_Length n,
-          KnownNat s, Check_Signed_Or_Unsigned s) =>
-  Aetherling_Value (Atom_Int n s) where
+instance Aetherling_Value Atom_Int8 where
   edge_to_maybe_expr (Atom_Int8_Edge x) = Just x
+  edge_to_maybe_expr _ = Nothing
+  expr_to_edge x = Atom_Int8_Edge x
+  get_AST_type _ = Int8T
+  get_AST_value (Atom_Int8 i) = Just $ Int8V i
+  get_AST_value _ = Nothing
+  get_input_edge s idx = Atom_Int8_Edge (InputN Int8T s idx)
+
+instance Aetherling_Int Atom_Int8 where
+  is_signed _ = True
+  get_width _ = 8
+
+instance Signed_Int Atom_Int8
+
+instance Aetherling_Value Atom_UInt8 where
+  edge_to_maybe_expr (Atom_UInt8_Edge x) = Just x
+  edge_to_maybe_expr _ = Nothing
+  expr_to_edge x = Atom_UInt8_Edge x
+  get_AST_type _ = UInt8T
+  get_AST_value (Atom_UInt8 i) = Just $ UInt8V i
+  get_AST_value _ = Nothing
+  get_input_edge s idx = Atom_UInt8_Edge (InputN UInt8T s idx)
+
+instance Aetherling_Int Atom_UInt8 where
+  is_signed _ = False
+  get_width _ = 8
+
+instance Aetherling_Value Atom_Int16 where
+  edge_to_maybe_expr (Atom_Int16_Edge x) = Just x
+  edge_to_maybe_expr _ = Nothing
+  expr_to_edge x = Atom_Int16_Edge x
+  get_AST_type _ = Int16T
+  get_AST_value (Atom_Int16 i) = Just $ Int16V i
+  get_AST_value _ = Nothing
+  get_input_edge s idx = Atom_Int16_Edge (InputN Int16T s idx)
+
+instance Aetherling_Int Atom_Int16 where
+  is_signed _ = True
+  get_width _ = 16
+
+instance Signed_Int Atom_Int16
+
+instance Aetherling_Value Atom_UInt16 where
+  edge_to_maybe_expr (Atom_UInt16_Edge x) = Just x
+  edge_to_maybe_expr _ = Nothing
+  expr_to_edge x = Atom_UInt16_Edge x
+  get_AST_type _ = UInt16T
+  get_AST_value (Atom_UInt16 i) = Just $ UInt16V i
+  get_AST_value _ = Nothing
+  get_input_edge s idx = Atom_UInt16_Edge (InputN UInt16T s idx)
+  
+instance Aetherling_Int Atom_UInt16 where
+  is_signed _ = False
+  get_width _ = 16
+
+instance Aetherling_Value Atom_Int32 where
   edge_to_maybe_expr (Atom_Int32_Edge x) = Just x
   edge_to_maybe_expr _ = Nothing
-  expr_to_edge x | (e_out_type $ expr_to_types x) == Int8T = Atom_Int8_Edge x
   expr_to_edge x = Atom_Int32_Edge x
-  get_AST_type _ =
-    case (bit_width, signed_flag) of
-      (8, 0) -> Int8T
-      (8, 1) -> UInt8T
-      (16, 0) -> Int16T
-      (16, 1) -> UInt16T
-      (32, 0) -> Int32T
-      (32, 1) -> UInt32T
-      _ -> error "can't convert int of wrong length or signing to AST type"
-    where
-      bit_width = fromInteger $ natVal (Proxy :: Proxy n)
-      signed_flag = fromInteger $ natVal (Proxy :: Proxy s)
-  get_AST_value (Atom_Int8 i) = Just $ Int8V i
+  get_AST_type _ = Int32T
   get_AST_value (Atom_Int32 i) = Just $ Int32V i
   get_AST_value _ = Nothing
-  get_input_edge s idx = 
-    case (bit_width, signed_flag) of
-      (8, 0) -> Atom_Int8_Edge (InputN Int8T s idx)
-      (8, 1) -> Atom_UInt8_Edge (InputN UInt8T s idx)
-      (16, 0) -> Atom_Int16_Edge (InputN Int16T s idx)
-      (16, 1) -> Atom_UInt16_Edge (InputN UInt16T s idx)
-      (32, 0) -> Atom_Int32_Edge (InputN Int32T s idx)
-      (32, 1) -> Atom_UInt32_Edge (InputN UInt32T s idx)
-      _ -> error "can't convert int of wrong length or signing to input edge"
-    where
-      bit_width = fromInteger $ natVal (Proxy :: Proxy n)
-      signed_flag = fromInteger $ natVal (Proxy :: Proxy s)
+  get_input_edge s idx = Atom_Int32_Edge (InputN Int32T s idx)
+  
+instance Aetherling_Int Atom_Int32 where
+  is_signed _ = True
+  get_width _ = 32
+
+instance Signed_Int Atom_Int32
+
+instance Aetherling_Value Atom_UInt32 where
+  edge_to_maybe_expr (Atom_UInt32_Edge x) = Just x
+  edge_to_maybe_expr _ = Nothing
+  expr_to_edge x = Atom_UInt32_Edge x
+  get_AST_type _ = UInt32T
+  get_AST_value (Atom_UInt32 i) = Just $ UInt32V i
+  get_AST_value _ = Nothing
+  get_input_edge s idx = Atom_UInt32_Edge (InputN UInt32T s idx)
+
+instance Aetherling_Int Atom_UInt32 where
+  is_signed _ = False
+  get_width _ = 32
 
 instance (Aetherling_Value a, Aetherling_Value b) =>
   Aetherling_Value (Atom_Tuple a b) where

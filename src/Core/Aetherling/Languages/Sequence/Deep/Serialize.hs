@@ -22,9 +22,17 @@ save_type' (UnitT) =
 save_type' (BitT) =
   defMessage & PS.v .~ PS.Bit
 save_type' (Int8T) =
-  defMessage & PS.v .~ PS.Int
+  defMessage & PS.v .~ PS.Int8
+save_type' (UInt8T) =
+  defMessage & PS.v .~ PS.UInt8
+save_type' (Int16T) =
+  defMessage & PS.v .~ PS.Int16
+save_type' (UInt16T) =
+  defMessage & PS.v .~ PS.UInt16
 save_type' (Int32T) =
-  defMessage & PS.v .~ PS.Int
+  defMessage & PS.v .~ PS.Int32
+save_type' (UInt32T) =
+  defMessage & PS.v .~ PS.UInt32
 save_type' (ATupleT left right) =
   defMessage & PS.v .~ PS.ATuple
   & PS.children .~ [left_serialized, right_serialized]
@@ -52,7 +60,12 @@ load_type' serialized_type = do
   case type_version of
     PS.Unit -> UnitT
     PS.Bit -> BitT
-    PS.Int -> Int8T
+    PS.Int8 -> Int8T
+    PS.UInt8 -> UInt8T
+    PS.Int16 -> Int16T
+    PS.UInt16 -> UInt16T
+    PS.Int32 -> Int32T
+    PS.UInt32 -> UInt32T
     PS.ATuple -> do
       let elem_t_xs = serialized_type ^. PS.children
       if Prelude.length elem_t_xs == 2

@@ -30,18 +30,33 @@ data Atom_Bit =
 type Signed = 0
 type Unsigned = 1
 
-data Atom_Int n s =
+data Atom_Int8 =
   Atom_Int8 Int8
   | Atom_Int8_Edge Expr
-  | Atom_UInt8 Word8
+  deriving (Show, Eq)
+
+data Atom_UInt8 =
+  Atom_UInt8 Word8
   | Atom_UInt8_Edge Expr
-  | Atom_Int16 Int16
+  deriving (Show, Eq)
+
+data Atom_Int16 =
+  Atom_Int16 Int16
   | Atom_Int16_Edge Expr
-  | Atom_UInt16 Word16
+  deriving (Show, Eq)
+
+data Atom_UInt16 =
+  Atom_UInt16 Word16
   | Atom_UInt16_Edge Expr
-  | Atom_Int32 Int32
+  deriving (Show, Eq)
+
+data Atom_Int32 =
+  Atom_Int32 Int32
   | Atom_Int32_Edge Expr
-  | Atom_UInt32 Word32
+  deriving (Show, Eq)
+
+data Atom_UInt32 =
+  Atom_UInt32 Word32
   | Atom_UInt32_Edge Expr
   deriving (Show, Eq)
 
@@ -72,13 +87,6 @@ instance (KnownNat n) => Applicative (Seq n) where
 Type families for computing whether types satisfy constraints
 -}
 
-type family Check_Int_Valid_Length (x :: Nat) :: Constraint where
-  Check_Int_Valid_Length 32 = True ~ True
-  Check_Int_Valid_Length 16 = True ~ True
-  Check_Int_Valid_Length 8 = True ~ True
-  Check_Int_Valid_Length x =
-    TypeError (ShowType x :<>: Text " is not an 8 or 32 bit int.")
-
 type family Check_Signed_Or_Unsigned (x :: Nat) :: Constraint where
   Check_Signed_Or_Unsigned Signed = True ~ True
   Check_Signed_Or_Unsigned Unsigned = True ~ True
@@ -87,7 +95,12 @@ type family Check_Signed_Or_Unsigned (x :: Nat) :: Constraint where
 
 type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom Atom_Unit = True ~ True
-  Check_Type_Is_Atom (Atom_Int _ _) = True ~ True
+  Check_Type_Is_Atom Atom_Int8 = True ~ True
+  Check_Type_Is_Atom Atom_UInt8 = True ~ True
+  Check_Type_Is_Atom Atom_Int16 = True ~ True
+  Check_Type_Is_Atom Atom_UInt16 = True ~ True
+  Check_Type_Is_Atom Atom_Int32 = True ~ True
+  Check_Type_Is_Atom Atom_UInt32 = True ~ True
   Check_Type_Is_Atom (Atom_Bit) = True ~ True
   Check_Type_Is_Atom (Atom_Tuple a b) = True ~ True
   Check_Type_Is_Atom x =
@@ -95,7 +108,12 @@ type family Check_Type_Is_Atom (x :: *) :: Constraint where
 
 type family Check_Type_Is_Atom_Or_Nested (x :: *) :: Constraint where
   Check_Type_Is_Atom_Or_Nested Atom_Unit = True ~ True
-  Check_Type_Is_Atom_Or_Nested (Atom_Int _ _) = True ~ True
+  Check_Type_Is_Atom_Or_Nested Atom_Int8 = True ~ True
+  Check_Type_Is_Atom_Or_Nested Atom_UInt8 = True ~ True
+  Check_Type_Is_Atom_Or_Nested Atom_Int16 = True ~ True
+  Check_Type_Is_Atom_Or_Nested Atom_UInt16 = True ~ True
+  Check_Type_Is_Atom_Or_Nested Atom_Int32 = True ~ True
+  Check_Type_Is_Atom_Or_Nested Atom_UInt32 = True ~ True
   Check_Type_Is_Atom_Or_Nested (Atom_Bit) = True ~ True
   Check_Type_Is_Atom_Or_Nested (Atom_Tuple a b) = True ~ True
   Check_Type_Is_Atom_Or_Nested (Seq _ a) = Check_Type_Is_Atom_Or_Nested a
@@ -112,3 +130,9 @@ class Aetherling_Value a where
   get_AST_type :: Proxy a -> AST_Type
   get_AST_value :: a -> Maybe AST_Value
   get_input_edge :: String -> DAG_Index -> a
+
+class Aetherling_Int a where
+  is_signed :: a -> Bool
+  get_width :: a -> Int
+
+class Signed_Int a
