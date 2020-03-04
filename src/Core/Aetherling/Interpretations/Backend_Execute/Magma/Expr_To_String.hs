@@ -165,12 +165,12 @@ print_module new_module = do
 -- this handles the strings inside a module
 module_to_string_inner :: Expr -> Memo_Print_StateM Backend_Module_Ref Backend_Module_Ref
 module_to_string_inner (IdN producer_e cur_idx) = throwError $ RH.Print_Failure "id not supported to magma"
-module_to_string_inner consumer_e@(AbsN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(AbsN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = show use_valids
-  let cur_ref = Backend_Module_Ref cur_ref_name ("DefineAbs_Atom(" ++ valid_str ++ ")")
+  let cur_ref = Backend_Module_Ref cur_ref_name ("DefineAbs_Atom(" ++ show t ++ "," ++ valid_str ++ ")")
                 [Module_Port "I" IntT] (Module_Port "O" IntT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
@@ -201,13 +201,13 @@ module_to_string_inner consumer_e@(OrN producer_e cur_idx) = do
                 [Module_Port "I" (ATupleT BitT BitT)] (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(AddN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(AddN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = show use_valids
   let cur_ref = Backend_Module_Ref cur_ref_name ("DefineAdd_Atom(" ++ valid_str ++ ")")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(SubN producer_e cur_idx) = do
