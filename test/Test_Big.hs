@@ -70,12 +70,12 @@ stencil_2x2_2dC_test in_col in_img = do
 tuple_2d_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @3) $
                     fmap (list_to_seq (Proxy @3)) $
-                    fmap (fmap Atom_Int) hask_kernel
+                    fmap (fmap Atom_UInt8) hask_kernel
   let kernel = const_genC kernel_list in_seq
   let kernel_and_values = map2C (map2C atom_tupleC) in_seq kernel 
   let mul_result = mapC (mapC lslC) kernel_and_values
   let sum = reduceC'' (mapC addC) $ mapC (reduceC addC) mul_result
-  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_Int 4]]
+  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_UInt8 4]]
   let norm = const_genC norm_list in_seq
   let sum_and_norm = map2C (map2C atom_tupleC) sum norm
   mapC (mapC lsrC) sum_and_norm
@@ -83,12 +83,12 @@ tuple_2d_mul_shallow_no_input in_seq = do
 tuple_2d_2x2_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @2) $
                     fmap (list_to_seq (Proxy @2)) $
-                    fmap (fmap Atom_Int) hask_kernel_2x2
+                    fmap (fmap Atom_UInt8) hask_kernel_2x2
   let kernel = const_genC kernel_list in_seq
   let kernel_and_values = map2C (map2C atom_tupleC) in_seq kernel
   let mul_result = mapC (mapC lslC) kernel_and_values
   let sum = reduceC'' (mapC addC) $ mapC (reduceC addC) mul_result
-  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_Int 3]]
+  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_UInt8 3]]
   let norm = const_genC norm_list in_seq
   let sum_and_norm = map2C (map2C atom_tupleC) sum norm
   mapC (mapC lsrC) sum_and_norm
@@ -111,7 +111,7 @@ row_size_conv2d_big :: Integer = 1920
 col_size_conv2d_big :: Integer = 1080
 img_size_conv2d_big :: Int = fromInteger $ col_size_conv2d_big*row_size_conv2d_big
 big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_UInt8))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
 big_conv_2d_throughputs = [16, 8, 4, 2, 1, 1 % 3]
 --big_conv_2d_slowdowns = speed_to_slow [1] (toInteger img_size_conv2d_big)
@@ -159,7 +159,7 @@ img_size_big_b2b :: Int = fromInteger $ col_size_big_b2b*row_size_big_b2b
 big_conv_2d_b2b_throughputs = [16, 8, 4, 2, 1, 1 % 3]
 --big_conv_2d_b2b_slowdowns = speed_to_slow [1 % 3] (toInteger img_size_big_b2b)
 big_conv_2d_b2b = conv_2d_b2b_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_UInt8))
 big_conv_2d_b2b_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d_b2b
 big_conv_2d_b2b_ppar =
   fmap (\s -> compile_with_throughput_to_expr big_conv_2d_b2b s) big_conv_2d_b2b_throughputs
@@ -188,13 +188,13 @@ t_const' = 15
 sharpen_one_pixel a_pixel b_pixel = do
   let b_sub_a = subC $ atom_tupleC b_pixel a_pixel
   let a_sub_b = subC $ atom_tupleC a_pixel b_pixel
-  let const_0 = (const_genC (Atom_Int 0) a_pixel)
-  let t_constC = const_genC (Atom_Int t_const') a_pixel
+  let const_0 = (const_genC (Atom_UInt8 0) a_pixel)
+  let t_constC = const_genC (Atom_UInt8 t_const') a_pixel
   let passed_threshold_b_sub_a = ltC $ atom_tupleC t_constC b_sub_a
   let passed_threshold_a_sub_b = ltC $ atom_tupleC t_constC a_sub_b
   let passed_thresholds = orC $ atom_tupleC passed_threshold_a_sub_b passed_threshold_b_sub_a
   let h = ifC (atom_tupleC passed_thresholds (atom_tupleC b_sub_a const_0))
-  let alpha_h = lsrC $ atom_tupleC h (const_genC (Atom_Int 2) a_pixel)
+  let alpha_h = lsrC $ atom_tupleC h (const_genC (Atom_UInt8 2) a_pixel)
   addC $ atom_tupleC b_pixel alpha_h
 
 sharpen_shallow_no_input in_col in_seq = do
@@ -215,7 +215,7 @@ row_size_sharpen_big :: Integer = 1920
 col_size_sharpen_big :: Integer = 1080
 img_size_sharpen_big :: Int = fromInteger $ col_size_sharpen_big*row_size_sharpen_big
 big_sharpen = sharpen_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_UInt8))
 big_sharpen_seq_idx = add_indexes $ seq_shallow_to_deep big_sharpen
 big_sharpen_throughputs = [16, 8, 4, 2, 1, 1 % 3]
 --big_sharpen_slowdowns = speed_to_slow [1] (toInteger img_size_sharpen_big)

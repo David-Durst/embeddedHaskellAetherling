@@ -104,6 +104,42 @@ instance Convertible_To_Atom_Strings Integer where
   convert_to_haskell_proto x = defMessage
     & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
   num_atoms _ = 1
+  
+instance Convertible_To_Atom_Strings Int8 where
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_haskell_proto x = defMessage
+    & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
+  num_atoms _ = 1
+
+instance Convertible_To_Atom_Strings Word8 where
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_haskell_proto x = defMessage
+    & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
+  num_atoms _ = 1
+
+instance Convertible_To_Atom_Strings Int16 where
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_haskell_proto x = defMessage
+    & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
+  num_atoms _ = 1
+
+instance Convertible_To_Atom_Strings Word16 where
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_haskell_proto x = defMessage
+    & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
+  num_atoms _ = 1
+
+instance Convertible_To_Atom_Strings Int32 where
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_haskell_proto x = defMessage
+    & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
+  num_atoms _ = 1
+
+instance Convertible_To_Atom_Strings Word32 where
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_haskell_proto x = defMessage
+    & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
+  num_atoms _ = 1
 
 instance Convertible_To_Atom_Strings Bool where
   convert_to_flat_atom_list x conf = [make_bool_string_for_backend conf x]

@@ -283,25 +283,25 @@ stencil_2x2_generator row_size inputs = do
     | r <- [0..num_rows-1], c <- [0..num_cols-1]]
 
 -- need thse for Integer and Int versions
-hask_kernel :: [[Int]] = [[0,1,0],[1,2,1],[0,1,0]]
-hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
+hask_kernel :: [[Word8]] = [[0,1,0],[1,2,1],[0,1,0]]
+hask_kernel' :: [Word8] = [1,2,1,2,4,2,1,2,1]
 conv_generator :: (Num a, Integral a) => [[[a]]] -> [a]
 conv_generator stencil_2d_output = [
   if window_valid
-  then (sum $ zipWith (*) window_flat (map fromInteger hask_kernel')) `div` 16
+  then (sum $ zipWith (*) window_flat (map fromIntegral hask_kernel')) `div` 16
   else fromIntegral int_to_ignore
   | window <- stencil_2d_output,
     let window_flat = concat window,
     let window_valid = not $ any (\x -> (fromIntegral x) == int_to_ignore) window_flat]
 
 -- need thse for Integer and Int versions
-hask_kernel_2x2 :: [[Int]] = [[0,2],[1,0]]
-hask_kernel'_2x2 :: [Integer] = [1,4,2,1]
+hask_kernel_2x2 :: [[Word8]] = [[0,2],[1,0]]
+hask_kernel'_2x2 :: [Word8] = [1,4,2,1]
 
 conv_2x2_generator :: (Num a, Integral a) => [[[a]]] -> [a]
 conv_2x2_generator stencil_2d_output = [
   if window_valid
-  then (sum $ zipWith (*) window_flat (map fromInteger hask_kernel'_2x2)) `div` 8
+  then (sum $ zipWith (*) window_flat (map fromIntegral hask_kernel'_2x2)) `div` 8
   else fromIntegral int_to_ignore
   | window <- stencil_2d_output,
     let window_flat = concat window,
@@ -309,7 +309,7 @@ conv_2x2_generator stencil_2d_output = [
 
 t_const :: Integer
 t_const = 15
-sharpen_one_pixel' :: (num a, Integral a) => a -> a -> a 
+sharpen_one_pixel' :: (Num a, Integral a) => a -> a -> a 
 sharpen_one_pixel' a b = do
   let h = if (b - a) > (fromIntegral t_const) || (a - b) > (fromIntegral t_const) then b - a else 0
   fromIntegral $ if (fromIntegral a) == int_to_ignore then a else b + (h `div` 4)
