@@ -83,7 +83,7 @@ main = do
   --putStrLn "exactly 1 st_programs with registers"
   --putStrLn $ show $ e_out_type $ expr_to_outer_types_st $ add_registers deep_st_program
   --return ()
-  let p_types = Expr_Types {e_in_types = [TSeqT 2073600 0 (TSeqT 1 2 st_int)], e_out_type = TSeqT 2073600 0 (TSeqT 1 2 st_int)}
+  let p_types = Expr_Types {e_in_types = [TSeqT 2073600 0 (TSeqT 1 2 st_uint8)], e_out_type = TSeqT 2073600 0 (TSeqT 1 2 st_uint8)}
   test_gen_io_for_st p_types big_conv_2d_inputs big_conv_2d_output
   
 stencil_3_1dC_nested in_seq = do
@@ -110,12 +110,12 @@ stencil_3x3_2dC_test in_col in_img = do
 tuple_2d_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @3) $
                     fmap (list_to_seq (Proxy @3)) $
-                    fmap (fmap Atom_Int) hask_kernel
+                    fmap (fmap Atom_UInt8) hask_kernel
   let kernel = const_genC kernel_list in_seq
   let kernel_and_values = map2C (map2C atom_tupleC) in_seq kernel 
   let mul_result = mapC (mapC lslC) kernel_and_values
   let sum = reduceC'' (mapC addC) $ mapC (reduceC addC) mul_result
-  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_Int 4]]
+  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_UInt8 4]]
   let norm = const_genC norm_list in_seq
   let sum_and_norm = map2C (map2C atom_tupleC) sum norm
   mapC (mapC lsrC) sum_and_norm
@@ -129,7 +129,7 @@ row_size_big :: Integer = 1920
 col_size_big :: Integer = 1080
 img_size_big :: Int = fromInteger $ col_size_big*row_size_big
 big_conv_2d = conv_2d_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_Int))
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_UInt8))
 big_conv_2d_seq_idx = add_indexes $ seq_shallow_to_deep big_conv_2d
 big_conv_2d_slowdowns = speed_to_slow [16, 8, 4, 2, 1, 1 % 3] (toInteger img_size_big)-- --[1,2,4,8,16,32,64,img_size_big `div` 2, img_size_big, img_size_big *3]--, img_size_big*9]
 big_conv_2d_ppar =
