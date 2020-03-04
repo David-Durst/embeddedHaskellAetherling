@@ -155,7 +155,7 @@ module_to_string_inner consumer_e@(AbsN t producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Abs" ++ valid_str ++
-                                                 "(STInt(" ++ int_width ++ "))")
+                                                 "(" ++ type_to_chisel t ++ ")")
                 [Module_Port "I" t] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
@@ -192,7 +192,7 @@ module_to_string_inner consumer_e@(AddN t producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Add" ++ valid_str ++
-                                                 "(STInt(" ++ int_width ++ "))")
+                                                 "(" ++ type_to_chisel t ++ ")")
                 [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
@@ -202,7 +202,7 @@ module_to_string_inner consumer_e@(SubN t producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Sub" ++ valid_str ++
-                                                 "(STInt(" ++ int_width ++ "))")
+                                                 "(" ++ type_to_chisel t ++ ")")
                 [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
@@ -212,7 +212,7 @@ module_to_string_inner consumer_e@(MulN t producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Mul" ++ valid_str ++
-                                                 "(STInt(" ++ int_width ++ "))")
+                                                 "(" ++ type_to_chisel t ++ ")")
                 [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
@@ -222,7 +222,7 @@ module_to_string_inner consumer_e@(DivN t producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Div" ++ valid_str ++
-                                                 "(STInt(" ++ int_width ++ "))")
+                                                 "(" ++ type_to_chisel t ++ ")")
                 [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
@@ -232,7 +232,7 @@ module_to_string_inner consumer_e@(LSRN t producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("RShift" ++ valid_str ++
-                                                 "(STInt(" ++ int_width ++ "))")
+                                                 "(" ++ type_to_chisel t ++ ")")
                 [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
@@ -242,7 +242,7 @@ module_to_string_inner consumer_e@(LSLN t producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("LShift" ++ valid_str ++
-                                                 "(STInt(" ++ int_width ++ "))")
+                                                 "(" ++ type_to_chisel t ++ ")")
                 [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
@@ -252,7 +252,7 @@ module_to_string_inner consumer_e@(LtN t producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Lt" ++ valid_str ++
-                                                 "(STInt(" ++ int_width ++ "))")
+                                                 "(" ++ type_to_chisel t ++ ")")
                 [Module_Port "I" (ATupleT t t)] (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
