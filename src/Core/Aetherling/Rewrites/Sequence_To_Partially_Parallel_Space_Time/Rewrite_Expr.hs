@@ -112,7 +112,8 @@ rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
                      " of program \n" ++
                      Seq_Print.print_seq_str seq_expr) No_Index
     else do
-    let first_out_tr = traceShow possible_output_types $ head possible_output_types
+    --let first_out_tr = traceShow possible_output_types $ head possible_output_types
+    let first_out_tr = head possible_output_types
     let first_st_expr = rewrite_to_partially_parallel_type_rewrite first_out_tr
                         seq_expr
     let other_trs = tail possible_output_types
@@ -139,8 +140,8 @@ rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
                ) (PA first_st_expr (Comp_Area.get_area first_st_expr), first_out_tr) other_trs
     --traceShow ("resulting area" ++ show (area x)) $ program x
     --traceShow ("possible output types" ++ show possible_output_types) $ program x
-    traceShow ("min type rewrite" ++ show (snd x) ) $ program $ fst x
-    --program $ fst x
+    --traceShow ("min type rewrite" ++ show (snd x) ) $ program $ fst x
+    program $ fst x
  {-
                    force $ traceShow ("min_st_out_type " ++ show min_st_out_type ++ " min area " ++ show min_st_area ++ " min error " ++ (show $ Has_Error.has_error min_st_expr) ++ (" min layers " ++ (show $ STT.num_layers_t min_st_out_type))) $ traceShow ("next_st_out_type " ++ show next_st_out_type ++ " next_area " ++ show next_st_area ++ " next error " ++ (show $ Has_Error.has_error next_st_expr) ++ (" next layers " ++ (show $ STT.num_layers_t next_st_out_type))) $ if Has_Error.has_error min_st_expr ||
 

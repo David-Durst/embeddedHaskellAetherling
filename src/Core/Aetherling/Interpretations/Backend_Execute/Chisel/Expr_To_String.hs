@@ -748,12 +748,12 @@ get_module_valid_down_str ref =
 type_to_chisel :: AST_Type -> String
 type_to_chisel UnitT = "undefined"
 type_to_chisel BitT = "STBit()"
-type_to_chisel Int8T = "STInt(8, True)"
-type_to_chisel UInt8T = "STInt(8, False)"
-type_to_chisel Int16T = "STInt(16, True)"
-type_to_chisel UInt16T = "STInt(16, False)"
-type_to_chisel Int32T = "STInt(32, True)"
-type_to_chisel UInt32T = "STInt(32, False)"
+type_to_chisel Int8T = "STInt(8, true)"
+type_to_chisel UInt8T = "STInt(8, false)"
+type_to_chisel Int16T = "STInt(16, true)"
+type_to_chisel UInt16T = "STInt(16, false)"
+type_to_chisel Int32T = "STInt(32, true)"
+type_to_chisel UInt32T = "STInt(32, false)"
 type_to_chisel (ATupleT t0 t1) =
   "STAtomTuple(" ++
   type_to_chisel t0 ++ ", " ++
