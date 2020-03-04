@@ -17,6 +17,8 @@ import Data.ProtoLens.Encoding
 import Data.ProtoLens (defMessage)
 import Lens.Family2 ((&), (.~), (^.))
 import qualified Data.ByteString as BS
+import Data.Word
+import Data.Int
 
 data ST_Val_String = ST_Val_String {
   st_values :: String,
@@ -140,8 +142,18 @@ instance (Convertible_To_Atom_Strings a) => Convertible_To_Atom_Strings [a] wher
 instance Convertible_To_Atom_Strings AST_Atoms where
   convert_to_flat_atom_list (BitA b) conf =
     [make_bool_string_for_backend conf $ b]
-  convert_to_flat_atom_list (IntA i) conf =
-    [make_integer_string_for_backend conf i]
+  convert_to_flat_atom_list (Int8A i) conf =
+    [make_integer_string_for_backend conf $ toInteger i]
+  convert_to_flat_atom_list (UInt8A i) conf =
+    [make_integer_string_for_backend conf $ toInteger i]
+  convert_to_flat_atom_list (Int16A i) conf =
+    [make_integer_string_for_backend conf $ toInteger i]
+  convert_to_flat_atom_list (UInt16A i) conf =
+    [make_integer_string_for_backend conf $ toInteger i]
+  convert_to_flat_atom_list (Int32A i) conf =
+    [make_integer_string_for_backend conf $ toInteger i]
+  convert_to_flat_atom_list (UInt32A i) conf =
+    [make_integer_string_for_backend conf $ toInteger i]
   convert_to_flat_atom_list (ATupleA x y) conf =
     [make_tuple_string_for_backend conf
       (head $ convert_to_flat_atom_list x conf)
@@ -152,13 +164,26 @@ instance Convertible_To_Atom_Strings AST_Atoms where
 -- these atoms are just used to convert between
 -- the atoms in AST_Value and the string representations from Convertible_To_Atom_Strings
 -- when printing an AST_Value to magma
-data AST_Atoms = BitA Bool | IntA Integer | ATupleA AST_Atoms AST_Atoms
-               deriving (Show, Eq)
+data AST_Atoms =
+  BitA Bool
+  | Int8A Int8
+  | UInt8A Word8
+  | Int16A Int16
+  | UInt16A Word16
+  | Int32A Int32
+  | UInt32A Word32
+  | ATupleA AST_Atoms AST_Atoms
+  deriving (Show, Eq)
 
 flatten_ast_value :: AST_Value -> [AST_Atoms]
 flatten_ast_value UnitV = undefined
 flatten_ast_value (BitV b) = [BitA b]
-flatten_ast_value (IntV i) = [IntA $ toInteger i]
+flatten_ast_value (Int8V i) = [Int8A i]
+flatten_ast_value (UInt8V i) = [UInt8A i]
+flatten_ast_value (Int16V i) = [Int16A i]
+flatten_ast_value (UInt16V i) = [UInt16A i]
+flatten_ast_value (Int32V i) = [Int32A i]
+flatten_ast_value (UInt32V i) = [UInt32A i]
 flatten_ast_value (ATupleV l r) = [ATupleA
                                    (head $ flatten_ast_value l)
                                    (head $ flatten_ast_value r)]
@@ -298,7 +323,22 @@ generate_st_val_idxs_for_st_type' UnitT _ _ _ cur_space cur_time
 generate_st_val_idxs_for_st_type' BitT _ _ _ cur_space cur_time
   valid cur_idx = do
   [ST_Val_Index cur_idx valid cur_space cur_time]
-generate_st_val_idxs_for_st_type' IntT _ _ _ cur_space cur_time
+generate_st_val_idxs_for_st_type' Int8T _ _ _ cur_space cur_time
+  valid cur_idx = do
+  [ST_Val_Index cur_idx valid cur_space cur_time]
+generate_st_val_idxs_for_st_type' UInt8T _ _ _ cur_space cur_time
+  valid cur_idx = do
+  [ST_Val_Index cur_idx valid cur_space cur_time]
+generate_st_val_idxs_for_st_type' Int16T _ _ _ cur_space cur_time
+  valid cur_idx = do
+  [ST_Val_Index cur_idx valid cur_space cur_time]
+generate_st_val_idxs_for_st_type' UInt16T _ _ _ cur_space cur_time
+  valid cur_idx = do
+  [ST_Val_Index cur_idx valid cur_space cur_time]
+generate_st_val_idxs_for_st_type' Int32T _ _ _ cur_space cur_time
+  valid cur_idx = do
+  [ST_Val_Index cur_idx valid cur_space cur_time]
+generate_st_val_idxs_for_st_type' UInt32T _ _ _ cur_space cur_time
   valid cur_idx = do
   [ST_Val_Index cur_idx valid cur_space cur_time]
 generate_st_val_idxs_for_st_type' (ATupleT t0 t1) _ _ _ cur_space

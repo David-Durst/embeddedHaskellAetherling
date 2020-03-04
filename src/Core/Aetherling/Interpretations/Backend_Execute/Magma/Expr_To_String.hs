@@ -760,7 +760,12 @@ get_output_port cur_ref_name = return $ cur_ref_name ++ ".O"
 type_to_python :: AST_Type -> String
 type_to_python UnitT = "undefined"
 type_to_python BitT = "ST_Bit()"
-type_to_python IntT = "ST_Int()"
+type_to_python Int8T = "ST_Int(8, True)"
+type_to_python UInt8T = "ST_Int(8, False)"
+type_to_python Int16T = "ST_Int(16, True)"
+type_to_python UInt16T = "ST_Int(16, False)"
+type_to_python Int32T = "ST_Int(32, True)"
+type_to_python UInt32T = "ST_Int(32, False)"
 type_to_python (ATupleT t0 t1) =
   "ST_Atom_Tuple(" ++
   type_to_python t0 ++ ", " ++
