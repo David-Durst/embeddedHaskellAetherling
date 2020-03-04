@@ -250,14 +250,14 @@ speed_and_expr_to_slow speedups e = do
   let out_len = SeqT.num_atoms_total_t_seq out_seq_t
   speed_to_slow speedups (toInteger out_len)
 
-stencil_generator :: Integer -> [Integer] -> [[[Integer]]]
+stencil_generator :: (Num a, Integral a) => Integer -> [a] -> [[[a]]]
 stencil_generator row_size inputs = do
   let inputs_2d = Vec.fromList inputs
   let col_size = toInteger $ length inputs `div` fromInteger row_size
   let num_rows = toInteger $ col_size
   let num_cols = row_size
   let get_input r c = if (r < 0) || (c < 0) 
-        then int_to_ignore
+        then fromInteger int_to_ignore
         else (inputs_2d Vec.! (fromInteger (r * row_size + c)))
   [
     [
@@ -266,14 +266,14 @@ stencil_generator row_size inputs = do
       | stencil_c <- [2,1,0]] | stencil_r <- [2,1,0]]
     | r <- [0..num_rows-1], c <- [0..num_cols-1]]
     
-stencil_2x2_generator :: Integer -> [Integer] -> [[[Integer]]]
+stencil_2x2_generator :: (Num a, Integral a) => Integer -> [a] -> [[[a]]]
 stencil_2x2_generator row_size inputs = do
   let inputs_2d = Vec.fromList inputs
   let col_size = toInteger $ length inputs `div` fromInteger row_size
   let num_rows = toInteger $ col_size
   let num_cols = row_size
   let get_input r c = if (r < 0) || (c < 0) 
-        then int_to_ignore
+        then fromInteger int_to_ignore
         else (inputs_2d Vec.! (fromInteger (r * row_size + c)))
   [
     [
@@ -285,36 +285,34 @@ stencil_2x2_generator row_size inputs = do
 -- need thse for Integer and Int versions
 hask_kernel :: [[Int]] = [[0,1,0],[1,2,1],[0,1,0]]
 hask_kernel' :: [Integer] = [1,2,1,2,4,2,1,2,1]
-conv_generator :: [[[Integer]]] -> [Integer]
+conv_generator :: (Num a, Integral a) => [[[a]]] -> [a]
 conv_generator stencil_2d_output = [
   if window_valid
-  then (sum $ zipWith (*) window_flat hask_kernel') `mod` 256 `div` 16
-  else int_to_ignore
+  then (sum $ zipWith (*) window_flat (map fromInteger hask_kernel')) `div` 16
+  else fromIntegral int_to_ignore
   | window <- stencil_2d_output,
     let window_flat = concat window,
-    let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
+    let window_valid = not $ any (\x -> (fromIntegral x) == int_to_ignore) window_flat]
 
 -- need thse for Integer and Int versions
 hask_kernel_2x2 :: [[Int]] = [[0,2],[1,0]]
 hask_kernel'_2x2 :: [Integer] = [1,4,2,1]
 
-conv_2x2_generator :: [[[Integer]]] -> [Integer]
+conv_2x2_generator :: (Num a, Integral a) => [[[a]]] -> [a]
 conv_2x2_generator stencil_2d_output = [
   if window_valid
-  then (sum $ zipWith (*) window_flat hask_kernel'_2x2) `mod` 256 `div` 8
-  else int_to_ignore
+  then (sum $ zipWith (*) window_flat (map fromInteger hask_kernel'_2x2)) `div` 8
+  else fromIntegral int_to_ignore
   | window <- stencil_2d_output,
     let window_flat = concat window,
-    let window_valid = not $ any (\x -> x == int_to_ignore) window_flat]
+    let window_valid = not $ any (\x -> (fromIntegral x) == int_to_ignore) window_flat]
 
 t_const :: Integer
 t_const = 15
-sharpen_one_pixel' :: Integer -> Integer -> Integer
+sharpen_one_pixel' :: (num a, Integral a) => a -> a -> a 
 sharpen_one_pixel' a b = do
-  let a_8 :: Word8 = fromIntegral a
-  let b_8 :: Word8 = fromIntegral b
-  let h = if (b_8 - a_8) > (fromIntegral t_const) || (a_8 - b_8) > (fromIntegral t_const) then b_8 - a_8 else 0
-  fromIntegral $ if a == int_to_ignore then a_8 else b_8 + (h `div` 4)
+  let h = if (b - a) > (fromIntegral t_const) || (a - b) > (fromIntegral t_const) then b - a else 0
+  fromIntegral $ if (fromIntegral a) == int_to_ignore then a else b + (h `div` 4)
   
 sharpen_one_pixel'_integer :: Integer -> Integer -> Integer
 sharpen_one_pixel'_integer a b = do

@@ -171,7 +171,7 @@ module_to_string_inner consumer_e@(AbsN t producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = show use_valids
   let cur_ref = Backend_Module_Ref cur_ref_name ("DefineAbs_Atom(" ++ show t ++ "," ++ valid_str ++ ")")
-                [Module_Port "I" IntT] (Module_Port "O" IntT)
+                [Module_Port "I" t] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
@@ -210,58 +210,58 @@ module_to_string_inner consumer_e@(AddN t producer_e cur_idx) = do
                 [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(SubN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(SubN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = show use_valids
   let cur_ref = Backend_Module_Ref cur_ref_name ("DefineSub_Atom(" ++ valid_str ++ ")")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(MulN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(MulN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = show use_valids
   let cur_ref = Backend_Module_Ref cur_ref_name ("DefineMul_Atom(" ++ valid_str ++ ")")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(DivN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(DivN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = show use_valids
   let cur_ref = Backend_Module_Ref cur_ref_name ("DefineDiv_Atom(" ++ valid_str ++ ")")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(LSRN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(LSRN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = show use_valids
   let cur_ref = Backend_Module_Ref cur_ref_name ("DefineRShift_Atom(" ++ valid_str ++ ")")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(LSLN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(LSLN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = show use_valids
   let cur_ref = Backend_Module_Ref cur_ref_name ("DefineLShift_Atom(" ++ valid_str ++ ")")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(LtN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(LtN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = show use_valids
   let cur_ref = Backend_Module_Ref cur_ref_name ("DefineLt_Atom(" ++ valid_str ++ ")")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" BitT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do

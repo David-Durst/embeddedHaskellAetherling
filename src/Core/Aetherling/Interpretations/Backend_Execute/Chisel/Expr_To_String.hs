@@ -149,14 +149,14 @@ print_module new_module = do
 -- this handles the strings inside a module
 module_to_string_inner :: Expr -> Memo_Print_StateM Backend_Module_Ref Backend_Module_Ref
 module_to_string_inner (IdN producer_e cur_idx) = throwError $ RH.Print_Failure "id not supported to chisel"
-module_to_string_inner consumer_e@(AbsN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(AbsN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Abs" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "I" IntT] (Module_Port "O" IntT)
+                [Module_Port "I" t] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(NotN producer_e cur_idx) = do
@@ -186,74 +186,74 @@ module_to_string_inner consumer_e@(OrN producer_e cur_idx) = do
                 [Module_Port "I" (ATupleT BitT BitT)] (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(AddN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(AddN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Add" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(SubN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(SubN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Sub" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(MulN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(MulN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Mul" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(DivN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(DivN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Div" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(LSRN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(LSRN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("RShift" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "I" IntT] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(LSLN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(LSLN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("LShift" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "I" IntT] (Module_Port "O" IntT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
-module_to_string_inner consumer_e@(LtN producer_e cur_idx) = do
+module_to_string_inner consumer_e@(LtN t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Lt" ++ valid_str ++
                                                  "(STInt(" ++ int_width ++ "))")
-                [Module_Port "I" (ATupleT IntT IntT)] (Module_Port "O" BitT)
+                [Module_Port "I" (ATupleT t t)] (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do
@@ -748,7 +748,12 @@ get_module_valid_down_str ref =
 type_to_chisel :: AST_Type -> String
 type_to_chisel UnitT = "undefined"
 type_to_chisel BitT = "STBit()"
-type_to_chisel IntT = "STInt(8)"
+type_to_chisel Int8T = "STInt(8, True)"
+type_to_chisel UInt8T = "STInt(8, False)"
+type_to_chisel Int16T = "STInt(16, True)"
+type_to_chisel UInt16T = "STInt(16, False)"
+type_to_chisel Int32T = "STInt(32, True)"
+type_to_chisel UInt32T = "STInt(32, False)"
 type_to_chisel (ATupleT t0 t1) =
   "STAtomTuple(" ++
   type_to_chisel t0 ++ ", " ++
