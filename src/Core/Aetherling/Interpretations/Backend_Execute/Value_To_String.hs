@@ -44,7 +44,7 @@ chisel_conf = ST_Val_To_String_Config (\x _ _ -> show x) (map toLower . show)
     (foldl (\result_s new_s -> result_s ++ "," ++ new_s) (head x) (tail x)) ++
     ")")
 chisel_hardware_conf = ST_Val_To_String_Config
-  (\x w s -> show x ++ "." ++ if s then "S" else "U" ++ "(" ++ show w ++ ")")
+  (\x w s -> show x ++ "." ++ if s then "S" else "U" ++ "(" ++ show w ++ ".W)")
   (\x -> (map toLower . show) x ++ ".B")
   (\x y -> "Const.make_vec(" ++ x ++ ", " ++ y ++ ")")
   (\x -> "Const.make_vec(" ++
