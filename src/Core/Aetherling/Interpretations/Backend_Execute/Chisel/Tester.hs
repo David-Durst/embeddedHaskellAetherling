@@ -115,6 +115,11 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
         -- circuit will always emit valid once started valid
         -- the valid/invalid clocks on types aren't refleceted by valid wire
         tab_str ++ tab_str ++ tab_str ++ "expect_nested(c.valid_down, 1)\n" ++
+        tab_str ++ tab_str ++ "}\n" ++
+        tab_str ++ tab_str ++ "if(f_clk < " ++ show output_latency ++ "){\n" ++
+        -- circuit will always emit valid once started valid
+        -- the valid/invalid clocks on types aren't refleceted by valid wire
+        tab_str ++ tab_str ++ tab_str ++ "expect_nested(c.valid_down, 0)\n" ++
         tab_str ++ tab_str ++ "}\n"
   let test_output = tab_str ++ tab_str ++ "if(f_clk >= pipeline_clks && " ++
                     " chisel_output_valid(output_counter)){\n" ++
