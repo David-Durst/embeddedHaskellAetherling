@@ -390,7 +390,7 @@ slowdown_target_to_file_name_string (Output_ST_Type t) = show $ STT.clocks_t t
       
 run_process :: String -> Maybe FilePath -> IO Process_Result
 run_process process_str cwd = do
-  --traceShowM $ "running: " ++ process_str
+  traceShowM $ "running: " ++ process_str
   stdout_name <- emptySystemTempFile "ae_stdout.txt"
   stdout_file <- openFile stdout_name WriteMode
   stderr_name <- emptySystemTempFile "ae_stderr.txt"

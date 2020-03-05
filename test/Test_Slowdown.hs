@@ -379,6 +379,11 @@ map_to_up_results_chisel = sequence $
               map_to_up (wrap_single_t s)
               Chisel No_Verilog
               map_to_up_inputs map_to_up_output) [1,2,4]
+map_to_up_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              map_to_up (wrap_single_t s)
+              Chisel No_Verilog
+              map_to_up_inputs map_to_up_output) [2]
 
 -- test two multi-rates of different rates
 up_to_down = 
