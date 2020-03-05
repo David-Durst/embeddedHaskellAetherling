@@ -98,8 +98,10 @@ generate_tester_io_with_rust p inputs output = do
           STSer.save_type file_name t
       ) (zip test_types_proto_file_names (e_in_types p_types ++ [e_out_type p_types]))
 
-  let inputs_nested = map (\t -> num_atoms_per_valid_t t > 1) (e_in_types p_types)
-  let output_nested = num_atoms_per_valid_t (e_out_type p_types) > 1
+  -- techincally stuple is an atom but the backend treats it as an array (like sseq)
+  -- so nested if stuples of length > 1
+  let inputs_nested = map (\t -> num_atoms_or_stuple_per_valid_t t > 1) (e_in_types p_types)
+  let output_nested = num_atoms_or_stuple_per_valid_t (e_out_type p_types) > 1
   let clks = clocks_t $ e_out_type p_types
 
   let inputs_fp = map (\(path, nested) -> Test_File_Data path nested)

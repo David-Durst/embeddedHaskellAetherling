@@ -747,6 +747,11 @@ stuple_to_seq_results_chisel = sequence $
               stuple_to_seq (wrap_single_t s)
               Chisel No_Verilog
               stuple_to_seq_inputs stuple_to_seq_output) [16,8,4,2,1,1%2,1%4]
+stuple_to_seq_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              stuple_to_seq (wrap_single_t s)
+              Chisel No_Verilog
+              stuple_to_seq_inputs stuple_to_seq_output) [4]
 stuple_to_seq_results' = sequence $
   fmap (\s -> test_with_backend
               stuple_to_seq (wrap_single_t s)

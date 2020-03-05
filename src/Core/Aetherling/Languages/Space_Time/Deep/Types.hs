@@ -128,6 +128,20 @@ num_atoms_per_valid_t (STupleT n t) = num_atoms_per_valid_t t
 num_atoms_per_valid_t (SSeqT n t) = n * num_atoms_per_valid_t t
 num_atoms_per_valid_t (TSeqT n _ t) = num_atoms_per_valid_t t
 
+num_atoms_or_stuple_per_valid_t :: AST_Type -> Int
+num_atoms_or_stuple_per_valid_t UnitT = 1
+num_atoms_or_stuple_per_valid_t BitT = 1
+num_atoms_or_stuple_per_valid_t Int8T = 1
+num_atoms_or_stuple_per_valid_t UInt8T = 1
+num_atoms_or_stuple_per_valid_t Int16T = 1
+num_atoms_or_stuple_per_valid_t UInt16T = 1
+num_atoms_or_stuple_per_valid_t Int32T = 1
+num_atoms_or_stuple_per_valid_t UInt32T = 1
+num_atoms_or_stuple_per_valid_t (ATupleT t0 t1) = 1
+num_atoms_or_stuple_per_valid_t (STupleT n t) = n * num_atoms_or_stuple_per_valid_t t
+num_atoms_or_stuple_per_valid_t (SSeqT n t) = n * num_atoms_or_stuple_per_valid_t t
+num_atoms_or_stuple_per_valid_t (TSeqT n _ t) = num_atoms_or_stuple_per_valid_t t
+
 clocks_t :: AST_Type -> Int
 clocks_t UnitT = 1
 clocks_t BitT = 1
