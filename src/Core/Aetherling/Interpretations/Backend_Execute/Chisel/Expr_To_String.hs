@@ -33,6 +33,10 @@ chisel_verilog_output_epilogue =
   tab_str ++ "chisel3.Driver.execute(Array[String](), () => new Top)\n" ++
   "}"
 
+print_chisel :: Expr -> IO ()
+print_chisel e = do
+  putStrLn $ module_str $ module_to_chisel_string e
+
 module_to_chisel_string :: Expr -> Backend_String_Results
 module_to_chisel_string e = do
   let prelude = chisel_prelude

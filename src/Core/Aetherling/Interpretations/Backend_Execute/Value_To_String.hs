@@ -26,23 +26,25 @@ data ST_Val_String = ST_Val_String {
   } deriving (Show, Eq)
 
 data ST_Val_To_String_Config = ST_Val_To_String_Config {
-  make_integer_string_for_backend :: Integer -> String,
+  -- First integer is value to make to stirng, second one is lengths
+  -- Bool is true if signed
+  make_integer_string_for_backend :: Integer -> Integer -> Bool -> String,
   make_bool_string_for_backend :: Bool -> String,
   make_tuple_string_for_backend :: String -> String -> String,
   make_array_string_for_backend :: [String] -> String
   }
 
-json_conf = ST_Val_To_String_Config show (map toLower . show) (\x y -> show_no_quotes (x,y))
-             show_no_quotes
-magma_conf = ST_Val_To_String_Config show show (\x y -> show_no_quotes (x,y))
-             show_no_quotes
-chisel_conf = ST_Val_To_String_Config show (map toLower . show)
+json_conf = ST_Val_To_String_Config (\x _ _ -> show x) (map toLower . show)
+            (\x y -> show_no_quotes (x,y)) show_no_quotes
+magma_conf = ST_Val_To_String_Config (\x _ _ -> show x) show
+             (\x y -> show_no_quotes (x,y)) show_no_quotes
+chisel_conf = ST_Val_To_String_Config (\x _ _ -> show x) (map toLower . show)
   (\x y -> "Array(" ++ x ++ ", " ++ y ++ ")")
   (\x -> "Array(" ++
     (foldl (\result_s new_s -> result_s ++ "," ++ new_s) (head x) (tail x)) ++
     ")")
 chisel_hardware_conf = ST_Val_To_String_Config
-  (\x -> show x ++ ".U")
+  (\x w s -> show x ++ "." ++ if s then "S" else "U" ++ "(" ++ show w ++ ")")
   (\x -> (map toLower . show) x ++ ".B")
   (\x y -> "Const.make_vec(" ++ x ++ ", " ++ y ++ ")")
   (\x -> "Const.make_vec(" ++
@@ -99,43 +101,49 @@ class Convertible_To_Atom_Strings a where
   num_atoms :: a -> Int
 
 instance Convertible_To_Atom_Strings Integer where
-  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf x]
+  convert_to_flat_atom_list x conf = error "can't map integer to flat atom list as no width"
   convert_to_haskell_proto x = defMessage
     & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
   num_atoms _ = 1
   
 instance Convertible_To_Atom_Strings Int8 where
-  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf
+                                      (fromIntegral x) 8 True]
   convert_to_haskell_proto x = defMessage
     & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
   num_atoms _ = 1
 
 instance Convertible_To_Atom_Strings Word8 where
-  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf
+                                      (fromIntegral x) 8 False]
   convert_to_haskell_proto x = defMessage
     & PS.maybe'elems .~ Just (PS.ValueSerialized'Uint $ fromIntegral x)
   num_atoms _ = 1
 
 instance Convertible_To_Atom_Strings Int16 where
-  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf
+                                      (fromIntegral x) 16 True]
   convert_to_haskell_proto x = defMessage
     & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
   num_atoms _ = 1
 
 instance Convertible_To_Atom_Strings Word16 where
-  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf
+                                      (fromIntegral x) 16 False]
   convert_to_haskell_proto x = defMessage
     & PS.maybe'elems .~ Just (PS.ValueSerialized'Uint $ fromIntegral x)
   num_atoms _ = 1
 
 instance Convertible_To_Atom_Strings Int32 where
-  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf
+                                      (fromIntegral x) 32 True]
   convert_to_haskell_proto x = defMessage
     & PS.maybe'elems .~ Just (PS.ValueSerialized'Int $ fromIntegral x)
   num_atoms _ = 1
 
 instance Convertible_To_Atom_Strings Word32 where
-  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf $ fromIntegral x]
+  convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf
+                                      (fromIntegral x) 32 False]
   convert_to_haskell_proto x = defMessage
     & PS.maybe'elems .~ Just (PS.ValueSerialized'Uint $ fromIntegral x)
   num_atoms _ = 1
@@ -178,17 +186,17 @@ instance Convertible_To_Atom_Strings AST_Atoms where
   convert_to_flat_atom_list (BitA b) conf =
     [make_bool_string_for_backend conf $ b]
   convert_to_flat_atom_list (Int8A i) conf =
-    [make_integer_string_for_backend conf $ toInteger i]
+    [make_integer_string_for_backend conf (toInteger i) 8 True]
   convert_to_flat_atom_list (UInt8A i) conf =
-    [make_integer_string_for_backend conf $ toInteger i]
+    [make_integer_string_for_backend conf (toInteger i) 8 False]
   convert_to_flat_atom_list (Int16A i) conf =
-    [make_integer_string_for_backend conf $ toInteger i]
+    [make_integer_string_for_backend conf (toInteger i) 16 True]
   convert_to_flat_atom_list (UInt16A i) conf =
-    [make_integer_string_for_backend conf $ toInteger i]
+    [make_integer_string_for_backend conf (toInteger i) 16 False]
   convert_to_flat_atom_list (Int32A i) conf =
-    [make_integer_string_for_backend conf $ toInteger i]
+    [make_integer_string_for_backend conf (toInteger i) 32 True]
   convert_to_flat_atom_list (UInt32A i) conf =
-    [make_integer_string_for_backend conf $ toInteger i]
+    [make_integer_string_for_backend conf (toInteger i) 32 False]
   convert_to_flat_atom_list (ATupleA x y) conf =
     [make_tuple_string_for_backend conf
       (head $ convert_to_flat_atom_list x conf)

@@ -16,10 +16,10 @@ import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import Data.List
 
 main :: IO ()
---main = defaultMain tests
-main = do
-  putStrLn $ show $ sum big_conv_2d_output
-  return ()
+main = defaultMain tests
+--main = do
+--  putStrLn $ show $ sum big_conv_2d_output
+--  return ()
 --  error "hi"
 --  putStrLn "hi"
 -- putStrLn $ show $ length $ rewrite_all_AST_types 25600 $ Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions.e_out_type  $ Aetherling.Languages.Sequence.Deep.Expr_Type_Conversions.expr_to_outer_types big_conv_2d_seq_idx
@@ -31,8 +31,9 @@ main = do
 --  return ()
 
 tests :: TestTree
-tests = testGroup "Top Level Aetherling Tests" [slowdown_tests, apps_tests, big_tests]
+--tests = testGroup "Top Level Aetherling Tests" [slowdown_tests, apps_tests, big_tests]
 --tests = testGroup "Top Level Aetherling Tests" [apps_tests]
 --tests = testGroup "Top Level Aetherling Tests" [slowdown_tests]
+tests = testGroup "Top Level Aetherling Tests" [slowdown_tests_chisel]
 --tests = testGroup "Top Level Aetherling Tests" [big_tests]
 

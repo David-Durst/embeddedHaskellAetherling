@@ -28,7 +28,7 @@ import Control.Monad.State
 import Data.Either
 import Data.Ratio
 
-slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
+slowdown_tests = testGroup "Basic End To End Tests Using Magma"
   [
     testCase "single map" $
     (all_success single_map_results) @? "single map failed",
@@ -74,6 +74,54 @@ slowdown_tests = testGroup "Compiler Sequence To Verilog, Running Verilator"
     (all_success seq_and_stuple_results) @? "seq and stuple failed",
     testCase "striple to seq" $
     (all_success striple_to_seq_results) @? "striple to seq failed"
+  ]
+  
+slowdown_tests_chisel = testGroup "Basic End To End Tests Using Chisel"
+  [
+    testCase "single map" $
+    (all_success single_map_results_chisel) @? "single map failed",
+    testCase "two maps" $
+    (all_success two_maps_results_chisel) @? "two maps failed",
+    testCase "diamond" $
+    (all_success diamond_map_results_chisel) @? "diamond failed",
+    testCase "map with underutilization" $
+    (all_success single_map_underutil_results_chisel) @? "map with underutilization failed",
+    testCase "constant generator" $
+    (all_success const_test_results_chisel) @? "constant generator failed",
+    testCase "less than" $
+    (all_success lt_test_results_chisel) @? "less than failed",
+    testCase "an if and less than" $
+    (all_success if_lt_test_results_chisel) @? "if and less than failed",
+    testCase "map to an upsample" $
+    (all_success map_to_up_results_chisel) @? "map to up failed",
+    testCase "up to down" $
+    (all_success up_to_down_results_chisel) @? "up to down failed",
+    testCase "nested map to top level up" $
+    (all_success nested_map_to_top_level_up_results_chisel) @? "nested map to top level up failed",
+    testCase "nested map to nested up" $
+    (all_success nested_map_to_nested_up_results_chisel) @? "nested map to nested up failed",
+    testCase "partition to flat map" $
+    (all_success partition_to_flat_map_results_chisel) @? "partition to flat map failed",
+    testCase "map to unpartition" $
+    (all_success map_to_unpartition_results_chisel) @? "map to unpartition failed",
+    testCase "double up" $
+    (all_success double_up_results_chisel) @? "double_up failed",
+    testCase "down over nested to down over flattened" $
+    (all_success down_over_nested_to_down_over_flattened_results_chisel) @? "down over nested to down over flattened failed",
+    testCase "tuple sum" $
+    (all_success tuple_sum_results_chisel) @? "tuple_sum failed",
+    testCase "tuple reduce" $
+    (all_success tuple_reduce_results_chisel) @? "tuple_reduce failed",
+    testCase "fst snd sum" $
+    (all_success fst_snd_sum_results_chisel) @? "fst snd sum failed",
+    testCase "stuple to seq" $
+    (all_success stuple_to_seq_results_chisel) @? "stuple to seq failed",
+    testCase "seq to stuple" $
+    (all_success seq_to_stuple_results_chisel) @? "seq to stuple failed",
+    testCase "seq and stuple" $
+    (all_success seq_and_stuple_results_chisel) @? "seq and stuple failed",
+    testCase "striple to seq" $
+    (all_success striple_to_seq_results_chisel) @? "striple to seq failed"
   ]
 
 all_success :: IO [[Test_Result]] -> IO Bool
@@ -202,6 +250,11 @@ diamond_map_results_chisel = sequence $
               diamond_map (wrap_single_t s)
               Chisel No_Verilog
               diamond_map_inputs diamond_map_output) [1,2,4]
+diamond_map_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              diamond_map (wrap_single_t s)
+              Chisel No_Verilog
+              diamond_map_inputs diamond_map_output) [1]
 
 single_map_underutil = 
   mapC' (Proxy @4) absC $ -- [4]
@@ -248,6 +301,11 @@ const_test_results_chisel = sequence $
               const_test (wrap_single_t s)
               Chisel No_Verilog
               const_test_inputs const_test_outputs) [1,3,9]
+const_test_results_chisel' = sequence $
+  fmap (\s -> test_with_backend 
+              const_test (wrap_single_t s)
+              Chisel No_Verilog
+              const_test_inputs const_test_outputs) [3]
 
 lt_atom_test x = do
   let one = const_genC (Atom_UInt8 1) x
