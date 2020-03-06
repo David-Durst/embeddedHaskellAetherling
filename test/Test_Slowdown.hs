@@ -104,10 +104,11 @@ slowdown_tests_chisel = testGroup "Basic End To End Tests Using Chisel"
     (all_success partition_to_flat_map_results_chisel) @? "partition to flat map failed",
     testCase "map to unpartition" $
     (all_success map_to_unpartition_results_chisel) @? "map to unpartition failed",
-    testCase "double up" $
-    (all_success double_up_results_chisel) @? "double_up failed",
-    testCase "down over nested to down over flattened" $
-    (all_success down_over_nested_to_down_over_flattened_results_chisel) @? "down over nested to down over flattened failed",
+    -- disabling these as full reshape not yet implemented in chisel
+    --testCase "double up" $
+    --(all_success double_up_results_chisel) @? "double_up failed",
+    --testCase "down over nested to down over flattened" $
+    --(all_success down_over_nested_to_down_over_flattened_results_chisel) @? "down over nested to down over flattened failed",
     testCase "tuple sum" $
     (all_success tuple_sum_results_chisel) @? "tuple_sum failed",
     testCase "tuple reduce" $
