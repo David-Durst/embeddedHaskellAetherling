@@ -22,6 +22,7 @@ fi
 
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ssh $user@kiwi "rm -rf results"
+ssh $user@kiwi "rm -rf IP"
 ssh $user@kiwi "mkdir -p results"
 scp $dir/remote.sh $user@kiwi:
 scp $dir/constraints*.xdc $user@kiwi:
