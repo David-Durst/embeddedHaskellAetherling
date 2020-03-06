@@ -6,6 +6,7 @@ import Test_ST_Embedding
 import Test_Slowdown
 import Test_Apps
 import Test_Big
+import Test_Big32
 import Test_Spatial
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
@@ -33,8 +34,9 @@ main = defaultMain tests
 tests :: TestTree
 --tests = testGroup "Top Level Aetherling Tests" [slowdown_tests, apps_tests, big_tests]
 --tests = testGroup "Top Level Aetherling Tests" [apps_tests]
-tests = testGroup "Top Level Aetherling Tests" [apps_tests_chisel]
+--tests = testGroup "Top Level Aetherling Tests" [apps_tests_chisel]
 --tests = testGroup "Top Level Aetherling Tests" [slowdown_tests]
 --tests = testGroup "Top Level Aetherling Tests" [slowdown_tests_chisel]
 --tests = testGroup "Top Level Aetherling Tests" [big_tests]
+tests = testGroup "Top Level Aetherling Tests" [big_32_tests]
 

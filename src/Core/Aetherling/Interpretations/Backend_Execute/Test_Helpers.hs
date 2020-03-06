@@ -287,6 +287,10 @@ stencil_2x2_generator row_size inputs = do
 -- need thse for Integer and Int versions
 hask_kernel :: [[Word8]] = [[0,1,0],[1,2,1],[0,1,0]]
 hask_kernel' :: [Word8] = [1,2,1,2,4,2,1,2,1]
+hask_kernel_16 :: [[Word16]] = [[0,1,0],[1,2,1],[0,1,0]]
+hask_kernel'_16 :: [Word16] = [1,2,1,2,4,2,1,2,1]
+hask_kernel_32 :: [[Word32]] = [[0,1,0],[1,2,1],[0,1,0]]
+hask_kernel'_32 :: [Word32] = [1,2,1,2,4,2,1,2,1]
 conv_generator :: (Num a, Integral a) => [[[a]]] -> [a]
 conv_generator stencil_2d_output = [
   if window_valid
@@ -299,6 +303,10 @@ conv_generator stencil_2d_output = [
 -- need thse for Integer and Int versions
 hask_kernel_2x2 :: [[Word8]] = [[0,2],[1,0]]
 hask_kernel'_2x2 :: [Word8] = [1,4,2,1]
+hask_kernel_2x2_16 :: [[Word16]] = [[0,2],[1,0]]
+hask_kernel'_2x2_16 :: [Word16] = [1,4,2,1]
+hask_kernel_2x2_32 :: [[Word32]] = [[0,2],[1,0]]
+hask_kernel'_2x2_32 :: [Word32] = [1,4,2,1]
 
 conv_2x2_generator :: (Num a, Integral a) => [[[a]]] -> [a]
 conv_2x2_generator stencil_2d_output = [
