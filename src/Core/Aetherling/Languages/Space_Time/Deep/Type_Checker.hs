@@ -152,7 +152,7 @@ check_type' consumer_e@(FIFON _ _ producer_e _) =
   check_unary_operator consumer_e producer_e
 check_type' consumer_e@(ReshapeN in_t out_t producer_e _) =
   if (clocks_t in_t == clocks_t out_t) &&
-     (num_atoms_total_t in_t == num_atoms_total_t out_t)
+     (num_atoms_or_stuple_per_valid_t in_t == num_atoms_or_stuple_per_valid_t out_t)
   then check_unary_operator consumer_e producer_e
   else throwError $ Reshape_Type_Error in_t out_t consumer_e
   
