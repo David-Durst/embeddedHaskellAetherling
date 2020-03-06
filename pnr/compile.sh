@@ -11,6 +11,8 @@ GENERATE_MULS_TCL=$6
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 VERILOG_BUILD_COPY=$(basename $VERILOG_FILE)
+VERILOG_MULS=${VERILOG_FILE}_mul
+VERILOG_MULS_BUILD_COPY=${VERILOG_BUILD_COPY}_mul
 CONSTRAINT_BUILD_COPY=$(basename $CONSTRAINT_FILE)
 if [ -z "$CURRENT_TIME" ]; then
     CURRENT_TIME=$(date "+%Y.%m.%d-%H.%M.%S")
@@ -27,12 +29,15 @@ fi
 
 mkdir -p $BUILDDIR
 cp $VERILOG_FILE $BUILDDIR
+if [ -f "${VERILOG_MULS}" ]; then
+    cp $VERILOG_MULS $BUILDDIR
+fi
 cp $CONSTRAINT_FILE $BUILDDIR
 cd $BUILDDIR
 echo "source ${GENERATE_MULS_TCL}" > system.tcl
 echo "read_verilog $VERILOG_BUILD_COPY" >> system.tcl
-if [ -f "${VERILOG_BUILD_COPY}_mul.v" ]; then
-    echo "read_verilog ${VERILOG_BUILD_COPY}_mul.v" >> system.tcl
+if [ -f "${VERILOG_MULS_BUILD_COPY}" ]; then
+    echo "read_verilog ${VERILOG_MULS_BUILD_COPY}" >> system.tcl
 fi
 echo "read_xdc $CONSTRAINT_BUILD_COPY" >> system.tcl
 echo "synth_design -top top -part xc7z020clg484-1 -mode out_of_context" >> system.tcl
