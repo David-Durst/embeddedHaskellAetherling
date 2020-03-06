@@ -1,376 +1,619 @@
-module corebit_and (input in0, input in1, output out);
-  assign out = in0 & in1;
-endmodule
-
-module atomTupleCreator_t0Int_t1Int (input [7:0] I0, input [7:0] I1, output [7:0] O__0, output [7:0] O__1, output valid_down, input valid_up);
-assign O__0 = I0;
-assign O__1 = I1;
-assign valid_down = valid_up;
-endmodule
-
-module coreir_ult #(parameter width = 1) (input [width-1:0] in0, input [width-1:0] in1, output out);
-  assign out = in0 < in1;
-endmodule
-
-module coreir_term #(parameter width = 1) (input [width-1:0] in);
-
-endmodule
-
-module coreir_reg #(parameter width = 1, parameter clk_posedge = 1, parameter init = 1) (input clk, input [width-1:0] in, output [width-1:0] out);
-  reg [width-1:0] outReg=init;
-  wire real_clk;
-  assign real_clk = clk_posedge ? clk : ~clk;
-  always @(posedge real_clk) begin
-    outReg <= in;
+module FIFO(
+  input        clock,
+  input        reset,
+  input        valid_up,
+  output       valid_down,
+  input  [7:0] I_0,
+  input  [7:0] I_1,
+  input  [7:0] I_2,
+  input  [7:0] I_3,
+  input  [7:0] I_4,
+  output [7:0] O_0,
+  output [7:0] O_1,
+  output [7:0] O_2,
+  output [7:0] O_3,
+  output [7:0] O_4
+);
+  reg [7:0] _T__0; // @[FIFO.scala 13:26]
+  reg [31:0] _RAND_0;
+  reg [7:0] _T__1; // @[FIFO.scala 13:26]
+  reg [31:0] _RAND_1;
+  reg [7:0] _T__2; // @[FIFO.scala 13:26]
+  reg [31:0] _RAND_2;
+  reg [7:0] _T__3; // @[FIFO.scala 13:26]
+  reg [31:0] _RAND_3;
+  reg [7:0] _T__4; // @[FIFO.scala 13:26]
+  reg [31:0] _RAND_4;
+  reg  _T_1; // @[FIFO.scala 15:27]
+  reg [31:0] _RAND_5;
+  assign valid_down = _T_1; // @[FIFO.scala 16:16]
+  assign O_0 = _T__0; // @[FIFO.scala 14:7]
+  assign O_1 = _T__1; // @[FIFO.scala 14:7]
+  assign O_2 = _T__2; // @[FIFO.scala 14:7]
+  assign O_3 = _T__3; // @[FIFO.scala 14:7]
+  assign O_4 = _T__4; // @[FIFO.scala 14:7]
+`ifdef RANDOMIZE_GARBAGE_ASSIGN
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_INVALID_ASSIGN
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_REG_INIT
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_MEM_INIT
+`define RANDOMIZE
+`endif
+`ifndef RANDOM
+`define RANDOM $random
+`endif
+`ifdef RANDOMIZE_MEM_INIT
+  integer initvar;
+`endif
+`ifndef SYNTHESIS
+initial begin
+  `ifdef RANDOMIZE
+    `ifdef INIT_RANDOM
+      `INIT_RANDOM
+    `endif
+    `ifndef VERILATOR
+      `ifdef RANDOMIZE_DELAY
+        #`RANDOMIZE_DELAY begin end
+      `else
+        #0.002 begin end
+      `endif
+    `endif
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_0 = {1{`RANDOM}};
+  _T__0 = _RAND_0[7:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_1 = {1{`RANDOM}};
+  _T__1 = _RAND_1[7:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_2 = {1{`RANDOM}};
+  _T__2 = _RAND_2[7:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_3 = {1{`RANDOM}};
+  _T__3 = _RAND_3[7:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_4 = {1{`RANDOM}};
+  _T__4 = _RAND_4[7:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_5 = {1{`RANDOM}};
+  _T_1 = _RAND_5[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `endif // RANDOMIZE
+end // initial
+`endif // SYNTHESIS
+  always @(posedge clock) begin
+    _T__0 <= I_0;
+    _T__1 <= I_1;
+    _T__2 <= I_2;
+    _T__3 <= I_3;
+    _T__4 <= I_4;
+    if (reset) begin
+      _T_1 <= 1'h0;
+    end else begin
+      _T_1 <= valid_up;
+    end
   end
-  assign out = outReg;
 endmodule
-
-module coreir_mux #(parameter width = 1) (input [width-1:0] in0, input [width-1:0] in1, input sel, output [width-1:0] out);
-  assign out = sel ? in1 : in0;
+module InitialDelayCounter(
+  input   clock,
+  input   reset,
+  output  valid_down
+);
+  reg  value; // @[InitialDelayCounter.scala 8:34]
+  reg [31:0] _RAND_0;
+  wire  _T_1; // @[InitialDelayCounter.scala 17:17]
+  wire  _T_4; // @[InitialDelayCounter.scala 17:53]
+  assign _T_1 = value < 1'h1; // @[InitialDelayCounter.scala 17:17]
+  assign _T_4 = value + 1'h1; // @[InitialDelayCounter.scala 17:53]
+  assign valid_down = value; // @[InitialDelayCounter.scala 16:16]
+`ifdef RANDOMIZE_GARBAGE_ASSIGN
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_INVALID_ASSIGN
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_REG_INIT
+`define RANDOMIZE
+`endif
+`ifdef RANDOMIZE_MEM_INIT
+`define RANDOMIZE
+`endif
+`ifndef RANDOM
+`define RANDOM $random
+`endif
+`ifdef RANDOMIZE_MEM_INIT
+  integer initvar;
+`endif
+`ifndef SYNTHESIS
+initial begin
+  `ifdef RANDOMIZE
+    `ifdef INIT_RANDOM
+      `INIT_RANDOM
+    `endif
+    `ifndef VERILATOR
+      `ifdef RANDOMIZE_DELAY
+        #`RANDOMIZE_DELAY begin end
+      `else
+        #0.002 begin end
+      `endif
+    `endif
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_0 = {1{`RANDOM}};
+  value = _RAND_0[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `endif // RANDOMIZE
+end // initial
+`endif // SYNTHESIS
+  always @(posedge clock) begin
+    if (reset) begin
+      value <= 1'h0;
+    end else if (_T_1) begin
+      value <= _T_4;
+    end
+  end
 endmodule
-
-module coreir_eq #(parameter width = 1) (input [width-1:0] in0, input [width-1:0] in1, output out);
-  assign out = in0 == in1;
+module AtomTuple(
+  input        valid_up,
+  output       valid_down,
+  input  [7:0] I0,
+  output [7:0] O_t0b
+);
+  assign valid_down = valid_up; // @[Tuple.scala 51:14]
+  assign O_t0b = I0; // @[Tuple.scala 49:9]
 endmodule
-
-module coreir_const #(parameter width = 1, parameter value = 1) (output [width-1:0] out);
-  assign out = value;
+module Add(
+  input        valid_up,
+  output       valid_down,
+  input  [7:0] I_t0b,
+  output [7:0] O
+);
+  assign valid_down = valid_up; // @[Arithmetic.scala 108:14]
+  assign O = I_t0b + 8'h5; // @[Arithmetic.scala 106:7]
 endmodule
-
-module coreir_add #(parameter width = 1) (input [width-1:0] in0, input [width-1:0] in1, output [width-1:0] out);
-  assign out = in0 + in1;
+module Module_0(
+  input        clock,
+  input        reset,
+  input        valid_up,
+  output       valid_down,
+  input  [7:0] I,
+  output [7:0] O
+);
+  wire  InitialDelayCounter_clock; // @[Const.scala 11:33]
+  wire  InitialDelayCounter_reset; // @[Const.scala 11:33]
+  wire  InitialDelayCounter_valid_down; // @[Const.scala 11:33]
+  wire  n6_valid_up; // @[Top.scala 16:20]
+  wire  n6_valid_down; // @[Top.scala 16:20]
+  wire [7:0] n6_I0; // @[Top.scala 16:20]
+  wire [7:0] n6_O_t0b; // @[Top.scala 16:20]
+  wire  n7_valid_up; // @[Top.scala 20:20]
+  wire  n7_valid_down; // @[Top.scala 20:20]
+  wire [7:0] n7_I_t0b; // @[Top.scala 20:20]
+  wire [7:0] n7_O; // @[Top.scala 20:20]
+  InitialDelayCounter InitialDelayCounter ( // @[Const.scala 11:33]
+    .clock(InitialDelayCounter_clock),
+    .reset(InitialDelayCounter_reset),
+    .valid_down(InitialDelayCounter_valid_down)
+  );
+  AtomTuple n6 ( // @[Top.scala 16:20]
+    .valid_up(n6_valid_up),
+    .valid_down(n6_valid_down),
+    .I0(n6_I0),
+    .O_t0b(n6_O_t0b)
+  );
+  Add n7 ( // @[Top.scala 20:20]
+    .valid_up(n7_valid_up),
+    .valid_down(n7_valid_down),
+    .I_t0b(n7_I_t0b),
+    .O(n7_O)
+  );
+  assign valid_down = n7_valid_down; // @[Top.scala 24:16]
+  assign O = n7_O; // @[Top.scala 23:7]
+  assign InitialDelayCounter_clock = clock;
+  assign InitialDelayCounter_reset = reset;
+  assign n6_valid_up = valid_up & InitialDelayCounter_valid_down; // @[Top.scala 19:17]
+  assign n6_I0 = I; // @[Top.scala 17:11]
+  assign n7_valid_up = n6_valid_down; // @[Top.scala 22:17]
+  assign n7_I_t0b = n6_O_t0b; // @[Top.scala 21:10]
 endmodule
-
-module \commonlib_muxn__N2__width1 (input [0:0] in_data_0, input [0:0] in_data_1, input [0:0] in_sel, output [0:0] out);
-wire [0:0] _join_out;
-coreir_mux #(.width(1)) _join(.in0(in_data_0), .in1(in_data_1), .out(_join_out), .sel(in_sel[0]));
-assign out = _join_out;
+module MapS(
+  input        clock,
+  input        reset,
+  input        valid_up,
+  output       valid_down,
+  input  [7:0] I_0,
+  input  [7:0] I_1,
+  input  [7:0] I_2,
+  input  [7:0] I_3,
+  input  [7:0] I_4,
+  output [7:0] O_0,
+  output [7:0] O_1,
+  output [7:0] O_2,
+  output [7:0] O_3,
+  output [7:0] O_4
+);
+  wire  fst_op_clock; // @[MapS.scala 9:22]
+  wire  fst_op_reset; // @[MapS.scala 9:22]
+  wire  fst_op_valid_up; // @[MapS.scala 9:22]
+  wire  fst_op_valid_down; // @[MapS.scala 9:22]
+  wire [7:0] fst_op_I; // @[MapS.scala 9:22]
+  wire [7:0] fst_op_O; // @[MapS.scala 9:22]
+  wire  other_ops_0_clock; // @[MapS.scala 10:86]
+  wire  other_ops_0_reset; // @[MapS.scala 10:86]
+  wire  other_ops_0_valid_up; // @[MapS.scala 10:86]
+  wire  other_ops_0_valid_down; // @[MapS.scala 10:86]
+  wire [7:0] other_ops_0_I; // @[MapS.scala 10:86]
+  wire [7:0] other_ops_0_O; // @[MapS.scala 10:86]
+  wire  other_ops_1_clock; // @[MapS.scala 10:86]
+  wire  other_ops_1_reset; // @[MapS.scala 10:86]
+  wire  other_ops_1_valid_up; // @[MapS.scala 10:86]
+  wire  other_ops_1_valid_down; // @[MapS.scala 10:86]
+  wire [7:0] other_ops_1_I; // @[MapS.scala 10:86]
+  wire [7:0] other_ops_1_O; // @[MapS.scala 10:86]
+  wire  other_ops_2_clock; // @[MapS.scala 10:86]
+  wire  other_ops_2_reset; // @[MapS.scala 10:86]
+  wire  other_ops_2_valid_up; // @[MapS.scala 10:86]
+  wire  other_ops_2_valid_down; // @[MapS.scala 10:86]
+  wire [7:0] other_ops_2_I; // @[MapS.scala 10:86]
+  wire [7:0] other_ops_2_O; // @[MapS.scala 10:86]
+  wire  other_ops_3_clock; // @[MapS.scala 10:86]
+  wire  other_ops_3_reset; // @[MapS.scala 10:86]
+  wire  other_ops_3_valid_up; // @[MapS.scala 10:86]
+  wire  other_ops_3_valid_down; // @[MapS.scala 10:86]
+  wire [7:0] other_ops_3_I; // @[MapS.scala 10:86]
+  wire [7:0] other_ops_3_O; // @[MapS.scala 10:86]
+  wire  _T; // @[MapS.scala 23:83]
+  wire  _T_1; // @[MapS.scala 23:83]
+  wire  _T_2; // @[MapS.scala 23:83]
+  Module_0 fst_op ( // @[MapS.scala 9:22]
+    .clock(fst_op_clock),
+    .reset(fst_op_reset),
+    .valid_up(fst_op_valid_up),
+    .valid_down(fst_op_valid_down),
+    .I(fst_op_I),
+    .O(fst_op_O)
+  );
+  Module_0 other_ops_0 ( // @[MapS.scala 10:86]
+    .clock(other_ops_0_clock),
+    .reset(other_ops_0_reset),
+    .valid_up(other_ops_0_valid_up),
+    .valid_down(other_ops_0_valid_down),
+    .I(other_ops_0_I),
+    .O(other_ops_0_O)
+  );
+  Module_0 other_ops_1 ( // @[MapS.scala 10:86]
+    .clock(other_ops_1_clock),
+    .reset(other_ops_1_reset),
+    .valid_up(other_ops_1_valid_up),
+    .valid_down(other_ops_1_valid_down),
+    .I(other_ops_1_I),
+    .O(other_ops_1_O)
+  );
+  Module_0 other_ops_2 ( // @[MapS.scala 10:86]
+    .clock(other_ops_2_clock),
+    .reset(other_ops_2_reset),
+    .valid_up(other_ops_2_valid_up),
+    .valid_down(other_ops_2_valid_down),
+    .I(other_ops_2_I),
+    .O(other_ops_2_O)
+  );
+  Module_0 other_ops_3 ( // @[MapS.scala 10:86]
+    .clock(other_ops_3_clock),
+    .reset(other_ops_3_reset),
+    .valid_up(other_ops_3_valid_up),
+    .valid_down(other_ops_3_valid_down),
+    .I(other_ops_3_I),
+    .O(other_ops_3_O)
+  );
+  assign _T = fst_op_valid_down & other_ops_0_valid_down; // @[MapS.scala 23:83]
+  assign _T_1 = _T & other_ops_1_valid_down; // @[MapS.scala 23:83]
+  assign _T_2 = _T_1 & other_ops_2_valid_down; // @[MapS.scala 23:83]
+  assign valid_down = _T_2 & other_ops_3_valid_down; // @[MapS.scala 23:14]
+  assign O_0 = fst_op_O; // @[MapS.scala 17:8]
+  assign O_1 = other_ops_0_O; // @[MapS.scala 21:12]
+  assign O_2 = other_ops_1_O; // @[MapS.scala 21:12]
+  assign O_3 = other_ops_2_O; // @[MapS.scala 21:12]
+  assign O_4 = other_ops_3_O; // @[MapS.scala 21:12]
+  assign fst_op_clock = clock;
+  assign fst_op_reset = reset;
+  assign fst_op_valid_up = valid_up; // @[MapS.scala 15:19]
+  assign fst_op_I = I_0; // @[MapS.scala 16:12]
+  assign other_ops_0_clock = clock; // @[MapS.scala 10:86]
+  assign other_ops_0_reset = reset; // @[MapS.scala 10:86]
+  assign other_ops_0_valid_up = valid_up; // @[MapS.scala 19:39]
+  assign other_ops_0_I = I_1; // @[MapS.scala 20:41]
+  assign other_ops_1_clock = clock; // @[MapS.scala 10:86]
+  assign other_ops_1_reset = reset; // @[MapS.scala 10:86]
+  assign other_ops_1_valid_up = valid_up; // @[MapS.scala 19:39]
+  assign other_ops_1_I = I_2; // @[MapS.scala 20:41]
+  assign other_ops_2_clock = clock; // @[MapS.scala 10:86]
+  assign other_ops_2_reset = reset; // @[MapS.scala 10:86]
+  assign other_ops_2_valid_up = valid_up; // @[MapS.scala 19:39]
+  assign other_ops_2_I = I_3; // @[MapS.scala 20:41]
+  assign other_ops_3_clock = clock; // @[MapS.scala 10:86]
+  assign other_ops_3_reset = reset; // @[MapS.scala 10:86]
+  assign other_ops_3_valid_up = valid_up; // @[MapS.scala 19:39]
+  assign other_ops_3_I = I_4; // @[MapS.scala 20:41]
 endmodule
-
-module lutN #(parameter N = 1, parameter init = 1) (input [N-1:0] in, output out);
-  assign out = init[in];
+module MapT(
+  input        clock,
+  input        reset,
+  input        valid_up,
+  output       valid_down,
+  input  [7:0] I_0,
+  input  [7:0] I_1,
+  input  [7:0] I_2,
+  input  [7:0] I_3,
+  input  [7:0] I_4,
+  output [7:0] O_0,
+  output [7:0] O_1,
+  output [7:0] O_2,
+  output [7:0] O_3,
+  output [7:0] O_4
+);
+  wire  op_clock; // @[MapT.scala 8:20]
+  wire  op_reset; // @[MapT.scala 8:20]
+  wire  op_valid_up; // @[MapT.scala 8:20]
+  wire  op_valid_down; // @[MapT.scala 8:20]
+  wire [7:0] op_I_0; // @[MapT.scala 8:20]
+  wire [7:0] op_I_1; // @[MapT.scala 8:20]
+  wire [7:0] op_I_2; // @[MapT.scala 8:20]
+  wire [7:0] op_I_3; // @[MapT.scala 8:20]
+  wire [7:0] op_I_4; // @[MapT.scala 8:20]
+  wire [7:0] op_O_0; // @[MapT.scala 8:20]
+  wire [7:0] op_O_1; // @[MapT.scala 8:20]
+  wire [7:0] op_O_2; // @[MapT.scala 8:20]
+  wire [7:0] op_O_3; // @[MapT.scala 8:20]
+  wire [7:0] op_O_4; // @[MapT.scala 8:20]
+  MapS op ( // @[MapT.scala 8:20]
+    .clock(op_clock),
+    .reset(op_reset),
+    .valid_up(op_valid_up),
+    .valid_down(op_valid_down),
+    .I_0(op_I_0),
+    .I_1(op_I_1),
+    .I_2(op_I_2),
+    .I_3(op_I_3),
+    .I_4(op_I_4),
+    .O_0(op_O_0),
+    .O_1(op_O_1),
+    .O_2(op_O_2),
+    .O_3(op_O_3),
+    .O_4(op_O_4)
+  );
+  assign valid_down = op_valid_down; // @[MapT.scala 16:16]
+  assign O_0 = op_O_0; // @[MapT.scala 15:7]
+  assign O_1 = op_O_1; // @[MapT.scala 15:7]
+  assign O_2 = op_O_2; // @[MapT.scala 15:7]
+  assign O_3 = op_O_3; // @[MapT.scala 15:7]
+  assign O_4 = op_O_4; // @[MapT.scala 15:7]
+  assign op_clock = clock;
+  assign op_reset = reset;
+  assign op_valid_up = valid_up; // @[MapT.scala 13:17]
+  assign op_I_0 = I_0; // @[MapT.scala 14:10]
+  assign op_I_1 = I_1; // @[MapT.scala 14:10]
+  assign op_I_2 = I_2; // @[MapT.scala 14:10]
+  assign op_I_3 = I_3; // @[MapT.scala 14:10]
+  assign op_I_4 = I_4; // @[MapT.scala 14:10]
 endmodule
-
-module \aetherlinglib_hydrate__hydratedTypeBit8 (input [7:0] in, output [7:0] out);
-assign out = {in[7],in[6],in[5],in[4],in[3],in[2],in[1],in[0]};
+module Top(
+  input        clock,
+  input        reset,
+  input        valid_up,
+  output       valid_down,
+  input  [7:0] I_0,
+  input  [7:0] I_1,
+  input  [7:0] I_2,
+  input  [7:0] I_3,
+  input  [7:0] I_4,
+  output [7:0] O_0,
+  output [7:0] O_1,
+  output [7:0] O_2,
+  output [7:0] O_3,
+  output [7:0] O_4
+);
+  wire  n1_clock; // @[Top.scala 30:20]
+  wire  n1_reset; // @[Top.scala 30:20]
+  wire  n1_valid_up; // @[Top.scala 30:20]
+  wire  n1_valid_down; // @[Top.scala 30:20]
+  wire [7:0] n1_I_0; // @[Top.scala 30:20]
+  wire [7:0] n1_I_1; // @[Top.scala 30:20]
+  wire [7:0] n1_I_2; // @[Top.scala 30:20]
+  wire [7:0] n1_I_3; // @[Top.scala 30:20]
+  wire [7:0] n1_I_4; // @[Top.scala 30:20]
+  wire [7:0] n1_O_0; // @[Top.scala 30:20]
+  wire [7:0] n1_O_1; // @[Top.scala 30:20]
+  wire [7:0] n1_O_2; // @[Top.scala 30:20]
+  wire [7:0] n1_O_3; // @[Top.scala 30:20]
+  wire [7:0] n1_O_4; // @[Top.scala 30:20]
+  wire  n9_clock; // @[Top.scala 33:20]
+  wire  n9_reset; // @[Top.scala 33:20]
+  wire  n9_valid_up; // @[Top.scala 33:20]
+  wire  n9_valid_down; // @[Top.scala 33:20]
+  wire [7:0] n9_I_0; // @[Top.scala 33:20]
+  wire [7:0] n9_I_1; // @[Top.scala 33:20]
+  wire [7:0] n9_I_2; // @[Top.scala 33:20]
+  wire [7:0] n9_I_3; // @[Top.scala 33:20]
+  wire [7:0] n9_I_4; // @[Top.scala 33:20]
+  wire [7:0] n9_O_0; // @[Top.scala 33:20]
+  wire [7:0] n9_O_1; // @[Top.scala 33:20]
+  wire [7:0] n9_O_2; // @[Top.scala 33:20]
+  wire [7:0] n9_O_3; // @[Top.scala 33:20]
+  wire [7:0] n9_O_4; // @[Top.scala 33:20]
+  wire  n10_clock; // @[Top.scala 36:21]
+  wire  n10_reset; // @[Top.scala 36:21]
+  wire  n10_valid_up; // @[Top.scala 36:21]
+  wire  n10_valid_down; // @[Top.scala 36:21]
+  wire [7:0] n10_I_0; // @[Top.scala 36:21]
+  wire [7:0] n10_I_1; // @[Top.scala 36:21]
+  wire [7:0] n10_I_2; // @[Top.scala 36:21]
+  wire [7:0] n10_I_3; // @[Top.scala 36:21]
+  wire [7:0] n10_I_4; // @[Top.scala 36:21]
+  wire [7:0] n10_O_0; // @[Top.scala 36:21]
+  wire [7:0] n10_O_1; // @[Top.scala 36:21]
+  wire [7:0] n10_O_2; // @[Top.scala 36:21]
+  wire [7:0] n10_O_3; // @[Top.scala 36:21]
+  wire [7:0] n10_O_4; // @[Top.scala 36:21]
+  wire  n11_clock; // @[Top.scala 39:21]
+  wire  n11_reset; // @[Top.scala 39:21]
+  wire  n11_valid_up; // @[Top.scala 39:21]
+  wire  n11_valid_down; // @[Top.scala 39:21]
+  wire [7:0] n11_I_0; // @[Top.scala 39:21]
+  wire [7:0] n11_I_1; // @[Top.scala 39:21]
+  wire [7:0] n11_I_2; // @[Top.scala 39:21]
+  wire [7:0] n11_I_3; // @[Top.scala 39:21]
+  wire [7:0] n11_I_4; // @[Top.scala 39:21]
+  wire [7:0] n11_O_0; // @[Top.scala 39:21]
+  wire [7:0] n11_O_1; // @[Top.scala 39:21]
+  wire [7:0] n11_O_2; // @[Top.scala 39:21]
+  wire [7:0] n11_O_3; // @[Top.scala 39:21]
+  wire [7:0] n11_O_4; // @[Top.scala 39:21]
+  wire  n12_clock; // @[Top.scala 42:21]
+  wire  n12_reset; // @[Top.scala 42:21]
+  wire  n12_valid_up; // @[Top.scala 42:21]
+  wire  n12_valid_down; // @[Top.scala 42:21]
+  wire [7:0] n12_I_0; // @[Top.scala 42:21]
+  wire [7:0] n12_I_1; // @[Top.scala 42:21]
+  wire [7:0] n12_I_2; // @[Top.scala 42:21]
+  wire [7:0] n12_I_3; // @[Top.scala 42:21]
+  wire [7:0] n12_I_4; // @[Top.scala 42:21]
+  wire [7:0] n12_O_0; // @[Top.scala 42:21]
+  wire [7:0] n12_O_1; // @[Top.scala 42:21]
+  wire [7:0] n12_O_2; // @[Top.scala 42:21]
+  wire [7:0] n12_O_3; // @[Top.scala 42:21]
+  wire [7:0] n12_O_4; // @[Top.scala 42:21]
+  FIFO n1 ( // @[Top.scala 30:20]
+    .clock(n1_clock),
+    .reset(n1_reset),
+    .valid_up(n1_valid_up),
+    .valid_down(n1_valid_down),
+    .I_0(n1_I_0),
+    .I_1(n1_I_1),
+    .I_2(n1_I_2),
+    .I_3(n1_I_3),
+    .I_4(n1_I_4),
+    .O_0(n1_O_0),
+    .O_1(n1_O_1),
+    .O_2(n1_O_2),
+    .O_3(n1_O_3),
+    .O_4(n1_O_4)
+  );
+  MapT n9 ( // @[Top.scala 33:20]
+    .clock(n9_clock),
+    .reset(n9_reset),
+    .valid_up(n9_valid_up),
+    .valid_down(n9_valid_down),
+    .I_0(n9_I_0),
+    .I_1(n9_I_1),
+    .I_2(n9_I_2),
+    .I_3(n9_I_3),
+    .I_4(n9_I_4),
+    .O_0(n9_O_0),
+    .O_1(n9_O_1),
+    .O_2(n9_O_2),
+    .O_3(n9_O_3),
+    .O_4(n9_O_4)
+  );
+  FIFO n10 ( // @[Top.scala 36:21]
+    .clock(n10_clock),
+    .reset(n10_reset),
+    .valid_up(n10_valid_up),
+    .valid_down(n10_valid_down),
+    .I_0(n10_I_0),
+    .I_1(n10_I_1),
+    .I_2(n10_I_2),
+    .I_3(n10_I_3),
+    .I_4(n10_I_4),
+    .O_0(n10_O_0),
+    .O_1(n10_O_1),
+    .O_2(n10_O_2),
+    .O_3(n10_O_3),
+    .O_4(n10_O_4)
+  );
+  FIFO n11 ( // @[Top.scala 39:21]
+    .clock(n11_clock),
+    .reset(n11_reset),
+    .valid_up(n11_valid_up),
+    .valid_down(n11_valid_down),
+    .I_0(n11_I_0),
+    .I_1(n11_I_1),
+    .I_2(n11_I_2),
+    .I_3(n11_I_3),
+    .I_4(n11_I_4),
+    .O_0(n11_O_0),
+    .O_1(n11_O_1),
+    .O_2(n11_O_2),
+    .O_3(n11_O_3),
+    .O_4(n11_O_4)
+  );
+  FIFO n12 ( // @[Top.scala 42:21]
+    .clock(n12_clock),
+    .reset(n12_reset),
+    .valid_up(n12_valid_up),
+    .valid_down(n12_valid_down),
+    .I_0(n12_I_0),
+    .I_1(n12_I_1),
+    .I_2(n12_I_2),
+    .I_3(n12_I_3),
+    .I_4(n12_I_4),
+    .O_0(n12_O_0),
+    .O_1(n12_O_1),
+    .O_2(n12_O_2),
+    .O_3(n12_O_3),
+    .O_4(n12_O_4)
+  );
+  assign valid_down = n12_valid_down; // @[Top.scala 46:16]
+  assign O_0 = n12_O_0; // @[Top.scala 45:7]
+  assign O_1 = n12_O_1; // @[Top.scala 45:7]
+  assign O_2 = n12_O_2; // @[Top.scala 45:7]
+  assign O_3 = n12_O_3; // @[Top.scala 45:7]
+  assign O_4 = n12_O_4; // @[Top.scala 45:7]
+  assign n1_clock = clock;
+  assign n1_reset = reset;
+  assign n1_valid_up = valid_up; // @[Top.scala 32:17]
+  assign n1_I_0 = I_0; // @[Top.scala 31:10]
+  assign n1_I_1 = I_1; // @[Top.scala 31:10]
+  assign n1_I_2 = I_2; // @[Top.scala 31:10]
+  assign n1_I_3 = I_3; // @[Top.scala 31:10]
+  assign n1_I_4 = I_4; // @[Top.scala 31:10]
+  assign n9_clock = clock;
+  assign n9_reset = reset;
+  assign n9_valid_up = n1_valid_down; // @[Top.scala 35:17]
+  assign n9_I_0 = n1_O_0; // @[Top.scala 34:10]
+  assign n9_I_1 = n1_O_1; // @[Top.scala 34:10]
+  assign n9_I_2 = n1_O_2; // @[Top.scala 34:10]
+  assign n9_I_3 = n1_O_3; // @[Top.scala 34:10]
+  assign n9_I_4 = n1_O_4; // @[Top.scala 34:10]
+  assign n10_clock = clock;
+  assign n10_reset = reset;
+  assign n10_valid_up = n9_valid_down; // @[Top.scala 38:18]
+  assign n10_I_0 = n9_O_0; // @[Top.scala 37:11]
+  assign n10_I_1 = n9_O_1; // @[Top.scala 37:11]
+  assign n10_I_2 = n9_O_2; // @[Top.scala 37:11]
+  assign n10_I_3 = n9_O_3; // @[Top.scala 37:11]
+  assign n10_I_4 = n9_O_4; // @[Top.scala 37:11]
+  assign n11_clock = clock;
+  assign n11_reset = reset;
+  assign n11_valid_up = n10_valid_down; // @[Top.scala 41:18]
+  assign n11_I_0 = n10_O_0; // @[Top.scala 40:11]
+  assign n11_I_1 = n10_O_1; // @[Top.scala 40:11]
+  assign n11_I_2 = n10_O_2; // @[Top.scala 40:11]
+  assign n11_I_3 = n10_O_3; // @[Top.scala 40:11]
+  assign n11_I_4 = n10_O_4; // @[Top.scala 40:11]
+  assign n12_clock = clock;
+  assign n12_reset = reset;
+  assign n12_valid_up = n11_valid_down; // @[Top.scala 44:18]
+  assign n12_I_0 = n11_O_0; // @[Top.scala 43:11]
+  assign n12_I_1 = n11_O_1; // @[Top.scala 43:11]
+  assign n12_I_2 = n11_O_2; // @[Top.scala 43:11]
+  assign n12_I_3 = n11_O_3; // @[Top.scala 43:11]
+  assign n12_I_4 = n11_O_4; // @[Top.scala 43:11]
 endmodule
-
-module \aetherlinglib_dehydrate__hydratedTypeBit (input in, output [0:0] out);
-assign out = in;
-endmodule
-
-module Term_Bitt (input I);
-wire [0:0] dehydrate_tBit_inst0_out;
-\aetherlinglib_dehydrate__hydratedTypeBit dehydrate_tBit_inst0(.in(I), .out(dehydrate_tBit_inst0_out));
-coreir_term #(.width(1)) term_w1_inst0(.in(dehydrate_tBit_inst0_out));
-endmodule
-
-module SizedCounter_1_cinFalse_coutFalse_incr1_hasCETrue_hasResetFalse (input CE, input CLK, output [0:0] O);
-wire [0:0] const_0_1_out;
-Term_Bitt Term_Bitt_inst0(.I(CE));
-coreir_const #(.value(1'h0), .width(1)) const_0_1(.out(const_0_1_out));
-assign O = const_0_1_out;
-endmodule
-
-module Mux2xOutBits1 (input [0:0] I0, input [0:0] I1, output [0:0] O, input S);
-wire [0:0] coreir_commonlib_mux2x1_inst0_out;
-\commonlib_muxn__N2__width1 coreir_commonlib_mux2x1_inst0(.in_data_0(I0), .in_data_1(I1), .in_sel(S), .out(coreir_commonlib_mux2x1_inst0_out));
-assign O = coreir_commonlib_mux2x1_inst0_out;
-endmodule
-
-module Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1 (input CE, input CLK, input [0:0] I, output [0:0] O, input RESET);
-wire [0:0] Mux2xOutBits1_inst0_O;
-wire [0:0] const_0_1_out;
-wire [0:0] enable_mux_O;
-wire [0:0] value_out;
-Mux2xOutBits1 Mux2xOutBits1_inst0(.I0(enable_mux_O), .I1(const_0_1_out), .O(Mux2xOutBits1_inst0_O), .S(RESET));
-coreir_const #(.value(1'h0), .width(1)) const_0_1(.out(const_0_1_out));
-Mux2xOutBits1 enable_mux(.I0(value_out), .I1(I), .O(enable_mux_O), .S(CE));
-coreir_reg #(.clk_posedge(1), .init(1'h0), .width(1)) value(.clk(CLK), .in(Mux2xOutBits1_inst0_O), .out(value_out));
-assign O = value_out;
-endmodule
-
-module LUT1_2 (input I0, output O);
-wire coreir_lut1_inst0_out;
-lutN #(.init(2'h2), .N(1)) coreir_lut1_inst0(.in(I0), .out(coreir_lut1_inst0_out));
-assign O = coreir_lut1_inst0_out;
-endmodule
-
-module LUT1_1 (input I0, output O);
-wire coreir_lut1_inst0_out;
-lutN #(.init(2'h1), .N(1)) coreir_lut1_inst0(.in(I0), .out(coreir_lut1_inst0_out));
-assign O = coreir_lut1_inst0_out;
-endmodule
-
-module LUT1_0 (input I0, output O);
-wire coreir_lut1_inst0_out;
-lutN #(.init(2'h0), .N(1)) coreir_lut1_inst0(.in(I0), .out(coreir_lut1_inst0_out));
-assign O = coreir_lut1_inst0_out;
-endmodule
-
-module LUT_Array_8_Bit_t_1n (input CLK, input [0:0] addr, output [7:0] data);
-wire LUT1_0_inst0_O;
-wire LUT1_0_inst1_O;
-wire LUT1_0_inst2_O;
-wire LUT1_0_inst3_O;
-wire LUT1_0_inst4_O;
-wire LUT1_0_inst5_O;
-wire LUT1_1_inst0_O;
-wire LUT1_1_inst1_O;
-wire [7:0] hydrate_tArray_8_Bit__inst0_out;
-LUT1_0 LUT1_0_inst0(.I0(addr[0]), .O(LUT1_0_inst0_O));
-LUT1_0 LUT1_0_inst1(.I0(addr[0]), .O(LUT1_0_inst1_O));
-LUT1_0 LUT1_0_inst2(.I0(addr[0]), .O(LUT1_0_inst2_O));
-LUT1_0 LUT1_0_inst3(.I0(addr[0]), .O(LUT1_0_inst3_O));
-LUT1_0 LUT1_0_inst4(.I0(addr[0]), .O(LUT1_0_inst4_O));
-LUT1_0 LUT1_0_inst5(.I0(addr[0]), .O(LUT1_0_inst5_O));
-LUT1_1 LUT1_1_inst0(.I0(addr[0]), .O(LUT1_1_inst0_O));
-LUT1_1 LUT1_1_inst1(.I0(addr[0]), .O(LUT1_1_inst1_O));
-\aetherlinglib_hydrate__hydratedTypeBit8 hydrate_tArray_8_Bit__inst0(.in({LUT1_0_inst5_O,LUT1_0_inst4_O,LUT1_0_inst3_O,LUT1_0_inst2_O,LUT1_0_inst1_O,LUT1_1_inst1_O,LUT1_0_inst0_O,LUT1_1_inst0_O}), .out(hydrate_tArray_8_Bit__inst0_out));
-assign data = hydrate_tArray_8_Bit__inst0_out;
-endmodule
-
-module DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse (input CLK, input I, output O);
-wire [0:0] reg_P_inst0_out;
-coreir_reg #(.clk_posedge(1), .init(1'h0), .width(1)) reg_P_inst0(.clk(CLK), .in(I), .out(reg_P_inst0_out));
-assign O = reg_P_inst0_out[0];
-endmodule
-
-module Register8 (input CLK, input [7:0] I, output [7:0] O);
-wire DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst0_O;
-wire DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst1_O;
-wire DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst2_O;
-wire DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst3_O;
-wire DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst4_O;
-wire DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst5_O;
-wire DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst6_O;
-wire DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst7_O;
-DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst0(.CLK(CLK), .I(I[0]), .O(DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst0_O));
-DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst1(.CLK(CLK), .I(I[1]), .O(DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst1_O));
-DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst2(.CLK(CLK), .I(I[2]), .O(DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst2_O));
-DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst3(.CLK(CLK), .I(I[3]), .O(DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst3_O));
-DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst4(.CLK(CLK), .I(I[4]), .O(DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst4_O));
-DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst5(.CLK(CLK), .I(I[5]), .O(DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst5_O));
-DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst6(.CLK(CLK), .I(I[6]), .O(DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst6_O));
-DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst7(.CLK(CLK), .I(I[7]), .O(DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst7_O));
-assign O = {DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst7_O,DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst6_O,DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst5_O,DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst4_O,DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst3_O,DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst2_O,DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst1_O,DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst0_O};
-endmodule
-
-module Register_Array_8_Bit_t_0init_FalseCE_FalseRESET (input CLK, input [7:0] I, output [7:0] O);
-wire [7:0] Register8_inst0_O;
-Register8 Register8_inst0(.CLK(CLK), .I(I), .O(Register8_inst0_O));
-assign O = Register8_inst0_O;
-endmodule
-
-module Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET (input CLK, input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, input [7:0] I_3, input [7:0] I_4, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output [7:0] O_3, output [7:0] O_4);
-wire [7:0] Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst0_O;
-wire [7:0] Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst1_O;
-wire [7:0] Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst2_O;
-wire [7:0] Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst3_O;
-wire [7:0] Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst4_O;
-Register_Array_8_Bit_t_0init_FalseCE_FalseRESET Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst0(.CLK(CLK), .I(I_0), .O(Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst0_O));
-Register_Array_8_Bit_t_0init_FalseCE_FalseRESET Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst1(.CLK(CLK), .I(I_1), .O(Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst1_O));
-Register_Array_8_Bit_t_0init_FalseCE_FalseRESET Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst2(.CLK(CLK), .I(I_2), .O(Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst2_O));
-Register_Array_8_Bit_t_0init_FalseCE_FalseRESET Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst3(.CLK(CLK), .I(I_3), .O(Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst3_O));
-Register_Array_8_Bit_t_0init_FalseCE_FalseRESET Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst4(.CLK(CLK), .I(I_4), .O(Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst4_O));
-assign O_0 = Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst0_O;
-assign O_1 = Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst1_O;
-assign O_2 = Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst2_O;
-assign O_3 = Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst3_O;
-assign O_4 = Register_Array_8_Bit_t_0init_FalseCE_FalseRESET_inst4_O;
-endmodule
-
-module Register1 (input CLK, input [0:0] I, output [0:0] O);
-wire DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst0_O;
-DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst0(.CLK(CLK), .I(I[0]), .O(DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst0_O));
-assign O = DFF_init0_has_ceFalse_has_resetFalse_has_async_resetFalse_inst0_O;
-endmodule
-
-module Register_Bitt_0init_FalseCE_FalseRESET (input CLK, input I, output O);
-wire [0:0] Register1_inst0_O;
-Register1 Register1_inst0(.CLK(CLK), .I(I), .O(Register1_inst0_O));
-assign O = Register1_inst0_O[0];
-endmodule
-
-module FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue (input CLK, input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, input [7:0] I_3, input [7:0] I_4, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output [7:0] O_3, output [7:0] O_4, output valid_down, input valid_up);
-wire [7:0] Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0;
-wire [7:0] Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_1;
-wire [7:0] Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_2;
-wire [7:0] Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_3;
-wire [7:0] Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_4;
-wire Register_Bitt_0init_FalseCE_FalseRESET_inst0_O;
-Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0(.CLK(CLK), .I_0(I_0), .I_1(I_1), .I_2(I_2), .I_3(I_3), .I_4(I_4), .O_0(Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0), .O_1(Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_1), .O_2(Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_2), .O_3(Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_3), .O_4(Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_4));
-Register_Bitt_0init_FalseCE_FalseRESET Register_Bitt_0init_FalseCE_FalseRESET_inst0(.CLK(CLK), .I(valid_up), .O(Register_Bitt_0init_FalseCE_FalseRESET_inst0_O));
-assign O_0 = Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_0;
-assign O_1 = Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_1;
-assign O_2 = Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_2;
-assign O_3 = Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_3;
-assign O_4 = Register_Array_5_Array_8_Bit__t_0init_FalseCE_FalseRESET_inst0_O_4;
-assign valid_down = Register_Bitt_0init_FalseCE_FalseRESET_inst0_O;
-endmodule
-
-module Counter1CER (input CE, input CLK, output [0:0] O, input RESET);
-wire [0:0] Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1_inst0_O;
-wire [0:0] const_1_1_out;
-wire [0:0] coreir_add1_inst0_out;
-Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1 Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1_inst0(.CE(CE), .CLK(CLK), .I(coreir_add1_inst0_out), .O(Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1_inst0_O), .RESET(RESET));
-coreir_const #(.value(1'h1), .width(1)) const_1_1(.out(const_1_1_out));
-coreir_add #(.width(1)) coreir_add1_inst0(.in0(Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1_inst0_O), .in1(const_1_1_out), .out(coreir_add1_inst0_out));
-assign O = Register_has_ce_True_has_reset_True_has_async_reset_False_type_Bits_n_1_inst0_O;
-endmodule
-
-module Counter1_Mod2CE (input CE, input CLK, output [0:0] O);
-wire [0:0] Counter1CER_inst0_O;
-wire LUT1_2_inst0_O;
-wire and_inst0_out;
-Counter1CER Counter1CER_inst0(.CE(CE), .CLK(CLK), .O(Counter1CER_inst0_O), .RESET(and_inst0_out));
-LUT1_2 LUT1_2_inst0(.I0(Counter1CER_inst0_O[0]), .O(LUT1_2_inst0_O));
-corebit_and and_inst0(.in0(LUT1_2_inst0_O), .in1(CE), .out(and_inst0_out));
-assign O = Counter1CER_inst0_O;
-endmodule
-
-module InitialDelayCounter_1 (input CE, input CLK, output valid);
-wire [0:0] Counter1_Mod2CE_inst0_O;
-wire and_inst0_out;
-wire [0:0] coreir_const11_inst0_out;
-wire coreir_eq_1_inst0_out;
-wire coreir_ult1_inst0_out;
-Counter1_Mod2CE Counter1_Mod2CE_inst0(.CE(and_inst0_out), .CLK(CLK), .O(Counter1_Mod2CE_inst0_O));
-corebit_and and_inst0(.in0(CE), .in1(coreir_ult1_inst0_out), .out(and_inst0_out));
-coreir_const #(.value(1'h1), .width(1)) coreir_const11_inst0(.out(coreir_const11_inst0_out));
-coreir_eq #(.width(1)) coreir_eq_1_inst0(.in0(Counter1_Mod2CE_inst0_O), .in1(coreir_const11_inst0_out), .out(coreir_eq_1_inst0_out));
-coreir_ult #(.width(1)) coreir_ult1_inst0(.in0(Counter1_Mod2CE_inst0_O), .in1(coreir_const11_inst0_out), .out(coreir_ult1_inst0_out));
-assign valid = coreir_eq_1_inst0_out;
-endmodule
-
-module Const_tInt_hasCEFalse_hasResetFalse_hasValidTrue (input CLK, output [7:0] O, output valid_down, input valid_up);
-wire InitialDelayCounter_1_inst0_valid;
-wire [7:0] LUT_Array_8_Bit_t_1n_inst0_data;
-wire [0:0] SizedCounter_1_cinFalse_coutFalse_incr1_hasCETrue_hasResetFalse_inst0_O;
-wire [0:0] coreir_const11_inst0_out;
-InitialDelayCounter_1 InitialDelayCounter_1_inst0(.CE(coreir_const11_inst0_out[0]), .CLK(CLK), .valid(InitialDelayCounter_1_inst0_valid));
-LUT_Array_8_Bit_t_1n LUT_Array_8_Bit_t_1n_inst0(.CLK(CLK), .addr(SizedCounter_1_cinFalse_coutFalse_incr1_hasCETrue_hasResetFalse_inst0_O), .data(LUT_Array_8_Bit_t_1n_inst0_data));
-SizedCounter_1_cinFalse_coutFalse_incr1_hasCETrue_hasResetFalse SizedCounter_1_cinFalse_coutFalse_incr1_hasCETrue_hasResetFalse_inst0(.CE(InitialDelayCounter_1_inst0_valid), .CLK(CLK), .O(SizedCounter_1_cinFalse_coutFalse_incr1_hasCETrue_hasResetFalse_inst0_O));
-Term_Bitt Term_Bitt_inst0(.I(valid_up));
-coreir_const #(.value(1'h1), .width(1)) coreir_const11_inst0(.out(coreir_const11_inst0_out));
-assign O = LUT_Array_8_Bit_t_1n_inst0_data;
-assign valid_down = InitialDelayCounter_1_inst0_valid;
-endmodule
-
-module Add_Atom (input [7:0] I__0, input [7:0] I__1, output [7:0] O, output valid_down, input valid_up);
-wire [7:0] coreir_add8_inst0_out;
-coreir_add #(.width(8)) coreir_add8_inst0(.in0(I__0), .in1(I__1), .out(coreir_add8_inst0_out));
-assign O = coreir_add8_inst0_out;
-assign valid_down = valid_up;
-endmodule
-
-module Module_0 (input CLK, input [7:0] I, output [7:0] O, output valid_down, input valid_up);
-wire [7:0] Add_Atom_inst0_O;
-wire Add_Atom_inst0_valid_down;
-wire [7:0] Const_tInt_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O;
-wire Const_tInt_hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down;
-wire and_inst0_out;
-wire [7:0] atomTupleCreator_t0Int_t1Int_inst0_O__0;
-wire [7:0] atomTupleCreator_t0Int_t1Int_inst0_O__1;
-wire atomTupleCreator_t0Int_t1Int_inst0_valid_down;
-Add_Atom Add_Atom_inst0(.I__0(atomTupleCreator_t0Int_t1Int_inst0_O__0), .I__1(atomTupleCreator_t0Int_t1Int_inst0_O__1), .O(Add_Atom_inst0_O), .valid_down(Add_Atom_inst0_valid_down), .valid_up(atomTupleCreator_t0Int_t1Int_inst0_valid_down));
-Const_tInt_hasCEFalse_hasResetFalse_hasValidTrue Const_tInt_hasCEFalse_hasResetFalse_hasValidTrue_inst0(.CLK(CLK), .O(Const_tInt_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .valid_down(Const_tInt_hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .valid_up(valid_up));
-corebit_and and_inst0(.in0(valid_up), .in1(Const_tInt_hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .out(and_inst0_out));
-atomTupleCreator_t0Int_t1Int atomTupleCreator_t0Int_t1Int_inst0(.I0(I), .I1(Const_tInt_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O), .O__0(atomTupleCreator_t0Int_t1Int_inst0_O__0), .O__1(atomTupleCreator_t0Int_t1Int_inst0_O__1), .valid_down(atomTupleCreator_t0Int_t1Int_inst0_valid_down), .valid_up(and_inst0_out));
-assign O = Add_Atom_inst0_O;
-assign valid_down = Add_Atom_inst0_valid_down;
-endmodule
-
-module NativeMapParallel_n5 (input CLK, input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, input [7:0] I_3, input [7:0] I_4, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output [7:0] O_3, output [7:0] O_4, output valid_down, input valid_up);
-wire [7:0] Module_0_inst0_O;
-wire Module_0_inst0_valid_down;
-wire [7:0] Module_0_inst1_O;
-wire Module_0_inst1_valid_down;
-wire [7:0] Module_0_inst2_O;
-wire Module_0_inst2_valid_down;
-wire [7:0] Module_0_inst3_O;
-wire Module_0_inst3_valid_down;
-wire [7:0] Module_0_inst4_O;
-wire Module_0_inst4_valid_down;
-wire and_inst0_out;
-wire and_inst1_out;
-wire and_inst2_out;
-wire and_inst3_out;
-Module_0 Module_0_inst0(.CLK(CLK), .I(I_0), .O(Module_0_inst0_O), .valid_down(Module_0_inst0_valid_down), .valid_up(valid_up));
-Module_0 Module_0_inst1(.CLK(CLK), .I(I_1), .O(Module_0_inst1_O), .valid_down(Module_0_inst1_valid_down), .valid_up(valid_up));
-Module_0 Module_0_inst2(.CLK(CLK), .I(I_2), .O(Module_0_inst2_O), .valid_down(Module_0_inst2_valid_down), .valid_up(valid_up));
-Module_0 Module_0_inst3(.CLK(CLK), .I(I_3), .O(Module_0_inst3_O), .valid_down(Module_0_inst3_valid_down), .valid_up(valid_up));
-Module_0 Module_0_inst4(.CLK(CLK), .I(I_4), .O(Module_0_inst4_O), .valid_down(Module_0_inst4_valid_down), .valid_up(valid_up));
-corebit_and and_inst0(.in0(Module_0_inst0_valid_down), .in1(Module_0_inst1_valid_down), .out(and_inst0_out));
-corebit_and and_inst1(.in0(and_inst0_out), .in1(Module_0_inst2_valid_down), .out(and_inst1_out));
-corebit_and and_inst2(.in0(and_inst1_out), .in1(Module_0_inst3_valid_down), .out(and_inst2_out));
-corebit_and and_inst3(.in0(and_inst2_out), .in1(Module_0_inst4_valid_down), .out(and_inst3_out));
-assign O_0 = Module_0_inst0_O;
-assign O_1 = Module_0_inst1_O;
-assign O_2 = Module_0_inst2_O;
-assign O_3 = Module_0_inst3_O;
-assign O_4 = Module_0_inst4_O;
-assign valid_down = and_inst3_out;
-endmodule
-
-module Map_T_n40_i0 (input CLK, input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, input [7:0] I_3, input [7:0] I_4, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output [7:0] O_3, output [7:0] O_4, output valid_down, input valid_up);
-wire [7:0] NativeMapParallel_n5_inst0_O_0;
-wire [7:0] NativeMapParallel_n5_inst0_O_1;
-wire [7:0] NativeMapParallel_n5_inst0_O_2;
-wire [7:0] NativeMapParallel_n5_inst0_O_3;
-wire [7:0] NativeMapParallel_n5_inst0_O_4;
-wire NativeMapParallel_n5_inst0_valid_down;
-NativeMapParallel_n5 NativeMapParallel_n5_inst0(.CLK(CLK), .I_0(I_0), .I_1(I_1), .I_2(I_2), .I_3(I_3), .I_4(I_4), .O_0(NativeMapParallel_n5_inst0_O_0), .O_1(NativeMapParallel_n5_inst0_O_1), .O_2(NativeMapParallel_n5_inst0_O_2), .O_3(NativeMapParallel_n5_inst0_O_3), .O_4(NativeMapParallel_n5_inst0_O_4), .valid_down(NativeMapParallel_n5_inst0_valid_down), .valid_up(valid_up));
-assign O_0 = NativeMapParallel_n5_inst0_O_0;
-assign O_1 = NativeMapParallel_n5_inst0_O_1;
-assign O_2 = NativeMapParallel_n5_inst0_O_2;
-assign O_3 = NativeMapParallel_n5_inst0_O_3;
-assign O_4 = NativeMapParallel_n5_inst0_O_4;
-assign valid_down = NativeMapParallel_n5_inst0_valid_down;
-endmodule
-
-module top (input CLK, input [7:0] I_0, input [7:0] I_1, input [7:0] I_2, input [7:0] I_3, input [7:0] I_4, output [7:0] O_0, output [7:0] O_1, output [7:0] O_2, output [7:0] O_3, output [7:0] O_4, output valid_down, input valid_up);
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_1;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_2;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_3;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_4;
-wire FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_0;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_1;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_2;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_3;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_4;
-wire FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_valid_down;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_0;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_1;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_2;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_3;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_4;
-wire FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_valid_down;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_0;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_1;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_2;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_3;
-wire [7:0] FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_4;
-wire FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_valid_down;
-wire [7:0] Map_T_n40_i0_inst0_O_0;
-wire [7:0] Map_T_n40_i0_inst0_O_1;
-wire [7:0] Map_T_n40_i0_inst0_O_2;
-wire [7:0] Map_T_n40_i0_inst0_O_3;
-wire [7:0] Map_T_n40_i0_inst0_O_4;
-wire Map_T_n40_i0_inst0_valid_down;
-FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0(.CLK(CLK), .I_0(I_0), .I_1(I_1), .I_2(I_2), .I_3(I_3), .I_4(I_4), .O_0(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0), .O_1(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_1), .O_2(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_2), .O_3(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_3), .O_4(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_4), .valid_down(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down), .valid_up(valid_up));
-FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1(.CLK(CLK), .I_0(Map_T_n40_i0_inst0_O_0), .I_1(Map_T_n40_i0_inst0_O_1), .I_2(Map_T_n40_i0_inst0_O_2), .I_3(Map_T_n40_i0_inst0_O_3), .I_4(Map_T_n40_i0_inst0_O_4), .O_0(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_0), .O_1(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_1), .O_2(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_2), .O_3(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_3), .O_4(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_4), .valid_down(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_valid_down), .valid_up(Map_T_n40_i0_inst0_valid_down));
-FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2(.CLK(CLK), .I_0(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_0), .I_1(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_1), .I_2(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_2), .I_3(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_3), .I_4(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_O_4), .O_0(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_0), .O_1(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_1), .O_2(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_2), .O_3(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_3), .O_4(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_4), .valid_down(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_valid_down), .valid_up(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst1_valid_down));
-FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3(.CLK(CLK), .I_0(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_0), .I_1(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_1), .I_2(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_2), .I_3(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_3), .I_4(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_O_4), .O_0(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_0), .O_1(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_1), .O_2(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_2), .O_3(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_3), .O_4(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_4), .valid_down(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_valid_down), .valid_up(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst2_valid_down));
-Map_T_n40_i0 Map_T_n40_i0_inst0(.CLK(CLK), .I_0(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_0), .I_1(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_1), .I_2(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_2), .I_3(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_3), .I_4(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_O_4), .O_0(Map_T_n40_i0_inst0_O_0), .O_1(Map_T_n40_i0_inst0_O_1), .O_2(Map_T_n40_i0_inst0_O_2), .O_3(Map_T_n40_i0_inst0_O_3), .O_4(Map_T_n40_i0_inst0_O_4), .valid_down(Map_T_n40_i0_inst0_valid_down), .valid_up(FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst0_valid_down));
-assign O_0 = FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_0;
-assign O_1 = FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_1;
-assign O_2 = FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_2;
-assign O_3 = FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_3;
-assign O_4 = FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_O_4;
-assign valid_down = FIFO_tTSeq_40_0_SSeq_5_Int___delay1_hasCEFalse_hasResetFalse_hasValidTrue_inst3_valid_down;
-endmodule
-

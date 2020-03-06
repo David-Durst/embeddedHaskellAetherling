@@ -2,7 +2,7 @@ module Aetherling.Monad_Helpers where
 import qualified Control.Monad.State as S
 import Control.Monad.Identity
 import Debug.Trace
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import Control.DeepSeq
 import GHC.Generics (Generic)
 

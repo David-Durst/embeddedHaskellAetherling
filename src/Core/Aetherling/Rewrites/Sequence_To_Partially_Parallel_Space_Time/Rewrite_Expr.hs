@@ -736,20 +736,20 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr_no tr_io tr_ni) :
   let in_t_ppar = ST_Conv.e_out_type $ ST_Conv.expr_to_types producer_ppar
   cur_idx <- get_cur_index
   return $ STE.ReshapeN in_t_ppar out_t_ppar producer_ppar cur_idx
-{- 
+ 
 sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
                                                  (SplitNestedR (TimeR tr1_n tr1_i) NonSeqR))
                                                : type_rewrites_tl)
   seq_e@(SeqE.UnpartitionN no ni elem_t producer _) |
   tr0_n == no && tr1_n == ni = do
-  traceShowM "howdy"
+  --traceShowM "howdy"
   add_output_rewrite_for_node seq_e type_rewrites
   elem_t_ppar <- ppar_AST_type type_rewrites_tl elem_t
   -- this works as parameters_match makes sure no*ni equals tr_no
   -- and unpartition must accept same no and ni regardless of invalid clocks
   let upstream_type_rewrites = TimeR tr0_n tr0_i : TimeR tr1_n tr1_i : type_rewrites_tl
   sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
--}
+
   
 sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
                                                  (SplitNestedR (TimeR tr1_n tr1_i)

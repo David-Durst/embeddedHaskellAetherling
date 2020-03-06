@@ -44,6 +44,17 @@ apps_tests = testGroup "Full Application Tests"
     (TS.all_success sharpen_results) @? "sharpen failed"
   ]
 
+apps_tests_chisel = testGroup "Full Application Tests"
+  [
+    --testCase "MAP in paper" $
+    --(TS.all_success single_map_200_results_chisel) @? "map failed",
+    --testCase "CONV in paper - single 3x3 convolution" $
+    --(TS.all_success conv_2d_results_chisel) @? "single 3x3 convolution failed",
+    testCase "CONVB2B in paper - conv 3x3 to 2x2" $
+    (TS.all_success conv_2d_b2b_results_chisel) @? "conv 3x3 to 2x2 failed"--,
+    --testCase "SHARPEN in paper" $
+    --(TS.all_success sharpen_results_chisel) @? "sharpen failed"
+  ]
 all_types = sequence [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types, --sharpen_results_all_types,
              TS.pyramid_1d_results_all_types]
 
@@ -71,7 +82,7 @@ single_map_200_results = sequence $
 single_map_200_results_chisel = sequence $
   fmap (\s -> test_with_backend
               single_map_200 (wrap_single_t s)
-              Chisel No_Verilog
+              Chisel (Save_Gen_Verilog "map")
               single_map_200_inputs single_map_200_output)
   [1,2,4,5,8,10,20,40,200]
 single_map_200_results_all_types = sequence $
