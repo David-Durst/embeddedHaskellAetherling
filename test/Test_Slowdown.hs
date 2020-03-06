@@ -666,7 +666,7 @@ tuple_reduce_results' = sequence $
 tuple_reduce_results_chisel = sequence $
   fmap (\s -> test_with_backend
               tuple_reduce (wrap_single_t s)
-              Chisel No_Verilog
+              Chisel (Save_Gen_Verilog "tuple_reduce")
               tuple_reduce_inputs tuple_reduce_output) [1,1%2,1%4,1%8]
 tuple_reduce_results_chisel' = sequence $
   fmap (\s -> test_with_backend

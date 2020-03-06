@@ -25,7 +25,8 @@ mkdir -p $BUILDDIR
 cp $VERILOG_FILE $BUILDDIR
 cp $CONSTRAINT_FILE $BUILDDIR
 cd $BUILDDIR
-echo "read_verilog $VERILOG_BUILD_COPY" > system.tcl
+echo "source generate_muls.tcl" > system.tcl
+echo "read_verilog $VERILOG_BUILD_COPY" >> system.tcl
 echo "read_xdc $CONSTRAINT_BUILD_COPY" >> system.tcl
 echo "synth_design -top top -part xc7z020clg484-1 -mode out_of_context" >> system.tcl
 #echo "set_property HD.CLK_SRC BUFGCTRL_X0Y16 [get_ports CLK]" >> system.tcl

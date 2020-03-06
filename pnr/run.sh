@@ -26,6 +26,7 @@ ssh $user@kiwi "mkdir -p results"
 scp $dir/remote.sh $user@kiwi:
 scp $dir/constraints*.xdc $user@kiwi:
 scp $dir/compile.sh $user@kiwi:
+scp $dir/../chiselAetherling/src/main/resources/verilogAetherling/generate_muls.tcl $user@kiwi:
 
 scp -r ${dir}/../test/verilog_examples $user@kiwi:
 ssh $user@kiwi "tmux new -d -s pnr './remote.sh verilog_examples/ &> results/log.log'"
