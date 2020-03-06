@@ -6,6 +6,7 @@ CONSTRAINT_FILE=$2
 BUILDDIR_INPUT=$3
 CURRENT_TIME=$4
 BUILDSUBDIR_INPUT=$5
+GENERATE_MULS_TCL=$6
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -19,13 +20,16 @@ if [ -z "$BUILDSUBDIR_INPUT" ]; then
 else
     BUILDDIR=$BUILDDIR_INPUT.$CURRENT_TIME/$BUILDSUBDIR_INPUT/
 fi
+if [ -z "$GENERATE_MULS_TCL" ]; then
+    GENERATE_MULS_TCL=$(pwd)/generate_muls.tcl
+fi
 
 
 mkdir -p $BUILDDIR
 cp $VERILOG_FILE $BUILDDIR
 cp $CONSTRAINT_FILE $BUILDDIR
 cd $BUILDDIR
-echo "source generate_muls.tcl" > system.tcl
+echo "source ${GENERATE_MULS_TCL}" > system.tcl
 echo "read_verilog $VERILOG_BUILD_COPY" >> system.tcl
 if [ -f "${VERILOG_BUILD_COPY}_mul.v" ]; then
     echo "read_verilog ${VERILOG_BUILD_COPY}_mul.v" >> system.tcl

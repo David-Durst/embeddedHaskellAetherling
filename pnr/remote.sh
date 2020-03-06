@@ -4,6 +4,7 @@ results_temp="results/results_temp.txt"
 results="results/results.csv"
 circuit_dir_path=$1
 CURRENT_TIME=$(date "+%Y.%m.%d-%H.%M.%S")
+generate_muls_tcl=$(readlink -f generate_muls.tcl)
 
 echo "System | Application | Parallelism | Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 | DSP48 Blocks | Slices | SLICEL | SLICEM | Slack (VIOLATED) |" > ${results_temp}
 
@@ -16,7 +17,7 @@ for circuit_path in ${circuit_dir_path}/*/*/*.v; do
     circuit_name=`sed -n -E "s/(.*)_[^_]*/\1/p" <<< $circuit_basename`
     circuit_par=`sed -n -E "s/.*_([^_]*).v$/\1/p" <<< $circuit_basename`
 
-    ./compile.sh $circuit_path constraints${system}.xdc build $CURRENT_TIME "${system}/${circuit_name}_${circuit_par}"
+    ./compile.sh $circuit_path constraints${system}.xdc build $CURRENT_TIME "${system}/${circuit_name}_${circuit_par}" ${generate_muls_tcl}
     last_build_dir=$(<last_builddir.log)
     
     echo -n "${system}" >> ${results_temp}
