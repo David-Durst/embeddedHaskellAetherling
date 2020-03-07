@@ -98,6 +98,20 @@ size_t (STupleT n t) = n * size_t t
 size_t (SSeqT n t) = n * size_t t
 size_t (TSeqT n _ t) = size_t t
 
+size_all_clocks_t :: AST_Type -> Int
+size_all_clocks_t UnitT = 0
+size_all_clocks_t BitT = 1
+size_all_clocks_t Int8T = 8
+size_all_clocks_t UInt8T = 8
+size_all_clocks_t Int16T = 16
+size_all_clocks_t UInt16T = 16
+size_all_clocks_t Int32T = 32
+size_all_clocks_t UInt32T = 32
+size_all_clocks_t (ATupleT t0 t1) = size_all_clocks_t t0 + size_all_clocks_t t1
+size_all_clocks_t (STupleT n t) = n * size_all_clocks_t t
+size_all_clocks_t (SSeqT n t) = n * size_all_clocks_t t
+size_all_clocks_t (TSeqT n _ t) = n * size_all_clocks_t t
+
 num_atoms_total_t_st = num_atoms_total_t
 
 num_atoms_total_t :: AST_Type -> Int
@@ -205,6 +219,8 @@ diff_types (SSeqT na a) (SSeqT nb b) | na == nb = diff_types a b
 diff_types (TSeqT na ia a) (TSeqT nb ib b) | (na == nb) && (ia == ib) = diff_types a b
 diff_types (STupleT na a) (STupleT nb b) | na == nb = diff_types a b
 diff_types a b = Just a
+
+norm_and_diff_types a b = diff_types (normalize_type a) (normalize_type b)
 
 num_layers_t :: AST_Type -> Int
 num_layers_t UnitT = 1

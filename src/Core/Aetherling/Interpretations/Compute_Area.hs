@@ -177,7 +177,7 @@ get_area' e@(ReshapeN in_t out_t producer _) = do
   let in_out_diff = diff_types in_t_norm out_t_norm
   let type_area =
         if isJust in_out_diff
-        then size_t $ fromJust in_out_diff
+        then size_all_clocks_t $ fromJust in_out_diff
         else 0
   return $ producer_area + (2 * type_area)
 get_area'_map n e f producer = do

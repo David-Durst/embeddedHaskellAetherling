@@ -736,7 +736,7 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr_no tr_io tr_ni) :
   let in_t_ppar = ST_Conv.e_out_type $ ST_Conv.expr_to_types producer_ppar
   cur_idx <- get_cur_index
   return $ STE.ReshapeN in_t_ppar out_t_ppar producer_ppar cur_idx
- 
+{- 
 sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
                                                  (SplitNestedR (TimeR tr1_n tr1_i) NonSeqR))
                                                : type_rewrites_tl)
@@ -748,8 +748,9 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_
   -- this works as parameters_match makes sure no*ni equals tr_no
   -- and unpartition must accept same no and ni regardless of invalid clocks
   let upstream_type_rewrites = TimeR tr0_n tr0_i : TimeR tr1_n tr1_i : type_rewrites_tl
+  -- MAKE THIS PUT A RESHAPE NODE IN IF GOING TO USE IT!!!!!!
   sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
-
+-}
   
 sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
                                                  (SplitNestedR (TimeR tr1_n tr1_i)
@@ -824,6 +825,8 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   seq_e@(SeqE.UnpartitionN no ni elem_t producer index) = do
   add_output_rewrite_for_node seq_e type_rewrites
   let types = Seq_Conv.expr_to_types seq_e
+  let predicted_out_st_type = type_rewrite_to_example_st_type
+                              (Seq_Conv.e_out_type types) type_rewrites
   -- ppar_AST_type applies the type_rewrites to match downstream
   out_t_ppar <- ppar_AST_type type_rewrites (Seq_Conv.e_out_type types)
 
@@ -873,6 +876,9 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
               out_t_ppar first_st_expr reshape_idx
         let other_trs = tail possible_input_trs
         L.foldl' (\(!min_tr, !min_st_area, !min_st_expr) next_tr -> do
+                     let predicted_in_st_type = type_rewrite_to_example_st_type
+                                                (head $ Seq_Conv.e_in_types types)
+                                                next_tr
                      let next_st_expr = rewrite_to_partially_parallel_type_rewrite
                                         next_tr producer
                      let next_st_expr_with_reshape = 
@@ -883,7 +889,8 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
                                            ST_Conv.expr_to_types min_st_expr
                      let next_st_out_type = ST_Conv.e_out_type $
                                             ST_Conv.expr_to_types next_st_expr
-                     force $ if Has_Error.has_error min_st_expr ||
+                     force $ if --isJust (STT.norm_and_diff_types predicted_in_st_type predicted_out_st_type) ||
+                                Has_Error.has_error min_st_expr ||
                                 (next_st_area < min_st_area &&
                                  (not $ Has_Error.has_error next_st_expr)) ||
                                 -- if they produce same program but one has

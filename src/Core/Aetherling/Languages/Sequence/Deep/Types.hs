@@ -35,7 +35,11 @@ instance Show AST_Type where
   show (SeqT n t) = "(SeqT " ++ show n ++ " " ++ show t ++ ")"
 
 seq_int8 = Int8T
+seq_uint8 = UInt8T
+seq_int16 = Int8T
+seq_uint16 = UInt8T
 seq_int32 = Int32T
+seq_uint32 = UInt32T
 
 -- these exist only because it's easier to have a value that is an Aetherling value
 -- rather than a value that's a member of a type class of aetherling values,

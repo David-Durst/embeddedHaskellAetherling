@@ -288,3 +288,47 @@ st_type_to_type_rewrite (SeqT.SeqT n_seq t_seq) (STT.TSeqT n_st i_st t_st) |
       _ -> SplitNestedR (TimeR n_st i_st) fst_tr : other_trs
 st_type_to_type_rewrite seq_t st_t = error $ "can't convert " ++ show seq_t ++
                                      " to " ++ show st_t
+
+-- | this isn't 1-to-1 mapping as NonSeqR can map to many types
+type_rewrite_to_example_st_type :: SeqT.AST_Type -> [Type_Rewrite] -> STT.AST_Type
+type_rewrite_to_example_st_type SeqT.UnitT _ = STT.UnitT
+type_rewrite_to_example_st_type SeqT.Int8T _ = STT.Int8T
+type_rewrite_to_example_st_type SeqT.UInt8T _ = STT.UInt8T
+type_rewrite_to_example_st_type SeqT.Int16T _ = STT.Int16T
+type_rewrite_to_example_st_type SeqT.UInt16T _ = STT.UInt16T
+type_rewrite_to_example_st_type SeqT.Int32T _ = STT.Int32T
+type_rewrite_to_example_st_type SeqT.UInt32T _ = STT.UInt32T
+type_rewrite_to_example_st_type (SeqT.ATupleT l r) tr =
+  STT.ATupleT (type_rewrite_to_example_st_type l tr) (type_rewrite_to_example_st_type r tr)
+type_rewrite_to_example_st_type (SeqT.STupleT n t_seq) (NonSeqR:tr_tl) =
+  STT.STupleT n (type_rewrite_to_example_st_type t_seq tr_tl)
+type_rewrite_to_example_st_type (SeqT.SeqT n_seq t_seq) (SpaceR n_st:tr_tl) |
+  n_seq == n_st =
+    STT.SSeqT n_st (type_rewrite_to_example_st_type t_seq tr_tl)
+type_rewrite_to_example_st_type (SeqT.SeqT n_seq t_seq) (TimeR n_st i_st:tr_tl) |
+  n_seq == n_st =
+    STT.TSeqT n_st i_st (type_rewrite_to_example_st_type t_seq tr_tl)
+type_rewrite_to_example_st_type (SeqT.SeqT n_seq t_seq) (SplitR no_st io_st ni_st:tr_tl) |
+  n_seq == no_st * ni_st =
+    STT.TSeqT no_st io_st (STT.SSeqT ni_st $ type_rewrite_to_example_st_type t_seq tr_tl)
+type_rewrite_to_example_st_type (SeqT.SeqT n_seq t_seq) (SplitNestedR (TimeR no_st io_st) inner_tr :tr_tl) |
+  n_seq `mod` no_st == 0 = do
+    let inner_types = case inner_tr of
+          NonSeqR -> type_rewrite_to_example_st_type t_seq tr_tl
+          _ -> type_rewrite_to_example_st_type
+               (SeqT.SeqT (n_seq `div` no_st) t_seq) (inner_tr : tr_tl)
+    STT.TSeqT no_st io_st inner_types
+type_rewrite_to_example_st_type seq_t trs = error $ "can't make seq_t " ++ show seq_t ++
+                                            " with type rewrites " ++ show trs ++
+                                            " into st types "
+
+flatten_tr :: [Type_Rewrite] -> [Type_Rewrite]
+flatten_tr (l@(SpaceR _) : tl) = l : flatten_tr tl
+flatten_tr (l@(TimeR _ _) : tl) = l : flatten_tr tl
+flatten_tr (SplitR no io ni : tl) = TimeR no io : SpaceR ni : flatten_tr tl
+flatten_tr (SplitNestedR nested_hd NonSeqR : tl) =
+  flatten_tr [nested_hd] ++ flatten_tr tl
+flatten_tr (SplitNestedR nested_hd nested_tl : tl) =
+  flatten_tr [nested_hd] ++ flatten_tr [nested_tl] ++ flatten_tr tl
+flatten_tr (NonSeqR : tl) = NonSeqR : flatten_tr tl
+flatten_tr [] = []
