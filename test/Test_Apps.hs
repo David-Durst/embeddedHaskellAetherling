@@ -46,14 +46,14 @@ apps_tests = testGroup "Full Application Tests"
 
 apps_tests_chisel = testGroup "Full Application Tests"
   [
-    --testCase "MAP in paper" $
-    --(TS.all_success single_map_200_results_chisel) @? "map failed",
-    --testCase "CONV in paper - single 3x3 convolution" $
-    --(TS.all_success conv_2d_results_chisel) @? "single 3x3 convolution failed",
+    testCase "MAP in paper" $
+    (TS.all_success single_map_200_results_chisel) @? "map failed",
+    testCase "CONV in paper - single 3x3 convolution" $
+    (TS.all_success conv_2d_results_chisel) @? "single 3x3 convolution failed",
     testCase "CONVB2B in paper - conv 3x3 to 2x2" $
-    (TS.all_success conv_2d_b2b_results_chisel) @? "conv 3x3 to 2x2 failed"--,
-    --testCase "SHARPEN in paper" $
-    --(TS.all_success sharpen_results_chisel) @? "sharpen failed"
+    (TS.all_success conv_2d_b2b_results_chisel) @? "conv 3x3 to 2x2 failed",
+    testCase "SHARPEN in paper" $
+    (TS.all_success sharpen_results_chisel) @? "sharpen failed"
   ]
 all_types = sequence [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types, --sharpen_results_all_types,
              TS.pyramid_1d_results_all_types]

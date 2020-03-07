@@ -736,7 +736,7 @@ sequence_to_partially_parallel type_rewrites@(tr0@(SplitR tr_no tr_io tr_ni) :
   let in_t_ppar = ST_Conv.e_out_type $ ST_Conv.expr_to_types producer_ppar
   cur_idx <- get_cur_index
   return $ STE.ReshapeN in_t_ppar out_t_ppar producer_ppar cur_idx
-{- 
+ 
 sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
                                                  (SplitNestedR (TimeR tr1_n tr1_i) NonSeqR))
                                                : type_rewrites_tl)
@@ -750,7 +750,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_
   let upstream_type_rewrites = TimeR tr0_n tr0_i : TimeR tr1_n tr1_i : type_rewrites_tl
   -- MAKE THIS PUT A RESHAPE NODE IN IF GOING TO USE IT!!!!!!
   sequence_to_partially_parallel_with_reshape upstream_type_rewrites producer
--}
+
   
 sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_i)
                                                  (SplitNestedR (TimeR tr1_n tr1_i)
