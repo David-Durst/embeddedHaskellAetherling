@@ -254,7 +254,7 @@ show_no_quotes = filter (\x -> x /= '\"') . show
 
 convert_st_val_idxs_to_vals :: M.Map Int String -> [[ST_Val_Index]] -> [[String]]
 convert_st_val_idxs_to_vals idx_to_str st_val_idxs =
-  map (map (\st_val_idx -> M.findWithDefault "0.U" (flat_idx st_val_idx) idx_to_str)) st_val_idxs
+  map (map (\st_val_idx -> M.findWithDefault "undef" (flat_idx st_val_idx) idx_to_str)) st_val_idxs
 
 generate_st_val_idxs_for_st_type_new :: M.Map Int String -> AST_Type -> [[String]]
 generate_st_val_idxs_for_st_type_new idx_to_str t = do
@@ -270,7 +270,7 @@ generate_st_val_idxs_for_st_type_new idx_to_str t = do
 initialize_and_set_val_indexes :: M.Map Int String -> AST_Type -> Int -> Int ->
   Int -> STS.ST s (STArray s (Int, Int) String)
 initialize_and_set_val_indexes idx_to_str t total_width total_time valid_time = do
-  idxs <- newArray ((0,0),(total_time-1,total_width-1)) "0.U"
+  idxs <- newArray ((0,0),(total_time-1,total_width-1)) "undef"
   set_val_index idx_to_str t total_width total_time valid_time 0 0 True 0 idxs
   return idxs
   
@@ -346,7 +346,7 @@ set_val_index idx_to_str (TSeqT n i t) total_width
   return ()
 set_val_index idx_to_str _ _ _ _ cur_space cur_time valid cur_idx st_val_idxs = do
   writeArray st_val_idxs (cur_time, cur_space)
-    (M.findWithDefault "0.U" cur_idx idx_to_str)
+    (M.findWithDefault "undef" cur_idx idx_to_str)
     
 foldM' :: (Monad m) => (a -> b -> m a) -> a -> [b] -> m a
 foldM' _ z [] = return z

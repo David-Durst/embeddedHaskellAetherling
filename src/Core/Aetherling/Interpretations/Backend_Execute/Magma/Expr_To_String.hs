@@ -170,7 +170,7 @@ module_to_string_inner consumer_e@(AbsN t producer_e cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
   use_valids <- use_valid_port
   let valid_str = show use_valids
-  let cur_ref = Backend_Module_Ref cur_ref_name ("DefineAbs_Atom(" ++ show t ++ "," ++ valid_str ++ ")")
+  let cur_ref = Backend_Module_Ref cur_ref_name ("DefineAbs_Atom(" ++ valid_str ++ ")")
                 [Module_Port "I" t] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
