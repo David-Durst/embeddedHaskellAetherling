@@ -237,7 +237,7 @@ module_to_string_inner consumer_e@(LSRN t producer_e cur_idx) = do
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("RShift" ++ valid_str ++
                                                  "(" ++ type_to_chisel t ++ ")")
-                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
+                [Module_Port "I" (ATupleT t UInt8T)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(LSLN t producer_e cur_idx) = do
@@ -247,7 +247,7 @@ module_to_string_inner consumer_e@(LSLN t producer_e cur_idx) = do
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("LShift" ++ valid_str ++
                                                  "(" ++ type_to_chisel t ++ ")")
-                [Module_Port "I" (ATupleT t t)] (Module_Port "O" t)
+                [Module_Port "I" (ATupleT t UInt8T)] (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
 module_to_string_inner consumer_e@(LtN t producer_e cur_idx) = do

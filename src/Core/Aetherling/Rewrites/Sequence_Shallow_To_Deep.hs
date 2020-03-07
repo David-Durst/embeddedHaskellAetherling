@@ -100,7 +100,7 @@ instance Sequence_Language Rewrite_StateM where
       _ -> throwError $ Expr_Failure $ fail_message_edge "divC" "Atom_Tuple Atom_Int Atom_Int"
       
   lsrC :: forall a . (Aetherling_Value a, Aetherling_Int a) =>
-    Rewrite_StateM (Atom_Tuple a a) -> Rewrite_StateM a
+    Rewrite_StateM (Atom_Tuple a Atom_UInt8) -> Rewrite_StateM a
   lsrC inputM = do
     input <- inputM
     let t = get_AST_type (Proxy :: Proxy a)
@@ -109,7 +109,7 @@ instance Sequence_Language Rewrite_StateM where
       _ -> throwError $ Expr_Failure $ fail_message_edge "lsrC" "Atom_Tuple Atom_Int Atom_Int"
       
   lslC :: forall a . (Aetherling_Value a, Aetherling_Int a) =>
-    Rewrite_StateM (Atom_Tuple a a) -> Rewrite_StateM a
+    Rewrite_StateM (Atom_Tuple a Atom_UInt8) -> Rewrite_StateM a
   lslC inputM = do
     input <- inputM
     let t = get_AST_type (Proxy :: Proxy a)

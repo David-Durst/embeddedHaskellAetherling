@@ -252,3 +252,9 @@ big_tests = testGroup "Big Tests"
     testCase "big sharpen chisel" $
     (TS.all_success big_sharpen_results_chisel) @? "big sharpen chisel failed"
   ]
+
+big_tests' = testGroup "Big Tests"
+  [
+    testCase "single big 3x3 convolution chisel" $
+    (TS.all_success big_conv_2d_results_chisel') @? "single 3x3 convolution chisel failed"
+  ]

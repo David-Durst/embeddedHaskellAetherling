@@ -70,12 +70,12 @@ stencil_2x2_2dC_test in_col in_img = do
 tuple_2d_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @3) $
                     fmap (list_to_seq (Proxy @3)) $
-                    fmap (fmap Atom_UInt32) hask_kernel_32
+                    fmap (fmap Atom_UInt8) hask_kernel
   let kernel = const_genC kernel_list in_seq
   let kernel_and_values = map2C (map2C atom_tupleC) in_seq kernel 
   let mul_result = mapC (mapC lslC) kernel_and_values
   let sum = reduceC'' (mapC addC) $ mapC (reduceC addC) mul_result
-  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_UInt32 4]]
+  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_UInt8 4]]
   let norm = const_genC norm_list in_seq
   let sum_and_norm = map2C (map2C atom_tupleC) sum norm
   mapC (mapC lsrC) sum_and_norm
@@ -83,12 +83,12 @@ tuple_2d_mul_shallow_no_input in_seq = do
 tuple_2d_2x2_mul_shallow_no_input in_seq = do
   let kernel_list = list_to_seq (Proxy @2) $
                     fmap (list_to_seq (Proxy @2)) $
-                    fmap (fmap Atom_UInt32) hask_kernel_2x2_32
+                    fmap (fmap Atom_UInt8) hask_kernel_2x2
   let kernel = const_genC kernel_list in_seq
   let kernel_and_values = map2C (map2C atom_tupleC) in_seq kernel
   let mul_result = mapC (mapC lslC) kernel_and_values
   let sum = reduceC'' (mapC addC) $ mapC (reduceC addC) mul_result
-  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_UInt32 3]]
+  let norm_list = list_to_seq (Proxy @1) [list_to_seq (Proxy @1) [Atom_UInt8 3]]
   let norm = const_genC norm_list in_seq
   let sum_and_norm = map2C (map2C atom_tupleC) sum norm
   mapC (mapC lsrC) sum_and_norm
@@ -194,7 +194,7 @@ sharpen_one_pixel a_pixel b_pixel = do
   let passed_threshold_a_sub_b = ltC $ atom_tupleC t_constC a_sub_b
   let passed_thresholds = orC $ atom_tupleC passed_threshold_a_sub_b passed_threshold_b_sub_a
   let h = ifC (atom_tupleC passed_thresholds (atom_tupleC b_sub_a const_0))
-  let alpha_h = lsrC $ atom_tupleC h (const_genC (Atom_UInt32 2) a_pixel)
+  let alpha_h = lsrC $ atom_tupleC h (const_genC (Atom_UInt8 2) a_pixel)
   addC $ atom_tupleC b_pixel alpha_h
 
 sharpen_shallow_no_input in_col in_seq = do
@@ -251,4 +251,10 @@ big_32_tests = testGroup "Big_32 Tests"
     (TS.all_success big_32_conv_2d_b2b_results_chisel) @? "big_32 3x3 conv to 2x2 conv chisel failed",
     testCase "big_32 sharpen chisel" $
     (TS.all_success big_32_sharpen_results_chisel) @? "big_32 sharpen chisel failed"
+  ]
+
+big_32_tests' = testGroup "Big_32 Tests"
+  [
+    testCase "single big_32 3x3 convolution chisel" $
+    (TS.all_success big_32_conv_2d_results_chisel') @? "single 3x3 convolution chisel failed"
   ]
