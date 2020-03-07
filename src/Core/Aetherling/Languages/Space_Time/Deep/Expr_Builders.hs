@@ -56,6 +56,15 @@ repeated_stuple map_gen input_exprs elem_t = do
     -- start at 3 to set
     map_stuple_initial [3 .. length input_exprs]
 
+add_input_test :: (Expr -> DAG_Index -> Expr) -> Expr
+add_input_test expr_gen = do
+  let input_idx = Index 1000
+  let outer_idx = Index 1001
+  let expr_types = expr_to_types
+                   (expr_gen (ErrorN "not an error" input_idx) outer_idx)
+  let expr_in_type = head $ e_in_types expr_types
+  expr_gen (InputN expr_in_type "I" input_idx) outer_idx
+
 add_input_to_expr_for_map :: Monad m => (Expr -> DAG_Index -> Expr) ->
                              Memo_Rewrite_StateTM Expr m Expr
 add_input_to_expr_for_map expr_gen = do
