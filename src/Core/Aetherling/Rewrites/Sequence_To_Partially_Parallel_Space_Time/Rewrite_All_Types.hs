@@ -276,6 +276,17 @@ st_type_to_type_rewrite (SeqT.SeqT n_seq t_seq) (STT.SSeqT n_st t_st) |
     let (fst_tr : other_trs) = st_type_to_type_rewrite
                                (SeqT.SeqT (n_seq `div` n_st) t_seq) t_st
     SplitNestedR (SpaceR n_st) fst_tr : other_trs
+st_type_to_type_rewrite (SeqT.SeqT n_seq t_seq)
+  (STT.TSeqT n_st i_st (STT.TSeqT 1 ii_st (STT.TSeqT 1 iii_st t_st))) |
+  n_seq == n_st =
+    SplitNestedR (TimeR n_st i_st) (SplitNestedR (TimeR 1 ii_st)
+                                    (SplitNestedR (TimeR 1 iii_st) NonSeqR)) :
+    st_type_to_type_rewrite t_seq t_st
+st_type_to_type_rewrite (SeqT.SeqT n_seq t_seq)
+  (STT.TSeqT n_st i_st (STT.TSeqT 1 ii_st t_st)) |
+  n_seq == n_st =
+    SplitNestedR (TimeR n_st i_st) (SplitNestedR (TimeR 1 ii_st) NonSeqR) :
+    st_type_to_type_rewrite t_seq t_st
 st_type_to_type_rewrite (SeqT.SeqT n_seq t_seq) (STT.TSeqT n_st i_st t_st) |
   n_seq == n_st =
     TimeR n_st i_st : st_type_to_type_rewrite t_seq t_st
