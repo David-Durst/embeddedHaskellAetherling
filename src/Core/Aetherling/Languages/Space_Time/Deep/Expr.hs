@@ -290,5 +290,20 @@ instance Indexible Expr where
   get_index e = index e
   set_index e i = e { index = i }
 
+has_two_inputs (Map2_sN _ _ _ _ _) = True
+has_two_inputs (Map2_tN _ _ _ _ _ _) = True
+has_two_inputs (ATupleN _ _ _ _ _) = True
+has_two_inputs (STupleN _ _ _ _) = True
+has_two_inputs (STupleAppendN _ _ _ _ _) = True
+has_two_inputs _ = False
+
 seq_in_st = seq_in
+seq_in_left_st = seq_in_left
+seq_in_right_st = seq_in_right
+seq_in_n_st 0 e = seq_in e
+seq_in_n_st n e = do
+  let inner_e = seq_in_n_st (n-1) e
+  if has_two_inputs inner_e
+  then seq_in_left inner_e
+  else seq_in inner_e
 f_st = f
