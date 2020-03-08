@@ -25,6 +25,7 @@ import Data.Traversable
 import GHC.TypeLits
 import GHC.TypeLits.Extra
 import Data.Ratio
+import Data.Word
 
 
 
@@ -121,8 +122,8 @@ big_32_conv_2d_ppar_typechecked =
   fmap check_type big_32_conv_2d_ppar
 big_32_conv_2d_ppar_typechecked' =
   fmap check_type_get_error big_32_conv_2d_ppar
-big_32_conv_2d_inputs :: [[Integer]] = [[i*5 | i <- [1..row_size_conv2d_big_32*col_size_conv2d_big_32]]]
-big_32_conv_2d_output :: [Integer] =
+big_32_conv_2d_inputs :: [[Word32]] = map (map fromIntegral) [[i*5 | i <- [1..row_size_conv2d_big_32*col_size_conv2d_big_32]]]
+big_32_conv_2d_output :: [Word32] =
   conv_generator $ stencil_generator row_size_conv2d_big_32 (big_32_conv_2d_inputs !! 0)
 big_32_conv_2d_results = sequence $
   fmap (\s -> test_with_backend
@@ -168,10 +169,11 @@ big_32_conv_2d_b2b_ppar_typechecked =
 big_32_conv_2d_b2b_ppar_typechecked' =
   fmap check_type_get_error big_32_conv_2d_b2b_ppar
 
-big_32_conv_2d_b2b_inputs :: [[Integer]] = [[1..row_size_big_32_b2b*col_size_big_32_b2b]]
-big_32_conv_2d_b2b_output :: [Integer] =
+big_32_conv_2d_b2b_inputs :: [[Word32]] = map (map fromIntegral) [[1..row_size_big_32_b2b*col_size_big_32_b2b]]
+big_32_conv_2d_b2b_output :: [Word32] =
   conv_2x2_generator $ stencil_2x2_generator row_size_big_32_b2b $
-  conv_generator $ stencil_generator row_size_big_32_b2b [1..row_size_big_32_b2b*col_size_big_32_b2b]
+  conv_generator $ stencil_generator row_size_big_32_b2b $
+  head big_32_conv_2d_b2b_inputs
 big_32_conv_2d_b2b_results = sequence $
   fmap (\s -> test_with_backend
               big_32_conv_2d_b2b (wrap_single_t s)
@@ -225,8 +227,8 @@ big_32_sharpen_ppar_typechecked =
   fmap check_type big_32_sharpen_ppar
 big_32_sharpen_ppar_typechecked' =
   fmap check_type_get_error big_32_sharpen_ppar
-big_32_sharpen_inputs :: [[Integer]] = [[i * 5 | i <- [1..row_size_sharpen_big_32 * col_size_sharpen_big_32]]]
-big_32_sharpen_output :: [Integer] =
+big_32_sharpen_inputs :: [[Word32]] = map (map fromIntegral) [[i * 5 | i <- [1..row_size_sharpen_big_32 * col_size_sharpen_big_32]]]
+big_32_sharpen_output :: [Word32] =
   zipWith sharpen_one_pixel' 
   (conv_generator $ stencil_generator row_size_sharpen_big_32 (big_32_sharpen_inputs !! 0))
   (big_32_sharpen_inputs !! 0)
