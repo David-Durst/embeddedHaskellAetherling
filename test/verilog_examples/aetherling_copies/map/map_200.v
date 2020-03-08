@@ -150,39 +150,39 @@ module Module_0(
   wire  InitialDelayCounter_clock; // @[Const.scala 11:33]
   wire  InitialDelayCounter_reset; // @[Const.scala 11:33]
   wire  InitialDelayCounter_valid_down; // @[Const.scala 11:33]
-  wire  n5_valid_up; // @[Top.scala 16:20]
-  wire  n5_valid_down; // @[Top.scala 16:20]
-  wire [7:0] n5_I0; // @[Top.scala 16:20]
-  wire [7:0] n5_O_t0b; // @[Top.scala 16:20]
-  wire  n6_valid_up; // @[Top.scala 20:20]
-  wire  n6_valid_down; // @[Top.scala 20:20]
-  wire [7:0] n6_I_t0b; // @[Top.scala 20:20]
-  wire [7:0] n6_O; // @[Top.scala 20:20]
+  wire  n5_valid_up; // @[Top.scala 17:20]
+  wire  n5_valid_down; // @[Top.scala 17:20]
+  wire [7:0] n5_I0; // @[Top.scala 17:20]
+  wire [7:0] n5_O_t0b; // @[Top.scala 17:20]
+  wire  n6_valid_up; // @[Top.scala 21:20]
+  wire  n6_valid_down; // @[Top.scala 21:20]
+  wire [7:0] n6_I_t0b; // @[Top.scala 21:20]
+  wire [7:0] n6_O; // @[Top.scala 21:20]
   InitialDelayCounter InitialDelayCounter ( // @[Const.scala 11:33]
     .clock(InitialDelayCounter_clock),
     .reset(InitialDelayCounter_reset),
     .valid_down(InitialDelayCounter_valid_down)
   );
-  AtomTuple n5 ( // @[Top.scala 16:20]
+  AtomTuple n5 ( // @[Top.scala 17:20]
     .valid_up(n5_valid_up),
     .valid_down(n5_valid_down),
     .I0(n5_I0),
     .O_t0b(n5_O_t0b)
   );
-  Add n6 ( // @[Top.scala 20:20]
+  Add n6 ( // @[Top.scala 21:20]
     .valid_up(n6_valid_up),
     .valid_down(n6_valid_down),
     .I_t0b(n6_I_t0b),
     .O(n6_O)
   );
-  assign valid_down = n6_valid_down; // @[Top.scala 24:16]
-  assign O = n6_O; // @[Top.scala 23:7]
+  assign valid_down = n6_valid_down; // @[Top.scala 25:16]
+  assign O = n6_O; // @[Top.scala 24:7]
   assign InitialDelayCounter_clock = clock;
   assign InitialDelayCounter_reset = reset;
-  assign n5_valid_up = valid_up & InitialDelayCounter_valid_down; // @[Top.scala 19:17]
-  assign n5_I0 = I; // @[Top.scala 17:11]
-  assign n6_valid_up = n5_valid_down; // @[Top.scala 22:17]
-  assign n6_I_t0b = n5_O_t0b; // @[Top.scala 21:10]
+  assign n5_valid_up = valid_up & InitialDelayCounter_valid_down; // @[Top.scala 20:17]
+  assign n5_I0 = I; // @[Top.scala 18:11]
+  assign n6_valid_up = n5_valid_down; // @[Top.scala 23:17]
+  assign n6_I_t0b = n5_O_t0b; // @[Top.scala 22:10]
 endmodule
 module MapT(
   input        clock,
@@ -221,37 +221,37 @@ module Top(
   input  [7:0] I,
   output [7:0] O
 );
-  wire  n1_clock; // @[Top.scala 30:20]
-  wire  n1_reset; // @[Top.scala 30:20]
-  wire  n1_valid_up; // @[Top.scala 30:20]
-  wire  n1_valid_down; // @[Top.scala 30:20]
-  wire [7:0] n1_I; // @[Top.scala 30:20]
-  wire [7:0] n1_O; // @[Top.scala 30:20]
-  wire  n7_clock; // @[Top.scala 33:20]
-  wire  n7_reset; // @[Top.scala 33:20]
-  wire  n7_valid_up; // @[Top.scala 33:20]
-  wire  n7_valid_down; // @[Top.scala 33:20]
-  wire [7:0] n7_I; // @[Top.scala 33:20]
-  wire [7:0] n7_O; // @[Top.scala 33:20]
-  wire  n8_clock; // @[Top.scala 36:20]
-  wire  n8_reset; // @[Top.scala 36:20]
-  wire  n8_valid_up; // @[Top.scala 36:20]
-  wire  n8_valid_down; // @[Top.scala 36:20]
-  wire [7:0] n8_I; // @[Top.scala 36:20]
-  wire [7:0] n8_O; // @[Top.scala 36:20]
-  wire  n9_clock; // @[Top.scala 39:20]
-  wire  n9_reset; // @[Top.scala 39:20]
-  wire  n9_valid_up; // @[Top.scala 39:20]
-  wire  n9_valid_down; // @[Top.scala 39:20]
-  wire [7:0] n9_I; // @[Top.scala 39:20]
-  wire [7:0] n9_O; // @[Top.scala 39:20]
-  wire  n10_clock; // @[Top.scala 42:21]
-  wire  n10_reset; // @[Top.scala 42:21]
-  wire  n10_valid_up; // @[Top.scala 42:21]
-  wire  n10_valid_down; // @[Top.scala 42:21]
-  wire [7:0] n10_I; // @[Top.scala 42:21]
-  wire [7:0] n10_O; // @[Top.scala 42:21]
-  FIFO n1 ( // @[Top.scala 30:20]
+  wire  n1_clock; // @[Top.scala 31:20]
+  wire  n1_reset; // @[Top.scala 31:20]
+  wire  n1_valid_up; // @[Top.scala 31:20]
+  wire  n1_valid_down; // @[Top.scala 31:20]
+  wire [7:0] n1_I; // @[Top.scala 31:20]
+  wire [7:0] n1_O; // @[Top.scala 31:20]
+  wire  n7_clock; // @[Top.scala 34:20]
+  wire  n7_reset; // @[Top.scala 34:20]
+  wire  n7_valid_up; // @[Top.scala 34:20]
+  wire  n7_valid_down; // @[Top.scala 34:20]
+  wire [7:0] n7_I; // @[Top.scala 34:20]
+  wire [7:0] n7_O; // @[Top.scala 34:20]
+  wire  n8_clock; // @[Top.scala 37:20]
+  wire  n8_reset; // @[Top.scala 37:20]
+  wire  n8_valid_up; // @[Top.scala 37:20]
+  wire  n8_valid_down; // @[Top.scala 37:20]
+  wire [7:0] n8_I; // @[Top.scala 37:20]
+  wire [7:0] n8_O; // @[Top.scala 37:20]
+  wire  n9_clock; // @[Top.scala 40:20]
+  wire  n9_reset; // @[Top.scala 40:20]
+  wire  n9_valid_up; // @[Top.scala 40:20]
+  wire  n9_valid_down; // @[Top.scala 40:20]
+  wire [7:0] n9_I; // @[Top.scala 40:20]
+  wire [7:0] n9_O; // @[Top.scala 40:20]
+  wire  n10_clock; // @[Top.scala 43:21]
+  wire  n10_reset; // @[Top.scala 43:21]
+  wire  n10_valid_up; // @[Top.scala 43:21]
+  wire  n10_valid_down; // @[Top.scala 43:21]
+  wire [7:0] n10_I; // @[Top.scala 43:21]
+  wire [7:0] n10_O; // @[Top.scala 43:21]
+  FIFO n1 ( // @[Top.scala 31:20]
     .clock(n1_clock),
     .reset(n1_reset),
     .valid_up(n1_valid_up),
@@ -259,7 +259,7 @@ module Top(
     .I(n1_I),
     .O(n1_O)
   );
-  MapT n7 ( // @[Top.scala 33:20]
+  MapT n7 ( // @[Top.scala 34:20]
     .clock(n7_clock),
     .reset(n7_reset),
     .valid_up(n7_valid_up),
@@ -267,7 +267,7 @@ module Top(
     .I(n7_I),
     .O(n7_O)
   );
-  FIFO n8 ( // @[Top.scala 36:20]
+  FIFO n8 ( // @[Top.scala 37:20]
     .clock(n8_clock),
     .reset(n8_reset),
     .valid_up(n8_valid_up),
@@ -275,7 +275,7 @@ module Top(
     .I(n8_I),
     .O(n8_O)
   );
-  FIFO n9 ( // @[Top.scala 39:20]
+  FIFO n9 ( // @[Top.scala 40:20]
     .clock(n9_clock),
     .reset(n9_reset),
     .valid_up(n9_valid_up),
@@ -283,7 +283,7 @@ module Top(
     .I(n9_I),
     .O(n9_O)
   );
-  FIFO n10 ( // @[Top.scala 42:21]
+  FIFO n10 ( // @[Top.scala 43:21]
     .clock(n10_clock),
     .reset(n10_reset),
     .valid_up(n10_valid_up),
@@ -291,26 +291,26 @@ module Top(
     .I(n10_I),
     .O(n10_O)
   );
-  assign valid_down = n10_valid_down; // @[Top.scala 46:16]
-  assign O = n10_O; // @[Top.scala 45:7]
+  assign valid_down = n10_valid_down; // @[Top.scala 47:16]
+  assign O = n10_O; // @[Top.scala 46:7]
   assign n1_clock = clock;
   assign n1_reset = reset;
-  assign n1_valid_up = valid_up; // @[Top.scala 32:17]
-  assign n1_I = I; // @[Top.scala 31:10]
+  assign n1_valid_up = valid_up; // @[Top.scala 33:17]
+  assign n1_I = I; // @[Top.scala 32:10]
   assign n7_clock = clock;
   assign n7_reset = reset;
-  assign n7_valid_up = n1_valid_down; // @[Top.scala 35:17]
-  assign n7_I = n1_O; // @[Top.scala 34:10]
+  assign n7_valid_up = n1_valid_down; // @[Top.scala 36:17]
+  assign n7_I = n1_O; // @[Top.scala 35:10]
   assign n8_clock = clock;
   assign n8_reset = reset;
-  assign n8_valid_up = n7_valid_down; // @[Top.scala 38:17]
-  assign n8_I = n7_O; // @[Top.scala 37:10]
+  assign n8_valid_up = n7_valid_down; // @[Top.scala 39:17]
+  assign n8_I = n7_O; // @[Top.scala 38:10]
   assign n9_clock = clock;
   assign n9_reset = reset;
-  assign n9_valid_up = n8_valid_down; // @[Top.scala 41:17]
-  assign n9_I = n8_O; // @[Top.scala 40:10]
+  assign n9_valid_up = n8_valid_down; // @[Top.scala 42:17]
+  assign n9_I = n8_O; // @[Top.scala 41:10]
   assign n10_clock = clock;
   assign n10_reset = reset;
-  assign n10_valid_up = n9_valid_down; // @[Top.scala 44:18]
-  assign n10_I = n9_O; // @[Top.scala 43:11]
+  assign n10_valid_up = n9_valid_down; // @[Top.scala 45:18]
+  assign n10_I = n9_O; // @[Top.scala 44:11]
 endmodule

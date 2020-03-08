@@ -234,7 +234,7 @@ conv_2d_results' = sequence $
   fmap (\s -> test_with_backend
               conv_2d (wrap_single_t s)
               Magma No_Verilog
-              conv_2d_inputs conv_2d_output) [1]
+              conv_2d_inputs conv_2d_output) [1%9]
 conv_2d_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               conv_2d (wrap_single_t s)
@@ -471,7 +471,7 @@ conv_2d_b2b_results' = sequence $
   fmap (\s -> test_with_backend
               conv_2d_b2b (wrap_single_t s)
               Magma (Save_Gen_Verilog "conv2d_b2b")
-              conv_2d_b2b_inputs conv_2d_b2b_output) [2]
+              conv_2d_b2b_inputs conv_2d_b2b_output) [1%3]
 conv_2d_b2b_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               conv_2d_b2b (wrap_single_t s)
