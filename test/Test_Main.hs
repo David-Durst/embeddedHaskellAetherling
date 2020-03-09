@@ -50,6 +50,6 @@ tests :: TestTree
 --tests = testGroup "Top Level Aetherling Tests" [big_real_tests, big_real_16_tests, big_real_32_tests, big_16_tests]
 --tests = testGroup "Top Level Aetherling Tests" [big_real_16_tests, big_real_32_tests]
 --tests = testGroup "Top Level Aetherling Tests" [big_16_tests]
-tests = testGroup "Top Level Aetherling Tests" [big_real_16_tests']
+tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests']
 --tests = testGroup "Top Level Aetherling Tests" [big_16_tests']
 

@@ -144,7 +144,7 @@ big_real_32_conv_2d_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               big_real_32_conv_2d (wrap_single_t s)
               Chisel (Save_Gen_Verilog "big_real_32_conv2d")
-              big_real_32_conv_2d_inputs big_real_32_conv_2d_output) [big_real_32_conv_2d_throughputs !! 5]
+              big_real_32_conv_2d_inputs big_real_32_conv_2d_output) [big_real_32_conv_2d_throughputs !! 4]
 big_real_32_conv_2d_st_prints = sequence $
   fmap (\s -> compile_to_file
               big_real_32_conv_2d (wrap_single_t s)
@@ -255,8 +255,8 @@ big_real_32_tests = testGroup "Big Real 32 Tests"
     (TS.all_success big_real_32_sharpen_results_chisel) @? "big_real_32 sharpen chisel failed"
   ]
 
-big_real_32_tests' = testGroup "Big REal 32 Tests"
+big_real_32_tests' = testGroup "Big Real 32 Tests"
   [
-    testCase "single big_real_32 3x3 convolution chisel" $
+    testCase "one single big_real_32 3x3 convolution chisel" $
     (TS.all_success big_real_32_conv_2d_results_chisel') @? "single 3x3 convolution chisel failed"
   ]
