@@ -84,7 +84,7 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
         tab_str ++ "val pipeline_clks = " ++ show output_latency ++ "\n" ++
         tab_str ++ "val total_clks = run_clks + pipeline_clks\n" ++
         tab_str ++ "for(f_clk <- 0 to (total_clks - 1)) {\n" ++
-        tab_str ++ tab_str ++ "println(s\"clk: $f_clk\")\n"
+        tab_str ++ tab_str ++ "//println(s\"clk: $f_clk\")\n"
   let test_inputs = foldl (++) "" $
         map (\i -> do
                 let i_port_name = (port_name $
@@ -101,9 +101,9 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
             ) [0..num_ports - 1]
   let test_print = tab_str ++ tab_str ++
         case num_ports of
-          0 -> "peek_nullary_module(c)\n"
-          1 -> "peek_unary_module(c)\n"
-          _ -> "peek_binary_module(c)\n"
+          0 -> "//peek_nullary_module(c)\n"
+          1 -> "//peek_unary_module(c)\n"
+          _ -> "//peek_binary_module(c)\n"
   let output_port_name = port_name $ out_port $
                          module_outer_results module_str_data
   let test_output_counter_incr =
