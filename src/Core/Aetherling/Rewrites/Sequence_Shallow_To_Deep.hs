@@ -16,6 +16,8 @@ import Control.Applicative
 import GHC.TypeLits
 import Unsafe.Coerce
 import Data.Either
+import Data.Ratio
+import Data.Word
 import qualified Data.Vector.Sized as V
 import qualified Data.Map.Lazy as M
 import Util
@@ -91,7 +93,7 @@ instance Sequence_Language Rewrite_StateM where
       _ -> throwError $ Expr_Failure $ fail_message_edge "mulC" "Atom_Tuple Atom_Int Atom_Int"
 
   divC :: forall a . (Aetherling_Value a, Aetherling_Int a) =>
-    Rewrite_StateM (Atom_Tuple a a) -> Rewrite_StateM a
+    Rewrite_StateM (Atom_Tuple a Atom_FixP1_7) -> Rewrite_StateM a
   divC inputM = do
     input <- inputM
     let t = get_AST_type (Proxy :: Proxy a)

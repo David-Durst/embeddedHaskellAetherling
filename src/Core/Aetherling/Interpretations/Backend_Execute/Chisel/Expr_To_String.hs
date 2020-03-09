@@ -24,6 +24,7 @@ chisel_prelude =
   "import aetherling.types._\n" ++
   "import aetherling.modules.helpers.GlobalValues.undef\n" ++
   "import chisel3._\n" ++
+  "import chisel3.experimental.FixedPoint\n" ++
   "import scala.io.Source\n" ++
   "import spray.json._\n" ++
   "import DefaultJsonProtocol._\n\n" 
@@ -755,6 +756,7 @@ type_to_chisel UnitT = "undefined"
 type_to_chisel BitT = "STBit()"
 type_to_chisel Int8T = "STInt(8, true)"
 type_to_chisel UInt8T = "STInt(8, false)"
+type_to_chisel FixP1_7T = "STFixP1_7()"
 type_to_chisel Int16T = "STInt(16, true)"
 type_to_chisel UInt16T = "STInt(16, false)"
 type_to_chisel Int32T = "STInt(32, true)"

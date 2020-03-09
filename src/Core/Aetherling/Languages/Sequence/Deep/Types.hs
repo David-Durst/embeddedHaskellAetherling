@@ -12,6 +12,7 @@ data AST_Type =
   | BitT
   | Int8T
   | UInt8T
+  | FixP1_7T
   | Int16T
   | UInt16T
   | Int32T
@@ -26,6 +27,7 @@ instance Show AST_Type where
   show BitT = "BitT"
   show Int8T = "Int8T"
   show UInt8T = "UInt8T"
+  show FixP1_7T = "FixP1_7T"
   show Int16T = "Int16T"
   show UInt16T = "UInt16T"
   show Int32T = "Int32T"
@@ -36,6 +38,7 @@ instance Show AST_Type where
 
 seq_int8 = Int8T
 seq_uint8 = UInt8T
+seq_fp1_7 = FixP1_7T
 seq_int16 = Int8T
 seq_uint16 = UInt8T
 seq_int32 = Int32T
@@ -49,6 +52,7 @@ data AST_Value =
   | BitV Bool
   | Int8V Int8
   | UInt8V Word8
+  | FixP1_7V Double
   | Int16V Int16
   | UInt16V Word16
   | Int32V Int32
@@ -65,6 +69,7 @@ num_atoms_total_t UnitT = 1
 num_atoms_total_t BitT = 1
 num_atoms_total_t Int8T = 1
 num_atoms_total_t UInt8T = 1
+num_atoms_total_t FixP1_7T = 1
 num_atoms_total_t Int16T = 1
 num_atoms_total_t UInt16T = 1
 num_atoms_total_t Int32T = 1
@@ -79,6 +84,7 @@ size_t UnitT = 0
 size_t BitT = 1
 size_t Int8T = 8
 size_t UInt8T = 8
+size_t FixP1_7T = 8
 size_t Int16T = 16
 size_t UInt16T = 16
 size_t Int32T = 32

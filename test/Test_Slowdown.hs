@@ -674,6 +674,34 @@ tuple_reduce_results_chisel' = sequence $
               Chisel No_Verilog
               tuple_reduce_inputs tuple_reduce_output) [1]
 
+tuple_div_no_input in_seq = do
+  let kernel_list = fmap Atom_FixP1_7 [1/16,2/16,1/16,2/16,4/16,2/16,1/16,3/16]
+  let kernel = const_genC (Seq $ listToVector (Proxy @8) kernel_list) in_seq
+  let kernel_and_values = map2C atom_tupleC in_seq kernel
+  let muled_pairs = mapC divC kernel_and_values
+  reduceC addC muled_pairs
+tuple_div = tuple_div_no_input $
+  com_input_seq "I" (Proxy :: Proxy (Seq 8 Atom_UInt8))
+tuple_div_seq_idx = add_indexes $ seq_shallow_to_deep tuple_div
+tuple_div_ppar =
+  fmap (\s -> compile_with_throughput_to_expr tuple_div s) [1,1%2,1%4,1%8]
+tuple_div_ppar_typechecked =
+  fmap check_type tuple_div_ppar
+tuple_div_ppar_typechecked' =
+  fmap check_type_get_error tuple_div_ppar
+tuple_div_inputs :: [[Integer]] = [[10,8,9,3,4,2,2,2]]
+tuple_div_output :: [Integer] = [2]
+-- need to come back and check why slowest version uses a reduce_s
+tuple_div_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              tuple_div (wrap_single_t s)
+              Chisel (Save_Gen_Verilog "tuple_div")
+              tuple_div_inputs tuple_div_output) [1,1%2,1%4,1%8]
+tuple_div_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              tuple_div (wrap_single_t s)
+              Chisel No_Verilog
+              tuple_div_inputs tuple_div_output) [1]
 
 fst_snd_sum_no_input in_seq = do
   let kernel_list = fmap Atom_UInt8 [1,2,3,4,5,6,7,8]
@@ -851,6 +879,7 @@ shift_one_results_chisel = sequence $
               Chisel No_Verilog
               shift_one_inputs shift_one_output) shift_throughputs
 
+{-
 stencil_1dC_internal_test in_seq = do
   let shifted_once = shiftC (Proxy @1) in_seq
   let shifted_twice = shiftC (Proxy @1) shifted_once
@@ -1039,4 +1068,6 @@ map_reduce_ppar =
   fmap (\s -> rewrite_to_partially_parallel s map_reduce_seq_idx) [1,3,9]
 map_reduce_ppar_typechecked =
   fmap check_type map_reduce_ppar
+-}
+
 -}

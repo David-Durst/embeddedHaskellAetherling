@@ -40,6 +40,11 @@ data Atom_UInt8 =
   | Atom_UInt8_Edge Expr
   deriving (Show, Eq)
 
+data Atom_FixP1_7 =
+  Atom_FixP1_7 Double
+  | Atom_FixP1_7_Edge Expr
+  deriving (Show, Eq)
+
 data Atom_Int16 =
   Atom_Int16 Int16
   | Atom_Int16_Edge Expr
@@ -97,6 +102,7 @@ type family Check_Type_Is_Atom (x :: *) :: Constraint where
   Check_Type_Is_Atom Atom_Unit = True ~ True
   Check_Type_Is_Atom Atom_Int8 = True ~ True
   Check_Type_Is_Atom Atom_UInt8 = True ~ True
+  Check_Type_Is_Atom Atom_FixP1_7 = True ~ True
   Check_Type_Is_Atom Atom_Int16 = True ~ True
   Check_Type_Is_Atom Atom_UInt16 = True ~ True
   Check_Type_Is_Atom Atom_Int32 = True ~ True

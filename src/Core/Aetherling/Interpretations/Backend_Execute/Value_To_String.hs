@@ -31,18 +31,22 @@ data ST_Val_To_String_Config = ST_Val_To_String_Config {
   make_integer_string_for_backend :: Integer -> Integer -> Bool -> String,
   make_bool_string_for_backend :: Bool -> String,
   make_tuple_string_for_backend :: String -> String -> String,
-  make_array_string_for_backend :: [String] -> String
+  make_array_string_for_backend :: [String] -> String,
+  make_fp_string_for_backend :: Double -> String
   }
 
 json_conf = ST_Val_To_String_Config (\x _ _ -> show x) (map toLower . show)
             (\x y -> show_no_quotes (x,y)) show_no_quotes
+            (\_ -> error "json backend doesn't support fp")
 magma_conf = ST_Val_To_String_Config (\x _ _ -> show x) show
              (\x y -> show_no_quotes (x,y)) show_no_quotes
+             (\_ -> error "magma backend doens't support fp")
 chisel_conf = ST_Val_To_String_Config (\x _ _ -> show x) (map toLower . show)
   (\x y -> "Array(" ++ x ++ ", " ++ y ++ ")")
   (\x -> "Array(" ++
     (foldl (\result_s new_s -> result_s ++ "," ++ new_s) (head x) (tail x)) ++
     ")")
+  (\f -> "FixedPoint.fromDouble(" ++ show f ++ ",8.W, 7.BP)")
 chisel_hardware_conf = ST_Val_To_String_Config
   (\x w s -> show x ++ "." ++ if s then "S" else "U" ++ "(" ++ show w ++ ".W)")
   (\x -> (map toLower . show) x ++ ".B")
@@ -50,6 +54,7 @@ chisel_hardware_conf = ST_Val_To_String_Config
   (\x -> "Const.make_vec(" ++
     (foldl (\result_s new_s -> result_s ++ "," ++ new_s) (head x) (tail x)) ++
     ")")
+  (\f -> "FixedPoint.fromDouble(" ++ show f ++ ",8.W, 7.BP)")
 
 convert_seq_val_to_st_val_string ::
   Convertible_To_Atom_Strings a => a -> AST_Type ->
@@ -120,6 +125,11 @@ instance Convertible_To_Atom_Strings Word8 where
     & PS.maybe'elems .~ Just (PS.ValueSerialized'Uint $ fromIntegral x)
   num_atoms _ = 1
 
+instance Convertible_To_Atom_Strings Double where
+  convert_to_flat_atom_list x conf = [make_fp_string_for_backend conf x]
+  convert_to_haskell_proto x = error "can't convert double to protobnnuf"
+  num_atoms _ = 1
+  
 instance Convertible_To_Atom_Strings Int16 where
   convert_to_flat_atom_list x conf = [make_integer_string_for_backend conf
                                       (fromIntegral x) 16 True]
@@ -189,6 +199,8 @@ instance Convertible_To_Atom_Strings AST_Atoms where
     [make_integer_string_for_backend conf (toInteger i) 8 True]
   convert_to_flat_atom_list (UInt8A i) conf =
     [make_integer_string_for_backend conf (toInteger i) 8 False]
+  convert_to_flat_atom_list (FixP1_7A i) conf =
+    [make_fp_string_for_backend conf i]
   convert_to_flat_atom_list (Int16A i) conf =
     [make_integer_string_for_backend conf (toInteger i) 16 True]
   convert_to_flat_atom_list (UInt16A i) conf =
@@ -212,6 +224,7 @@ data AST_Atoms =
   | Int8A Int8
   | UInt8A Word8
   | Int16A Int16
+  | FixP1_7A Double
   | UInt16A Word16
   | Int32A Int32
   | UInt32A Word32
@@ -223,6 +236,7 @@ flatten_ast_value UnitV = undefined
 flatten_ast_value (BitV b) = [BitA b]
 flatten_ast_value (Int8V i) = [Int8A i]
 flatten_ast_value (UInt8V i) = [UInt8A i]
+flatten_ast_value (FixP1_7V i) = [FixP1_7A i]
 flatten_ast_value (Int16V i) = [Int16A i]
 flatten_ast_value (UInt16V i) = [UInt16A i]
 flatten_ast_value (Int32V i) = [Int32A i]
@@ -370,6 +384,9 @@ generate_st_val_idxs_for_st_type' Int8T _ _ _ cur_space cur_time
   valid cur_idx = do
   [ST_Val_Index cur_idx valid cur_space cur_time]
 generate_st_val_idxs_for_st_type' UInt8T _ _ _ cur_space cur_time
+  valid cur_idx = do
+  [ST_Val_Index cur_idx valid cur_space cur_time]
+generate_st_val_idxs_for_st_type' FixP1_7T _ _ _ cur_space cur_time
   valid cur_idx = do
   [ST_Val_Index cur_idx valid cur_space cur_time]
 generate_st_val_idxs_for_st_type' Int16T _ _ _ cur_space cur_time

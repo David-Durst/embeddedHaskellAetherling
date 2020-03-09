@@ -34,8 +34,10 @@ apps_tests = testGroup "Full Application Tests"
     (TS.all_success single_map_200_results) @? "map failed",
     testCase "CONV in paper - single 3x3 convolution" $
     (TS.all_success conv_2d_results) @? "single 3x3 convolution failed",
+    {-
     testCase "pyramid" $
     (TS.all_success TS.pyramid_1d_results) @? "pyramid failed",
+-}
     testCase "CONVB2B in paper - conv 3x3 to 2x2" $
     (TS.all_success conv_2d_b2b_results) @? "conv 3x3 to 2x2 failed",
     testCase "conv 3x3 to 3x3" $
@@ -55,8 +57,8 @@ apps_tests_chisel = testGroup "Full Application Tests"
     testCase "SHARPEN in paper" $
     (TS.all_success sharpen_results_chisel) @? "sharpen failed"
   ]
-all_types = sequence [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types, --sharpen_results_all_types,
-             TS.pyramid_1d_results_all_types]
+all_types = sequence [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types] --, sharpen_results_all_types,
+             --TS.pyramid_1d_results_all_types]
 
 add_5 atom_in = do
   let const = const_genC (Atom_UInt8 5) atom_in

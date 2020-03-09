@@ -58,6 +58,7 @@ dependencies:
 - lens-family
 - bytestring
 - vector
+- Decimal
 
 ghc-options:
 - -O2

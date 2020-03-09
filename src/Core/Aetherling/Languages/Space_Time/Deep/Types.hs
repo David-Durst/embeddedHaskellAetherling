@@ -9,6 +9,7 @@ data AST_Type =
   | BitT
   | Int8T
   | UInt8T
+  | FixP1_7T
   | Int16T
   | UInt16T
   | Int32T
@@ -24,6 +25,7 @@ instance Show AST_Type where
   show BitT = "BitT"
   show Int8T = "Int8T"
   show UInt8T = "UInt8T"
+  show FixP1_7T = "FixP1_7T"
   show Int16T = "Int16T"
   show UInt16T = "UInt16T"
   show Int32T = "Int32T"
@@ -35,6 +37,7 @@ instance Show AST_Type where
 
 st_int8 = Int8T
 st_uint8 = UInt8T
+seq_fp1_7 = FixP1_7T
 st_int16 = Int16T
 st_uint16 = UInt16T
 st_int32 = Int32T
@@ -73,6 +76,7 @@ data AST_Value =
   | BitV Bool
   | Int8V Int8
   | UInt8V Word8
+  | FixP1_7V Double
   | Int16V Int16
   | UInt16V Word16
   | Int32V Int32
@@ -89,6 +93,7 @@ size_t UnitT = 0
 size_t BitT = 1
 size_t Int8T = 8
 size_t UInt8T = 8
+size_t FixP1_7T = 8
 size_t Int16T = 16
 size_t UInt16T = 16
 size_t Int32T = 32
@@ -103,6 +108,7 @@ size_all_clocks_t UnitT = 0
 size_all_clocks_t BitT = 1
 size_all_clocks_t Int8T = 8
 size_all_clocks_t UInt8T = 8
+size_all_clocks_t FixP1_7T = 8
 size_all_clocks_t Int16T = 16
 size_all_clocks_t UInt16T = 16
 size_all_clocks_t Int32T = 32
@@ -119,6 +125,7 @@ num_atoms_total_t UnitT = 1
 num_atoms_total_t BitT = 1
 num_atoms_total_t Int8T = 1
 num_atoms_total_t UInt8T = 1
+num_atoms_total_t FixP1_7T = 1
 num_atoms_total_t Int16T = 1
 num_atoms_total_t UInt16T = 1
 num_atoms_total_t Int32T = 1
@@ -133,6 +140,7 @@ num_atoms_per_valid_t UnitT = 1
 num_atoms_per_valid_t BitT = 1
 num_atoms_per_valid_t Int8T = 1
 num_atoms_per_valid_t UInt8T = 1
+num_atoms_per_valid_t FixP1_7T = 1
 num_atoms_per_valid_t Int16T = 1
 num_atoms_per_valid_t UInt16T = 1
 num_atoms_per_valid_t Int32T = 1
@@ -147,6 +155,7 @@ num_atoms_or_stuple_per_valid_t UnitT = 1
 num_atoms_or_stuple_per_valid_t BitT = 1
 num_atoms_or_stuple_per_valid_t Int8T = 1
 num_atoms_or_stuple_per_valid_t UInt8T = 1
+num_atoms_or_stuple_per_valid_t FixP1_7T = 1
 num_atoms_or_stuple_per_valid_t Int16T = 1
 num_atoms_or_stuple_per_valid_t UInt16T = 1
 num_atoms_or_stuple_per_valid_t Int32T = 1
@@ -161,6 +170,7 @@ clocks_t UnitT = 1
 clocks_t BitT = 1
 clocks_t Int8T = 1
 clocks_t UInt8T = 1
+clocks_t FixP1_7T = 1
 clocks_t Int16T = 1
 clocks_t UInt16T = 1
 clocks_t Int32T = 1
@@ -175,6 +185,7 @@ valid_clocks_t UnitT = 1
 valid_clocks_t BitT = 1
 valid_clocks_t Int8T = 1
 valid_clocks_t UInt8T = 1
+valid_clocks_t FixP1_7T = 1
 valid_clocks_t Int16T = 1
 valid_clocks_t UInt16T = 1
 valid_clocks_t Int32T = 1
@@ -227,6 +238,7 @@ num_layers_t UnitT = 1
 num_layers_t BitT = 1
 num_layers_t Int8T = 1
 num_layers_t UInt8T = 1
+num_layers_t FixP1_7T = 1
 num_layers_t Int16T = 1
 num_layers_t UInt16T = 1
 num_layers_t Int32T = 1

@@ -55,6 +55,19 @@ instance Aetherling_Value Atom_UInt8 where
 instance Aetherling_Int Atom_UInt8 where
   is_signed _ = False
   get_width _ = 8
+  
+instance Aetherling_Value Atom_FixP1_7 where
+  edge_to_maybe_expr (Atom_FixP1_7_Edge x) = Just x
+  edge_to_maybe_expr _ = Nothing
+  expr_to_edge x = Atom_FixP1_7_Edge x
+  get_AST_type _ = FixP1_7T
+  get_AST_value (Atom_FixP1_7 i) = Just $ FixP1_7V i
+  get_AST_value _ = Nothing
+  get_input_edge s idx = Atom_FixP1_7_Edge (InputN FixP1_7T s idx)
+
+instance Aetherling_Int Atom_FixP1_7 where
+  is_signed _ = False
+  get_width _ = 8
 
 instance Aetherling_Value Atom_Int16 where
   edge_to_maybe_expr (Atom_Int16_Edge x) = Just x
