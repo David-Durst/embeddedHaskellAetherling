@@ -27,6 +27,7 @@ import GHC.TypeLits.Extra
 import Control.Monad.State
 import Data.Either
 import Data.Ratio
+import Data.Word
 
 slowdown_tests = testGroup "Basic End To End Tests Using Magma"
   [
@@ -636,13 +637,13 @@ tuple_sum_results_chisel = sequence $
               tuple_sum_inputs tuple_sum_output) [1,2,4]
 
 tuple_reduce_no_input in_seq = do
-  let kernel_list = fmap Atom_UInt8 [1,2,3,4,2,1,2,3]
+  let kernel_list = fmap Atom_UInt16 [1,2,3,4,2,1,2,3]
   let kernel = const_genC (Seq $ listToVector (Proxy @8) kernel_list) in_seq
   let kernel_and_values = map2C atom_tupleC kernel in_seq
   let muled_pairs = mapC mulC kernel_and_values
   reduceC addC muled_pairs
 tuple_reduce = tuple_reduce_no_input $
-  com_input_seq "I" (Proxy :: Proxy (Seq 8 Atom_UInt8))
+  com_input_seq "I" (Proxy :: Proxy (Seq 8 Atom_UInt16))
 tuple_reduce_seq_idx = add_indexes $ seq_shallow_to_deep tuple_reduce
 tuple_reduce_ppar =
   fmap (\s -> compile_with_throughput_to_expr tuple_reduce s) [1,1%2,1%4,1%8]
@@ -675,13 +676,12 @@ tuple_reduce_results_chisel' = sequence $
               tuple_reduce_inputs tuple_reduce_output) [1]
 
 tuple_div_no_input in_seq = do
-  let kernel_list = fmap Atom_FixP1_7 [1/16,2/16,1/16,2/16,4/16,2/16,1/16,3/16]
+  let kernel_list = fmap Atom_FixP1_7 [1/16,2/16,5/16,2/16,4/16,2/16,1/16,3/16]
   let kernel = const_genC (Seq $ listToVector (Proxy @8) kernel_list) in_seq
   let kernel_and_values = map2C atom_tupleC in_seq kernel
-  let muled_pairs = mapC divC kernel_and_values
-  reduceC addC muled_pairs
+  mapC divC kernel_and_values
 tuple_div = tuple_div_no_input $
-  com_input_seq "I" (Proxy :: Proxy (Seq 8 Atom_UInt8))
+  com_input_seq "I" (Proxy :: Proxy (Seq 8 Atom_UInt16))
 tuple_div_seq_idx = add_indexes $ seq_shallow_to_deep tuple_div
 tuple_div_ppar =
   fmap (\s -> compile_with_throughput_to_expr tuple_div s) [1,1%2,1%4,1%8]
@@ -690,7 +690,7 @@ tuple_div_ppar_typechecked =
 tuple_div_ppar_typechecked' =
   fmap check_type_get_error tuple_div_ppar
 tuple_div_inputs :: [[Integer]] = [[10,8,9,3,4,2,2,2]]
-tuple_div_output :: [Integer] = [2]
+tuple_div_output :: [Integer] = [0,1,2,0,1,0,0,0]
 -- need to come back and check why slowest version uses a reduce_s
 tuple_div_results_chisel = sequence $
   fmap (\s -> test_with_backend
@@ -702,6 +702,40 @@ tuple_div_results_chisel' = sequence $
               tuple_div (wrap_single_t s)
               Chisel No_Verilog
               tuple_div_inputs tuple_div_output) [1]
+  
+tuple_div_big_no_input in_seq = do
+  let kernel_list = fmap Atom_FixP1_7 [1/16 | _ <- [0..7]]
+  let kernel_list' = fmap Atom_UInt16 [16 | _ <- [0..7]]
+  let kernel = const_genC (Seq $ listToVector (Proxy @8) kernel_list) in_seq
+  let kernel_and_values = map2C atom_tupleC in_seq kernel
+  let div_res = mapC divC kernel_and_values
+  let kernel' = const_genC (Seq $ listToVector (Proxy @8) kernel_list') div_res
+  let kernel_and_values' = map2C atom_tupleC div_res kernel'
+  mapC mulC kernel_and_values'
+tuple_div_big = tuple_div_big_no_input $
+  com_input_seq "I" (Proxy :: Proxy (Seq 8 Atom_UInt16))
+tuple_div_big_seq_idx = add_indexes $ seq_shallow_to_deep tuple_div_big
+tuple_div_big_ppar =
+  fmap (\s -> compile_with_throughput_to_expr tuple_div_big s) [1,1%2,1%4,1%8]
+tuple_div_big_ppar_typechecked =
+  fmap check_type tuple_div_big_ppar
+tuple_div_big_ppar_typechecked' =
+  fmap check_type_get_error tuple_div_big_ppar
+tuple_div_big_inputs :: [[Word16]] = map (map fromInteger)
+                                     [[15032, 54950, 48647, 54237, 39688, 39536, 46670, 34643]]
+tuple_div_big_output = map (\x -> x `div` 16 * 16) $ head tuple_div_big_inputs
+
+-- need to come back and check why slowest version uses a reduce_s
+tuple_div_big_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              tuple_div_big (wrap_single_t s)
+              Chisel (Save_Gen_Verilog "tuple_div_big")
+              tuple_div_big_inputs tuple_div_big_output) [1,1%2,1%4,1%8]
+tuple_div_big_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              tuple_div_big (wrap_single_t s)
+              Chisel No_Verilog
+              tuple_div_big_inputs tuple_div_big_output) [1]
 
 fst_snd_sum_no_input in_seq = do
   let kernel_list = fmap Atom_UInt8 [1,2,3,4,5,6,7,8]
