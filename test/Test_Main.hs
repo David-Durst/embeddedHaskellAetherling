@@ -5,9 +5,14 @@ import Test_Seq_Embedding
 import Test_ST_Embedding
 import Test_Slowdown
 import Test_Apps
+import Test_Apps_Real_Math
 import Test_Big
+import Test_Big16
 import Test_Big32
 import Test_Spatial
+import Test_Big_Real_Math
+import Test_Big_Real_Math16
+import Test_Big_Real_Math32
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types
@@ -40,5 +45,8 @@ tests :: TestTree
 --tests = testGroup "Top Level Aetherling Tests" [slowdown_tests_chisel]
 --tests = testGroup "Top Level Aetherling Tests" [big_tests]
 --tests = testGroup "Top Level Aetherling Tests" [big_tests']
-tests = testGroup "Top Level Aetherling Tests" [big_tests, big_32_tests]
+--tests = testGroup "Top Level Aetherling Tests" [big_tests, big_16_tests, big_32_tests]
+--tests = testGroup "Top Level Aetherling Tests" [apps_tests_real_math_chisel]
+--tests = testGroup "Top Level Aetherling Tests" [big_real_tests, big_real_16_tests, big_real_32_tests, big_16_tests]
+tests = testGroup "Top Level Aetherling Tests" [big_real_16_tests, big_real_32_tests, big_16_tests]
 

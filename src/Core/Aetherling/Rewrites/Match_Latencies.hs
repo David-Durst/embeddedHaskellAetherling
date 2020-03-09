@@ -71,38 +71,21 @@ match_latencies' e@(MulN _ producer _) = do
   return $ this_comb_latency {
     latency = latency this_comb_latency + 3
     }
-match_latencies' e@(DivN Int8T producer _) = do
-  this_comb_latency <- match_combinational_op e producer
-  return $ this_comb_latency {
-    latency = latency this_comb_latency + 12
-    }
-match_latencies' e@(DivN UInt8T producer _) = do
-  this_comb_latency <- match_combinational_op e producer
-  return $ this_comb_latency {
-    latency = latency this_comb_latency + 10
-    }
-match_latencies' e@(DivN Int16T producer _) = do
-  this_comb_latency <- match_combinational_op e producer
-  return $ this_comb_latency {
-    latency = latency this_comb_latency + 20
-    }
-match_latencies' e@(DivN UInt16T producer _) = do
-  this_comb_latency <- match_combinational_op e producer
-  return $ this_comb_latency {
-    latency = latency this_comb_latency + 18
-    }
 match_latencies' e@(DivN Int32T producer _) = do
   this_comb_latency <- match_combinational_op e producer
   return $ this_comb_latency {
-    latency = latency this_comb_latency + 36
+    latency = latency this_comb_latency + 6
     }
 match_latencies' e@(DivN UInt32T producer _) = do
   this_comb_latency <- match_combinational_op e producer
   return $ this_comb_latency {
-    latency = latency this_comb_latency + 34
+    latency = latency this_comb_latency + 6
     }
-match_latencies' e@(DivN t producer _) =
-  error $ "can't match_latency for div with non-int " ++ show t
+match_latencies' e@(DivN t producer _) = do
+  this_comb_latency <- match_combinational_op e producer
+  return $ this_comb_latency {
+    latency = latency this_comb_latency + 3
+    }
 match_latencies' e@(LSRN _ producer _) = match_combinational_op e producer
 match_latencies' e@(LSLN _ producer _) = match_combinational_op e producer
 match_latencies' e@(LtN _ producer _) = match_combinational_op e producer

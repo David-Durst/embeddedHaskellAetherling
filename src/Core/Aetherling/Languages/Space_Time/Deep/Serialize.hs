@@ -58,6 +58,7 @@ save_type' (TSeqT n i elem_t) =
   & PS.children .~ [elem_t_serialized]
   where
     elem_t_serialized = save_type' elem_t
+save_type' _ = error "not supported st type to save"
 
 load_type :: FilePath -> IO AST_Type
 load_type file_path = do

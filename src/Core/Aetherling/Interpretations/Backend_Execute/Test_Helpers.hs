@@ -284,8 +284,10 @@ stencil_2x2_generator row_size inputs = do
       | stencil_c <- [1,0]] | stencil_r <- [1,0]]
     | r <- [0..num_rows-1], c <- [0..num_cols-1]]
 
--- need thse for Integer and Int versions
 hask_kernel :: [[Word8]] = [[0,1,0],[1,2,1],[0,1,0]]
+hask_kernel_real :: [[Word8]] = [[1,2,1],[2,4,2],[1,2,1]]
+hask_kernel_real16 :: [[Word16]] = [[1,2,1],[2,4,2],[1,2,1]]
+hask_kernel_real32 :: [[Word32]] = [[1,2,1],[2,4,2],[1,2,1]]
 hask_kernel' :: [Word8] = [1,2,1,2,4,2,1,2,1]
 conv_generator :: (Num a, Integral a) => [[[a]]] -> [a]
 conv_generator stencil_2d_output = [
@@ -296,8 +298,10 @@ conv_generator stencil_2d_output = [
     let window_flat = concat window,
     let window_valid = not $ any (\x -> (fromIntegral x) == int_to_ignore) window_flat]
 
--- need thse for Integer and Int versions
 hask_kernel_2x2 :: [[Word8]] = [[0,2],[1,0]]
+hask_kernel_2x2_real :: [[Word8]] = [[1,4],[2,1]]
+hask_kernel_2x2_real16 :: [[Word16]] = [[1,4],[2,1]]
+hask_kernel_2x2_real32 :: [[Word32]] = [[1,4],[2,1]]
 hask_kernel'_2x2 :: [Word8] = [1,4,2,1]
 
 conv_2x2_generator :: (Num a, Integral a) => [[[a]]] -> [a]

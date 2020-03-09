@@ -107,6 +107,9 @@ print_st_type Int8T nesting = do
 print_st_type UInt8T nesting = do
   cur_int <- cur_print_int
   return $ nesting_str nesting ++ show cur_int
+print_st_type FixP1_7T nesting = do
+  cur_int <- cur_print_int
+  return $ nesting_str nesting ++ show cur_int
 print_st_type Int16T nesting = do
   cur_int <- cur_print_int
   return $ nesting_str nesting ++ show cur_int
