@@ -144,7 +144,7 @@ big_16_conv_2d_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               big_16_conv_2d (wrap_single_t s)
               Chisel (Save_Gen_Verilog "big_16_conv2d")
-              big_16_conv_2d_inputs big_16_conv_2d_output) [big_16_conv_2d_throughputs !! 4]
+              big_16_conv_2d_inputs big_16_conv_2d_output) [big_16_conv_2d_throughputs !! 0]
 big_16_conv_2d_st_prints = sequence $
   fmap (\s -> compile_to_file
               big_16_conv_2d (wrap_single_t s)

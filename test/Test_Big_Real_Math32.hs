@@ -255,6 +255,13 @@ big_real_32_tests = testGroup "Big Real 32 Tests"
     (TS.all_success big_real_32_sharpen_results_chisel) @? "big_real_32 sharpen chisel failed"
   ]
 
+big_real_32_tests_part = testGroup "Big Real 32 Tests part"
+  [
+    testCase "big_real_32 3x3 conv to 2x2 conv chisel" $
+    (TS.all_success big_real_32_conv_2d_b2b_results_chisel) @? "big_real_32 3x3 conv to 2x2 conv chisel failed",
+    testCase "big_real_32 sharpen chisel" $
+    (TS.all_success big_real_32_sharpen_results_chisel) @? "big_real_32 sharpen chisel failed"
+  ]
 big_real_32_tests' = testGroup "Big Real 32 Tests"
   [
     testCase "one single big_real_32 3x3 convolution chisel" $
