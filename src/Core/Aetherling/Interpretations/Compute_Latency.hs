@@ -188,7 +188,7 @@ compute_latency' e@(Reduce_sN _ f producer _) = do
   inner_latency <- compute_latency' f
   update_latency_state cur_lat
   if inner_latency == 0
-    then return $ producer_latency + 1
+    then return $ producer_latency + 2
     else do
     print_stM e
     throwError $ Latency_Failure $
@@ -271,7 +271,7 @@ compute_down_latency sel_idx t = sel_idx * clocks_t t
 compute_reduce_latency :: Int -> Expr -> Int
 compute_reduce_latency n f = do
   let f_out_type = ST_Conv.e_out_type $ ST_Conv.expr_to_types f
-  (n - 1) * (clocks_t f_out_type) + 1
+  (n - 1) * (clocks_t f_out_type) + 2
 
 compute_reshape_latency :: AST_Type -> AST_Type -> Int
 compute_reshape_latency in_t out_t = do
