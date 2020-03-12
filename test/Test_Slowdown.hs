@@ -74,7 +74,9 @@ slowdown_tests = testGroup "Basic End To End Tests Using Magma"
     testCase "seq and stuple" $
     (all_success seq_and_stuple_results) @? "seq and stuple failed",
     testCase "striple to seq" $
-    (all_success striple_to_seq_results) @? "striple to seq failed"
+    (all_success striple_to_seq_results) @? "striple to seq failed",
+    testCase "shifts" $
+    (all_success shift_one_results) @? "shifting failed"
   ]
   
 slowdown_tests_chisel = testGroup "Basic End To End Tests Using Chisel"
@@ -123,7 +125,9 @@ slowdown_tests_chisel = testGroup "Basic End To End Tests Using Chisel"
     testCase "seq and stuple" $
     (all_success seq_and_stuple_results_chisel) @? "seq and stuple failed",
     testCase "striple to seq" $
-    (all_success striple_to_seq_results_chisel) @? "striple to seq failed"
+    (all_success striple_to_seq_results_chisel) @? "striple to seq failed",
+    testCase "shifts" $
+    (all_success shift_one_results) @? "shifting failed"
   ]
 
 all_success :: IO [[Test_Result]] -> IO Bool
@@ -895,9 +899,9 @@ shift_one_ppar_typechecked =
   fmap check_type shift_one_ppar
 shift_one_ppar_typechecked' =
   fmap check_type_get_error shift_one_ppar
-shift_one_inputs :: [[Integer]] = [[1..shift_length]]
+shift_one_inputs :: [[Word8]] = map (map fromInteger) [[1..shift_length]]
 --shift_one_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
-shift_one_output :: [[Integer]] = [replicate 6 int_to_ignore ++ [1..shift_length-6]]--[[int_to_ignore, int_to_ignore, int_to_ignore, int_to_ignore] ++ [1..4]]
+shift_one_output :: [[Word8]] = map (map fromInteger) [replicate 6 int_to_ignore ++ [1..shift_length-6]]--[[int_to_ignore, int_to_ignore, int_to_ignore, int_to_ignore] ++ [1..4]]
 -- need to come back and check why slowest version uses a reduce_s
 shift_one_results = sequence $
   fmap (\s -> test_with_backend
@@ -912,6 +916,16 @@ shift_one_results_chisel = sequence $
               shift_one (wrap_single_t s)
               Chisel No_Verilog
               shift_one_inputs shift_one_output) shift_throughputs
+shift_one_results' = sequence $
+  fmap (\s -> test_with_backend
+              shift_one (wrap_single_t s)
+              Magma No_Verilog
+              shift_one_inputs shift_one_output) [16]
+shift_one_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              shift_one (wrap_single_t s)
+              Chisel No_Verilog
+              shift_one_inputs shift_one_output) [16]
 
 {-
 stencil_1dC_internal_test in_seq = do
