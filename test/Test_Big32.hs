@@ -260,3 +260,9 @@ big_32_tests' = testGroup "Big_32 Tests"
     testCase "single big_32 3x3 convolution chisel" $
     (TS.all_success big_32_conv_2d_results_chisel') @? "single 3x3 convolution chisel failed"
   ]
+
+apps_big_32_shifts_io = sequence [
+  save_seq_test_io_as_json "big_apps_32_shifts/conv2d" big_32_conv_2d_inputs big_32_conv_2d_output,
+  save_seq_test_io_as_json "big_apps_32_shifts/conv2d_b2b" big_32_conv_2d_b2b_inputs big_32_conv_2d_b2b_output,
+  save_seq_test_io_as_json "big_apps_32_shifts/sharpen" big_32_sharpen_inputs big_32_sharpen_output
+  ]

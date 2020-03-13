@@ -28,3 +28,4 @@ stack.yaml.lock
 target/
 *.prof
 *.hp
+*.tar.gz

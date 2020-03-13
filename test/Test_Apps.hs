@@ -57,6 +57,13 @@ apps_tests_chisel = testGroup "Full Application Tests"
     testCase "SHARPEN in paper" $
     (TS.all_success sharpen_results_chisel) @? "sharpen failed"
   ]
+
+apps_paper_shifts_io = sequence [
+  save_seq_test_io_as_json "paper_apps_8_shifts/map" single_map_200_inputs single_map_200_output,
+  save_seq_test_io_as_json "paper_apps_8_shifts/conv2d" conv_2d_inputs conv_2d_output,
+  save_seq_test_io_as_json "paper_apps_8_shifts/conv2d_b2b" conv_2d_b2b_inputs conv_2d_b2b_output,
+  save_seq_test_io_as_json "paper_apps_8_shifts/sharpen" sharpen_inputs sharpen_output
+  ]
 all_types = sequence [single_map_200_results_all_types, conv_2d_results_all_types, conv_2d_results_all_types] --, sharpen_results_all_types,
              --TS.pyramid_1d_results_all_types]
 

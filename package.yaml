@@ -59,6 +59,7 @@ dependencies:
 - bytestring
 - vector
 - Decimal
+- aeson
 
 ghc-options:
 - -O2

@@ -22,7 +22,8 @@ import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import Data.List
 
 main :: IO ()
-main = defaultMain tests
+--main = defaultMain tests
+main = gen_io
 --main = do
 --  putStrLn $ show $ sum big_conv_2d_output
 --  return ()
@@ -54,3 +55,16 @@ tests :: TestTree
 tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests']
 --tests = testGroup "Top Level Aetherling Tests" [big_16_tests']
 
+
+gen_io :: IO ()
+gen_io = do
+  -- need:
+  -- paper apps: as in paper and real math - done
+  -- 1920x1080: 8, 32 and shifts, real
+  apps_paper_shifts_io
+  apps_paper_real_io
+  apps_big_shifts_io
+  apps_big_32_shifts_io
+  apps_big_8_real_io
+  apps_big_32_real_io
+  return ()

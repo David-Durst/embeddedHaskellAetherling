@@ -38,6 +38,11 @@ apps_tests_real_math_chisel = testGroup "Full Application Tests"
     (TS.all_success sharpen_real_results_chisel) @? "sharpen_real failed"
   ]
 
+apps_paper_real_io = sequence [
+  save_seq_test_io_as_json "paper_apps_8_real/conv2d" conv_2d_real_inputs conv_2d_real_output,
+  save_seq_test_io_as_json "paper_apps_8_real/conv2d_b2b" conv_2d_real_b2b_inputs conv_2d_real_b2b_output,
+  save_seq_test_io_as_json "paper_apps_8_real/sharpen" sharpen_real_inputs sharpen_real_output
+  ]
 
 stencil_3_1dC_nested in_seq = do
   let shifted_once = shiftC (Proxy @1) in_seq

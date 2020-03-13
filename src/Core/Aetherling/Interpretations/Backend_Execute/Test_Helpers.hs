@@ -1,4 +1,5 @@
 module Aetherling.Interpretations.Backend_Execute.Test_Helpers where
+import Aetherling.Interpretations.Backend_Execute.Constants
 import qualified Aetherling.Languages.Sequence.Deep.Serialize as SeqSer
 import qualified Aetherling.Languages.Space_Time.Deep.Serialize as STSer
 import qualified Aetherling.Languages.Sequence.Deep.Expr as SeqE
@@ -17,6 +18,9 @@ import Debug.Trace
 import Data.List
 import Data.Word
 import qualified Data.Vector as Vec
+import Data.Aeson
+import System.Directory
+import System.FilePath
 
 data Test_Result = Test_Success
                   | Test_Failure {
@@ -223,8 +227,19 @@ test_gen_io_for_st p_types inputs output = do
     output_file_data test_out_valid_file_name (tester_clocks tester_strings)
 -}
 
-
-    
+save_seq_test_io_as_json :: Integral a => FilePath -> [[a]] -> [a] -> IO ()
+save_seq_test_io_as_json test_name inputs output = do
+  let test_file_prelude = test_json_dir ++ test_name
+  createDirectoryIfMissing True $ takeDirectory test_file_prelude
+  if length inputs == 1
+    then
+    encodeFile (test_file_prelude ++ "_input.json") $ map toInteger $ head inputs
+    else do
+    let inputs_with_idxs = zip [0..] $ map (map toInteger) inputs
+    mapM (\(idx, els) -> encodeFile (test_file_prelude ++ "_input_" ++
+                                    show idx ++ ".json") els) inputs_with_idxs
+    return ()
+  encodeFile (test_file_prelude ++ "_output.json") $ map toInteger output
 
 generate_tester_input_output_for_st_program ::
   (Convertible_To_Atom_Strings a, Convertible_To_Atom_Strings b) =>
