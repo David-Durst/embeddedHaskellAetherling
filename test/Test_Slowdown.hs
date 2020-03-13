@@ -157,17 +157,17 @@ single_map_output :: [Integer] = [0,1,2,3]
 single_map_results = sequence $
   fmap (\s -> test_with_backend
               single_map (wrap_single_t s)
-              Magma (Save_Gen_Verilog "single_map")
+              Magma No_Verilog
               single_map_inputs single_map_output) [1,2,4]
 single_map_results_chisel = sequence $
   fmap (\s -> test_with_backend
               single_map (wrap_single_t s)
-              Chisel (Save_Gen_Verilog "single_map")
+              Chisel No_Verilog
               single_map_inputs single_map_output) [1,2,4]
 single_map_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               single_map (wrap_single_t s)
-              Chisel (Save_Gen_Verilog "single_map")
+              Chisel No_Verilog
               single_map_inputs single_map_output) [1]
 single_map_verilog_path = "test/verilog_examples/aetherling_copies/single_map/single_map_4_0.v"
 single_map_ae_verilog = sequence $
@@ -671,7 +671,7 @@ tuple_reduce_results' = sequence $
 tuple_reduce_results_chisel = sequence $
   fmap (\s -> test_with_backend
               tuple_reduce (wrap_single_t s)
-              Chisel (Save_Gen_Verilog "tuple_reduce")
+              Chisel No_Verilog
               tuple_reduce_inputs tuple_reduce_output) [1,1%2,1%4,1%8]
 tuple_reduce_results_chisel' = sequence $
   fmap (\s -> test_with_backend
@@ -699,7 +699,7 @@ tuple_div_output :: [Integer] = [0,1,2,0,1,0,0,0]
 tuple_div_results_chisel = sequence $
   fmap (\s -> test_with_backend
               tuple_div (wrap_single_t s)
-              Chisel (Save_Gen_Verilog "tuple_div")
+              Chisel No_Verilog
               tuple_div_inputs tuple_div_output) [1,1%2,1%4,1%8]
 tuple_div_results_chisel' = sequence $
   fmap (\s -> test_with_backend
@@ -733,7 +733,7 @@ tuple_div_big_output = map (\x -> x `div` 16 * 16) $ head tuple_div_big_inputs
 tuple_div_big_results_chisel = sequence $
   fmap (\s -> test_with_backend
               tuple_div_big (wrap_single_t s)
-              Chisel (Save_Gen_Verilog "tuple_div_big")
+              Chisel No_Verilog
               tuple_div_big_inputs tuple_div_big_output) [1,1%2,1%4,1%8]
 tuple_div_big_results_chisel' = sequence $
   fmap (\s -> test_with_backend
