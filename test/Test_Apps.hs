@@ -58,6 +58,12 @@ apps_tests_chisel = testGroup "Full Application Tests"
     (TS.all_success sharpen_results_chisel) @? "sharpen failed"
   ]
 
+apps_tests_chisel' = testGroup "Full Application Tests"
+  [
+    testCase "one single 3x3 convolution" $
+    (TS.all_success conv_2d_results_chisel') @? "one single 3x3 convolution failed"
+  ]
+
 apps_paper_shifts_io = sequence [
   save_seq_test_io_as_json "paper_apps_8_shifts/map" single_map_200_inputs single_map_200_output,
   save_seq_test_io_as_json "paper_apps_8_shifts/conv2d" conv_2d_inputs conv_2d_output,
