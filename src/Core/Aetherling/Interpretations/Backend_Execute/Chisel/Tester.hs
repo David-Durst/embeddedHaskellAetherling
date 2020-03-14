@@ -129,7 +129,7 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
                     "compute_num_atoms_per_sseq_layer(c." ++
                     output_port_name ++ ")))\n" ++
                     tab_str ++ tab_str ++ "}\n"
-  let test_step = tab_str ++ tab_str ++ "step(1)\n"
+  let test_step = tab_str ++ tab_str ++ "if (f_clk < (total_clks - 1)) step(1)\n"
   let test_end = tab_str ++ "}\n"
   let test_body =
         f_inputs ++ f_output ++
