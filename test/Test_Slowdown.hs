@@ -116,6 +116,8 @@ slowdown_tests_chisel = testGroup "Basic End To End Tests Using Chisel"
     (all_success tuple_sum_results_chisel) @? "tuple_sum failed",
     testCase "tuple reduce" $
     (all_success tuple_reduce_results_chisel) @? "tuple_reduce failed",
+    testCase "tuple reduce set by trs" $
+    (all_success tuple_reduce_results_chisel_by_tr) @? "tuple_reduce set by trs failed",
     testCase "fst snd sum" $
     (all_success fst_snd_sum_results_chisel) @? "fst snd sum failed",
     testCase "stuple to seq" $
