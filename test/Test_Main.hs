@@ -22,8 +22,8 @@ import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import Data.List
 
 main :: IO ()
---main = defaultMain tests
-main = gen_io
+main = defaultMain tests
+--main = gen_io
 --main = do
 --  putStrLn $ show $ sum big_conv_2d_output
 --  return ()
