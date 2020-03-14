@@ -10248,14 +10248,16 @@ module ReduceT(
   input  [31:0] I_0_0,
   output [31:0] O_0_0
 );
-  reg  _T; // @[ReduceT.scala 18:34]
+  reg [31:0] undelayed_out_0_0; // @[ReduceT.scala 17:29]
   reg [31:0] _RAND_0;
-  reg  _T_1; // @[ReduceT.scala 18:26]
+  reg  _T_1; // @[ReduceT.scala 18:34]
   reg [31:0] _RAND_1;
-  reg [31:0] _T_2_0_0; // @[ReduceT.scala 55:15]
+  reg  _T_2; // @[ReduceT.scala 18:26]
   reg [31:0] _RAND_2;
-  assign valid_down = _T_1; // @[ReduceT.scala 18:16]
-  assign O_0_0 = _T_2_0_0; // @[ReduceT.scala 55:5]
+  reg [31:0] _T_3_0_0; // @[ReduceT.scala 55:15]
+  reg [31:0] _RAND_3;
+  assign valid_down = _T_2; // @[ReduceT.scala 18:16]
+  assign O_0_0 = _T_3_0_0; // @[ReduceT.scala 55:5]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -10289,7 +10291,7 @@ initial begin
     `endif
   `ifdef RANDOMIZE_REG_INIT
   _RAND_0 = {1{`RANDOM}};
-  _T = _RAND_0[0:0];
+  undelayed_out_0_0 = _RAND_0[31:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_1 = {1{`RANDOM}};
@@ -10297,23 +10299,28 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_2 = {1{`RANDOM}};
-  _T_2_0_0 = _RAND_2[31:0];
+  _T_2 = _RAND_2[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_3 = {1{`RANDOM}};
+  _T_3_0_0 = _RAND_3[31:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
-    if (reset) begin
-      _T <= 1'h0;
-    end else begin
-      _T <= valid_up;
-    end
+    undelayed_out_0_0 <= I_0_0;
     if (reset) begin
       _T_1 <= 1'h0;
     end else begin
-      _T_1 <= _T;
+      _T_1 <= valid_up;
     end
-    _T_2_0_0 <= I_0_0;
+    if (reset) begin
+      _T_2 <= 1'h0;
+    end else begin
+      _T_2 <= _T_1;
+    end
+    _T_3_0_0 <= undelayed_out_0_0;
   end
 endmodule
 module Passthrough_2(

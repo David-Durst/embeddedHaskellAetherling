@@ -42,6 +42,7 @@ tests :: TestTree
 --tests = testGroup "Top Level Aetherling Tests" [apps_tests]
 --tests = testGroup "Top Level Aetherling Tests" [apps_tests_chisel, big_tests']
 --tests = testGroup "Top Level Aetherling Tests" [apps_tests_chisel]
+--tests = testGroup "Top Level Aetherling Tests" [apps_tests_chisel']
 --tests = testGroup "Top Level Aetherling Tests" [slowdown_tests]
 --tests = testGroup "Top Level Aetherling Tests" [slowdown_tests_chisel]
 --tests = testGroup "Top Level Aetherling Tests" [big_tests]
