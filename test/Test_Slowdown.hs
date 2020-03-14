@@ -646,20 +646,20 @@ tuple_reduce_no_input in_seq = do
   let kernel_and_values = map2C atom_tupleC kernel in_seq
   let muled_pairs = mapC mulC kernel_and_values
   reduceC addC muled_pairs
-tuple_reduce = tuple_reduce_no_input $
-  com_input_seq "I" (Proxy :: Proxy (Seq 8 Atom_UInt16))
+tuple_reduce = mapC tuple_reduce_no_input $
+  com_input_seq "I" (Proxy :: Proxy (Seq 2 (Seq 8 Atom_UInt16)))
 tuple_reduce_seq_idx = add_indexes $ seq_shallow_to_deep tuple_reduce
 tuple_reduce_ppar =
   fmap (\s -> compile_with_throughput_to_expr tuple_reduce s) [1,1%2,1%4,1%8]
-tuple_reduce_out_types = [STT.TSeqT 1 0 (STT.SSeqT 1 STT.st_int16)]
-tuple_reduce_ppar_by_types =
-  fmap (\s -> compile_with_st_type_to_expr tuple_reduce s) tuple_reduce_out_types
+tuple_reduce_out_tr = [[TimeR 2 0, SplitR 1 0 1, NonSeqR]]
+tuple_reduce_ppar_by_tr =
+  fmap (\s -> compile_with_type_rewrite_to_expr tuple_reduce s) tuple_reduce_out_tr
 tuple_reduce_ppar_typechecked =
   fmap check_type tuple_reduce_ppar
 tuple_reduce_ppar_typechecked' =
   fmap check_type_get_error tuple_reduce_ppar
-tuple_reduce_inputs :: [[Integer]] = [[10,8,9,3,4,2,2,2,9,7,9,3,4,2,2,2]]
-tuple_reduce_output :: [Integer] = [85,83]
+tuple_reduce_inputs :: [[[Integer]]] = [[[10,8,9,3,4,2,2,2],[9,7,9,3,4,2,2,2]]]
+tuple_reduce_output :: [[Integer]] = [[85,82]]
 -- need to come back and check why slowest version uses a reduce_s
 tuple_reduce_results = sequence $
   fmap (\s -> test_with_backend
@@ -681,11 +681,11 @@ tuple_reduce_results_chisel' = sequence $
               tuple_reduce (wrap_single_t s)
               Chisel No_Verilog
               tuple_reduce_inputs tuple_reduce_output) [1]
-tuple_reduce_results_chisel_by_types = sequence $
+tuple_reduce_results_chisel_by_tr = sequence $
   fmap (\s -> test_with_backend
-              tuple_reduce (wrap_single_st_type s)
+              tuple_reduce (Type_Rewrites s)
               Chisel No_Verilog
-              tuple_reduce_inputs tuple_reduce_output) tuple_reduce_out_types
+              tuple_reduce_inputs tuple_reduce_output) tuple_reduce_out_tr
 
 tuple_div_no_input in_seq = do
   let kernel_list = fmap Atom_FixP1_7 [1/16,2/16,5/16,2/16,4/16,2/16,1/16,3/16]
