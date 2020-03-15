@@ -34,7 +34,7 @@ chisel_test_spec_wrapper src_body test_body =
   "class TopTester extends ChiselFlatSpec {\n" ++
   tab_str ++ "\"Top\" should \"behave correctly\" in {\n" ++ 
   tab_str ++ tab_str ++ "iotesters.Driver.execute(Array(\"--backend-name\"," ++
-  " \"verilator\",\"--target-dir\",\"test_run_dir/top\"), () => new Top()) {\n" ++
+  " \"verilator\",\"--target-dir\",\"test_run_dir/top\",\"--generate-vcd-output\",\"off\"), () => new Top()) {\n" ++
   tab_str ++ tab_str ++ tab_str ++ "c => new TopTest(c)\n" ++
   tab_str ++ tab_str ++ "} should be(true)\n" ++
   tab_str ++ "}\n" ++
