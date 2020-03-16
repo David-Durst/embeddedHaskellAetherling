@@ -9318,13 +9318,15 @@ module ReduceT(
   reg [31:0] _RAND_2;
   reg [31:0] _T_9; // @[ReduceT.scala 35:24]
   reg [31:0] _RAND_3;
-  reg [31:0] _T_10; // @[ReduceT.scala 43:83]
+  reg  _T_10; // @[ReduceT.scala 37:35]
   reg [31:0] _RAND_4;
-  reg  _T_11; // @[ReduceT.scala 50:28]
+  reg [31:0] _T_11; // @[ReduceT.scala 44:83]
   reg [31:0] _RAND_5;
-  wire  _T_13; // @[ReduceT.scala 51:28]
-  reg [31:0] _T_14; // @[ReduceT.scala 55:15]
+  reg  _T_12; // @[ReduceT.scala 51:28]
   reg [31:0] _RAND_6;
+  wire  _T_14; // @[ReduceT.scala 52:28]
+  reg [31:0] _T_15; // @[ReduceT.scala 56:15]
+  reg [31:0] _RAND_7;
   NestedCountersWithNumValid NestedCountersWithNumValid ( // @[ReduceT.scala 22:34]
     .CE(NestedCountersWithNumValid_CE),
     .valid(NestedCountersWithNumValid_valid)
@@ -9337,12 +9339,12 @@ module ReduceT(
   assign _T_2 = value == 2'h2; // @[Counter.scala 37:24]
   assign _T_4 = value + 2'h1; // @[Counter.scala 38:22]
   assign _T_6 = value == 2'h0; // @[ReduceT.scala 34:60]
-  assign _T_13 = _T_11 | _T_2; // @[ReduceT.scala 51:28]
-  assign valid_down = _T_11; // @[ReduceT.scala 52:16]
-  assign O = _T_14; // @[ReduceT.scala 55:5]
-  assign NestedCountersWithNumValid_CE = valid_up; // @[ReduceT.scala 37:25]
-  assign AddNoValid_I_t0b = _T_10; // @[ReduceT.scala 43:55]
-  assign AddNoValid_I_t1b = _T_9; // @[ReduceT.scala 44:55]
+  assign _T_14 = _T_12 | _T_2; // @[ReduceT.scala 52:28]
+  assign valid_down = _T_12; // @[ReduceT.scala 53:16]
+  assign O = _T_15; // @[ReduceT.scala 56:5]
+  assign NestedCountersWithNumValid_CE = _T_10; // @[ReduceT.scala 37:25]
+  assign AddNoValid_I_t0b = _T_11; // @[ReduceT.scala 44:55]
+  assign AddNoValid_I_t1b = _T_9; // @[ReduceT.scala 45:55]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -9392,15 +9394,19 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_4 = {1{`RANDOM}};
-  _T_10 = _RAND_4[31:0];
+  _T_10 = _RAND_4[0:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_5 = {1{`RANDOM}};
-  _T_11 = _RAND_5[0:0];
+  _T_11 = _RAND_5[31:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_6 = {1{`RANDOM}};
-  _T_14 = _RAND_6[31:0];
+  _T_12 = _RAND_6[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_7 = {1{`RANDOM}};
+  _T_15 = _RAND_7[31:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
@@ -9428,13 +9434,14 @@ end // initial
         _T_9 <= AddNoValid_O;
       end
     end
-    _T_10 <= I;
+    _T_10 <= valid_up;
+    _T_11 <= I;
     if (reset) begin
-      _T_11 <= 1'h0;
+      _T_12 <= 1'h0;
     end else begin
-      _T_11 <= _T_13;
+      _T_12 <= _T_14;
     end
-    _T_14 <= AddNoValid_O;
+    _T_15 <= AddNoValid_O;
   end
 endmodule
 module MapS_4(
@@ -9738,10 +9745,10 @@ module ReduceT_1(
   reg [31:0] _RAND_1;
   reg  _T_2; // @[ReduceT.scala 18:26]
   reg [31:0] _RAND_2;
-  reg [31:0] _T_3_0; // @[ReduceT.scala 55:15]
+  reg [31:0] _T_3_0; // @[ReduceT.scala 56:15]
   reg [31:0] _RAND_3;
   assign valid_down = _T_2; // @[ReduceT.scala 18:16]
-  assign O_0 = _T_3_0; // @[ReduceT.scala 55:5]
+  assign O_0 = _T_3_0; // @[ReduceT.scala 56:5]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
