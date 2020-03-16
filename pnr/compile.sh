@@ -43,7 +43,7 @@ if [ -f "${VERILOG_MULS_BUILD_COPY}" ]; then
 fi
 echo "read_verilog $VERILOG_BUILD_COPY" >> system.tcl
 echo "read_xdc $CONSTRAINT_BUILD_COPY" >> system.tcl
-echo "synth_design -top top -part xc7z020clg484-1 -mode out_of_context" >> system.tcl
+echo "synth_design -top top -part xc7k160tiffv676-2 -mode out_of_context" >> system.tcl
 #echo "set_property HD.CLK_SRC BUFGCTRL_X0Y16 [get_ports CLK]" >> system.tcl
 echo "set_property SEVERITY {Warning} [get_drc_checks UCIO-1]" >> system.tcl
 echo "set_property SEVERITY {Warning} [get_drc_checks NSTD-1]" >> system.tcl

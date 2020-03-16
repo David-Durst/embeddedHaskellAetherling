@@ -219,13 +219,26 @@ module NestedCounters(
 );
   assign valid = CE; // @[NestedCounters.scala 65:13]
 endmodule
+module NestedCounters_1(
+  input   CE,
+  output  valid
+);
+  wire  NestedCounters_CE; // @[NestedCounters.scala 53:31]
+  wire  NestedCounters_valid; // @[NestedCounters.scala 53:31]
+  NestedCounters NestedCounters ( // @[NestedCounters.scala 53:31]
+    .CE(NestedCounters_CE),
+    .valid(NestedCounters_valid)
+  );
+  assign valid = NestedCounters_valid; // @[NestedCounters.scala 56:11]
+  assign NestedCounters_CE = CE; // @[NestedCounters.scala 57:22]
+endmodule
 module NestedCountersWithNumValid(
   input   CE,
   output  valid
 );
   wire  NestedCounters_CE; // @[NestedCounters.scala 20:44]
   wire  NestedCounters_valid; // @[NestedCounters.scala 20:44]
-  NestedCounters NestedCounters ( // @[NestedCounters.scala 20:44]
+  NestedCounters_1 NestedCounters ( // @[NestedCounters.scala 20:44]
     .CE(NestedCounters_CE),
     .valid(NestedCounters_valid)
   );
@@ -236,27 +249,57 @@ module RAM_ST(
   input         clock,
   input         RE,
   input  [6:0]  RADDR,
-  output [15:0] RDATA,
+  output [15:0] RDATA_0,
+  output [15:0] RDATA_1,
+  output [15:0] RDATA_2,
+  output [15:0] RDATA_3,
+  output [15:0] RDATA_4,
+  output [15:0] RDATA_5,
+  output [15:0] RDATA_6,
+  output [15:0] RDATA_7,
+  output [15:0] RDATA_8,
+  output [15:0] RDATA_9,
+  output [15:0] RDATA_10,
+  output [15:0] RDATA_11,
+  output [15:0] RDATA_12,
+  output [15:0] RDATA_13,
+  output [15:0] RDATA_14,
+  output [15:0] RDATA_15,
   input         WE,
   input  [6:0]  WADDR,
-  input  [15:0] WDATA
+  input  [15:0] WDATA_0,
+  input  [15:0] WDATA_1,
+  input  [15:0] WDATA_2,
+  input  [15:0] WDATA_3,
+  input  [15:0] WDATA_4,
+  input  [15:0] WDATA_5,
+  input  [15:0] WDATA_6,
+  input  [15:0] WDATA_7,
+  input  [15:0] WDATA_8,
+  input  [15:0] WDATA_9,
+  input  [15:0] WDATA_10,
+  input  [15:0] WDATA_11,
+  input  [15:0] WDATA_12,
+  input  [15:0] WDATA_13,
+  input  [15:0] WDATA_14,
+  input  [15:0] WDATA_15
 );
   wire  write_elem_counter_CE; // @[RAM_ST.scala 20:34]
   wire  write_elem_counter_valid; // @[RAM_ST.scala 20:34]
   wire  read_elem_counter_CE; // @[RAM_ST.scala 21:33]
   wire  read_elem_counter_valid; // @[RAM_ST.scala 21:33]
-  reg [15:0] ram [0:119]; // @[RAM_ST.scala 29:24]
-  reg [31:0] _RAND_0;
-  wire [15:0] ram__T_8_data; // @[RAM_ST.scala 29:24]
-  wire [6:0] ram__T_8_addr; // @[RAM_ST.scala 29:24]
-  reg [31:0] _RAND_1;
-  wire [15:0] ram__T_2_data; // @[RAM_ST.scala 29:24]
-  wire [6:0] ram__T_2_addr; // @[RAM_ST.scala 29:24]
-  wire  ram__T_2_mask; // @[RAM_ST.scala 29:24]
-  wire  ram__T_2_en; // @[RAM_ST.scala 29:24]
-  reg  ram__T_8_en_pipe_0;
+  reg [255:0] ram [0:119]; // @[RAM_ST.scala 29:24]
+  reg [255:0] _RAND_0;
+  wire [255:0] ram__T_23_data; // @[RAM_ST.scala 29:24]
+  wire [6:0] ram__T_23_addr; // @[RAM_ST.scala 29:24]
+  reg [255:0] _RAND_1;
+  wire [255:0] ram__T_17_data; // @[RAM_ST.scala 29:24]
+  wire [6:0] ram__T_17_addr; // @[RAM_ST.scala 29:24]
+  wire  ram__T_17_mask; // @[RAM_ST.scala 29:24]
+  wire  ram__T_17_en; // @[RAM_ST.scala 29:24]
+  reg  ram__T_23_en_pipe_0;
   reg [31:0] _RAND_2;
-  reg [6:0] ram__T_8_addr_pipe_0;
+  reg [6:0] ram__T_23_addr_pipe_0;
   reg [31:0] _RAND_3;
   wire [6:0] _GEN_1; // @[RAM_ST.scala 31:71]
   wire [6:0] _GEN_2; // @[RAM_ST.scala 31:71]
@@ -378,6 +421,8 @@ module RAM_ST(
   wire [6:0] _GEN_118; // @[RAM_ST.scala 31:71]
   wire [6:0] _GEN_119; // @[RAM_ST.scala 31:71]
   wire [7:0] _T; // @[RAM_ST.scala 31:71]
+  wire [127:0] _T_8; // @[RAM_ST.scala 31:115]
+  wire [127:0] _T_15; // @[RAM_ST.scala 31:115]
   wire [6:0] _GEN_126; // @[RAM_ST.scala 32:46]
   wire [6:0] _GEN_127; // @[RAM_ST.scala 32:46]
   wire [6:0] _GEN_128; // @[RAM_ST.scala 32:46]
@@ -497,7 +542,8 @@ module RAM_ST(
   wire [6:0] _GEN_242; // @[RAM_ST.scala 32:46]
   wire [6:0] _GEN_243; // @[RAM_ST.scala 32:46]
   wire [6:0] _GEN_244; // @[RAM_ST.scala 32:46]
-  wire [7:0] _T_3; // @[RAM_ST.scala 32:46]
+  wire [7:0] _T_18; // @[RAM_ST.scala 32:46]
+  wire [255:0] _T_25;
   NestedCountersWithNumValid write_elem_counter ( // @[RAM_ST.scala 20:34]
     .CE(write_elem_counter_CE),
     .valid(write_elem_counter_valid)
@@ -506,16 +552,16 @@ module RAM_ST(
     .CE(read_elem_counter_CE),
     .valid(read_elem_counter_valid)
   );
-  assign ram__T_8_addr = ram__T_8_addr_pipe_0;
+  assign ram__T_23_addr = ram__T_23_addr_pipe_0;
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
-  assign ram__T_8_data = ram[ram__T_8_addr]; // @[RAM_ST.scala 29:24]
+  assign ram__T_23_data = ram[ram__T_23_addr]; // @[RAM_ST.scala 29:24]
   `else
-  assign ram__T_8_data = ram__T_8_addr >= 7'h78 ? _RAND_1[15:0] : ram[ram__T_8_addr]; // @[RAM_ST.scala 29:24]
+  assign ram__T_23_data = ram__T_23_addr >= 7'h78 ? _RAND_1[255:0] : ram[ram__T_23_addr]; // @[RAM_ST.scala 29:24]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
-  assign ram__T_2_data = WDATA;
-  assign ram__T_2_addr = _T[6:0];
-  assign ram__T_2_mask = 1'h1;
-  assign ram__T_2_en = write_elem_counter_valid;
+  assign ram__T_17_data = {_T_15,_T_8};
+  assign ram__T_17_addr = _T[6:0];
+  assign ram__T_17_mask = 1'h1;
+  assign ram__T_17_en = write_elem_counter_valid;
   assign _GEN_1 = 7'h1 == WADDR ? 7'h1 : 7'h0; // @[RAM_ST.scala 31:71]
   assign _GEN_2 = 7'h2 == WADDR ? 7'h2 : _GEN_1; // @[RAM_ST.scala 31:71]
   assign _GEN_3 = 7'h3 == WADDR ? 7'h3 : _GEN_2; // @[RAM_ST.scala 31:71]
@@ -636,6 +682,8 @@ module RAM_ST(
   assign _GEN_118 = 7'h76 == WADDR ? 7'h76 : _GEN_117; // @[RAM_ST.scala 31:71]
   assign _GEN_119 = 7'h77 == WADDR ? 7'h77 : _GEN_118; // @[RAM_ST.scala 31:71]
   assign _T = {{1'd0}, _GEN_119}; // @[RAM_ST.scala 31:71]
+  assign _T_8 = {WDATA_7,WDATA_6,WDATA_5,WDATA_4,WDATA_3,WDATA_2,WDATA_1,WDATA_0}; // @[RAM_ST.scala 31:115]
+  assign _T_15 = {WDATA_15,WDATA_14,WDATA_13,WDATA_12,WDATA_11,WDATA_10,WDATA_9,WDATA_8}; // @[RAM_ST.scala 31:115]
   assign _GEN_126 = 7'h1 == RADDR ? 7'h1 : 7'h0; // @[RAM_ST.scala 32:46]
   assign _GEN_127 = 7'h2 == RADDR ? 7'h2 : _GEN_126; // @[RAM_ST.scala 32:46]
   assign _GEN_128 = 7'h3 == RADDR ? 7'h3 : _GEN_127; // @[RAM_ST.scala 32:46]
@@ -755,8 +803,24 @@ module RAM_ST(
   assign _GEN_242 = 7'h75 == RADDR ? 7'h75 : _GEN_241; // @[RAM_ST.scala 32:46]
   assign _GEN_243 = 7'h76 == RADDR ? 7'h76 : _GEN_242; // @[RAM_ST.scala 32:46]
   assign _GEN_244 = 7'h77 == RADDR ? 7'h77 : _GEN_243; // @[RAM_ST.scala 32:46]
-  assign _T_3 = {{1'd0}, _GEN_244}; // @[RAM_ST.scala 32:46]
-  assign RDATA = ram__T_8_data; // @[RAM_ST.scala 32:9]
+  assign _T_18 = {{1'd0}, _GEN_244}; // @[RAM_ST.scala 32:46]
+  assign _T_25 = ram__T_23_data;
+  assign RDATA_0 = _T_25[15:0]; // @[RAM_ST.scala 32:9]
+  assign RDATA_1 = _T_25[31:16]; // @[RAM_ST.scala 32:9]
+  assign RDATA_2 = _T_25[47:32]; // @[RAM_ST.scala 32:9]
+  assign RDATA_3 = _T_25[63:48]; // @[RAM_ST.scala 32:9]
+  assign RDATA_4 = _T_25[79:64]; // @[RAM_ST.scala 32:9]
+  assign RDATA_5 = _T_25[95:80]; // @[RAM_ST.scala 32:9]
+  assign RDATA_6 = _T_25[111:96]; // @[RAM_ST.scala 32:9]
+  assign RDATA_7 = _T_25[127:112]; // @[RAM_ST.scala 32:9]
+  assign RDATA_8 = _T_25[143:128]; // @[RAM_ST.scala 32:9]
+  assign RDATA_9 = _T_25[159:144]; // @[RAM_ST.scala 32:9]
+  assign RDATA_10 = _T_25[175:160]; // @[RAM_ST.scala 32:9]
+  assign RDATA_11 = _T_25[191:176]; // @[RAM_ST.scala 32:9]
+  assign RDATA_12 = _T_25[207:192]; // @[RAM_ST.scala 32:9]
+  assign RDATA_13 = _T_25[223:208]; // @[RAM_ST.scala 32:9]
+  assign RDATA_14 = _T_25[239:224]; // @[RAM_ST.scala 32:9]
+  assign RDATA_15 = _T_25[255:240]; // @[RAM_ST.scala 32:9]
   assign write_elem_counter_CE = WE; // @[RAM_ST.scala 23:25]
   assign read_elem_counter_CE = RE; // @[RAM_ST.scala 24:24]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
@@ -790,30 +854,30 @@ initial begin
         #0.002 begin end
       `endif
     `endif
-  _RAND_0 = {1{`RANDOM}};
+  _RAND_0 = {8{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
   for (initvar = 0; initvar < 120; initvar = initvar+1)
-    ram[initvar] = _RAND_0[15:0];
+    ram[initvar] = _RAND_0[255:0];
   `endif // RANDOMIZE_MEM_INIT
-  _RAND_1 = {1{`RANDOM}};
+  _RAND_1 = {8{`RANDOM}};
   `ifdef RANDOMIZE_REG_INIT
   _RAND_2 = {1{`RANDOM}};
-  ram__T_8_en_pipe_0 = _RAND_2[0:0];
+  ram__T_23_en_pipe_0 = _RAND_2[0:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_3 = {1{`RANDOM}};
-  ram__T_8_addr_pipe_0 = _RAND_3[6:0];
+  ram__T_23_addr_pipe_0 = _RAND_3[6:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
-    if(ram__T_2_en & ram__T_2_mask) begin
-      ram[ram__T_2_addr] <= ram__T_2_data; // @[RAM_ST.scala 29:24]
+    if(ram__T_17_en & ram__T_17_mask) begin
+      ram[ram__T_17_addr] <= ram__T_17_data; // @[RAM_ST.scala 29:24]
     end
-    ram__T_8_en_pipe_0 <= read_elem_counter_valid;
+    ram__T_23_en_pipe_0 <= read_elem_counter_valid;
     if (read_elem_counter_valid) begin
-      ram__T_8_addr_pipe_0 <= _T_3[6:0];
+      ram__T_23_addr_pipe_0 <= _T_18[6:0];
     end
   end
 endmodule
@@ -821,16 +885,76 @@ module ShiftT(
   input         clock,
   input         reset,
   input         valid_up,
-  input  [15:0] I,
-  output [15:0] O
+  input  [15:0] I_0,
+  input  [15:0] I_1,
+  input  [15:0] I_2,
+  input  [15:0] I_3,
+  input  [15:0] I_4,
+  input  [15:0] I_5,
+  input  [15:0] I_6,
+  input  [15:0] I_7,
+  input  [15:0] I_8,
+  input  [15:0] I_9,
+  input  [15:0] I_10,
+  input  [15:0] I_11,
+  input  [15:0] I_12,
+  input  [15:0] I_13,
+  input  [15:0] I_14,
+  input  [15:0] I_15,
+  output [15:0] O_0,
+  output [15:0] O_1,
+  output [15:0] O_2,
+  output [15:0] O_3,
+  output [15:0] O_4,
+  output [15:0] O_5,
+  output [15:0] O_6,
+  output [15:0] O_7,
+  output [15:0] O_8,
+  output [15:0] O_9,
+  output [15:0] O_10,
+  output [15:0] O_11,
+  output [15:0] O_12,
+  output [15:0] O_13,
+  output [15:0] O_14,
+  output [15:0] O_15
 );
   wire  RAM_ST_clock; // @[ShiftT.scala 39:29]
   wire  RAM_ST_RE; // @[ShiftT.scala 39:29]
   wire [6:0] RAM_ST_RADDR; // @[ShiftT.scala 39:29]
-  wire [15:0] RAM_ST_RDATA; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_0; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_1; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_2; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_3; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_4; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_5; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_6; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_7; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_8; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_9; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_10; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_11; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_12; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_13; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_14; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_15; // @[ShiftT.scala 39:29]
   wire  RAM_ST_WE; // @[ShiftT.scala 39:29]
   wire [6:0] RAM_ST_WADDR; // @[ShiftT.scala 39:29]
-  wire [15:0] RAM_ST_WDATA; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_0; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_1; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_2; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_3; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_4; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_5; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_6; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_7; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_8; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_9; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_10; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_11; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_12; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_13; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_14; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_15; // @[ShiftT.scala 39:29]
   wire  NestedCounters_CE; // @[ShiftT.scala 41:31]
   wire  NestedCounters_valid; // @[ShiftT.scala 41:31]
   reg [6:0] value; // @[Counter.scala 29:33]
@@ -841,24 +965,84 @@ module ShiftT(
     .clock(RAM_ST_clock),
     .RE(RAM_ST_RE),
     .RADDR(RAM_ST_RADDR),
-    .RDATA(RAM_ST_RDATA),
+    .RDATA_0(RAM_ST_RDATA_0),
+    .RDATA_1(RAM_ST_RDATA_1),
+    .RDATA_2(RAM_ST_RDATA_2),
+    .RDATA_3(RAM_ST_RDATA_3),
+    .RDATA_4(RAM_ST_RDATA_4),
+    .RDATA_5(RAM_ST_RDATA_5),
+    .RDATA_6(RAM_ST_RDATA_6),
+    .RDATA_7(RAM_ST_RDATA_7),
+    .RDATA_8(RAM_ST_RDATA_8),
+    .RDATA_9(RAM_ST_RDATA_9),
+    .RDATA_10(RAM_ST_RDATA_10),
+    .RDATA_11(RAM_ST_RDATA_11),
+    .RDATA_12(RAM_ST_RDATA_12),
+    .RDATA_13(RAM_ST_RDATA_13),
+    .RDATA_14(RAM_ST_RDATA_14),
+    .RDATA_15(RAM_ST_RDATA_15),
     .WE(RAM_ST_WE),
     .WADDR(RAM_ST_WADDR),
-    .WDATA(RAM_ST_WDATA)
+    .WDATA_0(RAM_ST_WDATA_0),
+    .WDATA_1(RAM_ST_WDATA_1),
+    .WDATA_2(RAM_ST_WDATA_2),
+    .WDATA_3(RAM_ST_WDATA_3),
+    .WDATA_4(RAM_ST_WDATA_4),
+    .WDATA_5(RAM_ST_WDATA_5),
+    .WDATA_6(RAM_ST_WDATA_6),
+    .WDATA_7(RAM_ST_WDATA_7),
+    .WDATA_8(RAM_ST_WDATA_8),
+    .WDATA_9(RAM_ST_WDATA_9),
+    .WDATA_10(RAM_ST_WDATA_10),
+    .WDATA_11(RAM_ST_WDATA_11),
+    .WDATA_12(RAM_ST_WDATA_12),
+    .WDATA_13(RAM_ST_WDATA_13),
+    .WDATA_14(RAM_ST_WDATA_14),
+    .WDATA_15(RAM_ST_WDATA_15)
   );
-  NestedCounters NestedCounters ( // @[ShiftT.scala 41:31]
+  NestedCounters_1 NestedCounters ( // @[ShiftT.scala 41:31]
     .CE(NestedCounters_CE),
     .valid(NestedCounters_valid)
   );
   assign _T_1 = value == 7'h77; // @[Counter.scala 37:24]
   assign _T_3 = value + 7'h1; // @[Counter.scala 38:22]
-  assign O = RAM_ST_RDATA; // @[ShiftT.scala 51:7]
+  assign O_0 = RAM_ST_RDATA_0; // @[ShiftT.scala 51:7]
+  assign O_1 = RAM_ST_RDATA_1; // @[ShiftT.scala 51:7]
+  assign O_2 = RAM_ST_RDATA_2; // @[ShiftT.scala 51:7]
+  assign O_3 = RAM_ST_RDATA_3; // @[ShiftT.scala 51:7]
+  assign O_4 = RAM_ST_RDATA_4; // @[ShiftT.scala 51:7]
+  assign O_5 = RAM_ST_RDATA_5; // @[ShiftT.scala 51:7]
+  assign O_6 = RAM_ST_RDATA_6; // @[ShiftT.scala 51:7]
+  assign O_7 = RAM_ST_RDATA_7; // @[ShiftT.scala 51:7]
+  assign O_8 = RAM_ST_RDATA_8; // @[ShiftT.scala 51:7]
+  assign O_9 = RAM_ST_RDATA_9; // @[ShiftT.scala 51:7]
+  assign O_10 = RAM_ST_RDATA_10; // @[ShiftT.scala 51:7]
+  assign O_11 = RAM_ST_RDATA_11; // @[ShiftT.scala 51:7]
+  assign O_12 = RAM_ST_RDATA_12; // @[ShiftT.scala 51:7]
+  assign O_13 = RAM_ST_RDATA_13; // @[ShiftT.scala 51:7]
+  assign O_14 = RAM_ST_RDATA_14; // @[ShiftT.scala 51:7]
+  assign O_15 = RAM_ST_RDATA_15; // @[ShiftT.scala 51:7]
   assign RAM_ST_clock = clock;
   assign RAM_ST_RE = valid_up; // @[ShiftT.scala 49:20]
   assign RAM_ST_RADDR = _T_1 ? 7'h0 : _T_3; // @[ShiftT.scala 46:76 ShiftT.scala 47:38]
   assign RAM_ST_WE = valid_up; // @[ShiftT.scala 48:20]
   assign RAM_ST_WADDR = value; // @[ShiftT.scala 45:23]
-  assign RAM_ST_WDATA = I; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_0 = I_0; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_1 = I_1; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_2 = I_2; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_3 = I_3; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_4 = I_4; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_5 = I_5; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_6 = I_6; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_7 = I_7; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_8 = I_8; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_9 = I_9; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_10 = I_10; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_11 = I_11; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_12 = I_12; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_13 = I_13; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_14 = I_14; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_15 = I_15; // @[ShiftT.scala 50:23]
   assign NestedCounters_CE = valid_up; // @[ShiftT.scala 42:22]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
@@ -948,288 +1132,123 @@ module ShiftTS(
   output [15:0] O_14,
   output [15:0] O_15
 );
-  wire  ShiftT_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_1_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_1_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_1_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_1_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_1_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_2_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_2_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_2_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_2_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_2_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_3_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_3_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_3_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_3_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_3_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_4_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_4_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_4_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_4_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_4_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_5_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_5_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_5_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_5_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_5_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_6_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_6_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_6_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_6_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_6_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_7_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_7_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_7_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_7_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_7_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_8_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_8_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_8_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_8_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_8_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_9_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_9_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_9_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_9_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_9_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_10_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_10_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_10_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_10_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_10_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_11_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_11_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_11_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_11_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_11_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_12_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_12_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_12_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_12_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_12_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_13_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_13_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_13_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_13_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_13_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_14_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_14_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_14_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_14_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_14_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_15_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_15_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_15_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_15_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_15_O; // @[ShiftTS.scala 32:34]
-  ShiftT ShiftT ( // @[ShiftTS.scala 32:34]
+  wire  ShiftT_clock; // @[ShiftTS.scala 32:26]
+  wire  ShiftT_reset; // @[ShiftTS.scala 32:26]
+  wire  ShiftT_valid_up; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_0; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_1; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_2; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_3; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_4; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_5; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_6; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_7; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_8; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_9; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_10; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_11; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_12; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_13; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_14; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_15; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_0; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_1; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_2; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_3; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_4; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_5; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_6; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_7; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_8; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_9; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_10; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_11; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_12; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_13; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_14; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_15; // @[ShiftTS.scala 32:26]
+  ShiftT ShiftT ( // @[ShiftTS.scala 32:26]
     .clock(ShiftT_clock),
     .reset(ShiftT_reset),
     .valid_up(ShiftT_valid_up),
-    .I(ShiftT_I),
-    .O(ShiftT_O)
+    .I_0(ShiftT_I_0),
+    .I_1(ShiftT_I_1),
+    .I_2(ShiftT_I_2),
+    .I_3(ShiftT_I_3),
+    .I_4(ShiftT_I_4),
+    .I_5(ShiftT_I_5),
+    .I_6(ShiftT_I_6),
+    .I_7(ShiftT_I_7),
+    .I_8(ShiftT_I_8),
+    .I_9(ShiftT_I_9),
+    .I_10(ShiftT_I_10),
+    .I_11(ShiftT_I_11),
+    .I_12(ShiftT_I_12),
+    .I_13(ShiftT_I_13),
+    .I_14(ShiftT_I_14),
+    .I_15(ShiftT_I_15),
+    .O_0(ShiftT_O_0),
+    .O_1(ShiftT_O_1),
+    .O_2(ShiftT_O_2),
+    .O_3(ShiftT_O_3),
+    .O_4(ShiftT_O_4),
+    .O_5(ShiftT_O_5),
+    .O_6(ShiftT_O_6),
+    .O_7(ShiftT_O_7),
+    .O_8(ShiftT_O_8),
+    .O_9(ShiftT_O_9),
+    .O_10(ShiftT_O_10),
+    .O_11(ShiftT_O_11),
+    .O_12(ShiftT_O_12),
+    .O_13(ShiftT_O_13),
+    .O_14(ShiftT_O_14),
+    .O_15(ShiftT_O_15)
   );
-  ShiftT ShiftT_1 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_1_clock),
-    .reset(ShiftT_1_reset),
-    .valid_up(ShiftT_1_valid_up),
-    .I(ShiftT_1_I),
-    .O(ShiftT_1_O)
-  );
-  ShiftT ShiftT_2 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_2_clock),
-    .reset(ShiftT_2_reset),
-    .valid_up(ShiftT_2_valid_up),
-    .I(ShiftT_2_I),
-    .O(ShiftT_2_O)
-  );
-  ShiftT ShiftT_3 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_3_clock),
-    .reset(ShiftT_3_reset),
-    .valid_up(ShiftT_3_valid_up),
-    .I(ShiftT_3_I),
-    .O(ShiftT_3_O)
-  );
-  ShiftT ShiftT_4 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_4_clock),
-    .reset(ShiftT_4_reset),
-    .valid_up(ShiftT_4_valid_up),
-    .I(ShiftT_4_I),
-    .O(ShiftT_4_O)
-  );
-  ShiftT ShiftT_5 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_5_clock),
-    .reset(ShiftT_5_reset),
-    .valid_up(ShiftT_5_valid_up),
-    .I(ShiftT_5_I),
-    .O(ShiftT_5_O)
-  );
-  ShiftT ShiftT_6 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_6_clock),
-    .reset(ShiftT_6_reset),
-    .valid_up(ShiftT_6_valid_up),
-    .I(ShiftT_6_I),
-    .O(ShiftT_6_O)
-  );
-  ShiftT ShiftT_7 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_7_clock),
-    .reset(ShiftT_7_reset),
-    .valid_up(ShiftT_7_valid_up),
-    .I(ShiftT_7_I),
-    .O(ShiftT_7_O)
-  );
-  ShiftT ShiftT_8 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_8_clock),
-    .reset(ShiftT_8_reset),
-    .valid_up(ShiftT_8_valid_up),
-    .I(ShiftT_8_I),
-    .O(ShiftT_8_O)
-  );
-  ShiftT ShiftT_9 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_9_clock),
-    .reset(ShiftT_9_reset),
-    .valid_up(ShiftT_9_valid_up),
-    .I(ShiftT_9_I),
-    .O(ShiftT_9_O)
-  );
-  ShiftT ShiftT_10 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_10_clock),
-    .reset(ShiftT_10_reset),
-    .valid_up(ShiftT_10_valid_up),
-    .I(ShiftT_10_I),
-    .O(ShiftT_10_O)
-  );
-  ShiftT ShiftT_11 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_11_clock),
-    .reset(ShiftT_11_reset),
-    .valid_up(ShiftT_11_valid_up),
-    .I(ShiftT_11_I),
-    .O(ShiftT_11_O)
-  );
-  ShiftT ShiftT_12 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_12_clock),
-    .reset(ShiftT_12_reset),
-    .valid_up(ShiftT_12_valid_up),
-    .I(ShiftT_12_I),
-    .O(ShiftT_12_O)
-  );
-  ShiftT ShiftT_13 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_13_clock),
-    .reset(ShiftT_13_reset),
-    .valid_up(ShiftT_13_valid_up),
-    .I(ShiftT_13_I),
-    .O(ShiftT_13_O)
-  );
-  ShiftT ShiftT_14 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_14_clock),
-    .reset(ShiftT_14_reset),
-    .valid_up(ShiftT_14_valid_up),
-    .I(ShiftT_14_I),
-    .O(ShiftT_14_O)
-  );
-  ShiftT ShiftT_15 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_15_clock),
-    .reset(ShiftT_15_reset),
-    .valid_up(ShiftT_15_valid_up),
-    .I(ShiftT_15_I),
-    .O(ShiftT_15_O)
-  );
-  assign valid_down = valid_up; // @[ShiftTS.scala 39:14]
-  assign O_0 = ShiftT_O; // @[ShiftTS.scala 34:36]
-  assign O_1 = ShiftT_1_O; // @[ShiftTS.scala 34:36]
-  assign O_2 = ShiftT_2_O; // @[ShiftTS.scala 34:36]
-  assign O_3 = ShiftT_3_O; // @[ShiftTS.scala 34:36]
-  assign O_4 = ShiftT_4_O; // @[ShiftTS.scala 34:36]
-  assign O_5 = ShiftT_5_O; // @[ShiftTS.scala 34:36]
-  assign O_6 = ShiftT_6_O; // @[ShiftTS.scala 34:36]
-  assign O_7 = ShiftT_7_O; // @[ShiftTS.scala 34:36]
-  assign O_8 = ShiftT_8_O; // @[ShiftTS.scala 34:36]
-  assign O_9 = ShiftT_9_O; // @[ShiftTS.scala 34:36]
-  assign O_10 = ShiftT_10_O; // @[ShiftTS.scala 34:36]
-  assign O_11 = ShiftT_11_O; // @[ShiftTS.scala 34:36]
-  assign O_12 = ShiftT_12_O; // @[ShiftTS.scala 34:36]
-  assign O_13 = ShiftT_13_O; // @[ShiftTS.scala 34:36]
-  assign O_14 = ShiftT_14_O; // @[ShiftTS.scala 34:36]
-  assign O_15 = ShiftT_15_O; // @[ShiftTS.scala 34:36]
+  assign valid_down = valid_up; // @[ShiftTS.scala 58:14]
+  assign O_0 = ShiftT_O_0; // @[ShiftTS.scala 51:36]
+  assign O_1 = ShiftT_O_1; // @[ShiftTS.scala 51:36]
+  assign O_2 = ShiftT_O_2; // @[ShiftTS.scala 51:36]
+  assign O_3 = ShiftT_O_3; // @[ShiftTS.scala 51:36]
+  assign O_4 = ShiftT_O_4; // @[ShiftTS.scala 51:36]
+  assign O_5 = ShiftT_O_5; // @[ShiftTS.scala 51:36]
+  assign O_6 = ShiftT_O_6; // @[ShiftTS.scala 51:36]
+  assign O_7 = ShiftT_O_7; // @[ShiftTS.scala 51:36]
+  assign O_8 = ShiftT_O_8; // @[ShiftTS.scala 51:36]
+  assign O_9 = ShiftT_O_9; // @[ShiftTS.scala 51:36]
+  assign O_10 = ShiftT_O_10; // @[ShiftTS.scala 51:36]
+  assign O_11 = ShiftT_O_11; // @[ShiftTS.scala 51:36]
+  assign O_12 = ShiftT_O_12; // @[ShiftTS.scala 51:36]
+  assign O_13 = ShiftT_O_13; // @[ShiftTS.scala 51:36]
+  assign O_14 = ShiftT_O_14; // @[ShiftTS.scala 51:36]
+  assign O_15 = ShiftT_O_15; // @[ShiftTS.scala 51:36]
   assign ShiftT_clock = clock;
   assign ShiftT_reset = reset;
-  assign ShiftT_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_I = I_0; // @[ShiftTS.scala 33:24]
-  assign ShiftT_1_clock = clock;
-  assign ShiftT_1_reset = reset;
-  assign ShiftT_1_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_1_I = I_1; // @[ShiftTS.scala 33:24]
-  assign ShiftT_2_clock = clock;
-  assign ShiftT_2_reset = reset;
-  assign ShiftT_2_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_2_I = I_2; // @[ShiftTS.scala 33:24]
-  assign ShiftT_3_clock = clock;
-  assign ShiftT_3_reset = reset;
-  assign ShiftT_3_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_3_I = I_3; // @[ShiftTS.scala 33:24]
-  assign ShiftT_4_clock = clock;
-  assign ShiftT_4_reset = reset;
-  assign ShiftT_4_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_4_I = I_4; // @[ShiftTS.scala 33:24]
-  assign ShiftT_5_clock = clock;
-  assign ShiftT_5_reset = reset;
-  assign ShiftT_5_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_5_I = I_5; // @[ShiftTS.scala 33:24]
-  assign ShiftT_6_clock = clock;
-  assign ShiftT_6_reset = reset;
-  assign ShiftT_6_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_6_I = I_6; // @[ShiftTS.scala 33:24]
-  assign ShiftT_7_clock = clock;
-  assign ShiftT_7_reset = reset;
-  assign ShiftT_7_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_7_I = I_7; // @[ShiftTS.scala 33:24]
-  assign ShiftT_8_clock = clock;
-  assign ShiftT_8_reset = reset;
-  assign ShiftT_8_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_8_I = I_8; // @[ShiftTS.scala 33:24]
-  assign ShiftT_9_clock = clock;
-  assign ShiftT_9_reset = reset;
-  assign ShiftT_9_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_9_I = I_9; // @[ShiftTS.scala 33:24]
-  assign ShiftT_10_clock = clock;
-  assign ShiftT_10_reset = reset;
-  assign ShiftT_10_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_10_I = I_10; // @[ShiftTS.scala 33:24]
-  assign ShiftT_11_clock = clock;
-  assign ShiftT_11_reset = reset;
-  assign ShiftT_11_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_11_I = I_11; // @[ShiftTS.scala 33:24]
-  assign ShiftT_12_clock = clock;
-  assign ShiftT_12_reset = reset;
-  assign ShiftT_12_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_12_I = I_12; // @[ShiftTS.scala 33:24]
-  assign ShiftT_13_clock = clock;
-  assign ShiftT_13_reset = reset;
-  assign ShiftT_13_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_13_I = I_13; // @[ShiftTS.scala 33:24]
-  assign ShiftT_14_clock = clock;
-  assign ShiftT_14_reset = reset;
-  assign ShiftT_14_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_14_I = I_14; // @[ShiftTS.scala 33:24]
-  assign ShiftT_15_clock = clock;
-  assign ShiftT_15_reset = reset;
-  assign ShiftT_15_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_15_I = I_15; // @[ShiftTS.scala 33:24]
+  assign ShiftT_valid_up = valid_up; // @[ShiftTS.scala 53:29]
+  assign ShiftT_I_0 = I_0; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_1 = I_1; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_2 = I_2; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_3 = I_3; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_4 = I_4; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_5 = I_5; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_6 = I_6; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_7 = I_7; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_8 = I_8; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_9 = I_9; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_10 = I_10; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_11 = I_11; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_12 = I_12; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_13 = I_13; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_14 = I_14; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_15 = I_15; // @[ShiftTS.scala 50:25]
 endmodule
-module ShiftT_32(
+module ShiftT_2(
   input         clock,
-  input  [15:0] I,
-  output [15:0] O
+  input  [15:0] I_0,
+  output [15:0] O_0
 );
-  reg [15:0] _T; // @[ShiftT.scala 24:82]
+  reg [15:0] _T_0; // @[ShiftT.scala 24:82]
   reg [31:0] _RAND_0;
-  assign O = _T; // @[ShiftT.scala 24:7]
+  assign O_0 = _T_0; // @[ShiftT.scala 24:7]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -1263,13 +1282,13 @@ initial begin
     `endif
   `ifdef RANDOMIZE_REG_INIT
   _RAND_0 = {1{`RANDOM}};
-  _T = _RAND_0[15:0];
+  _T_0 = _RAND_0[15:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
-    _T <= I;
+    _T_0 <= I_0;
   end
 endmodule
 module ShiftTS_2(
@@ -1309,33 +1328,33 @@ module ShiftTS_2(
   output [15:0] O_14,
   output [15:0] O_15
 );
-  wire  ShiftT_clock; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_O; // @[ShiftTS.scala 32:34]
-  ShiftT_32 ShiftT ( // @[ShiftTS.scala 32:34]
+  wire  ShiftT_clock; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_0; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_0; // @[ShiftTS.scala 32:26]
+  ShiftT_2 ShiftT ( // @[ShiftTS.scala 32:26]
     .clock(ShiftT_clock),
-    .I(ShiftT_I),
-    .O(ShiftT_O)
+    .I_0(ShiftT_I_0),
+    .O_0(ShiftT_O_0)
   );
-  assign valid_down = valid_up; // @[ShiftTS.scala 39:14]
-  assign O_0 = ShiftT_O; // @[ShiftTS.scala 34:36]
-  assign O_1 = I_0; // @[ShiftTS.scala 29:36]
-  assign O_2 = I_1; // @[ShiftTS.scala 29:36]
-  assign O_3 = I_2; // @[ShiftTS.scala 29:36]
-  assign O_4 = I_3; // @[ShiftTS.scala 29:36]
-  assign O_5 = I_4; // @[ShiftTS.scala 29:36]
-  assign O_6 = I_5; // @[ShiftTS.scala 29:36]
-  assign O_7 = I_6; // @[ShiftTS.scala 29:36]
-  assign O_8 = I_7; // @[ShiftTS.scala 29:36]
-  assign O_9 = I_8; // @[ShiftTS.scala 29:36]
-  assign O_10 = I_9; // @[ShiftTS.scala 29:36]
-  assign O_11 = I_10; // @[ShiftTS.scala 29:36]
-  assign O_12 = I_11; // @[ShiftTS.scala 29:36]
-  assign O_13 = I_12; // @[ShiftTS.scala 29:36]
-  assign O_14 = I_13; // @[ShiftTS.scala 29:36]
-  assign O_15 = I_14; // @[ShiftTS.scala 29:36]
+  assign valid_down = valid_up; // @[ShiftTS.scala 58:14]
+  assign O_0 = ShiftT_O_0; // @[ShiftTS.scala 51:36]
+  assign O_1 = I_0; // @[ShiftTS.scala 40:36]
+  assign O_2 = I_1; // @[ShiftTS.scala 40:36]
+  assign O_3 = I_2; // @[ShiftTS.scala 40:36]
+  assign O_4 = I_3; // @[ShiftTS.scala 40:36]
+  assign O_5 = I_4; // @[ShiftTS.scala 40:36]
+  assign O_6 = I_5; // @[ShiftTS.scala 40:36]
+  assign O_7 = I_6; // @[ShiftTS.scala 40:36]
+  assign O_8 = I_7; // @[ShiftTS.scala 40:36]
+  assign O_9 = I_8; // @[ShiftTS.scala 40:36]
+  assign O_10 = I_9; // @[ShiftTS.scala 40:36]
+  assign O_11 = I_10; // @[ShiftTS.scala 40:36]
+  assign O_12 = I_11; // @[ShiftTS.scala 40:36]
+  assign O_13 = I_12; // @[ShiftTS.scala 40:36]
+  assign O_14 = I_13; // @[ShiftTS.scala 40:36]
+  assign O_15 = I_14; // @[ShiftTS.scala 40:36]
   assign ShiftT_clock = clock;
-  assign ShiftT_I = I_15; // @[ShiftTS.scala 33:24]
+  assign ShiftT_I_0 = I_15; // @[ShiftTS.scala 50:25]
 endmodule
 module SSeqTupleCreator(
   input         valid_up,
@@ -13559,8 +13578,16 @@ module ReduceS(
   wire [15:0] AddNoValid_1_O; // @[ReduceS.scala 20:43]
   reg [15:0] _T; // @[ReduceS.scala 27:24]
   reg [31:0] _RAND_0;
-  reg  _T_1; // @[ReduceS.scala 47:24]
+  reg [15:0] _T_1; // @[ReduceS.scala 43:46]
   reg [31:0] _RAND_1;
+  reg [15:0] _T_2; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_2;
+  reg [15:0] _T_3; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_3;
+  reg  _T_4; // @[ReduceS.scala 47:32]
+  reg [31:0] _RAND_4;
+  reg  _T_5; // @[ReduceS.scala 47:24]
+  reg [31:0] _RAND_5;
   AddNoValid AddNoValid ( // @[ReduceS.scala 20:43]
     .I_t0b(AddNoValid_I_t0b),
     .I_t1b(AddNoValid_I_t1b),
@@ -13571,12 +13598,12 @@ module ReduceS(
     .I_t1b(AddNoValid_1_I_t1b),
     .O(AddNoValid_1_O)
   );
-  assign valid_down = _T_1; // @[ReduceS.scala 47:14]
+  assign valid_down = _T_5; // @[ReduceS.scala 47:14]
   assign O_0 = _T; // @[ReduceS.scala 27:14]
-  assign AddNoValid_I_t0b = I_2; // @[ReduceS.scala 43:18]
+  assign AddNoValid_I_t0b = _T_2; // @[ReduceS.scala 43:18]
   assign AddNoValid_I_t1b = AddNoValid_1_O; // @[ReduceS.scala 36:18]
-  assign AddNoValid_1_I_t0b = I_0; // @[ReduceS.scala 43:18]
-  assign AddNoValid_1_I_t1b = I_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_1_I_t0b = _T_3; // @[ReduceS.scala 43:18]
+  assign AddNoValid_1_I_t1b = _T_1; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -13614,18 +13641,38 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_1 = {1{`RANDOM}};
-  _T_1 = _RAND_1[0:0];
+  _T_1 = _RAND_1[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_2 = {1{`RANDOM}};
+  _T_2 = _RAND_2[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_3 = {1{`RANDOM}};
+  _T_3 = _RAND_3[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_4 = {1{`RANDOM}};
+  _T_4 = _RAND_4[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_5 = {1{`RANDOM}};
+  _T_5 = _RAND_5[0:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     _T <= AddNoValid_O;
+    _T_1 <= I_0;
+    _T_2 <= I_1;
+    _T_3 <= I_2;
     if (reset) begin
-      _T_1 <= 1'h0;
+      _T_4 <= 1'h0;
     end else begin
-      _T_1 <= valid_up;
+      _T_4 <= valid_up;
     end
+    _T_5 <= _T_4;
   end
 endmodule
 module MapS_6(
@@ -13760,8 +13807,16 @@ module ReduceS_1(
   wire [15:0] MapSNoValid_1_O_0; // @[ReduceS.scala 20:43]
   reg [15:0] _T_0; // @[ReduceS.scala 27:24]
   reg [31:0] _RAND_0;
-  reg  _T_1; // @[ReduceS.scala 47:24]
+  reg [15:0] _T_1_0; // @[ReduceS.scala 43:46]
   reg [31:0] _RAND_1;
+  reg [15:0] _T_2_0; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_2;
+  reg [15:0] _T_3_0; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_3;
+  reg  _T_4; // @[ReduceS.scala 47:32]
+  reg [31:0] _RAND_4;
+  reg  _T_5; // @[ReduceS.scala 47:24]
+  reg [31:0] _RAND_5;
   MapSNoValid MapSNoValid ( // @[ReduceS.scala 20:43]
     .I_0_t0b(MapSNoValid_I_0_t0b),
     .I_0_t1b(MapSNoValid_I_0_t1b),
@@ -13772,12 +13827,12 @@ module ReduceS_1(
     .I_0_t1b(MapSNoValid_1_I_0_t1b),
     .O_0(MapSNoValid_1_O_0)
   );
-  assign valid_down = _T_1; // @[ReduceS.scala 47:14]
+  assign valid_down = _T_5; // @[ReduceS.scala 47:14]
   assign O_0_0 = _T_0; // @[ReduceS.scala 27:14]
-  assign MapSNoValid_I_0_t0b = I_0_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_I_0_t0b = _T_3_0; // @[ReduceS.scala 43:18]
   assign MapSNoValid_I_0_t1b = MapSNoValid_1_O_0; // @[ReduceS.scala 36:18]
-  assign MapSNoValid_1_I_0_t0b = I_1_0; // @[ReduceS.scala 43:18]
-  assign MapSNoValid_1_I_0_t1b = I_2_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_1_I_0_t0b = _T_2_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_1_I_0_t1b = _T_1_0; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -13815,18 +13870,38 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_1 = {1{`RANDOM}};
-  _T_1 = _RAND_1[0:0];
+  _T_1_0 = _RAND_1[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_2 = {1{`RANDOM}};
+  _T_2_0 = _RAND_2[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_3 = {1{`RANDOM}};
+  _T_3_0 = _RAND_3[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_4 = {1{`RANDOM}};
+  _T_4 = _RAND_4[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_5 = {1{`RANDOM}};
+  _T_5 = _RAND_5[0:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     _T_0 <= MapSNoValid_O_0;
+    _T_1_0 <= I_0_0;
+    _T_2_0 <= I_1_0;
+    _T_3_0 <= I_2_0;
     if (reset) begin
-      _T_1 <= 1'h0;
+      _T_4 <= 1'h0;
     end else begin
-      _T_1 <= valid_up;
+      _T_4 <= valid_up;
     end
+    _T_5 <= _T_4;
   end
 endmodule
 module InitialDelayCounter_1(
@@ -13834,13 +13909,13 @@ module InitialDelayCounter_1(
   input   reset,
   output  valid_down
 );
-  reg [2:0] value; // @[InitialDelayCounter.scala 8:34]
+  reg [3:0] value; // @[InitialDelayCounter.scala 8:34]
   reg [31:0] _RAND_0;
   wire  _T_1; // @[InitialDelayCounter.scala 17:17]
-  wire [2:0] _T_4; // @[InitialDelayCounter.scala 17:53]
-  assign _T_1 = value < 3'h6; // @[InitialDelayCounter.scala 17:17]
-  assign _T_4 = value + 3'h1; // @[InitialDelayCounter.scala 17:53]
-  assign valid_down = value == 3'h6; // @[InitialDelayCounter.scala 16:16]
+  wire [3:0] _T_4; // @[InitialDelayCounter.scala 17:53]
+  assign _T_1 = value < 4'h8; // @[InitialDelayCounter.scala 17:17]
+  assign _T_4 = value + 4'h1; // @[InitialDelayCounter.scala 17:53]
+  assign valid_down = value == 4'h8; // @[InitialDelayCounter.scala 16:16]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -13874,14 +13949,14 @@ initial begin
     `endif
   `ifdef RANDOMIZE_REG_INIT
   _RAND_0 = {1{`RANDOM}};
-  value = _RAND_0[2:0];
+  value = _RAND_0[3:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     if (reset) begin
-      value <= 3'h0;
+      value <= 4'h0;
     end else if (_T_1) begin
       value <= _T_4;
     end
@@ -20336,9 +20411,9 @@ module InitialDelayCounter_2(
   reg [31:0] _RAND_0;
   wire  _T_1; // @[InitialDelayCounter.scala 17:17]
   wire [3:0] _T_4; // @[InitialDelayCounter.scala 17:53]
-  assign _T_1 = value < 4'h9; // @[InitialDelayCounter.scala 17:17]
+  assign _T_1 = value < 4'hb; // @[InitialDelayCounter.scala 17:17]
   assign _T_4 = value + 4'h1; // @[InitialDelayCounter.scala 17:53]
-  assign valid_down = value == 4'h9; // @[InitialDelayCounter.scala 16:16]
+  assign valid_down = value == 4'hb; // @[InitialDelayCounter.scala 16:16]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -20671,17 +20746,23 @@ module ReduceS_2(
   wire [15:0] AddNoValid_O; // @[ReduceS.scala 20:43]
   reg [15:0] _T; // @[ReduceS.scala 27:24]
   reg [31:0] _RAND_0;
-  reg  _T_1; // @[ReduceS.scala 47:24]
+  reg [15:0] _T_1; // @[ReduceS.scala 43:46]
   reg [31:0] _RAND_1;
+  reg [15:0] _T_2; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_2;
+  reg  _T_3; // @[ReduceS.scala 47:32]
+  reg [31:0] _RAND_3;
+  reg  _T_4; // @[ReduceS.scala 47:24]
+  reg [31:0] _RAND_4;
   AddNoValid AddNoValid ( // @[ReduceS.scala 20:43]
     .I_t0b(AddNoValid_I_t0b),
     .I_t1b(AddNoValid_I_t1b),
     .O(AddNoValid_O)
   );
-  assign valid_down = _T_1; // @[ReduceS.scala 47:14]
+  assign valid_down = _T_4; // @[ReduceS.scala 47:14]
   assign O_0 = _T; // @[ReduceS.scala 27:14]
-  assign AddNoValid_I_t0b = I_1; // @[ReduceS.scala 43:18]
-  assign AddNoValid_I_t1b = I_0; // @[ReduceS.scala 43:18]
+  assign AddNoValid_I_t0b = _T_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_I_t1b = _T_2; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -20719,18 +20800,33 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_1 = {1{`RANDOM}};
-  _T_1 = _RAND_1[0:0];
+  _T_1 = _RAND_1[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_2 = {1{`RANDOM}};
+  _T_2 = _RAND_2[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_3 = {1{`RANDOM}};
+  _T_3 = _RAND_3[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_4 = {1{`RANDOM}};
+  _T_4 = _RAND_4[0:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     _T <= AddNoValid_O;
+    _T_1 <= I_0;
+    _T_2 <= I_1;
     if (reset) begin
-      _T_1 <= 1'h0;
+      _T_3 <= 1'h0;
     end else begin
-      _T_1 <= valid_up;
+      _T_3 <= valid_up;
     end
+    _T_4 <= _T_3;
   end
 endmodule
 module MapS_15(
@@ -20805,17 +20901,23 @@ module ReduceS_3(
   wire [15:0] MapSNoValid_O_0; // @[ReduceS.scala 20:43]
   reg [15:0] _T_0; // @[ReduceS.scala 27:24]
   reg [31:0] _RAND_0;
-  reg  _T_1; // @[ReduceS.scala 47:24]
+  reg [15:0] _T_1_0; // @[ReduceS.scala 43:46]
   reg [31:0] _RAND_1;
+  reg [15:0] _T_2_0; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_2;
+  reg  _T_3; // @[ReduceS.scala 47:32]
+  reg [31:0] _RAND_3;
+  reg  _T_4; // @[ReduceS.scala 47:24]
+  reg [31:0] _RAND_4;
   MapSNoValid MapSNoValid ( // @[ReduceS.scala 20:43]
     .I_0_t0b(MapSNoValid_I_0_t0b),
     .I_0_t1b(MapSNoValid_I_0_t1b),
     .O_0(MapSNoValid_O_0)
   );
-  assign valid_down = _T_1; // @[ReduceS.scala 47:14]
+  assign valid_down = _T_4; // @[ReduceS.scala 47:14]
   assign O_0_0 = _T_0; // @[ReduceS.scala 27:14]
-  assign MapSNoValid_I_0_t0b = I_0_0; // @[ReduceS.scala 43:18]
-  assign MapSNoValid_I_0_t1b = I_1_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_I_0_t0b = _T_1_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_I_0_t1b = _T_2_0; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -20853,18 +20955,33 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_1 = {1{`RANDOM}};
-  _T_1 = _RAND_1[0:0];
+  _T_1_0 = _RAND_1[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_2 = {1{`RANDOM}};
+  _T_2_0 = _RAND_2[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_3 = {1{`RANDOM}};
+  _T_3 = _RAND_3[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_4 = {1{`RANDOM}};
+  _T_4 = _RAND_4[0:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     _T_0 <= MapSNoValid_O_0;
+    _T_1_0 <= I_0_0;
+    _T_2_0 <= I_1_0;
     if (reset) begin
-      _T_1 <= 1'h0;
+      _T_3 <= 1'h0;
     end else begin
-      _T_1 <= valid_up;
+      _T_3 <= valid_up;
     end
+    _T_4 <= _T_3;
   end
 endmodule
 module InitialDelayCounter_3(
@@ -20872,13 +20989,13 @@ module InitialDelayCounter_3(
   input   reset,
   output  valid_down
 );
-  reg [3:0] value; // @[InitialDelayCounter.scala 8:34]
+  reg [4:0] value; // @[InitialDelayCounter.scala 8:34]
   reg [31:0] _RAND_0;
   wire  _T_1; // @[InitialDelayCounter.scala 17:17]
-  wire [3:0] _T_4; // @[InitialDelayCounter.scala 17:53]
-  assign _T_1 = value < 4'he; // @[InitialDelayCounter.scala 17:17]
-  assign _T_4 = value + 4'h1; // @[InitialDelayCounter.scala 17:53]
-  assign valid_down = value == 4'he; // @[InitialDelayCounter.scala 16:16]
+  wire [4:0] _T_4; // @[InitialDelayCounter.scala 17:53]
+  assign _T_1 = value < 5'h12; // @[InitialDelayCounter.scala 17:17]
+  assign _T_4 = value + 5'h1; // @[InitialDelayCounter.scala 17:53]
+  assign valid_down = value == 5'h12; // @[InitialDelayCounter.scala 16:16]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -20912,14 +21029,14 @@ initial begin
     `endif
   `ifdef RANDOMIZE_REG_INIT
   _RAND_0 = {1{`RANDOM}};
-  value = _RAND_0[3:0];
+  value = _RAND_0[4:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     if (reset) begin
-      value <= 4'h0;
+      value <= 5'h0;
     end else if (_T_1) begin
       value <= _T_4;
     end

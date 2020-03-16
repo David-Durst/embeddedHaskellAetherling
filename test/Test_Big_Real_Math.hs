@@ -246,8 +246,8 @@ big_real_tests = testGroup "Big_Real Tests"
   [
     --testCase "single big_real 3x3 convolution magma" $
     --(TS.all_success big_real_conv_2d_results') @? "single 3x3 convolution failed"
-    testCase "single big_real 3x3 convolution chisel" $
-    (TS.all_success big_real_conv_2d_results_chisel) @? "single 3x3 convolution chisel failed",
+    testCase "big_real 3x3 convolution chisel" $
+    (TS.all_success big_real_conv_2d_results_chisel) @? "big real 3x3 convolution chisel failed",
     testCase "big_real 3x3 conv to 2x2 conv chisel" $
     (TS.all_success big_real_conv_2d_b2b_results_chisel) @? "big_real 3x3 conv to 2x2 conv chisel failed",
     testCase "big_real sharpen chisel" $

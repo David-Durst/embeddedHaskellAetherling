@@ -79,13 +79,26 @@ module NestedCounters(
 );
   assign valid = CE; // @[NestedCounters.scala 65:13]
 endmodule
+module NestedCounters_1(
+  input   CE,
+  output  valid
+);
+  wire  NestedCounters_CE; // @[NestedCounters.scala 53:31]
+  wire  NestedCounters_valid; // @[NestedCounters.scala 53:31]
+  NestedCounters NestedCounters ( // @[NestedCounters.scala 53:31]
+    .CE(NestedCounters_CE),
+    .valid(NestedCounters_valid)
+  );
+  assign valid = NestedCounters_valid; // @[NestedCounters.scala 56:11]
+  assign NestedCounters_CE = CE; // @[NestedCounters.scala 57:22]
+endmodule
 module NestedCountersWithNumValid(
   input   CE,
   output  valid
 );
   wire  NestedCounters_CE; // @[NestedCounters.scala 20:44]
   wire  NestedCounters_valid; // @[NestedCounters.scala 20:44]
-  NestedCounters NestedCounters ( // @[NestedCounters.scala 20:44]
+  NestedCounters_1 NestedCounters ( // @[NestedCounters.scala 20:44]
     .CE(NestedCounters_CE),
     .valid(NestedCounters_valid)
   );
@@ -96,27 +109,29 @@ module RAM_ST(
   input         clock,
   input         RE,
   input  [9:0]  RADDR,
-  output [15:0] RDATA,
+  output [15:0] RDATA_0,
+  output [15:0] RDATA_1,
   input         WE,
   input  [9:0]  WADDR,
-  input  [15:0] WDATA
+  input  [15:0] WDATA_0,
+  input  [15:0] WDATA_1
 );
   wire  write_elem_counter_CE; // @[RAM_ST.scala 20:34]
   wire  write_elem_counter_valid; // @[RAM_ST.scala 20:34]
   wire  read_elem_counter_CE; // @[RAM_ST.scala 21:33]
   wire  read_elem_counter_valid; // @[RAM_ST.scala 21:33]
-  reg [15:0] ram [0:959]; // @[RAM_ST.scala 29:24]
+  reg [31:0] ram [0:959]; // @[RAM_ST.scala 29:24]
   reg [31:0] _RAND_0;
-  wire [15:0] ram__T_8_data; // @[RAM_ST.scala 29:24]
-  wire [9:0] ram__T_8_addr; // @[RAM_ST.scala 29:24]
+  wire [31:0] ram__T_9_data; // @[RAM_ST.scala 29:24]
+  wire [9:0] ram__T_9_addr; // @[RAM_ST.scala 29:24]
   reg [31:0] _RAND_1;
-  wire [15:0] ram__T_2_data; // @[RAM_ST.scala 29:24]
-  wire [9:0] ram__T_2_addr; // @[RAM_ST.scala 29:24]
-  wire  ram__T_2_mask; // @[RAM_ST.scala 29:24]
-  wire  ram__T_2_en; // @[RAM_ST.scala 29:24]
-  reg  ram__T_8_en_pipe_0;
+  wire [31:0] ram__T_3_data; // @[RAM_ST.scala 29:24]
+  wire [9:0] ram__T_3_addr; // @[RAM_ST.scala 29:24]
+  wire  ram__T_3_mask; // @[RAM_ST.scala 29:24]
+  wire  ram__T_3_en; // @[RAM_ST.scala 29:24]
+  reg  ram__T_9_en_pipe_0;
   reg [31:0] _RAND_2;
-  reg [9:0] ram__T_8_addr_pipe_0;
+  reg [9:0] ram__T_9_addr_pipe_0;
   reg [31:0] _RAND_3;
   wire [9:0] _GEN_1; // @[RAM_ST.scala 31:71]
   wire [9:0] _GEN_2; // @[RAM_ST.scala 31:71]
@@ -2037,7 +2052,8 @@ module RAM_ST(
   wire [9:0] _GEN_1922; // @[RAM_ST.scala 32:46]
   wire [9:0] _GEN_1923; // @[RAM_ST.scala 32:46]
   wire [9:0] _GEN_1924; // @[RAM_ST.scala 32:46]
-  wire [10:0] _T_3; // @[RAM_ST.scala 32:46]
+  wire [10:0] _T_4; // @[RAM_ST.scala 32:46]
+  wire [31:0] _T_11;
   NestedCountersWithNumValid write_elem_counter ( // @[RAM_ST.scala 20:34]
     .CE(write_elem_counter_CE),
     .valid(write_elem_counter_valid)
@@ -2046,16 +2062,16 @@ module RAM_ST(
     .CE(read_elem_counter_CE),
     .valid(read_elem_counter_valid)
   );
-  assign ram__T_8_addr = ram__T_8_addr_pipe_0;
+  assign ram__T_9_addr = ram__T_9_addr_pipe_0;
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
-  assign ram__T_8_data = ram[ram__T_8_addr]; // @[RAM_ST.scala 29:24]
+  assign ram__T_9_data = ram[ram__T_9_addr]; // @[RAM_ST.scala 29:24]
   `else
-  assign ram__T_8_data = ram__T_8_addr >= 10'h3c0 ? _RAND_1[15:0] : ram[ram__T_8_addr]; // @[RAM_ST.scala 29:24]
+  assign ram__T_9_data = ram__T_9_addr >= 10'h3c0 ? _RAND_1[31:0] : ram[ram__T_9_addr]; // @[RAM_ST.scala 29:24]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
-  assign ram__T_2_data = WDATA;
-  assign ram__T_2_addr = _T[9:0];
-  assign ram__T_2_mask = 1'h1;
-  assign ram__T_2_en = write_elem_counter_valid;
+  assign ram__T_3_data = {WDATA_1,WDATA_0};
+  assign ram__T_3_addr = _T[9:0];
+  assign ram__T_3_mask = 1'h1;
+  assign ram__T_3_en = write_elem_counter_valid;
   assign _GEN_1 = 10'h1 == WADDR ? 10'h1 : 10'h0; // @[RAM_ST.scala 31:71]
   assign _GEN_2 = 10'h2 == WADDR ? 10'h2 : _GEN_1; // @[RAM_ST.scala 31:71]
   assign _GEN_3 = 10'h3 == WADDR ? 10'h3 : _GEN_2; // @[RAM_ST.scala 31:71]
@@ -3975,8 +3991,10 @@ module RAM_ST(
   assign _GEN_1922 = 10'h3bd == RADDR ? 10'h3bd : _GEN_1921; // @[RAM_ST.scala 32:46]
   assign _GEN_1923 = 10'h3be == RADDR ? 10'h3be : _GEN_1922; // @[RAM_ST.scala 32:46]
   assign _GEN_1924 = 10'h3bf == RADDR ? 10'h3bf : _GEN_1923; // @[RAM_ST.scala 32:46]
-  assign _T_3 = {{1'd0}, _GEN_1924}; // @[RAM_ST.scala 32:46]
-  assign RDATA = ram__T_8_data; // @[RAM_ST.scala 32:9]
+  assign _T_4 = {{1'd0}, _GEN_1924}; // @[RAM_ST.scala 32:46]
+  assign _T_11 = ram__T_9_data;
+  assign RDATA_0 = _T_11[15:0]; // @[RAM_ST.scala 32:9]
+  assign RDATA_1 = _T_11[31:16]; // @[RAM_ST.scala 32:9]
   assign write_elem_counter_CE = WE; // @[RAM_ST.scala 23:25]
   assign read_elem_counter_CE = RE; // @[RAM_ST.scala 24:24]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
@@ -4013,27 +4031,27 @@ initial begin
   _RAND_0 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
   for (initvar = 0; initvar < 960; initvar = initvar+1)
-    ram[initvar] = _RAND_0[15:0];
+    ram[initvar] = _RAND_0[31:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_1 = {1{`RANDOM}};
   `ifdef RANDOMIZE_REG_INIT
   _RAND_2 = {1{`RANDOM}};
-  ram__T_8_en_pipe_0 = _RAND_2[0:0];
+  ram__T_9_en_pipe_0 = _RAND_2[0:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_3 = {1{`RANDOM}};
-  ram__T_8_addr_pipe_0 = _RAND_3[9:0];
+  ram__T_9_addr_pipe_0 = _RAND_3[9:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
-    if(ram__T_2_en & ram__T_2_mask) begin
-      ram[ram__T_2_addr] <= ram__T_2_data; // @[RAM_ST.scala 29:24]
+    if(ram__T_3_en & ram__T_3_mask) begin
+      ram[ram__T_3_addr] <= ram__T_3_data; // @[RAM_ST.scala 29:24]
     end
-    ram__T_8_en_pipe_0 <= read_elem_counter_valid;
+    ram__T_9_en_pipe_0 <= read_elem_counter_valid;
     if (read_elem_counter_valid) begin
-      ram__T_8_addr_pipe_0 <= _T_3[9:0];
+      ram__T_9_addr_pipe_0 <= _T_4[9:0];
     end
   end
 endmodule
@@ -4041,16 +4059,20 @@ module ShiftT(
   input         clock,
   input         reset,
   input         valid_up,
-  input  [15:0] I,
-  output [15:0] O
+  input  [15:0] I_0,
+  input  [15:0] I_1,
+  output [15:0] O_0,
+  output [15:0] O_1
 );
   wire  RAM_ST_clock; // @[ShiftT.scala 39:29]
   wire  RAM_ST_RE; // @[ShiftT.scala 39:29]
   wire [9:0] RAM_ST_RADDR; // @[ShiftT.scala 39:29]
-  wire [15:0] RAM_ST_RDATA; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_0; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_1; // @[ShiftT.scala 39:29]
   wire  RAM_ST_WE; // @[ShiftT.scala 39:29]
   wire [9:0] RAM_ST_WADDR; // @[ShiftT.scala 39:29]
-  wire [15:0] RAM_ST_WDATA; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_0; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_1; // @[ShiftT.scala 39:29]
   wire  NestedCounters_CE; // @[ShiftT.scala 41:31]
   wire  NestedCounters_valid; // @[ShiftT.scala 41:31]
   reg [9:0] value; // @[Counter.scala 29:33]
@@ -4061,24 +4083,28 @@ module ShiftT(
     .clock(RAM_ST_clock),
     .RE(RAM_ST_RE),
     .RADDR(RAM_ST_RADDR),
-    .RDATA(RAM_ST_RDATA),
+    .RDATA_0(RAM_ST_RDATA_0),
+    .RDATA_1(RAM_ST_RDATA_1),
     .WE(RAM_ST_WE),
     .WADDR(RAM_ST_WADDR),
-    .WDATA(RAM_ST_WDATA)
+    .WDATA_0(RAM_ST_WDATA_0),
+    .WDATA_1(RAM_ST_WDATA_1)
   );
-  NestedCounters NestedCounters ( // @[ShiftT.scala 41:31]
+  NestedCounters_1 NestedCounters ( // @[ShiftT.scala 41:31]
     .CE(NestedCounters_CE),
     .valid(NestedCounters_valid)
   );
   assign _T_1 = value == 10'h3bf; // @[Counter.scala 37:24]
   assign _T_3 = value + 10'h1; // @[Counter.scala 38:22]
-  assign O = RAM_ST_RDATA; // @[ShiftT.scala 51:7]
+  assign O_0 = RAM_ST_RDATA_0; // @[ShiftT.scala 51:7]
+  assign O_1 = RAM_ST_RDATA_1; // @[ShiftT.scala 51:7]
   assign RAM_ST_clock = clock;
   assign RAM_ST_RE = valid_up; // @[ShiftT.scala 49:20]
   assign RAM_ST_RADDR = _T_1 ? 10'h0 : _T_3; // @[ShiftT.scala 46:76 ShiftT.scala 47:38]
   assign RAM_ST_WE = valid_up; // @[ShiftT.scala 48:20]
   assign RAM_ST_WADDR = value; // @[ShiftT.scala 45:23]
-  assign RAM_ST_WDATA = I; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_0 = I_0; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_1 = I_1; // @[ShiftT.scala 50:23]
   assign NestedCounters_CE = valid_up; // @[ShiftT.scala 42:22]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
@@ -4140,50 +4166,39 @@ module ShiftTS(
   output [15:0] O_0,
   output [15:0] O_1
 );
-  wire  ShiftT_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_1_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_1_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_1_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_1_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_1_O; // @[ShiftTS.scala 32:34]
-  ShiftT ShiftT ( // @[ShiftTS.scala 32:34]
+  wire  ShiftT_clock; // @[ShiftTS.scala 32:26]
+  wire  ShiftT_reset; // @[ShiftTS.scala 32:26]
+  wire  ShiftT_valid_up; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_0; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_1; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_0; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_1; // @[ShiftTS.scala 32:26]
+  ShiftT ShiftT ( // @[ShiftTS.scala 32:26]
     .clock(ShiftT_clock),
     .reset(ShiftT_reset),
     .valid_up(ShiftT_valid_up),
-    .I(ShiftT_I),
-    .O(ShiftT_O)
+    .I_0(ShiftT_I_0),
+    .I_1(ShiftT_I_1),
+    .O_0(ShiftT_O_0),
+    .O_1(ShiftT_O_1)
   );
-  ShiftT ShiftT_1 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_1_clock),
-    .reset(ShiftT_1_reset),
-    .valid_up(ShiftT_1_valid_up),
-    .I(ShiftT_1_I),
-    .O(ShiftT_1_O)
-  );
-  assign valid_down = valid_up; // @[ShiftTS.scala 39:14]
-  assign O_0 = ShiftT_O; // @[ShiftTS.scala 34:36]
-  assign O_1 = ShiftT_1_O; // @[ShiftTS.scala 34:36]
+  assign valid_down = valid_up; // @[ShiftTS.scala 58:14]
+  assign O_0 = ShiftT_O_0; // @[ShiftTS.scala 51:36]
+  assign O_1 = ShiftT_O_1; // @[ShiftTS.scala 51:36]
   assign ShiftT_clock = clock;
   assign ShiftT_reset = reset;
-  assign ShiftT_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_I = I_0; // @[ShiftTS.scala 33:24]
-  assign ShiftT_1_clock = clock;
-  assign ShiftT_1_reset = reset;
-  assign ShiftT_1_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_1_I = I_1; // @[ShiftTS.scala 33:24]
+  assign ShiftT_valid_up = valid_up; // @[ShiftTS.scala 53:29]
+  assign ShiftT_I_0 = I_0; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_1 = I_1; // @[ShiftTS.scala 50:25]
 endmodule
-module ShiftT_4(
+module ShiftT_2(
   input         clock,
-  input  [15:0] I,
-  output [15:0] O
+  input  [15:0] I_0,
+  output [15:0] O_0
 );
-  reg [15:0] _T; // @[ShiftT.scala 24:82]
+  reg [15:0] _T_0; // @[ShiftT.scala 24:82]
   reg [31:0] _RAND_0;
-  assign O = _T; // @[ShiftT.scala 24:7]
+  assign O_0 = _T_0; // @[ShiftT.scala 24:7]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -4217,13 +4232,13 @@ initial begin
     `endif
   `ifdef RANDOMIZE_REG_INIT
   _RAND_0 = {1{`RANDOM}};
-  _T = _RAND_0[15:0];
+  _T_0 = _RAND_0[15:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
-    _T <= I;
+    _T_0 <= I_0;
   end
 endmodule
 module ShiftTS_2(
@@ -4235,19 +4250,19 @@ module ShiftTS_2(
   output [15:0] O_0,
   output [15:0] O_1
 );
-  wire  ShiftT_clock; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_O; // @[ShiftTS.scala 32:34]
-  ShiftT_4 ShiftT ( // @[ShiftTS.scala 32:34]
+  wire  ShiftT_clock; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_0; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_0; // @[ShiftTS.scala 32:26]
+  ShiftT_2 ShiftT ( // @[ShiftTS.scala 32:26]
     .clock(ShiftT_clock),
-    .I(ShiftT_I),
-    .O(ShiftT_O)
+    .I_0(ShiftT_I_0),
+    .O_0(ShiftT_O_0)
   );
-  assign valid_down = valid_up; // @[ShiftTS.scala 39:14]
-  assign O_0 = ShiftT_O; // @[ShiftTS.scala 34:36]
-  assign O_1 = I_0; // @[ShiftTS.scala 29:36]
+  assign valid_down = valid_up; // @[ShiftTS.scala 58:14]
+  assign O_0 = ShiftT_O_0; // @[ShiftTS.scala 51:36]
+  assign O_1 = I_0; // @[ShiftTS.scala 40:36]
   assign ShiftT_clock = clock;
-  assign ShiftT_I = I_1; // @[ShiftTS.scala 33:24]
+  assign ShiftT_I_0 = I_1; // @[ShiftTS.scala 50:25]
 endmodule
 module SSeqTupleCreator(
   input         valid_up,
@@ -6579,8 +6594,16 @@ module ReduceS(
   wire [15:0] AddNoValid_1_O; // @[ReduceS.scala 20:43]
   reg [15:0] _T; // @[ReduceS.scala 27:24]
   reg [31:0] _RAND_0;
-  reg  _T_1; // @[ReduceS.scala 47:24]
+  reg [15:0] _T_1; // @[ReduceS.scala 43:46]
   reg [31:0] _RAND_1;
+  reg [15:0] _T_2; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_2;
+  reg [15:0] _T_3; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_3;
+  reg  _T_4; // @[ReduceS.scala 47:32]
+  reg [31:0] _RAND_4;
+  reg  _T_5; // @[ReduceS.scala 47:24]
+  reg [31:0] _RAND_5;
   AddNoValid AddNoValid ( // @[ReduceS.scala 20:43]
     .I_t0b(AddNoValid_I_t0b),
     .I_t1b(AddNoValid_I_t1b),
@@ -6591,12 +6614,12 @@ module ReduceS(
     .I_t1b(AddNoValid_1_I_t1b),
     .O(AddNoValid_1_O)
   );
-  assign valid_down = _T_1; // @[ReduceS.scala 47:14]
+  assign valid_down = _T_5; // @[ReduceS.scala 47:14]
   assign O_0 = _T; // @[ReduceS.scala 27:14]
-  assign AddNoValid_I_t0b = I_0; // @[ReduceS.scala 43:18]
+  assign AddNoValid_I_t0b = _T_2; // @[ReduceS.scala 43:18]
   assign AddNoValid_I_t1b = AddNoValid_1_O; // @[ReduceS.scala 36:18]
-  assign AddNoValid_1_I_t0b = I_2; // @[ReduceS.scala 43:18]
-  assign AddNoValid_1_I_t1b = I_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_1_I_t0b = _T_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_1_I_t1b = _T_3; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -6634,18 +6657,38 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_1 = {1{`RANDOM}};
-  _T_1 = _RAND_1[0:0];
+  _T_1 = _RAND_1[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_2 = {1{`RANDOM}};
+  _T_2 = _RAND_2[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_3 = {1{`RANDOM}};
+  _T_3 = _RAND_3[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_4 = {1{`RANDOM}};
+  _T_4 = _RAND_4[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_5 = {1{`RANDOM}};
+  _T_5 = _RAND_5[0:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     _T <= AddNoValid_O;
+    _T_1 <= I_0;
+    _T_2 <= I_1;
+    _T_3 <= I_2;
     if (reset) begin
-      _T_1 <= 1'h0;
+      _T_4 <= 1'h0;
     end else begin
-      _T_1 <= valid_up;
+      _T_4 <= valid_up;
     end
+    _T_5 <= _T_4;
   end
 endmodule
 module MapS_6(
@@ -6780,8 +6823,16 @@ module ReduceS_1(
   wire [15:0] MapSNoValid_1_O_0; // @[ReduceS.scala 20:43]
   reg [15:0] _T_0; // @[ReduceS.scala 27:24]
   reg [31:0] _RAND_0;
-  reg  _T_1; // @[ReduceS.scala 47:24]
+  reg [15:0] _T_1_0; // @[ReduceS.scala 43:46]
   reg [31:0] _RAND_1;
+  reg [15:0] _T_2_0; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_2;
+  reg [15:0] _T_3_0; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_3;
+  reg  _T_4; // @[ReduceS.scala 47:32]
+  reg [31:0] _RAND_4;
+  reg  _T_5; // @[ReduceS.scala 47:24]
+  reg [31:0] _RAND_5;
   MapSNoValid MapSNoValid ( // @[ReduceS.scala 20:43]
     .I_0_t0b(MapSNoValid_I_0_t0b),
     .I_0_t1b(MapSNoValid_I_0_t1b),
@@ -6792,12 +6843,12 @@ module ReduceS_1(
     .I_0_t1b(MapSNoValid_1_I_0_t1b),
     .O_0(MapSNoValid_1_O_0)
   );
-  assign valid_down = _T_1; // @[ReduceS.scala 47:14]
+  assign valid_down = _T_5; // @[ReduceS.scala 47:14]
   assign O_0_0 = _T_0; // @[ReduceS.scala 27:14]
-  assign MapSNoValid_I_0_t0b = I_1_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_I_0_t0b = _T_2_0; // @[ReduceS.scala 43:18]
   assign MapSNoValid_I_0_t1b = MapSNoValid_1_O_0; // @[ReduceS.scala 36:18]
-  assign MapSNoValid_1_I_0_t0b = I_2_0; // @[ReduceS.scala 43:18]
-  assign MapSNoValid_1_I_0_t1b = I_0_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_1_I_0_t0b = _T_1_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_1_I_0_t1b = _T_3_0; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -6835,18 +6886,38 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_1 = {1{`RANDOM}};
-  _T_1 = _RAND_1[0:0];
+  _T_1_0 = _RAND_1[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_2 = {1{`RANDOM}};
+  _T_2_0 = _RAND_2[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_3 = {1{`RANDOM}};
+  _T_3_0 = _RAND_3[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_4 = {1{`RANDOM}};
+  _T_4 = _RAND_4[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_5 = {1{`RANDOM}};
+  _T_5 = _RAND_5[0:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     _T_0 <= MapSNoValid_O_0;
+    _T_1_0 <= I_0_0;
+    _T_2_0 <= I_1_0;
+    _T_3_0 <= I_2_0;
     if (reset) begin
-      _T_1 <= 1'h0;
+      _T_4 <= 1'h0;
     end else begin
-      _T_1 <= valid_up;
+      _T_4 <= valid_up;
     end
+    _T_5 <= _T_4;
   end
 endmodule
 module InitialDelayCounter_1(
@@ -6854,13 +6925,13 @@ module InitialDelayCounter_1(
   input   reset,
   output  valid_down
 );
-  reg [1:0] value; // @[InitialDelayCounter.scala 8:34]
+  reg [2:0] value; // @[InitialDelayCounter.scala 8:34]
   reg [31:0] _RAND_0;
   wire  _T_1; // @[InitialDelayCounter.scala 17:17]
-  wire [1:0] _T_4; // @[InitialDelayCounter.scala 17:53]
-  assign _T_1 = value < 2'h3; // @[InitialDelayCounter.scala 17:17]
-  assign _T_4 = value + 2'h1; // @[InitialDelayCounter.scala 17:53]
-  assign valid_down = value == 2'h3; // @[InitialDelayCounter.scala 16:16]
+  wire [2:0] _T_4; // @[InitialDelayCounter.scala 17:53]
+  assign _T_1 = value < 3'h5; // @[InitialDelayCounter.scala 17:17]
+  assign _T_4 = value + 3'h1; // @[InitialDelayCounter.scala 17:53]
+  assign valid_down = value == 3'h5; // @[InitialDelayCounter.scala 16:16]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -6894,14 +6965,14 @@ initial begin
     `endif
   `ifdef RANDOMIZE_REG_INIT
   _RAND_0 = {1{`RANDOM}};
-  value = _RAND_0[1:0];
+  value = _RAND_0[2:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     if (reset) begin
-      value <= 2'h0;
+      value <= 3'h0;
     end else if (_T_1) begin
       value <= _T_4;
     end
@@ -7556,53 +7627,53 @@ module FIFO_1(
   output [15:0] O_0,
   output [15:0] O_1
 );
-  reg [15:0] _T__0 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__0 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_0;
   wire [15:0] _T__0__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__0__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__0__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_1;
   wire [15:0] _T__0__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__0__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__0__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__0__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__0__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__0__T_17_en_pipe_0;
   reg [31:0] _RAND_2;
-  reg [1:0] _T__0__T_17_addr_pipe_0;
+  reg [2:0] _T__0__T_17_addr_pipe_0;
   reg [31:0] _RAND_3;
-  reg [15:0] _T__1 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__1 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_4;
   wire [15:0] _T__1__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__1__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__1__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_5;
   wire [15:0] _T__1__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__1__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__1__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__1__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__1__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__1__T_17_en_pipe_0;
   reg [31:0] _RAND_6;
-  reg [1:0] _T__1__T_17_addr_pipe_0;
+  reg [2:0] _T__1__T_17_addr_pipe_0;
   reg [31:0] _RAND_7;
-  reg [1:0] value; // @[Counter.scala 29:33]
+  reg [2:0] value; // @[Counter.scala 29:33]
   reg [31:0] _RAND_8;
-  reg [1:0] value_1; // @[Counter.scala 29:33]
+  reg [2:0] value_1; // @[Counter.scala 29:33]
   reg [31:0] _RAND_9;
-  reg [1:0] value_2; // @[Counter.scala 29:33]
+  reg [2:0] value_2; // @[Counter.scala 29:33]
   reg [31:0] _RAND_10;
   wire  _T_1; // @[FIFO.scala 33:46]
   wire  _T_2; // @[Counter.scala 37:24]
-  wire [1:0] _T_4; // @[Counter.scala 38:22]
+  wire [2:0] _T_4; // @[Counter.scala 38:22]
   wire  _T_6; // @[FIFO.scala 38:39]
-  wire [1:0] _T_11; // @[Counter.scala 38:22]
+  wire [2:0] _T_11; // @[Counter.scala 38:22]
   wire  _T_12; // @[FIFO.scala 42:39]
   wire  _T_18; // @[Counter.scala 37:24]
-  wire [1:0] _T_20; // @[Counter.scala 38:22]
+  wire [2:0] _T_20; // @[Counter.scala 38:22]
   wire  _GEN_8; // @[FIFO.scala 42:57]
   wire  _GEN_28; // @[FIFO.scala 39:15]
   assign _T__0__T_17_addr = _T__0__T_17_addr_pipe_0;
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__0__T_17_data = _T__0[_T__0__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__0__T_17_data = _T__0__T_17_addr >= 2'h3 ? _RAND_1[15:0] : _T__0[_T__0__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__0__T_17_data = _T__0__T_17_addr >= 3'h5 ? _RAND_1[15:0] : _T__0[_T__0__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__0__T_5_data = I_0;
   assign _T__0__T_5_addr = value_2;
@@ -7612,22 +7683,22 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__1__T_17_data = _T__1[_T__1__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__1__T_17_data = _T__1__T_17_addr >= 2'h3 ? _RAND_5[15:0] : _T__1[_T__1__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__1__T_17_data = _T__1__T_17_addr >= 3'h5 ? _RAND_5[15:0] : _T__1[_T__1__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__1__T_5_data = I_1;
   assign _T__1__T_5_addr = value_2;
   assign _T__1__T_5_mask = 1'h1;
   assign _T__1__T_5_en = valid_up;
-  assign _T_1 = value == 2'h2; // @[FIFO.scala 33:46]
-  assign _T_2 = value_2 == 2'h2; // @[Counter.scala 37:24]
-  assign _T_4 = value_2 + 2'h1; // @[Counter.scala 38:22]
-  assign _T_6 = value < 2'h2; // @[FIFO.scala 38:39]
-  assign _T_11 = value + 2'h1; // @[Counter.scala 38:22]
-  assign _T_12 = value >= 2'h1; // @[FIFO.scala 42:39]
-  assign _T_18 = value_1 == 2'h2; // @[Counter.scala 37:24]
-  assign _T_20 = value_1 + 2'h1; // @[Counter.scala 38:22]
+  assign _T_1 = value == 3'h4; // @[FIFO.scala 33:46]
+  assign _T_2 = value_2 == 3'h4; // @[Counter.scala 37:24]
+  assign _T_4 = value_2 + 3'h1; // @[Counter.scala 38:22]
+  assign _T_6 = value < 3'h4; // @[FIFO.scala 38:39]
+  assign _T_11 = value + 3'h1; // @[Counter.scala 38:22]
+  assign _T_12 = value >= 3'h3; // @[FIFO.scala 42:39]
+  assign _T_18 = value_1 == 3'h4; // @[Counter.scala 37:24]
+  assign _T_20 = value_1 + 3'h1; // @[Counter.scala 38:22]
   assign _GEN_8 = _T_12 & _T_12; // @[FIFO.scala 42:57]
-  assign valid_down = value == 2'h2; // @[FIFO.scala 33:16]
+  assign valid_down = value == 3'h4; // @[FIFO.scala 33:16]
   assign O_0 = _T__0__T_17_data; // @[FIFO.scala 43:11]
   assign O_1 = _T__1__T_17_data; // @[FIFO.scala 43:11]
   assign _GEN_28 = valid_up & _T_6; // @[FIFO.scala 39:15]
@@ -7664,7 +7735,7 @@ initial begin
     `endif
   _RAND_0 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__0[initvar] = _RAND_0[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_1 = {1{`RANDOM}};
@@ -7674,11 +7745,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_3 = {1{`RANDOM}};
-  _T__0__T_17_addr_pipe_0 = _RAND_3[1:0];
+  _T__0__T_17_addr_pipe_0 = _RAND_3[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_4 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__1[initvar] = _RAND_4[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_5 = {1{`RANDOM}};
@@ -7688,19 +7759,19 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_7 = {1{`RANDOM}};
-  _T__1__T_17_addr_pipe_0 = _RAND_7[1:0];
+  _T__1__T_17_addr_pipe_0 = _RAND_7[2:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_8 = {1{`RANDOM}};
-  value = _RAND_8[1:0];
+  value = _RAND_8[2:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_9 = {1{`RANDOM}};
-  value_1 = _RAND_9[1:0];
+  value_1 = _RAND_9[2:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_10 = {1{`RANDOM}};
-  value_2 = _RAND_10[1:0];
+  value_2 = _RAND_10[2:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
@@ -7721,32 +7792,32 @@ end // initial
       _T__1__T_17_addr_pipe_0 <= value_1;
     end
     if (reset) begin
-      value <= 2'h0;
+      value <= 3'h0;
     end else if (valid_up) begin
       if (_T_6) begin
         if (_T_1) begin
-          value <= 2'h0;
+          value <= 3'h0;
         end else begin
           value <= _T_11;
         end
       end
     end
     if (reset) begin
-      value_1 <= 2'h0;
+      value_1 <= 3'h0;
     end else if (valid_up) begin
       if (_T_12) begin
         if (_T_18) begin
-          value_1 <= 2'h0;
+          value_1 <= 3'h0;
         end else begin
           value_1 <= _T_20;
         end
       end
     end
     if (reset) begin
-      value_2 <= 2'h0;
+      value_2 <= 3'h0;
     end else if (valid_up) begin
       if (_T_2) begin
-        value_2 <= 2'h0;
+        value_2 <= 3'h0;
       end else begin
         value_2 <= _T_4;
       end

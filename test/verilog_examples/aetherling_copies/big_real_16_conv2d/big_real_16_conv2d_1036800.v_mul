@@ -20,7 +20,7 @@ module BlackBoxMulUInt8(
                    .A(I0),
                    .B(I1),
                    .P(O),
-                   .CLK(clk)
+                   .CLK(clock)
                    );
 `endif
 endmodule
@@ -47,7 +47,7 @@ module BlackBoxMulInt8(
                      .A(I0),
                      .B(I1),
                      .P(O),
-                     .CLK(clk)
+                     .CLK(clock)
                      );
 `endif
 endmodule
@@ -74,7 +74,7 @@ module BlackBoxMulUInt16(
                    .A(I0),
                    .B(I1),
                    .P(O),
-                   .CLK(clk)
+                   .CLK(clock)
                    );
 `endif
 endmodule
@@ -101,7 +101,7 @@ module BlackBoxMulInt16(
                      .A(I0),
                      .B(I1),
                      .P(O),
-                     .CLK(clk)
+                     .CLK(clock)
                      );
 `endif
 endmodule
@@ -134,7 +134,7 @@ module BlackBoxMulUInt32(
                    .A(I0),
                    .B(I1),
                    .P(O),
-                   .CLK(clk)
+                   .CLK(clock)
                    );
 `endif
 endmodule
@@ -167,7 +167,7 @@ module BlackBoxMulInt32(
                      .A(I0),
                      .B(I1),
                      .P(O),
-                     .CLK(clk)
+                     .CLK(clock)
                      );
 `endif
 endmodule

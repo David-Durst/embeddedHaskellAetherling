@@ -219,13 +219,26 @@ module NestedCounters(
 );
   assign valid = CE; // @[NestedCounters.scala 65:13]
 endmodule
+module NestedCounters_1(
+  input   CE,
+  output  valid
+);
+  wire  NestedCounters_CE; // @[NestedCounters.scala 53:31]
+  wire  NestedCounters_valid; // @[NestedCounters.scala 53:31]
+  NestedCounters NestedCounters ( // @[NestedCounters.scala 53:31]
+    .CE(NestedCounters_CE),
+    .valid(NestedCounters_valid)
+  );
+  assign valid = NestedCounters_valid; // @[NestedCounters.scala 56:11]
+  assign NestedCounters_CE = CE; // @[NestedCounters.scala 57:22]
+endmodule
 module NestedCountersWithNumValid(
   input   CE,
   output  valid
 );
   wire  NestedCounters_CE; // @[NestedCounters.scala 20:44]
   wire  NestedCounters_valid; // @[NestedCounters.scala 20:44]
-  NestedCounters NestedCounters ( // @[NestedCounters.scala 20:44]
+  NestedCounters_1 NestedCounters ( // @[NestedCounters.scala 20:44]
     .CE(NestedCounters_CE),
     .valid(NestedCounters_valid)
   );
@@ -236,27 +249,57 @@ module RAM_ST(
   input         clock,
   input         RE,
   input  [6:0]  RADDR,
-  output [15:0] RDATA,
+  output [15:0] RDATA_0,
+  output [15:0] RDATA_1,
+  output [15:0] RDATA_2,
+  output [15:0] RDATA_3,
+  output [15:0] RDATA_4,
+  output [15:0] RDATA_5,
+  output [15:0] RDATA_6,
+  output [15:0] RDATA_7,
+  output [15:0] RDATA_8,
+  output [15:0] RDATA_9,
+  output [15:0] RDATA_10,
+  output [15:0] RDATA_11,
+  output [15:0] RDATA_12,
+  output [15:0] RDATA_13,
+  output [15:0] RDATA_14,
+  output [15:0] RDATA_15,
   input         WE,
   input  [6:0]  WADDR,
-  input  [15:0] WDATA
+  input  [15:0] WDATA_0,
+  input  [15:0] WDATA_1,
+  input  [15:0] WDATA_2,
+  input  [15:0] WDATA_3,
+  input  [15:0] WDATA_4,
+  input  [15:0] WDATA_5,
+  input  [15:0] WDATA_6,
+  input  [15:0] WDATA_7,
+  input  [15:0] WDATA_8,
+  input  [15:0] WDATA_9,
+  input  [15:0] WDATA_10,
+  input  [15:0] WDATA_11,
+  input  [15:0] WDATA_12,
+  input  [15:0] WDATA_13,
+  input  [15:0] WDATA_14,
+  input  [15:0] WDATA_15
 );
   wire  write_elem_counter_CE; // @[RAM_ST.scala 20:34]
   wire  write_elem_counter_valid; // @[RAM_ST.scala 20:34]
   wire  read_elem_counter_CE; // @[RAM_ST.scala 21:33]
   wire  read_elem_counter_valid; // @[RAM_ST.scala 21:33]
-  reg [15:0] ram [0:119]; // @[RAM_ST.scala 29:24]
-  reg [31:0] _RAND_0;
-  wire [15:0] ram__T_8_data; // @[RAM_ST.scala 29:24]
-  wire [6:0] ram__T_8_addr; // @[RAM_ST.scala 29:24]
-  reg [31:0] _RAND_1;
-  wire [15:0] ram__T_2_data; // @[RAM_ST.scala 29:24]
-  wire [6:0] ram__T_2_addr; // @[RAM_ST.scala 29:24]
-  wire  ram__T_2_mask; // @[RAM_ST.scala 29:24]
-  wire  ram__T_2_en; // @[RAM_ST.scala 29:24]
-  reg  ram__T_8_en_pipe_0;
+  reg [255:0] ram [0:119]; // @[RAM_ST.scala 29:24]
+  reg [255:0] _RAND_0;
+  wire [255:0] ram__T_23_data; // @[RAM_ST.scala 29:24]
+  wire [6:0] ram__T_23_addr; // @[RAM_ST.scala 29:24]
+  reg [255:0] _RAND_1;
+  wire [255:0] ram__T_17_data; // @[RAM_ST.scala 29:24]
+  wire [6:0] ram__T_17_addr; // @[RAM_ST.scala 29:24]
+  wire  ram__T_17_mask; // @[RAM_ST.scala 29:24]
+  wire  ram__T_17_en; // @[RAM_ST.scala 29:24]
+  reg  ram__T_23_en_pipe_0;
   reg [31:0] _RAND_2;
-  reg [6:0] ram__T_8_addr_pipe_0;
+  reg [6:0] ram__T_23_addr_pipe_0;
   reg [31:0] _RAND_3;
   wire [6:0] _GEN_1; // @[RAM_ST.scala 31:71]
   wire [6:0] _GEN_2; // @[RAM_ST.scala 31:71]
@@ -378,6 +421,8 @@ module RAM_ST(
   wire [6:0] _GEN_118; // @[RAM_ST.scala 31:71]
   wire [6:0] _GEN_119; // @[RAM_ST.scala 31:71]
   wire [7:0] _T; // @[RAM_ST.scala 31:71]
+  wire [127:0] _T_8; // @[RAM_ST.scala 31:115]
+  wire [127:0] _T_15; // @[RAM_ST.scala 31:115]
   wire [6:0] _GEN_126; // @[RAM_ST.scala 32:46]
   wire [6:0] _GEN_127; // @[RAM_ST.scala 32:46]
   wire [6:0] _GEN_128; // @[RAM_ST.scala 32:46]
@@ -497,7 +542,8 @@ module RAM_ST(
   wire [6:0] _GEN_242; // @[RAM_ST.scala 32:46]
   wire [6:0] _GEN_243; // @[RAM_ST.scala 32:46]
   wire [6:0] _GEN_244; // @[RAM_ST.scala 32:46]
-  wire [7:0] _T_3; // @[RAM_ST.scala 32:46]
+  wire [7:0] _T_18; // @[RAM_ST.scala 32:46]
+  wire [255:0] _T_25;
   NestedCountersWithNumValid write_elem_counter ( // @[RAM_ST.scala 20:34]
     .CE(write_elem_counter_CE),
     .valid(write_elem_counter_valid)
@@ -506,16 +552,16 @@ module RAM_ST(
     .CE(read_elem_counter_CE),
     .valid(read_elem_counter_valid)
   );
-  assign ram__T_8_addr = ram__T_8_addr_pipe_0;
+  assign ram__T_23_addr = ram__T_23_addr_pipe_0;
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
-  assign ram__T_8_data = ram[ram__T_8_addr]; // @[RAM_ST.scala 29:24]
+  assign ram__T_23_data = ram[ram__T_23_addr]; // @[RAM_ST.scala 29:24]
   `else
-  assign ram__T_8_data = ram__T_8_addr >= 7'h78 ? _RAND_1[15:0] : ram[ram__T_8_addr]; // @[RAM_ST.scala 29:24]
+  assign ram__T_23_data = ram__T_23_addr >= 7'h78 ? _RAND_1[255:0] : ram[ram__T_23_addr]; // @[RAM_ST.scala 29:24]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
-  assign ram__T_2_data = WDATA;
-  assign ram__T_2_addr = _T[6:0];
-  assign ram__T_2_mask = 1'h1;
-  assign ram__T_2_en = write_elem_counter_valid;
+  assign ram__T_17_data = {_T_15,_T_8};
+  assign ram__T_17_addr = _T[6:0];
+  assign ram__T_17_mask = 1'h1;
+  assign ram__T_17_en = write_elem_counter_valid;
   assign _GEN_1 = 7'h1 == WADDR ? 7'h1 : 7'h0; // @[RAM_ST.scala 31:71]
   assign _GEN_2 = 7'h2 == WADDR ? 7'h2 : _GEN_1; // @[RAM_ST.scala 31:71]
   assign _GEN_3 = 7'h3 == WADDR ? 7'h3 : _GEN_2; // @[RAM_ST.scala 31:71]
@@ -636,6 +682,8 @@ module RAM_ST(
   assign _GEN_118 = 7'h76 == WADDR ? 7'h76 : _GEN_117; // @[RAM_ST.scala 31:71]
   assign _GEN_119 = 7'h77 == WADDR ? 7'h77 : _GEN_118; // @[RAM_ST.scala 31:71]
   assign _T = {{1'd0}, _GEN_119}; // @[RAM_ST.scala 31:71]
+  assign _T_8 = {WDATA_7,WDATA_6,WDATA_5,WDATA_4,WDATA_3,WDATA_2,WDATA_1,WDATA_0}; // @[RAM_ST.scala 31:115]
+  assign _T_15 = {WDATA_15,WDATA_14,WDATA_13,WDATA_12,WDATA_11,WDATA_10,WDATA_9,WDATA_8}; // @[RAM_ST.scala 31:115]
   assign _GEN_126 = 7'h1 == RADDR ? 7'h1 : 7'h0; // @[RAM_ST.scala 32:46]
   assign _GEN_127 = 7'h2 == RADDR ? 7'h2 : _GEN_126; // @[RAM_ST.scala 32:46]
   assign _GEN_128 = 7'h3 == RADDR ? 7'h3 : _GEN_127; // @[RAM_ST.scala 32:46]
@@ -755,8 +803,24 @@ module RAM_ST(
   assign _GEN_242 = 7'h75 == RADDR ? 7'h75 : _GEN_241; // @[RAM_ST.scala 32:46]
   assign _GEN_243 = 7'h76 == RADDR ? 7'h76 : _GEN_242; // @[RAM_ST.scala 32:46]
   assign _GEN_244 = 7'h77 == RADDR ? 7'h77 : _GEN_243; // @[RAM_ST.scala 32:46]
-  assign _T_3 = {{1'd0}, _GEN_244}; // @[RAM_ST.scala 32:46]
-  assign RDATA = ram__T_8_data; // @[RAM_ST.scala 32:9]
+  assign _T_18 = {{1'd0}, _GEN_244}; // @[RAM_ST.scala 32:46]
+  assign _T_25 = ram__T_23_data;
+  assign RDATA_0 = _T_25[15:0]; // @[RAM_ST.scala 32:9]
+  assign RDATA_1 = _T_25[31:16]; // @[RAM_ST.scala 32:9]
+  assign RDATA_2 = _T_25[47:32]; // @[RAM_ST.scala 32:9]
+  assign RDATA_3 = _T_25[63:48]; // @[RAM_ST.scala 32:9]
+  assign RDATA_4 = _T_25[79:64]; // @[RAM_ST.scala 32:9]
+  assign RDATA_5 = _T_25[95:80]; // @[RAM_ST.scala 32:9]
+  assign RDATA_6 = _T_25[111:96]; // @[RAM_ST.scala 32:9]
+  assign RDATA_7 = _T_25[127:112]; // @[RAM_ST.scala 32:9]
+  assign RDATA_8 = _T_25[143:128]; // @[RAM_ST.scala 32:9]
+  assign RDATA_9 = _T_25[159:144]; // @[RAM_ST.scala 32:9]
+  assign RDATA_10 = _T_25[175:160]; // @[RAM_ST.scala 32:9]
+  assign RDATA_11 = _T_25[191:176]; // @[RAM_ST.scala 32:9]
+  assign RDATA_12 = _T_25[207:192]; // @[RAM_ST.scala 32:9]
+  assign RDATA_13 = _T_25[223:208]; // @[RAM_ST.scala 32:9]
+  assign RDATA_14 = _T_25[239:224]; // @[RAM_ST.scala 32:9]
+  assign RDATA_15 = _T_25[255:240]; // @[RAM_ST.scala 32:9]
   assign write_elem_counter_CE = WE; // @[RAM_ST.scala 23:25]
   assign read_elem_counter_CE = RE; // @[RAM_ST.scala 24:24]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
@@ -790,30 +854,30 @@ initial begin
         #0.002 begin end
       `endif
     `endif
-  _RAND_0 = {1{`RANDOM}};
+  _RAND_0 = {8{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
   for (initvar = 0; initvar < 120; initvar = initvar+1)
-    ram[initvar] = _RAND_0[15:0];
+    ram[initvar] = _RAND_0[255:0];
   `endif // RANDOMIZE_MEM_INIT
-  _RAND_1 = {1{`RANDOM}};
+  _RAND_1 = {8{`RANDOM}};
   `ifdef RANDOMIZE_REG_INIT
   _RAND_2 = {1{`RANDOM}};
-  ram__T_8_en_pipe_0 = _RAND_2[0:0];
+  ram__T_23_en_pipe_0 = _RAND_2[0:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_3 = {1{`RANDOM}};
-  ram__T_8_addr_pipe_0 = _RAND_3[6:0];
+  ram__T_23_addr_pipe_0 = _RAND_3[6:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
-    if(ram__T_2_en & ram__T_2_mask) begin
-      ram[ram__T_2_addr] <= ram__T_2_data; // @[RAM_ST.scala 29:24]
+    if(ram__T_17_en & ram__T_17_mask) begin
+      ram[ram__T_17_addr] <= ram__T_17_data; // @[RAM_ST.scala 29:24]
     end
-    ram__T_8_en_pipe_0 <= read_elem_counter_valid;
+    ram__T_23_en_pipe_0 <= read_elem_counter_valid;
     if (read_elem_counter_valid) begin
-      ram__T_8_addr_pipe_0 <= _T_3[6:0];
+      ram__T_23_addr_pipe_0 <= _T_18[6:0];
     end
   end
 endmodule
@@ -821,16 +885,76 @@ module ShiftT(
   input         clock,
   input         reset,
   input         valid_up,
-  input  [15:0] I,
-  output [15:0] O
+  input  [15:0] I_0,
+  input  [15:0] I_1,
+  input  [15:0] I_2,
+  input  [15:0] I_3,
+  input  [15:0] I_4,
+  input  [15:0] I_5,
+  input  [15:0] I_6,
+  input  [15:0] I_7,
+  input  [15:0] I_8,
+  input  [15:0] I_9,
+  input  [15:0] I_10,
+  input  [15:0] I_11,
+  input  [15:0] I_12,
+  input  [15:0] I_13,
+  input  [15:0] I_14,
+  input  [15:0] I_15,
+  output [15:0] O_0,
+  output [15:0] O_1,
+  output [15:0] O_2,
+  output [15:0] O_3,
+  output [15:0] O_4,
+  output [15:0] O_5,
+  output [15:0] O_6,
+  output [15:0] O_7,
+  output [15:0] O_8,
+  output [15:0] O_9,
+  output [15:0] O_10,
+  output [15:0] O_11,
+  output [15:0] O_12,
+  output [15:0] O_13,
+  output [15:0] O_14,
+  output [15:0] O_15
 );
   wire  RAM_ST_clock; // @[ShiftT.scala 39:29]
   wire  RAM_ST_RE; // @[ShiftT.scala 39:29]
   wire [6:0] RAM_ST_RADDR; // @[ShiftT.scala 39:29]
-  wire [15:0] RAM_ST_RDATA; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_0; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_1; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_2; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_3; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_4; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_5; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_6; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_7; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_8; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_9; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_10; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_11; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_12; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_13; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_14; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_RDATA_15; // @[ShiftT.scala 39:29]
   wire  RAM_ST_WE; // @[ShiftT.scala 39:29]
   wire [6:0] RAM_ST_WADDR; // @[ShiftT.scala 39:29]
-  wire [15:0] RAM_ST_WDATA; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_0; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_1; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_2; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_3; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_4; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_5; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_6; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_7; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_8; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_9; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_10; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_11; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_12; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_13; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_14; // @[ShiftT.scala 39:29]
+  wire [15:0] RAM_ST_WDATA_15; // @[ShiftT.scala 39:29]
   wire  NestedCounters_CE; // @[ShiftT.scala 41:31]
   wire  NestedCounters_valid; // @[ShiftT.scala 41:31]
   reg [6:0] value; // @[Counter.scala 29:33]
@@ -841,24 +965,84 @@ module ShiftT(
     .clock(RAM_ST_clock),
     .RE(RAM_ST_RE),
     .RADDR(RAM_ST_RADDR),
-    .RDATA(RAM_ST_RDATA),
+    .RDATA_0(RAM_ST_RDATA_0),
+    .RDATA_1(RAM_ST_RDATA_1),
+    .RDATA_2(RAM_ST_RDATA_2),
+    .RDATA_3(RAM_ST_RDATA_3),
+    .RDATA_4(RAM_ST_RDATA_4),
+    .RDATA_5(RAM_ST_RDATA_5),
+    .RDATA_6(RAM_ST_RDATA_6),
+    .RDATA_7(RAM_ST_RDATA_7),
+    .RDATA_8(RAM_ST_RDATA_8),
+    .RDATA_9(RAM_ST_RDATA_9),
+    .RDATA_10(RAM_ST_RDATA_10),
+    .RDATA_11(RAM_ST_RDATA_11),
+    .RDATA_12(RAM_ST_RDATA_12),
+    .RDATA_13(RAM_ST_RDATA_13),
+    .RDATA_14(RAM_ST_RDATA_14),
+    .RDATA_15(RAM_ST_RDATA_15),
     .WE(RAM_ST_WE),
     .WADDR(RAM_ST_WADDR),
-    .WDATA(RAM_ST_WDATA)
+    .WDATA_0(RAM_ST_WDATA_0),
+    .WDATA_1(RAM_ST_WDATA_1),
+    .WDATA_2(RAM_ST_WDATA_2),
+    .WDATA_3(RAM_ST_WDATA_3),
+    .WDATA_4(RAM_ST_WDATA_4),
+    .WDATA_5(RAM_ST_WDATA_5),
+    .WDATA_6(RAM_ST_WDATA_6),
+    .WDATA_7(RAM_ST_WDATA_7),
+    .WDATA_8(RAM_ST_WDATA_8),
+    .WDATA_9(RAM_ST_WDATA_9),
+    .WDATA_10(RAM_ST_WDATA_10),
+    .WDATA_11(RAM_ST_WDATA_11),
+    .WDATA_12(RAM_ST_WDATA_12),
+    .WDATA_13(RAM_ST_WDATA_13),
+    .WDATA_14(RAM_ST_WDATA_14),
+    .WDATA_15(RAM_ST_WDATA_15)
   );
-  NestedCounters NestedCounters ( // @[ShiftT.scala 41:31]
+  NestedCounters_1 NestedCounters ( // @[ShiftT.scala 41:31]
     .CE(NestedCounters_CE),
     .valid(NestedCounters_valid)
   );
   assign _T_1 = value == 7'h77; // @[Counter.scala 37:24]
   assign _T_3 = value + 7'h1; // @[Counter.scala 38:22]
-  assign O = RAM_ST_RDATA; // @[ShiftT.scala 51:7]
+  assign O_0 = RAM_ST_RDATA_0; // @[ShiftT.scala 51:7]
+  assign O_1 = RAM_ST_RDATA_1; // @[ShiftT.scala 51:7]
+  assign O_2 = RAM_ST_RDATA_2; // @[ShiftT.scala 51:7]
+  assign O_3 = RAM_ST_RDATA_3; // @[ShiftT.scala 51:7]
+  assign O_4 = RAM_ST_RDATA_4; // @[ShiftT.scala 51:7]
+  assign O_5 = RAM_ST_RDATA_5; // @[ShiftT.scala 51:7]
+  assign O_6 = RAM_ST_RDATA_6; // @[ShiftT.scala 51:7]
+  assign O_7 = RAM_ST_RDATA_7; // @[ShiftT.scala 51:7]
+  assign O_8 = RAM_ST_RDATA_8; // @[ShiftT.scala 51:7]
+  assign O_9 = RAM_ST_RDATA_9; // @[ShiftT.scala 51:7]
+  assign O_10 = RAM_ST_RDATA_10; // @[ShiftT.scala 51:7]
+  assign O_11 = RAM_ST_RDATA_11; // @[ShiftT.scala 51:7]
+  assign O_12 = RAM_ST_RDATA_12; // @[ShiftT.scala 51:7]
+  assign O_13 = RAM_ST_RDATA_13; // @[ShiftT.scala 51:7]
+  assign O_14 = RAM_ST_RDATA_14; // @[ShiftT.scala 51:7]
+  assign O_15 = RAM_ST_RDATA_15; // @[ShiftT.scala 51:7]
   assign RAM_ST_clock = clock;
   assign RAM_ST_RE = valid_up; // @[ShiftT.scala 49:20]
   assign RAM_ST_RADDR = _T_1 ? 7'h0 : _T_3; // @[ShiftT.scala 46:76 ShiftT.scala 47:38]
   assign RAM_ST_WE = valid_up; // @[ShiftT.scala 48:20]
   assign RAM_ST_WADDR = value; // @[ShiftT.scala 45:23]
-  assign RAM_ST_WDATA = I; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_0 = I_0; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_1 = I_1; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_2 = I_2; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_3 = I_3; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_4 = I_4; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_5 = I_5; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_6 = I_6; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_7 = I_7; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_8 = I_8; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_9 = I_9; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_10 = I_10; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_11 = I_11; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_12 = I_12; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_13 = I_13; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_14 = I_14; // @[ShiftT.scala 50:23]
+  assign RAM_ST_WDATA_15 = I_15; // @[ShiftT.scala 50:23]
   assign NestedCounters_CE = valid_up; // @[ShiftT.scala 42:22]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
@@ -948,288 +1132,123 @@ module ShiftTS(
   output [15:0] O_14,
   output [15:0] O_15
 );
-  wire  ShiftT_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_1_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_1_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_1_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_1_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_1_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_2_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_2_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_2_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_2_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_2_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_3_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_3_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_3_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_3_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_3_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_4_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_4_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_4_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_4_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_4_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_5_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_5_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_5_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_5_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_5_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_6_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_6_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_6_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_6_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_6_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_7_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_7_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_7_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_7_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_7_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_8_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_8_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_8_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_8_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_8_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_9_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_9_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_9_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_9_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_9_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_10_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_10_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_10_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_10_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_10_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_11_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_11_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_11_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_11_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_11_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_12_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_12_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_12_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_12_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_12_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_13_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_13_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_13_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_13_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_13_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_14_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_14_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_14_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_14_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_14_O; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_15_clock; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_15_reset; // @[ShiftTS.scala 32:34]
-  wire  ShiftT_15_valid_up; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_15_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_15_O; // @[ShiftTS.scala 32:34]
-  ShiftT ShiftT ( // @[ShiftTS.scala 32:34]
+  wire  ShiftT_clock; // @[ShiftTS.scala 32:26]
+  wire  ShiftT_reset; // @[ShiftTS.scala 32:26]
+  wire  ShiftT_valid_up; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_0; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_1; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_2; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_3; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_4; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_5; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_6; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_7; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_8; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_9; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_10; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_11; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_12; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_13; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_14; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_15; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_0; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_1; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_2; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_3; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_4; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_5; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_6; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_7; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_8; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_9; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_10; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_11; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_12; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_13; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_14; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_15; // @[ShiftTS.scala 32:26]
+  ShiftT ShiftT ( // @[ShiftTS.scala 32:26]
     .clock(ShiftT_clock),
     .reset(ShiftT_reset),
     .valid_up(ShiftT_valid_up),
-    .I(ShiftT_I),
-    .O(ShiftT_O)
+    .I_0(ShiftT_I_0),
+    .I_1(ShiftT_I_1),
+    .I_2(ShiftT_I_2),
+    .I_3(ShiftT_I_3),
+    .I_4(ShiftT_I_4),
+    .I_5(ShiftT_I_5),
+    .I_6(ShiftT_I_6),
+    .I_7(ShiftT_I_7),
+    .I_8(ShiftT_I_8),
+    .I_9(ShiftT_I_9),
+    .I_10(ShiftT_I_10),
+    .I_11(ShiftT_I_11),
+    .I_12(ShiftT_I_12),
+    .I_13(ShiftT_I_13),
+    .I_14(ShiftT_I_14),
+    .I_15(ShiftT_I_15),
+    .O_0(ShiftT_O_0),
+    .O_1(ShiftT_O_1),
+    .O_2(ShiftT_O_2),
+    .O_3(ShiftT_O_3),
+    .O_4(ShiftT_O_4),
+    .O_5(ShiftT_O_5),
+    .O_6(ShiftT_O_6),
+    .O_7(ShiftT_O_7),
+    .O_8(ShiftT_O_8),
+    .O_9(ShiftT_O_9),
+    .O_10(ShiftT_O_10),
+    .O_11(ShiftT_O_11),
+    .O_12(ShiftT_O_12),
+    .O_13(ShiftT_O_13),
+    .O_14(ShiftT_O_14),
+    .O_15(ShiftT_O_15)
   );
-  ShiftT ShiftT_1 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_1_clock),
-    .reset(ShiftT_1_reset),
-    .valid_up(ShiftT_1_valid_up),
-    .I(ShiftT_1_I),
-    .O(ShiftT_1_O)
-  );
-  ShiftT ShiftT_2 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_2_clock),
-    .reset(ShiftT_2_reset),
-    .valid_up(ShiftT_2_valid_up),
-    .I(ShiftT_2_I),
-    .O(ShiftT_2_O)
-  );
-  ShiftT ShiftT_3 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_3_clock),
-    .reset(ShiftT_3_reset),
-    .valid_up(ShiftT_3_valid_up),
-    .I(ShiftT_3_I),
-    .O(ShiftT_3_O)
-  );
-  ShiftT ShiftT_4 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_4_clock),
-    .reset(ShiftT_4_reset),
-    .valid_up(ShiftT_4_valid_up),
-    .I(ShiftT_4_I),
-    .O(ShiftT_4_O)
-  );
-  ShiftT ShiftT_5 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_5_clock),
-    .reset(ShiftT_5_reset),
-    .valid_up(ShiftT_5_valid_up),
-    .I(ShiftT_5_I),
-    .O(ShiftT_5_O)
-  );
-  ShiftT ShiftT_6 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_6_clock),
-    .reset(ShiftT_6_reset),
-    .valid_up(ShiftT_6_valid_up),
-    .I(ShiftT_6_I),
-    .O(ShiftT_6_O)
-  );
-  ShiftT ShiftT_7 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_7_clock),
-    .reset(ShiftT_7_reset),
-    .valid_up(ShiftT_7_valid_up),
-    .I(ShiftT_7_I),
-    .O(ShiftT_7_O)
-  );
-  ShiftT ShiftT_8 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_8_clock),
-    .reset(ShiftT_8_reset),
-    .valid_up(ShiftT_8_valid_up),
-    .I(ShiftT_8_I),
-    .O(ShiftT_8_O)
-  );
-  ShiftT ShiftT_9 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_9_clock),
-    .reset(ShiftT_9_reset),
-    .valid_up(ShiftT_9_valid_up),
-    .I(ShiftT_9_I),
-    .O(ShiftT_9_O)
-  );
-  ShiftT ShiftT_10 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_10_clock),
-    .reset(ShiftT_10_reset),
-    .valid_up(ShiftT_10_valid_up),
-    .I(ShiftT_10_I),
-    .O(ShiftT_10_O)
-  );
-  ShiftT ShiftT_11 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_11_clock),
-    .reset(ShiftT_11_reset),
-    .valid_up(ShiftT_11_valid_up),
-    .I(ShiftT_11_I),
-    .O(ShiftT_11_O)
-  );
-  ShiftT ShiftT_12 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_12_clock),
-    .reset(ShiftT_12_reset),
-    .valid_up(ShiftT_12_valid_up),
-    .I(ShiftT_12_I),
-    .O(ShiftT_12_O)
-  );
-  ShiftT ShiftT_13 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_13_clock),
-    .reset(ShiftT_13_reset),
-    .valid_up(ShiftT_13_valid_up),
-    .I(ShiftT_13_I),
-    .O(ShiftT_13_O)
-  );
-  ShiftT ShiftT_14 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_14_clock),
-    .reset(ShiftT_14_reset),
-    .valid_up(ShiftT_14_valid_up),
-    .I(ShiftT_14_I),
-    .O(ShiftT_14_O)
-  );
-  ShiftT ShiftT_15 ( // @[ShiftTS.scala 32:34]
-    .clock(ShiftT_15_clock),
-    .reset(ShiftT_15_reset),
-    .valid_up(ShiftT_15_valid_up),
-    .I(ShiftT_15_I),
-    .O(ShiftT_15_O)
-  );
-  assign valid_down = valid_up; // @[ShiftTS.scala 39:14]
-  assign O_0 = ShiftT_O; // @[ShiftTS.scala 34:36]
-  assign O_1 = ShiftT_1_O; // @[ShiftTS.scala 34:36]
-  assign O_2 = ShiftT_2_O; // @[ShiftTS.scala 34:36]
-  assign O_3 = ShiftT_3_O; // @[ShiftTS.scala 34:36]
-  assign O_4 = ShiftT_4_O; // @[ShiftTS.scala 34:36]
-  assign O_5 = ShiftT_5_O; // @[ShiftTS.scala 34:36]
-  assign O_6 = ShiftT_6_O; // @[ShiftTS.scala 34:36]
-  assign O_7 = ShiftT_7_O; // @[ShiftTS.scala 34:36]
-  assign O_8 = ShiftT_8_O; // @[ShiftTS.scala 34:36]
-  assign O_9 = ShiftT_9_O; // @[ShiftTS.scala 34:36]
-  assign O_10 = ShiftT_10_O; // @[ShiftTS.scala 34:36]
-  assign O_11 = ShiftT_11_O; // @[ShiftTS.scala 34:36]
-  assign O_12 = ShiftT_12_O; // @[ShiftTS.scala 34:36]
-  assign O_13 = ShiftT_13_O; // @[ShiftTS.scala 34:36]
-  assign O_14 = ShiftT_14_O; // @[ShiftTS.scala 34:36]
-  assign O_15 = ShiftT_15_O; // @[ShiftTS.scala 34:36]
+  assign valid_down = valid_up; // @[ShiftTS.scala 58:14]
+  assign O_0 = ShiftT_O_0; // @[ShiftTS.scala 51:36]
+  assign O_1 = ShiftT_O_1; // @[ShiftTS.scala 51:36]
+  assign O_2 = ShiftT_O_2; // @[ShiftTS.scala 51:36]
+  assign O_3 = ShiftT_O_3; // @[ShiftTS.scala 51:36]
+  assign O_4 = ShiftT_O_4; // @[ShiftTS.scala 51:36]
+  assign O_5 = ShiftT_O_5; // @[ShiftTS.scala 51:36]
+  assign O_6 = ShiftT_O_6; // @[ShiftTS.scala 51:36]
+  assign O_7 = ShiftT_O_7; // @[ShiftTS.scala 51:36]
+  assign O_8 = ShiftT_O_8; // @[ShiftTS.scala 51:36]
+  assign O_9 = ShiftT_O_9; // @[ShiftTS.scala 51:36]
+  assign O_10 = ShiftT_O_10; // @[ShiftTS.scala 51:36]
+  assign O_11 = ShiftT_O_11; // @[ShiftTS.scala 51:36]
+  assign O_12 = ShiftT_O_12; // @[ShiftTS.scala 51:36]
+  assign O_13 = ShiftT_O_13; // @[ShiftTS.scala 51:36]
+  assign O_14 = ShiftT_O_14; // @[ShiftTS.scala 51:36]
+  assign O_15 = ShiftT_O_15; // @[ShiftTS.scala 51:36]
   assign ShiftT_clock = clock;
   assign ShiftT_reset = reset;
-  assign ShiftT_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_I = I_0; // @[ShiftTS.scala 33:24]
-  assign ShiftT_1_clock = clock;
-  assign ShiftT_1_reset = reset;
-  assign ShiftT_1_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_1_I = I_1; // @[ShiftTS.scala 33:24]
-  assign ShiftT_2_clock = clock;
-  assign ShiftT_2_reset = reset;
-  assign ShiftT_2_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_2_I = I_2; // @[ShiftTS.scala 33:24]
-  assign ShiftT_3_clock = clock;
-  assign ShiftT_3_reset = reset;
-  assign ShiftT_3_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_3_I = I_3; // @[ShiftTS.scala 33:24]
-  assign ShiftT_4_clock = clock;
-  assign ShiftT_4_reset = reset;
-  assign ShiftT_4_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_4_I = I_4; // @[ShiftTS.scala 33:24]
-  assign ShiftT_5_clock = clock;
-  assign ShiftT_5_reset = reset;
-  assign ShiftT_5_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_5_I = I_5; // @[ShiftTS.scala 33:24]
-  assign ShiftT_6_clock = clock;
-  assign ShiftT_6_reset = reset;
-  assign ShiftT_6_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_6_I = I_6; // @[ShiftTS.scala 33:24]
-  assign ShiftT_7_clock = clock;
-  assign ShiftT_7_reset = reset;
-  assign ShiftT_7_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_7_I = I_7; // @[ShiftTS.scala 33:24]
-  assign ShiftT_8_clock = clock;
-  assign ShiftT_8_reset = reset;
-  assign ShiftT_8_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_8_I = I_8; // @[ShiftTS.scala 33:24]
-  assign ShiftT_9_clock = clock;
-  assign ShiftT_9_reset = reset;
-  assign ShiftT_9_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_9_I = I_9; // @[ShiftTS.scala 33:24]
-  assign ShiftT_10_clock = clock;
-  assign ShiftT_10_reset = reset;
-  assign ShiftT_10_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_10_I = I_10; // @[ShiftTS.scala 33:24]
-  assign ShiftT_11_clock = clock;
-  assign ShiftT_11_reset = reset;
-  assign ShiftT_11_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_11_I = I_11; // @[ShiftTS.scala 33:24]
-  assign ShiftT_12_clock = clock;
-  assign ShiftT_12_reset = reset;
-  assign ShiftT_12_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_12_I = I_12; // @[ShiftTS.scala 33:24]
-  assign ShiftT_13_clock = clock;
-  assign ShiftT_13_reset = reset;
-  assign ShiftT_13_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_13_I = I_13; // @[ShiftTS.scala 33:24]
-  assign ShiftT_14_clock = clock;
-  assign ShiftT_14_reset = reset;
-  assign ShiftT_14_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_14_I = I_14; // @[ShiftTS.scala 33:24]
-  assign ShiftT_15_clock = clock;
-  assign ShiftT_15_reset = reset;
-  assign ShiftT_15_valid_up = valid_up; // @[ShiftTS.scala 35:31]
-  assign ShiftT_15_I = I_15; // @[ShiftTS.scala 33:24]
+  assign ShiftT_valid_up = valid_up; // @[ShiftTS.scala 53:29]
+  assign ShiftT_I_0 = I_0; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_1 = I_1; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_2 = I_2; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_3 = I_3; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_4 = I_4; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_5 = I_5; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_6 = I_6; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_7 = I_7; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_8 = I_8; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_9 = I_9; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_10 = I_10; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_11 = I_11; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_12 = I_12; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_13 = I_13; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_14 = I_14; // @[ShiftTS.scala 50:25]
+  assign ShiftT_I_15 = I_15; // @[ShiftTS.scala 50:25]
 endmodule
-module ShiftT_32(
+module ShiftT_2(
   input         clock,
-  input  [15:0] I,
-  output [15:0] O
+  input  [15:0] I_0,
+  output [15:0] O_0
 );
-  reg [15:0] _T; // @[ShiftT.scala 24:82]
+  reg [15:0] _T_0; // @[ShiftT.scala 24:82]
   reg [31:0] _RAND_0;
-  assign O = _T; // @[ShiftT.scala 24:7]
+  assign O_0 = _T_0; // @[ShiftT.scala 24:7]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -1263,13 +1282,13 @@ initial begin
     `endif
   `ifdef RANDOMIZE_REG_INIT
   _RAND_0 = {1{`RANDOM}};
-  _T = _RAND_0[15:0];
+  _T_0 = _RAND_0[15:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
-    _T <= I;
+    _T_0 <= I_0;
   end
 endmodule
 module ShiftTS_2(
@@ -1309,33 +1328,33 @@ module ShiftTS_2(
   output [15:0] O_14,
   output [15:0] O_15
 );
-  wire  ShiftT_clock; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_I; // @[ShiftTS.scala 32:34]
-  wire [15:0] ShiftT_O; // @[ShiftTS.scala 32:34]
-  ShiftT_32 ShiftT ( // @[ShiftTS.scala 32:34]
+  wire  ShiftT_clock; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_I_0; // @[ShiftTS.scala 32:26]
+  wire [15:0] ShiftT_O_0; // @[ShiftTS.scala 32:26]
+  ShiftT_2 ShiftT ( // @[ShiftTS.scala 32:26]
     .clock(ShiftT_clock),
-    .I(ShiftT_I),
-    .O(ShiftT_O)
+    .I_0(ShiftT_I_0),
+    .O_0(ShiftT_O_0)
   );
-  assign valid_down = valid_up; // @[ShiftTS.scala 39:14]
-  assign O_0 = ShiftT_O; // @[ShiftTS.scala 34:36]
-  assign O_1 = I_0; // @[ShiftTS.scala 29:36]
-  assign O_2 = I_1; // @[ShiftTS.scala 29:36]
-  assign O_3 = I_2; // @[ShiftTS.scala 29:36]
-  assign O_4 = I_3; // @[ShiftTS.scala 29:36]
-  assign O_5 = I_4; // @[ShiftTS.scala 29:36]
-  assign O_6 = I_5; // @[ShiftTS.scala 29:36]
-  assign O_7 = I_6; // @[ShiftTS.scala 29:36]
-  assign O_8 = I_7; // @[ShiftTS.scala 29:36]
-  assign O_9 = I_8; // @[ShiftTS.scala 29:36]
-  assign O_10 = I_9; // @[ShiftTS.scala 29:36]
-  assign O_11 = I_10; // @[ShiftTS.scala 29:36]
-  assign O_12 = I_11; // @[ShiftTS.scala 29:36]
-  assign O_13 = I_12; // @[ShiftTS.scala 29:36]
-  assign O_14 = I_13; // @[ShiftTS.scala 29:36]
-  assign O_15 = I_14; // @[ShiftTS.scala 29:36]
+  assign valid_down = valid_up; // @[ShiftTS.scala 58:14]
+  assign O_0 = ShiftT_O_0; // @[ShiftTS.scala 51:36]
+  assign O_1 = I_0; // @[ShiftTS.scala 40:36]
+  assign O_2 = I_1; // @[ShiftTS.scala 40:36]
+  assign O_3 = I_2; // @[ShiftTS.scala 40:36]
+  assign O_4 = I_3; // @[ShiftTS.scala 40:36]
+  assign O_5 = I_4; // @[ShiftTS.scala 40:36]
+  assign O_6 = I_5; // @[ShiftTS.scala 40:36]
+  assign O_7 = I_6; // @[ShiftTS.scala 40:36]
+  assign O_8 = I_7; // @[ShiftTS.scala 40:36]
+  assign O_9 = I_8; // @[ShiftTS.scala 40:36]
+  assign O_10 = I_9; // @[ShiftTS.scala 40:36]
+  assign O_11 = I_10; // @[ShiftTS.scala 40:36]
+  assign O_12 = I_11; // @[ShiftTS.scala 40:36]
+  assign O_13 = I_12; // @[ShiftTS.scala 40:36]
+  assign O_14 = I_13; // @[ShiftTS.scala 40:36]
+  assign O_15 = I_14; // @[ShiftTS.scala 40:36]
   assign ShiftT_clock = clock;
-  assign ShiftT_I = I_15; // @[ShiftTS.scala 33:24]
+  assign ShiftT_I_0 = I_15; // @[ShiftTS.scala 50:25]
 endmodule
 module SSeqTupleCreator(
   input         valid_up,
@@ -13439,8 +13458,16 @@ module ReduceS(
   wire [15:0] AddNoValid_1_O; // @[ReduceS.scala 20:43]
   reg [15:0] _T; // @[ReduceS.scala 27:24]
   reg [31:0] _RAND_0;
-  reg  _T_1; // @[ReduceS.scala 47:24]
+  reg [15:0] _T_1; // @[ReduceS.scala 43:46]
   reg [31:0] _RAND_1;
+  reg [15:0] _T_2; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_2;
+  reg [15:0] _T_3; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_3;
+  reg  _T_4; // @[ReduceS.scala 47:32]
+  reg [31:0] _RAND_4;
+  reg  _T_5; // @[ReduceS.scala 47:24]
+  reg [31:0] _RAND_5;
   AddNoValid AddNoValid ( // @[ReduceS.scala 20:43]
     .I_t0b(AddNoValid_I_t0b),
     .I_t1b(AddNoValid_I_t1b),
@@ -13451,12 +13478,12 @@ module ReduceS(
     .I_t1b(AddNoValid_1_I_t1b),
     .O(AddNoValid_1_O)
   );
-  assign valid_down = _T_1; // @[ReduceS.scala 47:14]
+  assign valid_down = _T_5; // @[ReduceS.scala 47:14]
   assign O_0 = _T; // @[ReduceS.scala 27:14]
-  assign AddNoValid_I_t0b = I_2; // @[ReduceS.scala 43:18]
+  assign AddNoValid_I_t0b = _T_3; // @[ReduceS.scala 43:18]
   assign AddNoValid_I_t1b = AddNoValid_1_O; // @[ReduceS.scala 36:18]
-  assign AddNoValid_1_I_t0b = I_0; // @[ReduceS.scala 43:18]
-  assign AddNoValid_1_I_t1b = I_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_1_I_t0b = _T_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_1_I_t1b = _T_2; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -13494,18 +13521,38 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_1 = {1{`RANDOM}};
-  _T_1 = _RAND_1[0:0];
+  _T_1 = _RAND_1[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_2 = {1{`RANDOM}};
+  _T_2 = _RAND_2[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_3 = {1{`RANDOM}};
+  _T_3 = _RAND_3[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_4 = {1{`RANDOM}};
+  _T_4 = _RAND_4[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_5 = {1{`RANDOM}};
+  _T_5 = _RAND_5[0:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     _T <= AddNoValid_O;
+    _T_1 <= I_0;
+    _T_2 <= I_1;
+    _T_3 <= I_2;
     if (reset) begin
-      _T_1 <= 1'h0;
+      _T_4 <= 1'h0;
     end else begin
-      _T_1 <= valid_up;
+      _T_4 <= valid_up;
     end
+    _T_5 <= _T_4;
   end
 endmodule
 module MapS_6(
@@ -13640,8 +13687,16 @@ module ReduceS_1(
   wire [15:0] MapSNoValid_1_O_0; // @[ReduceS.scala 20:43]
   reg [15:0] _T_0; // @[ReduceS.scala 27:24]
   reg [31:0] _RAND_0;
-  reg  _T_1; // @[ReduceS.scala 47:24]
+  reg [15:0] _T_1_0; // @[ReduceS.scala 43:46]
   reg [31:0] _RAND_1;
+  reg [15:0] _T_2_0; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_2;
+  reg [15:0] _T_3_0; // @[ReduceS.scala 43:46]
+  reg [31:0] _RAND_3;
+  reg  _T_4; // @[ReduceS.scala 47:32]
+  reg [31:0] _RAND_4;
+  reg  _T_5; // @[ReduceS.scala 47:24]
+  reg [31:0] _RAND_5;
   MapSNoValid MapSNoValid ( // @[ReduceS.scala 20:43]
     .I_0_t0b(MapSNoValid_I_0_t0b),
     .I_0_t1b(MapSNoValid_I_0_t1b),
@@ -13652,12 +13707,12 @@ module ReduceS_1(
     .I_0_t1b(MapSNoValid_1_I_0_t1b),
     .O_0(MapSNoValid_1_O_0)
   );
-  assign valid_down = _T_1; // @[ReduceS.scala 47:14]
+  assign valid_down = _T_5; // @[ReduceS.scala 47:14]
   assign O_0_0 = _T_0; // @[ReduceS.scala 27:14]
-  assign MapSNoValid_I_0_t0b = I_2_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_I_0_t0b = _T_2_0; // @[ReduceS.scala 43:18]
   assign MapSNoValid_I_0_t1b = MapSNoValid_1_O_0; // @[ReduceS.scala 36:18]
-  assign MapSNoValid_1_I_0_t0b = I_0_0; // @[ReduceS.scala 43:18]
-  assign MapSNoValid_1_I_0_t1b = I_1_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_1_I_0_t0b = _T_1_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_1_I_0_t1b = _T_3_0; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -13695,18 +13750,38 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_1 = {1{`RANDOM}};
-  _T_1 = _RAND_1[0:0];
+  _T_1_0 = _RAND_1[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_2 = {1{`RANDOM}};
+  _T_2_0 = _RAND_2[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_3 = {1{`RANDOM}};
+  _T_3_0 = _RAND_3[15:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_4 = {1{`RANDOM}};
+  _T_4 = _RAND_4[0:0];
+  `endif // RANDOMIZE_REG_INIT
+  `ifdef RANDOMIZE_REG_INIT
+  _RAND_5 = {1{`RANDOM}};
+  _T_5 = _RAND_5[0:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     _T_0 <= MapSNoValid_O_0;
+    _T_1_0 <= I_0_0;
+    _T_2_0 <= I_1_0;
+    _T_3_0 <= I_2_0;
     if (reset) begin
-      _T_1 <= 1'h0;
+      _T_4 <= 1'h0;
     end else begin
-      _T_1 <= valid_up;
+      _T_4 <= valid_up;
     end
+    _T_5 <= _T_4;
   end
 endmodule
 module InitialDelayCounter_1(
@@ -13714,13 +13789,13 @@ module InitialDelayCounter_1(
   input   reset,
   output  valid_down
 );
-  reg [1:0] value; // @[InitialDelayCounter.scala 8:34]
+  reg [2:0] value; // @[InitialDelayCounter.scala 8:34]
   reg [31:0] _RAND_0;
   wire  _T_1; // @[InitialDelayCounter.scala 17:17]
-  wire [1:0] _T_4; // @[InitialDelayCounter.scala 17:53]
-  assign _T_1 = value < 2'h3; // @[InitialDelayCounter.scala 17:17]
-  assign _T_4 = value + 2'h1; // @[InitialDelayCounter.scala 17:53]
-  assign valid_down = value == 2'h3; // @[InitialDelayCounter.scala 16:16]
+  wire [2:0] _T_4; // @[InitialDelayCounter.scala 17:53]
+  assign _T_1 = value < 3'h5; // @[InitialDelayCounter.scala 17:17]
+  assign _T_4 = value + 3'h1; // @[InitialDelayCounter.scala 17:53]
+  assign valid_down = value == 3'h5; // @[InitialDelayCounter.scala 16:16]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -13754,14 +13829,14 @@ initial begin
     `endif
   `ifdef RANDOMIZE_REG_INIT
   _RAND_0 = {1{`RANDOM}};
-  value = _RAND_0[1:0];
+  value = _RAND_0[2:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
 `endif // SYNTHESIS
   always @(posedge clock) begin
     if (reset) begin
-      value <= 2'h0;
+      value <= 3'h0;
     end else if (_T_1) begin
       value <= _T_4;
     end
@@ -15858,235 +15933,235 @@ module FIFO_1(
   output [15:0] O_14,
   output [15:0] O_15
 );
-  reg [15:0] _T__0 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__0 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_0;
   wire [15:0] _T__0__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__0__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__0__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_1;
   wire [15:0] _T__0__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__0__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__0__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__0__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__0__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__0__T_17_en_pipe_0;
   reg [31:0] _RAND_2;
-  reg [1:0] _T__0__T_17_addr_pipe_0;
+  reg [2:0] _T__0__T_17_addr_pipe_0;
   reg [31:0] _RAND_3;
-  reg [15:0] _T__1 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__1 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_4;
   wire [15:0] _T__1__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__1__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__1__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_5;
   wire [15:0] _T__1__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__1__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__1__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__1__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__1__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__1__T_17_en_pipe_0;
   reg [31:0] _RAND_6;
-  reg [1:0] _T__1__T_17_addr_pipe_0;
+  reg [2:0] _T__1__T_17_addr_pipe_0;
   reg [31:0] _RAND_7;
-  reg [15:0] _T__2 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__2 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_8;
   wire [15:0] _T__2__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__2__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__2__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_9;
   wire [15:0] _T__2__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__2__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__2__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__2__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__2__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__2__T_17_en_pipe_0;
   reg [31:0] _RAND_10;
-  reg [1:0] _T__2__T_17_addr_pipe_0;
+  reg [2:0] _T__2__T_17_addr_pipe_0;
   reg [31:0] _RAND_11;
-  reg [15:0] _T__3 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__3 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_12;
   wire [15:0] _T__3__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__3__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__3__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_13;
   wire [15:0] _T__3__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__3__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__3__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__3__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__3__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__3__T_17_en_pipe_0;
   reg [31:0] _RAND_14;
-  reg [1:0] _T__3__T_17_addr_pipe_0;
+  reg [2:0] _T__3__T_17_addr_pipe_0;
   reg [31:0] _RAND_15;
-  reg [15:0] _T__4 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__4 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_16;
   wire [15:0] _T__4__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__4__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__4__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_17;
   wire [15:0] _T__4__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__4__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__4__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__4__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__4__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__4__T_17_en_pipe_0;
   reg [31:0] _RAND_18;
-  reg [1:0] _T__4__T_17_addr_pipe_0;
+  reg [2:0] _T__4__T_17_addr_pipe_0;
   reg [31:0] _RAND_19;
-  reg [15:0] _T__5 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__5 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_20;
   wire [15:0] _T__5__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__5__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__5__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_21;
   wire [15:0] _T__5__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__5__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__5__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__5__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__5__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__5__T_17_en_pipe_0;
   reg [31:0] _RAND_22;
-  reg [1:0] _T__5__T_17_addr_pipe_0;
+  reg [2:0] _T__5__T_17_addr_pipe_0;
   reg [31:0] _RAND_23;
-  reg [15:0] _T__6 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__6 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_24;
   wire [15:0] _T__6__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__6__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__6__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_25;
   wire [15:0] _T__6__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__6__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__6__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__6__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__6__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__6__T_17_en_pipe_0;
   reg [31:0] _RAND_26;
-  reg [1:0] _T__6__T_17_addr_pipe_0;
+  reg [2:0] _T__6__T_17_addr_pipe_0;
   reg [31:0] _RAND_27;
-  reg [15:0] _T__7 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__7 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_28;
   wire [15:0] _T__7__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__7__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__7__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_29;
   wire [15:0] _T__7__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__7__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__7__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__7__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__7__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__7__T_17_en_pipe_0;
   reg [31:0] _RAND_30;
-  reg [1:0] _T__7__T_17_addr_pipe_0;
+  reg [2:0] _T__7__T_17_addr_pipe_0;
   reg [31:0] _RAND_31;
-  reg [15:0] _T__8 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__8 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_32;
   wire [15:0] _T__8__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__8__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__8__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_33;
   wire [15:0] _T__8__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__8__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__8__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__8__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__8__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__8__T_17_en_pipe_0;
   reg [31:0] _RAND_34;
-  reg [1:0] _T__8__T_17_addr_pipe_0;
+  reg [2:0] _T__8__T_17_addr_pipe_0;
   reg [31:0] _RAND_35;
-  reg [15:0] _T__9 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__9 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_36;
   wire [15:0] _T__9__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__9__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__9__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_37;
   wire [15:0] _T__9__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__9__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__9__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__9__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__9__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__9__T_17_en_pipe_0;
   reg [31:0] _RAND_38;
-  reg [1:0] _T__9__T_17_addr_pipe_0;
+  reg [2:0] _T__9__T_17_addr_pipe_0;
   reg [31:0] _RAND_39;
-  reg [15:0] _T__10 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__10 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_40;
   wire [15:0] _T__10__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__10__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__10__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_41;
   wire [15:0] _T__10__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__10__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__10__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__10__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__10__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__10__T_17_en_pipe_0;
   reg [31:0] _RAND_42;
-  reg [1:0] _T__10__T_17_addr_pipe_0;
+  reg [2:0] _T__10__T_17_addr_pipe_0;
   reg [31:0] _RAND_43;
-  reg [15:0] _T__11 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__11 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_44;
   wire [15:0] _T__11__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__11__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__11__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_45;
   wire [15:0] _T__11__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__11__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__11__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__11__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__11__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__11__T_17_en_pipe_0;
   reg [31:0] _RAND_46;
-  reg [1:0] _T__11__T_17_addr_pipe_0;
+  reg [2:0] _T__11__T_17_addr_pipe_0;
   reg [31:0] _RAND_47;
-  reg [15:0] _T__12 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__12 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_48;
   wire [15:0] _T__12__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__12__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__12__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_49;
   wire [15:0] _T__12__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__12__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__12__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__12__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__12__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__12__T_17_en_pipe_0;
   reg [31:0] _RAND_50;
-  reg [1:0] _T__12__T_17_addr_pipe_0;
+  reg [2:0] _T__12__T_17_addr_pipe_0;
   reg [31:0] _RAND_51;
-  reg [15:0] _T__13 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__13 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_52;
   wire [15:0] _T__13__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__13__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__13__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_53;
   wire [15:0] _T__13__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__13__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__13__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__13__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__13__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__13__T_17_en_pipe_0;
   reg [31:0] _RAND_54;
-  reg [1:0] _T__13__T_17_addr_pipe_0;
+  reg [2:0] _T__13__T_17_addr_pipe_0;
   reg [31:0] _RAND_55;
-  reg [15:0] _T__14 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__14 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_56;
   wire [15:0] _T__14__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__14__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__14__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_57;
   wire [15:0] _T__14__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__14__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__14__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__14__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__14__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__14__T_17_en_pipe_0;
   reg [31:0] _RAND_58;
-  reg [1:0] _T__14__T_17_addr_pipe_0;
+  reg [2:0] _T__14__T_17_addr_pipe_0;
   reg [31:0] _RAND_59;
-  reg [15:0] _T__15 [0:2]; // @[FIFO.scala 23:33]
+  reg [15:0] _T__15 [0:4]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_60;
   wire [15:0] _T__15__T_17_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__15__T_17_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__15__T_17_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_61;
   wire [15:0] _T__15__T_5_data; // @[FIFO.scala 23:33]
-  wire [1:0] _T__15__T_5_addr; // @[FIFO.scala 23:33]
+  wire [2:0] _T__15__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__15__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__15__T_5_en; // @[FIFO.scala 23:33]
   reg  _T__15__T_17_en_pipe_0;
   reg [31:0] _RAND_62;
-  reg [1:0] _T__15__T_17_addr_pipe_0;
+  reg [2:0] _T__15__T_17_addr_pipe_0;
   reg [31:0] _RAND_63;
-  reg [1:0] value; // @[Counter.scala 29:33]
+  reg [2:0] value; // @[Counter.scala 29:33]
   reg [31:0] _RAND_64;
-  reg [1:0] value_1; // @[Counter.scala 29:33]
+  reg [2:0] value_1; // @[Counter.scala 29:33]
   reg [31:0] _RAND_65;
-  reg [1:0] value_2; // @[Counter.scala 29:33]
+  reg [2:0] value_2; // @[Counter.scala 29:33]
   reg [31:0] _RAND_66;
   wire  _T_1; // @[FIFO.scala 33:46]
   wire  _T_2; // @[Counter.scala 37:24]
-  wire [1:0] _T_4; // @[Counter.scala 38:22]
+  wire [2:0] _T_4; // @[Counter.scala 38:22]
   wire  _T_6; // @[FIFO.scala 38:39]
-  wire [1:0] _T_11; // @[Counter.scala 38:22]
+  wire [2:0] _T_11; // @[Counter.scala 38:22]
   wire  _T_12; // @[FIFO.scala 42:39]
   wire  _T_18; // @[Counter.scala 37:24]
-  wire [1:0] _T_20; // @[Counter.scala 38:22]
+  wire [2:0] _T_20; // @[Counter.scala 38:22]
   wire  _GEN_8; // @[FIFO.scala 42:57]
   wire  _GEN_70; // @[FIFO.scala 39:15]
   assign _T__0__T_17_addr = _T__0__T_17_addr_pipe_0;
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__0__T_17_data = _T__0[_T__0__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__0__T_17_data = _T__0__T_17_addr >= 2'h3 ? _RAND_1[15:0] : _T__0[_T__0__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__0__T_17_data = _T__0__T_17_addr >= 3'h5 ? _RAND_1[15:0] : _T__0[_T__0__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__0__T_5_data = I_0;
   assign _T__0__T_5_addr = value_2;
@@ -16096,7 +16171,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__1__T_17_data = _T__1[_T__1__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__1__T_17_data = _T__1__T_17_addr >= 2'h3 ? _RAND_5[15:0] : _T__1[_T__1__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__1__T_17_data = _T__1__T_17_addr >= 3'h5 ? _RAND_5[15:0] : _T__1[_T__1__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__1__T_5_data = I_1;
   assign _T__1__T_5_addr = value_2;
@@ -16106,7 +16181,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__2__T_17_data = _T__2[_T__2__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__2__T_17_data = _T__2__T_17_addr >= 2'h3 ? _RAND_9[15:0] : _T__2[_T__2__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__2__T_17_data = _T__2__T_17_addr >= 3'h5 ? _RAND_9[15:0] : _T__2[_T__2__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__2__T_5_data = I_2;
   assign _T__2__T_5_addr = value_2;
@@ -16116,7 +16191,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__3__T_17_data = _T__3[_T__3__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__3__T_17_data = _T__3__T_17_addr >= 2'h3 ? _RAND_13[15:0] : _T__3[_T__3__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__3__T_17_data = _T__3__T_17_addr >= 3'h5 ? _RAND_13[15:0] : _T__3[_T__3__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__3__T_5_data = I_3;
   assign _T__3__T_5_addr = value_2;
@@ -16126,7 +16201,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__4__T_17_data = _T__4[_T__4__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__4__T_17_data = _T__4__T_17_addr >= 2'h3 ? _RAND_17[15:0] : _T__4[_T__4__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__4__T_17_data = _T__4__T_17_addr >= 3'h5 ? _RAND_17[15:0] : _T__4[_T__4__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__4__T_5_data = I_4;
   assign _T__4__T_5_addr = value_2;
@@ -16136,7 +16211,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__5__T_17_data = _T__5[_T__5__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__5__T_17_data = _T__5__T_17_addr >= 2'h3 ? _RAND_21[15:0] : _T__5[_T__5__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__5__T_17_data = _T__5__T_17_addr >= 3'h5 ? _RAND_21[15:0] : _T__5[_T__5__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__5__T_5_data = I_5;
   assign _T__5__T_5_addr = value_2;
@@ -16146,7 +16221,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__6__T_17_data = _T__6[_T__6__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__6__T_17_data = _T__6__T_17_addr >= 2'h3 ? _RAND_25[15:0] : _T__6[_T__6__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__6__T_17_data = _T__6__T_17_addr >= 3'h5 ? _RAND_25[15:0] : _T__6[_T__6__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__6__T_5_data = I_6;
   assign _T__6__T_5_addr = value_2;
@@ -16156,7 +16231,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__7__T_17_data = _T__7[_T__7__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__7__T_17_data = _T__7__T_17_addr >= 2'h3 ? _RAND_29[15:0] : _T__7[_T__7__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__7__T_17_data = _T__7__T_17_addr >= 3'h5 ? _RAND_29[15:0] : _T__7[_T__7__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__7__T_5_data = I_7;
   assign _T__7__T_5_addr = value_2;
@@ -16166,7 +16241,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__8__T_17_data = _T__8[_T__8__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__8__T_17_data = _T__8__T_17_addr >= 2'h3 ? _RAND_33[15:0] : _T__8[_T__8__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__8__T_17_data = _T__8__T_17_addr >= 3'h5 ? _RAND_33[15:0] : _T__8[_T__8__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__8__T_5_data = I_8;
   assign _T__8__T_5_addr = value_2;
@@ -16176,7 +16251,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__9__T_17_data = _T__9[_T__9__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__9__T_17_data = _T__9__T_17_addr >= 2'h3 ? _RAND_37[15:0] : _T__9[_T__9__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__9__T_17_data = _T__9__T_17_addr >= 3'h5 ? _RAND_37[15:0] : _T__9[_T__9__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__9__T_5_data = I_9;
   assign _T__9__T_5_addr = value_2;
@@ -16186,7 +16261,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__10__T_17_data = _T__10[_T__10__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__10__T_17_data = _T__10__T_17_addr >= 2'h3 ? _RAND_41[15:0] : _T__10[_T__10__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__10__T_17_data = _T__10__T_17_addr >= 3'h5 ? _RAND_41[15:0] : _T__10[_T__10__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__10__T_5_data = I_10;
   assign _T__10__T_5_addr = value_2;
@@ -16196,7 +16271,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__11__T_17_data = _T__11[_T__11__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__11__T_17_data = _T__11__T_17_addr >= 2'h3 ? _RAND_45[15:0] : _T__11[_T__11__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__11__T_17_data = _T__11__T_17_addr >= 3'h5 ? _RAND_45[15:0] : _T__11[_T__11__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__11__T_5_data = I_11;
   assign _T__11__T_5_addr = value_2;
@@ -16206,7 +16281,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__12__T_17_data = _T__12[_T__12__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__12__T_17_data = _T__12__T_17_addr >= 2'h3 ? _RAND_49[15:0] : _T__12[_T__12__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__12__T_17_data = _T__12__T_17_addr >= 3'h5 ? _RAND_49[15:0] : _T__12[_T__12__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__12__T_5_data = I_12;
   assign _T__12__T_5_addr = value_2;
@@ -16216,7 +16291,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__13__T_17_data = _T__13[_T__13__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__13__T_17_data = _T__13__T_17_addr >= 2'h3 ? _RAND_53[15:0] : _T__13[_T__13__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__13__T_17_data = _T__13__T_17_addr >= 3'h5 ? _RAND_53[15:0] : _T__13[_T__13__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__13__T_5_data = I_13;
   assign _T__13__T_5_addr = value_2;
@@ -16226,7 +16301,7 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__14__T_17_data = _T__14[_T__14__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__14__T_17_data = _T__14__T_17_addr >= 2'h3 ? _RAND_57[15:0] : _T__14[_T__14__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__14__T_17_data = _T__14__T_17_addr >= 3'h5 ? _RAND_57[15:0] : _T__14[_T__14__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__14__T_5_data = I_14;
   assign _T__14__T_5_addr = value_2;
@@ -16236,22 +16311,22 @@ module FIFO_1(
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
   assign _T__15__T_17_data = _T__15[_T__15__T_17_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__15__T_17_data = _T__15__T_17_addr >= 2'h3 ? _RAND_61[15:0] : _T__15[_T__15__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__15__T_17_data = _T__15__T_17_addr >= 3'h5 ? _RAND_61[15:0] : _T__15[_T__15__T_17_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__15__T_5_data = I_15;
   assign _T__15__T_5_addr = value_2;
   assign _T__15__T_5_mask = 1'h1;
   assign _T__15__T_5_en = valid_up;
-  assign _T_1 = value == 2'h2; // @[FIFO.scala 33:46]
-  assign _T_2 = value_2 == 2'h2; // @[Counter.scala 37:24]
-  assign _T_4 = value_2 + 2'h1; // @[Counter.scala 38:22]
-  assign _T_6 = value < 2'h2; // @[FIFO.scala 38:39]
-  assign _T_11 = value + 2'h1; // @[Counter.scala 38:22]
-  assign _T_12 = value >= 2'h1; // @[FIFO.scala 42:39]
-  assign _T_18 = value_1 == 2'h2; // @[Counter.scala 37:24]
-  assign _T_20 = value_1 + 2'h1; // @[Counter.scala 38:22]
+  assign _T_1 = value == 3'h4; // @[FIFO.scala 33:46]
+  assign _T_2 = value_2 == 3'h4; // @[Counter.scala 37:24]
+  assign _T_4 = value_2 + 3'h1; // @[Counter.scala 38:22]
+  assign _T_6 = value < 3'h4; // @[FIFO.scala 38:39]
+  assign _T_11 = value + 3'h1; // @[Counter.scala 38:22]
+  assign _T_12 = value >= 3'h3; // @[FIFO.scala 42:39]
+  assign _T_18 = value_1 == 3'h4; // @[Counter.scala 37:24]
+  assign _T_20 = value_1 + 3'h1; // @[Counter.scala 38:22]
   assign _GEN_8 = _T_12 & _T_12; // @[FIFO.scala 42:57]
-  assign valid_down = value == 2'h2; // @[FIFO.scala 33:16]
+  assign valid_down = value == 3'h4; // @[FIFO.scala 33:16]
   assign O_0 = _T__0__T_17_data; // @[FIFO.scala 43:11]
   assign O_1 = _T__1__T_17_data; // @[FIFO.scala 43:11]
   assign O_2 = _T__2__T_17_data; // @[FIFO.scala 43:11]
@@ -16302,7 +16377,7 @@ initial begin
     `endif
   _RAND_0 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__0[initvar] = _RAND_0[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_1 = {1{`RANDOM}};
@@ -16312,11 +16387,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_3 = {1{`RANDOM}};
-  _T__0__T_17_addr_pipe_0 = _RAND_3[1:0];
+  _T__0__T_17_addr_pipe_0 = _RAND_3[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_4 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__1[initvar] = _RAND_4[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_5 = {1{`RANDOM}};
@@ -16326,11 +16401,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_7 = {1{`RANDOM}};
-  _T__1__T_17_addr_pipe_0 = _RAND_7[1:0];
+  _T__1__T_17_addr_pipe_0 = _RAND_7[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_8 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__2[initvar] = _RAND_8[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_9 = {1{`RANDOM}};
@@ -16340,11 +16415,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_11 = {1{`RANDOM}};
-  _T__2__T_17_addr_pipe_0 = _RAND_11[1:0];
+  _T__2__T_17_addr_pipe_0 = _RAND_11[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_12 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__3[initvar] = _RAND_12[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_13 = {1{`RANDOM}};
@@ -16354,11 +16429,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_15 = {1{`RANDOM}};
-  _T__3__T_17_addr_pipe_0 = _RAND_15[1:0];
+  _T__3__T_17_addr_pipe_0 = _RAND_15[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_16 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__4[initvar] = _RAND_16[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_17 = {1{`RANDOM}};
@@ -16368,11 +16443,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_19 = {1{`RANDOM}};
-  _T__4__T_17_addr_pipe_0 = _RAND_19[1:0];
+  _T__4__T_17_addr_pipe_0 = _RAND_19[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_20 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__5[initvar] = _RAND_20[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_21 = {1{`RANDOM}};
@@ -16382,11 +16457,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_23 = {1{`RANDOM}};
-  _T__5__T_17_addr_pipe_0 = _RAND_23[1:0];
+  _T__5__T_17_addr_pipe_0 = _RAND_23[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_24 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__6[initvar] = _RAND_24[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_25 = {1{`RANDOM}};
@@ -16396,11 +16471,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_27 = {1{`RANDOM}};
-  _T__6__T_17_addr_pipe_0 = _RAND_27[1:0];
+  _T__6__T_17_addr_pipe_0 = _RAND_27[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_28 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__7[initvar] = _RAND_28[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_29 = {1{`RANDOM}};
@@ -16410,11 +16485,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_31 = {1{`RANDOM}};
-  _T__7__T_17_addr_pipe_0 = _RAND_31[1:0];
+  _T__7__T_17_addr_pipe_0 = _RAND_31[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_32 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__8[initvar] = _RAND_32[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_33 = {1{`RANDOM}};
@@ -16424,11 +16499,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_35 = {1{`RANDOM}};
-  _T__8__T_17_addr_pipe_0 = _RAND_35[1:0];
+  _T__8__T_17_addr_pipe_0 = _RAND_35[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_36 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__9[initvar] = _RAND_36[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_37 = {1{`RANDOM}};
@@ -16438,11 +16513,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_39 = {1{`RANDOM}};
-  _T__9__T_17_addr_pipe_0 = _RAND_39[1:0];
+  _T__9__T_17_addr_pipe_0 = _RAND_39[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_40 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__10[initvar] = _RAND_40[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_41 = {1{`RANDOM}};
@@ -16452,11 +16527,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_43 = {1{`RANDOM}};
-  _T__10__T_17_addr_pipe_0 = _RAND_43[1:0];
+  _T__10__T_17_addr_pipe_0 = _RAND_43[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_44 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__11[initvar] = _RAND_44[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_45 = {1{`RANDOM}};
@@ -16466,11 +16541,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_47 = {1{`RANDOM}};
-  _T__11__T_17_addr_pipe_0 = _RAND_47[1:0];
+  _T__11__T_17_addr_pipe_0 = _RAND_47[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_48 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__12[initvar] = _RAND_48[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_49 = {1{`RANDOM}};
@@ -16480,11 +16555,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_51 = {1{`RANDOM}};
-  _T__12__T_17_addr_pipe_0 = _RAND_51[1:0];
+  _T__12__T_17_addr_pipe_0 = _RAND_51[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_52 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__13[initvar] = _RAND_52[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_53 = {1{`RANDOM}};
@@ -16494,11 +16569,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_55 = {1{`RANDOM}};
-  _T__13__T_17_addr_pipe_0 = _RAND_55[1:0];
+  _T__13__T_17_addr_pipe_0 = _RAND_55[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_56 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__14[initvar] = _RAND_56[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_57 = {1{`RANDOM}};
@@ -16508,11 +16583,11 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_59 = {1{`RANDOM}};
-  _T__14__T_17_addr_pipe_0 = _RAND_59[1:0];
+  _T__14__T_17_addr_pipe_0 = _RAND_59[2:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_60 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
-  for (initvar = 0; initvar < 3; initvar = initvar+1)
+  for (initvar = 0; initvar < 5; initvar = initvar+1)
     _T__15[initvar] = _RAND_60[15:0];
   `endif // RANDOMIZE_MEM_INIT
   _RAND_61 = {1{`RANDOM}};
@@ -16522,19 +16597,19 @@ initial begin
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_63 = {1{`RANDOM}};
-  _T__15__T_17_addr_pipe_0 = _RAND_63[1:0];
+  _T__15__T_17_addr_pipe_0 = _RAND_63[2:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_64 = {1{`RANDOM}};
-  value = _RAND_64[1:0];
+  value = _RAND_64[2:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_65 = {1{`RANDOM}};
-  value_1 = _RAND_65[1:0];
+  value_1 = _RAND_65[2:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_66 = {1{`RANDOM}};
-  value_2 = _RAND_66[1:0];
+  value_2 = _RAND_66[2:0];
   `endif // RANDOMIZE_REG_INIT
   `endif // RANDOMIZE
 end // initial
@@ -16653,32 +16728,32 @@ end // initial
       _T__15__T_17_addr_pipe_0 <= value_1;
     end
     if (reset) begin
-      value <= 2'h0;
+      value <= 3'h0;
     end else if (valid_up) begin
       if (_T_6) begin
         if (_T_1) begin
-          value <= 2'h0;
+          value <= 3'h0;
         end else begin
           value <= _T_11;
         end
       end
     end
     if (reset) begin
-      value_1 <= 2'h0;
+      value_1 <= 3'h0;
     end else if (valid_up) begin
       if (_T_12) begin
         if (_T_18) begin
-          value_1 <= 2'h0;
+          value_1 <= 3'h0;
         end else begin
           value_1 <= _T_20;
         end
       end
     end
     if (reset) begin
-      value_2 <= 2'h0;
+      value_2 <= 3'h0;
     end else if (valid_up) begin
       if (_T_2) begin
-        value_2 <= 2'h0;
+        value_2 <= 3'h0;
       end else begin
         value_2 <= _T_4;
       end
