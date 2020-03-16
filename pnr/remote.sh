@@ -6,7 +6,7 @@ circuit_dir_path=$1
 CURRENT_TIME=$(date "+%Y.%m.%d-%H.%M.%S")
 generate_muls_tcl=$(readlink -f generate_muls.tcl)
 
-echo "System | Application | Parallelism | Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 | DSP48 Blocks | Slices | SLICEL | SLICEM | Slack (VIOLATED) |" > ${results_temp}
+echo "System | Application | Parallelism | Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 | DSP48 Blocks | BRAM Tiles | Slices | SLICEL | SLICEM | Slack (VIOLATED) |" > ${results_temp}
 
 for circuit_path in ${circuit_dir_path}/aetherling_copies/*/*.v; do
 	  echo "Processing ${circuit_path}"
@@ -24,11 +24,13 @@ for circuit_path in ${circuit_dir_path}/aetherling_copies/*/*.v; do
     echo -n "|${circuit_name}" >> ${results_temp}
     echo -n "|${circuit_par}" >> ${results_temp}
     hierarchical_results=$(sed -n -E "s/\|[^\(]top.*\(top\)\s*(.*)$/\1/pI" $last_build_dir/utilization_h.txt)
+    bram_tiles_results=$(sed -n -E "s/\|\s+Block RAM Tile\s+\|([^\|]+\|).*$/\1/pI" $last_build_dir/utilization.txt)
     slices_results=$(sed -n -E "s/\|\s+Slice\s+\|([^\|]+\|).*$/\1/pI" $last_build_dir/utilization.txt)
     slicel_results=$(sed -n -E "s/\|\s+SLICEL\s+\|([^\|]+\|).*$/\1/pI" $last_build_dir/utilization.txt)
     slicem_results=$(sed -n -E "s/\|\s+SLICEM\s+\|([^\|]+\|).*$/\1/pI" $last_build_dir/utilization.txt)
     timing_results=$(sed -n -E "s/^Slack.*:\s*(-?.*ns).*/\1/pI" $last_build_dir/timing.txt)
     echo -n "$hierarchical_results" >> ${results_temp}
+    echo -n "$bram_tiles_results" >> ${results_temp}
     echo -n "$slices_results" >> ${results_temp}
     echo -n "$slicel_results" >> ${results_temp}
     echo -n "$slicem_results" >> ${results_temp}

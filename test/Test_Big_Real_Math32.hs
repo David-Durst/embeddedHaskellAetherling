@@ -242,6 +242,11 @@ big_real_32_sharpen_results_chisel = sequence $
               big_real_32_sharpen (wrap_single_t s)
               Chisel (Save_Gen_Verilog "big_real_32_sharpen")
               big_real_32_sharpen_inputs big_real_32_sharpen_output) big_real_32_sharpen_throughputs
+big_real_32_sharpen_results_chisel' = sequence $
+  fmap (\s -> test_with_backend 
+              big_real_32_sharpen (wrap_single_t s)
+              Chisel (Save_Gen_Verilog "big_real_32_sharpen")
+              big_real_32_sharpen_inputs big_real_32_sharpen_output) [big_real_32_sharpen_throughputs !! 3]
 
 big_real_32_tests = testGroup "Big Real 32 Tests"
   [
@@ -266,6 +271,11 @@ big_real_32_tests' = testGroup "Big Real 32 Tests"
   [
     testCase "one single big_real_32 3x3 convolution chisel" $
     (TS.all_success big_real_32_conv_2d_results_chisel') @? "single 3x3 convolution chisel failed"
+  ]
+big_real_32_tests_sharpen' = testGroup "Big Real 32 Tests"
+  [
+    testCase "one single big_real_32 shapren chisel" $
+    (TS.all_success big_real_32_sharpen_results_chisel') @? "single 3x3 convolution chisel failed"
   ]
 
 apps_big_32_real_io = sequence [
