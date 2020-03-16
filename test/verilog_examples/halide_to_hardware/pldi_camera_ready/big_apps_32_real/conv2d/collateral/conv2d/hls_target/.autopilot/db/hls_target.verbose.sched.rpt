@@ -1,0 +1,179 @@
+
+
+================================================================
+== Vivado HLS Report for 'hls_target'
+================================================================
+* Date:           Sun Mar 15 23:18:27 2020
+
+* Version:        2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)
+* Project:        conv2d
+* Solution:       hls_target
+* Product family: zynq
+* Target device:  xc7z020clg484-1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.60|      7.33|        0.70|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +---------+---------+---------+---------+----------+
+    |      Latency      |      Interval     | Pipeline |
+    |   min   |   max   |   min   |   max   |   Type   |
+    +---------+---------+---------+---------+----------+
+    |  2077921|  2077921|  2077922|  2077922| dataflow |
+    +---------+---------+---------+---------+----------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        N/A
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 1
+ResetActiveHigh: 1
+IsCombinational: 2
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 0
+HasVarLatency: 1
+IsPipeline: 0
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states: 4
+* Pipeline: 0
+* Dataflow Pipeline: 1
+  DF-Pipeline-0: Size = 4, States = { 1 2 3 4 }
+
+* FSM state transitions: 
+1 --> 
+	2  / true
+2 --> 
+	3  / true
+3 --> 
+	4  / true
+4 --> 
+* FSM state operations: 
+
+ <State 1>: 0.00ns
+ST_1: p_hw_input_stencil_st (11)  [1/1] 0.00ns  loc: hls_target.cpp:57
+codeRepl:6  %p_hw_input_stencil_st = alloca i288, align 8
+
+ST_1: StgValue_6 (17)  [2/2] 0.00ns  loc: hls_target.cpp:61
+codeRepl:12  call fastcc void @linebuffer.1(i32* %hw_input_V_value_V, i1* %hw_input_V_last_V, i288* %p_hw_input_stencil_st)
+
+
+ <State 2>: 0.00ns
+ST_2: StgValue_7 (17)  [1/2] 0.00ns  loc: hls_target.cpp:61
+codeRepl:12  call fastcc void @linebuffer.1(i32* %hw_input_V_value_V, i1* %hw_input_V_last_V, i288* %p_hw_input_stencil_st)
+
+
+ <State 3>: 0.00ns
+ST_3: StgValue_8 (18)  [2/2] 0.00ns
+codeRepl:13  call fastcc void @Loop_1_proc(i288* %p_hw_input_stencil_st, i32* %hw_output_V_value_V, i1* %hw_output_V_last_V)
+
+
+ <State 4>: 4.61ns
+ST_4: StgValue_9 (5)  [1/1] 0.00ns  loc: hls_target.cpp:9
+codeRepl:0  call void (...)* @_ssdm_op_SpecDataflowPipeline(i32 -1, [1 x i8]* @p_str) nounwind
+
+ST_4: StgValue_10 (6)  [1/1] 0.00ns
+codeRepl:1  call void (...)* @_ssdm_op_SpecBitsMap(i32* %hw_input_V_value_V), !map !513
+
+ST_4: StgValue_11 (7)  [1/1] 0.00ns
+codeRepl:2  call void (...)* @_ssdm_op_SpecBitsMap(i1* %hw_input_V_last_V), !map !519
+
+ST_4: StgValue_12 (8)  [1/1] 0.00ns
+codeRepl:3  call void (...)* @_ssdm_op_SpecBitsMap(i32* %hw_output_V_value_V), !map !523
+
+ST_4: StgValue_13 (9)  [1/1] 0.00ns
+codeRepl:4  call void (...)* @_ssdm_op_SpecBitsMap(i1* %hw_output_V_last_V), !map !527
+
+ST_4: StgValue_14 (10)  [1/1] 0.00ns
+codeRepl:5  call void (...)* @_ssdm_op_SpecTopModule([11 x i8]* @hls_target_str) nounwind
+
+ST_4: empty (12)  [1/1] 0.00ns
+codeRepl:7  %empty = call i32 (...)* @_ssdm_op_SpecChannel([35 x i8]* @p_hw_input_stencil_st, i32 1, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 1, i32 1, i288* %p_hw_input_stencil_st, i288* %p_hw_input_stencil_st)
+
+ST_4: StgValue_16 (13)  [1/1] 0.00ns
+codeRepl:8  call void (...)* @_ssdm_op_SpecInterface(i288* %p_hw_input_stencil_st, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_4: StgValue_17 (14)  [1/1] 0.00ns  loc: hls_target.cpp:59
+codeRepl:9  call void (...)* @_ssdm_op_SpecMemCore(i288* %p_hw_input_stencil_st, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_4: StgValue_18 (15)  [1/1] 0.00ns  loc: hls_target.cpp:11
+codeRepl:10  call void (...)* @_ssdm_op_SpecInterface(i32* %hw_input_V_value_V, i1* %hw_input_V_last_V, [6 x i8]* @p_str1, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 0, i32 0, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str) nounwind
+
+ST_4: StgValue_19 (16)  [1/1] 0.00ns  loc: hls_target.cpp:12
+codeRepl:11  call void (...)* @_ssdm_op_SpecInterface(i32* %hw_output_V_value_V, i1* %hw_output_V_last_V, [6 x i8]* @p_str1, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 0, i32 0, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str) nounwind
+
+ST_4: StgValue_20 (18)  [1/2] 4.61ns
+codeRepl:13  call fastcc void @Loop_1_proc(i288* %p_hw_input_stencil_st, i32* %hw_output_V_value_V, i1* %hw_output_V_last_V)
+
+ST_4: StgValue_21 (19)  [1/1] 0.00ns  loc: hls_target.cpp:161
+codeRepl:14  ret void
+
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 5.6ns, clock uncertainty: 0.7ns.
+
+ <State 1>: 0ns
+The critical path consists of the following:
+
+ <State 2>: 0ns
+The critical path consists of the following:
+
+ <State 3>: 0ns
+The critical path consists of the following:
+
+ <State 4>: 4.61ns
+The critical path consists of the following:
+	'call' operation to 'Loop_1_proc' [18]  (4.61 ns)
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+	State 3
+	State 4
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

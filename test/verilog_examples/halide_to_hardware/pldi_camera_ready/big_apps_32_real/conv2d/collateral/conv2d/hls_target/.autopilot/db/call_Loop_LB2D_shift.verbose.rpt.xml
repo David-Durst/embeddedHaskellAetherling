@@ -1,0 +1,143 @@
+<profile>
+
+<section name = "Vivado HLS Report for 'call_Loop_LB2D_shift'" level="0">
+<item name = "Date">Sun Mar 15 23:18:27 2020
+</item>
+<item name = "Version">2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)</item>
+<item name = "Project">conv2d</item>
+<item name = "Solution">hls_target</item>
+<item name = "Product family">zynq</item>
+<item name = "Target device">xc7z020clg484-1</item>
+</section>
+
+<section name = "Performance Estimates" level="0">
+<item name = "Timing (ns)">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="4">Clock, Target, Estimated, Uncertainty</keys>
+<column name="ap_clk">5.60, 5.01, 0.70</column>
+</table>
+</item>
+</section>
+</item>
+<item name = "Latency (clock cycles)">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="6">, min, max, min, max, Type</keys>
+<column name="">2072995, 2072995, 2072995, 2072995, none</column>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="0">
+<keys size="7">Instance, Module, min, max, min, max, Type</keys>
+</table>
+</item>
+<item name = "Loop"><table name="" hasTotal="0">
+<keys size="8">Loop Name, min, max, Latency, achieved, target, Count, Pipelined</keys>
+<column name="- LB2D_shift">2072994, 2072994, 1923, -, -, 1078, no</column>
+<column name=" + LB1D_shiftreg">1920, 1920, 2, 1, 1, 1920, yes</column>
+</table>
+</item>
+</section>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Utilization Estimates" level="0">
+<item name = "Summary"><table name="" hasTotal="1">
+<keys size="5">Name, BRAM_18K, DSP48E, FF, LUT</keys>
+<column name="DSP">-, -, -, -</column>
+<column name="Expression">-, -, 76, 59</column>
+<column name="FIFO">-, -, -, -</column>
+<column name="Instance">-, -, -, -</column>
+<column name="Memory">-, -, -, -</column>
+<column name="Multiplexer">-, -, -, 87</column>
+<column name="Register">-, -, 234, -</column>
+<specialColumn name="Available">280, 220, 106400, 53200</specialColumn>
+<specialColumn name="Utilization (%)">0, 0, ~0, ~0</specialColumn>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="1">
+<keys size="6">Instance, Module, BRAM_18K, DSP48E, FF, LUT</keys>
+</table>
+</item>
+<item name = "DSP48"><table name="" hasTotal="0">
+<keys size="3">Instance, Module, Expression</keys>
+</table>
+</item>
+<item name = "Memory"><table name="" hasTotal="1">
+<keys size="9">Memory, Module, BRAM_18K, FF, LUT, Words, Bits, Banks, W*Bits*Banks</keys>
+</table>
+</item>
+<item name = "FIFO"><table name="" hasTotal="1">
+<keys size="7">Name, BRAM_18K, FF, LUT, Depth, Bits, Size:D*B</keys>
+</table>
+</item>
+<item name = "Expression"><table name="" hasTotal="1">
+<keys size="7">Variable Name, Operation, DSP48E, FF, LUT, Bitwidth P0, Bitwidth P1</keys>
+<column name="i_fu_133_p2">+, 0, 38, 16, 11, 1</column>
+<column name="n1_1_fu_121_p2">+, 0, 38, 16, 11, 1</column>
+<column name="ap_block_pp0_stage0_flag00001001">and, 0, 0, 2, 1, 1</column>
+<column name="icmp_fu_149_p2">icmp, 0, 0, 5, 10, 1</column>
+<column name="tmp_5_fu_115_p2">icmp, 0, 0, 6, 11, 11</column>
+<column name="tmp_7_fu_127_p2">icmp, 0, 0, 6, 11, 9</column>
+<column name="ap_block_state1">or, 0, 0, 2, 1, 1</column>
+<column name="ap_block_state4_pp0_stage0_iter1">or, 0, 0, 2, 1, 1</column>
+<column name="ap_enable_pp0">xor, 0, 0, 2, 1, 2</column>
+<column name="ap_enable_reg_pp0_iter1">xor, 0, 0, 2, 1, 2</column>
+</table>
+</item>
+<item name = "Multiplexer"><table name="" hasTotal="1">
+<keys size="5">Name, LUT, Input Size, Bits, Total Bits</keys>
+<column name="ap_NS_fsm">27, 5, 1, 5</column>
+<column name="ap_done">9, 2, 1, 2</column>
+<column name="ap_enable_reg_pp0_iter1">15, 3, 1, 3</column>
+<column name="i_0_i_i_reg_104">9, 2, 11, 22</column>
+<column name="n1_reg_93">9, 2, 11, 22</column>
+<column name="out_stream_V_value_V_blk_n">9, 2, 1, 2</column>
+<column name="slice_stream_V_value_V_blk_n">9, 2, 1, 2</column>
+</table>
+</item>
+<item name = "Register"><table name="" hasTotal="1">
+<keys size="5">Name, FF, LUT, Bits, Const Bits</keys>
+<column name="ap_CS_fsm">4, 0, 4, 0</column>
+<column name="ap_done_reg">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter0">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter1">1, 0, 1, 0</column>
+<column name="buffer_0_value_V_fu_76">96, 0, 96, 0</column>
+<column name="buffer_1_value_V_fu_72">96, 0, 96, 0</column>
+<column name="i_0_i_i_reg_104">11, 0, 11, 0</column>
+<column name="icmp_reg_300">1, 0, 1, 0</column>
+<column name="n1_1_reg_286">11, 0, 11, 0</column>
+<column name="n1_reg_93">11, 0, 11, 0</column>
+<column name="tmp_7_reg_291">1, 0, 1, 0</column>
+</table>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Interface" level="0">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="6">RTL Ports, Dir, Bits, Protocol, Source Object, C Type</keys>
+<column name="ap_clk">in, 1, ap_ctrl_hs, call_Loop_LB2D_shift, return value</column>
+<column name="ap_rst">in, 1, ap_ctrl_hs, call_Loop_LB2D_shift, return value</column>
+<column name="ap_start">in, 1, ap_ctrl_hs, call_Loop_LB2D_shift, return value</column>
+<column name="ap_done">out, 1, ap_ctrl_hs, call_Loop_LB2D_shift, return value</column>
+<column name="ap_continue">in, 1, ap_ctrl_hs, call_Loop_LB2D_shift, return value</column>
+<column name="ap_idle">out, 1, ap_ctrl_hs, call_Loop_LB2D_shift, return value</column>
+<column name="ap_ready">out, 1, ap_ctrl_hs, call_Loop_LB2D_shift, return value</column>
+<column name="slice_stream_V_value_V_dout">in, 96, ap_fifo, slice_stream_V_value_V, pointer</column>
+<column name="slice_stream_V_value_V_empty_n">in, 1, ap_fifo, slice_stream_V_value_V, pointer</column>
+<column name="slice_stream_V_value_V_read">out, 1, ap_fifo, slice_stream_V_value_V, pointer</column>
+<column name="out_stream_V_value_V_din">out, 288, ap_fifo, out_stream_V_value_V, pointer</column>
+<column name="out_stream_V_value_V_full_n">in, 1, ap_fifo, out_stream_V_value_V, pointer</column>
+<column name="out_stream_V_value_V_write">out, 1, ap_fifo, out_stream_V_value_V, pointer</column>
+</table>
+</item>
+</section>
+</profile>

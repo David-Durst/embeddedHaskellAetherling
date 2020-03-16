@@ -1,0 +1,115 @@
+<profile>
+
+<section name = "Vivado HLS Report for 'linebuffer'" level="0">
+<item name = "Date">Sun Mar 15 23:18:28 2020
+</item>
+<item name = "Version">2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)</item>
+<item name = "Project">conv2d</item>
+<item name = "Solution">hls_target</item>
+<item name = "Product family">zynq</item>
+<item name = "Target device">xc7z020clg484-1</item>
+</section>
+
+<section name = "Performance Estimates" level="0">
+<item name = "Timing (ns)">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="4">Clock, Target, Estimated, Uncertainty</keys>
+<column name="ap_clk">5.60, 5.87, 0.70</column>
+</table>
+</item>
+</section>
+</item>
+<item name = "Latency (clock cycles)">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="6">, min, max, min, max, Type</keys>
+<column name="">2077921, 2077921, 2077922, 2077922, dataflow</column>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="0">
+<keys size="7">Instance, Module, min, max, min, max, Type</keys>
+<column name="call_U0">call, 2077921, 2077921, 2077922, 2077922, dataflow</column>
+</table>
+</item>
+<item name = "Loop"><table name="" hasTotal="0">
+<keys size="8">Loop Name, min, max, Latency, achieved, target, Count, Pipelined</keys>
+</table>
+</item>
+</section>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Utilization Estimates" level="0">
+<item name = "Summary"><table name="" hasTotal="1">
+<keys size="5">Name, BRAM_18K, DSP48E, FF, LUT</keys>
+<column name="DSP">-, -, -, -</column>
+<column name="Expression">-, -, -, -</column>
+<column name="FIFO">-, -, -, -</column>
+<column name="Instance">8, -, 1097, 644</column>
+<column name="Memory">-, -, -, -</column>
+<column name="Multiplexer">-, -, -, -</column>
+<column name="Register">-, -, -, -</column>
+<specialColumn name="Available">280, 220, 106400, 53200</specialColumn>
+<specialColumn name="Utilization (%)">2, 0, 1, 1</specialColumn>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="1">
+<keys size="6">Instance, Module, BRAM_18K, DSP48E, FF, LUT</keys>
+<column name="call_U0">call, 8, 0, 1097, 644</column>
+</table>
+</item>
+<item name = "DSP48"><table name="" hasTotal="0">
+<keys size="3">Instance, Module, Expression</keys>
+</table>
+</item>
+<item name = "Memory"><table name="" hasTotal="1">
+<keys size="9">Memory, Module, BRAM_18K, FF, LUT, Words, Bits, Banks, W*Bits*Banks</keys>
+</table>
+</item>
+<item name = "FIFO"><table name="" hasTotal="1">
+<keys size="7">Name, BRAM_18K, FF, LUT, Depth, Bits, Size:D*B</keys>
+</table>
+</item>
+<item name = "Expression"><table name="" hasTotal="1">
+<keys size="7">Variable Name, Operation, DSP48E, FF, LUT, Bitwidth P0, Bitwidth P1</keys>
+</table>
+</item>
+<item name = "Multiplexer"><table name="" hasTotal="1">
+<keys size="5">Name, LUT, Input Size, Bits, Total Bits</keys>
+</table>
+</item>
+<item name = "Register"><table name="" hasTotal="1">
+<keys size="5">Name, FF, LUT, Bits, Const Bits</keys>
+</table>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Interface" level="0">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="6">RTL Ports, Dir, Bits, Protocol, Source Object, C Type</keys>
+<column name="in_stream_V_value_V_dout">in, 32, ap_fifo, in_stream_V_value_V, pointer</column>
+<column name="in_stream_V_value_V_empty_n">in, 1, ap_fifo, in_stream_V_value_V, pointer</column>
+<column name="in_stream_V_value_V_read">out, 1, ap_fifo, in_stream_V_value_V, pointer</column>
+<column name="out_stream_V_value_V_din">out, 288, ap_fifo, out_stream_V_value_V, pointer</column>
+<column name="out_stream_V_value_V_full_n">in, 1, ap_fifo, out_stream_V_value_V, pointer</column>
+<column name="out_stream_V_value_V_write">out, 1, ap_fifo, out_stream_V_value_V, pointer</column>
+<column name="ap_clk">in, 1, ap_ctrl_hs, linebuffer, return value</column>
+<column name="ap_rst">in, 1, ap_ctrl_hs, linebuffer, return value</column>
+<column name="ap_done">out, 1, ap_ctrl_hs, linebuffer, return value</column>
+<column name="ap_start">in, 1, ap_ctrl_hs, linebuffer, return value</column>
+<column name="ap_ready">out, 1, ap_ctrl_hs, linebuffer, return value</column>
+<column name="ap_idle">out, 1, ap_ctrl_hs, linebuffer, return value</column>
+<column name="ap_continue">in, 1, ap_ctrl_hs, linebuffer, return value</column>
+</table>
+</item>
+</section>
+</profile>
