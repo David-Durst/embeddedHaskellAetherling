@@ -56,6 +56,9 @@ add_indexes' consumer_e@(Lut_GenN _ _ producer_e _) =
 add_indexes' consumer_e@(Const_GenN _ _ _) = do
   cur_idx <- get_cur_index
   return $ consumer_e {index = cur_idx}
+add_indexes' consumer_e@(CounterN _ _ _ _) = do
+  cur_idx <- get_cur_index
+  return $ consumer_e {index = cur_idx}
 
 -- sequence operators
 add_indexes' consumer_e@(ShiftN _ _ _ producer_e _) =

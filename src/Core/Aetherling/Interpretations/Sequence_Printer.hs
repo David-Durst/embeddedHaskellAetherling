@@ -193,6 +193,11 @@ print_inner consumer_e@(Const_GenN constant constant_type cur_idx) = do
   add_to_cur_module cur_ref_name $ "Const_GenN " ++ show constant ++ " " ++
     show constant_type
   return cur_ref_name
+print_inner consumer_e@(CounterN n incr_amount int_type cur_idx) = do
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "CounterN " ++ show n ++ " " ++
+    show incr_amount ++ " " ++ show int_type
+  return cur_ref_name
 
 -- sequence operators
 print_inner consumer_e@(ShiftN n shift_amount elem_t producer_e cur_idx) = do

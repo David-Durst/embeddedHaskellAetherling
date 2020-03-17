@@ -115,6 +115,9 @@ compute_latency' e@(IfN t producer _) = memo producer $ compute_latency' produce
 -- generators
 compute_latency' e@(Lut_GenN _ _ producer _) = memo producer $ compute_latency' producer
 compute_latency' e@(Const_GenN _ _ delay _) = return delay
+compute_latency' e@(Counter_sN _ _ _ delay _) = return delay
+compute_latency' e@(Counter_tN _ _ _ _ delay _) = return delay
+
 
 -- sequence operators
 compute_latency' e@(Shift_sN _ _ _ producer _) = memo producer $ compute_latency' producer

@@ -35,9 +35,10 @@ data Merge_FIFO_State = Merge_FIFO_State {
 merge_consts_and_fifos' :: Expr ->
                            Memo_Rewrite_StateTM Expr
                            (S.State Merge_FIFO_State) Expr
-merge_consts_and_fifos' fifo_e@(FIFON _ fifo_delay
-                                const_e@(Const_GenN _ _ const_delay _)
-                                orig_idx) = do
+-- note: const_e no longer just const, counter also isn't input but has not input
+merge_consts_and_fifos' fifo_e@(FIFON _ fifo_delay const_e orig_idx) |
+  non_input_with_no_inputs const_e == True = do
+  let const_delay = delay const_e
   cur_state <-  lift $ lift $ lift $ get
   let rewritten_fifos_map = rewritten_fifos cur_state
   if M.member (orig_idx, fifo_delay + const_delay) rewritten_fifos_map
@@ -54,6 +55,7 @@ merge_consts_and_fifos' fifo_e@(FIFON _ fifo_delay
           delay = fifo_delay + const_delay,
           index = copy_idx
           }
+
 merge_consts_and_fifos' consumer_e = do
   let f_e_maybe = get_f consumer_e
   merged_f <- mapM (\f_e -> memo f_e $ merge_consts_and_fifos' f_e) f_e_maybe

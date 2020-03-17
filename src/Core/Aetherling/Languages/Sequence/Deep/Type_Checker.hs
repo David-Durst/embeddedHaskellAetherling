@@ -54,6 +54,7 @@ check_type' consumer_e@(IfN _ producer_e _) =
 check_type' consumer_e@(Lut_GenN _ _ producer_e _) = 
   check_unary_operator consumer_e producer_e
 check_type' (Const_GenN _ t _) = return t
+check_type' (CounterN len _ output_int_type _) = return (SeqT len output_int_type)
 
 -- sequence operators
 check_type' consumer_e@(ShiftN _ _ _ producer_e _) =

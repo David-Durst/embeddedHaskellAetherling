@@ -85,7 +85,10 @@ get_area' e@(IfN t producer _) = do
 get_area' e@(Lut_GenN _ _ producer _) = get_area_if_not_already_seen producer $ get_area' producer
 get_area' e@(Const_GenN _ const_t _ _) = do
   return $ size_t const_t
-  
+get_area' e@(Counter_sN n _ int_type _ _) = return $ n * size_t int_type
+get_area' e@(Counter_tN n i _ int_type _ _) = do
+  add_area <- get_area' (AddN int_type (InputN int_type "" No_Index) No_Index)
+  return $ add_area + size_t int_type
 
 -- sequence operators
 get_area' e@(Shift_sN _ _ _ producer _) = get_area_if_not_already_seen producer $ get_area' producer

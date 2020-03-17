@@ -188,6 +188,16 @@ print_inner consumer_e@(Const_GenN constant constant_type delay cur_idx) = do
   add_to_cur_module cur_ref_name $ "Const_GenN " ++ show constant ++ " " ++
     show delay ++ " " ++ show constant_type
   return cur_ref_name
+print_inner consumer_e@(Counter_sN n incr_amount int_type delay cur_idx) = do
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "Counter_sN " ++ show n ++ " " ++
+    show incr_amount ++ " " ++ show int_type ++ " " ++ show delay
+  return cur_ref_name
+print_inner consumer_e@(Counter_tN n i incr_amount int_type delay cur_idx) = do
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "Counter_tN " ++ show n ++ " " ++ show i ++ " " ++
+    show incr_amount ++ " " ++ show int_type ++ " " ++ show delay
+  return cur_ref_name
 
 -- sequence operators
 print_inner consumer_e@(Shift_sN n shift_amount elem_t producer_e cur_idx) = do

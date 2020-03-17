@@ -97,6 +97,12 @@ match_latencies' e@(Lut_GenN _ _ producer _) = match_combinational_op e producer
 match_latencies' e@(Const_GenN _ _ delay _) = do
   e_new_idx <- update_index e
   return $ Matched_Latency_Result e_new_idx delay
+match_latencies' e@(Counter_sN _ _ _ delay _) = do
+  e_new_idx <- update_index e
+  return $ Matched_Latency_Result e_new_idx delay
+match_latencies' e@(Counter_tN _ _ _ _ delay _) = do
+  e_new_idx <- update_index e
+  return $ Matched_Latency_Result e_new_idx delay
 
 -- sequence operators
 match_latencies' e@(Shift_sN _ _ _ producer _) = match_combinational_op e producer

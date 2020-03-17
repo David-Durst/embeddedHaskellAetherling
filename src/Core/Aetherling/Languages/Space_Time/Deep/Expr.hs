@@ -33,6 +33,21 @@ data Expr =
       delay :: Int,
       index :: DAG_Index
       }
+  | Counter_sN {
+      n :: Int,
+      incr_amount :: Int,
+      int_type :: AST_Type,
+      delay :: Int,
+      index :: DAG_Index
+      }
+  | Counter_tN {
+      n :: Int,
+      i :: Int,
+      incr_amount :: Int,
+      int_type :: AST_Type,
+      delay :: Int,
+      index :: DAG_Index
+      }
 
   -- sequence operators
   | Shift_sN {
@@ -289,6 +304,11 @@ is_error_node _ = False
 instance Indexible Expr where
   get_index e = index e
   set_index e i = e { index = i }
+
+non_input_with_no_inputs (Const_GenN _ _ _ _) = True
+non_input_with_no_inputs (Counter_sN _ _ _ _ _) = True
+non_input_with_no_inputs (Counter_tN _ _ _ _ _ _) = True
+non_input_with_no_inputs _ = False
 
 has_two_inputs (Map2_sN _ _ _ _ _) = True
 has_two_inputs (Map2_tN _ _ _ _ _ _) = True

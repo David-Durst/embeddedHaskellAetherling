@@ -30,6 +30,12 @@ data Expr =
       constant_type :: AST_Type,
       index :: DAG_Index
       }
+  | CounterN {
+      n :: Int,
+      incr_amount :: Int,
+      int_type :: AST_Type,
+      index :: DAG_Index
+      }
 
   -- sequence operators
   | ShiftN {
