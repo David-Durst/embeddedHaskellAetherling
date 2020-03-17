@@ -37,8 +37,8 @@ module Top(
   wire io_output_oobs_0;
   wire io_output_oobs_1;
   x258_ctrchain cchain ( // @[:@2879.2]
-    .clock(CLK), // @[:@2880.4]
-    .reset(1'b0), // @[:@2881.4]
+    .clock(clock), // @[:@2880.4]
+    .reset(reset), // @[:@2881.4]
     .io_input_reset(1'b0), // @[:@2882.4]
     .io_input_enable(valid_up), // @[:@2882.4]
     .io_output_counts_1(io_output_counts_1), // @[:@2882.4]
