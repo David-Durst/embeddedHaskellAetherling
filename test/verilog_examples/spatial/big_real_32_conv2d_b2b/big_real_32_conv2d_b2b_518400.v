@@ -9,7 +9,6 @@ module Top(
   input  [31:0] I_3,
   output [31:0] O_0,
   output [31:0] O_1,
-  output [31:0] O_1,
   output [31:0] O_2,
   output [31:0] O_3
 );
