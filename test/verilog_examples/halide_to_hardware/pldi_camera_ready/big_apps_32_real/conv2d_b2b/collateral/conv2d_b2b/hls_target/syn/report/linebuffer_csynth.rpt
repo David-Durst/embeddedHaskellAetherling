@@ -1,0 +1,122 @@
+
+
+================================================================
+== Vivado HLS Report for 'linebuffer'
+================================================================
+* Date:           Mon Mar 16 18:02:58 2020
+
+* Version:        2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)
+* Project:        conv2d_b2b
+* Solution:       hls_target
+* Product family: zynq
+* Target device:  xc7z020clg484-1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.60|      5.87|        0.70|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +---------+---------+---------+---------+----------+
+    |      Latency      |      Interval     | Pipeline |
+    |   min   |   max   |   min   |   max   |   Type   |
+    +---------+---------+---------+---------+----------+
+    |  2077921|  2077921|  2077922|  2077922| dataflow |
+    +---------+---------+---------+---------+----------+
+
+    + Detail: 
+        * Instance: 
+        +---------+-------+---------+---------+---------+---------+----------+
+        |         |       |      Latency      |      Interval     | Pipeline |
+        | Instance| Module|   min   |   max   |   min   |   max   |   Type   |
+        +---------+-------+---------+---------+---------+---------+----------+
+        |call_U0  |call   |  2077921|  2077921|  2077922|  2077922| dataflow |
+        +---------+-------+---------+---------+---------+---------+----------+
+
+        * Loop: 
+        N/A
+
+
+
+================================================================
+== Utilization Estimates
+================================================================
+* Summary: 
++-----------------+---------+-------+--------+-------+
+|       Name      | BRAM_18K| DSP48E|   FF   |  LUT  |
++-----------------+---------+-------+--------+-------+
+|DSP              |        -|      -|       -|      -|
+|Expression       |        -|      -|       -|      -|
+|FIFO             |        -|      -|       -|      -|
+|Instance         |        8|      -|    1097|    646|
+|Memory           |        -|      -|       -|      -|
+|Multiplexer      |        -|      -|       -|      -|
+|Register         |        -|      -|       -|      -|
++-----------------+---------+-------+--------+-------+
+|Total            |        8|      0|    1097|    646|
++-----------------+---------+-------+--------+-------+
+|Available        |      280|    220|  106400|  53200|
++-----------------+---------+-------+--------+-------+
+|Utilization (%)  |        2|      0|       1|      1|
++-----------------+---------+-------+--------+-------+
+
++ Detail: 
+    * Instance: 
+    +---------+-------+---------+-------+------+-----+
+    | Instance| Module| BRAM_18K| DSP48E|  FF  | LUT |
+    +---------+-------+---------+-------+------+-----+
+    |call_U0  |call   |        8|      0|  1097|  646|
+    +---------+-------+---------+-------+------+-----+
+    |Total    |       |        8|      0|  1097|  646|
+    +---------+-------+---------+-------+------+-----+
+
+    * DSP48: 
+    N/A
+
+    * Memory: 
+    N/A
+
+    * FIFO: 
+    N/A
+
+    * Expression: 
+    N/A
+
+    * Multiplexer: 
+    N/A
+
+    * Register: 
+    N/A
+
+
+
+================================================================
+== Interface
+================================================================
+* Summary: 
++-----------------------------+-----+-----+------------+----------------------+--------------+
+|          RTL Ports          | Dir | Bits|  Protocol  |     Source Object    |    C Type    |
++-----------------------------+-----+-----+------------+----------------------+--------------+
+|in_stream_V_value_V_dout     |  in |   32|   ap_fifo  |  in_stream_V_value_V |    pointer   |
+|in_stream_V_value_V_empty_n  |  in |    1|   ap_fifo  |  in_stream_V_value_V |    pointer   |
+|in_stream_V_value_V_read     | out |    1|   ap_fifo  |  in_stream_V_value_V |    pointer   |
+|out_stream_V_value_V_din     | out |  288|   ap_fifo  | out_stream_V_value_V |    pointer   |
+|out_stream_V_value_V_full_n  |  in |    1|   ap_fifo  | out_stream_V_value_V |    pointer   |
+|out_stream_V_value_V_write   | out |    1|   ap_fifo  | out_stream_V_value_V |    pointer   |
+|ap_clk                       |  in |    1| ap_ctrl_hs |      linebuffer      | return value |
+|ap_rst                       |  in |    1| ap_ctrl_hs |      linebuffer      | return value |
+|ap_done                      | out |    1| ap_ctrl_hs |      linebuffer      | return value |
+|ap_start                     |  in |    1| ap_ctrl_hs |      linebuffer      | return value |
+|ap_ready                     | out |    1| ap_ctrl_hs |      linebuffer      | return value |
+|ap_idle                      | out |    1| ap_ctrl_hs |      linebuffer      | return value |
+|ap_continue                  |  in |    1| ap_ctrl_hs |      linebuffer      | return value |
++-----------------------------+-----+-----+------------+----------------------+--------------+
+

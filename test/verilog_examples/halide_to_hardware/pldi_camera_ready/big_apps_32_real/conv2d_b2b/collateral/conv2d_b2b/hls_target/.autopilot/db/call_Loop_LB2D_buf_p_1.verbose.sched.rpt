@@ -1,0 +1,276 @@
+
+
+================================================================
+== Vivado HLS Report for 'call_Loop_LB2D_buf_p_1'
+================================================================
+* Date:           Mon Mar 16 18:02:55 2020
+
+* Version:        2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)
+* Project:        conv2d_b2b
+* Solution:       hls_target
+* Product family: zynq
+* Target device:  xc7z020clg484-1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.60|      5.01|        0.70|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +---------+---------+---------+---------+---------+
+    |      Latency      |      Interval     | Pipeline|
+    |   min   |   max   |   min   |   max   |   Type  |
+    +---------+---------+---------+---------+---------+
+    |  2071917|  2071917|  2071917|  2071917|   none  |
+    +---------+---------+---------+---------+---------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        +---------------+---------+---------+----------+-----------+-----------+------+----------+
+        |               |      Latency      | Iteration|  Initiation Interval  | Trip |          |
+        |   Loop Name   |   min   |   max   |  Latency |  achieved |   target  | Count| Pipelined|
+        +---------------+---------+---------+----------+-----------+-----------+------+----------+
+        |- LB2D_buf     |  2071916|  2071916|      1922|          -|          -|  1078|    no    |
+        | + LB2D_buf.1  |     1919|     1919|         3|          1|          1|  1918|    yes   |
+        +---------------+---------+---------+----------+-----------+-----------+------+----------+
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 2
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 0
+HasVarLatency: 1
+IsPipeline: 0
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 1, depth = 3
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states: 6
+* Pipeline: 1
+  Pipeline-0: II = 1, D = 3, States = { 3 4 5 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 
+	2  / true
+2 --> 
+	3  / (!tmp)
+3 --> 
+	6  / (tmp_1)
+	4  / (!tmp_1)
+4 --> 
+	5  / true
+5 --> 
+	3  / true
+6 --> 
+	2  / true
+* FSM state operations: 
+
+ <State 1>: 1.59ns
+ST_1: StgValue_7 (3)  [1/1] 0.00ns
+newFuncRoot:0  call void (...)* @_ssdm_op_SpecMemCore(i64* %slice_stream_V_value_V, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_1: StgValue_8 (4)  [1/1] 0.00ns
+newFuncRoot:1  call void (...)* @_ssdm_op_SpecMemCore(i32* %in_stream_V_value_V, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_1: StgValue_9 (5)  [1/1] 0.00ns
+newFuncRoot:2  call void (...)* @_ssdm_op_SpecInterface(i64* %slice_stream_V_value_V, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_1: StgValue_10 (6)  [1/1] 0.00ns
+newFuncRoot:3  call void (...)* @_ssdm_op_SpecInterface(i32* %in_stream_V_value_V, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_1: buffer_0_value_V (7)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:168
+newFuncRoot:4  %buffer_0_value_V = alloca [1918 x i32], align 4
+
+ST_1: StgValue_12 (8)  [1/1] 1.59ns
+newFuncRoot:5  br label %0
+
+
+ <State 2>: 5.01ns
+ST_2: row (10)  [1/1] 0.00ns
+:0  %row = phi i11 [ 0, %newFuncRoot ], [ %row_1, %1 ]
+
+ST_2: tmp (11)  [1/1] 2.94ns  loc: ../../../lib_files/Linebuffer.h:177
+:1  %tmp = icmp eq i11 %row, -970
+
+ST_2: empty (12)  [1/1] 0.00ns
+:2  %empty = call i32 (...)* @_ssdm_op_SpecLoopTripCount(i64 1078, i64 1078, i64 1078)
+
+ST_2: row_1 (13)  [1/1] 2.33ns  loc: ../../../lib_files/Linebuffer.h:177
+:3  %row_1 = add i11 %row, 1
+
+ST_2: StgValue_17 (14)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:177
+:4  br i1 %tmp, label %.preheader.exitStub, label %3
+
+ST_2: StgValue_18 (16)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:177
+:0  call void (...)* @_ssdm_op_SpecLoopName([9 x i8]* @p_str23) nounwind
+
+ST_2: tmp_9 (17)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:177
+:1  %tmp_9 = call i32 (...)* @_ssdm_op_SpecRegionBegin([9 x i8]* @p_str23)
+
+ST_2: tmp_s (18)  [1/1] 2.94ns  loc: ../../../lib_files/Linebuffer.h:187
+:2  %tmp_s = icmp eq i11 %row, 0
+
+ST_2: StgValue_21 (19)  [1/1] 1.59ns  loc: ../../../lib_files/Linebuffer.h:179
+:3  br label %2
+
+ST_2: StgValue_22 (47)  [1/1] 0.00ns
+.preheader.exitStub:0  ret void
+
+
+ <State 3>: 5.01ns
+ST_3: col (21)  [1/1] 0.00ns
+:0  %col = phi i11 [ 0, %3 ], [ %col_1, %._crit_edge ]
+
+ST_3: tmp_1 (22)  [1/1] 2.94ns  loc: ../../../lib_files/Linebuffer.h:179
+:1  %tmp_1 = icmp eq i11 %col, -130
+
+ST_3: col_1 (23)  [1/1] 2.33ns  loc: ../../../lib_files/Linebuffer.h:179
+:2  %col_1 = add i11 %col, 1
+
+ST_3: StgValue_26 (24)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:179
+:3  br i1 %tmp_1, label %1, label %4
+
+ST_3: col_cast (26)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:179
+:0  %col_cast = zext i11 %col to i64
+
+ST_3: StgValue_28 (31)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:187
+:5  br i1 %tmp_s, label %._crit_edge, label %.preheader57
+
+ST_3: buffer_0_value_V_ad_1 (33)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:198
+.preheader57:0  %buffer_0_value_V_ad_1 = getelementptr [1918 x i32]* %buffer_0_value_V, i64 0, i64 %col_cast
+
+ST_3: p_Val2_s (34)  [2/2] 3.25ns  loc: ../../../lib_files/Linebuffer.h:198
+.preheader57:1  %p_Val2_s = load i32* %buffer_0_value_V_ad_1, align 4
+
+
+ <State 4>: 3.25ns
+ST_4: tmp_value_V_3 (30)  [1/1] 2.45ns  loc: ../../../lib_files/Linebuffer.h:186
+:4  %tmp_value_V_3 = call i32 @_ssdm_op_Read.ap_fifo.volatile.i32P(i32* %in_stream_V_value_V)
+
+ST_4: p_Val2_s (34)  [1/2] 3.25ns  loc: ../../../lib_files/Linebuffer.h:198
+.preheader57:1  %p_Val2_s = load i32* %buffer_0_value_V_ad_1, align 4
+
+
+ <State 5>: 3.25ns
+ST_5: empty_33 (27)  [1/1] 0.00ns
+:1  %empty_33 = call i32 (...)* @_ssdm_op_SpecLoopTripCount(i64 1918, i64 1918, i64 1918)
+
+ST_5: tmp_2 (28)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:179
+:2  %tmp_2 = call i32 (...)* @_ssdm_op_SpecRegionBegin([13 x i8]* @p_str24)
+
+ST_5: StgValue_35 (29)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:181
+:3  call void (...)* @_ssdm_op_SpecPipeline(i32 1, i32 1, i32 1, i32 0, [1 x i8]* @p_str) nounwind
+
+ST_5: p_Result_s (35)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:206
+.preheader57:2  %p_Result_s = call i64 @_ssdm_op_BitConcatenate.i64.i32.i32(i32 %tmp_value_V_3, i32 %p_Val2_s)
+
+ST_5: StgValue_37 (36)  [1/1] 2.45ns  loc: ../../../lib_files/Linebuffer.h:207
+.preheader57:3  call void @_ssdm_op_Write.ap_fifo.volatile.i64P(i64* %slice_stream_V_value_V, i64 %p_Result_s)
+
+ST_5: StgValue_38 (37)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:208
+.preheader57:4  br label %._crit_edge
+
+ST_5: buffer_0_value_V_ad (39)  [1/1] 0.00ns  loc: ../../../lib_files/Stencil.h:75->../../../lib_files/Linebuffer.h:209
+._crit_edge:0  %buffer_0_value_V_ad = getelementptr [1918 x i32]* %buffer_0_value_V, i64 0, i64 %col_cast
+
+ST_5: StgValue_40 (40)  [1/1] 3.25ns  loc: ../../../lib_files/Stencil.h:75->../../../lib_files/Linebuffer.h:209
+._crit_edge:1  store i32 %tmp_value_V_3, i32* %buffer_0_value_V_ad, align 4
+
+ST_5: empty_32 (41)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:210
+._crit_edge:2  %empty_32 = call i32 (...)* @_ssdm_op_SpecRegionEnd([13 x i8]* @p_str24, i32 %tmp_2)
+
+ST_5: StgValue_42 (42)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:179
+._crit_edge:3  br label %2
+
+
+ <State 6>: 0.00ns
+ST_6: empty_31 (44)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:212
+:0  %empty_31 = call i32 (...)* @_ssdm_op_SpecRegionEnd([9 x i8]* @p_str23, i32 %tmp_9)
+
+ST_6: StgValue_44 (45)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:177
+:1  br label %0
+
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 5.6ns, clock uncertainty: 0.7ns.
+
+ <State 1>: 1.59ns
+The critical path consists of the following:
+	multiplexor before 'phi' operation ('row') with incoming values : ('row', ../../../lib_files/Linebuffer.h:177) [10]  (1.59 ns)
+
+ <State 2>: 5.01ns
+The critical path consists of the following:
+	'icmp' operation ('tmp', ../../../lib_files/Linebuffer.h:177) [11]  (2.94 ns)
+	blocking operation 2.07 ns on control path)
+
+ <State 3>: 5.01ns
+The critical path consists of the following:
+	'icmp' operation ('tmp_1', ../../../lib_files/Linebuffer.h:179) [22]  (2.94 ns)
+	blocking operation 2.07 ns on control path)
+
+ <State 4>: 3.25ns
+The critical path consists of the following:
+	'load' operation ('__Val2__', ../../../lib_files/Linebuffer.h:198) on array 'buffer[0].value.V', ../../../lib_files/Linebuffer.h:168 [34]  (3.25 ns)
+
+ <State 5>: 3.25ns
+The critical path consists of the following:
+	'getelementptr' operation ('buffer_0_value_V_ad', ../../../lib_files/Stencil.h:75->../../../lib_files/Linebuffer.h:209) [39]  (0 ns)
+	'store' operation (../../../lib_files/Stencil.h:75->../../../lib_files/Linebuffer.h:209) of variable 'tmp.value.V', ../../../lib_files/Linebuffer.h:186 on array 'buffer[0].value.V', ../../../lib_files/Linebuffer.h:168 [40]  (3.25 ns)
+
+ <State 6>: 0ns
+The critical path consists of the following:
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+	State 3
+	State 4
+	State 5
+	State 6
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

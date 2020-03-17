@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xd:acceleratorMap xmlns:xd="http://www.xilinx.com/xidane" xd:functionName="hls_target" xd:componentRef="hls_target" xd:initiationInterval="2077922" xd:clockPeriod="5.600000" xd:sequential="true" xd:hostMachine="64" xd:reset="control">
+  <xd:controlReg xd:name="control" xd:interfaceRef="ap_ctrl" xd:busTypeRef="acc_handshake" xd:type="acc_handshake"/>
+  <xd:arg xd:name="hw_input.value" xd:originalName="hw_input" xd:direction="in" xd:interfaceRef="hw_input_V_value_V" xd:busTypeRef="register" xd:handshakeRef="ap_hs" xd:dataWidth="32"/>
+  <xd:arg xd:name="hw_input.last" xd:originalName="hw_input" xd:direction="in" xd:interfaceRef="hw_input_V_last_V" xd:busTypeRef="register" xd:handshakeRef="ap_hs" xd:dataWidth="1"/>
+  <xd:arg xd:name="hw_output.value" xd:originalName="hw_output" xd:direction="out" xd:interfaceRef="hw_output_V_value_V" xd:busTypeRef="register" xd:handshakeRef="ap_hs" xd:dataWidth="32" xd:firstOut="24"/>
+  <xd:arg xd:name="hw_output.last" xd:originalName="hw_output" xd:direction="out" xd:interfaceRef="hw_output_V_last_V" xd:busTypeRef="register" xd:handshakeRef="ap_hs" xd:dataWidth="1" xd:firstOut="24"/>
+  <xd:latencyEstimates xd:best-case="2077921" xd:worst-case="2077921" xd:average-case="2077921"/>
+  <xd:resourceEstimates xd:LUT="12674" xd:FF="13455" xd:BRAM="12" xd:DSP="55"/>
+</xd:acceleratorMap>

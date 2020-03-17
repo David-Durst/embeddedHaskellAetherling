@@ -1,0 +1,147 @@
+
+
+================================================================
+== Vivado HLS Report for 'linebuffer_2'
+================================================================
+* Date:           Mon Mar 16 18:02:56 2020
+
+* Version:        2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)
+* Project:        conv2d_b2b
+* Solution:       hls_target
+* Product family: zynq
+* Target device:  xc7z020clg484-1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.60|      5.01|        0.70|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +---------+---------+---------+---------+----------+
+    |      Latency      |      Interval     | Pipeline |
+    |   min   |   max   |   min   |   max   |   Type   |
+    +---------+---------+---------+---------+----------+
+    |  2071917|  2071917|  2071918|  2071918| dataflow |
+    +---------+---------+---------+---------+----------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        N/A
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 2
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 0
+HasVarLatency: 1
+IsPipeline: 0
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states: 2
+* Pipeline: 0
+* Dataflow Pipeline: 1
+  DF-Pipeline-0: Size = 2, States = { 1 2 }
+
+* FSM state transitions: 
+1 --> 
+	2  / true
+2 --> 
+* FSM state operations: 
+
+ <State 1>: 0.00ns
+ST_1: StgValue_3 (12)  [2/2] 0.00ns  loc: ../../../lib_files/Linebuffer.h:403->../../../lib_files/Linebuffer.h:492->../../../lib_files/Linebuffer.h:505->../../../lib_files/Linebuffer.h:530
+:9  call fastcc void @call.1(i32* %in_stream_V_value_V, i128* %out_stream_V_value_V)
+
+
+ <State 2>: 0.00ns
+ST_2: StgValue_4 (3)  [1/1] 0.00ns
+:0  call void (...)* @_ssdm_op_SpecInterface(i128* %out_stream_V_value_V, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_2: StgValue_5 (4)  [1/1] 0.00ns
+:1  call void (...)* @_ssdm_op_SpecInterface(i32* %in_stream_V_value_V, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_2: StgValue_6 (5)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:529
+:2  call void (...)* @_ssdm_op_SpecDataflowPipeline(i32 -1, [1 x i8]* @p_str) nounwind
+
+ST_2: StgValue_7 (6)  [1/1] 0.00ns
+:3  call void (...)* @_ssdm_op_SpecMemCore(i128* %out_stream_V_value_V, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_2: StgValue_8 (7)  [1/1] 0.00ns
+:4  call void (...)* @_ssdm_op_SpecMemCore(i32* %in_stream_V_value_V, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_2: StgValue_9 (8)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:504->../../../lib_files/Linebuffer.h:530
+:5  call void (...)* @_ssdm_op_SpecLoopName([11 x i8]* @p_str21) nounwind
+
+ST_2: tmp (9)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:504->../../../lib_files/Linebuffer.h:530
+:6  %tmp = call i32 (...)* @_ssdm_op_SpecRegionBegin([11 x i8]* @p_str21)
+
+ST_2: StgValue_11 (10)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:491->../../../lib_files/Linebuffer.h:505->../../../lib_files/Linebuffer.h:530
+:7  call void (...)* @_ssdm_op_SpecLoopName([11 x i8]* @p_str22) nounwind
+
+ST_2: empty (11)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:506->../../../lib_files/Linebuffer.h:530
+:8  %empty = call i32 (...)* @_ssdm_op_SpecRegionEnd([11 x i8]* @p_str21, i32 %tmp)
+
+ST_2: StgValue_13 (12)  [1/2] 0.00ns  loc: ../../../lib_files/Linebuffer.h:403->../../../lib_files/Linebuffer.h:492->../../../lib_files/Linebuffer.h:505->../../../lib_files/Linebuffer.h:530
+:9  call fastcc void @call.1(i32* %in_stream_V_value_V, i128* %out_stream_V_value_V)
+
+ST_2: StgValue_14 (13)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:531
+:10  ret void
+
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 5.6ns, clock uncertainty: 0.7ns.
+
+ <State 1>: 0ns
+The critical path consists of the following:
+
+ <State 2>: 0ns
+The critical path consists of the following:
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

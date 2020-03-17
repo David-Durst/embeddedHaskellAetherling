@@ -1,0 +1,941 @@
+
+
+================================================================
+== Vivado HLS Report for 'hls_target'
+================================================================
+* Date:           Mon Mar 16 18:03:00 2020
+
+* Version:        2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)
+* Project:        conv2d_b2b
+* Solution:       hls_target
+* Product family: zynq
+* Target device:  xc7z020clg484-1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.60|      7.33|        0.70|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +---------+---------+---------+---------+----------+
+    |      Latency      |      Interval     | Pipeline |
+    |   min   |   max   |   min   |   max   |   Type   |
+    +---------+---------+---------+---------+----------+
+    |  2077921|  2077921|  2077922|  2077922| dataflow |
+    +---------+---------+---------+---------+----------+
+
+    + Detail: 
+        * Instance: 
+        +-----------------+--------------+---------+---------+---------+---------+----------+
+        |                 |              |      Latency      |      Interval     | Pipeline |
+        |     Instance    |    Module    |   min   |   max   |   min   |   max   |   Type   |
+        +-----------------+--------------+---------+---------+---------+---------+----------+
+        |Loop_2_proc_U0   |Loop_2_proc   |  2064637|  2064637|  2064637|  2064637|   none   |
+        |Loop_3_proc_U0   |Loop_3_proc   |  2064633|  2064633|  2064633|  2064633|   none   |
+        |linebuffer_1_U0  |linebuffer_1  |  2077921|  2077921|  2077922|  2077922| dataflow |
+        |Loop_1_proc_U0   |Loop_1_proc   |  2067610|  2067610|  2067610|  2067610|   none   |
+        |linebuffer_2_U0  |linebuffer_2  |  2071917|  2071917|  2071918|  2071918| dataflow |
+        +-----------------+--------------+---------+---------+---------+---------+----------+
+
+        * Loop: 
+        N/A
+
+
+
+================================================================
+== Utilization Estimates
+================================================================
+* Summary: 
++-----------------+---------+-------+--------+-------+
+|       Name      | BRAM_18K| DSP48E|   FF   |  LUT  |
++-----------------+---------+-------+--------+-------+
+|DSP              |        -|      -|       -|      -|
+|Expression       |        -|      -|       0|     10|
+|FIFO             |        -|      -|       0|      4|
+|Instance         |       12|     55|   13455|  12660|
+|Memory           |        -|      -|       -|      -|
+|Multiplexer      |        -|      -|       -|      -|
+|Register         |        -|      -|       -|      -|
++-----------------+---------+-------+--------+-------+
+|Total            |       12|     55|   13455|  12674|
++-----------------+---------+-------+--------+-------+
+|Available        |      280|    220|  106400|  53200|
++-----------------+---------+-------+--------+-------+
+|Utilization (%)  |        4|     25|      12|     23|
++-----------------+---------+-------+--------+-------+
+
++ Detail: 
+    * Instance: 
+    +-----------------+--------------+---------+-------+------+------+
+    |     Instance    |    Module    | BRAM_18K| DSP48E|  FF  |  LUT |
+    +-----------------+--------------+---------+-------+------+------+
+    |Loop_1_proc_U0   |Loop_1_proc   |        0|      0|   936|   435|
+    |Loop_2_proc_U0   |Loop_2_proc   |        0|     44|  8657|  8716|
+    |Loop_3_proc_U0   |Loop_3_proc   |        0|     11|  2237|  2372|
+    |linebuffer_1_U0  |linebuffer_1  |        8|      0|  1231|   805|
+    |linebuffer_2_U0  |linebuffer_2  |        4|      0|   394|   332|
+    +-----------------+--------------+---------+-------+------+------+
+    |Total            |              |       12|     55| 13455| 12660|
+    +-----------------+--------------+---------+-------+------+------+
+
+    * DSP48: 
+    N/A
+
+    * Memory: 
+    N/A
+
+    * FIFO: 
+    +--------------------------+---------+---+----+------+-----+---------+
+    |           Name           | BRAM_18K| FF| LUT| Depth| Bits| Size:D*B|
+    +--------------------------+---------+---+----+------+-----+---------+
+    |p_hw_input_stencil_st_U   |        0|  0|   1|     1|  288|      288|
+    |p_mul_stencil_stream_s_U  |        0|  0|   1|     1|  128|      128|
+    |p_mul_stencil_update_1_U  |        0|  0|   1|     1|   32|       32|
+    |p_p2_mul1_stencil_str_U   |        0|  0|   1|     1|   32|       32|
+    +--------------------------+---------+---+----+------+-----+---------+
+    |Total                     |        0|  0|   4|     4|  480|      480|
+    +--------------------------+---------+---+----+------+-----+---------+
+
+    * Expression: 
+    +------------------------------+----------+-------+---+----+------------+------------+
+    |         Variable Name        | Operation| DSP48E| FF| LUT| Bitwidth P0| Bitwidth P1|
+    +------------------------------+----------+-------+---+----+------------+------------+
+    |ap_idle                       |    and   |      0|  0|   2|           1|           1|
+    |Loop_1_proc_U0_start_full_n   |    or    |      0|  0|   2|           1|           1|
+    |Loop_2_proc_U0_start_full_n   |    or    |      0|  0|   2|           1|           1|
+    |linebuffer_1_U0_start_full_n  |    or    |      0|  0|   2|           1|           1|
+    |linebuffer_2_U0_start_full_n  |    or    |      0|  0|   2|           1|           1|
+    +------------------------------+----------+-------+---+----+------------+------------+
+    |Total                         |          |      0|  0|  10|           5|           5|
+    +------------------------------+----------+-------+---+----+------------+------------+
+
+    * Multiplexer: 
+    N/A
+
+    * Register: 
+    N/A
+
+
+
+================================================================
+== Interface
+================================================================
+* Summary: 
++----------------------------+-----+-----+------------+---------------------+--------------+
+|          RTL Ports         | Dir | Bits|  Protocol  |    Source Object    |    C Type    |
++----------------------------+-----+-----+------------+---------------------+--------------+
+|hw_input_V_value_V          |  in |   32|    ap_hs   |  hw_input_V_value_V |    pointer   |
+|hw_input_V_value_V_ap_vld   |  in |    1|    ap_hs   |  hw_input_V_value_V |    pointer   |
+|hw_input_V_value_V_ap_ack   | out |    1|    ap_hs   |  hw_input_V_value_V |    pointer   |
+|hw_input_V_last_V           |  in |    1|    ap_hs   |  hw_input_V_last_V  |    pointer   |
+|hw_input_V_last_V_ap_vld    |  in |    1|    ap_hs   |  hw_input_V_last_V  |    pointer   |
+|hw_input_V_last_V_ap_ack    | out |    1|    ap_hs   |  hw_input_V_last_V  |    pointer   |
+|hw_output_V_value_V         | out |   32|    ap_hs   | hw_output_V_value_V |    pointer   |
+|hw_output_V_value_V_ap_vld  | out |    1|    ap_hs   | hw_output_V_value_V |    pointer   |
+|hw_output_V_value_V_ap_ack  |  in |    1|    ap_hs   | hw_output_V_value_V |    pointer   |
+|hw_output_V_last_V          | out |    1|    ap_hs   |  hw_output_V_last_V |    pointer   |
+|hw_output_V_last_V_ap_vld   | out |    1|    ap_hs   |  hw_output_V_last_V |    pointer   |
+|hw_output_V_last_V_ap_ack   |  in |    1|    ap_hs   |  hw_output_V_last_V |    pointer   |
+|ap_clk                      |  in |    1| ap_ctrl_hs |      hls_target     | return value |
+|ap_rst                      |  in |    1| ap_ctrl_hs |      hls_target     | return value |
+|ap_done                     | out |    1| ap_ctrl_hs |      hls_target     | return value |
+|ap_start                    |  in |    1| ap_ctrl_hs |      hls_target     | return value |
+|ap_ready                    | out |    1| ap_ctrl_hs |      hls_target     | return value |
+|ap_idle                     | out |    1| ap_ctrl_hs |      hls_target     | return value |
++----------------------------+-----+-----+------------+---------------------+--------------+
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 1
+ResetActiveHigh: 1
+IsCombinational: 2
+IsDatapathOnly: 2
+HasWiredReturn: 1
+HasMFsm: 0
+HasVarLatency: 1
+IsPipeline: 0
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states: 10
+* Pipeline: 0
+* Dataflow Pipeline: 1
+  DF-Pipeline-0: Size = 10, States = { 1 2 3 4 5 6 7 8 9 10 }
+
+* FSM state transitions: 
+1 --> 
+	2  / true
+2 --> 
+	3  / true
+3 --> 
+	4  / true
+4 --> 
+	5  / true
+5 --> 
+	6  / true
+6 --> 
+	7  / true
+7 --> 
+	8  / true
+8 --> 
+	9  / true
+9 --> 
+	10  / true
+10 --> 
+* FSM state operations: 
+
+ <State 1>: 0.00ns
+ST_1: p_hw_input_stencil_st (11)  [1/1] 0.00ns  loc: hls_target.cpp:50
+codeRepl:6  %p_hw_input_stencil_st = alloca i288, align 8
+
+ST_1: p_mul_stencil_update_1 (15)  [1/1] 0.00ns
+codeRepl:10  %p_mul_stencil_update_1 = alloca i32, align 4
+
+ST_1: p_mul_stencil_stream_s (19)  [1/1] 0.00ns  loc: hls_target.cpp:146
+codeRepl:14  %p_mul_stencil_stream_s = alloca i128, align 8
+
+ST_1: p_p2_mul1_stencil_str (23)  [1/1] 0.00ns  loc: hls_target.cpp:155
+codeRepl:18  %p_p2_mul1_stencil_str = alloca i32, align 4
+
+ST_1: StgValue_15 (29)  [2/2] 0.00ns  loc: hls_target.cpp:54
+codeRepl:24  call fastcc void @linebuffer.1(i32* %hw_input_V_value_V, i1* %hw_input_V_last_V, i288* %p_hw_input_stencil_st)
+
+
+ <State 2>: 0.00ns
+ST_2: StgValue_16 (29)  [1/2] 0.00ns  loc: hls_target.cpp:54
+codeRepl:24  call fastcc void @linebuffer.1(i32* %hw_input_V_value_V, i1* %hw_input_V_last_V, i288* %p_hw_input_stencil_st)
+
+
+ <State 3>: 0.00ns
+ST_3: StgValue_17 (30)  [2/2] 0.00ns
+codeRepl:25  call fastcc void @Loop_1_proc(i288* %p_hw_input_stencil_st, i32* %p_mul_stencil_update_1)
+
+
+ <State 4>: 0.00ns
+ST_4: StgValue_18 (30)  [1/2] 0.00ns
+codeRepl:25  call fastcc void @Loop_1_proc(i288* %p_hw_input_stencil_st, i32* %p_mul_stencil_update_1)
+
+
+ <State 5>: 0.00ns
+ST_5: StgValue_19 (31)  [2/2] 0.00ns  loc: hls_target.cpp:150
+codeRepl:26  call fastcc void @linebuffer.2(i32* %p_mul_stencil_update_1, i128* %p_mul_stencil_stream_s)
+
+
+ <State 6>: 0.00ns
+ST_6: StgValue_20 (31)  [1/2] 0.00ns  loc: hls_target.cpp:150
+codeRepl:26  call fastcc void @linebuffer.2(i32* %p_mul_stencil_update_1, i128* %p_mul_stencil_stream_s)
+
+
+ <State 7>: 0.00ns
+ST_7: StgValue_21 (32)  [2/2] 0.00ns
+codeRepl:27  call fastcc void @Loop_2_proc(i128* %p_mul_stencil_stream_s, i32* %p_p2_mul1_stencil_str)
+
+
+ <State 8>: 0.00ns
+ST_8: StgValue_22 (32)  [1/2] 0.00ns
+codeRepl:27  call fastcc void @Loop_2_proc(i128* %p_mul_stencil_stream_s, i32* %p_p2_mul1_stencil_str)
+
+
+ <State 9>: 0.00ns
+ST_9: StgValue_23 (33)  [2/2] 0.00ns
+codeRepl:28  call fastcc void @Loop_3_proc(i32* %p_p2_mul1_stencil_str, i32* %hw_output_V_value_V, i1* %hw_output_V_last_V)
+
+
+ <State 10>: 4.61ns
+ST_10: StgValue_24 (5)  [1/1] 0.00ns  loc: hls_target.cpp:9
+codeRepl:0  call void (...)* @_ssdm_op_SpecDataflowPipeline(i32 -1, [1 x i8]* @p_str) nounwind
+
+ST_10: StgValue_25 (6)  [1/1] 0.00ns
+codeRepl:1  call void (...)* @_ssdm_op_SpecBitsMap(i32* %hw_input_V_value_V), !map !534
+
+ST_10: StgValue_26 (7)  [1/1] 0.00ns
+codeRepl:2  call void (...)* @_ssdm_op_SpecBitsMap(i1* %hw_input_V_last_V), !map !540
+
+ST_10: StgValue_27 (8)  [1/1] 0.00ns
+codeRepl:3  call void (...)* @_ssdm_op_SpecBitsMap(i32* %hw_output_V_value_V), !map !544
+
+ST_10: StgValue_28 (9)  [1/1] 0.00ns
+codeRepl:4  call void (...)* @_ssdm_op_SpecBitsMap(i1* %hw_output_V_last_V), !map !548
+
+ST_10: StgValue_29 (10)  [1/1] 0.00ns
+codeRepl:5  call void (...)* @_ssdm_op_SpecTopModule([11 x i8]* @hls_target_str) nounwind
+
+ST_10: empty (12)  [1/1] 0.00ns
+codeRepl:7  %empty = call i32 (...)* @_ssdm_op_SpecChannel([35 x i8]* @p_hw_input_stencil_st, i32 1, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 1, i32 1, i288* %p_hw_input_stencil_st, i288* %p_hw_input_stencil_st)
+
+ST_10: StgValue_31 (13)  [1/1] 0.00ns
+codeRepl:8  call void (...)* @_ssdm_op_SpecInterface(i288* %p_hw_input_stencil_st, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_10: StgValue_32 (14)  [1/1] 0.00ns  loc: hls_target.cpp:52
+codeRepl:9  call void (...)* @_ssdm_op_SpecMemCore(i288* %p_hw_input_stencil_st, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_10: empty_22 (16)  [1/1] 0.00ns
+codeRepl:11  %empty_22 = call i32 (...)* @_ssdm_op_SpecChannel([37 x i8]* @p_mul_stencil_update_s, i32 1, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 1, i32 1, i32* %p_mul_stencil_update_1, i32* %p_mul_stencil_update_1)
+
+ST_10: StgValue_34 (17)  [1/1] 0.00ns
+codeRepl:12  call void (...)* @_ssdm_op_SpecInterface(i32* %p_mul_stencil_update_1, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_10: StgValue_35 (18)  [1/1] 0.00ns  loc: hls_target.cpp:61
+codeRepl:13  call void (...)* @_ssdm_op_SpecMemCore(i32* %p_mul_stencil_update_1, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_10: empty_23 (20)  [1/1] 0.00ns
+codeRepl:15  %empty_23 = call i32 (...)* @_ssdm_op_SpecChannel([30 x i8]* @p_mul_stencil_stream_s, i32 1, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 1, i32 1, i128* %p_mul_stencil_stream_s, i128* %p_mul_stencil_stream_s)
+
+ST_10: StgValue_37 (21)  [1/1] 0.00ns
+codeRepl:16  call void (...)* @_ssdm_op_SpecInterface(i128* %p_mul_stencil_stream_s, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_10: StgValue_38 (22)  [1/1] 0.00ns  loc: hls_target.cpp:148
+codeRepl:17  call void (...)* @_ssdm_op_SpecMemCore(i128* %p_mul_stencil_stream_s, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_10: empty_24 (24)  [1/1] 0.00ns
+codeRepl:19  %empty_24 = call i32 (...)* @_ssdm_op_SpecChannel([34 x i8]* @p_p2_mul1_stencil_str, i32 1, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 1, i32 1, i32* %p_p2_mul1_stencil_str, i32* %p_p2_mul1_stencil_str)
+
+ST_10: StgValue_40 (25)  [1/1] 0.00ns
+codeRepl:20  call void (...)* @_ssdm_op_SpecInterface(i32* %p_p2_mul1_stencil_str, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_10: StgValue_41 (26)  [1/1] 0.00ns  loc: hls_target.cpp:157
+codeRepl:21  call void (...)* @_ssdm_op_SpecMemCore(i32* %p_p2_mul1_stencil_str, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_10: StgValue_42 (27)  [1/1] 0.00ns  loc: hls_target.cpp:11
+codeRepl:22  call void (...)* @_ssdm_op_SpecInterface(i32* %hw_input_V_value_V, i1* %hw_input_V_last_V, [6 x i8]* @p_str1, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 0, i32 0, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str) nounwind
+
+ST_10: StgValue_43 (28)  [1/1] 0.00ns  loc: hls_target.cpp:12
+codeRepl:23  call void (...)* @_ssdm_op_SpecInterface(i32* %hw_output_V_value_V, i1* %hw_output_V_last_V, [6 x i8]* @p_str1, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 0, i32 0, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str) nounwind
+
+ST_10: StgValue_44 (33)  [1/2] 4.61ns
+codeRepl:28  call fastcc void @Loop_3_proc(i32* %p_p2_mul1_stencil_str, i32* %hw_output_V_value_V, i1* %hw_output_V_last_V)
+
+ST_10: StgValue_45 (34)  [1/1] 0.00ns  loc: hls_target.cpp:252
+codeRepl:29  ret void
+
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+STG Binding: 
+---------------- STG Properties BEGIN ----------------
+- Is combinational: 0
+- Is one-state seq: 0
+- Is datapath-only: 0
+- Is pipelined: 0
+- Is top level: 1
+Port [ Return ] is wired: 1; IO mode=ap_ctrl_hs:ce=0
+Port [ hw_input_V_value_V]:  wired=1; compound=0; hidden=0; nouse=0; global=0; static=0; extern=0; dir=0; type=0; pingpong=0; private_global=0; IO mode=ap_hs:ce=0
+Port [ hw_input_V_last_V]:  wired=1; compound=0; hidden=0; nouse=0; global=0; static=0; extern=0; dir=0; type=0; pingpong=0; private_global=0; IO mode=ap_hs:ce=0
+Port [ hw_output_V_value_V]:  wired=1; compound=0; hidden=0; nouse=0; global=0; static=0; extern=0; dir=1; type=0; pingpong=0; private_global=0; IO mode=ap_hs:ce=0
+Port [ hw_output_V_last_V]:  wired=1; compound=0; hidden=0; nouse=0; global=0; static=0; extern=0; dir=1; type=0; pingpong=0; private_global=0; IO mode=ap_hs:ce=0
+---------------- STG Properties END ------------------
+
+---------------- Datapath Model BEGIN ----------------
+
+<LifeTime>
+<method=bitvector/>
+p_hw_input_stencil_st  (alloca              ) [ 01111111111]
+p_mul_stencil_update_1 (alloca              ) [ 00111111111]
+p_mul_stencil_stream_s (alloca              ) [ 00111111111]
+p_p2_mul1_stencil_str  (alloca              ) [ 00111111111]
+StgValue_16            (call                ) [ 00000000000]
+StgValue_18            (call                ) [ 00000000000]
+StgValue_20            (call                ) [ 00000000000]
+StgValue_22            (call                ) [ 00000000000]
+StgValue_24            (specdataflowpipeline) [ 00000000000]
+StgValue_25            (specbitsmap         ) [ 00000000000]
+StgValue_26            (specbitsmap         ) [ 00000000000]
+StgValue_27            (specbitsmap         ) [ 00000000000]
+StgValue_28            (specbitsmap         ) [ 00000000000]
+StgValue_29            (spectopmodule       ) [ 00000000000]
+empty                  (specchannel         ) [ 00000000000]
+StgValue_31            (specinterface       ) [ 00000000000]
+StgValue_32            (specmemcore         ) [ 00000000000]
+empty_22               (specchannel         ) [ 00000000000]
+StgValue_34            (specinterface       ) [ 00000000000]
+StgValue_35            (specmemcore         ) [ 00000000000]
+empty_23               (specchannel         ) [ 00000000000]
+StgValue_37            (specinterface       ) [ 00000000000]
+StgValue_38            (specmemcore         ) [ 00000000000]
+empty_24               (specchannel         ) [ 00000000000]
+StgValue_40            (specinterface       ) [ 00000000000]
+StgValue_41            (specmemcore         ) [ 00000000000]
+StgValue_42            (specinterface       ) [ 00000000000]
+StgValue_43            (specinterface       ) [ 00000000000]
+StgValue_44            (call                ) [ 00000000000]
+StgValue_45            (ret                 ) [ 00000000000]
+</LifeTime>
+
+<model>
+
+<comp_list>
+<comp id="0" class="1000" name="hw_input_V_value_V">
+<pin_list>
+<pin id="1" dir="1" index="0" bw="1" slack="0"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="hw_input_V_value_V"/></StgValue>
+</bind>
+</comp>
+
+<comp id="2" class="1000" name="hw_input_V_last_V">
+<pin_list>
+<pin id="3" dir="1" index="0" bw="1" slack="0"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="hw_input_V_last_V"/></StgValue>
+</bind>
+</comp>
+
+<comp id="4" class="1000" name="hw_output_V_value_V">
+<pin_list>
+<pin id="5" dir="1" index="0" bw="1" slack="0"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="hw_output_V_value_V"/></StgValue>
+</bind>
+</comp>
+
+<comp id="6" class="1000" name="hw_output_V_last_V">
+<pin_list>
+<pin id="7" dir="1" index="0" bw="1" slack="0"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="hw_output_V_last_V"/></StgValue>
+</bind>
+</comp>
+
+<comp id="8" class="1001" name="const_8">
+<pin_list>
+<pin id="9" dir="1" index="0" bw="1" slack="0"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name=""/></StgValue>
+</bind>
+</comp>
+
+<comp id="10" class="1001" name="const_10">
+<pin_list>
+<pin id="11" dir="1" index="0" bw="1" slack="0"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="linebuffer.1"/></StgValue>
+</bind>
+</comp>
+
+<comp id="12" class="1001" name="const_12">
+<pin_list>
+<pin id="13" dir="1" index="0" bw="1" slack="0"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="Loop_1_proc"/></StgValue>
+</bind>
+</comp>
+
+<comp id="14" class="1001" name="const_14">
+<pin_list>
+<pin id="15" dir="1" index="0" bw="1" slack="0"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="linebuffer.2"/></StgValue>
+</bind>
+</comp>
+
+<comp id="16" class="1001" name="const_16">
+<pin_list>
+<pin id="17" dir="1" index="0" bw="1" slack="0"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="Loop_2_proc"/></StgValue>
+</bind>
+</comp>
+
+<comp id="18" class="1001" name="const_18">
+<pin_list>
+<pin id="19" dir="1" index="0" bw="1" slack="0"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="Loop_3_proc"/></StgValue>
+</bind>
+</comp>
+
+<comp id="20" class="1001" name="const_20">
+<pin_list>
+<pin id="21" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="_ssdm_op_SpecDataflowPipeline"/></StgValue>
+</bind>
+</comp>
+
+<comp id="22" class="1001" name="const_22">
+<pin_list>
+<pin id="23" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name=""/></StgValue>
+</bind>
+</comp>
+
+<comp id="24" class="1001" name="const_24">
+<pin_list>
+<pin id="25" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="p_str"/></StgValue>
+</bind>
+</comp>
+
+<comp id="26" class="1001" name="const_26">
+<pin_list>
+<pin id="27" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="_ssdm_op_SpecBitsMap"/></StgValue>
+</bind>
+</comp>
+
+<comp id="28" class="1001" name="const_28">
+<pin_list>
+<pin id="29" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="_ssdm_op_SpecTopModule"/></StgValue>
+</bind>
+</comp>
+
+<comp id="30" class="1001" name="const_30">
+<pin_list>
+<pin id="31" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="hls_target_str"/></StgValue>
+</bind>
+</comp>
+
+<comp id="32" class="1001" name="const_32">
+<pin_list>
+<pin id="33" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="_ssdm_op_SpecChannel"/></StgValue>
+</bind>
+</comp>
+
+<comp id="34" class="1001" name="const_34">
+<pin_list>
+<pin id="35" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="p_hw_input_stencil_st"/></StgValue>
+</bind>
+</comp>
+
+<comp id="36" class="1001" name="const_36">
+<pin_list>
+<pin id="37" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name=""/></StgValue>
+</bind>
+</comp>
+
+<comp id="38" class="1001" name="const_38">
+<pin_list>
+<pin id="39" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="_ssdm_op_SpecInterface"/></StgValue>
+</bind>
+</comp>
+
+<comp id="40" class="1001" name="const_40">
+<pin_list>
+<pin id="41" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="ap_fifo_str"/></StgValue>
+</bind>
+</comp>
+
+<comp id="42" class="1001" name="const_42">
+<pin_list>
+<pin id="43" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name=""/></StgValue>
+</bind>
+</comp>
+
+<comp id="44" class="1001" name="const_44">
+<pin_list>
+<pin id="45" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name=""/></StgValue>
+</bind>
+</comp>
+
+<comp id="46" class="1001" name="const_46">
+<pin_list>
+<pin id="47" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name=""/></StgValue>
+</bind>
+</comp>
+
+<comp id="48" class="1001" name="const_48">
+<pin_list>
+<pin id="49" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="_ssdm_op_SpecMemCore"/></StgValue>
+</bind>
+</comp>
+
+<comp id="50" class="1001" name="const_50">
+<pin_list>
+<pin id="51" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="p_str2"/></StgValue>
+</bind>
+</comp>
+
+<comp id="52" class="1001" name="const_52">
+<pin_list>
+<pin id="53" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="p_mul_stencil_update_s"/></StgValue>
+</bind>
+</comp>
+
+<comp id="54" class="1001" name="const_54">
+<pin_list>
+<pin id="55" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="p_mul_stencil_stream_s"/></StgValue>
+</bind>
+</comp>
+
+<comp id="56" class="1001" name="const_56">
+<pin_list>
+<pin id="57" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="p_p2_mul1_stencil_str"/></StgValue>
+</bind>
+</comp>
+
+<comp id="58" class="1001" name="const_58">
+<pin_list>
+<pin id="59" dir="1" index="0" bw="1" slack="2147483647"/>
+</pin_list>
+<bind>
+<StgValue><ssdm name="p_str1"/></StgValue>
+</bind>
+</comp>
+
+<comp id="60" class="1004" name="p_hw_input_stencil_st_fu_60">
+<pin_list>
+<pin id="61" dir="0" index="0" bw="1" slack="0"/>
+<pin id="62" dir="1" index="1" bw="288" slack="0"/>
+</pin_list>
+<bind>
+<opcode="alloca(26) " fcode="alloca"/>
+<opset="p_hw_input_stencil_st/1 "/>
+</bind>
+</comp>
+
+<comp id="64" class="1004" name="p_mul_stencil_update_1_fu_64">
+<pin_list>
+<pin id="65" dir="0" index="0" bw="1" slack="0"/>
+<pin id="66" dir="1" index="1" bw="32" slack="2"/>
+</pin_list>
+<bind>
+<opcode="alloca(26) " fcode="alloca"/>
+<opset="p_mul_stencil_update_1/1 "/>
+</bind>
+</comp>
+
+<comp id="68" class="1004" name="p_mul_stencil_stream_s_fu_68">
+<pin_list>
+<pin id="69" dir="0" index="0" bw="1" slack="0"/>
+<pin id="70" dir="1" index="1" bw="128" slack="4"/>
+</pin_list>
+<bind>
+<opcode="alloca(26) " fcode="alloca"/>
+<opset="p_mul_stencil_stream_s/1 "/>
+</bind>
+</comp>
+
+<comp id="72" class="1004" name="p_p2_mul1_stencil_str_fu_72">
+<pin_list>
+<pin id="73" dir="0" index="0" bw="1" slack="0"/>
+<pin id="74" dir="1" index="1" bw="32" slack="6"/>
+</pin_list>
+<bind>
+<opcode="alloca(26) " fcode="alloca"/>
+<opset="p_p2_mul1_stencil_str/1 "/>
+</bind>
+</comp>
+
+<comp id="76" class="1004" name="grp_Loop_2_proc_fu_76">
+<pin_list>
+<pin id="77" dir="0" index="0" bw="0" slack="0"/>
+<pin id="78" dir="0" index="1" bw="128" slack="6"/>
+<pin id="79" dir="0" index="2" bw="32" slack="6"/>
+<pin id="80" dir="1" index="3" bw="0" slack="2147483647"/>
+</pin_list>
+<bind>
+<opcode="call(48) " fcode="call"/>
+<opset="StgValue_21/7 "/>
+</bind>
+</comp>
+
+<comp id="82" class="1004" name="grp_Loop_3_proc_fu_82">
+<pin_list>
+<pin id="83" dir="0" index="0" bw="0" slack="0"/>
+<pin id="84" dir="0" index="1" bw="32" slack="8"/>
+<pin id="85" dir="0" index="2" bw="32" slack="0"/>
+<pin id="86" dir="0" index="3" bw="1" slack="0"/>
+<pin id="87" dir="1" index="4" bw="0" slack="2147483647"/>
+</pin_list>
+<bind>
+<opcode="call(48) " fcode="call"/>
+<opset="StgValue_23/9 "/>
+</bind>
+</comp>
+
+<comp id="91" class="1004" name="grp_linebuffer_1_fu_91">
+<pin_list>
+<pin id="92" dir="0" index="0" bw="0" slack="0"/>
+<pin id="93" dir="0" index="1" bw="32" slack="0"/>
+<pin id="94" dir="0" index="2" bw="1" slack="0"/>
+<pin id="95" dir="0" index="3" bw="288" slack="0"/>
+<pin id="96" dir="1" index="4" bw="0" slack="2147483647"/>
+</pin_list>
+<bind>
+<opcode="call(48) " fcode="call"/>
+<opset="StgValue_15/1 "/>
+</bind>
+</comp>
+
+<comp id="100" class="1004" name="grp_Loop_1_proc_fu_100">
+<pin_list>
+<pin id="101" dir="0" index="0" bw="0" slack="0"/>
+<pin id="102" dir="0" index="1" bw="288" slack="2"/>
+<pin id="103" dir="0" index="2" bw="32" slack="2"/>
+<pin id="104" dir="1" index="3" bw="0" slack="2147483647"/>
+</pin_list>
+<bind>
+<opcode="call(48) " fcode="call"/>
+<opset="StgValue_17/3 "/>
+</bind>
+</comp>
+
+<comp id="106" class="1004" name="grp_linebuffer_2_fu_106">
+<pin_list>
+<pin id="107" dir="0" index="0" bw="0" slack="0"/>
+<pin id="108" dir="0" index="1" bw="32" slack="4"/>
+<pin id="109" dir="0" index="2" bw="128" slack="4"/>
+<pin id="110" dir="1" index="3" bw="0" slack="2147483647"/>
+</pin_list>
+<bind>
+<opcode="call(48) " fcode="call"/>
+<opset="StgValue_19/5 "/>
+</bind>
+</comp>
+
+<comp id="112" class="1005" name="p_hw_input_stencil_st_reg_112">
+<pin_list>
+<pin id="113" dir="0" index="0" bw="288" slack="0"/>
+<pin id="114" dir="1" index="1" bw="288" slack="0"/>
+</pin_list>
+<bind>
+<opset="p_hw_input_stencil_st "/>
+</bind>
+</comp>
+
+<comp id="118" class="1005" name="p_mul_stencil_update_1_reg_118">
+<pin_list>
+<pin id="119" dir="0" index="0" bw="32" slack="2"/>
+<pin id="120" dir="1" index="1" bw="32" slack="2"/>
+</pin_list>
+<bind>
+<opset="p_mul_stencil_update_1 "/>
+</bind>
+</comp>
+
+<comp id="124" class="1005" name="p_mul_stencil_stream_s_reg_124">
+<pin_list>
+<pin id="125" dir="0" index="0" bw="128" slack="4"/>
+<pin id="126" dir="1" index="1" bw="128" slack="4"/>
+</pin_list>
+<bind>
+<opset="p_mul_stencil_stream_s "/>
+</bind>
+</comp>
+
+<comp id="130" class="1005" name="p_p2_mul1_stencil_str_reg_130">
+<pin_list>
+<pin id="131" dir="0" index="0" bw="32" slack="6"/>
+<pin id="132" dir="1" index="1" bw="32" slack="6"/>
+</pin_list>
+<bind>
+<opset="p_p2_mul1_stencil_str "/>
+</bind>
+</comp>
+
+</comp_list>
+
+<net_list>
+<net id="63"><net_src comp="8" pin="0"/><net_sink comp="60" pin=0"/></net>
+
+<net id="67"><net_src comp="8" pin="0"/><net_sink comp="64" pin=0"/></net>
+
+<net id="71"><net_src comp="8" pin="0"/><net_sink comp="68" pin=0"/></net>
+
+<net id="75"><net_src comp="8" pin="0"/><net_sink comp="72" pin=0"/></net>
+
+<net id="81"><net_src comp="16" pin="0"/><net_sink comp="76" pin=0"/></net>
+
+<net id="88"><net_src comp="18" pin="0"/><net_sink comp="82" pin=0"/></net>
+
+<net id="89"><net_src comp="4" pin="0"/><net_sink comp="82" pin=2"/></net>
+
+<net id="90"><net_src comp="6" pin="0"/><net_sink comp="82" pin=3"/></net>
+
+<net id="97"><net_src comp="10" pin="0"/><net_sink comp="91" pin=0"/></net>
+
+<net id="98"><net_src comp="0" pin="0"/><net_sink comp="91" pin=1"/></net>
+
+<net id="99"><net_src comp="2" pin="0"/><net_sink comp="91" pin=2"/></net>
+
+<net id="105"><net_src comp="12" pin="0"/><net_sink comp="100" pin=0"/></net>
+
+<net id="111"><net_src comp="14" pin="0"/><net_sink comp="106" pin=0"/></net>
+
+<net id="115"><net_src comp="60" pin="1"/><net_sink comp="112" pin=0"/></net>
+
+<net id="116"><net_src comp="112" pin="1"/><net_sink comp="91" pin=3"/></net>
+
+<net id="117"><net_src comp="112" pin="1"/><net_sink comp="100" pin=1"/></net>
+
+<net id="121"><net_src comp="64" pin="1"/><net_sink comp="118" pin=0"/></net>
+
+<net id="122"><net_src comp="118" pin="1"/><net_sink comp="100" pin=2"/></net>
+
+<net id="123"><net_src comp="118" pin="1"/><net_sink comp="106" pin=1"/></net>
+
+<net id="127"><net_src comp="68" pin="1"/><net_sink comp="124" pin=0"/></net>
+
+<net id="128"><net_src comp="124" pin="1"/><net_sink comp="106" pin=2"/></net>
+
+<net id="129"><net_src comp="124" pin="1"/><net_sink comp="76" pin=1"/></net>
+
+<net id="133"><net_src comp="72" pin="1"/><net_sink comp="130" pin=0"/></net>
+
+<net id="134"><net_src comp="130" pin="1"/><net_sink comp="76" pin=2"/></net>
+
+<net id="135"><net_src comp="130" pin="1"/><net_sink comp="82" pin=1"/></net>
+
+</net_list>
+
+</model> 
+---------------- Datapath Model END ------------------
+
+* FSMD analyzer results:
+  - Output states:
+	Port: hw_output_V_value_V | {9 10 }
+	Port: hw_output_V_last_V | {9 10 }
+ - Input state : 
+	Port: hls_target : hw_input_V_value_V | {1 2 }
+	Port: hls_target : hw_input_V_last_V | {1 2 }
+  - Chain level:
+	State 1
+		StgValue_15 : 1
+	State 2
+	State 3
+	State 4
+	State 5
+	State 6
+	State 7
+	State 8
+	State 9
+	State 10
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+
+* Functional unit list:
+|----------|-------------------------|---------|---------|---------|---------|---------|
+| Operation|     Functional Unit     |   BRAM  |  DSP48E |  Delay  |    FF   |   LUT   |
+|----------|-------------------------|---------|---------|---------|---------|---------|
+|          |  grp_Loop_2_proc_fu_76  |    0    |    44   |    0    |   7621  |   7236  |
+|          |  grp_Loop_3_proc_fu_82  |    0    |    11   |  1.588  |   1818  |   1838  |
+|   call   |  grp_linebuffer_1_fu_91 |    8    |    0    |  4.764  |   1502  |   462   |
+|          |  grp_Loop_1_proc_fu_100 |    0    |    0    |    0    |   755   |   305   |
+|          | grp_linebuffer_2_fu_106 |    4    |    0    |  1.588  |   513   |   109   |
+|----------|-------------------------|---------|---------|---------|---------|---------|
+|   Total  |                         |    12   |    55   |   7.94  |  12209  |   9950  |
+|----------|-------------------------|---------|---------|---------|---------|---------|
+
+Memories:
+N/A
+
+* Register list:
++------------------------------+--------+
+|                              |   FF   |
++------------------------------+--------+
+| p_hw_input_stencil_st_reg_112|   288  |
+|p_mul_stencil_stream_s_reg_124|   128  |
+|p_mul_stencil_update_1_reg_118|   32   |
+| p_p2_mul1_stencil_str_reg_130|   32   |
++------------------------------+--------+
+|             Total            |   480  |
++------------------------------+--------+
+
+* Multiplexer (MUX) list: 
+|--------|------|------|------|--------|
+|  Comp  |  Pin | Size |  BW  | S x BW |
+|--------|------|------|------|--------|
+|  Total |      |      |      |    0   |
+|--------|------|------|------|--------|
+
+
+
+* Summary:
++-----------+--------+--------+--------+--------+--------+
+|           |  BRAM  | DSP48E |  Delay |   FF   |   LUT  |
++-----------+--------+--------+--------+--------+--------+
+|  Function |   12   |   55   |    7   |  12209 |  9950  |
+|   Memory  |    -   |    -   |    -   |    -   |    -   |
+|Multiplexer|    -   |    -   |    -   |    -   |    -   |
+|  Register |    -   |    -   |    -   |   480  |    -   |
++-----------+--------+--------+--------+--------+--------+
+|   Total   |   12   |   55   |    7   |  12689 |  9950  |
++-----------+--------+--------+--------+--------+--------+

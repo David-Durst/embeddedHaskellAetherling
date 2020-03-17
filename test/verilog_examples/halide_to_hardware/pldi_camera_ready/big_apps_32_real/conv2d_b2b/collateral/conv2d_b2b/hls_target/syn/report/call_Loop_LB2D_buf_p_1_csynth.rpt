@@ -1,0 +1,183 @@
+
+
+================================================================
+== Vivado HLS Report for 'call_Loop_LB2D_buf_p_1'
+================================================================
+* Date:           Mon Mar 16 18:02:58 2020
+
+* Version:        2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)
+* Project:        conv2d_b2b
+* Solution:       hls_target
+* Product family: zynq
+* Target device:  xc7z020clg484-1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.60|      5.01|        0.70|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +---------+---------+---------+---------+---------+
+    |      Latency      |      Interval     | Pipeline|
+    |   min   |   max   |   min   |   max   |   Type  |
+    +---------+---------+---------+---------+---------+
+    |  2071917|  2071917|  2071917|  2071917|   none  |
+    +---------+---------+---------+---------+---------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        +---------------+---------+---------+----------+-----------+-----------+------+----------+
+        |               |      Latency      | Iteration|  Initiation Interval  | Trip |          |
+        |   Loop Name   |   min   |   max   |  Latency |  achieved |   target  | Count| Pipelined|
+        +---------------+---------+---------+----------+-----------+-----------+------+----------+
+        |- LB2D_buf     |  2071916|  2071916|      1922|          -|          -|  1078|    no    |
+        | + LB2D_buf.1  |     1919|     1919|         3|          1|          1|  1918|    yes   |
+        +---------------+---------+---------+----------+-----------+-----------+------+----------+
+
+
+
+================================================================
+== Utilization Estimates
+================================================================
+* Summary: 
++-----------------+---------+-------+--------+-------+
+|       Name      | BRAM_18K| DSP48E|   FF   |  LUT  |
++-----------------+---------+-------+--------+-------+
+|DSP              |        -|      -|       -|      -|
+|Expression       |        -|      -|      76|     70|
+|FIFO             |        -|      -|       -|      -|
+|Instance         |        -|      -|       -|      -|
+|Memory           |        4|      -|       0|      0|
+|Multiplexer      |        -|      -|       -|     99|
+|Register         |        -|      -|     133|      -|
++-----------------+---------+-------+--------+-------+
+|Total            |        4|      0|     209|    169|
++-----------------+---------+-------+--------+-------+
+|Available        |      280|    220|  106400|  53200|
++-----------------+---------+-------+--------+-------+
+|Utilization (%)  |        1|      0|   ~0   |   ~0  |
++-----------------+---------+-------+--------+-------+
+
++ Detail: 
+    * Instance: 
+    N/A
+
+    * DSP48: 
+    N/A
+
+    * Memory: 
+    +--------------------+----------------------+---------+---+----+------+-----+------+-------------+
+    |       Memory       |        Module        | BRAM_18K| FF| LUT| Words| Bits| Banks| W*Bits*Banks|
+    +--------------------+----------------------+---------+---+----+------+-----+------+-------------+
+    |buffer_0_value_V_U  |call_Loop_LB2D_bufYi  |        4|  0|   0|  1918|   32|     1|        61376|
+    +--------------------+----------------------+---------+---+----+------+-----+------+-------------+
+    |Total               |                      |        4|  0|   0|  1918|   32|     1|        61376|
+    +--------------------+----------------------+---------+---+----+------+-----+------+-------------+
+
+    * FIFO: 
+    N/A
+
+    * Expression: 
+    +-----------------------------------+----------+-------+----+----+------------+------------+
+    |           Variable Name           | Operation| DSP48E| FF | LUT| Bitwidth P0| Bitwidth P1|
+    +-----------------------------------+----------+-------+----+----+------------+------------+
+    |col_1_fu_144_p2                    |     +    |      0|  38|  16|          11|           1|
+    |row_1_fu_126_p2                    |     +    |      0|  38|  16|          11|           1|
+    |ap_block_state5_pp0_stage0_iter2   |    and   |      0|   0|   2|           1|           1|
+    |ap_enable_state3_pp0_iter0_stage0  |    and   |      0|   0|   2|           1|           1|
+    |ap_enable_state4_pp0_iter1_stage0  |    and   |      0|   0|   2|           1|           1|
+    |ap_enable_state5_pp0_iter2_stage0  |    and   |      0|   0|   2|           1|           1|
+    |ap_predicate_op30_load_state3      |    and   |      0|   0|   2|           1|           1|
+    |start_write                        |    and   |      0|   0|   2|           1|           1|
+    |tmp_1_fu_138_p2                    |   icmp   |      0|   0|   6|          11|           9|
+    |tmp_fu_120_p2                      |   icmp   |      0|   0|   6|          11|          11|
+    |tmp_s_fu_132_p2                    |   icmp   |      0|   0|   6|          11|           1|
+    |ap_block_pp0_stage0_flag00001001   |    or    |      0|   0|   2|           1|           1|
+    |ap_block_state1                    |    or    |      0|   0|   2|           1|           1|
+    |ap_enable_pp0                      |    xor   |      0|   0|   2|           1|           2|
+    |ap_enable_reg_pp0_iter1            |    xor   |      0|   0|   2|           1|           2|
+    +-----------------------------------+----------+-------+----+----+------------+------------+
+    |Total                              |          |      0|  76|  70|          65|          35|
+    +-----------------------------------+----------+-------+----+----+------------+------------+
+
+    * Multiplexer: 
+    +------------------------------+----+-----------+-----+-----------+
+    |             Name             | LUT| Input Size| Bits| Total Bits|
+    +------------------------------+----+-----------+-----+-----------+
+    |ap_NS_fsm                     |  27|          5|    1|          5|
+    |ap_done                       |   9|          2|    1|          2|
+    |ap_enable_reg_pp0_iter1       |   9|          2|    1|          2|
+    |ap_enable_reg_pp0_iter2       |   9|          2|    1|          2|
+    |col_reg_109                   |   9|          2|   11|         22|
+    |in_stream_V_value_V_blk_n     |   9|          2|    1|          2|
+    |real_start                    |   9|          2|    1|          2|
+    |row_reg_98                    |   9|          2|   11|         22|
+    |slice_stream_V_value_V_blk_n  |   9|          2|    1|          2|
+    +------------------------------+----+-----------+-----+-----------+
+    |Total                         |  99|         21|   29|         61|
+    +------------------------------+----+-----------+-----+-----------+
+
+    * Register: 
+    +-----------------------------------+----+----+-----+-----------+
+    |                Name               | FF | LUT| Bits| Const Bits|
+    +-----------------------------------+----+----+-----+-----------+
+    |ap_CS_fsm                          |   4|   0|    4|          0|
+    |ap_done_reg                        |   1|   0|    1|          0|
+    |ap_enable_reg_pp0_iter0            |   1|   0|    1|          0|
+    |ap_enable_reg_pp0_iter1            |   1|   0|    1|          0|
+    |ap_enable_reg_pp0_iter2            |   1|   0|    1|          0|
+    |ap_reg_pp0_iter1_col_cast_reg_184  |  11|   0|   64|         53|
+    |ap_reg_pp0_iter1_tmp_1_reg_175     |   1|   0|    1|          0|
+    |col_cast_reg_184                   |  11|   0|   64|         53|
+    |col_reg_109                        |  11|   0|   11|          0|
+    |p_Val2_s_reg_200                   |  32|   0|   32|          0|
+    |real_start_status_reg              |   1|   0|    1|          0|
+    |row_1_reg_166                      |  11|   0|   11|          0|
+    |row_reg_98                         |  11|   0|   11|          0|
+    |start_control_reg                  |   1|   0|    1|          0|
+    |start_once_reg                     |   1|   0|    1|          0|
+    |tmp_1_reg_175                      |   1|   0|    1|          0|
+    |tmp_s_reg_171                      |   1|   0|    1|          0|
+    |tmp_value_V_3_reg_194              |  32|   0|   32|          0|
+    +-----------------------------------+----+----+-----+-----------+
+    |Total                              | 133|   0|  239|        106|
+    +-----------------------------------+----+----+-----+-----------+
+
+
+
+================================================================
+== Interface
+================================================================
+* Summary: 
++-------------------------------+-----+-----+------------+------------------------+--------------+
+|           RTL Ports           | Dir | Bits|  Protocol  |      Source Object     |    C Type    |
++-------------------------------+-----+-----+------------+------------------------+--------------+
+|ap_clk                         |  in |    1| ap_ctrl_hs | call_Loop_LB2D_buf_p.1 | return value |
+|ap_rst                         |  in |    1| ap_ctrl_hs | call_Loop_LB2D_buf_p.1 | return value |
+|ap_start                       |  in |    1| ap_ctrl_hs | call_Loop_LB2D_buf_p.1 | return value |
+|start_full_n                   |  in |    1| ap_ctrl_hs | call_Loop_LB2D_buf_p.1 | return value |
+|ap_ready                       | out |    1| ap_ctrl_hs | call_Loop_LB2D_buf_p.1 | return value |
+|ap_done                        | out |    1| ap_ctrl_hs | call_Loop_LB2D_buf_p.1 | return value |
+|ap_continue                    |  in |    1| ap_ctrl_hs | call_Loop_LB2D_buf_p.1 | return value |
+|ap_idle                        | out |    1| ap_ctrl_hs | call_Loop_LB2D_buf_p.1 | return value |
+|start_out                      | out |    1| ap_ctrl_hs | call_Loop_LB2D_buf_p.1 | return value |
+|start_write                    | out |    1| ap_ctrl_hs | call_Loop_LB2D_buf_p.1 | return value |
+|in_stream_V_value_V_dout       |  in |   32|   ap_fifo  |   in_stream_V_value_V  |    pointer   |
+|in_stream_V_value_V_empty_n    |  in |    1|   ap_fifo  |   in_stream_V_value_V  |    pointer   |
+|in_stream_V_value_V_read       | out |    1|   ap_fifo  |   in_stream_V_value_V  |    pointer   |
+|slice_stream_V_value_V_din     | out |   64|   ap_fifo  | slice_stream_V_value_V |    pointer   |
+|slice_stream_V_value_V_full_n  |  in |    1|   ap_fifo  | slice_stream_V_value_V |    pointer   |
+|slice_stream_V_value_V_write   | out |    1|   ap_fifo  | slice_stream_V_value_V |    pointer   |
++-------------------------------+-----+-----+------------+------------------------+--------------+
+

@@ -1,0 +1,296 @@
+
+
+================================================================
+== Vivado HLS Report for 'Loop_1_proc'
+================================================================
+* Date:           Mon Mar 16 18:02:55 2020
+
+* Version:        2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)
+* Project:        conv2d_b2b
+* Solution:       hls_target
+* Product family: zynq
+* Target device:  xc7z020clg484-1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.60|      4.37|        0.70|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +---------+---------+---------+---------+---------+
+    |      Latency      |      Interval     | Pipeline|
+    |   min   |   max   |   min   |   max   |   Type  |
+    +---------+---------+---------+---------+---------+
+    |  2067610|  2067610|  2067610|  2067610|   none  |
+    +---------+---------+---------+---------+---------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        +----------+---------+---------+----------+-----------+-----------+---------+----------+
+        |          |      Latency      | Iteration|  Initiation Interval  |   Trip  |          |
+        | Loop Name|   min   |   max   |  Latency |  achieved |   target  |  Count  | Pipelined|
+        +----------+---------+---------+----------+-----------+-----------+---------+----------+
+        |- Loop 1  |  2067608|  2067608|         6|          1|          1|  2067604|    yes   |
+        +----------+---------+---------+----------+-----------+-----------+---------+----------+
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 2
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 0
+HasVarLatency: 1
+IsPipeline: 0
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 1, depth = 6
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states: 8
+* Pipeline: 1
+  Pipeline-0: II = 1, D = 6, States = { 2 3 4 5 6 7 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 
+	2  / true
+2 --> 
+	8  / (exitcond_flatten)
+	3  / (!exitcond_flatten)
+3 --> 
+	4  / true
+4 --> 
+	5  / true
+5 --> 
+	6  / true
+6 --> 
+	7  / true
+7 --> 
+	2  / true
+8 --> 
+* FSM state operations: 
+
+ <State 1>: 1.59ns
+ST_1: StgValue_9 (3)  [1/1] 0.00ns
+newFuncRoot:0  call void (...)* @_ssdm_op_SpecMemCore(i32* %p_mul_stencil_update_stream_V_value_V, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_1: StgValue_10 (4)  [1/1] 0.00ns
+newFuncRoot:1  call void (...)* @_ssdm_op_SpecMemCore(i288* %p_hw_input_stencil_stream_V_value_V, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_1: StgValue_11 (5)  [1/1] 0.00ns
+newFuncRoot:2  call void (...)* @_ssdm_op_SpecInterface(i32* %p_mul_stencil_update_stream_V_value_V, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_1: StgValue_12 (6)  [1/1] 0.00ns
+newFuncRoot:3  call void (...)* @_ssdm_op_SpecInterface(i288* %p_hw_input_stencil_stream_V_value_V, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_1: StgValue_13 (7)  [1/1] 1.59ns  loc: hls_target.cpp:64
+newFuncRoot:4  br label %.preheader39
+
+
+ <State 2>: 3.15ns
+ST_2: indvar_flatten (9)  [1/1] 0.00ns
+.preheader39:0  %indvar_flatten = phi i21 [ 0, %newFuncRoot ], [ %indvar_flatten_next, %.preheader39.preheader ]
+
+ST_2: exitcond_flatten (10)  [1/1] 3.15ns
+.preheader39:1  %exitcond_flatten = icmp eq i21 %indvar_flatten, -29548
+
+ST_2: indvar_flatten_next (11)  [1/1] 2.59ns
+.preheader39:2  %indvar_flatten_next = add i21 %indvar_flatten, 1
+
+ST_2: StgValue_17 (12)  [1/1] 0.00ns
+.preheader39:3  br i1 %exitcond_flatten, label %.exitStub, label %.preheader39.preheader
+
+
+ <State 3>: 2.45ns
+ST_3: tmp_value_V (17)  [1/1] 2.45ns  loc: hls_target.cpp:72
+.preheader39.preheader:3  %tmp_value_V = call i288 @_ssdm_op_Read.ap_fifo.volatile.i288P(i288* %p_hw_input_stencil_stream_V_value_V)
+
+ST_3: p_327 (18)  [1/1] 0.00ns  loc: ../../../lib_files/Stencil.h:122->hls_target.cpp:72
+.preheader39.preheader:4  %p_327 = trunc i288 %tmp_value_V to i32
+
+ST_3: p_339 (19)  [1/1] 0.00ns  loc: ../../../lib_files/Stencil.h:122->hls_target.cpp:72
+.preheader39.preheader:5  %p_339 = call i32 @_ssdm_op_PartSelect.i32.i288.i32.i32(i288 %tmp_value_V, i32 64, i32 95)
+
+ST_3: p_363 (20)  [1/1] 0.00ns  loc: ../../../lib_files/Stencil.h:122->hls_target.cpp:72
+.preheader39.preheader:6  %p_363 = call i32 @_ssdm_op_PartSelect.i32.i288.i32.i32(i288 %tmp_value_V, i32 192, i32 223)
+
+ST_3: p_375 (21)  [1/1] 0.00ns  loc: ../../../lib_files/Stencil.h:122->hls_target.cpp:72
+.preheader39.preheader:7  %p_375 = call i32 @_ssdm_op_PartSelect.i32.i288.i32.i32(i288 %tmp_value_V, i32 256, i32 287)
+
+ST_3: tmp_s (22)  [1/1] 0.00ns  loc: hls_target.cpp:72
+.preheader39.preheader:8  %tmp_s = call i31 @_ssdm_op_PartSelect.i31.i288.i32.i32(i288 %tmp_value_V, i32 32, i32 62)
+
+ST_3: tmp_11 (24)  [1/1] 0.00ns  loc: hls_target.cpp:72
+.preheader39.preheader:10  %tmp_11 = call i31 @_ssdm_op_PartSelect.i31.i288.i32.i32(i288 %tmp_value_V, i32 96, i32 126)
+
+ST_3: tmp_12 (26)  [1/1] 0.00ns  loc: hls_target.cpp:72
+.preheader39.preheader:12  %tmp_12 = call i30 @_ssdm_op_PartSelect.i30.i288.i32.i32(i288 %tmp_value_V, i32 128, i32 157)
+
+ST_3: tmp_13 (28)  [1/1] 0.00ns  loc: hls_target.cpp:72
+.preheader39.preheader:14  %tmp_13 = call i31 @_ssdm_op_PartSelect.i31.i288.i32.i32(i288 %tmp_value_V, i32 160, i32 190)
+
+ST_3: tmp_14 (30)  [1/1] 0.00ns  loc: hls_target.cpp:72
+.preheader39.preheader:16  %tmp_14 = call i31 @_ssdm_op_PartSelect.i31.i288.i32.i32(i288 %tmp_value_V, i32 224, i32 254)
+
+
+ <State 4>: 4.37ns
+ST_4: p_336 (23)  [1/1] 0.00ns  loc: hls_target.cpp:89
+.preheader39.preheader:9  %p_336 = call i32 @_ssdm_op_BitConcatenate.i32.i31.i1(i31 %tmp_s, i1 false)
+
+ST_4: p_354 (27)  [1/1] 0.00ns  loc: hls_target.cpp:110
+.preheader39.preheader:13  %p_354 = call i32 @_ssdm_op_BitConcatenate.i32.i30.i2(i30 %tmp_12, i2 0)
+
+ST_4: p_360 (29)  [1/1] 0.00ns  loc: hls_target.cpp:117
+.preheader39.preheader:15  %p_360 = call i32 @_ssdm_op_BitConcatenate.i32.i31.i1(i31 %tmp_13, i1 false)
+
+ST_4: p_372 (31)  [1/1] 0.00ns  loc: hls_target.cpp:131
+.preheader39.preheader:17  %p_372 = call i32 @_ssdm_op_BitConcatenate.i32.i31.i1(i31 %tmp_14, i1 false)
+
+ST_4: tmp2 (32)  [1/1] 2.90ns  loc: hls_target.cpp:139
+.preheader39.preheader:18  %tmp2 = add i32 %p_327, %p_336
+
+ST_4: tmp5 (35)  [1/1] 2.90ns  loc: hls_target.cpp:139
+.preheader39.preheader:21  %tmp5 = add i32 %p_360, %p_354
+
+ST_4: tmp7 (36)  [1/1] 2.19ns  loc: hls_target.cpp:139
+.preheader39.preheader:22  %tmp7 = add i32 %p_375, %p_372
+
+ST_4: tmp6 (37)  [1/1] 2.19ns  loc: hls_target.cpp:139
+.preheader39.preheader:23  %tmp6 = add i32 %p_363, %tmp7
+
+
+ <State 5>: 4.37ns
+ST_5: p_348 (25)  [1/1] 0.00ns  loc: hls_target.cpp:103
+.preheader39.preheader:11  %p_348 = call i32 @_ssdm_op_BitConcatenate.i32.i31.i1(i31 %tmp_11, i1 false)
+
+ST_5: tmp3 (33)  [1/1] 2.19ns  loc: hls_target.cpp:139
+.preheader39.preheader:19  %tmp3 = add i32 %p_348, %p_339
+
+ST_5: tmp1 (34)  [1/1] 2.19ns  loc: hls_target.cpp:139
+.preheader39.preheader:20  %tmp1 = add i32 %tmp2, %tmp3
+
+
+ <State 6>: 4.37ns
+ST_6: tmp4 (38)  [1/1] 2.19ns  loc: hls_target.cpp:139
+.preheader39.preheader:24  %tmp4 = add i32 %tmp5, %tmp6
+
+ST_6: p_379 (39)  [1/1] 2.19ns  loc: hls_target.cpp:139
+.preheader39.preheader:25  %p_379 = add nsw i32 %tmp1, %tmp4
+
+
+ <State 7>: 2.45ns
+ST_7: empty (14)  [1/1] 0.00ns
+.preheader39.preheader:0  %empty = call i32 (...)* @_ssdm_op_SpecLoopTripCount(i64 2067604, i64 2067604, i64 2067604)
+
+ST_7: tmp (15)  [1/1] 0.00ns  loc: hls_target.cpp:67
+.preheader39.preheader:1  %tmp = call i32 (...)* @_ssdm_op_SpecRegionBegin([12 x i8]* @p_str3)
+
+ST_7: StgValue_43 (16)  [1/1] 0.00ns  loc: hls_target.cpp:68
+.preheader39.preheader:2  call void (...)* @_ssdm_op_SpecPipeline(i32 1, i32 1, i32 1, i32 0, [1 x i8]* @p_str) nounwind
+
+ST_7: StgValue_44 (40)  [1/1] 2.45ns  loc: hls_target.cpp:141
+.preheader39.preheader:26  call void @_ssdm_op_Write.ap_fifo.volatile.i32P(i32* %p_mul_stencil_update_stream_V_value_V, i32 %p_379)
+
+ST_7: empty_125 (41)  [1/1] 0.00ns  loc: hls_target.cpp:143
+.preheader39.preheader:27  %empty_125 = call i32 (...)* @_ssdm_op_SpecRegionEnd([12 x i8]* @p_str3, i32 %tmp)
+
+ST_7: StgValue_46 (42)  [1/1] 0.00ns  loc: hls_target.cpp:66
+.preheader39.preheader:28  br label %.preheader39
+
+
+ <State 8>: 0.00ns
+ST_8: StgValue_47 (44)  [1/1] 0.00ns
+.exitStub:0  ret void
+
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 5.6ns, clock uncertainty: 0.7ns.
+
+ <State 1>: 1.59ns
+The critical path consists of the following:
+	multiplexor before 'phi' operation ('indvar_flatten') with incoming values : ('indvar_flatten_next') [9]  (1.59 ns)
+
+ <State 2>: 3.15ns
+The critical path consists of the following:
+	'phi' operation ('indvar_flatten') with incoming values : ('indvar_flatten_next') [9]  (0 ns)
+	'icmp' operation ('exitcond_flatten') [10]  (3.15 ns)
+
+ <State 3>: 2.45ns
+The critical path consists of the following:
+	fifo read on port 'p_hw_input_stencil_stream_V_value_V' (hls_target.cpp:72) [17]  (2.45 ns)
+
+ <State 4>: 4.37ns
+The critical path consists of the following:
+	'add' operation ('tmp7', hls_target.cpp:139) [36]  (2.19 ns)
+	'add' operation ('tmp6', hls_target.cpp:139) [37]  (2.19 ns)
+
+ <State 5>: 4.37ns
+The critical path consists of the following:
+	'add' operation ('tmp3', hls_target.cpp:139) [33]  (2.19 ns)
+	'add' operation ('tmp1', hls_target.cpp:139) [34]  (2.19 ns)
+
+ <State 6>: 4.37ns
+The critical path consists of the following:
+	'add' operation ('tmp4', hls_target.cpp:139) [38]  (2.19 ns)
+	'add' operation ('_379', hls_target.cpp:139) [39]  (2.19 ns)
+
+ <State 7>: 2.45ns
+The critical path consists of the following:
+	fifo write on port 'p_mul_stencil_update_stream_V_value_V' (hls_target.cpp:141) [40]  (2.45 ns)
+
+ <State 8>: 0ns
+The critical path consists of the following:
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+	State 3
+	State 4
+	State 5
+	State 6
+	State 7
+	State 8
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A

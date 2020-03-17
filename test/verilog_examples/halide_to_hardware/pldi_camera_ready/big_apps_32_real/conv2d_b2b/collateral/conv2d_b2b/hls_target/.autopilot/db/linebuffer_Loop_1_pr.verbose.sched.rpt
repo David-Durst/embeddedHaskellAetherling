@@ -1,0 +1,188 @@
+
+
+================================================================
+== Vivado HLS Report for 'linebuffer_Loop_1_pr'
+================================================================
+* Date:           Mon Mar 16 18:02:54 2020
+
+* Version:        2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)
+* Project:        conv2d_b2b
+* Solution:       hls_target
+* Product family: zynq
+* Target device:  xc7z020clg484-1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.60|      3.15|        0.70|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +---------+---------+---------+---------+---------+
+    |      Latency      |      Interval     | Pipeline|
+    |   min   |   max   |   min   |   max   |   Type  |
+    +---------+---------+---------+---------+---------+
+    |  2073602|  2073602|  2073602|  2073602|   none  |
+    +---------+---------+---------+---------+---------+
+
+    + Detail: 
+        * Instance: 
+        N/A
+
+        * Loop: 
+        +----------+---------+---------+----------+-----------+-----------+---------+----------+
+        |          |      Latency      | Iteration|  Initiation Interval  |   Trip  |          |
+        | Loop Name|   min   |   max   |  Latency |  achieved |   target  |  Count  | Pipelined|
+        +----------+---------+---------+----------+-----------+-----------+---------+----------+
+        |- Loop 1  |  2073600|  2073600|         2|          1|          1|  2073600|    yes   |
+        +----------+---------+---------+----------+-----------+-----------+---------+----------+
+
+============================================================
++ Verbose Summary: Synthesis Manager
+============================================================
+InlineROM: 1
+ExposeGlobal: 0
+============================================================
++ Verbose Summary: CDFG Model
+============================================================
+IsTopModel: 0
+ResetActiveHigh: 1
+IsCombinational: 2
+IsDatapathOnly: 0
+HasWiredReturn: 1
+HasMFsm: 0
+HasVarLatency: 1
+IsPipeline: 0
+IsRtlPipelined: 0
+IsInstanceOverlapped: 0
+IsDontTouch: 0
+HasImplIP: 0
+IsGatedGlobalClock: 0
+
++ Individual pipeline summary: 
+  * Pipeline-0: initiation interval (II) = 1, depth = 2
+
+
+============================================================
++ Verbose Summary: Schedule
+============================================================
+* Number of FSM states: 4
+* Pipeline: 1
+  Pipeline-0: II = 1, D = 2, States = { 2 3 }
+* Dataflow Pipeline: 0
+
+* FSM state transitions: 
+1 --> 
+	2  / true
+2 --> 
+	4  / (exitcond_flatten)
+	3  / (!exitcond_flatten)
+3 --> 
+	2  / true
+4 --> 
+* FSM state operations: 
+
+ <State 1>: 1.59ns
+ST_1: StgValue_5 (4)  [1/1] 0.00ns
+newFuncRoot:0  call void (...)* @_ssdm_op_SpecMemCore(i32* %in_stream_V_value_V, [1 x i8]* @p_str, [9 x i8]* @p_str2, [1 x i8]* @p_str, i32 -1, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_1: StgValue_6 (5)  [1/1] 0.00ns
+newFuncRoot:1  call void (...)* @_ssdm_op_SpecInterface(i32* %in_stream_V_value_V, [8 x i8]* @ap_fifo_str, i32 0, i32 0, [1 x i8]* @p_str, i32 0, i32 0, [1 x i8]* @p_str, [1 x i8]* @p_str, [1 x i8]* @p_str, i32 2, i32 2, i32 16, i32 16, [1 x i8]* @p_str, [1 x i8]* @p_str)
+
+ST_1: StgValue_7 (6)  [1/1] 1.59ns
+newFuncRoot:2  br label %.preheader.i
+
+
+ <State 2>: 3.15ns
+ST_2: indvar_flatten (8)  [1/1] 0.00ns
+.preheader.i:0  %indvar_flatten = phi i21 [ 0, %newFuncRoot ], [ %indvar_flatten_next, %.preheader4.i ]
+
+ST_2: exitcond_flatten (9)  [1/1] 3.15ns
+.preheader.i:1  %exitcond_flatten = icmp eq i21 %indvar_flatten, -23552
+
+ST_2: indvar_flatten_next (10)  [1/1] 2.59ns
+.preheader.i:2  %indvar_flatten_next = add i21 %indvar_flatten, 1
+
+ST_2: StgValue_11 (11)  [1/1] 0.00ns
+.preheader.i:3  br i1 %exitcond_flatten, label %.critedge.exitStub, label %.preheader4.i
+
+ST_2: empty_20 (16)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:554
+.preheader4.i:3  %empty_20 = call { i32, i1 } @_ssdm_op_Read.ap_auto.volatile.i32P.i1P(i32* %in_axi_stream_V_value_V, i1* %in_axi_stream_V_last_V)
+
+ST_2: tmp_value_V (17)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:554
+.preheader4.i:4  %tmp_value_V = extractvalue { i32, i1 } %empty_20, 0
+
+
+ <State 3>: 2.45ns
+ST_3: empty (13)  [1/1] 0.00ns
+.preheader4.i:0  %empty = call i32 (...)* @_ssdm_op_SpecLoopTripCount(i64 2073600, i64 2073600, i64 2073600)
+
+ST_3: tmp (14)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:554
+.preheader4.i:1  %tmp = call i32 (...)* @_ssdm_op_SpecRegionBegin([12 x i8]* @p_str35)
+
+ST_3: StgValue_16 (15)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:553
+.preheader4.i:2  call void (...)* @_ssdm_op_SpecPipeline(i32 1, i32 1, i32 1, i32 0, [1 x i8]* @p_str) nounwind
+
+ST_3: StgValue_17 (18)  [1/1] 2.45ns  loc: ../../../lib_files/Linebuffer.h:554
+.preheader4.i:5  call void @_ssdm_op_Write.ap_fifo.volatile.i32P(i32* %in_stream_V_value_V, i32 %tmp_value_V)
+
+ST_3: empty_21 (19)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:554
+.preheader4.i:6  %empty_21 = call i32 (...)* @_ssdm_op_SpecRegionEnd([12 x i8]* @p_str35, i32 %tmp)
+
+ST_3: StgValue_19 (20)  [1/1] 0.00ns  loc: ../../../lib_files/Linebuffer.h:552
+.preheader4.i:7  br label %.preheader.i
+
+
+ <State 4>: 0.00ns
+ST_4: StgValue_20 (22)  [1/1] 0.00ns
+.critedge.exitStub:0  ret void
+
+
+
+============================================================
++ Verbose Summary: Timing violations
+============================================================
+Target clock period: 5.6ns, clock uncertainty: 0.7ns.
+
+ <State 1>: 1.59ns
+The critical path consists of the following:
+	multiplexor before 'phi' operation ('indvar_flatten') with incoming values : ('indvar_flatten_next') [8]  (1.59 ns)
+
+ <State 2>: 3.15ns
+The critical path consists of the following:
+	'phi' operation ('indvar_flatten') with incoming values : ('indvar_flatten_next') [8]  (0 ns)
+	'icmp' operation ('exitcond_flatten') [9]  (3.15 ns)
+
+ <State 3>: 2.45ns
+The critical path consists of the following:
+	fifo write on port 'in_stream_V_value_V' (../../../lib_files/Linebuffer.h:554) [18]  (2.45 ns)
+
+ <State 4>: 0ns
+The critical path consists of the following:
+
+
+============================================================
++ Verbose Summary: Binding
+============================================================
+N/A
+* FSMD analyzer results:
+  - Output states:
+ - Input state : 
+  - Chain level:
+	State 1
+	State 2
+	State 3
+	State 4
+
+
+============================================================
++ Verbose Summary: Datapath Resource usage 
+============================================================
+N/A
