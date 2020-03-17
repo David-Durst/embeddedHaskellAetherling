@@ -36,9 +36,9 @@ fi
 cp $CONSTRAINT_FILE $BUILDDIR
 cd $BUILDDIR
 echo "" > system.tcl
+echo "set IP ${IP_DIR}" >> system.tcl
+echo "source ${GENERATE_MULS_TCL}" >> system.tcl
 if [ -f "${VERILOG_MULS_BUILD_COPY}" ]; then
-    echo "set IP ${IP_DIR}" >> system.tcl
-    echo "source ${GENERATE_MULS_TCL}" >> system.tcl
     echo "read_verilog ${VERILOG_MULS_BUILD_COPY}" >> system.tcl
 fi
 echo "read_verilog $VERILOG_BUILD_COPY" >> system.tcl
