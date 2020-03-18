@@ -75,7 +75,8 @@ compute_max_idx' consumer_e@(Const_GenN constant constant_type _ cur_idx) = do
   return cur_idx
 compute_max_idx' consumer_e@(Counter_sN _ _ _ _ cur_idx) = return cur_idx
 compute_max_idx' consumer_e@(Counter_tN _ _ _ _ _ cur_idx) = return cur_idx
-compute_max_idx' consumer_e@(Counter_nestedN _ _ _ cur_idx) = return cur_idx
+compute_max_idx' consumer_e@(Counter_tsN _ _ _ _ _ _ cur_idx) = return cur_idx
+compute_max_idx' consumer_e@(Counter_tnN _ _ _ _ _ cur_idx) = return cur_idx
 
 -- sequence operators
 compute_max_idx' consumer_e@(Shift_sN n shift_amount elem_t producer_e cur_idx) = do

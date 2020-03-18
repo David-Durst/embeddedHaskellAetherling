@@ -69,7 +69,10 @@ check_type' consumer_e@(Lut_GenN _ _ producer_e _) =
 check_type' (Const_GenN _ t _ _) = return t
 check_type' (Counter_sN n _ int_type _ _) = return $ SSeqT n int_type
 check_type' (Counter_tN n i _ int_type _ _) = return $ TSeqT n i int_type
-check_type' (Counter_nestedN _ out_type _ _) = return out_type
+check_type' (Counter_tsN no io ni _ int_type _ _) =
+  return $ TSeqT no io (SSeqT ni int_type)
+check_type' (Counter_tnN ns is _ int_type _ _) =
+  return $ nested_tseq_gen ns is int_type
 
 -- sequence operators
 check_type' consumer_e@(Shift_sN _ _ _ producer_e _) =

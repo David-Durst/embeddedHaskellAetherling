@@ -198,10 +198,15 @@ print_inner consumer_e@(Counter_tN n i incr_amount int_type delay cur_idx) = do
   add_to_cur_module cur_ref_name $ "Counter_tN " ++ show n ++ " " ++ show i ++ " " ++
     show incr_amount ++ " " ++ show int_type ++ " " ++ show delay
   return cur_ref_name
-print_inner consumer_e@(Counter_nestedN incr_amount out_type delay cur_idx) = do
+print_inner consumer_e@(Counter_tsN no io ni incr_amount int_type delay cur_idx) = do
   let cur_ref_name = "n" ++ print_index cur_idx
-  add_to_cur_module cur_ref_name $ "Counter_tN " ++ show incr_amount ++ " " ++
-    show out_type ++ " " ++ show delay
+  add_to_cur_module cur_ref_name $ "Counter_tsN " ++ show no ++ " " ++ show io ++
+    " " ++ show ni ++ " " ++ show incr_amount ++ " " ++ show int_type ++ " " ++ show delay
+  return cur_ref_name
+print_inner consumer_e@(Counter_tnN ns is incr_amount int_type delay cur_idx) = do
+  let cur_ref_name = "n" ++ print_index cur_idx
+  add_to_cur_module cur_ref_name $ "Counter_tnN " ++ show ns ++ " " ++ show is ++
+    " " ++ show incr_amount ++ " " ++ show int_type ++ " " ++ show delay
   return cur_ref_name
 
 -- sequence operators

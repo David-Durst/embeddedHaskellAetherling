@@ -103,7 +103,10 @@ match_latencies' e@(Counter_sN _ _ _ delay _) = do
 match_latencies' e@(Counter_tN _ _ _ _ delay _) = do
   e_new_idx <- update_index e
   return $ Matched_Latency_Result e_new_idx delay
-match_latencies' e@(Counter_nestedN _ _ delay _) = do
+match_latencies' e@(Counter_tsN _ _ _ _ _ delay _) = do
+  e_new_idx <- update_index e
+  return $ Matched_Latency_Result e_new_idx delay
+match_latencies' e@(Counter_tnN _ _ _ _ delay _) = do
   e_new_idx <- update_index e
   return $ Matched_Latency_Result e_new_idx delay
 

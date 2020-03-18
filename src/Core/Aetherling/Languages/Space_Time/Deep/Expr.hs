@@ -48,9 +48,20 @@ data Expr =
       delay :: Int,
       index :: DAG_Index
       }
-  | Counter_nestedN {
+  | Counter_tsN {
+      no :: Int,
+      io :: Int,
+      ni :: Int,
       incr_amount :: Int,
-      out_type :: AST_Type,
+      int_type :: AST_Type,
+      delay :: Int,
+      index :: DAG_Index
+      }
+  | Counter_tnN {
+      ns :: [Int],
+      is :: [Int],
+      incr_amount :: Int,
+      int_type :: AST_Type,
       delay :: Int,
       index :: DAG_Index
       }
@@ -314,7 +325,8 @@ instance Indexible Expr where
 non_input_with_no_inputs (Const_GenN _ _ _ _) = True
 non_input_with_no_inputs (Counter_sN _ _ _ _ _) = True
 non_input_with_no_inputs (Counter_tN _ _ _ _ _ _) = True
-non_input_with_no_inputs (Counter_nestedN _ _ _ _) = True
+non_input_with_no_inputs (Counter_tsN _ _ _ _ _ _ _) = True
+non_input_with_no_inputs (Counter_tnN _ _ _ _ _ _) = True
 non_input_with_no_inputs _ = False
 
 has_two_inputs (Map2_sN _ _ _ _ _) = True

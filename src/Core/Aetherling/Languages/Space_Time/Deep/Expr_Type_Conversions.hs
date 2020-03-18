@@ -41,8 +41,10 @@ expr_to_types (Counter_sN n _ int_type _ _) =
   Expr_Types [] $ SSeqT n int_type
 expr_to_types (Counter_tN n i _ int_type _ _) =
   Expr_Types [] $ TSeqT n i int_type
-expr_to_types (Counter_nestedN _ out_type _ _) =
-  Expr_Types [] out_type
+expr_to_types (Counter_tsN no io ni _ out_type _ _) =
+  Expr_Types [] (TSeqT ni io (SSeqT ni out_type))
+expr_to_types (Counter_tnN ns is _ out_type _ _) =
+  Expr_Types [] (nested_tseq_gen ns is out_type)
 
 -- sequence operators
 expr_to_types (Shift_sN n _ elem_t _ _) = Expr_Types [seq_type] seq_type
@@ -55,10 +57,7 @@ expr_to_types (Shift_ttN no ni io ii _ elem_t _ _) = Expr_Types [seq_type] seq_t
   where seq_type = TSeqT no io (TSeqT ni ii elem_t)
 expr_to_types (Shift_tnN no nis io iis _ elem_t _ _) = Expr_Types [seq_type] seq_type
   where
-    inner_type [] [] = elem_t
-    inner_type (ni:ni_tl) (ii:ii_tl) = TSeqT ni ii (inner_type ni_tl ii_tl)
-    inner_type _ _ = error "shift_tn inner_type mismatched nis iis lengths"
-    seq_type = TSeqT no io (inner_type nis iis)
+    seq_type = TSeqT no io (nested_tseq_gen nis iis elem_t)
 expr_to_types (Up_1d_sN n elem_t _ _) = Expr_Types in_types out_type
   where
     in_types = [SSeqT 1 elem_t]
@@ -230,7 +229,10 @@ expr_to_outer_types' consumer_e@(Lut_GenN _ _ producer_e _) =
 expr_to_outer_types' (Const_GenN _ t _ _) = return t
 expr_to_outer_types' (Counter_sN n _ int_type _ _) = return $ SSeqT n int_type
 expr_to_outer_types' (Counter_tN n i _ int_type _ _) = return $ TSeqT n i int_type
-expr_to_outer_types' (Counter_nestedN int_type out_type _ _) = return out_type
+expr_to_outer_types' (Counter_tsN no io ni _ int_type _ _) =
+  return $ TSeqT no io (SSeqT ni int_type)
+expr_to_outer_types' (Counter_tnN ns is _ int_type _ _) =
+  return $ nested_tseq_gen ns is int_type
 
 -- sequence operators
 expr_to_outer_types' consumer_e@(Shift_sN _ _ _ producer_e _) =
@@ -333,3 +335,9 @@ invalid_clocks_from_nested no ni io ii = (no * ii) + (io * (ni + ii))
 
 total_clocks_from_nested :: Int -> Int -> Int -> Int -> Int
 total_clocks_from_nested no ni io ii = (no * (ni + ii)) + (io * (ni + ii))
+
+nested_tseq_gen :: [Int] -> [Int] -> AST_Type -> AST_Type
+nested_tseq_gen [] [] elem_t = elem_t
+nested_tseq_gen (ni:ni_tl) (ii:ii_tl) elem_t =
+  TSeqT ni ii (nested_tseq_gen ni_tl ii_tl elem_t)
+nested_tseq_gen _ _ _ = error "shift_tn inner_type mismatched nis iis lengths"

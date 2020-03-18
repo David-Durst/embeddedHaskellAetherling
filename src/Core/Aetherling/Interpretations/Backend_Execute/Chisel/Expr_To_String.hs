@@ -284,6 +284,84 @@ module_to_string_inner consumer_e@(IfN t producer_e cur_idx) = do
                 (Module_Port "O" t)
   print_unary_operator cur_ref producer_ref
   return cur_ref
+module_to_string_inner consumer_e@(Const_GenN constant t delay cur_idx) = do
+  -- the chisel const_gen is not a module. It's just a function that
+  -- adds some properties. Therefore, it doesn't get wrapped in a Module
+  -- with a new call
+  let cur_ref_name = "const" ++ print_index cur_idx
+  let const_values_str =
+        convert_seq_val_to_st_val_string (flatten_ast_value constant)
+        (TSeqT 1 0 t) chisel_hardware_conf
+  let gen_str = "Const(" ++ type_to_chisel t ++
+                ", " ++ st_values const_values_str ++
+                ", " ++ show delay ++ ", valid_up)"
+  let out_port_name = (cur_ref_name ++ "_O")
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [] (Module_Port out_port_name t)
+  add_to_cur_module $ "val (" ++ out_port_name ++ ", " ++
+    cur_ref_name ++ "_valid_down) = " ++ gen_call cur_ref
+  update_output $ Module_Port out_port_name t
+  -- no need for valid_up wiring as valid is passed to function call
+  return cur_ref
+module_to_string_inner consumer_e@(Counter_sN n incr_amount int_type delay cur_idx) = do
+  -- the chisel const_gen is not a module. It's just a function that
+  -- adds some properties. Therefore, it doesn't get wrapped in a Module
+  -- with a new call
+  let cur_ref_name = "const" ++ print_index cur_idx
+  let gen_str = "Counter_S(" ++ show n ++
+                ", " ++ show incr_amount ++
+                ", " ++ type_to_chisel int_type ++
+                ", " ++ show delay ++ ", valid_up)"
+  let cur_ref_valid_str = cur_ref_name ++ ".valid_up"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [] (Module_Port (cur_ref_name ++ ".O")
+                    (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
+  print_nullary_operator cur_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Counter_tN n i incr_amount int_type delay cur_idx) = do
+  -- the chisel const_gen is not a module. It's just a function that
+  -- adds some properties. Therefore, it doesn't get wrapped in a Module
+  -- with a new call
+  let cur_ref_name = "const" ++ print_index cur_idx
+  let gen_str = "Counter_T(" ++ show n ++ ", " ++ show i ++
+                ", " ++ show incr_amount ++
+                ", " ++ type_to_chisel int_type ++
+                ", " ++ show delay ++ ", valid_up)"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [] (Module_Port (cur_ref_name ++ ".O")
+                    (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
+  print_nullary_operator cur_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Counter_tsN no io ni incr_amount int_type delay cur_idx) = do
+  -- the chisel const_gen is not a module. It's just a function that
+  -- adds some properties. Therefore, it doesn't get wrapped in a Module
+  -- with a new call
+  let cur_ref_name = "const" ++ print_index cur_idx
+  let gen_str = "Counter_TS(" ++ show no ++ ", " ++ show io ++  ", " ++ show ni ++
+                ", " ++ show incr_amount ++
+                ", " ++ type_to_chisel int_type ++
+                ", " ++ show delay ++ ", valid_up)"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [] (Module_Port (cur_ref_name ++ ".O")
+                    (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
+  print_nullary_operator cur_ref
+  return cur_ref
+module_to_string_inner consumer_e@(Counter_tnN ns is incr_amount int_type delay cur_idx) = do
+  -- the chisel const_gen is not a module. It's just a function that
+  -- adds some properties. Therefore, it doesn't get wrapped in a Module
+  -- with a new call
+  let cur_ref_name = "const" ++ print_index cur_idx
+  let gen_str = "Counter_TS(" ++
+                array_to_chisel_array ns ++ ", " ++
+                array_to_chisel_array is ++  ", " ++
+                ", " ++ show incr_amount ++
+                ", " ++ type_to_chisel int_type ++
+                ", " ++ show delay ++ ", valid_up)"
+  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
+                [] (Module_Port (cur_ref_name ++ ".O")
+                    (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
+  print_nullary_operator cur_ref
+  return cur_ref
   
 -- generators
 module_to_string_inner consumer_e@(Shift_sN n shift_amount elem_t producer_e cur_idx) = do
@@ -318,40 +396,14 @@ module_to_string_inner consumer_e@(Shift_tsN no io ni shift_amount elem_t produc
 module_to_string_inner consumer_e@(Shift_tnN no nis io iis shift_amount elem_t producer_e cur_idx) = do
   producer_ref <- memo producer_e $ module_to_string_inner producer_e
   let cur_ref_name = "n" ++ print_index cur_idx
-  let replace_brackets x =
-        let
-          repl '[' = "Array("
-          repl ']' = ")"
-          repl x = [x]
-        in concatMap repl x
-  let gen_str = "ShiftTN(" ++ show no ++ ", " ++ replace_brackets (show nis) ++ ", " ++
-                show io ++ ", " ++ replace_brackets (show iis) ++ ", " ++ show shift_amount ++ ", " ++
+  let gen_str = "ShiftTN(" ++ show no ++ ", " ++ array_to_chisel_array nis ++ ", " ++
+                show io ++ ", " ++ array_to_chisel_array iis ++ ", " ++ show shift_amount ++ ", " ++
                 type_to_chisel elem_t ++ ")"
   let types = ST_Conv.expr_to_types consumer_e
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
                 [Module_Port "I" (ST_Conv.e_out_type types)]
                 (Module_Port "O" (head $ ST_Conv.e_in_types types))
   print_unary_operator cur_ref producer_ref
-  return cur_ref
-module_to_string_inner consumer_e@(Const_GenN constant t delay cur_idx) = do
-  -- the chisel const_gen is not a module. It's just a function that
-  -- adds some properties. Therefore, it doesn't get wrapped in a Module
-  -- with a new call
-  let cur_ref_name = "const" ++ print_index cur_idx
-  let const_values_str =
-        convert_seq_val_to_st_val_string (flatten_ast_value constant)
-        (TSeqT 1 0 t) chisel_hardware_conf
-  let gen_str = "Const(" ++ type_to_chisel t ++
-                ", " ++ st_values const_values_str ++
-                ", " ++ show delay ++ ", valid_up)"
-  let out_port_name = (cur_ref_name ++ "_O")
-  let cur_ref_valid_str = cur_ref_name ++ "_valid_up"
-  let cur_ref = Backend_Module_Ref cur_ref_name gen_str
-                [] (Module_Port out_port_name t)
-  add_to_cur_module $ "val (" ++ out_port_name ++ ", " ++
-    cur_ref_name ++ "_valid_down) = " ++ gen_call cur_ref
-  update_output $ Module_Port out_port_name t
-  -- no need for valid_up wiring as valid is passed to function call
   return cur_ref
 
 -- sequence operators
@@ -692,6 +744,21 @@ module_to_string_inner consumer_e@(ReshapeN in_t out_t producer_e cur_idx) = do
 module_to_string_inner consumer_e = error $ "don't support yet: " ++
                                     show consumer_e 
 
+print_nullary_operator :: Backend_Module_Ref ->
+                          Memo_Print_StateM Backend_Module_Ref ()
+print_nullary_operator cur_ref = do
+  add_to_cur_module $ "val " ++ var_name cur_ref ++ " = Module(new " ++
+    gen_call cur_ref ++ ")"
+  update_output $ out_port cur_ref
+  incr_num_non_inputs_cur_module $ gen_call cur_ref
+  valid_bool <- use_valid_port
+  if valid_bool
+    then do
+    let producer_valid_str = "valid_up"
+    let cur_ref_valid_str = var_name cur_ref ++ ".valid_up"
+    add_to_cur_module $ cur_ref_valid_str ++ " := " ++ producer_valid_str
+    else return ()
+
 print_unary_operator :: Backend_Module_Ref -> Backend_Module_Ref ->
                         Memo_Print_StateM Backend_Module_Ref ()
 print_unary_operator cur_ref producer_ref = do
@@ -772,3 +839,10 @@ type_to_chisel (SSeqT n t) =
   "SSeq(" ++ show n ++ ", " ++ type_to_chisel t ++ ")"
 type_to_chisel (TSeqT n i t) =
   "TSeq(" ++ show n ++ ", " ++ show i ++ ", " ++ type_to_chisel t ++ ")"
+
+array_to_chisel_array :: Show a => [a] -> String
+array_to_chisel_array x = concatMap repl x
+  where 
+    repl '[' = "Array("
+    repl ']' = ")"
+    repl y = [y]
