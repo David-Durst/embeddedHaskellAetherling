@@ -11,7 +11,7 @@ module Top(
   wire [31:0] io_output_counts_1;
   wire [31:0] io_output_counts_0;
 
-  x349_inr_Foreach_SAMPLER_BOX_kernelx349_inr_Foreach_SAMPLER_BOX_concrete1 sampler_box ( // @[m_x55_ctr_0.scala 26:17:@1721.4]
+  x339_inr_Foreach_SAMPLER_BOX_kernelx339_inr_Foreach_SAMPLER_BOX_concrete1 sampler_box ( // @[m_x55_ctr_0.scala 26:17:@1721.4]
     .clock(clock), // @[:@1296.4]
     .reset(reset), // @[:@1297.4]
     .io_in_x194_TREADY(dontcare), // @[:@1298.4]
