@@ -1,0 +1,5 @@
+System,Application,Parallelism,TotalLUTs,LogicLUTs,LUTRAMs,SRLs,FFs,RAMB36,RAMB18,DSP48Blocks,BRAMTiles,Slices,SLICEL,SLICEM,Slack(VIOLATED),
+spatial,big_real_32_sharpen,1036800,3296,2970,0,326,3001,0,16,70,8,1173,689,484,2.092ns,
+spatial,big_real_32_sharpen,2073600,7412,7165,0,247,6086,12,0,35,12,2395,1587,808,1.773ns,
+spatial,big_real_32_sharpen,259200,42054,41462,0,592,27500,0,40,32,20,12435,7986,4449,0.549ns,
+spatial,big_real_32_sharpen,518400,21749,20925,0,824,18101,0,24,122,12,6805,4434,2371,1.312ns,
