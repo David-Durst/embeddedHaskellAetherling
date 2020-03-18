@@ -298,6 +298,22 @@ sequence_to_partially_parallel type_rewrites seq_e@(SeqE.Const_GenN constant_val
   v_par <- ppar_AST_value type_rewrites constant_val
   cur_idx <- get_cur_index
   return $ STE.Const_GenN v_par t_par 0 cur_idx
+sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr0_n) : [NonSeqR])
+  seq_e@(SeqE.CounterN n incr_amount int_type _) |
+  n == tr0_n = do
+  int_type_par <- ppar_AST_type [NonSeqR] int_type
+  cur_idx <- get_cur_index
+  return $ STE.Counter_sN n incr_amount int_type_par 0 cur_idx
+sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr0_n tr0_i) : [NonSeqR])
+  seq_e@(SeqE.CounterN n incr_amount int_type _) |
+  n == tr0_n = do
+  int_type_par <- ppar_AST_type [NonSeqR] int_type
+  cur_idx <- get_cur_index
+  return $ STE.Counter_tN n tr0_i incr_amount int_type_par 0 cur_idx
+sequence_to_partially_parallel type_rewrites seq_e@(SeqE.CounterN n incr_amount int_type _) = do
+  out_type_par <- ppar_AST_type type_rewrites int_type
+  cur_idx <- get_cur_index
+  return $ STE.Counter_nestedN incr_amount out_type_par 0 cur_idx
 
 -- sequence operators
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr_n) : type_rewrites_tl)

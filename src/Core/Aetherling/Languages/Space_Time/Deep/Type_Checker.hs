@@ -67,8 +67,9 @@ check_type' consumer_e@(IfN _ producer_e _) =
 check_type' consumer_e@(Lut_GenN _ _ producer_e _) = 
   check_unary_operator consumer_e producer_e
 check_type' (Const_GenN _ t _ _) = return t
-check_type' (Counter_sN n _ int_type _) = return $ SSeqT n int_type
-check_type' (Counter_tN n i _ int_type _) = return $ TSeqT n i int_type
+check_type' (Counter_sN n _ int_type _ _) = return $ SSeqT n int_type
+check_type' (Counter_tN n i _ int_type _ _) = return $ TSeqT n i int_type
+check_type' (Counter_nestedN _ out_type _ _) = return out_type
 
 -- sequence operators
 check_type' consumer_e@(Shift_sN _ _ _ producer_e _) =

@@ -41,6 +41,8 @@ expr_to_types (Counter_sN n _ int_type _ _) =
   Expr_Types [] $ SSeqT n int_type
 expr_to_types (Counter_tN n i _ int_type _ _) =
   Expr_Types [] $ TSeqT n i int_type
+expr_to_types (Counter_nestedN _ out_type _ _) =
+  Expr_Types [] out_type
 
 -- sequence operators
 expr_to_types (Shift_sN n _ elem_t _ _) = Expr_Types [seq_type] seq_type
@@ -228,6 +230,7 @@ expr_to_outer_types' consumer_e@(Lut_GenN _ _ producer_e _) =
 expr_to_outer_types' (Const_GenN _ t _ _) = return t
 expr_to_outer_types' (Counter_sN n _ int_type _ _) = return $ SSeqT n int_type
 expr_to_outer_types' (Counter_tN n i _ int_type _ _) = return $ TSeqT n i int_type
+expr_to_outer_types' (Counter_nestedN int_type out_type _ _) = return out_type
 
 -- sequence operators
 expr_to_outer_types' consumer_e@(Shift_sN _ _ _ producer_e _) =
