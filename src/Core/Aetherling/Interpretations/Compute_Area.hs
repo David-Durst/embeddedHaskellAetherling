@@ -87,8 +87,13 @@ get_area' e@(Const_GenN _ const_t _ _) = do
   return $ size_t const_t
 get_area' e@(Counter_sN n _ int_type _ _) = return $ n * size_t int_type
 get_area' e@(Counter_tN n i _ int_type _ _) = do
-  add_area <- get_area' (AddN int_type (InputN int_type "" No_Index) No_Index)
-  return $ add_area + size_t int_type
+  -- one int_type to store, one for adder
+  return $ 2 * size_t int_type
+get_area' e@(Counter_nestedN _ out_type _ _) = do
+  let atom_t = get_atom_t out_type
+  let num_adders = num_atoms_per_valid_t out_type
+  -- add 1 one for storage
+  return $ (num_adders + 1) * size_t atom_t
 
 -- sequence operators
 get_area' e@(Shift_sN _ _ _ producer _) = get_area_if_not_already_seen producer $ get_area' producer

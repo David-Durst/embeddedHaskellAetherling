@@ -44,6 +44,8 @@ add_pipeline_registers' e@(Counter_sN _ _ _ _ _) maybe_num_end_registers = do
   add_pipeline_registers_if_last maybe_num_end_registers e
 add_pipeline_registers' e@(Counter_tN _ _ _ _ _ _) maybe_num_end_registers = do
   add_pipeline_registers_if_last maybe_num_end_registers e
+add_pipeline_registers' e@(Counter_nestedN _ _ _ _) maybe_num_end_registers = do
+  add_pipeline_registers_if_last maybe_num_end_registers e
 add_pipeline_registers' e@(Map2_sN _ _ producer_left producer_right _)
   maybe_num_end_registers = do
   producer_left_pipelined <- memo producer_left $

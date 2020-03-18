@@ -247,3 +247,18 @@ num_layers_t (ATupleT _ _) = 1
 num_layers_t (STupleT n t) = num_layers_t t + 1
 num_layers_t (SSeqT n t) = num_layers_t t + 1
 num_layers_t (TSeqT n i t) = num_layers_t t + 1
+
+get_atom_t :: AST_Type -> AST_Type
+get_atom_t UnitT = UnitT
+get_atom_t BitT = BitT
+get_atom_t Int8T = Int8T
+get_atom_t UInt8T = UInt8T
+get_atom_t FixP1_7T = FixP1_7T
+get_atom_t Int16T = Int16T
+get_atom_t UInt16T = UInt16T
+get_atom_t Int32T = Int32T
+get_atom_t UInt32T = UInt32T
+get_atom_t t@(ATupleT t0 t1) = t
+get_atom_t (STupleT n t) = get_atom_t t
+get_atom_t (SSeqT n t) = get_atom_t t
+get_atom_t (TSeqT n _ t) = get_atom_t t
