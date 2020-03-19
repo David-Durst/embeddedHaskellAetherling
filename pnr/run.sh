@@ -21,15 +21,15 @@ else
 fi
 
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-ssh $user@kiwi "rm -rf results"
-ssh $user@kiwi "rm -rf verilog_examples"
-ssh $user@kiwi "rm -rf IP"
-ssh $user@kiwi "mkdir -p results"
-scp $dir/remote.sh $user@kiwi:
-scp $dir/constraints*.xdc $user@kiwi:
-scp $dir/compile.sh $user@kiwi:
-scp $dir/../chiselAetherling/src/main/resources/verilogAetherling/generate_muls.tcl $user@kiwi:
+ssh $user@kiwi@stanford.edu "rm -rf results"
+ssh $user@kiwi@stanford.edu "rm -rf verilog_examples"
+ssh $user@kiwi@stanford.edu "rm -rf IP"
+ssh $user@kiwi@stanford.edu "mkdir -p results"
+scp $dir/remote.sh $user@kiwi@stanford.edu:
+scp $dir/constraints*.xdc $user@kiwi@stanford.edu:
+scp $dir/compile.sh $user@kiwi@stanford.edu:
+scp $dir/../chiselAetherling/src/main/resources/verilogAetherling/generate_muls.tcl $user@kiwi@stanford.edu:
 
-scp -r ${dir}/../test/verilog_examples $user@kiwi:
-ssh $user@kiwi "tmux new -d -s pnr './remote.sh verilog_examples/ &> results/log.log'"
+scp -r ${dir}/../test/verilog_examples $user@kiwi@stanford.edu:
+ssh $user@kiwi@stanford.edu "tmux new -d -s pnr './remote.sh verilog_examples/ &> results/log.log'"
 
