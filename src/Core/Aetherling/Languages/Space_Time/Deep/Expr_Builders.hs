@@ -157,6 +157,10 @@ make_add_1_s inner_expr_gen producer = do
 
 get_producers :: Expr -> [Expr]
 get_producers (Const_GenN _ _ _ _) = []
+get_producers (Counter_sN _ _ _ _ _) = []
+get_producers (Counter_tN _ _ _ _ _ _) = []
+get_producers (Counter_tsN _ _ _ _ _ _ _) = []
+get_producers (Counter_tnN _ _ _ _ _ _) = []
 get_producers (InputN _ _ _) = []
 get_producers (ErrorN _ _) = []
 get_producers (Map2_sN _ _ producer0 producer1 _) = [producer0, producer1]

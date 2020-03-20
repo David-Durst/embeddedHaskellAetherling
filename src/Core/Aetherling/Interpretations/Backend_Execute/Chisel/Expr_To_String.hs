@@ -307,14 +307,14 @@ module_to_string_inner consumer_e@(Counter_sN n incr_amount int_type delay cur_i
   -- the chisel const_gen is not a module. It's just a function that
   -- adds some properties. Therefore, it doesn't get wrapped in a Module
   -- with a new call
-  let cur_ref_name = "const" ++ print_index cur_idx
+  let cur_ref_name = "counter" ++ print_index cur_idx
   let gen_str = "Counter_S(" ++ show n ++
                 ", " ++ show incr_amount ++
                 ", " ++ type_to_chisel int_type ++
-                ", " ++ show delay ++ ", valid_up)"
+                ", " ++ show delay ++ ")"
   let cur_ref_valid_str = cur_ref_name ++ ".valid_up"
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
-                [] (Module_Port (cur_ref_name ++ ".O")
+                [] (Module_Port "O"
                     (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
   print_nullary_operator cur_ref
   return cur_ref
@@ -322,13 +322,13 @@ module_to_string_inner consumer_e@(Counter_tN n i incr_amount int_type delay cur
   -- the chisel const_gen is not a module. It's just a function that
   -- adds some properties. Therefore, it doesn't get wrapped in a Module
   -- with a new call
-  let cur_ref_name = "const" ++ print_index cur_idx
+  let cur_ref_name = "counter" ++ print_index cur_idx
   let gen_str = "Counter_T(" ++ show n ++ ", " ++ show i ++
                 ", " ++ show incr_amount ++
                 ", " ++ type_to_chisel int_type ++
-                ", " ++ show delay ++ ", valid_up)"
+                ", " ++ show delay ++ ")"
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
-                [] (Module_Port (cur_ref_name ++ ".O")
+                [] (Module_Port "O"
                     (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
   print_nullary_operator cur_ref
   return cur_ref
@@ -336,13 +336,13 @@ module_to_string_inner consumer_e@(Counter_tsN no io ni incr_amount int_type del
   -- the chisel const_gen is not a module. It's just a function that
   -- adds some properties. Therefore, it doesn't get wrapped in a Module
   -- with a new call
-  let cur_ref_name = "const" ++ print_index cur_idx
+  let cur_ref_name = "counter" ++ print_index cur_idx
   let gen_str = "Counter_TS(" ++ show no ++ ", " ++ show io ++  ", " ++ show ni ++
                 ", " ++ show incr_amount ++
                 ", " ++ type_to_chisel int_type ++
-                ", " ++ show delay ++ ", valid_up)"
+                ", " ++ show delay ++ ")"
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
-                [] (Module_Port (cur_ref_name ++ ".O")
+                [] (Module_Port "O"
                     (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
   print_nullary_operator cur_ref
   return cur_ref
@@ -350,15 +350,15 @@ module_to_string_inner consumer_e@(Counter_tnN ns is incr_amount int_type delay 
   -- the chisel const_gen is not a module. It's just a function that
   -- adds some properties. Therefore, it doesn't get wrapped in a Module
   -- with a new call
-  let cur_ref_name = "const" ++ print_index cur_idx
-  let gen_str = "Counter_TS(" ++
+  let cur_ref_name = "counter" ++ print_index cur_idx
+  let gen_str = "Counter_TN(" ++
                 array_to_chisel_array ns ++ ", " ++
-                array_to_chisel_array is ++  ", " ++
+                array_to_chisel_array is ++ 
                 ", " ++ show incr_amount ++
                 ", " ++ type_to_chisel int_type ++
-                ", " ++ show delay ++ ", valid_up)"
+                ", " ++ show delay ++ ")"
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
-                [] (Module_Port (cur_ref_name ++ ".O")
+                [] (Module_Port "O"
                     (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
   print_nullary_operator cur_ref
   return cur_ref
@@ -841,7 +841,7 @@ type_to_chisel (TSeqT n i t) =
   "TSeq(" ++ show n ++ ", " ++ show i ++ ", " ++ type_to_chisel t ++ ")"
 
 array_to_chisel_array :: Show a => [a] -> String
-array_to_chisel_array x = concatMap repl x
+array_to_chisel_array x = concatMap repl $ show x
   where 
     repl '[' = "Array("
     repl ']' = ")"

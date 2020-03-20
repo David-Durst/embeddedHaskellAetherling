@@ -314,6 +314,32 @@ const_test_results_chisel' = sequence $
               const_test (wrap_single_t s)
               Chisel No_Verilog
               const_test_inputs const_test_outputs) [3]
+  
+counter_test =
+  counterC' (Proxy @9) 2 (Proxy :: Proxy Atom_UInt8) $
+  com_input "not_used" (Proxy :: Proxy Atom_Unit)
+counter_test_seq_idx = add_indexes $ seq_shallow_to_deep counter_test
+counter_trs = [[SpaceR 9, NonSeqR], [SplitR 3 0 3, NonSeqR], [TimeR 9 0, NonSeqR],
+               [SplitNestedR (TimeR 9 0) (SplitNestedR (TimeR 1 2) NonSeqR), NonSeqR],
+               [SplitNestedR (TimeR 9 0) (SplitNestedR (TimeR 1 2) (SplitNestedR (TimeR 1 2) NonSeqR)), NonSeqR]]
+counter_test_ppar = fmap
+  (\s -> compile_with_type_rewrite_to_expr counter_test s) counter_trs
+counter_test_ppar' = fmap
+  (\s -> compile_with_throughput_to_expr counter_test s) [4]
+counter_test_ppar_typechecked = fmap check_type counter_test_ppar
+counter_test_ppar_typechecked' = fmap check_type_get_error counter_test_ppar
+counter_test_inputs :: [[Integer]] = []
+counter_test_outputs :: [Integer] = [0,2..16]
+counter_test_results_chisel = sequence $
+  fmap (\s -> test_with_backend 
+              counter_test (Type_Rewrites s)
+              Chisel No_Verilog
+              counter_test_inputs counter_test_outputs) counter_trs
+counter_test_results_chisel' = sequence $
+  fmap (\s -> test_with_backend 
+              counter_test (Type_Rewrites s)
+              Chisel No_Verilog
+              counter_test_inputs counter_test_outputs) [counter_trs !! 3]
 
 lt_atom_test x = do
   let one = const_genC (Atom_UInt8 1) x

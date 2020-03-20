@@ -179,6 +179,7 @@ instance Sequence_Language Rewrite_StateM where
     let n_val = fromInteger $ natVal n_proxy
     return $ expr_to_edge $ CounterN n_val incr (get_AST_type (Proxy :: Proxy a)) No_Index
     
+  counterC' n_proxy incr _ input = counterC n_proxy incr input
 
   -- sequence operators
   -- generators
