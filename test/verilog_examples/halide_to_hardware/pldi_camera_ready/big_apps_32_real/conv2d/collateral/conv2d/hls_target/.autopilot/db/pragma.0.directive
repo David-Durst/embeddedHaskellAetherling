@@ -1,0 +1,401 @@
+<AutoPilot:ProjectResources xmlns:AutoPilot="com.autoesl.autopilot.ui.directiveView">
+<sourceFile name="">
+<directive functionLabel="" functionName="bitcast_to_uint" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="bitcast_to_uint" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="bitcast_to_uint" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="bitcast_to_type" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="bitcast_to_type" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="bitcast_to_type" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="operator ()" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="operator ()" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="operator Stencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="operator Stencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="res.value"/>
+<option name="complete" positionalBoolean="type" value=""/>
+<option name="dim" value="0"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="operator Stencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="UNROLL"/>
+</directive>
+<directive functionLabel="" functionName="operator Stencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="UNROLL"/>
+</directive>
+<directive functionLabel="" functionName="operator Stencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="UNROLL"/>
+</directive>
+<directive functionLabel="" functionName="operator Stencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="UNROLL"/>
+</directive>
+<directive functionLabel="" functionName="operator AxiPackedStencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="operator PackedStencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="operator Stencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="operator ()" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="operator ()" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="operator PackedStencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="operator PackedStencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="UNROLL"/>
+</directive>
+<directive functionLabel="" functionName="operator PackedStencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="UNROLL"/>
+</directive>
+<directive functionLabel="" functionName="operator PackedStencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="UNROLL"/>
+</directive>
+<directive functionLabel="" functionName="operator PackedStencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="UNROLL"/>
+</directive>
+<directive functionLabel="" functionName="operator AxiPackedStencil&lt;#0,#1,#2,#3,#4&gt;" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="buffer"/>
+<option name="complete" positionalBoolean="type" value=""/>
+<option name="dim" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="DEPENDENCE">
+<option name="array" positionalBoolean="class" value=""/>
+<option name="inter" positionalBoolean="type" value=""/>
+<option name="false" positionalBoolean="dependent" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="LOOP_FLATTEN">
+<option name="off" positionalBoolean="1" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="PIPELINE">
+<option name="II" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="PIPELINE">
+<option name="II" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="buffer"/>
+<option name="complete" positionalBoolean="type" value=""/>
+<option name="dim" value="0"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="DEPENDENCE">
+<option name="array" positionalBoolean="class" value=""/>
+<option name="inter" positionalBoolean="type" value=""/>
+<option name="false" positionalBoolean="dependent" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="LOOP_FLATTEN">
+<option name="off" positionalBoolean="1" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="PIPELINE">
+<option name="II" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="linebuffer_1D" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE">
+<option name="off" positionalBoolean="1" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="DATAFLOW"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="buffer"/>
+<option name="complete" positionalBoolean="type" value=""/>
+<option name="dim" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="STREAM">
+<option name="variable" positionalBoolean="4" value="slice_stream"/>
+<option name="depth" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="RESOURCE">
+<option name="variable" positionalBoolean="4" value="slice_stream"/>
+<option name="core" value="FIFO_SRL"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="LOOP_FLATTEN">
+<option name="off" positionalBoolean="1" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="DEPENDENCE">
+<option name="array" positionalBoolean="class" value=""/>
+<option name="inter" positionalBoolean="type" value=""/>
+<option name="false" positionalBoolean="dependent" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="PIPELINE">
+<option name="II" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE">
+<option name="off" positionalBoolean="1" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="DATAFLOW"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="buffer"/>
+<option name="complete" positionalBoolean="type" value=""/>
+<option name="dim" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="DEPENDENCE">
+<option name="array" positionalBoolean="class" value=""/>
+<option name="inter" positionalBoolean="type" value=""/>
+<option name="false" positionalBoolean="dependent" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="LOOP_FLATTEN">
+<option name="off" positionalBoolean="1" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="PIPELINE">
+<option name="II" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="buffer"/>
+<option name="complete" positionalBoolean="type" value=""/>
+<option name="dim" value="0"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="DEPENDENCE">
+<option name="array" positionalBoolean="class" value=""/>
+<option name="inter" positionalBoolean="type" value=""/>
+<option name="false" positionalBoolean="dependent" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="PIPELINE">
+<option name="II" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="call" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="linebuffer_2D" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="linebuffer_3D" label="">
+<pragma name="INLINE">
+<option name="off" positionalBoolean="1" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="linebuffer_3D" label="">
+<pragma name="DATAFLOW"/>
+</directive>
+<directive functionLabel="" functionName="linebuffer_3D" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="buffer"/>
+<option name="complete" positionalBoolean="type" value=""/>
+<option name="dim" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="linebuffer_3D" label="">
+<pragma name="STREAM">
+<option name="variable" positionalBoolean="4" value="slice_stream"/>
+<option name="depth" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="linebuffer_3D" label="">
+<pragma name="RESOURCE">
+<option name="variable" positionalBoolean="4" value="slice_stream"/>
+<option name="core" value="FIFO_SRL"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="linebuffer_3D" label="">
+<pragma name="LOOP_FLATTEN">
+<option name="off" positionalBoolean="1" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="linebuffer_3D" label="">
+<pragma name="DEPENDENCE">
+<option name="array" positionalBoolean="class" value=""/>
+<option name="inter" positionalBoolean="type" value=""/>
+<option name="false" positionalBoolean="dependent" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="linebuffer_3D" label="">
+<pragma name="PIPELINE">
+<option name="II" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="linebuffer_3D" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="linebuffer_4D" label="">
+<pragma name="INLINE"/>
+</directive>
+<directive functionLabel="" functionName="linebuffer" label="">
+<pragma name="INLINE">
+<option name="off" positionalBoolean="1" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="linebuffer" label="">
+<pragma name="DATAFLOW"/>
+</directive>
+<directive functionLabel="" functionName="linebuffer" label="">
+<pragma name="INLINE">
+<option name="off" positionalBoolean="1" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="linebuffer" label="">
+<pragma name="DATAFLOW"/>
+</directive>
+<directive functionLabel="" functionName="linebuffer" label="">
+<pragma name="STREAM">
+<option name="variable" positionalBoolean="4" value="in_stream"/>
+<option name="depth" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="linebuffer" label="">
+<pragma name="RESOURCE">
+<option name="variable" positionalBoolean="4" value="in_stream"/>
+<option name="core" value="FIFO_SRL"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="linebuffer" label="">
+<pragma name="PIPELINE">
+<option name="II" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="hls_target" label="">
+<pragma name="DATAFLOW"/>
+</directive>
+<directive functionLabel="" functionName="hls_target" label="">
+<pragma name="INLINE">
+<option name="region" positionalBoolean="1" value=""/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="hls_target" label="">
+<pragma name="INTERFACE">
+<option name="ap_hs" positionalBoolean="mode" value=""/>
+<option name="port" positionalBoolean="4" value="hw_input"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="hls_target" label="">
+<pragma name="INTERFACE">
+<option name="ap_hs" positionalBoolean="mode" value=""/>
+<option name="port" positionalBoolean="4" value="hw_output"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="hls_target" label="">
+<pragma name="STREAM">
+<option name="variable" positionalBoolean="4" value="_hw_input_stencil_stream"/>
+<option name="depth" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="hls_target" label="">
+<pragma name="RESOURCE">
+<option name="variable" positionalBoolean="4" value="_hw_input_stencil_stream"/>
+<option name="core" value="FIFO_SRL"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="hls_target" label="">
+<pragma name="PIPELINE">
+<option name="II" value="1"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="hls_target" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="_hw_input_stencil.value"/>
+<option name="complete" positionalBoolean="type" value=""/>
+<option name="dim" value="0"/>
+</pragma>
+</directive>
+<directive functionLabel="" functionName="hls_target" label="">
+<pragma name="ARRAY_PARTITION">
+<option name="variable" positionalBoolean="4" value="_hw_output_stencil.value"/>
+<option name="complete" positionalBoolean="type" value=""/>
+<option name="dim" value="0"/>
+</pragma>
+</directive>
+</sourceFile>
+</AutoPilot:ProjectResources>

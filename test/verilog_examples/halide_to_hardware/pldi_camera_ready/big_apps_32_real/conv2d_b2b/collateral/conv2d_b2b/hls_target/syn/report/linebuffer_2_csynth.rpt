@@ -1,0 +1,145 @@
+
+
+================================================================
+== Vivado HLS Report for 'linebuffer_2'
+================================================================
+* Date:           Mon Mar 16 18:02:59 2020
+
+* Version:        2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)
+* Project:        conv2d_b2b
+* Solution:       hls_target
+* Product family: zynq
+* Target device:  xc7z020clg484-1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.60|      5.01|        0.70|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +---------+---------+---------+---------+----------+
+    |      Latency      |      Interval     | Pipeline |
+    |   min   |   max   |   min   |   max   |   Type   |
+    +---------+---------+---------+---------+----------+
+    |  2071917|  2071917|  2071918|  2071918| dataflow |
+    +---------+---------+---------+---------+----------+
+
+    + Detail: 
+        * Instance: 
+        +-----------+--------+---------+---------+---------+---------+----------+
+        |           |        |      Latency      |      Interval     | Pipeline |
+        |  Instance | Module |   min   |   max   |   min   |   max   |   Type   |
+        +-----------+--------+---------+---------+---------+---------+----------+
+        |call_1_U0  |call_1  |  2071917|  2071917|  2071918|  2071918| dataflow |
+        +-----------+--------+---------+---------+---------+---------+----------+
+
+        * Loop: 
+        N/A
+
+
+
+================================================================
+== Utilization Estimates
+================================================================
+* Summary: 
++-----------------+---------+-------+--------+-------+
+|       Name      | BRAM_18K| DSP48E|   FF   |  LUT  |
++-----------------+---------+-------+--------+-------+
+|DSP              |        -|      -|       -|      -|
+|Expression       |        -|      -|       0|      2|
+|FIFO             |        -|      -|       -|      -|
+|Instance         |        4|      -|     391|    321|
+|Memory           |        -|      -|       -|      -|
+|Multiplexer      |        -|      -|       -|      9|
+|Register         |        -|      -|       3|      -|
++-----------------+---------+-------+--------+-------+
+|Total            |        4|      0|     394|    332|
++-----------------+---------+-------+--------+-------+
+|Available        |      280|    220|  106400|  53200|
++-----------------+---------+-------+--------+-------+
+|Utilization (%)  |        1|      0|   ~0   |   ~0  |
++-----------------+---------+-------+--------+-------+
+
++ Detail: 
+    * Instance: 
+    +-----------+--------+---------+-------+-----+-----+
+    |  Instance | Module | BRAM_18K| DSP48E|  FF | LUT |
+    +-----------+--------+---------+-------+-----+-----+
+    |call_1_U0  |call_1  |        4|      0|  391|  321|
+    +-----------+--------+---------+-------+-----+-----+
+    |Total      |        |        4|      0|  391|  321|
+    +-----------+--------+---------+-------+-----+-----+
+
+    * DSP48: 
+    N/A
+
+    * Memory: 
+    N/A
+
+    * FIFO: 
+    N/A
+
+    * Expression: 
+    +--------------+----------+-------+---+----+------------+------------+
+    | Variable Name| Operation| DSP48E| FF| LUT| Bitwidth P0| Bitwidth P1|
+    +--------------+----------+-------+---+----+------------+------------+
+    |start_write   |    and   |      0|  0|   2|           1|           1|
+    +--------------+----------+-------+---+----+------------+------------+
+    |Total         |          |      0|  0|   2|           1|           1|
+    +--------------+----------+-------+---+----+------------+------------+
+
+    * Multiplexer: 
+    +------------+----+-----------+-----+-----------+
+    |    Name    | LUT| Input Size| Bits| Total Bits|
+    +------------+----+-----------+-----+-----------+
+    |real_start  |   9|          2|    1|          2|
+    +------------+----+-----------+-----+-----------+
+    |Total       |   9|          2|    1|          2|
+    +------------+----+-----------+-----+-----------+
+
+    * Register: 
+    +-----------------------+---+----+-----+-----------+
+    |          Name         | FF| LUT| Bits| Const Bits|
+    +-----------------------+---+----+-----+-----------+
+    |real_start_status_reg  |  1|   0|    1|          0|
+    |start_control_reg      |  1|   0|    1|          0|
+    |start_once_reg         |  1|   0|    1|          0|
+    +-----------------------+---+----+-----+-----------+
+    |Total                  |  3|   0|    3|          0|
+    +-----------------------+---+----+-----+-----------+
+
+
+
+================================================================
+== Interface
+================================================================
+* Summary: 
++-----------------------------+-----+-----+------------+----------------------+--------------+
+|          RTL Ports          | Dir | Bits|  Protocol  |     Source Object    |    C Type    |
++-----------------------------+-----+-----+------------+----------------------+--------------+
+|ap_start                     |  in |    1| ap_ctrl_hs |     linebuffer.2     | return value |
+|start_full_n                 |  in |    1| ap_ctrl_hs |     linebuffer.2     | return value |
+|ap_ready                     | out |    1| ap_ctrl_hs |     linebuffer.2     | return value |
+|start_out                    | out |    1| ap_ctrl_hs |     linebuffer.2     | return value |
+|start_write                  | out |    1| ap_ctrl_hs |     linebuffer.2     | return value |
+|ap_clk                       |  in |    1| ap_ctrl_hs |     linebuffer.2     | return value |
+|ap_rst                       |  in |    1| ap_ctrl_hs |     linebuffer.2     | return value |
+|ap_done                      | out |    1| ap_ctrl_hs |     linebuffer.2     | return value |
+|ap_idle                      | out |    1| ap_ctrl_hs |     linebuffer.2     | return value |
+|ap_continue                  |  in |    1| ap_ctrl_hs |     linebuffer.2     | return value |
+|in_stream_V_value_V_dout     |  in |   32|   ap_fifo  |  in_stream_V_value_V |    pointer   |
+|in_stream_V_value_V_empty_n  |  in |    1|   ap_fifo  |  in_stream_V_value_V |    pointer   |
+|in_stream_V_value_V_read     | out |    1|   ap_fifo  |  in_stream_V_value_V |    pointer   |
+|out_stream_V_value_V_din     | out |  128|   ap_fifo  | out_stream_V_value_V |    pointer   |
+|out_stream_V_value_V_full_n  |  in |    1|   ap_fifo  | out_stream_V_value_V |    pointer   |
+|out_stream_V_value_V_write   | out |    1|   ap_fifo  | out_stream_V_value_V |    pointer   |
++-----------------------------+-----+-----+------------+----------------------+--------------+
+

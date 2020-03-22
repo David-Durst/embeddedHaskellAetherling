@@ -1,0 +1,154 @@
+
+
+================================================================
+== Vivado HLS Report for 'hls_target'
+================================================================
+* Date:           Mon Mar 16 18:03:00 2020
+
+* Version:        2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)
+* Project:        conv2d_b2b
+* Solution:       hls_target
+* Product family: zynq
+* Target device:  xc7z020clg484-1
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing (ns): 
+    * Summary: 
+    +--------+-------+----------+------------+
+    |  Clock | Target| Estimated| Uncertainty|
+    +--------+-------+----------+------------+
+    |ap_clk  |   5.60|      7.33|        0.70|
+    +--------+-------+----------+------------+
+
++ Latency (clock cycles): 
+    * Summary: 
+    +---------+---------+---------+---------+----------+
+    |      Latency      |      Interval     | Pipeline |
+    |   min   |   max   |   min   |   max   |   Type   |
+    +---------+---------+---------+---------+----------+
+    |  2077921|  2077921|  2077922|  2077922| dataflow |
+    +---------+---------+---------+---------+----------+
+
+    + Detail: 
+        * Instance: 
+        +-----------------+--------------+---------+---------+---------+---------+----------+
+        |                 |              |      Latency      |      Interval     | Pipeline |
+        |     Instance    |    Module    |   min   |   max   |   min   |   max   |   Type   |
+        +-----------------+--------------+---------+---------+---------+---------+----------+
+        |Loop_2_proc_U0   |Loop_2_proc   |  2064637|  2064637|  2064637|  2064637|   none   |
+        |Loop_3_proc_U0   |Loop_3_proc   |  2064633|  2064633|  2064633|  2064633|   none   |
+        |linebuffer_1_U0  |linebuffer_1  |  2077921|  2077921|  2077922|  2077922| dataflow |
+        |Loop_1_proc_U0   |Loop_1_proc   |  2067610|  2067610|  2067610|  2067610|   none   |
+        |linebuffer_2_U0  |linebuffer_2  |  2071917|  2071917|  2071918|  2071918| dataflow |
+        +-----------------+--------------+---------+---------+---------+---------+----------+
+
+        * Loop: 
+        N/A
+
+
+
+================================================================
+== Utilization Estimates
+================================================================
+* Summary: 
++-----------------+---------+-------+--------+-------+
+|       Name      | BRAM_18K| DSP48E|   FF   |  LUT  |
++-----------------+---------+-------+--------+-------+
+|DSP              |        -|      -|       -|      -|
+|Expression       |        -|      -|       0|     10|
+|FIFO             |        -|      -|       0|      4|
+|Instance         |       12|     55|   13455|  12660|
+|Memory           |        -|      -|       -|      -|
+|Multiplexer      |        -|      -|       -|      -|
+|Register         |        -|      -|       -|      -|
++-----------------+---------+-------+--------+-------+
+|Total            |       12|     55|   13455|  12674|
++-----------------+---------+-------+--------+-------+
+|Available        |      280|    220|  106400|  53200|
++-----------------+---------+-------+--------+-------+
+|Utilization (%)  |        4|     25|      12|     23|
++-----------------+---------+-------+--------+-------+
+
++ Detail: 
+    * Instance: 
+    +-----------------+--------------+---------+-------+------+------+
+    |     Instance    |    Module    | BRAM_18K| DSP48E|  FF  |  LUT |
+    +-----------------+--------------+---------+-------+------+------+
+    |Loop_1_proc_U0   |Loop_1_proc   |        0|      0|   936|   435|
+    |Loop_2_proc_U0   |Loop_2_proc   |        0|     44|  8657|  8716|
+    |Loop_3_proc_U0   |Loop_3_proc   |        0|     11|  2237|  2372|
+    |linebuffer_1_U0  |linebuffer_1  |        8|      0|  1231|   805|
+    |linebuffer_2_U0  |linebuffer_2  |        4|      0|   394|   332|
+    +-----------------+--------------+---------+-------+------+------+
+    |Total            |              |       12|     55| 13455| 12660|
+    +-----------------+--------------+---------+-------+------+------+
+
+    * DSP48: 
+    N/A
+
+    * Memory: 
+    N/A
+
+    * FIFO: 
+    +--------------------------+---------+---+----+------+-----+---------+
+    |           Name           | BRAM_18K| FF| LUT| Depth| Bits| Size:D*B|
+    +--------------------------+---------+---+----+------+-----+---------+
+    |p_hw_input_stencil_st_U   |        0|  0|   1|     1|  288|      288|
+    |p_mul_stencil_stream_s_U  |        0|  0|   1|     1|  128|      128|
+    |p_mul_stencil_update_1_U  |        0|  0|   1|     1|   32|       32|
+    |p_p2_mul1_stencil_str_U   |        0|  0|   1|     1|   32|       32|
+    +--------------------------+---------+---+----+------+-----+---------+
+    |Total                     |        0|  0|   4|     4|  480|      480|
+    +--------------------------+---------+---+----+------+-----+---------+
+
+    * Expression: 
+    +------------------------------+----------+-------+---+----+------------+------------+
+    |         Variable Name        | Operation| DSP48E| FF| LUT| Bitwidth P0| Bitwidth P1|
+    +------------------------------+----------+-------+---+----+------------+------------+
+    |ap_idle                       |    and   |      0|  0|   2|           1|           1|
+    |Loop_1_proc_U0_start_full_n   |    or    |      0|  0|   2|           1|           1|
+    |Loop_2_proc_U0_start_full_n   |    or    |      0|  0|   2|           1|           1|
+    |linebuffer_1_U0_start_full_n  |    or    |      0|  0|   2|           1|           1|
+    |linebuffer_2_U0_start_full_n  |    or    |      0|  0|   2|           1|           1|
+    +------------------------------+----------+-------+---+----+------------+------------+
+    |Total                         |          |      0|  0|  10|           5|           5|
+    +------------------------------+----------+-------+---+----+------------+------------+
+
+    * Multiplexer: 
+    N/A
+
+    * Register: 
+    N/A
+
+
+
+================================================================
+== Interface
+================================================================
+* Summary: 
++----------------------------+-----+-----+------------+---------------------+--------------+
+|          RTL Ports         | Dir | Bits|  Protocol  |    Source Object    |    C Type    |
++----------------------------+-----+-----+------------+---------------------+--------------+
+|hw_input_V_value_V          |  in |   32|    ap_hs   |  hw_input_V_value_V |    pointer   |
+|hw_input_V_value_V_ap_vld   |  in |    1|    ap_hs   |  hw_input_V_value_V |    pointer   |
+|hw_input_V_value_V_ap_ack   | out |    1|    ap_hs   |  hw_input_V_value_V |    pointer   |
+|hw_input_V_last_V           |  in |    1|    ap_hs   |  hw_input_V_last_V  |    pointer   |
+|hw_input_V_last_V_ap_vld    |  in |    1|    ap_hs   |  hw_input_V_last_V  |    pointer   |
+|hw_input_V_last_V_ap_ack    | out |    1|    ap_hs   |  hw_input_V_last_V  |    pointer   |
+|hw_output_V_value_V         | out |   32|    ap_hs   | hw_output_V_value_V |    pointer   |
+|hw_output_V_value_V_ap_vld  | out |    1|    ap_hs   | hw_output_V_value_V |    pointer   |
+|hw_output_V_value_V_ap_ack  |  in |    1|    ap_hs   | hw_output_V_value_V |    pointer   |
+|hw_output_V_last_V          | out |    1|    ap_hs   |  hw_output_V_last_V |    pointer   |
+|hw_output_V_last_V_ap_vld   | out |    1|    ap_hs   |  hw_output_V_last_V |    pointer   |
+|hw_output_V_last_V_ap_ack   |  in |    1|    ap_hs   |  hw_output_V_last_V |    pointer   |
+|ap_clk                      |  in |    1| ap_ctrl_hs |      hls_target     | return value |
+|ap_rst                      |  in |    1| ap_ctrl_hs |      hls_target     | return value |
+|ap_done                     | out |    1| ap_ctrl_hs |      hls_target     | return value |
+|ap_start                    |  in |    1| ap_ctrl_hs |      hls_target     | return value |
+|ap_ready                    | out |    1| ap_ctrl_hs |      hls_target     | return value |
+|ap_idle                     | out |    1| ap_ctrl_hs |      hls_target     | return value |
++----------------------------+-----+-----+------------+---------------------+--------------+
+

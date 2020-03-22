@@ -1,0 +1,50 @@
+<profile>
+
+<section name = "Vivado HLS Report for 'hls_target'" level="0">
+<item name = "Date">Mon Mar 16 18:02:57 2020
+</item>
+<item name = "Version">2017.2 (Build 1909853 on Thu Jun 15 18:55:24 MDT 2017)</item>
+<item name = "Project">conv2d_b2b</item>
+<item name = "Solution">hls_target</item>
+<item name = "Product family">zynq</item>
+<item name = "Target device">xc7z020clg484-1</item>
+</section>
+
+<section name = "Performance Estimates" level="0">
+<item name = "Timing (ns)">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="4">Clock, Target, Estimated, Uncertainty</keys>
+<column name="ap_clk">5.60, 7.33, 0.70</column>
+</table>
+</item>
+</section>
+</item>
+<item name = "Latency (clock cycles)">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="6">, min, max, min, max, Type</keys>
+<column name="">2077921, 2077921, 2077922, 2077922, dataflow</column>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="0">
+<keys size="7">Instance, Module, min, max, min, max, Type</keys>
+<column name="grp_Loop_2_proc_fu_76">Loop_2_proc, 2064637, 2064637, 2064637, 2064637, none</column>
+<column name="grp_Loop_3_proc_fu_82">Loop_3_proc, 2064633, 2064633, 2064633, 2064633, none</column>
+<column name="grp_linebuffer_1_fu_91">linebuffer_1, 2077921, 2077921, 2077922, 2077922, dataflow</column>
+<column name="grp_Loop_1_proc_fu_100">Loop_1_proc, 2067610, 2067610, 2067610, 2067610, none</column>
+<column name="grp_linebuffer_2_fu_106">linebuffer_2, 2071917, 2071917, 2071918, 2071918, dataflow</column>
+</table>
+</item>
+<item name = "Loop"><table name="" hasTotal="0">
+<keys size="8">Loop Name, min, max, Latency, achieved, target, Count, Pipelined</keys>
+</table>
+</item>
+</section>
+</item>
+</section>
+</item>
+</section>
+</profile>
