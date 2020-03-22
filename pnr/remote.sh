@@ -8,7 +8,7 @@ generate_muls_tcl=$(readlink -f generate_muls.tcl)
 
 echo "System | Application | Parallelism | Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 | DSP48 Blocks | BRAM Tiles | Slices | SLICEL | SLICEM | Slack (VIOLATED) |" > ${results_temp}
 
-for circuit_path in ${circuit_dir_path}/spatial/big_real_32_sharpen/*.v; do
+for circuit_path in ${circuit_dir_path}/halide_to_hardware/big_*/*.v; do
 	  echo "Processing ${circuit_path}"
     circuit_dir_path_length=$(expr length $circuit_dir_path)
     circuit_path_relative=${circuit_path:$circuit_dir_path_length}
