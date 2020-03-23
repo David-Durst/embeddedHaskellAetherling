@@ -174,7 +174,7 @@ instance Sequence_Language Rewrite_StateM where
       throwError $ Expr_Failure $ fail_message_edge "const_genC" "any_edge"
 
   counterC :: forall a b n . (KnownNat n, Aetherling_Value a, Aetherling_Int a) =>
-    Proxy n -> Int -> Rewrite_StateM b -> Rewrite_StateM a
+    Proxy n -> Int -> Rewrite_StateM b -> Rewrite_StateM (Seq n a)
   counterC n_proxy incr _ = do
     let n_val = fromInteger $ natVal n_proxy
     return $ expr_to_edge $ CounterN n_val incr (get_AST_type (Proxy :: Proxy a)) No_Index

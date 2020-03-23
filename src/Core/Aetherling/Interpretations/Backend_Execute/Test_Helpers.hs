@@ -299,6 +299,60 @@ stencil_2x2_generator row_size inputs = do
       | stencil_c <- [1,0]] | stencil_r <- [1,0]]
     | r <- [0..num_rows-1], c <- [0..num_cols-1]]
 
+demosaic_generator :: forall a . (Num a, Integral a) => Integer -> [a] -> [(a,a,a)]
+demosaic_generator row_size inputs = do
+  [(get_red r c, get_green r c, get_blue r c)
+    | r <- [0..num_rows-1], c <- [0..num_cols-1]]
+    where
+      col_size = toInteger $ length inputs `div` fromInteger row_size
+      num_rows = toInteger $ col_size
+      num_cols = row_size
+      inputs_2d = Vec.fromList inputs
+      get_input r c = if (r < 0) || (c < 0) || (r >= num_rows) || (c >= num_cols)
+                      then fromInteger int_to_ignore
+                      else (inputs_2d Vec.! (fromInteger (r * row_size + c)))
+      div2 :: a -> a -> a
+      div2 x y | x == fromInteger int_to_ignore || y == fromInteger int_to_ignore = fromInteger int_to_ignore
+      div2 x y = (x + y) `div` 2
+      div4 :: a -> a -> a -> a -> a
+      div4 x y z q |
+        x == fromInteger int_to_ignore || y == fromInteger int_to_ignore ||
+        z == fromInteger int_to_ignore || q == fromInteger int_to_ignore = fromInteger int_to_ignore
+      div4 x y z q = (x + y + z + q) `div` 4
+      get_red :: Integer -> Integer -> a
+      get_red r c | (r < 0) || (c < 0) = fromInteger int_to_ignore
+      get_red r c | (r `mod` 2 == 0) && (c `mod` 2 == 1) =
+                    get_input r c
+      get_red r c | r `mod` 2 == 0 = div2
+                    (get_input r (c - 1)) (get_input r (c + 1)) 
+      get_red r c | (r `mod` 2 == 1) && (c `mod` 2 == 0) = div4
+                    (get_input (r - 1) (c - 1)) (get_input (r - 1) (c + 1))
+                    (get_input (r + 1) (c - 1)) (get_input (r + 1) (c + 1))
+      get_red r c | r `mod` 2 == 1 = div2
+                    (get_input (r - 1) c) (get_input (r + 1) c)
+      get_red r c = error $ "r: " ++ show r ++ ", c: " ++ show c ++ " no match for red"
+      get_green :: Integer -> Integer -> a
+      get_green r c | (r < 0) || (c < 0) = fromInteger int_to_ignore
+      get_green r c | (r `mod` 2 == 0) && (c `mod` 2 == 0) =
+                    get_input r c
+      get_green r c | (r `mod` 2 == 1) && (c `mod` 2 == 1) = 
+                    get_input r c
+      get_green r c = div4
+                      (get_input (r - 1) c) (get_input (r + 1) c)
+                      (get_input r (c-1)) (get_input r (c+1))
+      get_blue :: Integer -> Integer -> a
+      get_blue r c | (r < 0) || (c < 0) = fromInteger int_to_ignore
+      get_blue r c | (r `mod` 2 == 1) && (c `mod` 2 == 0) =
+                    get_input r c
+      get_blue r c | r `mod` 2 == 1 = div2
+                    (get_input r (c - 1)) (get_input r (c + 1))
+      get_blue r c | (r `mod` 2 == 0) && (c `mod` 2 == 1) = div4
+                    (get_input (r - 1) (c - 1)) (get_input (r - 1) (c + 1))
+                    (get_input (r + 1) (c - 1)) (get_input (r + 1) (c + 1))
+      get_blue r c | r `mod` 2 == 0 = div2
+                    (get_input (r - 1) c) (get_input (r + 1) c)
+      get_blue r c = error $ "r: " ++ show r ++ ", c: " ++ show c ++ " no match for blue"
+
 hask_kernel :: [[Word8]] = [[0,1,0],[1,2,1],[0,1,0]]
 hask_kernel_real :: [[Word8]] = [[1,2,1],[2,4,2],[1,2,1]]
 hask_kernel_real16 :: [[Word16]] = [[1,2,1],[2,4,2],[1,2,1]]
@@ -345,7 +399,21 @@ int_to_3char x = printf "%03d" x
 
 print_linear_matrix row_length matrix =
   sequence $ map print $ map (map int_to_3char) $ chunksOf row_length matrix
-  
+
+pixel_to_3char :: PrintfArg a => (a,a,a) -> String
+pixel_to_3char (x0,x1,x2) = "(" ++ printf "%03d" x0 ++ ", "
+                            ++ printf "%03d" x1 ++ ", "
+                            ++ printf "%03d" x2 ++ ")"
+
+print_linear_image row_length matrix =
+  sequence $ map print $ map (map pixel_to_3char) $ chunksOf row_length matrix
+
+red_on_row = [0,10,0,20,0,30,0,40]
+red_off_row = [0,0,0,0,0,0,0,0]
+blue_on_row = [15,0,25,0,35,0,45,0]
+blue_off_row = red_off_row
+green_first_row = [7,0,17,0,27,0,37,0]
+green_second_row = [0,3,0,13,0,23,0,33]
 -- a helper int for values that should be ignored by tester as they
 -- indicate invalid in shift (and thus stencil)
 int_to_ignore = 253

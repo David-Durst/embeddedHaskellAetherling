@@ -36,10 +36,10 @@ class Monad m => Sequence_Language m where
     a -> m b -> m a
     
   counterC :: (KnownNat n, Aetherling_Value a, Aetherling_Int a) =>
-    Proxy n -> Int -> m b -> m a
+    Proxy n -> Int -> m b -> m (Seq n a)
     
   counterC' :: (KnownNat n, Aetherling_Value a, Aetherling_Int a) =>
-    Proxy n -> Int -> Proxy a -> m b -> m a
+    Proxy n -> Int -> Proxy a -> m b -> m (Seq n a)
     
   -- sequence operators
   shiftC :: (KnownNat n, KnownNat r,
