@@ -20,11 +20,11 @@ module Top(
     .clock(clock), // @[:@1296.4]
     .reset(reset), // @[:@1297.4]
     .io_in_x342_TREADY(dontcare), // @[:@1298.4]
-    .io_in_x342_TDATA({I_0,I_1}), // @[:@1298.4]
+    .io_in_x342_TDATA({I_0,I_1,I_2,I_3}), // @[:@1298.4]
     .io_in_x342_TID(8'h0),
     .io_in_x342_TDEST(8'h0),
     .io_in_x343_TVALID(valid_down), // @[:@1298.4]
-    .io_in_x343_TDATA({O_0,O_1}), // @[:@1298.4]
+    .io_in_x343_TDATA({O_0,O_1,O_2,O_3}), // @[:@1298.4]
     .io_in_x343_TREADY(1'b1), // @[:@1298.4]
     .io_sigsIn_datapathEn(valid_up), // @[:@1298.4]
     .io_sigsIn_backpressure(1'b1), // @[:@20563.4]
