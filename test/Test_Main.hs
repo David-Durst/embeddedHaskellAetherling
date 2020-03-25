@@ -54,11 +54,12 @@ tests :: TestTree
 --tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests_part]
 --tests = testGroup "Top Level Aetherling Tests" [big_16_tests]
 --tests = testGroup "Top Level Aetherling Tests" [big_32_tests']
-tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests']
+--tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests']
 --tests = testGroup "Top Level Aetherling Tests" [big_real_16_tests']
 --tests = testGroup "Top Level Aetherling Tests" [big_16_tests']
 --tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests_part, big_tests, big_16_tests, big_32_tests]
 --tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests_sharpen']
+tests = testGroup "Top Level Aetherling Tests" [big_32_tests, big_real_32_tests]
 
 
 gen_io :: IO ()

@@ -10105,10 +10105,10 @@ module ReduceT(
   reg [31:0] _RAND_1;
   reg  _T_2; // @[ReduceT.scala 18:26]
   reg [31:0] _RAND_2;
-  reg [31:0] _T_3_0_0; // @[ReduceT.scala 55:15]
+  reg [31:0] _T_3_0_0; // @[ReduceT.scala 56:15]
   reg [31:0] _RAND_3;
   assign valid_down = _T_2; // @[ReduceT.scala 18:16]
-  assign O_0_0 = _T_3_0_0; // @[ReduceT.scala 55:5]
+  assign O_0_0 = _T_3_0_0; // @[ReduceT.scala 56:5]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
