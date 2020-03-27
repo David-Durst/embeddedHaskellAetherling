@@ -963,25 +963,45 @@ shift_one_results_chisel' = sequence $
               Chisel No_Verilog
               shift_one_inputs shift_one_output) [16]
 
-{-
-stencil_1dC_internal_test in_seq = do
+conv_math in_seq = do
+  mapC (\x -> divC (atom_tupleC x (const_genC (Atom_FixP1_7 0.3334) in_seq))) (reduceC addC in_seq)
+conv_1d in_seq = do
   let shifted_once = shiftC (Proxy @1) in_seq
   let shifted_twice = shiftC (Proxy @1) shifted_once
   let window_tuple = map2C seq_tuple_appendC
                      (map2C seq_tupleC in_seq shifted_once)
                      shifted_twice
   let partitioned_tuple = partitionC Proxy (Proxy :: Proxy 1) window_tuple
-  mapC seq_tuple_to_seqC partitioned_tuple
-stencil_1d_internal_test = stencil_1dC_internal_test $
-  com_input_seq "I" (Proxy :: Proxy (Seq 100 Atom_UInt8))
-stencil_1d_internal_seq_idx = add_indexes $ seq_shallow_to_deep stencil_1d_internal_test
-stencil_1d_internal_ppar =
-  fmap (\s -> compile_with_throughput_to_expr stencil_1d_internal_test s)
-  [1,2,5,10,30,100,300]
-stencil_1d_internal_ppar_typechecked =
-  fmap check_type stencil_1d_internal_ppar
-stencil_1d_internal_ppar_typechecked' =
-  fmap check_type_get_error stencil_1d_internal_ppar
+  let window = mapC seq_tuple_to_seqC partitioned_tuple
+  let result = mapC conv_math window
+  unpartitionC result
+conv_1d_test = conv_1d $
+  com_input_seq "I" (Proxy :: Proxy (Seq 100 Atom_UInt32))
+conv_1d_seq_idx = add_indexes $ seq_shallow_to_deep conv_1d_test
+conv_1d_throughputs = 
+  [1%3,1,2,100]
+conv_1d_ppar =
+  fmap (\s -> compile_with_throughput_to_expr conv_1d_test s)
+  conv_1d_throughputs
+conv_1d_trs = 
+  [[SplitNestedR (TimeR 100 0) (SplitNestedR (TimeR 1 2) NonSeqR), NonSeqR],
+   [TimeR 100 0, NonSeqR]]
+conv_1d_ppar' =
+  fmap (\s -> compile_with_type_rewrite_to_expr conv_1d_test s) conv_1d_trs
+conv_1d_ppar_typechecked =
+  fmap check_type conv_1d_ppar
+conv_1d_ppar_typechecked' =
+  fmap check_type_get_error conv_1d_ppar
+conv_1d_inputs :: [[Integer]] = [[1..100]]
+--conv_1d_output :: [((Integer, Integer), Integer)] = [((i, i), i) | i <- [1 .. 8]]
+conv_1d_output :: [Integer] = [if i > 2 then i-1 else int_to_ignore | i <- [1 .. 100]]
+-- need to come back and check why slowest version uses a reduce_s
+conv_1d_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              conv_1d_test (Type_Rewrites s)
+              Chisel No_Verilog
+              conv_1d_inputs conv_1d_output) conv_1d_trs
+{-
 tuple_mul_internal_shallow_no_input in_seq = do
   let kernel_list = fmap Atom_UInt8 [1,1,1]
   let kernel = const_genC (Seq $ listToVector (Proxy @3) kernel_list) in_seq

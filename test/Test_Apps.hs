@@ -57,6 +57,12 @@ apps_tests_chisel = testGroup "Full Application Tests"
     testCase "SHARPEN in paper" $
     (TS.all_success sharpen_results_chisel) @? "sharpen failed"
   ]
+  
+apps_tests_chisel_map = testGroup "Full Application Tests"
+  [
+    testCase "MAP in paper" $
+    (TS.all_success single_map_200_results_chisel) @? "map failed"
+  ]
 
 apps_tests_chisel' = testGroup "Full Application Tests"
   [
