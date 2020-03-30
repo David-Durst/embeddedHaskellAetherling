@@ -1,5 +1,9 @@
 # Aetherling Embedded In Haskell
 
+This is the main repository for Aetherling.
+
+The [supplementary materials for the paper](aetherling-supplementary.pdf) can be found here.
+
 Please see [the theory section](theory/README.md) for an overview of this repo.
 
 Please see [the python repo](https://github.com/David-Durst/aetherling) for the Magma
