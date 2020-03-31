@@ -51,12 +51,34 @@ stencil_3x3_2dC_test in_col in_img = do
 two_row_counter two_row_length in_img = do
   let index_counter = counterC 1 (fromInteger two_row_length_integer)
                       in_img
-  mapC (\elem -> do
-           let row_length_const = const_genC (Atom_UInt32 (fromInteger $ two_row_length_integer `div` 2)) elem
-           ltC $ atom_tupleC elem row_length_const
-          ) index_counter
+  let is_row_even = mapC
+        (\elem -> do
+            let row_length_const =
+                  const_genC
+                  (Atom_UInt32 (fromInteger $ two_row_length_integer `div` 2))
+                  elem
+            ltC $ atom_tupleC elem row_length_const
+        ) index_counter
+
+  {-
+  let is_col_even = mapC
+        (\elem -> do
+          let shifted_elem =
+                lslC $ (\x -> atom_tupleC x (const_genC (Atom_UInt8 1) elem)) $
+                lsrC (atom_tupleC elem (const_genC (Atom_UInt8 1) elem))
+          eqC $ atom_tupleC elem shifted_elem
+        ) index_counter
+        
+  (is_row_even, is_col_even)
+-}
+  is_row_even
   where
     two_row_length_integer = natVal two_row_length
+
+demosaic_two_rows two_row_length in_img = do
+  --let (is_row_even, is_col_even) = two_row_counter two_row_length in_img
+  let is_row_even = two_row_counter two_row_length in_img
+  undefined
 
 -- true if even row and col
 -- this emits a value for the center pixel in the stencil
