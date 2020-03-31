@@ -119,4 +119,23 @@ demosaic_pixel in_stencil row_bit col_bit = do
         let t_pixel = get_pixel (-1) 0
         let b_pixel = get_pixel 1 0
         div2 t_pixel b_pixel
-  undefined
+
+  let tuple_colors r g b = map2C (map2C atom_tupleC) r $
+                           map2C (map2C atom_tupleC) g b
+  -- tuple up the above values into 3 color triple
+  let colors_re_ce = tuple_colors red_re_ce green_re_ce blue_re_ce
+  let colors_re_co = tuple_colors red_re_co green_other blue_re_co
+  let colors_ro_ce = tuple_colors red_ro_ce green_other blue_ro_ce
+  let colors_ro_co = tuple_colors red_ro_co green_ro_co blue_ro_co
+
+  -- select columns for each row
+  let even_row_select_cols = mapC (mapC ifC) $
+                             map2C (map2C atom_tupleC) col_bit $
+                             map2C (map2C atom_tupleC) colors_re_ce colors_re_co
+  let odd_row_select_cols = mapC (mapC ifC) $
+                            map2C (map2C atom_tupleC) col_bit $
+                            map2C (map2C atom_tupleC) colors_ro_ce colors_ro_co
+  -- now selectrow
+  mapC (mapC ifC) $
+    map2C (map2C atom_tupleC) row_bit $
+    map2C (map2C atom_tupleC) even_row_select_cols odd_row_select_cols
