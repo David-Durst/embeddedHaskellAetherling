@@ -73,6 +73,12 @@ instance Sequence_Language Rewrite_StateM where
     case input of
       Atom_Tuple_Edge x -> return $ expr_to_edge $ AddN t x No_Index
       _ -> throwError $ Expr_Failure $ fail_message_edge "addC" "Atom_Tuple Atom_Int Atom_Int"
+      
+  addU32C inputM = do
+    input <- inputM
+    case input of
+      Atom_Tuple_Edge x -> return $ expr_to_edge $ AddN UInt32T x No_Index
+      _ -> throwError $ Expr_Failure $ fail_message_edge "addC" "Atom_Tuple Atom_Int Atom_Int"
 
   subC :: forall a . (Aetherling_Value a, Aetherling_Int a) =>
     Rewrite_StateM (Atom_Tuple a a) -> Rewrite_StateM a

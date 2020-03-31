@@ -22,8 +22,9 @@ import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import Data.List
 
 main :: IO ()
-main = defaultMain tests
+--main = defaultMain tests
 --main = gen_io
+main = print_st_text
 --main = do
 --  putStrLn $ show $ sum big_conv_2d_output
 --  return ()
@@ -74,4 +75,14 @@ gen_io = do
   apps_big_32_shifts_io
   apps_big_8_real_io
   apps_big_32_real_io
+  return ()
+
+print_st_text :: IO ()
+print_st_text = do
+  --big_real_32_conv_2d_st_prints
+  big_real_32_conv_2d_b2b_st_prints
+  big_real_32_sharpen_st_prints
+  big_32_conv_2d_st_prints
+  big_32_conv_2d_b2b_st_prints
+  big_32_sharpen_st_prints
   return ()

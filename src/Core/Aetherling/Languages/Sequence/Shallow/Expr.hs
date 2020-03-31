@@ -17,6 +17,7 @@ class Monad m => Sequence_Language m where
 
   -- binary operators
   addC :: (Aetherling_Value a, Aetherling_Int a) => m (Atom_Tuple a a) -> m a
+  addU32C :: m (Atom_Tuple Atom_UInt32 Atom_UInt32) -> m Atom_UInt32
   subC :: (Aetherling_Value a, Aetherling_Int a) => m (Atom_Tuple a a) -> m a
   mulC :: (Aetherling_Value a, Aetherling_Int a) => m (Atom_Tuple a a) -> m a
   divC :: (Aetherling_Value a, Aetherling_Int a) => m (Atom_Tuple a Atom_FixP1_7) -> m a

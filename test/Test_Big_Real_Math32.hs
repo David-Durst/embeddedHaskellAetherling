@@ -148,7 +148,7 @@ big_real_32_conv_2d_results_chisel' = sequence $
 big_real_32_conv_2d_st_prints = sequence $
   fmap (\s -> compile_to_file
               big_real_32_conv_2d (wrap_single_t s)
-              text_backend "conv2d") big_real_32_conv_2d_throughputs
+              text_backend "big_real_32_conv2d") big_real_32_conv_2d_throughputs
 big_real_32_conv_2d_verilog_prints = sequence $
   fmap (\s -> compile_to_file
               big_real_32_conv_2d (wrap_single_t s)
@@ -184,6 +184,10 @@ big_real_32_conv_2d_b2b_results_chisel = sequence $
               big_real_32_conv_2d_b2b (wrap_single_t s)
               Chisel (Save_Gen_Verilog "big_real_32_conv2d_b2b")
               big_real_32_conv_2d_b2b_inputs big_real_32_conv_2d_b2b_output) big_real_32_conv_2d_b2b_throughputs
+big_real_32_conv_2d_b2b_st_prints = sequence $
+  fmap (\s -> compile_to_file
+              big_real_32_conv_2d_b2b (wrap_single_t s)
+              text_backend "big_real_32_conv2d_b2b") big_real_32_conv_2d_b2b_throughputs
 
 
 t_const' = 15
@@ -247,6 +251,10 @@ big_real_32_sharpen_results_chisel' = sequence $
               big_real_32_sharpen (wrap_single_t s)
               Chisel (Save_Gen_Verilog "big_real_32_sharpen")
               big_real_32_sharpen_inputs big_real_32_sharpen_output) [big_real_32_sharpen_throughputs !! 3]
+big_real_32_sharpen_st_prints = sequence $
+  fmap (\s -> compile_to_file
+              big_real_32_sharpen (wrap_single_t s)
+              text_backend "big_real_32_sharpen") big_real_32_sharpen_throughputs
 
 big_real_32_tests = testGroup "Big Real 32 Tests"
   [

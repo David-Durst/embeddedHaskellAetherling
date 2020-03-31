@@ -299,8 +299,17 @@ stencil_2x2_generator row_size inputs = do
       | stencil_c <- [1,0]] | stencil_r <- [1,0]]
     | r <- [0..num_rows-1], c <- [0..num_cols-1]]
 
-demosaic_generator :: forall a . (Num a, Integral a) => Integer -> [a] -> [(a,a,a)]
-demosaic_generator row_size inputs = do
+demosaic_generator row_size inputs =
+  map (\(r, g, b) ->
+         if (r == int_to_ignore) || (g == int_to_ignore) || (b == int_to_ignore)
+         then (int_to_ignore, int_to_ignore, int_to_ignore)
+         else (r,g,b) ) $
+  demosaic_generator' row_size inputs
+
+-- this generates demosiacs with partial pixel data (i.e. red channel but not
+-- green or blue)
+demosaic_generator' :: forall a . (Num a, Integral a) => Integer -> [a] -> [(a,a,a)]
+demosaic_generator' row_size inputs = do
   [(get_red r c, get_green r c, get_blue r c)
     | r <- [0..num_rows-1], c <- [0..num_cols-1]]
     where

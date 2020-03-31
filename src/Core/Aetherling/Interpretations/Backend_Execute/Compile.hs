@@ -286,7 +286,7 @@ compile_to_file' shallow_seq_program s_target l_target output_name_template = do
     where
       one_program = case s_target of
                       Min_Area_With_Slowdown_Factor s -> True
-                      Min_Area_With_Throughput _ -> error "call compile_to_file not compile_to_file' with speedups"
+                      Min_Area_With_Throughput _ -> True
                       All_With_Slowdown_Factor s -> False
                       Type_Rewrites trs -> True
                       Output_ST_Type _ -> True
@@ -382,7 +382,7 @@ params_to_file_name base_name s_target idx False =
 
 slowdown_target_to_file_name_string :: Throughput_Target -> String
 slowdown_target_to_file_name_string (Min_Area_With_Slowdown_Factor s) = show s
-slowdown_target_to_file_name_string (Min_Area_With_Throughput s) = error "don't call slowdown_target_to_file_name_string with speedup"
+slowdown_target_to_file_name_string (Min_Area_With_Throughput s) = show s ++ "thr" --error "don't call slowdown_target_to_file_name_string with speedup"
 slowdown_target_to_file_name_string (All_With_Slowdown_Factor s) = show s
 slowdown_target_to_file_name_string (Type_Rewrites trs) =
   show (product_tr_periods trs)
