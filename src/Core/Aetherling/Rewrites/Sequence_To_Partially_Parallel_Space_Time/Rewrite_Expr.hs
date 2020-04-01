@@ -301,18 +301,21 @@ sequence_to_partially_parallel type_rewrites seq_e@(SeqE.Const_GenN constant_val
 sequence_to_partially_parallel type_rewrites@(tr@(SpaceR tr0_n) : type_rewrites_tl)
   seq_e@(SeqE.CounterN n incr_amount int_type _) |
   n == tr0_n = do
+  add_output_rewrite_for_node seq_e type_rewrites
   int_type_par <- ppar_AST_type type_rewrites_tl int_type
   cur_idx <- get_cur_index
   return $ STE.Counter_sN n incr_amount int_type_par 0 cur_idx
 sequence_to_partially_parallel type_rewrites@(tr@(TimeR tr0_n tr0_i) : type_rewrites_tl)
   seq_e@(SeqE.CounterN n incr_amount int_type _) |
   n == tr0_n = do
+  add_output_rewrite_for_node seq_e type_rewrites
   int_type_par <- ppar_AST_type type_rewrites_tl int_type
   cur_idx <- get_cur_index
   return $ STE.Counter_tN n tr0_i incr_amount int_type_par 0 cur_idx
 sequence_to_partially_parallel type_rewrites@(tr@(SplitR tr0_n tr0_i tr1_n) : type_rewrites_tl)
   seq_e@(SeqE.CounterN n incr_amount int_type _) |
   n == tr0_n * tr1_n = do
+  add_output_rewrite_for_node seq_e type_rewrites
   out_type_par <- ppar_AST_type type_rewrites_tl int_type
   cur_idx <- get_cur_index
   return $ STE.Counter_tsN tr0_n tr0_i tr1_n incr_amount out_type_par 0 cur_idx
@@ -321,6 +324,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_
                                                   : type_rewrites_tl)
   seq_e@(SeqE.CounterN n incr_amount int_type _) |
   n == tr0_n * tr1_n = do
+  add_output_rewrite_for_node seq_e type_rewrites
   out_type_par <- ppar_AST_type type_rewrites_tl int_type
   cur_idx <- get_cur_index
   return $ STE.Counter_tnN [tr0_n, tr1_n] [tr0_i, tr1_i] incr_amount out_type_par 0 cur_idx
@@ -330,6 +334,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_
                                                   : type_rewrites_tl)
   seq_e@(SeqE.CounterN n incr_amount int_type _) |
   n == tr0_n * tr1_n = do
+  add_output_rewrite_for_node seq_e type_rewrites
   out_type_par <- ppar_AST_type type_rewrites_tl int_type
   cur_idx <- get_cur_index
   return $ STE.Counter_tnN [tr0_n, tr1_n, tr2_n] [tr0_i, tr1_i, tr2_i] incr_amount out_type_par 0 cur_idx
