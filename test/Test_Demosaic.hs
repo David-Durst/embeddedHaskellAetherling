@@ -48,10 +48,6 @@ stencil_3x3_2dC_test in_col in_img = do
   let partitioned_triple = partitionC Proxy (Proxy @1) triple
   mapC seq_tuple_to_seqC partitioned_triple
 
-demosaic_test two_row_length row_length in_seq = do
-  let first_stencil = stencil_3x3_2dC_test row_length in_seq
-  unpartitionC $ unpartitionC $ mapC (demosaic_two_rows two_row_length row_length) $ partitionC Proxy two_row_length first_stencil
-
 demosaic_two_rows two_row_length row_length stencil = do
   let are_row_and_col_even = partitionC Proxy (Proxy @1) $
                              partitionC Proxy (Proxy @1) $
@@ -164,3 +160,12 @@ demosaic_pixel in_stencil are_row_and_col_even = do
   mapC (mapC ifC) $
     map2C (map2C atom_tupleC) row_bit $
     map2C (map2C atom_tupleC) even_row_select_cols odd_row_select_cols
+
+demosaic_test two_row_length row_length in_seq = do
+  let first_stencil = stencil_3x3_2dC_test row_length in_seq
+  unpartitionC $ unpartitionC $ mapC (demosaic_two_rows two_row_length row_length) $ partitionC Proxy two_row_length first_stencil
+
+demosaic = unpartitionC $ demosaic_test (Proxy @3840) (Proxy @1920) $
+  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_UInt32))
+
+demosaic_seq_idx = add_indexes $ seq_shallow_to_deep demosaic
