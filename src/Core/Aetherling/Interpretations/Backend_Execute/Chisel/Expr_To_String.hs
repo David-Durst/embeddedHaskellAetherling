@@ -268,7 +268,7 @@ module_to_string_inner consumer_e@(EqN t producer_e cur_idx) = do
   use_valids <- use_valid_port
   let valid_str = if use_valids then "" else "NoValid"
   let cur_ref = Backend_Module_Ref cur_ref_name ("Eq" ++ valid_str ++
-                                                 "(" ++ type_to_chisel t ++ "))")
+                                                 "(" ++ type_to_chisel t ++ ")")
                 [Module_Port "I" (port_type $ out_port producer_ref)]
                 (Module_Port "O" BitT)
   print_unary_operator cur_ref producer_ref
