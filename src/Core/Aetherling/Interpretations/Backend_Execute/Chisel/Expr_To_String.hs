@@ -298,6 +298,7 @@ module_to_string_inner consumer_e@(Const_GenN constant t delay cur_idx) = do
   let out_port_name = (cur_ref_name ++ "_O")
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
                 [] (Module_Port out_port_name t)
+  incr_num_non_inputs_cur_module $ gen_call cur_ref
   add_to_cur_module $ "val (" ++ out_port_name ++ ", " ++
     cur_ref_name ++ "_valid_down) = " ++ gen_call cur_ref
   update_output $ Module_Port out_port_name t
@@ -316,6 +317,7 @@ module_to_string_inner consumer_e@(Counter_sN n incr_amount int_type delay cur_i
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
                 [] (Module_Port "O"
                     (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
+  incr_num_non_inputs_cur_module $ gen_call cur_ref
   print_nullary_operator cur_ref
   return cur_ref
 module_to_string_inner consumer_e@(Counter_tN n i incr_amount int_type delay cur_idx) = do
@@ -330,6 +332,7 @@ module_to_string_inner consumer_e@(Counter_tN n i incr_amount int_type delay cur
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
                 [] (Module_Port "O"
                     (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
+  incr_num_non_inputs_cur_module $ gen_call cur_ref
   print_nullary_operator cur_ref
   return cur_ref
 module_to_string_inner consumer_e@(Counter_tsN no io ni incr_amount int_type delay cur_idx) = do
@@ -344,6 +347,7 @@ module_to_string_inner consumer_e@(Counter_tsN no io ni incr_amount int_type del
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
                 [] (Module_Port "O"
                     (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
+  incr_num_non_inputs_cur_module $ gen_call cur_ref
   print_nullary_operator cur_ref
   return cur_ref
 module_to_string_inner consumer_e@(Counter_tnN ns is incr_amount int_type delay cur_idx) = do
@@ -360,6 +364,7 @@ module_to_string_inner consumer_e@(Counter_tnN ns is incr_amount int_type delay 
   let cur_ref = Backend_Module_Ref cur_ref_name gen_str
                 [] (Module_Port "O"
                     (ST_Conv.e_out_type $ ST_Conv.expr_to_types consumer_e))
+  incr_num_non_inputs_cur_module $ gen_call cur_ref
   print_nullary_operator cur_ref
   return cur_ref
   
