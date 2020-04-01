@@ -53,25 +53,32 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
   let num_ports = length $ in_ports $ module_outer_results $ module_str_data
   -- these are nested for both space and time
   -- issue: if 1 input per clock, then need to remove the space dimension
+  let f_inputs_atom_strs =
+        map (\i ->
+                atom_to_scala_string $ get_atom_t $ e_in_types p_types !! i
+               )
+        [0..num_ports-1]
   let f_inputs = foldl (++) "" $
         map (\i -> tab_str ++ "val chisel_inputs" ++ show i ++
               " = JsonParser(Source.fromFile(\"" ++
               show_no_quotes (test_path $ tester_inputs_fp tester_io_paths !! i) ++
               "\").getLines.mkString).convertTo[IndexedSeq[" ++
               (if (nested_array $ tester_inputs_fp tester_io_paths !! i)
-                then "IndexedSeq[Int]" else "Int") ++ "]]\n" ++
+                then "IndexedSeq[" ++ f_inputs_atom_strs !! i ++ "]"
+                else (f_inputs_atom_strs !! i)) ++ "]]\n" ++
               tab_str ++ "val chisel_inputs" ++ show i ++ "_valid = " ++
               " JsonParser(Source.fromFile(\"" ++
               show_no_quotes (tester_valid_in_fp tester_io_paths !! i) ++
               "\").getLines.mkString).convertTo[IndexedSeq[Boolean]]\n"
             )
         [0..num_ports - 1]
+  let f_output_atom_str = atom_to_scala_string $ get_atom_t $ e_out_type p_types
   let f_output = tab_str ++ "val chisel_output = " ++
                  " JsonParser(Source.fromFile(\"" ++
                  show_no_quotes (test_path $ tester_output_fp tester_io_paths) ++
                  "\").getLines.mkString).convertTo[IndexedSeq[" ++
                  (if (nested_array $ tester_output_fp tester_io_paths)
-                  then "IndexedSeq[Int]" else "Int") ++ "]]\n" ++
+                  then "IndexedSeq[" ++ f_output_atom_str ++ "]" else f_output_atom_str) ++ "]]\n" ++
                  tab_str ++ "val chisel_output_valid = " ++
                  " JsonParser(Source.fromFile(\"" ++
                  show_no_quotes (tester_valid_out_fp tester_io_paths) ++
@@ -137,3 +144,17 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
         test_output_counter_incr ++ test_valid_down_check ++
         test_output ++ test_step ++ test_end
   chisel_test_spec_wrapper (module_str module_str_data) test_body
+
+atom_to_scala_string :: AST_Type -> String
+atom_to_scala_string UnitT = "Unit"
+atom_to_scala_string BitT = "Boolean"
+atom_to_scala_string UInt8T = "Int"
+atom_to_scala_string Int8T = "Int"
+atom_to_scala_string UInt16T = "Int"
+atom_to_scala_string Int16T = "Int"
+atom_to_scala_string UInt32T = "Int"
+atom_to_scala_string Int32T = "Int"
+atom_to_scala_string (ATupleT t0 t1) = "Tuple2[" ++ atom_to_scala_string t0 ++
+                                       ", " ++ atom_to_scala_string t1 ++ "]"
+atom_to_scala_string t = error $ "Type " ++ show t ++
+                         " is not an atom type to convert to a scala string."
