@@ -318,9 +318,9 @@ demosaic_generator' row_size inputs = do
       num_rows = toInteger $ col_size
       num_cols = row_size
       inputs_2d = Vec.fromList inputs
-      get_input r c = if (r < 0) || (c < 0) || (r >= num_rows) || (c >= num_cols)
+      get_input r c = if (r-1 < 0) || (c-1 < 0) || (r-1 >= num_rows) || ((c-1) >= num_cols)
                       then fromInteger int_to_ignore
-                      else (inputs_2d Vec.! (fromInteger (r * row_size + c)))
+                      else (inputs_2d Vec.! (fromInteger ((r-1) * row_size + (c-1))))
       div2 :: a -> a -> a
       div2 x y | x == fromInteger int_to_ignore || y == fromInteger int_to_ignore = fromInteger int_to_ignore
       div2 x y = (x + y) `div` 2

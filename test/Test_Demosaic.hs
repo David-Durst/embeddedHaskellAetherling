@@ -62,7 +62,7 @@ two_row_counter two_row_length in_img = do
                   const_genC
                   (Atom_UInt32 (fromInteger $ two_row_length_integer `div` 2))
                   elem
-            ltC $ atom_tupleC elem row_length_const
+            notC $ ltC $ atom_tupleC elem row_length_const
         ) index_counter
 
   let is_col_even = mapC
@@ -70,7 +70,7 @@ two_row_counter two_row_length in_img = do
           let shifted_elem =
                 lslC $ (\x -> atom_tupleC x (const_genC (Atom_UInt8 1) elem)) $
                 lsrC (atom_tupleC elem (const_genC (Atom_UInt8 1) elem))
-          eqC $ atom_tupleC elem shifted_elem
+          notC $ eqC $ atom_tupleC elem shifted_elem
         ) index_counter
         
   map2C atom_tupleC is_row_even is_col_even
@@ -122,7 +122,7 @@ demosaic_pixel in_stencil are_row_and_col_even = do
         let t_pixel = get_pixel (-1) 0
         let r_pixel = get_pixel 0 1
         let b_pixel = get_pixel 1 0
-        div4 l_pixel t_pixel l_pixel b_pixel
+        div4 l_pixel t_pixel r_pixel b_pixel
   -- re means row even, ce means column even
   let blue_ro_co = do
         let l_pixel = get_pixel 0 (-1)
