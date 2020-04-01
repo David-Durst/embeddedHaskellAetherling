@@ -49,8 +49,7 @@ stencil_3x3_2dC_test in_col in_img = do
   mapC seq_tuple_to_seqC partitioned_triple
 
 two_row_counter two_row_length in_img = do
-  let index_counter = counterC 1 (fromInteger two_row_length_integer)
-                      in_img
+  let index_counter = counterC two_row_length 1 in_img
   let is_row_even = mapC
         (\elem -> do
             let row_length_const =
@@ -60,7 +59,6 @@ two_row_counter two_row_length in_img = do
             ltC $ atom_tupleC elem row_length_const
         ) index_counter
 
-  {-
   let is_col_even = mapC
         (\elem -> do
           let shifted_elem =
@@ -70,14 +68,11 @@ two_row_counter two_row_length in_img = do
         ) index_counter
         
   (is_row_even, is_col_even)
--}
-  is_row_even
   where
     two_row_length_integer = natVal two_row_length
 
 demosaic_two_rows two_row_length in_img = do
-  --let (is_row_even, is_col_even) = two_row_counter two_row_length in_img
-  let is_row_even = two_row_counter two_row_length in_img
+  let (is_row_even, is_col_even) = two_row_counter two_row_length in_img
   undefined
 
 -- true if even row and col
