@@ -48,6 +48,16 @@ stencil_3x3_2dC_test in_col in_img = do
   let partitioned_triple = partitionC Proxy (Proxy @1) triple
   mapC seq_tuple_to_seqC partitioned_triple
 
+demosaic_test two_row_length row_length in_seq = do
+  let first_stencil = stencil_3x3_2dC_test row_length in_seq
+  unpartitionC $ unpartitionC $ mapC (demosaic_two_rows two_row_length row_length) $ partitionC Proxy two_row_length first_stencil
+
+demosaic_two_rows two_row_length row_length stencil = do
+  let are_row_and_col_even = partitionC Proxy (Proxy @1) $
+                             partitionC Proxy (Proxy @1) $
+                             two_row_counter two_row_length stencil
+  map2C demosaic_pixel stencil are_row_and_col_even
+
 two_row_counter two_row_length in_img = do
   let index_counter = counterC two_row_length 1 in_img
   let is_row_even = mapC
@@ -67,17 +77,15 @@ two_row_counter two_row_length in_img = do
           eqC $ atom_tupleC elem shifted_elem
         ) index_counter
         
-  (is_row_even, is_col_even)
+  map2C atom_tupleC is_row_even is_col_even
   where
     two_row_length_integer = natVal two_row_length
 
-demosaic_two_rows two_row_length in_img = do
-  let (is_row_even, is_col_even) = two_row_counter two_row_length in_img
-  undefined
-
 -- true if even row and col
 -- this emits a value for the center pixel in the stencil
-demosaic_pixel in_stencil row_bit col_bit = do
+demosaic_pixel in_stencil are_row_and_col_even = do
+  let row_bit = mapC (mapC fstC) are_row_and_col_even
+  let col_bit = mapC (mapC sndC) are_row_and_col_even
   -- get the data per each pixel for each possible index
   let get_pixel row col = mapC (down_1dC (col + 1)) $ down_1dC (row + 1) in_stencil
   let div2 x y = do
