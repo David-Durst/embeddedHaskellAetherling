@@ -161,11 +161,53 @@ demosaic_pixel in_stencil are_row_and_col_even = do
     map2C (map2C atom_tupleC) row_bit $
     map2C (map2C atom_tupleC) even_row_select_cols odd_row_select_cols
 
-demosaic_test two_row_length row_length in_seq = do
-  let first_stencil = stencil_3x3_2dC_test row_length in_seq
-  unpartitionC $ unpartitionC $ mapC (demosaic_two_rows two_row_length row_length) $ partitionC Proxy two_row_length first_stencil
+row_length_proxy = Proxy @4
+two_row_length_proxy = Proxy @8
+demosaic_test in_seq = do
+  let first_stencil = stencil_3x3_2dC_test row_length_proxy in_seq
+  unpartitionC $ unpartitionC $ unpartitionC $
+    mapC (demosaic_two_rows two_row_length_proxy row_length_proxy) $
+    partitionC Proxy two_row_length_proxy first_stencil
 
-demosaic = unpartitionC $ demosaic_test (Proxy @3840) (Proxy @1920) $
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_UInt32))
+demosaic = demosaic_test $
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 Atom_UInt32))
 
+row_size_demosaic :: Integer = 4
+col_size_demosaic :: Integer = 4
+img_size_demosaic :: Int = fromInteger $ col_size_demosaic*row_size_demosaic
 demosaic_seq_idx = add_indexes $ seq_shallow_to_deep demosaic
+demosaic_throughputs = [16, 8, 4, 2, 1, 1 % 3]
+--demosaic_slowdowns = speed_to_slow [1] (toInteger img_size_conv2d_big_32)
+demosaic_ppar =
+  fmap (\s -> compile_with_throughput_to_expr demosaic s) demosaic_throughputs
+demosaic_ppar_typechecked =
+  fmap check_type demosaic_ppar
+demosaic_ppar_typechecked' =
+  fmap check_type_get_error demosaic_ppar
+demosaic_inputs :: [[Word32]] = map (map fromIntegral) [[i*5 | i <- [1..row_size_demosaic*col_size_demosaic]]]
+demosaic_output :: [(Word32, (Word32, Word32))] =
+  demosaic_generator row_size_demosaic (demosaic_inputs !! 0)
+demosaic_results = sequence $
+  fmap (\s -> test_with_backend
+              demosaic (wrap_single_t s)
+              Magma (Save_Gen_Verilog "demosaic")
+              demosaic_inputs demosaic_output) demosaic_throughputs
+demosaic_results_chisel = sequence $
+  fmap (\s -> test_with_backend
+              demosaic (wrap_single_t s)
+              Chisel (Save_Gen_Verilog "demosaic")
+              demosaic_inputs demosaic_output) demosaic_throughputs
+demosaic_results' = sequence $
+  fmap (\s -> test_with_backend
+              demosaic (wrap_single_t s)
+              Magma No_Verilog
+              demosaic_inputs demosaic_output) [demosaic_throughputs !! 0]
+demosaic_results_chisel' = sequence $
+  fmap (\s -> test_with_backend
+              demosaic (wrap_single_t s)
+              Chisel (Save_Gen_Verilog "demosaic")
+              demosaic_inputs demosaic_output) [demosaic_throughputs !! 4]
+demosaic_st_prints = sequence $
+  fmap (\s -> compile_to_file
+              demosaic (wrap_single_t s)
+              text_backend "demosaic") demosaic_throughputs

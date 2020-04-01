@@ -299,11 +299,12 @@ stencil_2x2_generator row_size inputs = do
       | stencil_c <- [1,0]] | stencil_r <- [1,0]]
     | r <- [0..num_rows-1], c <- [0..num_cols-1]]
 
+demosaic_generator :: forall a . (Num a, Integral a) => Integer -> [a] -> [(a, (a, a))]
 demosaic_generator row_size inputs =
   map (\(r, g, b) ->
-         if (r == int_to_ignore) || (g == int_to_ignore) || (b == int_to_ignore)
-         then (int_to_ignore, int_to_ignore, int_to_ignore)
-         else (r,g,b) ) $
+         if (r == fromInteger int_to_ignore) || (g == fromInteger int_to_ignore) || (b == fromInteger int_to_ignore)
+         then (fromInteger int_to_ignore, (fromInteger int_to_ignore, fromInteger int_to_ignore))
+         else (r,(g,b)) ) $
   demosaic_generator' row_size inputs
 
 -- this generates demosiacs with partial pixel data (i.e. red channel but not
@@ -409,10 +410,10 @@ int_to_3char x = printf "%03d" x
 print_linear_matrix row_length matrix =
   sequence $ map print $ map (map int_to_3char) $ chunksOf row_length matrix
 
-pixel_to_3char :: PrintfArg a => (a,a,a) -> String
-pixel_to_3char (x0,x1,x2) = "(" ++ printf "%03d" x0 ++ ", "
-                            ++ printf "%03d" x1 ++ ", "
-                            ++ printf "%03d" x2 ++ ")"
+pixel_to_3char :: PrintfArg a => (a,(a,a)) -> String
+pixel_to_3char (x0,(x1,x2)) = "(" ++ printf "%03d" x0 ++ ", "
+                              ++ printf "%03d" x1 ++ ", "
+                              ++ printf "%03d" x2 ++ ")"
 
 print_linear_image row_length matrix =
   sequence $ map print $ map (map pixel_to_3char) $ chunksOf row_length matrix
