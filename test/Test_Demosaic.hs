@@ -140,6 +140,8 @@ demosaic_pixel in_stencil are_row_and_col_even = do
         let t_pixel = get_pixel (-1) 0
         let b_pixel = get_pixel 1 0
         div2 t_pixel b_pixel
+  let top_left = get_pixel (-1) (-1)
+  let bottom_right = get_pixel (1) (1)
 
   let tuple_colors r g b = map2C (map2C atom_tupleC) r $
                            map2C (map2C atom_tupleC) g b
@@ -148,13 +150,18 @@ demosaic_pixel in_stencil are_row_and_col_even = do
   let colors_re_co = tuple_colors red_re_co green_other blue_re_co
   let colors_ro_ce = tuple_colors red_ro_ce green_other blue_ro_ce
   let colors_ro_co = tuple_colors red_ro_co green_ro_co blue_ro_co
+  let this_color = tuple_colors top_left green_re_ce bottom_right--red_re_co green_re_ce blue_ro_ce
 
   -- select columns for each row
   let even_row_select_cols = mapC (mapC ifC) $
                              map2C (map2C atom_tupleC) col_bit $
+                             --map2C (map2C atom_tupleC) colors_re_ce this_color
+                             --map2C (map2C atom_tupleC) colors_re_ce colors_re_ce
                              map2C (map2C atom_tupleC) colors_re_ce colors_re_co
   let odd_row_select_cols = mapC (mapC ifC) $
                             map2C (map2C atom_tupleC) col_bit $
+                            --map2C (map2C atom_tupleC) this_color this_color
+                            --map2C (map2C atom_tupleC) colors_re_ce colors_re_ce
                             map2C (map2C atom_tupleC) colors_ro_ce colors_ro_co
   -- now selectrow
   mapC (mapC ifC) $
@@ -184,7 +191,7 @@ demosaic_ppar_typechecked =
   fmap check_type demosaic_ppar
 demosaic_ppar_typechecked' =
   fmap check_type_get_error demosaic_ppar
-demosaic_inputs :: [[Word32]] = map (map fromIntegral) [[i*5 | i <- [1..row_size_demosaic*col_size_demosaic]]]
+demosaic_inputs :: [[Word32]] = map (map fromIntegral) [[i*i | i <- [1..row_size_demosaic*col_size_demosaic]]]
 demosaic_output :: [(Word32, (Word32, Word32))] =
   demosaic_generator row_size_demosaic (demosaic_inputs !! 0)
 demosaic_results = sequence $

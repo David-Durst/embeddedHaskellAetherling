@@ -329,37 +329,36 @@ demosaic_generator' row_size inputs = do
         x == fromInteger int_to_ignore || y == fromInteger int_to_ignore ||
         z == fromInteger int_to_ignore || q == fromInteger int_to_ignore = fromInteger int_to_ignore
       div4 x y z q = (x + y + z + q) `div` 4
+      -- r and c off set by 1 as using bottom right rather than center
+      -- but get_input coordinates are centerd, get_input does offseting itself
       get_red :: Integer -> Integer -> a
-      get_red r c | (r < 0) || (c < 0) = fromInteger int_to_ignore
-      get_red r c | (r `mod` 2 == 0) && (c `mod` 2 == 1) =
+      get_red r c | ((r-1) `mod` 2 == 0) && ((c-1) `mod` 2 == 1) =
                     get_input r c
-      get_red r c | r `mod` 2 == 0 = div2
+      get_red r c | (r-1) `mod` 2 == 0 = div2
                     (get_input r (c - 1)) (get_input r (c + 1)) 
-      get_red r c | (r `mod` 2 == 1) && (c `mod` 2 == 0) = div4
+      get_red r c | ((r-1) `mod` 2 == 1) && ((c-1) `mod` 2 == 0) = div4
                     (get_input (r - 1) (c - 1)) (get_input (r - 1) (c + 1))
                     (get_input (r + 1) (c - 1)) (get_input (r + 1) (c + 1))
-      get_red r c | r `mod` 2 == 1 = div2
+      get_red r c | (r-1) `mod` 2 == 1 = div2
                     (get_input (r - 1) c) (get_input (r + 1) c)
       get_red r c = error $ "r: " ++ show r ++ ", c: " ++ show c ++ " no match for red"
       get_green :: Integer -> Integer -> a
-      get_green r c | (r < 0) || (c < 0) = fromInteger int_to_ignore
-      get_green r c | (r `mod` 2 == 0) && (c `mod` 2 == 0) =
+      get_green r c | ((r-1) `mod` 2 == 0) && ((c-1) `mod` 2 == 0) =
                     get_input r c
-      get_green r c | (r `mod` 2 == 1) && (c `mod` 2 == 1) = 
+      get_green r c | ((r-1) `mod` 2 == 1) && ((c-1) `mod` 2 == 1) = 
                     get_input r c
       get_green r c = div4
                       (get_input (r - 1) c) (get_input (r + 1) c)
                       (get_input r (c-1)) (get_input r (c+1))
       get_blue :: Integer -> Integer -> a
-      get_blue r c | (r < 0) || (c < 0) = fromInteger int_to_ignore
-      get_blue r c | (r `mod` 2 == 1) && (c `mod` 2 == 0) =
+      get_blue r c | ((r-1) `mod` 2 == 1) && ((c-1) `mod` 2 == 0) =
                     get_input r c
-      get_blue r c | r `mod` 2 == 1 = div2
+      get_blue r c | (r-1) `mod` 2 == 1 = div2
                     (get_input r (c - 1)) (get_input r (c + 1))
-      get_blue r c | (r `mod` 2 == 0) && (c `mod` 2 == 1) = div4
+      get_blue r c | ((r-1) `mod` 2 == 0) && ((c-1) `mod` 2 == 1) = div4
                     (get_input (r - 1) (c - 1)) (get_input (r - 1) (c + 1))
                     (get_input (r + 1) (c - 1)) (get_input (r + 1) (c + 1))
-      get_blue r c | r `mod` 2 == 0 = div2
+      get_blue r c | (r-1) `mod` 2 == 0 = div2
                     (get_input (r - 1) c) (get_input (r + 1) c)
       get_blue r c = error $ "r: " ++ show r ++ ", c: " ++ show c ++ " no match for blue"
 
