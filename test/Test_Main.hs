@@ -13,6 +13,7 @@ import Test_Spatial
 import Test_Big_Real_Math
 import Test_Big_Real_Math16
 import Test_Big_Real_Math32
+import Test_Demosaic
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types
@@ -22,9 +23,9 @@ import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import Data.List
 
 main :: IO ()
---main = defaultMain tests
+main = defaultMain tests
 --main = gen_io
-main = print_st_text
+--main = print_st_text
 --main = do
 --  putStrLn $ show $ sum big_conv_2d_output
 --  return ()
@@ -61,7 +62,8 @@ tests :: TestTree
 --tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests_part, big_tests, big_16_tests, big_32_tests]
 --tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests_sharpen']
 --tests = testGroup "Top Level Aetherling Tests" [big_32_tests, big_real_32_tests]
-tests = testGroup "Top Level Aetherling Tests" [apps_tests_chisel_map]
+--tests = testGroup "Top Level Aetherling Tests" [apps_tests_chisel_map]
+tests = testGroup "Top Level Aetherling Tests" [demosaic_tests]
 
 
 gen_io :: IO ()
@@ -80,9 +82,11 @@ gen_io = do
 print_st_text :: IO ()
 print_st_text = do
   --big_real_32_conv_2d_st_prints
-  big_real_32_conv_2d_b2b_st_prints
-  big_real_32_sharpen_st_prints
-  big_32_conv_2d_st_prints
-  big_32_conv_2d_b2b_st_prints
-  big_32_sharpen_st_prints
+  --big_real_32_conv_2d_b2b_st_prints
+  --big_real_32_sharpen_st_prints
+  --big_32_conv_2d_st_prints
+  --big_32_conv_2d_b2b_st_prints
+  --big_32_sharpen_st_prints
+  --demosaic_st_prints
+  print_st $ demosaic_ppar_tr !! 0
   return ()

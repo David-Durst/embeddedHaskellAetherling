@@ -135,6 +135,21 @@ num_atoms_total_t (STupleT n t) = num_atoms_total_t t
 num_atoms_total_t (SSeqT n t) = n * num_atoms_total_t t
 num_atoms_total_t (TSeqT n _ t) = n * num_atoms_total_t t
 
+num_atoms_stuple_total_t :: AST_Type -> Int
+num_atoms_stuple_total_t UnitT = 1
+num_atoms_stuple_total_t BitT = 1
+num_atoms_stuple_total_t Int8T = 1
+num_atoms_stuple_total_t UInt8T = 1
+num_atoms_stuple_total_t FixP1_7T = 1
+num_atoms_stuple_total_t Int16T = 1
+num_atoms_stuple_total_t UInt16T = 1
+num_atoms_stuple_total_t Int32T = 1
+num_atoms_stuple_total_t UInt32T = 1
+num_atoms_stuple_total_t (ATupleT t0 t1) = 1
+num_atoms_stuple_total_t (STupleT n t) = n * num_atoms_stuple_total_t t
+num_atoms_stuple_total_t (SSeqT n t) = n * num_atoms_stuple_total_t t
+num_atoms_stuple_total_t (TSeqT n _ t) = n * num_atoms_stuple_total_t t
+
 num_atoms_per_valid_t :: AST_Type -> Int
 num_atoms_per_valid_t UnitT = 1
 num_atoms_per_valid_t BitT = 1
