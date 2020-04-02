@@ -63,7 +63,7 @@ tests :: TestTree
 --tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests_sharpen']
 --tests = testGroup "Top Level Aetherling Tests" [big_32_tests, big_real_32_tests]
 --tests = testGroup "Top Level Aetherling Tests" [apps_tests_chisel_map]
-tests = testGroup "Top Level Aetherling Tests" [demosaic_tests]
+tests = testGroup "Top Level Aetherling Tests" [demosaic_tests'']
 
 
 gen_io :: IO ()

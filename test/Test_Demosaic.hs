@@ -185,7 +185,8 @@ img_size_demosaic :: Int = fromInteger $ col_size_demosaic*row_size_demosaic
 demosaic_seq_idx = add_indexes $ seq_shallow_to_deep demosaic
 demosaic_throughputs = [16, 8, 4, 2, 1, 1 % 4]
 demosaic_tr = [[SplitNestedR (TimeR 2073600 0) (SplitNestedR (TimeR 1 3) NonSeqR), NonSeqR],
-               [TimeR 2073600 (2073600 * 3) , NonSeqR]]
+               [TimeR 2073600 (2073600 * 3) , NonSeqR],
+               [TimeR 2073600 0 , NonSeqR]]
 --demosaic_slowdowns = speed_to_slow [1] (toInteger img_size_conv2d_big_32)
 demosaic_ppar =
   fmap (\s -> compile_with_throughput_to_expr demosaic s) demosaic_throughputs
@@ -219,12 +220,17 @@ demosaic_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               demosaic (wrap_single_t s)
               Chisel (Save_Gen_Verilog "demosaic")
-              demosaic_inputs demosaic_output) [demosaic_throughputs !! 5]
+              demosaic_inputs demosaic_output) [demosaic_throughputs !! 4]
 demosaic_results_chisel_tr = sequence $
   fmap (\s -> test_with_backend
               demosaic (Type_Rewrites s)
               Chisel (Save_Gen_Verilog "demosaic")
               demosaic_inputs demosaic_output) [demosaic_tr !! 0]
+demosaic_results_chisel_tr' = sequence $
+  fmap (\s -> test_with_backend
+              demosaic (Type_Rewrites s)
+              Chisel (Save_Gen_Verilog "demosaic")
+              demosaic_inputs demosaic_output) [demosaic_tr !! 2]
 demosaic_st_prints = sequence $
   fmap (\s -> compile_to_file
               demosaic (Type_Rewrites s)
@@ -239,6 +245,19 @@ demosaic_tests = testGroup "Demosaic Tests"
     --testCase "printing demosaics" $
     --((\x -> returnIO True) demosaic_st_prints) @? "printing demosaics"
   ]
+  
+demosaic_tests' = testGroup "Demosaic Tests"
+  [
+    testCase "single demosaic" $
+    (TS.all_success demosaic_results_chisel') @? "single demosaic"--,
+    --testCase "printing demosaics" $
+    --((\x -> returnIO True) demosaic_st_prints) @? "printing demosaics"
+  ]
 
+demosaic_tests'' = testGroup "Demosaic Tests"
+  [
+    testCase "single demosaic with tr 1" $
+    (TS.all_success demosaic_results_chisel_tr') @? "single demosaic with tr 1"
+  ]
 returnIO :: a -> IO a
 returnIO = return

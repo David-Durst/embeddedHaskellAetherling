@@ -148,12 +148,12 @@ add_test_harness_to_chisel_str p module_str_data inputs output output_latency
 atom_to_scala_string :: AST_Type -> String
 atom_to_scala_string UnitT = "Unit"
 atom_to_scala_string BitT = "Boolean"
-atom_to_scala_string UInt8T = "Int"
-atom_to_scala_string Int8T = "Int"
-atom_to_scala_string UInt16T = "Int"
-atom_to_scala_string Int16T = "Int"
-atom_to_scala_string UInt32T = "Int"
-atom_to_scala_string Int32T = "Int"
+atom_to_scala_string UInt8T = "BigInt"
+atom_to_scala_string Int8T = "BigInt"
+atom_to_scala_string UInt16T = "BigInt"
+atom_to_scala_string Int16T = "BigInt"
+atom_to_scala_string UInt32T = "BigInt"
+atom_to_scala_string Int32T = "BigInt"
 atom_to_scala_string (ATupleT t0 t1) = "Tuple2[" ++ atom_to_scala_string t0 ++
                                        ", " ++ atom_to_scala_string t1 ++ "]"
 atom_to_scala_string t = error $ "Type " ++ show t ++
