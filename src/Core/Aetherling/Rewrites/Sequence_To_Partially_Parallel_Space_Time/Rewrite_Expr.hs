@@ -24,11 +24,13 @@ import qualified Data.List as L
 import Data.List.Split (chunksOf)
 import qualified Data.Set as S
 import qualified Data.Map as M
+import Data.Foldable as F
 import Debug.Trace
 import Data.Time
 import System.IO.Unsafe
 import Control.DeepSeq
 import GHC.Generics (Generic)
+import System.IO.Unsafe
 {-
 rewrite_to_partially_parallel_old :: Int -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel_old s seq_expr = do
@@ -57,7 +59,7 @@ rewrite_to_partially_parallel' s seq_expr = do
 rewrite_to_partially_parallel_type_rewrite :: [Type_Rewrite] -> SeqE.Expr -> STE.Expr
 rewrite_to_partially_parallel_type_rewrite tr seq_expr = do
   let (expr_par, state) = runState (evalStateT
-                             (runExceptT $ rewrite_to_partially_parallel_type_rewrite' tr seq_expr)
+                             (runExceptT $ rewrite_to_partially_parallel_type_rewrite' tr seq_expr 0)
                              empty_rewrite_data)
                  empty_ppar_state
   --trace ("num_calls : " ++ (show $ num_calls state)) $
@@ -71,11 +73,54 @@ rewrite_to_partially_parallel_type_rewrite tr seq_expr = do
       else STE.ErrorN ("\noutput_time: " ++ show output_time ++
                        "\ntype_rewrites: " ++ show tr ++
                        "\nslowdown doesn't match result" ++ ST_Print.print_st_str result) No_Index
+           
+rewrite_to_partially_parallel_type_rewrite_internal_start :: [Type_Rewrite] -> SeqE.Expr -> Reshape_TR_Cache -> (STE.Expr, Reshape_TR_Cache)
+rewrite_to_partially_parallel_type_rewrite_internal_start tr seq_expr cache = do
+  let (expr_par, state) = runState (evalStateT
+                             (runExceptT $ rewrite_to_partially_parallel_type_rewrite' tr seq_expr 0)
+                             empty_rewrite_data)
+                 (with_reshape_cache_ppar_state 0 cache)
+  --trace ("num_calls : " ++ (show $ num_calls state)) $
+  if isLeft expr_par
+    then (STE.ErrorN (rw_msg $ fromLeft undefined expr_par) No_Index, cache)
+    else do
+    let result = fromRight undefined expr_par
+    let output_time = STT.clocks_t $ ST_Conv.e_out_type $ ST_Conv.expr_to_types result
+    if output_time == product_tr_periods tr
+      then do
+      let new_cache = reshape_type_cache state
+      (result, new_cache)
+      else (STE.ErrorN ("\noutput_time: " ++ show output_time ++
+                       "\ntype_rewrites: " ++ show tr ++
+                       "\nslowdown doesn't match result" ++ ST_Print.print_st_str result) No_Index, cache)
+           
+rewrite_to_partially_parallel_type_rewrite_internal :: [Type_Rewrite] -> SeqE.Expr -> Partially_Parallel_MemoM STE.Expr STE.Expr
+rewrite_to_partially_parallel_type_rewrite_internal tr seq_expr = do
+  cache <- get_reshape_cache
+  depth <- get_ppar_depth
+  let (expr_par, state) = runState (evalStateT
+                             (runExceptT $ rewrite_to_partially_parallel_type_rewrite' tr seq_expr depth)
+                             empty_rewrite_data)
+                 (with_reshape_cache_ppar_state (depth+1) cache)
+  --trace ("num_calls : " ++ (show $ num_calls state)) $
+  if isLeft expr_par
+    then return $ STE.ErrorN (rw_msg $ fromLeft undefined expr_par) No_Index
+    else do
+    let result = fromRight undefined expr_par
+    let output_time = STT.clocks_t $ ST_Conv.e_out_type $ ST_Conv.expr_to_types result
+    if output_time == product_tr_periods tr
+      then do
+      set_reshape_cache $ reshape_type_cache state
+      return result
+      else return $ STE.ErrorN ("\noutput_time: " ++ show output_time ++
+                       "\ntype_rewrites: " ++ show tr ++
+                       "\nslowdown doesn't match result" ++ ST_Print.print_st_str result) No_Index
 
-rewrite_to_partially_parallel_type_rewrite' :: [Type_Rewrite] -> SeqE.Expr -> Partially_ParallelM STE.Expr
-rewrite_to_partially_parallel_type_rewrite' tr seq_expr = do
+rewrite_to_partially_parallel_type_rewrite' :: [Type_Rewrite] -> SeqE.Expr -> Int -> Partially_ParallelM STE.Expr
+rewrite_to_partially_parallel_type_rewrite' tr seq_expr depth = do
   --traceShowM $ rewrite_AST_type_debug s seq_expr_out_type
-  --traceM ("output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
+  --traceM ("depth: " ++ show depth ++ "\n output type slowdown" ++ show output_type_slowdowns ++ "\n s" ++ show s ++ "\n seq_expr_out_type" ++ show seq_expr_out_type ++ "\n")
+  traceM ("depth: " ++ show depth ++ "\n tr" ++ show tr)
   startEvalMemoT $ sequence_to_partially_parallel tr seq_expr
 
 data Program_And_Area = PA { program :: !STE.Expr, area :: !Int }
@@ -104,28 +149,36 @@ get_expr_with_min_area s seq_expr possible_st_programs_and_areas =
          possible_st_programs_and_areas
          
 rewrite_to_partially_parallel_slowdown_min_area_program :: Int -> SeqE.Expr -> STE.Expr
-rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
+rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr =
+  unsafePerformIO $ rewrite_to_partially_parallel_slowdown_min_area_program' s seq_expr
+  
+rewrite_to_partially_parallel_slowdown_min_area_program' :: Int -> SeqE.Expr -> IO STE.Expr
+rewrite_to_partially_parallel_slowdown_min_area_program' s seq_expr = do
   let seq_expr_out_type = Seq_Conv.e_out_type $ Seq_Conv.expr_to_types seq_expr
   let possible_output_types = rewrite_all_AST_types s seq_expr_out_type
   if null possible_output_types
-    then STE.ErrorN ("No possible rewrites for slowdown " ++ show s ++
+    then return $ STE.ErrorN ("No possible rewrites for slowdown " ++ show s ++
                      " of program \n" ++
                      Seq_Print.print_seq_str seq_expr) No_Index
     else do
     --let first_out_tr = traceShow possible_output_types $ head possible_output_types
     let first_out_tr = head possible_output_types
-    let first_st_expr = rewrite_to_partially_parallel_type_rewrite first_out_tr
-                        seq_expr
+    cur_time <- getCurrentTime
+    traceM $ "trying type rewrite " ++ show first_out_tr ++ " at " ++ show cur_time
+    let (first_st_expr, first_cache) = rewrite_to_partially_parallel_type_rewrite_internal_start first_out_tr
+                        seq_expr M.empty
     let other_trs = tail possible_output_types
-    let x = L.foldl' (\(PA min_st_expr min_st_area, !min_tr) next_tr -> do
-                   let next_st_expr = rewrite_to_partially_parallel_type_rewrite
-                                      next_tr seq_expr
+    (x, _, _) <- F.foldlM (\(PA min_st_expr min_st_area, !min_tr, cur_cache) next_tr -> do
+                   cur_time <- getCurrentTime
+                   traceM $ "trying type rewrite " ++ show first_out_tr ++ " at " ++ show cur_time
+                   let (next_st_expr, next_cache) = rewrite_to_partially_parallel_type_rewrite_internal_start
+                                      next_tr seq_expr cur_cache
                    let next_st_area = Comp_Area.get_area next_st_expr
                    let min_st_out_type = ST_Conv.e_out_type $
                                          ST_Conv.expr_to_types min_st_expr
                    let next_st_out_type = ST_Conv.e_out_type $
                                           ST_Conv.expr_to_types next_st_expr
-                   force $ if Has_Error.has_error min_st_expr ||
+                   return $ force $ if Has_Error.has_error min_st_expr ||
                               (next_st_area < min_st_area &&
                                (not $ Has_Error.has_error next_st_expr)) ||
                               -- if they produce same program but one has
@@ -135,13 +188,13 @@ rewrite_to_partially_parallel_slowdown_min_area_program s seq_expr = do
                                (not $ Has_Error.has_error min_st_expr) &&
                                (STT.num_layers_t next_st_out_type < STT.num_layers_t min_st_out_type)
                               )
-                     then (PA next_st_expr next_st_area, next_tr)
-                     else (PA min_st_expr min_st_area, min_tr)
-               ) (PA first_st_expr (Comp_Area.get_area first_st_expr), first_out_tr) other_trs
+                     then (PA next_st_expr next_st_area, next_tr, next_cache)
+                     else (PA min_st_expr min_st_area, min_tr, next_cache)
+               ) (PA first_st_expr (Comp_Area.get_area first_st_expr), first_out_tr, first_cache) other_trs
     --traceShow ("resulting area" ++ show (area x)) $ program x
     --traceShow ("possible output types" ++ show possible_output_types) $ program x
     --traceShow ("min type rewrite" ++ show (snd x) ) $ program $ fst x
-    program $ fst x
+    return $ program x
  {-
                    force $ traceShow ("min_st_out_type " ++ show min_st_out_type ++ " min area " ++ show min_st_area ++ " min error " ++ (show $ Has_Error.has_error min_st_expr) ++ (" min layers " ++ (show $ STT.num_layers_t min_st_out_type))) $ traceShow ("next_st_out_type " ++ show next_st_out_type ++ " next_area " ++ show next_st_area ++ " next error " ++ (show $ Has_Error.has_error next_st_expr) ++ (" next layers " ++ (show $ STT.num_layers_t next_st_out_type))) $ if Has_Error.has_error min_st_expr ||
 
@@ -163,6 +216,7 @@ data Input_Type_Rewrites = Input_Type_Rewrites {
 instance Ord Input_Type_Rewrites where
   tr0 <= tr1 = input_name tr0 <= input_name tr1
 
+type Reshape_TR_Cache = M.Map (DAG_Index, Int) [Type_Rewrite]
 data Partially_Parallel_State = Partially_Parallel_State {
   -- these are used to track the input rewrites for subgraphs
   -- because a map must know the input_type rewrites of its subgraph
@@ -171,10 +225,15 @@ data Partially_Parallel_State = Partially_Parallel_State {
   -- these are used to track the output type rewrites seen by each sequence node
   -- to detect a DAG where a single node may be rewritten multiple times
   output_rewrites_per_st_index :: M.Map DAG_Index [Type_Rewrite],
-  num_calls :: Int
+  num_calls :: Int,
+  -- the number of recursive ppar calls
+  recur_depth :: Int,
+  -- the reshapes already figured out
+  reshape_type_cache :: Reshape_TR_Cache
   } deriving (Show, Eq)
 
-empty_ppar_state = Partially_Parallel_State S.empty M.empty 0
+empty_ppar_state = Partially_Parallel_State S.empty M.empty 0 0 M.empty
+with_reshape_cache_ppar_state depth cache = Partially_Parallel_State S.empty M.empty 0 depth cache
   
 type Partially_ParallelM = ExceptT Rewrite_Failure (
   StateT Rewrite_Data (
@@ -194,6 +253,22 @@ get_num_calls :: Partially_Parallel_MemoM STE.Expr Int
 get_num_calls = do
   cur_data <- lift $ lift $ lift get
   return $ num_calls cur_data
+  
+get_ppar_depth :: Partially_Parallel_MemoM STE.Expr Int
+get_ppar_depth = do
+  cur_data <- lift $ lift $ lift get
+  return $ recur_depth cur_data
+  
+get_reshape_cache :: Partially_Parallel_MemoM STE.Expr Reshape_TR_Cache
+get_reshape_cache = do
+  cur_data <- lift $ lift $ lift get
+  return $ reshape_type_cache cur_data
+  
+set_reshape_cache :: Reshape_TR_Cache -> Partially_Parallel_MemoM STE.Expr ()
+set_reshape_cache cache = do
+  cur_data <- lift $ lift $ lift get
+  lift $ lift $ lift $ modify
+    (\cur_data -> cur_data { reshape_type_cache = cache })
     
 get_input_types_rewrites :: Partially_Parallel_MemoM STE.Expr (S.Set Input_Type_Rewrites)
 get_input_types_rewrites = do
@@ -815,7 +890,7 @@ sequence_to_partially_parallel type_rewrites@(tr@(SplitNestedR (TimeR tr0_n tr0_
         type_rewrites_tl
   let possible_input_trs = [outer_time_upstream_type_rewrites,
                             inner_time_upstream_type_rewrites]
-  let possible_st_programs = map (\trs -> (trs, rewrite_to_partially_parallel_type_rewrite trs producer))
+  possible_st_programs <- mapM (\trs -> sequence (trs, rewrite_to_partially_parallel_type_rewrite_internal trs producer))
                              possible_input_trs
   let valid_possible_st_programs = filter (not . Has_Error.has_error . snd) possible_st_programs
   --traceShowM $ "valid_possible_st_programs: " ++ show valid_possible_st_programs
@@ -905,21 +980,25 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   let possible_input_trs = map (\(tr0 : tr1 : _) -> tr0 : tr1 : type_rewrites_tl) possible_trs_for_in_seq
   --traceShowM $ "possible_input_trs: " ++ show possible_input_trs
   reshape_idx <- get_cur_index
-  let (min_tr, min_area, _) = if null possible_input_trs
-        then (undefined, -1, undefined)
-        else do
+  reshape_cache <- get_reshape_cache
+  (min_tr, min_area, _) <- if null possible_input_trs
+    then return (undefined, -1, undefined)
+    else if M.member (index, slowdown) reshape_cache
+    then do
+    return (reshape_cache M.! (index, slowdown), 0, undefined)
+    else do
         let first_out_tr = head possible_input_trs
-        let first_st_expr = rewrite_to_partially_parallel_type_rewrite first_out_tr
+        first_st_expr <- rewrite_to_partially_parallel_type_rewrite_internal first_out_tr
                             producer
         let first_st_with_reshape =
               STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types first_st_expr)
               out_t_ppar first_st_expr reshape_idx
         let other_trs = tail possible_input_trs
-        L.foldl' (\(!min_tr, !min_st_area, !min_st_expr) next_tr -> do
+        (min_tr, min_area, min_st_expr) <- F.foldlM (\(!min_tr, !min_st_area, !min_st_expr) next_tr -> do
                      let predicted_in_st_type = type_rewrite_to_example_st_type
                                                 (head $ Seq_Conv.e_in_types types)
                                                 next_tr
-                     let next_st_expr = rewrite_to_partially_parallel_type_rewrite
+                     next_st_expr <- rewrite_to_partially_parallel_type_rewrite_internal
                                         next_tr producer
                      let next_st_expr_with_reshape = 
                            STE.ReshapeN (ST_Conv.e_out_type $ ST_Conv.expr_to_types next_st_expr)
@@ -929,7 +1008,7 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
                                            ST_Conv.expr_to_types min_st_expr
                      let next_st_out_type = ST_Conv.e_out_type $
                                             ST_Conv.expr_to_types next_st_expr
-                     force $ if --isJust (STT.norm_and_diff_types predicted_in_st_type predicted_out_st_type) ||
+                     return $ force $ if --isJust (STT.norm_and_diff_types predicted_in_st_type predicted_out_st_type) ||
                                 Has_Error.has_error min_st_expr ||
                                 (next_st_area < min_st_area &&
                                  (not $ Has_Error.has_error next_st_expr)) ||
@@ -943,6 +1022,9 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
                              then (next_tr, next_st_area, next_st_expr)
                              else (min_tr, min_st_area, min_st_expr)
                  ) (first_out_tr, (Comp_Area.get_area first_st_with_reshape), first_st_expr) other_trs
+        let updated_cache = M.insert (index, slowdown) min_tr reshape_cache
+        set_reshape_cache updated_cache
+        return (min_tr, min_area, min_st_expr)
   if min_area == -1
     then throwError $ Slowdown_Failure 
          ("No possible rewrites for unpartition with " ++ show type_rewrites ++

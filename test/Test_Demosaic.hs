@@ -168,8 +168,8 @@ demosaic_pixel in_stencil are_row_and_col_even = do
     map2C (map2C atom_tupleC) row_bit $
     map2C (map2C atom_tupleC) even_row_select_cols odd_row_select_cols
 
-row_length_proxy = Proxy @1920
-two_row_length_proxy = Proxy @3840
+row_length_proxy = Proxy @4
+two_row_length_proxy = Proxy @8
 demosaic_test in_seq = do
   let first_stencil = stencil_3x3_2dC_test row_length_proxy in_seq
   unpartitionC $ unpartitionC $ unpartitionC $
@@ -177,10 +177,10 @@ demosaic_test in_seq = do
     partitionC Proxy two_row_length_proxy first_stencil
 
 demosaic = demosaic_test $
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_UInt32))
+  com_input_seq "I" (Proxy :: Proxy (Seq 16 Atom_UInt32))
 
-row_size_demosaic :: Integer = 1920
-col_size_demosaic :: Integer = 1080
+row_size_demosaic :: Integer = 4
+col_size_demosaic :: Integer = 4
 img_size_demosaic :: Int = fromInteger $ col_size_demosaic*row_size_demosaic
 demosaic_seq_idx = add_indexes $ seq_shallow_to_deep demosaic
 demosaic_throughputs = [16, 8, 4, 2, 1, 1 % 4]
@@ -220,7 +220,7 @@ demosaic_results_chisel' = sequence $
   fmap (\s -> test_with_backend
               demosaic (wrap_single_t s)
               Chisel (Save_Gen_Verilog "demosaic")
-              demosaic_inputs demosaic_output) [demosaic_throughputs !! 4]
+              demosaic_inputs demosaic_output) [demosaic_throughputs !! 5]
 demosaic_results_chisel_tr = sequence $
   fmap (\s -> test_with_backend
               demosaic (Type_Rewrites s)
