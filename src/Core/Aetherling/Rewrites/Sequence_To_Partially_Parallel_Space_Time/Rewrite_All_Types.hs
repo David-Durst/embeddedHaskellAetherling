@@ -24,7 +24,7 @@ data Type_Rewrite =
   -- currently only using for two TimeR's
   | SplitNestedR { tr_head :: Type_Rewrite, tr_tail :: Type_Rewrite }
   | NonSeqR
-  deriving (Show, Eq, Generic, NFData)
+  deriving (Show, Eq, Generic, NFData, Ord)
 
 num_seq_layers :: SeqT.AST_Type -> Int
 num_seq_layers (SeqT.SeqT n t) = 1 + num_seq_layers t
@@ -343,3 +343,7 @@ flatten_tr (SplitNestedR nested_hd nested_tl : tl) =
   flatten_tr [nested_hd] ++ flatten_tr [nested_tl] ++ flatten_tr tl
 flatten_tr (NonSeqR : tl) = NonSeqR : flatten_tr tl
 flatten_tr [] = []
+
+is_splitr :: Type_Rewrite -> Bool
+is_splitr (SplitR _ _ _) = True
+is_splitr _ = False
