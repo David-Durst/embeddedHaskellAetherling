@@ -348,10 +348,16 @@ is_splitr :: Type_Rewrite -> Bool
 is_splitr (SplitR _ _ _) = True
 is_splitr _ = False
 
+is_parallel_splitr :: Type_Rewrite -> Bool
+is_parallel_splitr (SplitR _ _ 1) = False
+is_parallel_splitr (SplitR _ _ _) = True
+is_parallel_splitr _ = False
+
 is_timer :: Type_Rewrite -> Bool
 is_timer (TimeR _ _) = True
 is_timer _ = False
 
-is_spacer :: Type_Rewrite -> Bool
-is_spacer (SpaceR _) = True
-is_spacer _ = False
+is_parallel_spacer :: Type_Rewrite -> Bool
+is_parallel_spacer (SpaceR 1) = False
+is_parallel_spacer (SpaceR _) = True
+is_parallel_spacer _ = False

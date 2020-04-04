@@ -14,6 +14,7 @@ import Test_Big_Real_Math
 import Test_Big_Real_Math16
 import Test_Big_Real_Math32
 import Test_Demosaic
+import Test_Camera
 import Aetherling.Languages.Space_Time.Deep.Expr_Type_Conversions
 import Aetherling.Languages.Space_Time.Deep.Types
 import Aetherling.Rewrites.Sequence_To_Partially_Parallel_Space_Time.Rewrite_All_Types
@@ -64,7 +65,7 @@ tests :: TestTree
 --tests = testGroup "Top Level Aetherling Tests" [big_32_tests, big_real_32_tests]
 --tests = testGroup "Top Level Aetherling Tests" [apps_tests_chisel_map]
 --tests = testGroup "Top Level Aetherling Tests" [demosaic_tests, big_32_tests, big_real_32_tests, apps_tests_chisel_map]
-tests = testGroup "Top Level Aetherling Tests" [demosaic_tests']
+tests = testGroup "Top Level Aetherling Tests" [camera_tests']
 
 
 gen_io :: IO ()
