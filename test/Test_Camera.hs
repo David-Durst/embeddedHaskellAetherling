@@ -32,9 +32,13 @@ import qualified Test_Big_Real_Math32 as TBR
 row_size_camera :: Integer = 1920
 col_size_camera :: Integer = 1080
 img_size_camera :: Int = fromInteger $ col_size_camera*row_size_camera
-camera = TD.demosaic_test $
-  TBR.sharpen_shallow_no_input (Proxy @1920) $ 
-  com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_UInt32))
+camera = do
+  let demosaic_out = TD.demosaic_test $
+        com_input_seq "I" (Proxy :: Proxy (Seq 2073600 Atom_UInt32))
+  let red = TBR.sharpen_shallow_no_input (Proxy @1920) $ mapC fstC demosaic_out
+  let green = TBR.sharpen_shallow_no_input (Proxy @1920) $ mapC (fstC . sndC) demosaic_out
+  let blue = TBR.sharpen_shallow_no_input (Proxy @1920) $ mapC (sndC . sndC) demosaic_out
+  map2C atom_tupleC red $ map2C atom_tupleC green blue
 camera_seq_idx = add_indexes $ seq_shallow_to_deep camera
 camera_throughputs = [16, 8, 4, 2, 1, 1 % 3]
 camera_tr = [[SplitNestedR (TimeR 2073600 0) (SplitNestedR (TimeR 1 3) NonSeqR), NonSeqR],
@@ -48,11 +52,22 @@ camera_ppar_typechecked =
 camera_ppar_typechecked' =
   fmap check_type_get_error camera_ppar
 camera_inputs :: [[Word32]] = map (map fromIntegral) [[i * i | i <- [1..row_size_camera * col_size_camera]]]
-camera_output :: [(Word32, (Word32, Word32))] =
-  demosaic_generator TD.row_size_demosaic $
-  zipWith sharpen_one_pixel' 
-  (conv_generator $ stencil_generator row_size_camera (camera_inputs !! 0))
-  (camera_inputs !! 0)
+camera_output :: [(Word32, (Word32, Word32))] = do
+  let demosaic_out = demosaic_generator TD.row_size_demosaic 
+                     (camera_inputs !! 0)
+  let red_demosaic = map fst demosaic_out
+  let red = zipWith sharpen_one_pixel'
+             (conv_generator $ stencil_generator row_size_camera $ red_demosaic)
+             red_demosaic
+  let green_demosaic = map (fst . snd) demosaic_out
+  let green = zipWith sharpen_one_pixel'
+             (conv_generator $ stencil_generator row_size_camera $ green_demosaic)
+             green_demosaic
+  let blue_demosaic = map (snd . snd) demosaic_out
+  let blue = zipWith sharpen_one_pixel'
+             (conv_generator $ stencil_generator row_size_camera $ blue_demosaic)
+             blue_demosaic
+  zip red $ zip green blue
 
 camera_results = sequence $
   fmap (\s -> test_with_backend
