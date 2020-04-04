@@ -975,7 +975,12 @@ sequence_to_partially_parallel type_rewrites@(tr : type_rewrites_tl)
   --traceShowM $ "unpartition " ++ show no ++ " " ++ show ni
   --traceShowM $ "slowdown: " ++ show slowdown
   --traceShowM $ "type_rewrites: " ++ show type_rewrites
-  let possible_trs_for_in_seq = filter (not . is_splitr) $ rewrite_all_AST_types slowdown unparititioned_in_seq
+  let possible_trs_for_in_seq_unfiltered = rewrite_all_AST_types slowdown unparititioned_in_seq
+  -- if the  input is time only don't start introducing parallelism,
+  -- no need to parallelize upstream if downstream isn't parallel
+  let possible_trs_for_in_seq = if is_timer tr
+        then filter (\in_trs -> not $ any is_splitr in_trs) possible_trs_for_in_seq_unfiltered
+        else possible_trs_for_in_seq_unfiltered
   --traceShowM $ "possible_trs_for_in_seq: " ++ show possible_trs_for_in_seq
   --traceShowM $ "lengths possible_trs_for_in_seq: " ++ show (fmap length possible_trs_for_in_seq)
   let possible_input_trs = map (\(tr0 : tr1 : _) -> tr0 : tr1 : type_rewrites_tl) possible_trs_for_in_seq
