@@ -40,7 +40,7 @@ camera = do
   let blue = TBR.sharpen_shallow_no_input (Proxy @1920) $ mapC (sndC . sndC) demosaic_out
   map2C atom_tupleC red $ map2C atom_tupleC green blue
 camera_seq_idx = add_indexes $ seq_shallow_to_deep camera
-camera_throughputs = [16, 8, 4, 2, 1, 1 % 3]
+camera_throughputs = [16, 8, 4, 2, 1, 1 % 4]
 camera_tr = [[SplitNestedR (TimeR 2073600 0) (SplitNestedR (TimeR 1 3) NonSeqR), NonSeqR],
                [TimeR 2073600 (2073600 * 3) , NonSeqR],
                [TimeR 2073600 0 , NonSeqR]]
