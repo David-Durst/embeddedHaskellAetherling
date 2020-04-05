@@ -8743,9 +8743,9 @@ module ReduceS_1(
   assign AddNoValid_I_t0b = _T_3; // @[ReduceS.scala 43:18]
   assign AddNoValid_I_t1b = AddNoValid_1_O; // @[ReduceS.scala 36:18]
   assign AddNoValid_1_I_t0b = AddNoValid_2_O; // @[ReduceS.scala 31:18]
-  assign AddNoValid_1_I_t1b = _T_4; // @[ReduceS.scala 43:18]
-  assign AddNoValid_2_I_t0b = _T_2; // @[ReduceS.scala 43:18]
-  assign AddNoValid_2_I_t1b = _T_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_1_I_t1b = _T_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_2_I_t0b = _T_4; // @[ReduceS.scala 43:18]
+  assign AddNoValid_2_I_t1b = _T_2; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif

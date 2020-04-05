@@ -7917,29 +7917,29 @@ module FIFO_1(
 );
   reg [31:0] _T__0 [0:16]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_0;
-  wire [31:0] _T__0__T_17_data; // @[FIFO.scala 23:33]
-  wire [4:0] _T__0__T_17_addr; // @[FIFO.scala 23:33]
+  wire [31:0] _T__0__T_15_data; // @[FIFO.scala 23:33]
+  wire [4:0] _T__0__T_15_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_1;
   wire [31:0] _T__0__T_5_data; // @[FIFO.scala 23:33]
   wire [4:0] _T__0__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__0__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__0__T_5_en; // @[FIFO.scala 23:33]
-  reg  _T__0__T_17_en_pipe_0;
+  reg  _T__0__T_15_en_pipe_0;
   reg [31:0] _RAND_2;
-  reg [4:0] _T__0__T_17_addr_pipe_0;
+  reg [4:0] _T__0__T_15_addr_pipe_0;
   reg [31:0] _RAND_3;
   reg [31:0] _T__1 [0:16]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_4;
-  wire [31:0] _T__1__T_17_data; // @[FIFO.scala 23:33]
-  wire [4:0] _T__1__T_17_addr; // @[FIFO.scala 23:33]
+  wire [31:0] _T__1__T_15_data; // @[FIFO.scala 23:33]
+  wire [4:0] _T__1__T_15_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_5;
   wire [31:0] _T__1__T_5_data; // @[FIFO.scala 23:33]
   wire [4:0] _T__1__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__1__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__1__T_5_en; // @[FIFO.scala 23:33]
-  reg  _T__1__T_17_en_pipe_0;
+  reg  _T__1__T_15_en_pipe_0;
   reg [31:0] _RAND_6;
-  reg [4:0] _T__1__T_17_addr_pipe_0;
+  reg [4:0] _T__1__T_15_addr_pipe_0;
   reg [31:0] _RAND_7;
   reg [4:0] value; // @[Counter.scala 29:33]
   reg [31:0] _RAND_8;
@@ -7951,27 +7951,26 @@ module FIFO_1(
   wire  _T_2; // @[Counter.scala 37:24]
   wire [4:0] _T_4; // @[Counter.scala 38:22]
   wire  _T_6; // @[FIFO.scala 38:39]
-  wire [4:0] _T_11; // @[Counter.scala 38:22]
-  wire  _T_12; // @[FIFO.scala 42:39]
-  wire  _T_18; // @[Counter.scala 37:24]
-  wire [4:0] _T_20; // @[Counter.scala 38:22]
+  wire [4:0] _T_9; // @[Counter.scala 38:22]
+  wire  _T_10; // @[FIFO.scala 42:39]
+  wire  _T_16; // @[Counter.scala 37:24]
+  wire [4:0] _T_18; // @[Counter.scala 38:22]
   wire  _GEN_8; // @[FIFO.scala 42:57]
-  wire  _GEN_28; // @[FIFO.scala 39:15]
-  assign _T__0__T_17_addr = _T__0__T_17_addr_pipe_0;
+  assign _T__0__T_15_addr = _T__0__T_15_addr_pipe_0;
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
-  assign _T__0__T_17_data = _T__0[_T__0__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__0__T_15_data = _T__0[_T__0__T_15_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__0__T_17_data = _T__0__T_17_addr >= 5'h11 ? _RAND_1[31:0] : _T__0[_T__0__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__0__T_15_data = _T__0__T_15_addr >= 5'h11 ? _RAND_1[31:0] : _T__0[_T__0__T_15_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__0__T_5_data = I_0;
   assign _T__0__T_5_addr = value_2;
   assign _T__0__T_5_mask = 1'h1;
   assign _T__0__T_5_en = valid_up;
-  assign _T__1__T_17_addr = _T__1__T_17_addr_pipe_0;
+  assign _T__1__T_15_addr = _T__1__T_15_addr_pipe_0;
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
-  assign _T__1__T_17_data = _T__1[_T__1__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__1__T_15_data = _T__1[_T__1__T_15_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__1__T_17_data = _T__1__T_17_addr >= 5'h11 ? _RAND_5[31:0] : _T__1[_T__1__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__1__T_15_data = _T__1__T_15_addr >= 5'h11 ? _RAND_5[31:0] : _T__1[_T__1__T_15_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__1__T_5_data = I_1;
   assign _T__1__T_5_addr = value_2;
@@ -7981,15 +7980,14 @@ module FIFO_1(
   assign _T_2 = value_2 == 5'h10; // @[Counter.scala 37:24]
   assign _T_4 = value_2 + 5'h1; // @[Counter.scala 38:22]
   assign _T_6 = value < 5'h10; // @[FIFO.scala 38:39]
-  assign _T_11 = value + 5'h1; // @[Counter.scala 38:22]
-  assign _T_12 = value >= 5'hf; // @[FIFO.scala 42:39]
-  assign _T_18 = value_1 == 5'h10; // @[Counter.scala 37:24]
-  assign _T_20 = value_1 + 5'h1; // @[Counter.scala 38:22]
-  assign _GEN_8 = _T_12 & _T_12; // @[FIFO.scala 42:57]
+  assign _T_9 = value + 5'h1; // @[Counter.scala 38:22]
+  assign _T_10 = value >= 5'hf; // @[FIFO.scala 42:39]
+  assign _T_16 = value_1 == 5'h10; // @[Counter.scala 37:24]
+  assign _T_18 = value_1 + 5'h1; // @[Counter.scala 38:22]
+  assign _GEN_8 = _T_10 & _T_10; // @[FIFO.scala 42:57]
   assign valid_down = value == 5'h10; // @[FIFO.scala 33:16]
-  assign O_0 = _T__0__T_17_data; // @[FIFO.scala 43:11]
-  assign O_1 = _T__1__T_17_data; // @[FIFO.scala 43:11]
-  assign _GEN_28 = valid_up & _T_6; // @[FIFO.scala 39:15]
+  assign O_0 = _T__0__T_15_data; // @[FIFO.scala 43:11]
+  assign O_1 = _T__1__T_15_data; // @[FIFO.scala 43:11]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -8029,11 +8027,11 @@ initial begin
   _RAND_1 = {1{`RANDOM}};
   `ifdef RANDOMIZE_REG_INIT
   _RAND_2 = {1{`RANDOM}};
-  _T__0__T_17_en_pipe_0 = _RAND_2[0:0];
+  _T__0__T_15_en_pipe_0 = _RAND_2[0:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_3 = {1{`RANDOM}};
-  _T__0__T_17_addr_pipe_0 = _RAND_3[4:0];
+  _T__0__T_15_addr_pipe_0 = _RAND_3[4:0];
   `endif // RANDOMIZE_REG_INIT
   _RAND_4 = {1{`RANDOM}};
   `ifdef RANDOMIZE_MEM_INIT
@@ -8043,11 +8041,11 @@ initial begin
   _RAND_5 = {1{`RANDOM}};
   `ifdef RANDOMIZE_REG_INIT
   _RAND_6 = {1{`RANDOM}};
-  _T__1__T_17_en_pipe_0 = _RAND_6[0:0];
+  _T__1__T_15_en_pipe_0 = _RAND_6[0:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_7 = {1{`RANDOM}};
-  _T__1__T_17_addr_pipe_0 = _RAND_7[4:0];
+  _T__1__T_15_addr_pipe_0 = _RAND_7[4:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_8 = {1{`RANDOM}};
@@ -8068,16 +8066,16 @@ end // initial
     if(_T__0__T_5_en & _T__0__T_5_mask) begin
       _T__0[_T__0__T_5_addr] <= _T__0__T_5_data; // @[FIFO.scala 23:33]
     end
-    _T__0__T_17_en_pipe_0 <= valid_up & _GEN_8;
+    _T__0__T_15_en_pipe_0 <= valid_up & _GEN_8;
     if (valid_up & _GEN_8) begin
-      _T__0__T_17_addr_pipe_0 <= value_1;
+      _T__0__T_15_addr_pipe_0 <= value_1;
     end
     if(_T__1__T_5_en & _T__1__T_5_mask) begin
       _T__1[_T__1__T_5_addr] <= _T__1__T_5_data; // @[FIFO.scala 23:33]
     end
-    _T__1__T_17_en_pipe_0 <= valid_up & _GEN_8;
+    _T__1__T_15_en_pipe_0 <= valid_up & _GEN_8;
     if (valid_up & _GEN_8) begin
-      _T__1__T_17_addr_pipe_0 <= value_1;
+      _T__1__T_15_addr_pipe_0 <= value_1;
     end
     if (reset) begin
       value <= 5'h0;
@@ -8086,18 +8084,18 @@ end // initial
         if (_T_1) begin
           value <= 5'h0;
         end else begin
-          value <= _T_11;
+          value <= _T_9;
         end
       end
     end
     if (reset) begin
       value_1 <= 5'h0;
     end else if (valid_up) begin
-      if (_T_12) begin
-        if (_T_18) begin
+      if (_T_10) begin
+        if (_T_16) begin
           value_1 <= 5'h0;
         end else begin
-          value_1 <= _T_20;
+          value_1 <= _T_18;
         end
       end
     end
@@ -8110,17 +8108,6 @@ end // initial
         value_2 <= _T_4;
       end
     end
-    `ifndef SYNTHESIS
-    `ifdef PRINTF_COND
-      if (`PRINTF_COND) begin
-    `endif
-        if (_GEN_28 & ~reset) begin
-          $fwrite(32'h80000002,"idc inc\n"); // @[FIFO.scala 39:15]
-        end
-    `ifdef PRINTF_COND
-      end
-    `endif
-    `endif // SYNTHESIS
   end
 endmodule
 module FIFO_2(
@@ -8133,16 +8120,16 @@ module FIFO_2(
 );
   reg [31:0] _T [0:6]; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_0;
-  wire [31:0] _T__T_17_data; // @[FIFO.scala 23:33]
-  wire [2:0] _T__T_17_addr; // @[FIFO.scala 23:33]
+  wire [31:0] _T__T_15_data; // @[FIFO.scala 23:33]
+  wire [2:0] _T__T_15_addr; // @[FIFO.scala 23:33]
   reg [31:0] _RAND_1;
   wire [31:0] _T__T_5_data; // @[FIFO.scala 23:33]
   wire [2:0] _T__T_5_addr; // @[FIFO.scala 23:33]
   wire  _T__T_5_mask; // @[FIFO.scala 23:33]
   wire  _T__T_5_en; // @[FIFO.scala 23:33]
-  reg  _T__T_17_en_pipe_0;
+  reg  _T__T_15_en_pipe_0;
   reg [31:0] _RAND_2;
-  reg [2:0] _T__T_17_addr_pipe_0;
+  reg [2:0] _T__T_15_addr_pipe_0;
   reg [31:0] _RAND_3;
   reg [2:0] value; // @[Counter.scala 29:33]
   reg [31:0] _RAND_4;
@@ -8154,17 +8141,16 @@ module FIFO_2(
   wire  _T_2; // @[Counter.scala 37:24]
   wire [2:0] _T_4; // @[Counter.scala 38:22]
   wire  _T_6; // @[FIFO.scala 38:39]
-  wire [2:0] _T_11; // @[Counter.scala 38:22]
-  wire  _T_12; // @[FIFO.scala 42:39]
-  wire  _T_18; // @[Counter.scala 37:24]
-  wire [2:0] _T_20; // @[Counter.scala 38:22]
+  wire [2:0] _T_9; // @[Counter.scala 38:22]
+  wire  _T_10; // @[FIFO.scala 42:39]
+  wire  _T_16; // @[Counter.scala 37:24]
+  wire [2:0] _T_18; // @[Counter.scala 38:22]
   wire  _GEN_8; // @[FIFO.scala 42:57]
-  wire  _GEN_25; // @[FIFO.scala 39:15]
-  assign _T__T_17_addr = _T__T_17_addr_pipe_0;
+  assign _T__T_15_addr = _T__T_15_addr_pipe_0;
   `ifndef RANDOMIZE_GARBAGE_ASSIGN
-  assign _T__T_17_data = _T[_T__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__T_15_data = _T[_T__T_15_addr]; // @[FIFO.scala 23:33]
   `else
-  assign _T__T_17_data = _T__T_17_addr >= 3'h7 ? _RAND_1[31:0] : _T[_T__T_17_addr]; // @[FIFO.scala 23:33]
+  assign _T__T_15_data = _T__T_15_addr >= 3'h7 ? _RAND_1[31:0] : _T[_T__T_15_addr]; // @[FIFO.scala 23:33]
   `endif // RANDOMIZE_GARBAGE_ASSIGN
   assign _T__T_5_data = I;
   assign _T__T_5_addr = value_2;
@@ -8174,14 +8160,13 @@ module FIFO_2(
   assign _T_2 = value_2 == 3'h6; // @[Counter.scala 37:24]
   assign _T_4 = value_2 + 3'h1; // @[Counter.scala 38:22]
   assign _T_6 = value < 3'h6; // @[FIFO.scala 38:39]
-  assign _T_11 = value + 3'h1; // @[Counter.scala 38:22]
-  assign _T_12 = value >= 3'h5; // @[FIFO.scala 42:39]
-  assign _T_18 = value_1 == 3'h6; // @[Counter.scala 37:24]
-  assign _T_20 = value_1 + 3'h1; // @[Counter.scala 38:22]
-  assign _GEN_8 = _T_12 & _T_12; // @[FIFO.scala 42:57]
+  assign _T_9 = value + 3'h1; // @[Counter.scala 38:22]
+  assign _T_10 = value >= 3'h5; // @[FIFO.scala 42:39]
+  assign _T_16 = value_1 == 3'h6; // @[Counter.scala 37:24]
+  assign _T_18 = value_1 + 3'h1; // @[Counter.scala 38:22]
+  assign _GEN_8 = _T_10 & _T_10; // @[FIFO.scala 42:57]
   assign valid_down = value == 3'h6; // @[FIFO.scala 33:16]
-  assign O = _T__T_17_data; // @[FIFO.scala 43:11]
-  assign _GEN_25 = valid_up & _T_6; // @[FIFO.scala 39:15]
+  assign O = _T__T_15_data; // @[FIFO.scala 43:11]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -8221,11 +8206,11 @@ initial begin
   _RAND_1 = {1{`RANDOM}};
   `ifdef RANDOMIZE_REG_INIT
   _RAND_2 = {1{`RANDOM}};
-  _T__T_17_en_pipe_0 = _RAND_2[0:0];
+  _T__T_15_en_pipe_0 = _RAND_2[0:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_3 = {1{`RANDOM}};
-  _T__T_17_addr_pipe_0 = _RAND_3[2:0];
+  _T__T_15_addr_pipe_0 = _RAND_3[2:0];
   `endif // RANDOMIZE_REG_INIT
   `ifdef RANDOMIZE_REG_INIT
   _RAND_4 = {1{`RANDOM}};
@@ -8246,9 +8231,9 @@ end // initial
     if(_T__T_5_en & _T__T_5_mask) begin
       _T[_T__T_5_addr] <= _T__T_5_data; // @[FIFO.scala 23:33]
     end
-    _T__T_17_en_pipe_0 <= valid_up & _GEN_8;
+    _T__T_15_en_pipe_0 <= valid_up & _GEN_8;
     if (valid_up & _GEN_8) begin
-      _T__T_17_addr_pipe_0 <= value_1;
+      _T__T_15_addr_pipe_0 <= value_1;
     end
     if (reset) begin
       value <= 3'h0;
@@ -8257,18 +8242,18 @@ end // initial
         if (_T_1) begin
           value <= 3'h0;
         end else begin
-          value <= _T_11;
+          value <= _T_9;
         end
       end
     end
     if (reset) begin
       value_1 <= 3'h0;
     end else if (valid_up) begin
-      if (_T_12) begin
-        if (_T_18) begin
+      if (_T_10) begin
+        if (_T_16) begin
           value_1 <= 3'h0;
         end else begin
-          value_1 <= _T_20;
+          value_1 <= _T_18;
         end
       end
     end
@@ -8281,17 +8266,6 @@ end // initial
         value_2 <= _T_4;
       end
     end
-    `ifndef SYNTHESIS
-    `ifdef PRINTF_COND
-      if (`PRINTF_COND) begin
-    `endif
-        if (_GEN_25 & ~reset) begin
-          $fwrite(32'h80000002,"idc inc\n"); // @[FIFO.scala 39:15]
-        end
-    `ifdef PRINTF_COND
-      end
-    `endif
-    `endif // SYNTHESIS
   end
 endmodule
 module InitialDelayCounter_2(

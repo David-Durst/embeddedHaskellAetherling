@@ -24,7 +24,9 @@ import Aetherling.Interpretations.Backend_Execute.Value_To_String
 import Data.List
 
 main :: IO ()
-main = defaultMain tests
+main = do
+  --print_st_text
+  defaultMain tests
 --main = gen_io
 --main = print_st_text
 --main = do
@@ -64,8 +66,9 @@ tests :: TestTree
 --tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests_sharpen']
 --tests = testGroup "Top Level Aetherling Tests" [big_32_tests, big_real_32_tests]
 --tests = testGroup "Top Level Aetherling Tests" [apps_tests_chisel_map]
---tests = testGroup "Top Level Aetherling Tests" [demosaic_tests, big_32_tests, big_real_32_tests, apps_tests_chisel_map]
-tests = testGroup "Top Level Aetherling Tests" [camera_tests]
+--tests = testGroup "Top Level Aetherling Tests" [big_32_tests, big_real_32_tests, apps_tests_chisel_map, demosaic_tests]
+tests = testGroup "Top Level Aetherling Tests" [big_real_32_tests, apps_tests_chisel_map, demosaic_tests]
+--tests = testGroup "Top Level Aetherling Tests" [camera_tests]
 
 
 gen_io :: IO ()
@@ -83,12 +86,12 @@ gen_io = do
 
 print_st_text :: IO ()
 print_st_text = do
-  --big_real_32_conv_2d_st_prints
-  --big_real_32_conv_2d_b2b_st_prints
-  --big_real_32_sharpen_st_prints
-  --big_32_conv_2d_st_prints
-  --big_32_conv_2d_b2b_st_prints
-  --big_32_sharpen_st_prints
-  --demosaic_st_prints
-  print_st $ demosaic_ppar_tr !! 0
+  big_real_32_conv_2d_st_prints
+  big_real_32_conv_2d_b2b_st_prints
+  big_real_32_sharpen_st_prints
+  big_32_conv_2d_st_prints
+  big_32_conv_2d_b2b_st_prints
+  big_32_sharpen_st_prints
+  demosaic_st_prints
+  --print_st $ demosaic_ppar_tr !! 0
   return ()

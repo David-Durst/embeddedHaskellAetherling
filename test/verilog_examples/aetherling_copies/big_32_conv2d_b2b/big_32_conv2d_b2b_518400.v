@@ -6162,8 +6162,8 @@ module ReduceS(
   assign O_0 = _T; // @[ReduceS.scala 27:14]
   assign AddNoValid_I_t0b = _T_3; // @[ReduceS.scala 43:18]
   assign AddNoValid_I_t1b = AddNoValid_1_O; // @[ReduceS.scala 36:18]
-  assign AddNoValid_1_I_t0b = _T_2; // @[ReduceS.scala 43:18]
-  assign AddNoValid_1_I_t1b = _T_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_1_I_t0b = _T_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_1_I_t1b = _T_2; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -6391,8 +6391,8 @@ module ReduceS_1(
   assign O_0_0 = _T_0; // @[ReduceS.scala 27:14]
   assign MapSNoValid_I_0_t0b = _T_1_0; // @[ReduceS.scala 43:18]
   assign MapSNoValid_I_0_t1b = MapSNoValid_1_O_0; // @[ReduceS.scala 36:18]
-  assign MapSNoValid_1_I_0_t0b = _T_2_0; // @[ReduceS.scala 43:18]
-  assign MapSNoValid_1_I_0_t1b = _T_3_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_1_I_0_t0b = _T_3_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_1_I_0_t1b = _T_2_0; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -8861,8 +8861,8 @@ module ReduceS_2(
   );
   assign valid_down = _T_4; // @[ReduceS.scala 47:14]
   assign O_0 = _T; // @[ReduceS.scala 27:14]
-  assign AddNoValid_I_t0b = _T_2; // @[ReduceS.scala 43:18]
-  assign AddNoValid_I_t1b = _T_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_I_t0b = _T_1; // @[ReduceS.scala 43:18]
+  assign AddNoValid_I_t1b = _T_2; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif
@@ -9016,8 +9016,8 @@ module ReduceS_3(
   );
   assign valid_down = _T_4; // @[ReduceS.scala 47:14]
   assign O_0_0 = _T_0; // @[ReduceS.scala 27:14]
-  assign MapSNoValid_I_0_t0b = _T_2_0; // @[ReduceS.scala 43:18]
-  assign MapSNoValid_I_0_t1b = _T_1_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_I_0_t0b = _T_1_0; // @[ReduceS.scala 43:18]
+  assign MapSNoValid_I_0_t1b = _T_2_0; // @[ReduceS.scala 43:18]
 `ifdef RANDOMIZE_GARBAGE_ASSIGN
 `define RANDOMIZE
 `endif

@@ -24,7 +24,7 @@ dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ssh $user@kiwi.stanford.edu "rm -rf results"
 ssh $user@kiwi.stanford.edu "rm -rf verilog_examples"
 ssh $user@kiwi.stanford.edu "rm verilog_examples.zip"
-#ssh $user@kiwi.stanford.edu "rm -rf IP"
+ssh $user@kiwi.stanford.edu "rm -rf IP"
 ssh $user@kiwi.stanford.edu "mkdir -p results"
 scp $dir/remote.sh $user@kiwi.stanford.edu:
 scp $dir/constraints*.xdc $user@kiwi.stanford.edu:
