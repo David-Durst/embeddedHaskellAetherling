@@ -139,6 +139,16 @@ print_slowdown_magma_text = do
   diamond_map_save_magma
   single_map_underutil_save_magma
   const_test_save_magma
+  lt_test_save_magma
+  if_lt_test_save_magma
+  map_to_up_save_magma
+  up_to_down_save_magma
+  nested_map_to_top_level_up_save_magma
+  nested_map_to_nested_up_save_magma
+  partition_to_flat_map_save_magma
+  map_to_unpartition_save_magma
+  double_up_save_magma
+  down_over_nested_to_down_over_flattened_save_magma
   return ()
   {-
 slowdown_tests_save_magma = testGroup "Basic End To End Tests Saving But Not Running Magma"
@@ -444,6 +454,10 @@ lt_test_results_chisel = sequence $
               lt_test (wrap_single_t s)
               Chisel No_Verilog
               lt_test_inputs lt_test_outputs) [1,2,4]
+lt_test_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              lt_test (wrap_single_t s)
+              Magma "lt") [1,2,4]
   
 if_lt_atom_test x = do
   let one = const_genC (Atom_UInt8 1) x
@@ -471,6 +485,10 @@ if_lt_test_results_chisel = sequence $
               if_lt_test (wrap_single_t s)
               Chisel No_Verilog
               if_lt_test_inputs if_lt_test_outputs) [1,2,4]
+if_lt_test_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              if_lt_test (wrap_single_t s)
+              Magma "if_lt") [1,2,4]
   
 -- tests basic multi-rate
 map_to_up = 
@@ -493,6 +511,10 @@ map_to_up_results_chisel = sequence $
               map_to_up (wrap_single_t s)
               Chisel No_Verilog
               map_to_up_inputs map_to_up_output) [1,2,4]
+map_to_up_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              if_lt_test (wrap_single_t s)
+              Magma "map_to_up") [1,2,4]
 
 -- test two multi-rates of different rates
 up_to_down = 
@@ -520,6 +542,10 @@ up_to_down_results' = sequence $
               up_to_down (wrap_single_t s)
               Magma No_Verilog
               up_to_down_inputs up_to_down_output) [4%5]
+up_to_down_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              up_to_down (wrap_single_t s)
+              Magma "map_to_up") [4%5,5]
 
 -- next two test how to distribute slowdown correctly when multi-rate is nested
 nested_map_to_top_level_up = 
@@ -550,6 +576,10 @@ nested_map_to_top_level_up_results_chisel = sequence $
               Chisel No_Verilog
               nested_map_to_top_level_up_inputs nested_map_to_top_level_up_output)
   [1,2,4,8,16]
+nested_map_to_top_level_up_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              nested_map_to_top_level_up (wrap_single_t s)
+              Magma "nested_map_to_top_level_up") [1,2,4,8,16]
 
 
 nested_map_to_nested_up =
@@ -574,6 +604,10 @@ nested_map_to_nested_up_results_chisel = sequence $
               nested_map_to_nested_up (wrap_single_t s)
               Chisel No_Verilog
               nested_map_to_nested_up_inputs nested_map_to_nested_up_output) [1,2,4,8,16]
+nested_map_to_nested_up_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              nested_map_to_nested_up (wrap_single_t s)
+              Magma "nested_map_to_nested_up") [1,2,4,8,16]
 
 -- testing basic partitioning
 partition_to_flat_map = 
@@ -597,6 +631,10 @@ partition_to_flat_map_results_chisel = sequence $
               partition_to_flat_map (wrap_single_t s)
               Chisel No_Verilog
               partition_to_flat_inputs partition_to_flat_output) [4,2,1,1%2,1%4]
+partition_to_flat_map_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              partition_to_flat_map (wrap_single_t s)
+              Magma "partition_to_flat_map") [4,2,1,1%2,1%4]
 
 map_to_unpartition =
   mapC (mapC absC) >>>
@@ -620,6 +658,10 @@ map_to_unpartition_results_chisel = sequence $
               map_to_unpartition (wrap_single_t s)
               Chisel No_Verilog
               map_to_unpartition_inputs map_to_unpartition_output) [4,2,1,1%2,1%4]
+map_to_unpartition_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              map_to_unpartition (wrap_single_t s)
+              Magma "map_to_unpartition") [4,2,1,1%2,1%4]
 
 -- combining multi-rate with partitioning
 double_up =
@@ -650,6 +692,10 @@ double_up_results_chisel = sequence $
               -- that isn't a passthrough
               -- and I haven't implemented that for chisel yet
               double_up_inputs double_up_output) [1,8,32]
+double_up_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              double_up (wrap_single_t s)
+              Magma "double_up") [1,2,4,8,16,32]
 
 
 down_over_nested_to_down_over_flattened = 
@@ -694,6 +740,10 @@ down_over_nested_to_down_over_flattened_results' = sequence $
               (wrap_single_t s) Magma No_Verilog
               down_over_nested_to_down_over_flattened_inputs
               down_over_nested_to_down_over_flattened_output) [1%16]
+down_over_nested_to_down_over_flattened_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              down_over_nested_to_down_over_flattened (wrap_single_t s)
+              Magma "down_over_nested_to_down_over_flattened") [1,1%2,1%4,1%8,1%16]
 
 
 tuple_reverse_shallow_no_input in_seq0 in_seq1 = do
