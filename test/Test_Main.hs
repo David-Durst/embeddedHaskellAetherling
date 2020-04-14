@@ -95,3 +95,8 @@ print_st_text = do
   demosaic_st_prints
   --print_st $ demosaic_ppar_tr !! 0
   return ()
+
+print_magma_text :: IO ()
+print_magma_text = do
+  print_slowdown_magma_text
+  return ()

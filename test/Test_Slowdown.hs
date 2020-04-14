@@ -131,6 +131,66 @@ slowdown_tests_chisel = testGroup "Basic End To End Tests Using Chisel"
     testCase "shifts" $
     (all_success shift_one_results) @? "shifting failed"
   ]
+  
+print_slowdown_magma_text :: IO ()
+print_slowdown_magma_text = do
+  single_map_save_magma
+  two_maps_save_magma
+  diamond_map_save_magma
+  single_map_underutil_save_magma
+  const_test_save_magma
+  return ()
+  {-
+slowdown_tests_save_magma = testGroup "Basic End To End Tests Saving But Not Running Magma"
+  [
+    testCase "single map" $
+    (all_success single_map_save_magma) @? "single map failed",
+    testCase "two maps" $
+    (all_success two_maps_save_magma) @? "two maps failed",
+    testCase "diamond" $
+    (all_success diamond_map_save_magma) @? "diamond failed",
+    testCase "map with underutilization" $
+    (all_success single_map_underutil_save_magma) @? "map with underutilization failed",
+    testCase "constant generator" $
+    (all_success const_test_save_magma) @? "constant generator failed",
+    testCase "less than" $
+    (all_success lt_test_results) @? "less than failed",
+    testCase "an if and less than" $
+    (all_success if_lt_test_results) @? "if and less than failed",
+    testCase "map to an upsample" $
+    (all_success map_to_up_results) @? "map to up failed",
+    testCase "up to down" $
+    (all_success up_to_down_results) @? "up to down failed",
+    testCase "nested map to top level up" $
+    (all_success nested_map_to_top_level_up_results) @? "nested map to top level up failed",
+    testCase "nested map to nested up" $
+    (all_success nested_map_to_nested_up_results) @? "nested map to nested up failed",
+    testCase "partition to flat map" $
+    (all_success partition_to_flat_map_results) @? "partition to flat map failed",
+    testCase "map to unpartition" $
+    (all_success map_to_unpartition_results) @? "map to unpartition failed",
+    testCase "double up" $
+    (all_success double_up_results) @? "double_up failed",
+    testCase "down over nested to down over flattened" $
+    (all_success down_over_nested_to_down_over_flattened_results) @? "down over nested to down over flattened failed",
+    testCase "tuple sum" $
+    (all_success tuple_sum_results) @? "tuple_sum failed",
+    testCase "tuple reduce" $
+    (all_success tuple_reduce_results) @? "tuple_reduce failed",
+    testCase "fst snd sum" $
+    (all_success fst_snd_sum_results) @? "fst snd sum failed",
+    testCase "stuple to seq" $
+    (all_success stuple_to_seq_results) @? "stuple to seq failed",
+    testCase "seq to stuple" $
+    (all_success seq_to_stuple_results) @? "seq to stuple failed",
+    testCase "seq and stuple" $
+    (all_success seq_and_stuple_results) @? "seq and stuple failed",
+    testCase "striple to seq" $
+    (all_success striple_to_seq_results) @? "striple to seq failed",
+    testCase "shifts" $
+    (all_success shift_one_results) @? "shifting failed"
+]
+-}
 
 all_success :: IO [[Test_Result]] -> IO Bool
 all_success results_io = do
@@ -182,6 +242,10 @@ single_map_save_chisel = sequence $
   fmap (\s -> compile_to_file
               single_map (wrap_single_t s)
               Chisel "single_map_chisel") [1,2,4]
+single_map_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              single_map (wrap_single_t s)
+              Magma "map") [1,2,4]
 
 
 two_maps = 
@@ -217,6 +281,10 @@ two_maps_results_chisel' = sequence $
               two_maps (wrap_single_t s)
               Chisel No_Verilog
               two_maps_inputs two_maps_output) [1]
+two_maps_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              two_maps (wrap_single_t s)
+              Magma "two_maps") [1,2,4]
                    
 tuple_simple_no_input input0 input1 =
   atom_tupleC input0 input1
@@ -263,6 +331,10 @@ diamond_map_results_chisel' = sequence $
               diamond_map (wrap_single_t s)
               Chisel No_Verilog
               diamond_map_inputs diamond_map_output) [1]
+diamond_map_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              diamond_map (wrap_single_t s)
+              Magma "diamond_map") [1,2,4]
 
 single_map_underutil = 
   mapC' (Proxy @4) absC $ -- [4]
@@ -283,6 +355,10 @@ single_map_underutil_results_chisel = sequence $
               single_map_underutil (wrap_single_t s)
               Chisel No_Verilog
               single_map_underutil_inputs single_map_underutil_output) [1%2,1,2,4]
+single_map_underutil_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              single_map_underutil (wrap_single_t s)
+              Magma "single_map_underutil") [1,2,4]
 
 const_test =
   const_genC (list_to_seq (Proxy @9) $ fmap Atom_UInt8 [0..8] :: Seq 9 Atom_UInt8) $
@@ -314,6 +390,10 @@ const_test_results_chisel' = sequence $
               const_test (wrap_single_t s)
               Chisel No_Verilog
               const_test_inputs const_test_outputs) [3]
+const_test_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              const_test (wrap_single_t s)
+              Magma "const_test") [1,3,9]
   
 counter_test =
   counterC' (Proxy @9) 2 (Proxy :: Proxy Atom_UInt8) $
