@@ -149,6 +149,8 @@ print_slowdown_magma_text = do
   map_to_unpartition_save_magma
   double_up_save_magma
   down_over_nested_to_down_over_flattened_save_magma
+  tuple_sum_save_magma
+  tuple_reduce_save_magma
   return ()
   {-
 slowdown_tests_save_magma = testGroup "Basic End To End Tests Saving But Not Running Magma"
@@ -797,6 +799,10 @@ tuple_sum_results_chisel = sequence $
               tuple_sum (wrap_single_t s)
               Chisel No_Verilog
               tuple_sum_inputs tuple_sum_output) [1,2,4]
+tuple_sum_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              tuple_sum (wrap_single_t s)
+              Magma "tuple_sum") [1,2,4]
 
 tuple_reduce_no_input in_seq = do
   let kernel_list = fmap Atom_UInt16 [1,2,3,4,2,1,2,3]
@@ -844,6 +850,10 @@ tuple_reduce_results_chisel_by_tr = sequence $
               tuple_reduce (Type_Rewrites s)
               Chisel No_Verilog
               tuple_reduce_inputs tuple_reduce_output) tuple_reduce_out_tr
+tuple_reduce_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              tuple_reduce (wrap_single_t s)
+              Magma "tuple_reduce") [1,1%2,1%4,1%8]
 
 tuple_div_no_input in_seq = do
   let kernel_list = fmap Atom_FixP1_7 [1/16,2/16,5/16,2/16,4/16,2/16,1/16,3/16]
