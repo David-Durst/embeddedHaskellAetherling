@@ -151,6 +151,11 @@ print_slowdown_magma_text = do
   down_over_nested_to_down_over_flattened_save_magma
   tuple_sum_save_magma
   tuple_reduce_save_magma
+  stuple_to_seq_save_magma
+  seq_to_stuple_save_magma
+  seq_and_stuple_save_magma
+  striple_to_seq_save_magma
+  shift_one_save_magma
   return ()
   {-
 slowdown_tests_save_magma = testGroup "Basic End To End Tests Saving But Not Running Magma"
@@ -947,6 +952,10 @@ fst_snd_sum_results_chisel = sequence $
               fst_snd_sum (wrap_single_t s)
               Chisel No_Verilog
               fst_snd_sum_inputs fst_snd_sum_output) [1,2,4,8]
+fst_snd_sum_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              fst_snd_sum (wrap_single_t s)
+              Magma "fst_snd_sum") [1,2,4,8]
 
 seq_to_stuple = 
   mapC seq_to_seq_tupleC $
@@ -970,6 +979,10 @@ seq_to_stuple_results_chisel = sequence $
               seq_to_stuple (wrap_single_t s)
               Chisel No_Verilog
               seq_to_stuple_inputs seq_to_stuple_output) [4,2,1,1%2,1%4]
+seq_to_stuple_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              seq_to_stuple (wrap_single_t s)
+              Magma "seq_to_stuple") [4,2,1,1%2,1%4]
 
 stuple_to_seq = 
   mapC seq_tuple_to_seqC $
@@ -1005,6 +1018,10 @@ stuple_to_seq_results' = sequence $
               stuple_to_seq (wrap_single_t s)
               Magma No_Verilog
               stuple_to_seq_inputs stuple_to_seq_output) [16]
+stuple_to_seq_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              stuple_to_seq (wrap_single_t s)
+              Magma "stuple_to_seq") [16,8,4,2,1,1%2,1%4]
                         
 seq_and_stuple_no_input = 
   mapC (seq_to_seq_tupleC >>> seq_tuple_to_seqC)
@@ -1031,6 +1048,10 @@ seq_and_stuple_results_chisel = sequence $
               seq_and_stuple (wrap_single_t s)
               Chisel No_Verilog
               seq_and_stuple_inputs seq_and_stuple_output) [1,2,4,8,16]
+seq_and_stuple_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              seq_and_stuple (wrap_single_t s)
+              Magma "seq_and_stuple") [1,2,4,8,16]
 
 striple_to_seq_shallow in_seq = do
   let pair = map2C (map2C seq_tupleC) in_seq in_seq
@@ -1059,6 +1080,10 @@ striple_to_seq_results_chisel = sequence $
               striple_to_seq (wrap_single_t s)
               Chisel No_Verilog
               striple_to_seq_inputs striple_to_seq_output) [24,8,4,2,1]
+striple_to_seq_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              striple_to_seq (wrap_single_t s)
+              Magma "striple_to_seq") [1,2,4,8,16]
 
 shift_length = 4096
 shift_one_shallow in_seq = do
@@ -1102,6 +1127,10 @@ shift_one_results_chisel' = sequence $
               shift_one (wrap_single_t s)
               Chisel No_Verilog
               shift_one_inputs shift_one_output) [16]
+shift_one_save_magma = sequence $
+  fmap (\s -> compile_to_file
+              shift_one (wrap_single_t s)
+              Magma "shift") shift_throughputs
 
 conv_math in_seq = do
   mapC (\x -> divC (atom_tupleC x (const_genC (Atom_FixP1_7 0.3334) in_seq))) (reduceC addC in_seq)
