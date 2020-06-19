@@ -3,3 +3,4 @@ module Aetherling.Interpretations.Backend_Execute.Constants where
 root_dir = "/Users/durst/dev/W17-8/haskellAetherling/Aetherling/"
 chisel_dir = root_dir ++ "/chiselAetherling/"
 chisel_top_src_path = "/src/main/scala/aetherling/modules/"
+test_json_dir = root_dir ++ "test/test_io_seq_form/"
