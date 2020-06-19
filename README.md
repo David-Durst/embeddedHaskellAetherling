@@ -1,6 +1,6 @@
 # Aetherling Embedded In Haskell
 
-This is the main repository for Aetherling.
+This is the main repository for Aetherling. Aetherling appeared as a paper in PLDI 2020. For more details, please see the main [Aetherling site](https://aetherling.org).
 
 The [supplementary materials for the paper](aetherling-supplementary.pdf) can be found here.
 
